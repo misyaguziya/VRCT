@@ -77,7 +77,7 @@ class ToplevelWindow_information(customtkinter.CTkToplevel):
         # create textbox information
         self.textbox_information = customtkinter.CTkTextbox(self)
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v0.1b)
+        textbox_information_message = """VRCT(v0.2b)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -116,6 +116,9 @@ https://twitter.com/misya_ai
 
 # アップデート履歴
 [2023-05-29: v0.1b] v0.1b リリース
+[2023-05-30: v0.2b]
+- 翻訳機能有効無効のチェックボックスを追加
+- 常に最前面の有効無効のチェックボックスを追加
 
 # 注意事項
 再配布とかはやめてね
