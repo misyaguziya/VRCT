@@ -316,7 +316,7 @@ class App(customtkinter.CTk):
             message = self.entry_message_box.get()
 
             # translate
-            if self.checkbox_translator.get() is True:
+            if self.checkbox_translation.get() is True:
                 result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
                 chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
             else:
@@ -339,5 +339,6 @@ class App(customtkinter.CTk):
             # delete message in entry message box
             self.entry_message_box.delete(0, customtkinter.END)
 
-app = App()
-app.mainloop()
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
