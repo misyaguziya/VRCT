@@ -11,6 +11,7 @@ PATH_CONFIG = "./config.json"
 OSC_IP_ADDRESS = "127.0.0.1"
 OSC_PORT = 9000
 TARGET_LANG = "EN-US"
+ENABLE_TRANSLATION = True
 CHOICE_TRANSLATOR = "DeepL"
 AUTH_KEY = None
 TRANSLATOR = None
@@ -26,6 +27,8 @@ if os.path.isfile(PATH_CONFIG) is not False:
         OSC_PORT = config["OSC_PORT"]
     if "TARGET_LANG" in config.keys():
         TARGET_LANG = config["TARGET_LANG"]
+    if "ENABLE_TRANSLATION" in config.keys():
+        ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
     if "CHOICE_TRANSLATOR" in config.keys():
         CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
     if "AUTH_KEY" in config.keys():
@@ -38,6 +41,7 @@ with open(PATH_CONFIG, 'w') as fp:
         "OSC_IP_ADDRESS": OSC_IP_ADDRESS,
         "OSC_PORT": OSC_PORT,
         "TARGET_LANG": TARGET_LANG,
+        "ENABLE_TRANSLATION": ENABLE_TRANSLATION,
         "CHOICE_TRANSLATOR": CHOICE_TRANSLATOR,
         "AUTH_KEY": AUTH_KEY,
         "MESSAGE_FORMAT": MESSAGE_FORMAT,
@@ -207,23 +211,27 @@ class App(customtkinter.CTk):
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
 
+        # checkbox translation
+        self.checkbox_translation = customtkinter.CTkCheckBox(self.sidebar_frame, text="translation", onvalue=True, offvalue=False, command=self.checkbox_translation_callback)
+        self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
+
         # combobox translator
         self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_translator_callback)
-        self.combobox_translator.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
+        self.combobox_translator.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
 
         # combobox language
         self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_language_callback)
-        self.combobox_language.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="we")
+        self.combobox_language.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="we")
 
         # button information
         self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
-                                                          image=customtkinter.CTkImage(Image.open("./img/info-icon-white.png")))
+                                                        image=customtkinter.CTkImage(Image.open("./img/info-icon-white.png")))
         self.button_information.grid(row=4, column=0, padx=5, pady=(10, 10), sticky="wse")
         self.information_window = None
 
         # button config
         self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
-                                                     image=customtkinter.CTkImage(Image.open("./img/config-icon-white.png")))
+                                                    image=customtkinter.CTkImage(Image.open("./img/config-icon-white.png")))
         self.button_config.grid(row=4, column=1, padx=5, pady=(10, 10), sticky="wse")
         self.config_window = None
 
@@ -237,7 +245,12 @@ class App(customtkinter.CTk):
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
 
         # set default values
-        self.combobox_translator.configure(values=["DeepL",  "Disable"],)
+        if ENABLE_TRANSLATION:
+            self.checkbox_translation.select()
+        else:
+            self.checkbox_translation.deselect()
+
+        self.combobox_translator.configure(values=["DeepL"],)
         self.combobox_language.configure(values=[
                 "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
                 "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
@@ -263,6 +276,15 @@ class App(customtkinter.CTk):
         if self.information_window is None or not self.information_window.winfo_exists():
             self.information_window = ToplevelWindow_information(self)
         self.information_window.focus()
+
+    def checkbox_translation_callback(self):
+        global ENABLE_TRANSLATION
+        ENABLE_TRANSLATION = self.checkbox_translation.get()
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["ENABLE_TRANSLATION"] = ENABLE_TRANSLATION
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
 
     def combobox_translator_callback(self, choice):
         global CHOICE_TRANSLATOR
@@ -292,7 +314,7 @@ class App(customtkinter.CTk):
             message = self.entry_message_box.get()
 
             # translate
-            if CHOICE_TRANSLATOR != "Disable":
+            if self.checkbox_translator.get() is True:
                 result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
                 chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
             else:
