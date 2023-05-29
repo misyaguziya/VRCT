@@ -13,6 +13,7 @@ OSC_PORT = 9000
 TARGET_LANG = "EN-US"
 ENABLE_TRANSLATION = True
 CHOICE_TRANSLATOR = "DeepL"
+ENABLE_FOREGROUND = True
 AUTH_KEY = None
 TRANSLATOR = None
 MESSAGE_FORMAT = "[message]([translation])"
@@ -31,6 +32,8 @@ if os.path.isfile(PATH_CONFIG) is not False:
         ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
     if "CHOICE_TRANSLATOR" in config.keys():
         CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
+    if "ENABLE_FOREGROUND" in config.keys():
+        ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
     if "AUTH_KEY" in config.keys():
         AUTH_KEY = config["AUTH_KEY"]
     if "MESSAGE_FORMAT" in config.keys():
@@ -43,6 +46,7 @@ with open(PATH_CONFIG, 'w') as fp:
         "TARGET_LANG": TARGET_LANG,
         "ENABLE_TRANSLATION": ENABLE_TRANSLATION,
         "CHOICE_TRANSLATOR": CHOICE_TRANSLATOR,
+        "ENABLE_FOREGROUND": ENABLE_FOREGROUND,
         "AUTH_KEY": AUTH_KEY,
         "MESSAGE_FORMAT": MESSAGE_FORMAT,
     }
@@ -204,37 +208,41 @@ class App(customtkinter.CTk):
         super().__init__()
         self.iconbitmap('./img/app.ico')
         self.title("VRCT")
-        self.geometry(f"{400}x{180}")
+        self.geometry(f"{400}x{190}")
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
         # sidebar left
         self.sidebar_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
-        self.sidebar_frame.grid_rowconfigure(4, weight=1)
+        self.sidebar_frame.grid_rowconfigure(5, weight=1)
 
         # checkbox translation
         self.checkbox_translation = customtkinter.CTkCheckBox(self.sidebar_frame, text="translation", onvalue=True, offvalue=False, command=self.checkbox_translation_callback)
-        self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
+        self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+
+        # checkbox foreground
+        self.checkbox_foreground = customtkinter.CTkCheckBox(self.sidebar_frame, text="foreground", onvalue=True, offvalue=False, command=self.checkbox_foreground_callback)
+        self.checkbox_foreground.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # combobox translator
         self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_translator_callback)
-        self.combobox_translator.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
+        self.combobox_translator.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # combobox language
         self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_language_callback)
-        self.combobox_language.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="we")
+        self.combobox_language.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # button information
         self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
                                                         image=customtkinter.CTkImage(Image.open("./img/info-icon-white.png")))
-        self.button_information.grid(row=4, column=0, padx=5, pady=(10, 10), sticky="wse")
+        self.button_information.grid(row=5, column=0, padx=5, pady=(10, 10), sticky="wse")
         self.information_window = None
 
         # button config
         self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
                                                     image=customtkinter.CTkImage(Image.open("./img/config-icon-white.png")))
-        self.button_config.grid(row=4, column=1, padx=5, pady=(10, 10), sticky="wse")
+        self.button_config.grid(row=5, column=1, padx=5, pady=(10, 10), sticky="wse")
         self.config_window = None
 
         # create textbox message log
@@ -251,6 +259,13 @@ class App(customtkinter.CTk):
             self.checkbox_translation.select()
         else:
             self.checkbox_translation.deselect()
+
+        if ENABLE_FOREGROUND:
+            self.checkbox_foreground.select()
+            self.attributes("-topmost", True)
+        else:
+            self.checkbox_foreground.deselect()
+            self.attributes("-topmost", False)
 
         self.combobox_translator.configure(values=["DeepL"],)
         self.combobox_language.configure(values=[
@@ -305,6 +320,20 @@ class App(customtkinter.CTk):
         config["TARGET_LANG"] = TARGET_LANG
         with open(PATH_CONFIG, "w") as fp:
             json.dump(config, fp, indent=4)
+
+    def checkbox_foreground_callback(self):
+        global ENABLE_FOREGROUND
+        ENABLE_FOREGROUND = self.checkbox_foreground.get()
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["ENABLE_FOREGROUND"] = ENABLE_FOREGROUND
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+
+        if ENABLE_FOREGROUND:
+            self.attributes("-topmost", True)
+        else:
+            self.attributes("-topmost", False)
 
     def press_key(self, event):
         if TRANSLATOR is None:
