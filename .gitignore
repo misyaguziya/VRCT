@@ -1,0 +1,8 @@
+build/
+dist/
+config.json
+VRC_ChatBox_translator.spec
+memo.txt
+app/
+booth/
+pyinstaller/
