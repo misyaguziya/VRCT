@@ -7,7 +7,7 @@ import customtkinter
 from PIL import Image
 
 # global
-PATH_CONFIG = "./config.json"
+PATH_CONFIG = os.path.join(os.path.dirname(__file__), "config.json")
 OSC_IP_ADDRESS = "127.0.0.1"
 OSC_PORT = 9000
 TARGET_LANG = "EN-US"
@@ -72,7 +72,7 @@ class ToplevelWindow_information(customtkinter.CTkToplevel):
         self.geometry(f"{500}x{300}")
         # self.resizable(False, False)
 
-        self.after(200, lambda: self.iconbitmap("./img/app.ico"))
+        self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
         # create textbox information
         self.textbox_information = customtkinter.CTkTextbox(self)
@@ -133,7 +133,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.geometry(f"{450}x{160}")
         self.resizable(False, False)
 
-        self.after(200, lambda: self.iconbitmap("./img/app.ico"))
+        self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Config")
         self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent")
         self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -209,7 +209,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-        self.iconbitmap('./img/app.ico')
+        self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
         self.geometry(f"{400}x{190}")
         self.grid_columnconfigure(1, weight=1)
@@ -238,13 +238,13 @@ class App(customtkinter.CTk):
 
         # button information
         self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
-                                                        image=customtkinter.CTkImage(Image.open("./img/info-icon-white.png")))
+                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "info-icon-white.png"))))
         self.button_information.grid(row=5, column=0, padx=5, pady=(10, 10), sticky="wse")
         self.information_window = None
 
         # button config
         self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
-                                                    image=customtkinter.CTkImage(Image.open("./img/config-icon-white.png")))
+                                                    image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "config-icon-white.png"))))
         self.button_config.grid(row=5, column=1, padx=5, pady=(10, 10), sticky="wse")
         self.config_window = None
 
