@@ -68,6 +68,7 @@ class ToplevelWindow_information(customtkinter.CTkToplevel):
         self.geometry(f"{500}x{300}")
         # self.resizable(False, False)
 
+        self.after(200, lambda: self.iconbitmap("./img/app.ico"))
         self.title("Information")
         # create textbox information
         self.textbox_information = customtkinter.CTkTextbox(self)
@@ -125,6 +126,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.geometry(f"{450}x{160}")
         self.resizable(False, False)
 
+        self.after(200, lambda: self.iconbitmap("./img/app.ico"))
         self.title("Config")
         self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent")
         self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -200,7 +202,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
-
+        self.iconbitmap('./img/app.ico')
         self.title("VRC ChatBox Translator")
         self.geometry(f"{400}x{180}")
         self.grid_columnconfigure(1, weight=1)
