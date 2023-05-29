@@ -4,6 +4,7 @@ import deepl
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 import customtkinter
+from PIL import Image
 
 # global
 PATH_CONFIG = "./config.json"
@@ -54,6 +55,65 @@ if AUTH_KEY is not None:
 # GUI
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
+
+class ToplevelWindow_information(customtkinter.CTkToplevel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.geometry(f"{500}x{300}")
+        # self.resizable(False, False)
+
+        self.title("Information")
+        # create textbox information
+        self.textbox_information = customtkinter.CTkTextbox(self)
+        self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
+        textbox_information_message = """VRCT(v0.1b)
+
+# 概要
+VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
+翻訳機能としてDeepLのAPIを使用してメッセージとその翻訳部分を同時に送信することができます。
+
+# 使用方法
+    初期設定時
+        1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
+        2. configボタンでconfigウィンドウを開きDeepL Auth Keyに認証キーを記載しcheckボタンを押す
+        3. configウィンドウを閉じる
+
+    通常使用時
+        1. メッセージボックスにメッセージを記入
+        2. Enterキーを押し、メッセージを送信する
+
+# その他の設定
+    コンボボックス
+        翻訳機能の有効無効
+        翻訳する言語の選択
+
+    configウィンドウ
+        OSC IP address: 変更不要
+        OSC port: 変更不要
+        DeepL Auth key: DeepLの認証キーの設定
+        Message Format: 送信するメッセージのデコレーションの設定
+            [message]がメッセージボックスに記入したメッセージに置換される
+            [translation]が翻訳されたメッセージに置換される
+            初期フォーマット:"[message]([translation])"
+
+    設定の初期化
+        config.jsonを削除
+
+# お問い合わせ
+要望などはTwitterまで
+https://twitter.com/misya_ai
+
+# アップデート履歴
+[2023-05-29: v0.1b] v0.1b リリース
+
+# 注意事項
+再配布とかはやめてね
+"""
+
+        self.textbox_information.insert("0.0", textbox_information_message)
+        self.textbox_information.configure(state='disabled')
 
 class ToplevelWindow_config(customtkinter.CTkToplevel):
     def __init__(self, *args, **kwargs):
@@ -146,21 +206,35 @@ class App(customtkinter.CTk):
         self.sidebar_frame = customtkinter.CTkFrame(self, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
+
+        # combobox translator
         self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_translator_callback)
-        self.combobox_translator.grid(row=0, column=0, padx=10, pady=(10, 5), sticky="w")
+        self.combobox_translator.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(10, 5), sticky="we")
+
+        # combobox language
         self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_language_callback)
-        self.combobox_language.grid(row=1, column=0, padx=10, pady=(5, 10), sticky="w")
-        self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="config", command=self.open_config)
-        self.button_config.grid(row=4, column=0, padx=10, pady=(10, 10), sticky="s")
+        self.combobox_language.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 10), sticky="we")
+
+        # button information
+        self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
+                                                          image=customtkinter.CTkImage(Image.open("./img/info-icon-white.png")))
+        self.button_information.grid(row=4, column=0, padx=5, pady=(10, 10), sticky="wse")
+        self.information_window = None
+
+        # button config
+        self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
+                                                     image=customtkinter.CTkImage(Image.open("./img/config-icon-white.png")))
+        self.button_config.grid(row=4, column=1, padx=5, pady=(10, 10), sticky="wse")
         self.config_window = None
 
-        # create textbox
-        self.textbox = customtkinter.CTkTextbox(self)
-        self.textbox.grid(row=0, column=1, padx=(10, 10), pady=(10, 5), sticky="nsew")
+        # create textbox message log
+        self.textbox_message_log = customtkinter.CTkTextbox(self)
+        self.textbox_message_log.grid(row=0, column=1, padx=(10, 10), pady=(10, 5), sticky="nsew")
+        self.textbox_message_log.configure(state='disabled')
 
-        # create entry
-        self.entry = customtkinter.CTkEntry(self, placeholder_text="message")
-        self.entry.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
+        # create entry message box
+        self.entry_message_box = customtkinter.CTkEntry(self, placeholder_text="message")
+        self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
 
         # set default values
         self.combobox_translator.configure(values=["DeepL",  "Disable"],)
@@ -169,19 +243,26 @@ class App(customtkinter.CTk):
                 "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
                 "SL","SV","TR","UK","ZH",
             ],)
-        self.entry.bind("<Return>", self.press_key)
+        self.entry_message_box.bind("<Return>", self.press_key)
 
         if TRANSLATOR is None:
-            self.textbox.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            # error update Auth key
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            self.textbox_message_log.configure(state='disabled')
 
         self.combobox_language.set(TARGET_LANG)
         self.combobox_translator.set(CHOICE_TRANSLATOR)
-
 
     def open_config(self):
         if self.config_window is None or not self.config_window.winfo_exists():
             self.config_window = ToplevelWindow_config(self)
         self.config_window.focus()
+
+    def open_information(self):
+        if self.information_window is None or not self.information_window.winfo_exists():
+            self.information_window = ToplevelWindow_information(self)
+        self.information_window.focus()
 
     def combobox_translator_callback(self, choice):
         global CHOICE_TRANSLATOR
@@ -203,16 +284,19 @@ class App(customtkinter.CTk):
 
     def press_key(self, event):
         if TRANSLATOR is None:
-            self.textbox.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            # error update Auth key
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            self.textbox_message_log.configure(state='disabled')
         else:
-            entry = self.entry.get()
+            message = self.entry_message_box.get()
 
             # translate
             if CHOICE_TRANSLATOR != "Disable":
-                result = TRANSLATOR.translate_text(entry, target_lang=TARGET_LANG)
-                chat_message = MESSAGE_FORMAT.replace("[message]", entry).replace("[translation]", result.text)
+                result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
+                chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
             else:
-                chat_message = f"{entry}"
+                chat_message = f"{message}"
 
             # send OSC message
             message = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
@@ -223,9 +307,13 @@ class App(customtkinter.CTk):
             client = udp_client.SimpleUDPClient(OSC_IP_ADDRESS, OSC_PORT)
             client.send(message)
 
-            # delete Entry message
-            self.textbox.insert("0.0", f"{chat_message}\n")
-            self.entry.delete(0, customtkinter.END)
+            # update textbox message log
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("0.0", f"{chat_message}\n")
+            self.textbox_message_log.configure(state='disabled')
+
+            # delete message in entry message box
+            self.entry_message_box.delete(0, customtkinter.END)
 
 app = App()
 app.mainloop()
