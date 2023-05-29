@@ -6,3 +6,7 @@ memo.txt
 app/
 booth/
 pyinstaller/
+VRCT.build/
+VRCT.dist/
+VRCT.onefile-build/
+VRCT.exe
