@@ -203,7 +203,7 @@ class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.iconbitmap('./img/app.ico')
-        self.title("VRC ChatBox Translator")
+        self.title("VRCT")
         self.geometry(f"{400}x{180}")
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
