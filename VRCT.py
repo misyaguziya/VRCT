@@ -3,6 +3,7 @@ import json
 import deepl
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
+import tkinter as tk
 import customtkinter
 from PIL import Image
 
@@ -13,10 +14,11 @@ OSC_PORT = 9000
 TARGET_LANG = "EN-US"
 ENABLE_TRANSLATION = True
 CHOICE_TRANSLATOR = "DeepL"
-ENABLE_FOREGROUND = True
+ENABLE_FOREGROUND = False
 AUTH_KEY = None
 TRANSLATOR = None
 MESSAGE_FORMAT = "[message]([translation])"
+FONT_FAMILY = "Yu Gothic UI"
 
 # load config
 if os.path.isfile(PATH_CONFIG) is not False:
@@ -38,6 +40,8 @@ if os.path.isfile(PATH_CONFIG) is not False:
         AUTH_KEY = config["AUTH_KEY"]
     if "MESSAGE_FORMAT" in config.keys():
         MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
+    if "FONT_FAMILY" in config.keys():
+        MESSAGE_FORMAT = config["FONT_FAMILY"]
 
 with open(PATH_CONFIG, 'w') as fp:
     config = {
@@ -76,7 +80,7 @@ class ToplevelWindow_information(customtkinter.CTkToplevel):
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
         # create textbox information
-        self.textbox_information = customtkinter.CTkTextbox(self)
+        self.textbox_information = customtkinter.CTkTextbox(self, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
         textbox_information_message = """VRCT(v0.2b)
 
@@ -139,33 +143,33 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Config")
-        self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent")
+        self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_ip_address = customtkinter.CTkEntry(self, width=300, placeholder_text=OSC_IP_ADDRESS)
+        self.entry_ip_address = customtkinter.CTkEntry(self, width=300, placeholder_text=OSC_IP_ADDRESS, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_ip_address = customtkinter.CTkButton(self, text="", width=1, command=self.update_ip_address,
-                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
+                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))),)
         self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
-        self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent")
+        self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_port = customtkinter.CTkEntry(self, placeholder_text=OSC_PORT)
+        self.entry_port = customtkinter.CTkEntry(self, placeholder_text=OSC_PORT, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_port = customtkinter.CTkButton(self, text="", width=1, command=self.update_port,
                                                 image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_port.grid(row=1, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
-        self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent")
+        self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_authkey = customtkinter.CTkEntry(self, placeholder_text=AUTH_KEY)
+        self.entry_authkey = customtkinter.CTkEntry(self, placeholder_text=AUTH_KEY, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_authkey = customtkinter.CTkButton(self, text="", width=1, command=self.update_authkey,
                                                     image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_authkey.grid(row=2, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
-        self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent")
+        self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_message_format = customtkinter.CTkEntry(self, placeholder_text=MESSAGE_FORMAT)
+        self.entry_message_format = customtkinter.CTkEntry(self, placeholder_text=MESSAGE_FORMAT, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_message_format = customtkinter.CTkButton(self, text="", width=1, command=self.update_message_format,
                                                             image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
@@ -245,19 +249,27 @@ class App(customtkinter.CTk):
         self.sidebar_frame.grid_rowconfigure(5, weight=1)
 
         # checkbox translation
-        self.checkbox_translation = customtkinter.CTkCheckBox(self.sidebar_frame, text="translation", onvalue=True, offvalue=False, command=self.checkbox_translation_callback)
+        self.checkbox_translation = customtkinter.CTkCheckBox(self.sidebar_frame, text="translation", onvalue=True, offvalue=False,
+                                                            command=self.checkbox_translation_callback,
+                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # checkbox foreground
-        self.checkbox_foreground = customtkinter.CTkCheckBox(self.sidebar_frame, text="foreground", onvalue=True, offvalue=False, command=self.checkbox_foreground_callback)
+        self.checkbox_foreground = customtkinter.CTkCheckBox(self.sidebar_frame, text="foreground", onvalue=True, offvalue=False,
+                                                            command=self.checkbox_foreground_callback,
+                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.checkbox_foreground.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # combobox translator
-        self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_translator_callback)
+        self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame,
+                                                            command=self.combobox_translator_callback,
+                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.combobox_translator.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # combobox language
-        self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame, command=self.combobox_language_callback)
+        self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame,
+                                                        command=self.combobox_language_callback,
+                                                        font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.combobox_language.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # button information
@@ -273,12 +285,12 @@ class App(customtkinter.CTk):
         self.config_window = None
 
         # create textbox message log
-        self.textbox_message_log = customtkinter.CTkTextbox(self)
+        self.textbox_message_log = customtkinter.CTkTextbox(self, font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.textbox_message_log.grid(row=0, column=1, padx=(10, 10), pady=(10, 5), sticky="nsew")
         self.textbox_message_log.configure(state='disabled')
 
         # create entry message box
-        self.entry_message_box = customtkinter.CTkEntry(self, placeholder_text="message")
+        self.entry_message_box = customtkinter.CTkEntry(self, placeholder_text="message", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
 
         # set default values
