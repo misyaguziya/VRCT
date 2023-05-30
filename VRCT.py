@@ -7,7 +7,7 @@ import customtkinter
 from PIL import Image
 
 # global
-PATH_CONFIG = os.path.join(os.path.dirname(__file__), "config.json")
+PATH_CONFIG = "./config.json"
 OSC_IP_ADDRESS = "127.0.0.1"
 OSC_PORT = 9000
 TARGET_LANG = "EN-US"
@@ -65,12 +65,13 @@ customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
 
 class ToplevelWindow_information(customtkinter.CTkToplevel):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.parent = parent
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         self.geometry(f"{500}x{300}")
-        # self.resizable(False, False)
+        self.minsize(500, 300)
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
@@ -94,9 +95,8 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
         2. Enterキーを押し、メッセージを送信する
 
 # その他の設定
-    コンボボックス
-        翻訳機能の有効無効
-        翻訳する言語の選択
+    translation チェックボックス: 翻訳の有効無効
+    foreground チェックボックス: 最前面表示の有効無効
 
     configウィンドウ
         OSC IP address: 変更不要
@@ -117,8 +117,11 @@ https://twitter.com/misya_ai
 # アップデート履歴
 [2023-05-29: v0.1b] v0.1b リリース
 [2023-05-30: v0.2b]
+- configボタンをギアアイコンに変更
+- 詳細情報のボタンを追加
 - 翻訳機能有効無効のチェックボックスを追加
-- 常に最前面の有効無効のチェックボックスを追加
+- 最前面表示の有効無効のチェックボックスを追加
+- いくつかのバグを修正
 
 # 注意事項
 再配布とかはやめてね
@@ -128,8 +131,9 @@ https://twitter.com/misya_ai
         self.textbox_information.configure(state='disabled')
 
 class ToplevelWindow_config(customtkinter.CTkToplevel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, parent, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.parent = parent
         self.geometry(f"{450}x{160}")
         self.resizable(False, False)
 
@@ -139,72 +143,91 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_ip_address = customtkinter.CTkEntry(self, width=300, placeholder_text=OSC_IP_ADDRESS)
         self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_ip_address = customtkinter.CTkButton(self, text="✓", width=1, command=self.update_ip_address)
+        self.button_ip_address = customtkinter.CTkButton(self, text="", width=1, command=self.update_ip_address,
+                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
         self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent")
         self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_port = customtkinter.CTkEntry(self, placeholder_text=OSC_PORT)
         self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_port = customtkinter.CTkButton(self, text="✓", width=1, command=self.update_port)
+        self.button_port = customtkinter.CTkButton(self, text="", width=1, command=self.update_port,
+                                                image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_port.grid(row=1, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
         self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent")
         self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_authkey = customtkinter.CTkEntry(self, placeholder_text=AUTH_KEY)
         self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_authkey = customtkinter.CTkButton(self, text="✓", width=1, command=self.update_authkey)
+        self.button_authkey = customtkinter.CTkButton(self, text="", width=1, command=self.update_authkey,
+                                                    image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_authkey.grid(row=2, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
         self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent")
         self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_message_format = customtkinter.CTkEntry(self, placeholder_text=MESSAGE_FORMAT)
         self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_message_format = customtkinter.CTkButton(self, text="✓", width=1, command=self.update_message_format)
+        self.button_message_format = customtkinter.CTkButton(self, text="", width=1, command=self.update_message_format,
+                                                            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
         self.button_message_format.grid(row=3, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
 
     def update_ip_address(self):
-        global OSC_IP_ADDRESS
-        OSC_IP_ADDRESS = self.entry_ip_address.get()
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["OSC_IP_ADDRESS"] = OSC_IP_ADDRESS
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
+        value = self.entry_ip_address.get()
+        if len(value) > 0:
+            global OSC_IP_ADDRESS
+            OSC_IP_ADDRESS = value
+            with open(PATH_CONFIG, "r") as fp:
+                config = json.load(fp)
+            config["OSC_IP_ADDRESS"] = OSC_IP_ADDRESS
+            with open(PATH_CONFIG, "w") as fp:
+                json.dump(config, fp, indent=4)
 
     def update_port(self):
-        global OSC_PORT
-        OSC_PORT = self.entry_port.get()
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["OSC_PORT"] = OSC_PORT
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
+        value = self.entry_port.get()
+        if len(value) > 0:
+            global OSC_PORT
+            OSC_PORT = value
+            with open(PATH_CONFIG, "r") as fp:
+                config = json.load(fp)
+            config["OSC_PORT"] = OSC_PORT
+            with open(PATH_CONFIG, "w") as fp:
+                json.dump(config, fp, indent=4)
 
     def update_authkey(self):
-        global AUTH_KEY
-        global TRANSLATOR
-        AUTH_KEY = self.entry_authkey.get()
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["AUTH_KEY"] = AUTH_KEY
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
+        value = self.entry_authkey.get()
+        if len(value) > 0:
+            global AUTH_KEY
+            global TRANSLATOR
+            AUTH_KEY = value
+            with open(PATH_CONFIG, "r") as fp:
+                config = json.load(fp)
+            config["AUTH_KEY"] = AUTH_KEY
+            with open(PATH_CONFIG, "w") as fp:
+                json.dump(config, fp, indent=4)
 
-        TRANSLATOR = deepl.Translator(AUTH_KEY)
-        try:
-            TRANSLATOR.translate_text(" ", target_lang="EN-US")
-        except:
-            TRANSLATOR = None
+            TRANSLATOR = deepl.Translator(AUTH_KEY)
+
+            self.parent.textbox_message_log.configure(state='normal')
+            self.parent.textbox_message_log.delete("0.0", "end")
+            self.parent.textbox_message_log.configure(state='disabled')
+            try:
+                TRANSLATOR.translate_text(" ", target_lang="EN-US")
+            except:
+                TRANSLATOR = None
+                self.parent.textbox_message_log.configure(state='normal')
+                self.parent.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+                self.parent.textbox_message_log.configure(state='disabled')
 
     def update_message_format(self):
-        global MESSAGE_FORMAT
-        MESSAGE_FORMAT = self.entry_message_format.get()
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["MESSAGE_FORMAT"] = MESSAGE_FORMAT
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
+        value = self.entry_message_format.get()
+        if len(value) > 0:
+            global MESSAGE_FORMAT
+            MESSAGE_FORMAT = value
+            with open(PATH_CONFIG, "r") as fp:
+                config = json.load(fp)
+            config["MESSAGE_FORMAT"] = MESSAGE_FORMAT
+            with open(PATH_CONFIG, "w") as fp:
+                json.dump(config, fp, indent=4)
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -212,6 +235,7 @@ class App(customtkinter.CTk):
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
         self.geometry(f"{400}x{190}")
+        self.minsize(400, 190)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -239,13 +263,13 @@ class App(customtkinter.CTk):
         # button information
         self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
                                                         image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "info-icon-white.png"))))
-        self.button_information.grid(row=5, column=0, padx=5, pady=(10, 10), sticky="wse")
+        self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(10, 10), sticky="wse")
         self.information_window = None
 
         # button config
         self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
                                                     image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "config-icon-white.png"))))
-        self.button_config.grid(row=5, column=1, padx=5, pady=(10, 10), sticky="wse")
+        self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(10, 10), sticky="wse")
         self.config_window = None
 
         # create textbox message log
@@ -340,10 +364,7 @@ class App(customtkinter.CTk):
 
     def press_key(self, event):
         if TRANSLATOR is None:
-            # error update Auth key
-            self.textbox_message_log.configure(state='normal')
-            self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
-            self.textbox_message_log.configure(state='disabled')
+            pass
         else:
             message = self.entry_message_box.get()
 
