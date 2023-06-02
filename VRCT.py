@@ -19,6 +19,7 @@ AUTH_KEY = None
 TRANSLATOR = None
 MESSAGE_FORMAT = "[message]([translation])"
 FONT_FAMILY = "Yu Gothic UI"
+TRANSPARENCY = 100
 
 # load config
 if os.path.isfile(PATH_CONFIG) is not False:
@@ -41,7 +42,9 @@ if os.path.isfile(PATH_CONFIG) is not False:
     if "MESSAGE_FORMAT" in config.keys():
         MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
     if "FONT_FAMILY" in config.keys():
-        MESSAGE_FORMAT = config["FONT_FAMILY"]
+        FONT_FAMILY = config["FONT_FAMILY"]
+    if "TRANSPARENCY" in config.keys():
+        TRANSPARENCY = config["TRANSPARENCY"]
 
 with open(PATH_CONFIG, 'w') as fp:
     config = {
@@ -53,6 +56,8 @@ with open(PATH_CONFIG, 'w') as fp:
         "ENABLE_FOREGROUND": ENABLE_FOREGROUND,
         "AUTH_KEY": AUTH_KEY,
         "MESSAGE_FORMAT": MESSAGE_FORMAT,
+        "FONT_FAMILY": FONT_FAMILY,
+        "TRANSPARENCY": TRANSPARENCY,
     }
     json.dump(config, fp, indent=4)
 
@@ -74,7 +79,7 @@ class ToplevelWindow_information(customtkinter.CTkToplevel):
         self.parent = parent
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
-        self.geometry(f"{500}x{300}")
+        # self.geometry(f"{500}x{300}")
         self.minsize(500, 300)
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
@@ -138,7 +143,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
-        self.geometry(f"{450}x{160}")
+        # self.geometry(f"{450}x{200}")
         self.resizable(False, False)
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
@@ -149,7 +154,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_ip_address = customtkinter.CTkButton(self, text="", width=1, command=self.update_ip_address,
                                                         image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))),)
-        self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -157,7 +162,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_port = customtkinter.CTkButton(self, text="", width=1, command=self.update_port,
                                                 image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_port.grid(row=1, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_port.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -165,7 +170,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_authkey = customtkinter.CTkButton(self, text="", width=1, command=self.update_authkey,
                                                     image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_authkey.grid(row=2, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_authkey.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -173,7 +178,13 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
         self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_message_format = customtkinter.CTkButton(self, text="", width=1, command=self.update_message_format,
                                                             image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_message_format.grid(row=3, column=2, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_message_format.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+
+        self.label_transparency = customtkinter.CTkLabel(self, text="Transparency:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_transparency.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.slider_transparency = customtkinter.CTkSlider(self, from_=50, to=100, command=self.update_transparency)
+        self.slider_transparency.grid(row=4, column=1, columnspan=2, padx=10, pady=10, sticky="nsew")
+        self.slider_transparency.set(TRANSPARENCY)
 
     def update_ip_address(self):
         value = self.entry_ip_address.get()
@@ -232,6 +243,16 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
             config["MESSAGE_FORMAT"] = MESSAGE_FORMAT
             with open(PATH_CONFIG, "w") as fp:
                 json.dump(config, fp, indent=4)
+
+    def update_transparency(self, value):
+        global TRANSPARENCY
+        TRANSPARENCY = value
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["TRANSPARENCY"] = TRANSPARENCY
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+        self.parent.wm_attributes("-alpha", TRANSPARENCY/100)
 
 class App(customtkinter.CTk):
     def __init__(self):
@@ -322,6 +343,7 @@ class App(customtkinter.CTk):
 
         self.combobox_language.set(TARGET_LANG)
         self.combobox_translator.set(CHOICE_TRANSLATOR)
+        self.wm_attributes("-alpha", TRANSPARENCY/100)
 
     def open_config(self):
         if self.config_window is None or not self.config_window.winfo_exists():
