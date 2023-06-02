@@ -599,6 +599,8 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", False)
 
         self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
+        self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
+        self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
 
         if TRANSLATOR is None:
             # error update Auth key
@@ -642,6 +644,9 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", False)
 
     def entry_message_box_press_key_enter(self, event):
+        if ENABLE_FOREGROUND:
+            self.attributes("-topmost", True)
+
         message = self.entry_message_box.get()
         if len(message) > 0:
             # translate
@@ -667,6 +672,14 @@ class App(customtkinter.CTk):
 
             # delete message in entry message box
             self.entry_message_box.delete(0, customtkinter.END)
+
+    def entry_message_box_press_key_any(self, event):
+        if ENABLE_FOREGROUND:
+            self.attributes("-topmost", False)
+
+    def entry_message_box_leave(self, event):
+        if ENABLE_FOREGROUND:
+            self.attributes("-topmost", True)
 
 if __name__ == "__main__":
     app = App()
