@@ -98,7 +98,7 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v0.2b)
+        textbox_information_message = """VRCT(v0.3b)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
