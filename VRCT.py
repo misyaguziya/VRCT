@@ -143,78 +143,170 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
-        # self.geometry(f"{450}x{200}")
+        self.geometry(f"{350}x{220}")
         self.resizable(False, False)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Config")
 
+        # tabwiew config
+        self.tabview_config = customtkinter.CTkTabview(self)
+        self.tabview_config.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
+        self.tabview_config.add("GUI")
+        self.tabview_config.add("Parameter")
+        self.tabview_config.tab("GUI").grid_columnconfigure(0, weight=1)
+        self.tabview_config.tab("Parameter").grid_columnconfigure(0, weight=1)
+
         # combobox translator
-        self.label_translator = customtkinter.CTkLabel(self, text="select translator:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_translator = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="select translator:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.label_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.combobox_translator = customtkinter.CTkComboBox(self,
-                                                            command=self.combobox_translator_callback,
-                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.combobox_translator = customtkinter.CTkComboBox(
+            self.tabview_config.tab("GUI"),
+            command=self.combobox_translator_callback,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.combobox_translator.grid(row=0, column=1, columnspan=2 ,padx=(0, 5), pady=5, sticky="nsew")
         self.combobox_translator.configure(values=["DeepL"],)
         self.combobox_translator.set(CHOICE_TRANSLATOR)
 
         # combobox language
-        self.label_language = customtkinter.CTkLabel(self, text="select language:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_language = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="select language:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.label_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.combobox_language = customtkinter.CTkComboBox(self,
-                                                        command=self.combobox_language_callback,
-                                                        font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.combobox_language = customtkinter.CTkComboBox(
+            self.tabview_config.tab("GUI"),
+            command=self.combobox_language_callback,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.combobox_language.grid(row=1, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
-        self.combobox_language.configure(values=[
+        self.combobox_language.configure(
+            values=[
                 "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
                 "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
                 "SL","SV","TR","UK","ZH",
-            ],)
+            ]
+        )
         self.combobox_language.set(TARGET_LANG)
 
         # slider transparency
-        self.label_transparency = customtkinter.CTkLabel(self, text="Transparency:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_transparency = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="Transparency:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.label_transparency.grid(row=2, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
-        self.slider_transparency = customtkinter.CTkSlider(self, from_=50, to=100, command=self.slider_transparency_callback)
+        self.slider_transparency = customtkinter.CTkSlider(
+            self.tabview_config.tab("GUI"),
+            from_=50,
+            to=100,
+            command=self.slider_transparency_callback
+        )
         self.slider_transparency.grid(row=2, column=1, columnspan=2, padx=5, pady=10, sticky="nsew")
         self.slider_transparency.set(TRANSPARENCY)
 
         # entry ip address
-        self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_ip_address.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_ip_address = customtkinter.CTkEntry(self, width=300, placeholder_text=OSC_IP_ADDRESS, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_ip_address.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_ip_address = customtkinter.CTkButton(self, text="", width=1, command=self.update_ip_address,
-                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))),)
-        self.button_ip_address.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_ip_address = customtkinter.CTkLabel(
+            self.tabview_config.tab("Parameter"),
+            text="OSC IP address:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_ip_address = customtkinter.CTkEntry(
+            self.tabview_config.tab("Parameter"),
+            placeholder_text=OSC_IP_ADDRESS,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_ip_address = customtkinter.CTkButton(
+            self.tabview_config.tab("Parameter"),
+            text="",
+            width=1,
+            command=self.update_ip_address,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
+        )
+        self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         # entry port
-        self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_port.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_port = customtkinter.CTkEntry(self, placeholder_text=OSC_PORT, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_port.grid(row=4, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_port = customtkinter.CTkButton(self, text="", width=1, command=self.update_port,
-                                                image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_port.grid(row=4, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_port = customtkinter.CTkLabel(
+            self.tabview_config.tab("Parameter"),
+            text="OSC Port:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_port = customtkinter.CTkEntry(
+            self.tabview_config.tab("Parameter"),
+            placeholder_text=OSC_PORT,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_port = customtkinter.CTkButton(
+            self.tabview_config.tab("Parameter"),
+            text="",
+            width=1,
+            command=self.update_port,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
+        )
+        self.button_port.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         # entry authkey
-        self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_authkey.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_authkey = customtkinter.CTkEntry(self, placeholder_text=AUTH_KEY, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_authkey.grid(row=5, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_authkey = customtkinter.CTkButton(self, text="", width=1, command=self.update_authkey,
-                                                    image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_authkey.grid(row=5, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_authkey = customtkinter.CTkLabel(
+            self.tabview_config.tab("Parameter"),
+            text="DeepL Auth Key:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_authkey = customtkinter.CTkEntry(
+            self.tabview_config.tab("Parameter"),
+            placeholder_text=AUTH_KEY,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_authkey = customtkinter.CTkButton(
+            self.tabview_config.tab("Parameter"),
+            text="",
+            width=1,
+            command=self.update_authkey,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
+        )
+        self.button_authkey.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         # entry message format
-        self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_message_format.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.entry_message_format = customtkinter.CTkEntry(self, placeholder_text=MESSAGE_FORMAT, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_message_format.grid(row=6, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_message_format = customtkinter.CTkButton(self, text="", width=1, command=self.update_message_format,
-                                                            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_message_format.grid(row=6, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_message_format = customtkinter.CTkLabel(
+            self.tabview_config.tab("Parameter"),
+            text="Message Format:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_message_format = customtkinter.CTkEntry(
+            self.tabview_config.tab("Parameter"),
+            placeholder_text=MESSAGE_FORMAT,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.button_message_format = customtkinter.CTkButton(
+            self.tabview_config.tab("Parameter"),
+            text="",
+            width=1,
+            command=self.update_message_format,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
+        )
+        self.button_message_format.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
     def update_ip_address(self):
         value = self.entry_ip_address.get()
