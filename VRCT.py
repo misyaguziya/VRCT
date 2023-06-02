@@ -20,6 +20,8 @@ TRANSLATOR = None
 MESSAGE_FORMAT = "[message]([translation])"
 FONT_FAMILY = "Yu Gothic UI"
 TRANSPARENCY = 100
+APPEARANCE_THEME = "System"
+UI_SCALING = "100%"
 
 # load config
 if os.path.isfile(PATH_CONFIG) is not False:
@@ -45,6 +47,10 @@ if os.path.isfile(PATH_CONFIG) is not False:
         FONT_FAMILY = config["FONT_FAMILY"]
     if "TRANSPARENCY" in config.keys():
         TRANSPARENCY = config["TRANSPARENCY"]
+    if "APPEARANCE_THEME" in config.keys():
+        APPEARANCE_THEME = config["APPEARANCE_THEME"]
+    if "UI_SCALING" in config.keys():
+        UI_SCALING = config["UI_SCALING"]
 
 with open(PATH_CONFIG, 'w') as fp:
     config = {
@@ -58,6 +64,8 @@ with open(PATH_CONFIG, 'w') as fp:
         "MESSAGE_FORMAT": MESSAGE_FORMAT,
         "FONT_FAMILY": FONT_FAMILY,
         "TRANSPARENCY": TRANSPARENCY,
+        "APPEARANCE_THEME": APPEARANCE_THEME,
+        "UI_SCALING": UI_SCALING,
     }
     json.dump(config, fp, indent=4)
 
@@ -70,12 +78,12 @@ if AUTH_KEY is not None:
         TRANSLATOR = None
 
 # GUI
-customtkinter.set_appearance_mode("System")
+customtkinter.set_appearance_mode(APPEARANCE_THEME)
 customtkinter.set_default_color_theme("blue")
 
 class ToplevelWindowInformation(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(parent, *args, **kwargs)
         self.parent = parent
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -85,7 +93,10 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
         # create textbox information
-        self.textbox_information = customtkinter.CTkTextbox(self, font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.textbox_information = customtkinter.CTkTextbox(
+            self,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
         textbox_information_message = """VRCT(v0.2b)
 
@@ -143,8 +154,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
-        self.geometry(f"{350}x{220}")
-        self.resizable(False, False)
+        # self.geometry(f"{350}x{270}")
+        # self.resizable(False, False)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -158,46 +169,47 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.tabview_config.add("Parameter")
         self.tabview_config.tab("GUI").grid_columnconfigure(0, weight=1)
         self.tabview_config.tab("Parameter").grid_columnconfigure(0, weight=1)
+        self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
 
-        # combobox translator
+        # optionmenu translator
         self.label_translator = customtkinter.CTkLabel(
             self.tabview_config.tab("GUI"),
-            text="select translator:",
+            text="Select Translator:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.label_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.combobox_translator = customtkinter.CTkComboBox(
+        self.optionmenu_translator = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
-            command=self.combobox_translator_callback,
+            values=["DeepL"],
+            command=self.optionmenu_translator_callback,
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.combobox_translator.grid(row=0, column=1, columnspan=2 ,padx=(0, 5), pady=5, sticky="nsew")
-        self.combobox_translator.configure(values=["DeepL"],)
-        self.combobox_translator.set(CHOICE_TRANSLATOR)
+        self.optionmenu_translator.grid(row=0, column=1, columnspan=2 ,padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_translator.set(CHOICE_TRANSLATOR)
 
-        # combobox language
+        # optionmenu language
         self.label_language = customtkinter.CTkLabel(
             self.tabview_config.tab("GUI"),
-            text="select language:",
+            text="Select Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.label_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.combobox_language = customtkinter.CTkComboBox(
+        self.optionmenu_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
-            command=self.combobox_language_callback,
+            command=self.optionmenu_language_callback,
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.combobox_language.grid(row=1, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
-        self.combobox_language.configure(
+        self.optionmenu_language.grid(row=1, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_language.configure(
             values=[
                 "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
                 "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
                 "SL","SV","TR","UK","ZH",
             ]
         )
-        self.combobox_language.set(TARGET_LANG)
+        self.optionmenu_language.set(TARGET_LANG)
 
         # slider transparency
         self.label_transparency = customtkinter.CTkLabel(
@@ -215,6 +227,55 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         )
         self.slider_transparency.grid(row=2, column=1, columnspan=2, padx=5, pady=10, sticky="nsew")
         self.slider_transparency.set(TRANSPARENCY)
+
+        # optionmenu theme
+        self.label_appearance_theme = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="Appearance Theme:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_appearance_theme.grid(row=3, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("GUI"),
+            values=["Light", "Dark", "System"],
+            command=self.optionmenu_theme_callback
+        )
+        self.optionmenu_appearance_theme.grid(row=3, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme.set(APPEARANCE_THEME)
+
+        # optionmenu UI scaling
+        self.label_ui_scaling = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="UI Scaling:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_ui_scaling.grid(row=4, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("GUI"),
+            values=["80%", "90%", "100%", "110%", "120%"],
+            command=self.optionmenu_ui_scaling_callback
+        )
+        self.optionmenu_ui_scaling.grid(row=4, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling.set(UI_SCALING)
+
+        # optionmenu font family
+        self.label_font_family = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="Font Family:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_font_family.grid(row=5, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        font_families = list(tk.font.families())
+        self.optionmenu_font_family = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("GUI"),
+            values=font_families,
+            command=self.optionmenu_font_family_callback
+        )
+        self.optionmenu_font_family.grid(row=5, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_font_family.set(FONT_FAMILY)
 
         # entry ip address
         self.label_ip_address = customtkinter.CTkLabel(
@@ -343,7 +404,6 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 json.dump(config, fp, indent=4)
 
             TRANSLATOR = deepl.Translator(AUTH_KEY)
-
             self.parent.textbox_message_log.configure(state='normal')
             self.parent.textbox_message_log.delete("0.0", "end")
             self.parent.textbox_message_log.configure(state='disabled')
@@ -376,7 +436,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             json.dump(config, fp, indent=4)
         self.parent.wm_attributes("-alpha", TRANSPARENCY/100)
 
-    def combobox_translator_callback(self, choice):
+    def optionmenu_translator_callback(self, choice):
         global CHOICE_TRANSLATOR
         CHOICE_TRANSLATOR = choice
         with open(PATH_CONFIG, "r") as fp:
@@ -385,7 +445,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         with open(PATH_CONFIG, "w") as fp:
             json.dump(config, fp, indent=4)
 
-    def combobox_language_callback(self, choice):
+    def optionmenu_language_callback(self, choice):
         global TARGET_LANG
         TARGET_LANG = choice
         with open(PATH_CONFIG, "r") as fp:
@@ -394,13 +454,69 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         with open(PATH_CONFIG, "w") as fp:
             json.dump(config, fp, indent=4)
 
+    def optionmenu_theme_callback(self, choice):
+        global APPEARANCE_THEME
+        APPEARANCE_THEME = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["APPEARANCE_THEME"] = APPEARANCE_THEME
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+        customtkinter.set_appearance_mode(APPEARANCE_THEME)
+
+    def optionmenu_ui_scaling_callback(self, choice):
+        global UI_SCALING
+        UI_SCALING = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["UI_SCALING"] = UI_SCALING
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+        new_scaling_float = int(UI_SCALING.replace("%", "")) / 100
+        customtkinter.set_widget_scaling(new_scaling_float)
+
+    def optionmenu_font_family_callback(self, choice):
+        global FONT_FAMILY
+        FONT_FAMILY = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["FONT_FAMILY"] = FONT_FAMILY
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+
+        self.parent.checkbox_translation.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.parent.checkbox_foreground.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.parent.textbox_message_log.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.parent.entry_message_box.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.parent.information_window.textbox_information.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_transparency.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_appearance_theme.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_appearance_theme.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_ui_scaling.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_ui_scaling.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_font_family.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_font_family.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_ip_address.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.entry_ip_address.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_port.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.entry_port.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_authkey.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.entry_authkey.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_message_format.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.entry_message_format.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+
 class App(customtkinter.CTk):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
-        self.geometry(f"{400}x{120}")
-        self.minsize(400, 120)
+        self.geometry(f"{400}x{110}")
+        self.minsize(400, 110)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -410,36 +526,63 @@ class App(customtkinter.CTk):
         self.sidebar_frame.grid_rowconfigure(5, weight=1)
 
         # checkbox translation
-        self.checkbox_translation = customtkinter.CTkCheckBox(self.sidebar_frame, text="translation", onvalue=True, offvalue=False,
-                                                            command=self.checkbox_translation_callback,
-                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.checkbox_translation = customtkinter.CTkCheckBox(
+            self.sidebar_frame,
+            text="translation",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_translation_callback,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # checkbox foreground
-        self.checkbox_foreground = customtkinter.CTkCheckBox(self.sidebar_frame, text="foreground", onvalue=True, offvalue=False,
-                                                            command=self.checkbox_foreground_callback,
-                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.checkbox_foreground = customtkinter.CTkCheckBox(
+            self.sidebar_frame,
+            text="foreground",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_foreground_callback,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.checkbox_foreground.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # button information
-        self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=25, command=self.open_information,
-                                                        image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "info-icon-white.png"))))
-        self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(10, 10), sticky="wse")
+        self.button_information = customtkinter.CTkButton(
+            self.sidebar_frame,
+            text="",
+            width=25,
+            command=self.open_information,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "info-icon-white.png")))
+        )
+        self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(5, 5), sticky="wse")
         self.information_window = None
 
         # button config
-        self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=25, command=self.open_config,
-                                                    image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "config-icon-white.png"))))
-        self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(10, 10), sticky="wse")
+        self.button_config = customtkinter.CTkButton(
+            self.sidebar_frame,
+            text="",
+            width=25,
+            command=self.open_config,
+            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "config-icon-white.png")))
+        )
+        self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
         self.config_window = None
 
         # create textbox message log
-        self.textbox_message_log = customtkinter.CTkTextbox(self, font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.textbox_message_log = customtkinter.CTkTextbox(
+            self,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.textbox_message_log.grid(row=0, column=1, padx=(10, 10), pady=(10, 5), sticky="nsew")
         self.textbox_message_log.configure(state='disabled')
 
         # create entry message box
-        self.entry_message_box = customtkinter.CTkEntry(self, placeholder_text="message", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.entry_message_box = customtkinter.CTkEntry(
+            self,
+            placeholder_text="message",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
 
         # set default values
