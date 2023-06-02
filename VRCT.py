@@ -107,7 +107,8 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
 # 使用方法
     初期設定時
         1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
-        2. configボタンでconfigウィンドウを開きDeepL Auth Keyに認証キーを記載しcheckボタンを押す
+        2. ギアアイコンのボタンでconfigウィンドウを開く
+        3. ParameterタブのDeepL Auth Keyに認証キーを記載し、フロッピーアイコンのボタンを押す
         3. configウィンドウを閉じる
 
     通常使用時
@@ -119,13 +120,21 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
     foreground チェックボックス: 最前面表示の有効無効
 
     configウィンドウ
-        OSC IP address: 変更不要
-        OSC port: 変更不要
-        DeepL Auth key: DeepLの認証キーの設定
-        Message Format: 送信するメッセージのデコレーションの設定
-            [message]がメッセージボックスに記入したメッセージに置換される
-            [translation]が翻訳されたメッセージに置換される
-            初期フォーマット:"[message]([translation])"
+        GUIタブ
+            Select translator: 翻訳APIの変更（今はDeepLのみ）
+            Select Language: 翻訳する言語を選択
+            Transparency: ウィンドウの透過度の調整
+            Appearance Theme: ウィンドウテーマを選択
+            UI Scaling: UIサイズを調整
+            Font Family: 表示フォントを選択
+        Parameterタブ
+            OSC IP address: 変更不要
+            OSC port: 変更不要
+            DeepL Auth key: DeepLの認証キーの設定
+            Message Format: 送信するメッセージのデコレーションの設定
+                [message]がメッセージボックスに記入したメッセージに置換される
+                [translation]が翻訳されたメッセージに置換される
+                初期フォーマット:"[message]([translation])"
 
     設定の初期化
         config.jsonを削除
@@ -142,6 +151,12 @@ https://twitter.com/misya_ai
 - 翻訳機能有効無効のチェックボックスを追加
 - 最前面表示の有効無効のチェックボックスを追加
 - いくつかのバグを修正
+[2023-06-03: v0.3b]
+- 全体的にUIを刷新
+- 透過機能を追加
+- テーマのLight/Dark/Systemのモードの変更機能を追加
+- UIのスケール変更機能を追加
+- フォントの変更機能を追加
 
 # 注意事項
 再配布とかはやめてね
