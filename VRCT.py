@@ -642,13 +642,10 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", False)
 
     def entry_message_box_press_key_enter(self, event):
-        if TRANSLATOR is None:
-            pass
-        else:
-            message = self.entry_message_box.get()
-
+        message = self.entry_message_box.get()
+        if len(message) > 0:
             # translate
-            if self.checkbox_translation.get() is True and len(message) > 0:
+            if (self.checkbox_translation.get() is True) and (TRANSLATOR is not None):
                 result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
                 chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
             else:
