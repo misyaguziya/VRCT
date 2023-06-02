@@ -73,7 +73,7 @@ if AUTH_KEY is not None:
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
 
-class ToplevelWindow_information(customtkinter.CTkToplevel):
+class ToplevelWindowInformation(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parent = parent
@@ -139,7 +139,7 @@ https://twitter.com/misya_ai
         self.textbox_information.insert("0.0", textbox_information_message)
         self.textbox_information.configure(state='disabled')
 
-class ToplevelWindow_config(customtkinter.CTkToplevel):
+class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
@@ -148,43 +148,73 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
 
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Config")
+
+        # combobox translator
+        self.label_translator = customtkinter.CTkLabel(self, text="select translator:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.combobox_translator = customtkinter.CTkComboBox(self,
+                                                            command=self.combobox_translator_callback,
+                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.combobox_translator.grid(row=0, column=1, columnspan=2 ,padx=(0, 5), pady=5, sticky="nsew")
+        self.combobox_translator.configure(values=["DeepL"],)
+        self.combobox_translator.set(CHOICE_TRANSLATOR)
+
+        # combobox language
+        self.label_language = customtkinter.CTkLabel(self, text="select language:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.combobox_language = customtkinter.CTkComboBox(self,
+                                                        command=self.combobox_language_callback,
+                                                        font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.combobox_language.grid(row=1, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.combobox_language.configure(values=[
+                "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
+                "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
+                "SL","SV","TR","UK","ZH",
+            ],)
+        self.combobox_language.set(TARGET_LANG)
+
+        # slider transparency
+        self.label_transparency = customtkinter.CTkLabel(self, text="Transparency:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_transparency.grid(row=2, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.slider_transparency = customtkinter.CTkSlider(self, from_=50, to=100, command=self.slider_transparency_callback)
+        self.slider_transparency.grid(row=2, column=1, columnspan=2, padx=5, pady=10, sticky="nsew")
+        self.slider_transparency.set(TRANSPARENCY)
+
+        # entry ip address
         self.label_ip_address = customtkinter.CTkLabel(self, text="OSC IP address:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_ip_address.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_ip_address = customtkinter.CTkEntry(self, width=300, placeholder_text=OSC_IP_ADDRESS, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_ip_address.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_ip_address = customtkinter.CTkButton(self, text="", width=1, command=self.update_ip_address,
                                                         image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))),)
-        self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.button_ip_address.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
+        # entry port
         self.label_port = customtkinter.CTkLabel(self, text="OSC Port:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_port.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_port = customtkinter.CTkEntry(self, placeholder_text=OSC_PORT, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_port.grid(row=4, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_port = customtkinter.CTkButton(self, text="", width=1, command=self.update_port,
                                                 image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_port.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.button_port.grid(row=4, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
+        # entry authkey
         self.label_authkey = customtkinter.CTkLabel(self, text="DeepL Auth Key:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_authkey.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_authkey = customtkinter.CTkEntry(self, placeholder_text=AUTH_KEY, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_authkey.grid(row=5, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_authkey = customtkinter.CTkButton(self, text="", width=1, command=self.update_authkey,
                                                     image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_authkey.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.button_authkey.grid(row=5, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
+        # entry message format
         self.label_message_format = customtkinter.CTkLabel(self, text="Message Format:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_message_format.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_message_format = customtkinter.CTkEntry(self, placeholder_text=MESSAGE_FORMAT, font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_message_format.grid(row=6, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
         self.button_message_format = customtkinter.CTkButton(self, text="", width=1, command=self.update_message_format,
                                                             image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png"))))
-        self.button_message_format.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
-
-        self.label_transparency = customtkinter.CTkLabel(self, text="Transparency:", fg_color="transparent", font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.label_transparency.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.slider_transparency = customtkinter.CTkSlider(self, from_=50, to=100, command=self.update_transparency)
-        self.slider_transparency.grid(row=4, column=1, columnspan=2, padx=10, pady=10, sticky="nsew")
-        self.slider_transparency.set(TRANSPARENCY)
+        self.button_message_format.grid(row=6, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
 
     def update_ip_address(self):
         value = self.entry_ip_address.get()
@@ -244,7 +274,7 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
             with open(PATH_CONFIG, "w") as fp:
                 json.dump(config, fp, indent=4)
 
-    def update_transparency(self, value):
+    def slider_transparency_callback(self, value):
         global TRANSPARENCY
         TRANSPARENCY = value
         with open(PATH_CONFIG, "r") as fp:
@@ -254,13 +284,31 @@ class ToplevelWindow_config(customtkinter.CTkToplevel):
             json.dump(config, fp, indent=4)
         self.parent.wm_attributes("-alpha", TRANSPARENCY/100)
 
+    def combobox_translator_callback(self, choice):
+        global CHOICE_TRANSLATOR
+        CHOICE_TRANSLATOR = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["CHOICE_TRANSLATOR"] = CHOICE_TRANSLATOR
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+
+    def combobox_language_callback(self, choice):
+        global TARGET_LANG
+        TARGET_LANG = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["TARGET_LANG"] = TARGET_LANG
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+
 class App(customtkinter.CTk):
     def __init__(self):
         super().__init__()
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
-        self.geometry(f"{400}x{190}")
-        self.minsize(400, 190)
+        self.geometry(f"{400}x{120}")
+        self.minsize(400, 120)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -281,26 +329,14 @@ class App(customtkinter.CTk):
                                                             font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.checkbox_foreground.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
-        # combobox translator
-        self.combobox_translator = customtkinter.CTkComboBox(self.sidebar_frame,
-                                                            command=self.combobox_translator_callback,
-                                                            font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.combobox_translator.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
-
-        # combobox language
-        self.combobox_language = customtkinter.CTkComboBox(self.sidebar_frame,
-                                                        command=self.combobox_language_callback,
-                                                        font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.combobox_language.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
-
         # button information
-        self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_information,
+        self.button_information = customtkinter.CTkButton(self.sidebar_frame, text="", width=25, command=self.open_information,
                                                         image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "info-icon-white.png"))))
         self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(10, 10), sticky="wse")
         self.information_window = None
 
         # button config
-        self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=70, command=self.open_config,
+        self.button_config = customtkinter.CTkButton(self.sidebar_frame, text="", width=25, command=self.open_config,
                                                     image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "config-icon-white.png"))))
         self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(10, 10), sticky="wse")
         self.config_window = None
@@ -327,13 +363,7 @@ class App(customtkinter.CTk):
             self.checkbox_foreground.deselect()
             self.attributes("-topmost", False)
 
-        self.combobox_translator.configure(values=["DeepL"],)
-        self.combobox_language.configure(values=[
-                "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
-                "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
-                "SL","SV","TR","UK","ZH",
-            ],)
-        self.entry_message_box.bind("<Return>", self.press_key)
+        self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
 
         if TRANSLATOR is None:
             # error update Auth key
@@ -341,18 +371,16 @@ class App(customtkinter.CTk):
             self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
             self.textbox_message_log.configure(state='disabled')
 
-        self.combobox_language.set(TARGET_LANG)
-        self.combobox_translator.set(CHOICE_TRANSLATOR)
         self.wm_attributes("-alpha", TRANSPARENCY/100)
 
     def open_config(self):
         if self.config_window is None or not self.config_window.winfo_exists():
-            self.config_window = ToplevelWindow_config(self)
+            self.config_window = ToplevelWindowConfig(self)
         self.config_window.focus()
 
     def open_information(self):
         if self.information_window is None or not self.information_window.winfo_exists():
-            self.information_window = ToplevelWindow_information(self)
+            self.information_window = ToplevelWindowInformation(self)
         self.information_window.focus()
 
     def checkbox_translation_callback(self):
@@ -361,24 +389,6 @@ class App(customtkinter.CTk):
         with open(PATH_CONFIG, "r") as fp:
             config = json.load(fp)
         config["ENABLE_TRANSLATION"] = ENABLE_TRANSLATION
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
-
-    def combobox_translator_callback(self, choice):
-        global CHOICE_TRANSLATOR
-        CHOICE_TRANSLATOR = choice
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["CHOICE_TRANSLATOR"] = CHOICE_TRANSLATOR
-        with open(PATH_CONFIG, "w") as fp:
-            json.dump(config, fp, indent=4)
-
-    def combobox_language_callback(self, choice):
-        global TARGET_LANG
-        TARGET_LANG = choice
-        with open(PATH_CONFIG, "r") as fp:
-            config = json.load(fp)
-        config["TARGET_LANG"] = TARGET_LANG
         with open(PATH_CONFIG, "w") as fp:
             json.dump(config, fp, indent=4)
 
@@ -396,14 +406,14 @@ class App(customtkinter.CTk):
         else:
             self.attributes("-topmost", False)
 
-    def press_key(self, event):
+    def entry_message_box_press_key_enter(self, event):
         if TRANSLATOR is None:
             pass
         else:
             message = self.entry_message_box.get()
 
             # translate
-            if self.checkbox_translation.get() is True:
+            if self.checkbox_translation.get() is True and len(message) > 0:
                 result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
                 chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
             else:
