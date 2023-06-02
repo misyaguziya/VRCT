@@ -503,7 +503,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.checkbox_foreground.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.parent.textbox_message_log.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.parent.entry_message_box.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.parent.information_window.textbox_information.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        try:
+            self.parent.information_window.textbox_information.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        except:
+            pass
         self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.optionmenu_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
