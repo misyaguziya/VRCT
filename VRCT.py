@@ -628,6 +628,9 @@ class App(customtkinter.CTk):
 
         self.wm_attributes("-alpha", TRANSPARENCY/100)
 
+        new_scaling_float = int(UI_SCALING.replace("%", "")) / 100
+        customtkinter.set_widget_scaling(new_scaling_float)
+
     def open_config(self):
         if self.config_window is None or not self.config_window.winfo_exists():
             self.config_window = ToplevelWindowConfig(self)
