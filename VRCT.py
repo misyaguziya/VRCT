@@ -1,6 +1,7 @@
 import os
 import json
 import deepl
+import deepl_translate
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 import tkinter as tk
@@ -11,12 +12,15 @@ from PIL import Image
 PATH_CONFIG = "./config.json"
 OSC_IP_ADDRESS = "127.0.0.1"
 OSC_PORT = 9000
-TARGET_LANG = "EN-US"
 ENABLE_TRANSLATION = True
-CHOICE_TRANSLATOR = "DeepL"
+CHOICE_TRANSLATOR = "DeepL(web)"
+SOURCE_LANG = "JA"
+TARGET_LANG = "EN"
 ENABLE_FOREGROUND = False
-AUTH_KEY = None
-TRANSLATOR = None
+AUTH_KEYS = {
+    "DeepL(web)": None,
+    "DeepL": None,
+}
 MESSAGE_FORMAT = "[message]([translation])"
 FONT_FAMILY = "Yu Gothic UI"
 TRANSPARENCY = 100
@@ -31,16 +35,18 @@ if os.path.isfile(PATH_CONFIG) is not False:
         OSC_IP_ADDRESS = config["OSC_IP_ADDRESS"]
     if "OSC_PORT" in config.keys():
         OSC_PORT = config["OSC_PORT"]
-    if "TARGET_LANG" in config.keys():
-        TARGET_LANG = config["TARGET_LANG"]
     if "ENABLE_TRANSLATION" in config.keys():
         ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
     if "CHOICE_TRANSLATOR" in config.keys():
         CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
+    if "SOURCE_LANG" in config.keys():
+        SOURCE_LANG = config["SOURCE_LANG"]
+    if "TARGET_LANG" in config.keys():
+        TARGET_LANG = config["TARGET_LANG"]
     if "ENABLE_FOREGROUND" in config.keys():
         ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
-    if "AUTH_KEY" in config.keys():
-        AUTH_KEY = config["AUTH_KEY"]
+    if "AUTH_KEYS" in config.keys():
+        AUTH_KEYS = config["AUTH_KEYS"]
     if "MESSAGE_FORMAT" in config.keys():
         MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
     if "FONT_FAMILY" in config.keys():
@@ -56,11 +62,12 @@ with open(PATH_CONFIG, 'w') as fp:
     config = {
         "OSC_IP_ADDRESS": OSC_IP_ADDRESS,
         "OSC_PORT": OSC_PORT,
-        "TARGET_LANG": TARGET_LANG,
         "ENABLE_TRANSLATION": ENABLE_TRANSLATION,
         "CHOICE_TRANSLATOR": CHOICE_TRANSLATOR,
+        "SOURCE_LANG": SOURCE_LANG,
+        "TARGET_LANG": TARGET_LANG,
         "ENABLE_FOREGROUND": ENABLE_FOREGROUND,
-        "AUTH_KEY": AUTH_KEY,
+        "AUTH_KEYS": AUTH_KEYS,
         "MESSAGE_FORMAT": MESSAGE_FORMAT,
         "FONT_FAMILY": FONT_FAMILY,
         "TRANSPARENCY": TRANSPARENCY,
@@ -69,13 +76,50 @@ with open(PATH_CONFIG, 'w') as fp:
     }
     json.dump(config, fp, indent=4)
 
-# deepl connect
-if AUTH_KEY is not None:
-    TRANSLATOR = deepl.Translator(AUTH_KEY)
-    try:
-        TRANSLATOR.translate_text(" ", target_lang="EN-US")
-    except:
-        TRANSLATOR = None
+# translator
+class Translator():
+    def __init__(self):
+        self.translator_status = {
+            "DeepL(web)": False,
+            "DeepL": False,
+        }
+        self.languages = {}
+        self.languages["DeepL(web)"] = [
+            "None","JA","EN","BG","ZH","CS","DA","NL","ET","FI","FR","DE","EL","HU","IT",
+            "LV","LT","PL","PT","RO","RU","SK","SL","ES","SV",
+        ]
+        self.languages["DeepL"] = [
+            "None","JA","EN-US","EN-GB","BG","CS","DA","DE","EL","ES","ET","FI","FR","HU",
+            "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK","SL",
+            "SV","TR","UK","ZH",
+        ]
+        self.deepl_client = None
+
+    def authentication(self, translator_name, authkey=None):
+        result = False
+        try:
+            if translator_name == "DeepL(web)":
+                self.translator_status["DeepL(web)"] = True
+                result = True
+            elif translator_name == "DeepL":
+                self.deepl_client = deepl.Translator(authkey)
+                self.deepl_client.translate_text(" ", target_lang="EN-US")
+                self.translator_status["DeepL"] = True
+                result = True
+        except:
+            pass
+        return result
+
+    def translate(self, translator_name, source_language, target_language, message):
+        result = False
+        try:
+            if translator_name == "DeepL(web)":
+                result = deepl_translate.translate(source_language=source_language, target_language=target_language, text=message)
+            elif translator_name == "DeepL":
+                result = self.deepl_client.translate_text(message, target_lang=target_language).text
+        except:
+            pass
+        return result
 
 # GUI
 customtkinter.set_appearance_mode(APPEARANCE_THEME)
@@ -194,13 +238,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.label_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
+
         self.optionmenu_translator = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
-            values=["DeepL"],
+            values=list(self.parent.translator.translator_status.keys()),
             command=self.optionmenu_translator_callback,
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.optionmenu_translator.grid(row=0, column=1, columnspan=2 ,padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_translator.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
         self.optionmenu_translator.set(CHOICE_TRANSLATOR)
 
         # optionmenu language
@@ -211,20 +256,39 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.label_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
-        self.optionmenu_language = customtkinter.CTkOptionMenu(
+
+        # select source language
+        self.optionmenu_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
-            command=self.optionmenu_language_callback,
+            command=self.optionmenu_source_language_callback,
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.optionmenu_language.grid(row=1, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
-        self.optionmenu_language.configure(
-            values=[
-                "JA","BG","CS","DA","DE","EL","EN","EN-US","EN-GB","ES","ET","FI","FR","HU",
-                "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU","SK",
-                "SL","SV","TR","UK","ZH",
-            ]
+        self.optionmenu_source_language.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_source_language.configure(
+            values=self.parent.translator.languages[CHOICE_TRANSLATOR]
         )
-        self.optionmenu_language.set(TARGET_LANG)
+        self.optionmenu_source_language.set(SOURCE_LANG)
+
+        # label -->
+        self.label_arrow = customtkinter.CTkLabel(
+            self.tabview_config.tab("GUI"),
+            text="-->",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.label_arrow.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+
+        # select target language
+        self.optionmenu_target_language = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("GUI"),
+            command=self.optionmenu_target_language_callback,
+            font=customtkinter.CTkFont(family=FONT_FAMILY)
+        )
+        self.optionmenu_target_language.grid(row=1, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_target_language.configure(
+            values=self.parent.translator.languages[CHOICE_TRANSLATOR]
+        )
+        self.optionmenu_target_language.set(TARGET_LANG)
 
         # slider transparency
         self.label_transparency = customtkinter.CTkLabel(
@@ -233,14 +297,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.label_transparency.grid(row=2, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.label_transparency.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.slider_transparency = customtkinter.CTkSlider(
             self.tabview_config.tab("GUI"),
             from_=50,
             to=100,
             command=self.slider_transparency_callback
         )
-        self.slider_transparency.grid(row=2, column=1, columnspan=2, padx=5, pady=10, sticky="nsew")
+        self.slider_transparency.grid(row=2, column=1, columnspan=3, padx=5, pady=10, sticky="nsew")
         self.slider_transparency.set(TRANSPARENCY)
 
         # optionmenu theme
@@ -250,13 +314,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.label_appearance_theme.grid(row=3, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.label_appearance_theme.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.optionmenu_appearance_theme = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
             values=["Light", "Dark", "System"],
             command=self.optionmenu_theme_callback
         )
-        self.optionmenu_appearance_theme.grid(row=3, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
         self.optionmenu_appearance_theme.set(APPEARANCE_THEME)
 
         # optionmenu UI scaling
@@ -266,13 +330,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.label_ui_scaling.grid(row=4, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.label_ui_scaling.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.optionmenu_ui_scaling = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
             values=["80%", "90%", "100%", "110%", "120%"],
             command=self.optionmenu_ui_scaling_callback
         )
-        self.optionmenu_ui_scaling.grid(row=4, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling.grid(row=4, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
         self.optionmenu_ui_scaling.set(UI_SCALING)
 
         # optionmenu font family
@@ -282,14 +346,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
-        self.label_font_family.grid(row=5, column=0, columnspan=1, padx=(0, 5), pady=5, sticky="nsew")
+        self.label_font_family.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         font_families = list(tk.font.families())
         self.optionmenu_font_family = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("GUI"),
             values=font_families,
             command=self.optionmenu_font_family_callback
         )
-        self.optionmenu_font_family.grid(row=5, column=1, columnspan=2, padx=(0, 5), pady=5, sticky="nsew")
+        self.optionmenu_font_family.grid(row=5, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
         self.optionmenu_font_family.set(FONT_FAMILY)
 
         # entry ip address
@@ -348,7 +412,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsew")
         self.entry_authkey = customtkinter.CTkEntry(
             self.tabview_config.tab("Parameter"),
-            placeholder_text=AUTH_KEY,
+            placeholder_text=AUTH_KEYS["DeepL"],
             font=customtkinter.CTkFont(family=FONT_FAMILY)
         )
         self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
@@ -409,23 +473,19 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def update_authkey(self):
         value = self.entry_authkey.get()
         if len(value) > 0:
-            global AUTH_KEY
-            global TRANSLATOR
-            AUTH_KEY = value
-            with open(PATH_CONFIG, "r") as fp:
-                config = json.load(fp)
-            config["AUTH_KEY"] = AUTH_KEY
-            with open(PATH_CONFIG, "w") as fp:
-                json.dump(config, fp, indent=4)
-
-            TRANSLATOR = deepl.Translator(AUTH_KEY)
+            global AUTH_KEYS
             self.parent.textbox_message_log.configure(state='normal')
             self.parent.textbox_message_log.delete("0.0", "end")
             self.parent.textbox_message_log.configure(state='disabled')
-            try:
-                TRANSLATOR.translate_text(" ", target_lang="EN-US")
-            except:
-                TRANSLATOR = None
+
+            if self.parent.translator.authentication(CHOICE_TRANSLATOR, AUTH_KEYS[CHOICE_TRANSLATOR]) is True:
+                AUTH_KEYS["DeepL"] = value
+                with open(PATH_CONFIG, "r") as fp:
+                    config = json.load(fp)
+                config["AUTH_KEYS"] = AUTH_KEYS
+                with open(PATH_CONFIG, "w") as fp:
+                    json.dump(config, fp, indent=4)
+            else:
                 self.parent.textbox_message_log.configure(state='normal')
                 self.parent.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
                 self.parent.textbox_message_log.configure(state='disabled')
@@ -453,14 +513,41 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
     def optionmenu_translator_callback(self, choice):
         global CHOICE_TRANSLATOR
+        global SOURCE_LANG
+        global TARGET_LANG
         CHOICE_TRANSLATOR = choice
+
+        if self.parent.translator.authentication(CHOICE_TRANSLATOR, AUTH_KEYS[CHOICE_TRANSLATOR]) is False:
+            self.parent.textbox_message_log.configure(state='normal')
+            self.parent.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            self.parent.textbox_message_log.configure(state='disabled')
+        self.optionmenu_source_language.configure(
+            values=self.parent.translator.languages[CHOICE_TRANSLATOR],
+            variable=customtkinter.StringVar(value="None"))
+        self.optionmenu_target_language.configure(
+            values=self.parent.translator.languages[CHOICE_TRANSLATOR],
+            variable=customtkinter.StringVar(value="None"))
+
+        SOURCE_LANG = "None"
+        TARGET_LANG = "None"
         with open(PATH_CONFIG, "r") as fp:
             config = json.load(fp)
         config["CHOICE_TRANSLATOR"] = CHOICE_TRANSLATOR
+        config["SOURCE_LANG"] = SOURCE_LANG
+        config["TARGET_LANG"] = TARGET_LANG
         with open(PATH_CONFIG, "w") as fp:
             json.dump(config, fp, indent=4)
 
-    def optionmenu_language_callback(self, choice):
+    def optionmenu_source_language_callback(self, choice):
+        global SOURCE_LANG
+        SOURCE_LANG = choice
+        with open(PATH_CONFIG, "r") as fp:
+            config = json.load(fp)
+        config["SOURCE_LANG"] = SOURCE_LANG
+        with open(PATH_CONFIG, "w") as fp:
+            json.dump(config, fp, indent=4)
+
+    def optionmenu_target_language_callback(self, choice):
         global TARGET_LANG
         TARGET_LANG = choice
         with open(PATH_CONFIG, "r") as fp:
@@ -511,7 +598,9 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.optionmenu_translator.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
-        self.optionmenu_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_source_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.label_arrow.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
+        self.optionmenu_target_language.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_transparency.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.label_appearance_theme.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
         self.optionmenu_appearance_theme.configure(font=customtkinter.CTkFont(family=FONT_FAMILY))
@@ -620,7 +709,8 @@ class App(customtkinter.CTk):
         self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
         self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
 
-        if TRANSLATOR is None:
+        self.translator = Translator()
+        if self.translator.authentication(CHOICE_TRANSLATOR, AUTH_KEYS[CHOICE_TRANSLATOR]) is False:
             # error update Auth key
             self.textbox_message_log.configure(state='normal')
             self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
@@ -671,11 +761,16 @@ class App(customtkinter.CTk):
         message = self.entry_message_box.get()
         if len(message) > 0:
             # translate
-            if (self.checkbox_translation.get() is True) and (TRANSLATOR is not None):
-                result = TRANSLATOR.translate_text(message, target_lang=TARGET_LANG)
-                chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result.text)
-            else:
+            if self.checkbox_translation.get() is False:
                 chat_message = f"{message}"
+            elif self.translator.translator_status[CHOICE_TRANSLATOR] is False:
+                self.textbox_message_log.configure(state='normal')
+                self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+                self.textbox_message_log.configure(state='disabled')
+                chat_message = f"{message}"
+            else:
+                result = self.translator.translate(translator_name=CHOICE_TRANSLATOR, source_language=SOURCE_LANG, target_language=TARGET_LANG, message=message)
+                chat_message = MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
             message = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
