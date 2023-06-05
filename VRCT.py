@@ -108,14 +108,18 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
-翻訳機能としてDeepLのAPIを使用してメッセージとその翻訳部分を同時に送信することができます。
+翻訳エンジンを使用してメッセージとその翻訳部分を同時に送信することができます。
+(翻訳エンジンはDeepL,Google,Bingに対応)
 
 # 使用方法
     初期設定時
+        0. VRChatのOSCを有効にする（重要）
+
+        (任意)
         1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
         2. ギアアイコンのボタンでconfigウィンドウを開く
         3. ParameterタブのDeepL Auth Keyに認証キーを記載し、フロッピーアイコンのボタンを押す
-        3. configウィンドウを閉じる
+        4. configウィンドウを閉じる
 
     通常使用時
         1. メッセージボックスにメッセージを記入
