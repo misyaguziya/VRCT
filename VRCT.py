@@ -104,7 +104,7 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v0.3b)
+        textbox_information_message = """VRCT(v0.4b)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -127,8 +127,8 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
 
     configウィンドウ
         GUIタブ
-            Select translator: 翻訳APIの変更（今はDeepLのみ）
-            Select Language: 翻訳する言語を選択
+            Select translator: 翻訳エンジンの変更
+            Select Language: 翻訳する言語[source, target]を選択
             Transparency: ウィンドウの透過度の調整
             Appearance Theme: ウィンドウテーマを選択
             UI Scaling: UIサイズを調整
@@ -163,6 +163,9 @@ https://twitter.com/misya_ai
 - テーマのLight/Dark/Systemのモードの変更機能を追加
 - UIのスケール変更機能を追加
 - フォントの変更機能を追加
+[2023-06-06: v0.4b]
+- 翻訳エンジンを追加
+- 入力と出力の翻訳言語を選択できるように変更
 
 # 注意事項
 再配布とかはやめてね
