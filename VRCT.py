@@ -801,8 +801,7 @@ class App(customtkinter.CTk):
 
         ## set voice2chat:
         self.vr = VoiceRecognizer()
-        self.vr.set_mic(self.CHOICE_MIC_DEVICE)
-        # self.vr.init_mic()
+        self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else list(self.vr.input_device_dict.keys())[0]
 
         ## set transparency for main window
         self.wm_attributes("-alpha", self.TRANSPARENCY/100)
