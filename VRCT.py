@@ -374,7 +374,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.optionmenu_translation_input_source_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
-            variable=customtkinter.StringVar(value=self.parent.SOURCE_LANG),
+            variable=customtkinter.StringVar(value=self.parent.INPUT_SOURCE_LANG),
         )
         self.optionmenu_translation_input_source_language.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
 
@@ -393,7 +393,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.optionmenu_translation_input_target_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
-            variable=customtkinter.StringVar(value=self.parent.TARGET_LANG),
+            variable=customtkinter.StringVar(value=self.parent.INPUT_TARGET_LANG),
         )
         self.optionmenu_translation_input_target_language.grid(row=1, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
 
@@ -412,7 +412,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             # command=self.optionmenu_translation_output_source_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
-            variable=customtkinter.StringVar(value=self.parent.SOURCE_LANG),
+            variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             state="disabled",
         )
         self.optionmenu_translation_output_source_language.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -432,7 +432,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             # command=self.optionmenu_translation_output_target_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
-            variable=customtkinter.StringVar(value=self.parent.TARGET_LANG),
+            variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             state="disabled",
         )
         self.optionmenu_translation_output_target_language.grid(row=2, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
@@ -468,7 +468,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             values=list(self.parent.vr.languages),
             command=self.optionmenu_input_mic_voice_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.INPUT_VOICE_LANGUAGE)
+            variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE)
         )
         self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
 
@@ -524,7 +524,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             values=list(self.parent.vr.input_device_dict.keys()),
             # command=self.optionmenu_input_speaker_device_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE),
+            variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             state="disabled"
         )
         self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
@@ -542,7 +542,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             values=list(self.parent.vr.languages),
             # command=self.optionmenu_input_speaker_voice_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.INPUT_VOICE_LANGUAGE),
+            variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             state="disabled"
         )
         self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
@@ -565,7 +565,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             state="disabled"
         )
         self.checkbox_input_speaker_is_dynamic.grid(row=6, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
-        if  self.parent.ENABLE_MIC_IS_DYNAMIC is True:
+        if  self.parent.ENABLE_SPEAKER_IS_DYNAMIC is True:
             self.checkbox_input_speaker_is_dynamic.select()
         else:
             self.checkbox_input_speaker_is_dynamic.deselect()
@@ -583,7 +583,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             from_=0,
             to=300,
             # command=self.slider_input_speaker_threshold_callback,
-            variable=tk.DoubleVar(value=self.parent.MIC_THRESHOLD),
+            variable=tk.DoubleVar(value=self.parent.SPEAKER_THRESHOLD),
             state="disabled"
         )
         self.slider_input_speaker_threshold.grid(row=7, column=1, columnspan=3 ,padx=5, pady=10, sticky="nsew")
@@ -775,19 +775,19 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
 
             self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.SOURCE_LANG = self.parent.translator.languages[choice][0]
-            self.parent.TARGET_LANG = self.parent.translator.languages[choice][1]
+            self.parent.INPUT_SOURCE_LANG = self.parent.translator.languages[choice][0]
+            self.parent.INPUT_TARGET_LANG = self.parent.translator.languages[choice][1]
             save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
-            save_json(self.parent.PATH_CONFIG, "SOURCE_LANG", self.parent.SOURCE_LANG)
-            save_json(self.parent.PATH_CONFIG, "TARGET_LANG", self.parent.TARGET_LANG)
+            save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
+            save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
 
     def optionmenu_translation_input_source_language_callback(self, choice):
-        self.parent.SOURCE_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "SOURCE_LANG", self.parent.SOURCE_LANG)
+        self.parent.INPUT_SOURCE_LANG = choice
+        save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
 
     def optionmenu_translation_input_target_language_callback(self, choice):
-        self.parent.TARGET_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "TARGET_LANG", self.parent.TARGET_LANG)
+        self.parent.INPUT_TARGET_LANG = choice
+        save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.parent.CHOICE_MIC_DEVICE = choice
@@ -795,8 +795,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.vr.set_mic(choice)
 
     def optionmenu_input_mic_voice_language_callback(self, choice):
-        self.parent.INPUT_VOICE_LANGUAGE = choice
-        save_json(self.parent.PATH_CONFIG, "INPUT_VOICE_LANGUAGE", self.parent.INPUT_VOICE_LANGUAGE)
+        self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
+        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
         self.parent.vr.set_mic(choice)
 
     def checkbox_input_mic_is_dynamic_callback(self):
@@ -849,13 +849,33 @@ class App(customtkinter.CTk):
 
         # init config
         self.PATH_CONFIG = "./config.json"
+        ## main window
+        self.ENABLE_TRANSLATION = False
+        self.ENABLE_TRANSCRIPTION = False
+        self.ENABLE_FOREGROUND = False
+        ## UI
+        self.TRANSPARENCY = 100
+        self.APPEARANCE_THEME = "System"
+        self.UI_SCALING = "100%"
+        self.FONT_FAMILY = "Yu Gothic UI"
+        ## Translation
+        self.CHOICE_TRANSLATOR = "DeepL(web)"
+        self.INPUT_SOURCE_LANG = "JA"
+        self.INPUT_TARGET_LANG = "EN"
+        self.OUTPUT_SOURCE_LANG = "JA"
+        self.OUTPUT_TARGET_LANG = "EN"
+        ## Transcription
+        self.CHOICE_MIC_DEVICE = None
+        self.INPUT_MIC_VOICE_LANGUAGE = "ja-JP"
+        self.ENABLE_MIC_IS_DYNAMIC = False
+        self.MIC_THRESHOLD = 300
+        self.CHOICE_SPEAKER_DEVICE = None
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = "ja-JP"
+        self.ENABLE_SPEAKER_IS_DYNAMIC = False
+        self.SPEAKER_THRESHOLD = 300
+        ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
         self.OSC_PORT = 9000
-        self.ENABLE_TRANSLATION = True
-        self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.SOURCE_LANG = "JA"
-        self.TARGET_LANG = "EN"
-        self.ENABLE_FOREGROUND = False
         self.AUTH_KEYS = {
             "DeepL(web)": None,
             "DeepL(auth)": None,
@@ -863,73 +883,95 @@ class App(customtkinter.CTk):
             "Google(web)": None,
         }
         self.MESSAGE_FORMAT = "[message]([translation])"
-        self.ENABLE_VOICE2CHAT = False
-        self.CHOICE_MIC_DEVICE = None
-        self.ENABLE_MIC_IS_DYNAMIC = False
-        self.MIC_THRESHOLD = 300
-        self.INPUT_VOICE_LANGUAGE = "ja-JP"
-        self.FONT_FAMILY = "Yu Gothic UI"
-        self.TRANSPARENCY = 100
-        self.APPEARANCE_THEME = "System"
-        self.UI_SCALING = "100%"
 
         # load config
         if os.path.isfile(self.PATH_CONFIG) is not False:
             with open(self.PATH_CONFIG, 'r') as fp:
                 config = json.load(fp)
-            if "OSC_IP_ADDRESS" in config.keys():
-                self.OSC_IP_ADDRESS = config["OSC_IP_ADDRESS"]
-            if "OSC_PORT" in config.keys():
-                self.OSC_PORT = config["OSC_PORT"]
+            # main window
             if "ENABLE_TRANSLATION" in config.keys():
                 self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
-            if "CHOICE_TRANSLATOR" in config.keys():
-                self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
-            if "SOURCE_LANG" in config.keys():
-                self.SOURCE_LANG = config["SOURCE_LANG"]
-            if "TARGET_LANG" in config.keys():
-                self.TARGET_LANG = config["TARGET_LANG"]
+            if "ENABLE_TRANSCRIPTION" in config.keys():
+                self.ENABLE_TRANSCRIPTION = config["ENABLE_TRANSCRIPTION"]
             if "ENABLE_FOREGROUND" in config.keys():
                 self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
-            if "AUTH_KEYS" in config.keys():
-                self.AUTH_KEYS = config["AUTH_KEYS"]
-            if "MESSAGE_FORMAT" in config.keys():
-                self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
-            if "FONT_FAMILY" in config.keys():
-                self.FONT_FAMILY = config["FONT_FAMILY"]
-            if "ENABLE_VOICE2CHAT" in config.keys():
-                self.ENABLE_VOICE2CHAT = config["ENABLE_VOICE2CHAT"]
-            if "CHOICE_MIC_DEVICE" in config.keys():
-                self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
-            if "MIC_THRESHOLD" in config.keys():
-                self.MIC_THRESHOLD = config["MIC_THRESHOLD"]
-            if "INPUT_VOICE_LANGUAGE" in config.keys():
-                self.INPUT_VOICE_LANGUAGE = config["INPUT_VOICE_LANGUAGE"]
+
+            # tab ui
             if "TRANSPARENCY" in config.keys():
                 self.TRANSPARENCY = config["TRANSPARENCY"]
             if "APPEARANCE_THEME" in config.keys():
                 self.APPEARANCE_THEME = config["APPEARANCE_THEME"]
             if "UI_SCALING" in config.keys():
                 self.UI_SCALING = config["UI_SCALING"]
+            if "FONT_FAMILY" in config.keys():
+                self.FONT_FAMILY = config["FONT_FAMILY"]
+
+            # translation
+            if "CHOICE_TRANSLATOR" in config.keys():
+                self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
+            if "INPUT_SOURCE_LANG" in config.keys():
+                self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
+            if "INPUT_TARGET_LANG" in config.keys():
+                self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
+            if "OUTPUT_SOURCE_LANG" in config.keys():
+                self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
+            if "OUTPUT_TARGET_LANG" in config.keys():
+                self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
+
+            # Transcription
+            if "CHOICE_MIC_DEVICE" in config.keys():
+                self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
+            if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
+                self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
+            if "ENABLE_MIC_IS_DYNAMIC" in config.keys():
+                self.ENABLE_MIC_IS_DYNAMIC = config["ENABLE_MIC_IS_DYNAMIC"]
+            if "MIC_THRESHOLD" in config.keys():
+                self.MIC_THRESHOLD = config["MIC_THRESHOLD"]
+            if "CHOICE_SPEAKER_DEVICE" in config.keys():
+                self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
+            if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
+                self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
+            if "ENABLE_SPEAKER_IS_DYNAMIC" in config.keys():
+                self.ENABLE_SPEAKER_IS_DYNAMIC = config["ENABLE_SPEAKER_IS_DYNAMIC"]
+            if "SPEAKER_THRESHOLD" in config.keys():
+                self.SPEAKER_THRESHOLD = config["SPEAKER_THRESHOLD"]
+
+            # Parameter
+            if "OSC_IP_ADDRESS" in config.keys():
+                self.OSC_IP_ADDRESS = config["OSC_IP_ADDRESS"]
+            if "OSC_PORT" in config.keys():
+                self.OSC_PORT = config["OSC_PORT"]
+            if "AUTH_KEYS" in config.keys():
+                self.AUTH_KEYS = config["AUTH_KEYS"]
+            if "MESSAGE_FORMAT" in config.keys():
+                self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
-                "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
-                "OSC_PORT": self.OSC_PORT,
                 "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
-                "CHOICE_TRANSLATOR": self.CHOICE_TRANSLATOR,
-                "SOURCE_LANG": self.SOURCE_LANG,
-                "TARGET_LANG": self.TARGET_LANG,
+                "ENABLE_TRANSCRIPTION": self.ENABLE_TRANSCRIPTION,
                 "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
-                "AUTH_KEYS": self.AUTH_KEYS,
-                "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
-                "FONT_FAMILY": self.FONT_FAMILY,
-                "ENABLE_VOICE2CHAT": self.ENABLE_VOICE2CHAT,
-                "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
-                "INPUT_VOICE_LANGUAGE": self.INPUT_VOICE_LANGUAGE,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
+                "FONT_FAMILY": self.FONT_FAMILY,
+                "CHOICE_TRANSLATOR": self.CHOICE_TRANSLATOR,
+                "INPUT_SOURCE_LANG": self.INPUT_SOURCE_LANG,
+                "INPUT_TARGET_LANG": self.INPUT_TARGET_LANG,
+                "OUTPUT_SOURCE_LANG": self.OUTPUT_SOURCE_LANG,
+                "OUTPUT_TARGET_LANG": self.OUTPUT_TARGET_LANG,
+                "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
+                "INPUT_MIC_VOICE_LANGUAGE": self.INPUT_MIC_VOICE_LANGUAGE,
+                "ENABLE_MIC_IS_DYNAMIC": self.ENABLE_MIC_IS_DYNAMIC,
+                "MIC_THRESHOLD": self.MIC_THRESHOLD,
+                "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
+                "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
+                "ENABLE_SPEAKER_IS_DYNAMIC": self.ENABLE_SPEAKER_IS_DYNAMIC,
+                "SPEAKER_THRESHOLD": self.SPEAKER_THRESHOLD,
+                "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
+                "OSC_PORT": self.OSC_PORT,
+                "AUTH_KEYS": self.AUTH_KEYS,
+                "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
             }
             json.dump(config, fp, indent=4)
 
@@ -1045,7 +1087,7 @@ class App(customtkinter.CTk):
             self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
             self.textbox_message_log.configure(state='disabled')
 
-        ## set voice2chat:
+        ## set transcription instance
         self.vr = VoiceRecognizer()
         self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else list(self.vr.input_device_dict.keys())[0]
 
@@ -1079,6 +1121,8 @@ class App(customtkinter.CTk):
             # start threading
             th = threading.Thread(target = self.voice_input)
             th.start()
+            self.ENABLE_TRANSCRIPTION = True
+            save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION", self.ENABLE_TRANSCRIPTION)
 
     def voice_input(self):
         mic_status = self.vr.set_mic(self.CHOICE_MIC_DEVICE)
@@ -1086,13 +1130,13 @@ class App(customtkinter.CTk):
         if mic_status:
             # start voice_input
             while self.checkbox_transcription.get() is True:
-                message = self.vr.listen_voice(language=self.INPUT_VOICE_LANGUAGE)
+                message = self.vr.listen_voice(language=self.INPUT_MIC_VOICE_LANGUAGE)
 
                 if len(message) > 0:
                     # translate
                     if self.checkbox_translation.get() is False:
                         chat_message = f"{message}"
-                    elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.SOURCE_LANG == "None") or (self.TARGET_LANG == "None"):
+                    elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
                         self.textbox_message_log.configure(state='normal')
                         self.textbox_message_log.insert("0.0", f"Auth Keyもしくは言語の設定が間違っています\n")
                         self.textbox_message_log.configure(state='disabled')
@@ -1100,8 +1144,8 @@ class App(customtkinter.CTk):
                     else:
                         result = self.translator.translate(
                             translator_name=self.CHOICE_TRANSLATOR,
-                            source_language=self.SOURCE_LANG,
-                            target_language=self.TARGET_LANG,
+                            source_language=self.INPUT_SOURCE_LANG,
+                            target_language=self.INPUT_TARGET_LANG,
                             message=message
                         )
                         chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
@@ -1140,7 +1184,7 @@ class App(customtkinter.CTk):
             # translate
             if self.checkbox_translation.get() is False:
                 chat_message = f"{message}"
-            elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.SOURCE_LANG == "None") or (self.TARGET_LANG == "None"):
+            elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
                 self.textbox_message_log.configure(state='normal')
                 self.textbox_message_log.insert("0.0", f"Auth Keyもしくは言語の設定が間違っています\n")
                 self.textbox_message_log.configure(state='disabled')
@@ -1148,8 +1192,8 @@ class App(customtkinter.CTk):
             else:
                 result = self.translator.translate(
                     translator_name=self.CHOICE_TRANSLATOR,
-                    source_language=self.SOURCE_LANG,
-                    target_language=self.TARGET_LANG,
+                    source_language=self.INPUT_SOURCE_LANG,
+                    target_language=self.INPUT_TARGET_LANG,
                     message=message
                 )
                 chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
