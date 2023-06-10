@@ -1,5 +1,6 @@
 import os
 import json
+import threading
 import deepl
 import deepl_translate
 import translators as ts
@@ -8,6 +9,8 @@ from pythonosc import udp_client
 import tkinter as tk
 import customtkinter
 from PIL import Image
+import pyaudio
+import speech_recognition as sr
 
 def save_json(path, key, value):
     with open(path, "r") as fp:
@@ -86,6 +89,74 @@ class Translator():
         except:
             pass
         return result
+
+# VoiceRecognizer
+class VoiceRecognizer():
+    def __init__(self):
+        self.input_device_dict = self.search_input_device()
+        self.r = sr.Recognizer()
+        self.mic = None
+        self.languages = [
+            "ja-JP","en-US","en-GB","af-ZA","ar-DZ","ar-BH","ar-EG","ar-IL","ar-IQ","ar-JO","ar-KW","ar-LB","ar-MA",
+            "ar-OM","ar-PS","ar-QA","ar-SA","ar-TN","ar-AE","eu-ES","bg-BG","ca-ES","cmn-Hans-CN","cmn-Hans-HK",
+            "cmn-Hant-TW","yue-Hant-HK","hr_HR","cs-CZ","da-DK","en-AU","en-CA","en-IN","en-IE","en-NZ","en-PH",
+            "en-ZA","fa-IR","fr-FR","fil-PH","gl-ES","de-DE","el-GR","fi-FI","he-IL","hi-IN","hu-HU","id-ID","is-IS",
+            "it-IT","it-CH","ko-KR","lt-LT","ms-MY","nl-NL","nb-NO","pl-PL","pt-BR","pt-PT","ro-RO","ru-RU","sr-RS",
+            "sk-SK","sl-SI","es-AR","es-BO","es-CL","es-CO","es-CR","es-DO","es-EC","es-SV","es-GT","es-HN","es-MX",
+            "es-NI","es-PA","es-PY","es-PE","es-PR","es-ES","es-UY","es-US","es-VE","sv-SE","th-TH","tr-TR","uk-UA",
+            "vi-VN","zu-ZA"
+        ]
+
+    def search_input_device(self):
+        pa = pyaudio.PyAudio()
+        input_device_dict = {}
+
+        mic_cnt = 1
+        for i in range(pa.get_device_count()):
+            device = pa.get_device_info_by_index(i)
+            try:
+                device["name"] = device["name"].encode('shift_jis').decode('utf-8')
+            except:
+                device["name"] = device["name"].encode('utf-8').decode('utf-8')
+            if device["maxInputChannels"] > 0:
+                input_device_dict[f'No.{mic_cnt}:{device["name"]}'] = device["index"]
+                mic_cnt += 1
+        pa.terminate()
+        return input_device_dict
+
+    def set_mic(self, device_name, threshold=50, is_dynamic=False):
+        if device_name in [v for v in self.input_device_dict.keys()]:
+            index = self.input_device_dict[device_name]
+            self.mic = sr.Microphone(device_index=index)
+            self.r.energy_threshold = threshold
+            if is_dynamic:
+                with self.mic as source:
+                    self.r.adjust_for_ambient_noise(source, 3.0)
+            return True
+        else:
+            return False
+
+    def init_mic(self, threshold=50, is_dynamic=False):
+        if isinstance(self.mic, sr.Microphone):
+            self.r.energy_threshold = threshold
+            if is_dynamic:
+                with self.mic as source:
+                    self.r.adjust_for_ambient_noise(source, 3.0)
+            return True
+        else:
+            return False
+
+    def listen_voice(self, language):
+        if self.mic != None:
+            with self.mic as source:
+                audio = self.r.listen(source)
+            try:
+                text = self.r.recognize_google(audio, language=language)
+                return text
+            except:
+                return ""
+        else:
+            return False
 
 class ToplevelWindowInformation(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
@@ -194,8 +265,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.tabview_config = customtkinter.CTkTabview(self)
         self.tabview_config.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
         self.tabview_config.add("GUI")
+        self.tabview_config.add("Transcription")
         self.tabview_config.add("Parameter")
         self.tabview_config.tab("GUI").grid_columnconfigure(2, weight=1)
+        self.tabview_config.tab("Transcription").grid_columnconfigure(2, weight=1)
         self.tabview_config.tab("Parameter").grid_columnconfigure(1, weight=1)
         self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
@@ -319,6 +392,79 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.FONT_FAMILY)
         )
         self.optionmenu_font_family.grid(row=5, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
+
+        # optionmenu mic device
+        self.label_mic_device = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Select Mic Device:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_mic_device.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.optionmenu_mic_device = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("Transcription"),
+            values=list(self.parent.vr.input_device_dict.keys()),
+            command=self.optionmenu_mic_device_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
+            variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE)
+        )
+        self.optionmenu_mic_device.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+
+        # optionmenu input voice language
+        self.label_input_voice_language = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Select Input Voice Language:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_voice_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.optionmenu_input_voice_language = customtkinter.CTkOptionMenu(
+            self.tabview_config.tab("Transcription"),
+            values=list(self.parent.vr.languages),
+            # command=self.optionmenu_input_voice_language_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
+            variable=customtkinter.StringVar(value=self.parent.INPUT_VOICE_LANGUAGE)
+        )
+        self.optionmenu_input_voice_language.grid(row=1, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+
+        # switch mic in dynamic
+        self.label_mic_is_dynamic = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Select Mic IsDynamic:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_mic_is_dynamic.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.checkbox_mic_is_dynamic = customtkinter.CTkCheckBox(
+            self.tabview_config.tab("Transcription"),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_mic_is_dynamic_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_mic_is_dynamic.grid(row=2, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        if  self.parent.ENABLE_MIC_IS_DYNAMIC is True:
+            self.checkbox_mic_is_dynamic.select()
+        else:
+            self.checkbox_mic_is_dynamic.deselect()
+
+        # switch mic threshold
+        self.label_mic_threshold = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Select Mic Threshold:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_mic_threshold.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.slider_mic_threshold = customtkinter.CTkSlider(
+            self.tabview_config.tab("Transcription"),
+            from_=0,
+            to=300,
+            command=self.slider_mic_threshold_callback,
+            variable=tk.DoubleVar(value=self.parent.MIC_THRESHOLD),
+        )
+        self.slider_mic_threshold.grid(row=3, column=1, columnspan=3 ,padx=5, pady=10, sticky="nsew")
 
         # entry ip address
         self.label_ip_address = customtkinter.CTkLabel(
@@ -478,6 +624,22 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.TARGET_LANG = choice
         save_json(self.parent.PATH_CONFIG, "TARGET_LANG", self.parent.TARGET_LANG)
 
+    def optionmenu_mic_device_callback(self, choice):
+        self.parent.CHOICE_MIC_DEVICE = choice
+        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
+        self.parent.vr.set_mic(choice)
+
+    def checkbox_mic_is_dynamic_callback(self):
+        value = self.checkbox_mic_is_dynamic.get()
+        self.parent.ENABLE_MIC_IS_DYNAMIC = value
+        save_json(self.parent.PATH_CONFIG, "ENABLE_MIC_IS_DYNAMIC", self.parent.ENABLE_MIC_IS_DYNAMIC)
+        self.parent.vr.init_mic(threshold=self.parent.MIC_THRESHOLD, is_dynamic=self.parent.ENABLE_MIC_IS_DYNAMIC)
+
+    def slider_mic_threshold_callback(self, value):
+        self.parent.MIC_THRESHOLD = value
+        save_json(self.parent.PATH_CONFIG, "MIC_THRESHOLD", self.parent.MIC_THRESHOLD)
+        self.parent.vr.init_mic(threshold=self.parent.MIC_THRESHOLD, is_dynamic=self.parent.ENABLE_MIC_IS_DYNAMIC)
+
     def optionmenu_theme_callback(self, choice):
         customtkinter.set_appearance_mode(choice)
 
@@ -513,6 +675,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_ui_scaling.configure(font=customtkinter.CTkFont(family=choice))
         self.label_font_family.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_font_family.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_mic_device.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_mic_device.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_voice_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_input_voice_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_mic_is_dynamic.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_ip_address.configure(font=customtkinter.CTkFont(family=choice))
         self.label_port.configure(font=customtkinter.CTkFont(family=choice))
@@ -545,6 +713,11 @@ class App(customtkinter.CTk):
             "Google(web)": None,
         }
         self.MESSAGE_FORMAT = "[message]([translation])"
+        self.ENABLE_VOICE2CHAT = False
+        self.CHOICE_MIC_DEVICE = None
+        self.ENABLE_MIC_IS_DYNAMIC = False
+        self.MIC_THRESHOLD = 300
+        self.INPUT_VOICE_LANGUAGE = "ja-JP"
         self.FONT_FAMILY = "Yu Gothic UI"
         self.TRANSPARENCY = 100
         self.APPEARANCE_THEME = "System"
@@ -574,6 +747,14 @@ class App(customtkinter.CTk):
                 self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
             if "FONT_FAMILY" in config.keys():
                 self.FONT_FAMILY = config["FONT_FAMILY"]
+            if "ENABLE_VOICE2CHAT" in config.keys():
+                self.ENABLE_VOICE2CHAT = config["ENABLE_VOICE2CHAT"]
+            if "CHOICE_MIC_DEVICE" in config.keys():
+                self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
+            if "MIC_THRESHOLD" in config.keys():
+                self.MIC_THRESHOLD = config["MIC_THRESHOLD"]
+            if "INPUT_VOICE_LANGUAGE" in config.keys():
+                self.INPUT_VOICE_LANGUAGE = config["INPUT_VOICE_LANGUAGE"]
             if "TRANSPARENCY" in config.keys():
                 self.TRANSPARENCY = config["TRANSPARENCY"]
             if "APPEARANCE_THEME" in config.keys():
@@ -593,6 +774,9 @@ class App(customtkinter.CTk):
                 "AUTH_KEYS": self.AUTH_KEYS,
                 "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
                 "FONT_FAMILY": self.FONT_FAMILY,
+                "ENABLE_VOICE2CHAT": self.ENABLE_VOICE2CHAT,
+                "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
+                "INPUT_VOICE_LANGUAGE": self.INPUT_VOICE_LANGUAGE,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
@@ -602,7 +786,7 @@ class App(customtkinter.CTk):
         # init main window
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
-        self.geometry(f"{400}x{110}")
+        self.geometry(f"{400}x{140}")
         self.minsize(400, 110)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -623,6 +807,17 @@ class App(customtkinter.CTk):
         )
         self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
+        # add checkbox transcription
+        self.checkbox_transcription = customtkinter.CTkCheckBox(
+            self.sidebar_frame,
+            text="Transcription",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_transcription_callback,
+            font=customtkinter.CTkFont(family=self.FONT_FAMILY)
+        )
+        self.checkbox_transcription.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+
         # add checkbox foreground
         self.checkbox_foreground = customtkinter.CTkCheckBox(
             self.sidebar_frame,
@@ -632,7 +827,7 @@ class App(customtkinter.CTk):
             command=self.checkbox_foreground_callback,
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_foreground.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_foreground.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # add button information
         self.button_information = customtkinter.CTkButton(
@@ -700,6 +895,10 @@ class App(customtkinter.CTk):
             self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
             self.textbox_message_log.configure(state='disabled')
 
+        ## set voice2chat:
+        self.vr = VoiceRecognizer()
+        self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else list(self.vr.input_device_dict.keys())[0]
+
         ## set transparency for main window
         self.wm_attributes("-alpha", self.TRANSPARENCY/100)
 
@@ -724,6 +923,52 @@ class App(customtkinter.CTk):
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
         save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
+
+    def checkbox_transcription_callback(self):
+        if self.checkbox_transcription.get() is True:
+            # start threading
+            th = threading.Thread(target = self.voice_input)
+            th.start()
+
+    def voice_input(self):
+        mic_status = self.vr.set_mic(self.CHOICE_MIC_DEVICE)
+        self.vr.init_mic(threshold=self.MIC_THRESHOLD, is_dynamic=self.ENABLE_MIC_IS_DYNAMIC)
+        if mic_status:
+            # start voice_input
+            while self.checkbox_transcription.get() is True:
+                message = self.vr.listen_voice(language=self.INPUT_VOICE_LANGUAGE)
+
+                if len(message) > 0:
+                    # translate
+                    if self.checkbox_translation.get() is False:
+                        chat_message = f"{message}"
+                    elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.SOURCE_LANG == "None") or (self.TARGET_LANG == "None"):
+                        self.textbox_message_log.configure(state='normal')
+                        self.textbox_message_log.insert("0.0", f"Auth Keyもしくは言語の設定が間違っています\n")
+                        self.textbox_message_log.configure(state='disabled')
+                        chat_message = f"{message}"
+                    else:
+                        result = self.translator.translate(
+                            translator_name=self.CHOICE_TRANSLATOR,
+                            source_language=self.SOURCE_LANG,
+                            target_language=self.TARGET_LANG,
+                            message=message
+                        )
+                        chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+
+                    # send OSC message
+                    message = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
+                    message.add_arg(f"{chat_message}")
+                    message.add_arg(True)
+                    message.add_arg(True)
+                    message = message.build()
+                    client = udp_client.SimpleUDPClient(self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    client.send(message)
+
+                    # update textbox message log
+                    self.textbox_message_log.configure(state='normal')
+                    self.textbox_message_log.insert("0.0", f"{chat_message}\n")
+                    self.textbox_message_log.configure(state='disabled')
 
     def checkbox_foreground_callback(self):
         value = self.checkbox_foreground.get()
