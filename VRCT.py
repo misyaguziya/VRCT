@@ -246,7 +246,7 @@ https://twitter.com/misya_ai
 再配布とかはやめてね
 """
 
-        self.textbox_information.insert("0.0", textbox_information_message)
+        self.textbox_information.insert("end", textbox_information_message)
         self.textbox_information.configure(state='disabled')
 
 class ToplevelWindowConfig(customtkinter.CTkToplevel):
@@ -764,7 +764,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
             self.parent.textbox_message_log.configure(state='normal')
-            self.parent.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            self.parent.textbox_message_log.insert("end", f"[ERROR]Auth Keyを設定してないか間違っています\n")
             self.parent.textbox_message_log.configure(state='disabled')
         else:
             self.optionmenu_translation_input_source_language.configure(
@@ -834,7 +834,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 save_json(self.parent.PATH_CONFIG, "AUTH_KEYS", self.parent.AUTH_KEYS)
             else:
                 self.parent.textbox_message_log.configure(state='normal')
-                self.parent.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+                self.parent.textbox_message_log.insert("end", f"[ERROR]Auth Keyを設定してないか間違っています\n")
                 self.parent.textbox_message_log.configure(state='disabled')
 
     def update_message_format(self):
@@ -1060,36 +1060,43 @@ class App(customtkinter.CTk):
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
 
         # set default values
-        ## set checkbox enable translation
-        if self.ENABLE_TRANSLATION:
-            self.checkbox_translation.select()
-        else:
-            self.checkbox_translation.deselect()
-
-        ## set set checkbox enable foreground
-        if self.ENABLE_FOREGROUND:
-            self.checkbox_foreground.select()
-            self.attributes("-topmost", True)
-        else:
-            self.checkbox_foreground.deselect()
-            self.attributes("-topmost", False)
-
-        ## set bind entry message box
-        self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
-        self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
-        self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
-
         ## set translator instance
         self.translator = Translator()
         if self.translator.authentication(self.CHOICE_TRANSLATOR, self.AUTH_KEYS[self.CHOICE_TRANSLATOR]) is False:
             # error update Auth key
             self.textbox_message_log.configure(state='normal')
-            self.textbox_message_log.insert("0.0", f"Auth Keyを設定してないか間違っています\n")
+            self.textbox_message_log.insert("end", f"[ERROR] Auth Keyを設定してないか間違っています\n")
             self.textbox_message_log.configure(state='disabled')
 
         ## set transcription instance
         self.vr = VoiceRecognizer()
         self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else list(self.vr.input_device_dict.keys())[0]
+
+        ## set checkbox enable translation
+        if self.ENABLE_TRANSLATION:
+            self.checkbox_translation.select()
+        else:
+            self.checkbox_translation.deselect()
+        self.checkbox_translation_callback()
+
+        ## set checkbox enable transcription
+        if self.ENABLE_TRANSCRIPTION:
+            self.checkbox_transcription.select()
+        else:
+            self.checkbox_transcription.deselect()
+        self.checkbox_transcription_callback()
+
+        ## set set checkbox enable foreground
+        if self.ENABLE_FOREGROUND:
+            self.checkbox_foreground.select()
+        else:
+            self.checkbox_foreground.deselect()
+        self.checkbox_foreground_callback()
+
+        ## set bind entry message box
+        self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
+        self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
+        self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
 
         ## set transparency for main window
         self.wm_attributes("-alpha", self.TRANSPARENCY/100)
@@ -1114,55 +1121,70 @@ class App(customtkinter.CTk):
 
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
+        if self.ENABLE_TRANSLATION:
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("end", f"[INFO] start translation\n")
+            self.textbox_message_log.configure(state='disabled')
+        else:
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("end", f"[INFO] stop translation\n")
+            self.textbox_message_log.configure(state='disabled')
         save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
     def checkbox_transcription_callback(self):
-        if self.checkbox_transcription.get() is True:
+        self.ENABLE_TRANSCRIPTION = self.checkbox_transcription.get()
+        if self.ENABLE_TRANSCRIPTION is True:
             # start threading
             th = threading.Thread(target = self.voice_input)
             th.start()
-            self.ENABLE_TRANSCRIPTION = True
-            save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION", self.ENABLE_TRANSCRIPTION)
+        save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION", self.ENABLE_TRANSCRIPTION)
 
     def voice_input(self):
-        mic_status = self.vr.set_mic(self.CHOICE_MIC_DEVICE)
+        self.vr.set_mic(self.CHOICE_MIC_DEVICE)
         self.vr.init_mic(threshold=self.MIC_THRESHOLD, is_dynamic=self.ENABLE_MIC_IS_DYNAMIC)
-        if mic_status:
-            # start voice_input
-            while self.checkbox_transcription.get() is True:
-                message = self.vr.listen_voice(language=self.INPUT_MIC_VOICE_LANGUAGE)
 
-                if len(message) > 0:
-                    # translate
-                    if self.checkbox_translation.get() is False:
-                        chat_message = f"{message}"
-                    elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
-                        self.textbox_message_log.configure(state='normal')
-                        self.textbox_message_log.insert("0.0", f"Auth Keyもしくは言語の設定が間違っています\n")
-                        self.textbox_message_log.configure(state='disabled')
-                        chat_message = f"{message}"
-                    else:
-                        result = self.translator.translate(
-                            translator_name=self.CHOICE_TRANSLATOR,
-                            source_language=self.INPUT_SOURCE_LANG,
-                            target_language=self.INPUT_TARGET_LANG,
-                            message=message
-                        )
-                        chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+        # start voice_input
+        if self.checkbox_transcription.get() is True:
+            self.textbox_message_log.configure(state='normal')
+            self.textbox_message_log.insert("end", f"[INFO] start transcription\n")
+            self.textbox_message_log.configure(state='disabled')
 
-                    # send OSC message
-                    message = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
-                    message.add_arg(f"{chat_message}")
-                    message.add_arg(True)
-                    message.add_arg(True)
-                    message = message.build()
-                    client = udp_client.SimpleUDPClient(self.OSC_IP_ADDRESS, self.OSC_PORT)
-                    client.send(message)
-
-                    # update textbox message log
+        while self.checkbox_transcription.get() is True:
+            message = self.vr.listen_voice(language=self.INPUT_MIC_VOICE_LANGUAGE)
+            if len(message) > 0:
+                # translate
+                if self.checkbox_translation.get() is False:
+                    chat_message = f"{message}"
+                elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
                     self.textbox_message_log.configure(state='normal')
-                    self.textbox_message_log.insert("0.0", f"{chat_message}\n")
+                    self.textbox_message_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
                     self.textbox_message_log.configure(state='disabled')
+                    chat_message = f"{message}"
+                else:
+                    result = self.translator.translate(
+                        translator_name=self.CHOICE_TRANSLATOR,
+                        source_language=self.INPUT_SOURCE_LANG,
+                        target_language=self.INPUT_TARGET_LANG,
+                        message=message
+                    )
+                    chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+
+                # send OSC message
+                message = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
+                message.add_arg(f"{chat_message}")
+                message.add_arg(True)
+                message.add_arg(True)
+                message = message.build()
+                client = udp_client.SimpleUDPClient(self.OSC_IP_ADDRESS, self.OSC_PORT)
+                client.send(message)
+
+                # update textbox message log
+                self.textbox_message_log.configure(state='normal')
+                self.textbox_message_log.insert("end", f"[VOICE] {chat_message}\n")
+                self.textbox_message_log.configure(state='disabled')
+        self.textbox_message_log.configure(state='normal')
+        self.textbox_message_log.insert("end", f"[INFO] stop transcription\n")
+        self.textbox_message_log.configure(state='disabled')
 
     def checkbox_foreground_callback(self):
         value = self.checkbox_foreground.get()
@@ -1186,7 +1208,7 @@ class App(customtkinter.CTk):
                 chat_message = f"{message}"
             elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
                 self.textbox_message_log.configure(state='normal')
-                self.textbox_message_log.insert("0.0", f"Auth Keyもしくは言語の設定が間違っています\n")
+                self.textbox_message_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
                 self.textbox_message_log.configure(state='disabled')
                 chat_message = f"{message}"
             else:
@@ -1209,7 +1231,7 @@ class App(customtkinter.CTk):
 
             # update textbox message log
             self.textbox_message_log.configure(state='normal')
-            self.textbox_message_log.insert("0.0", f"{chat_message}\n")
+            self.textbox_message_log.insert("end", f"[CHAT] {chat_message}\n")
             self.textbox_message_log.configure(state='disabled')
 
             # delete message in entry message box
