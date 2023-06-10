@@ -1187,14 +1187,11 @@ class App(customtkinter.CTk):
         self.textbox_message_log.configure(state='disabled')
 
     def checkbox_foreground_callback(self):
-        value = self.checkbox_foreground.get()
-
-        if value:
+        self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
+        if self.ENABLE_FOREGROUND:
             self.attributes("-topmost", True)
         else:
             self.attributes("-topmost", False)
-
-        self.ENABLE_FOREGROUND = value
         save_json(self.PATH_CONFIG, "ENABLE_FOREGROUND", self.ENABLE_FOREGROUND)
 
     def entry_message_box_press_key_enter(self, event):
@@ -1238,10 +1235,22 @@ class App(customtkinter.CTk):
             self.entry_message_box.delete(0, customtkinter.END)
 
     def entry_message_box_press_key_any(self, event):
+        # send OSC typing
+        typing = osc_message_builder.OscMessageBuilder(address="/chatbox/typing")
+        typing.add_arg(True)
+        typing = typing.build()
+        client = udp_client.SimpleUDPClient(self.OSC_IP_ADDRESS, self.OSC_PORT)
+        client.send(typing)
         if self.ENABLE_FOREGROUND:
             self.attributes("-topmost", False)
 
     def entry_message_box_leave(self, event):
+        # send OSC typing
+        typing = osc_message_builder.OscMessageBuilder(address="/chatbox/typing")
+        typing.add_arg(False)
+        typing = typing.build()
+        client = udp_client.SimpleUDPClient(self.OSC_IP_ADDRESS, self.OSC_PORT)
+        client.send(typing)
         if self.ENABLE_FOREGROUND:
             self.attributes("-topmost", True)
 
