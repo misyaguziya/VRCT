@@ -273,6 +273,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.tabview_config.tab("Transcription").grid_columnconfigure(1, weight=1)
         self.tabview_config.tab("Parameter").grid_columnconfigure(1, weight=1)
         self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
+        self.tabview_config._segmented_button.grid(sticky="W")
 
         # tab UI
         ## slider transparency
@@ -748,9 +749,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
         # main window
         self.parent.checkbox_translation.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.checkbox_transcription.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.checkbox_foreground.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.textbox_message_log.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.entry_message_box.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.tabview_logs._segmented_button.configure(font=customtkinter.CTkFont(family=choice))
 
         # window information
         try:
