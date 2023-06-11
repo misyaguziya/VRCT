@@ -980,7 +980,7 @@ class App(customtkinter.CTk):
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
         self.geometry(f"{400}x{140}")
-        self.minsize(400, 110)
+        self.minsize(400, 140)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -1044,13 +1044,33 @@ class App(customtkinter.CTk):
         self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
         self.config_window = None
 
+        # add tabview textbox
+        self.tabview_logs = customtkinter.CTkTabview(master=self)
+        self.tabview_logs.add("send")
+        self.tabview_logs.add("receive")
+        self.tabview_logs.grid(row=0, column=1, padx=5, pady=0, sticky="nsew")
+        self.tabview_logs._segmented_button.grid(sticky="W")
+        self.tabview_logs.tab("send").grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab("send").grid_columnconfigure(0, weight=1)
+        self.tabview_logs.tab("receive").grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab("receive").grid_columnconfigure(0, weight=1)
+        self.tabview_logs.configure(state='disabled')
+
         # add textbox message log
         self.textbox_message_log = customtkinter.CTkTextbox(
-            self,
+            self.tabview_logs.tab("send"),
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.textbox_message_log.grid(row=0, column=1, padx=(10, 10), pady=(10, 5), sticky="nsew")
+        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
         self.textbox_message_log.configure(state='disabled')
+
+        # add textbox message log
+        self.textbox_message_receive_log = customtkinter.CTkTextbox(
+            self.tabview_logs.tab("receive"),
+            font=customtkinter.CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_receive_log.configure(state='disabled')
 
         # add entry message box
         self.entry_message_box = customtkinter.CTkEntry(
