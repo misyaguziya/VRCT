@@ -1,10 +1,9 @@
-import pyaudio
+import sounddevice as sd
 import speech_recognition as sr
 
 # VoiceRecognizer
 class VoiceRecognizer():
     def __init__(self):
-        self.input_device_dict = self.search_input_device()
         self.r = sr.Recognizer()
         self.mic = None
         self.languages = [
@@ -19,25 +18,37 @@ class VoiceRecognizer():
         ]
 
     def search_input_device(self):
-        pa = pyaudio.PyAudio()
-        input_device_dict = {}
+        device_list = sd.query_devices()
+        input_device_list = []
 
-        mic_cnt = 1
-        for i in range(pa.get_device_count()):
-            device = pa.get_device_info_by_index(i)
-            try:
-                device["name"] = device["name"].encode('shift_jis').decode('utf-8')
-            except:
-                device["name"] = device["name"].encode('utf-8').decode('utf-8')
-            if device["maxInputChannels"] > 0:
-                input_device_dict[f'No.{mic_cnt}:{device["name"]}'] = device["index"]
-                mic_cnt += 1
-        pa.terminate()
-        return input_device_dict
+        for device in device_list:
+            if device["max_input_channels"] > 0:
+                input_device_list.append({"name": device["name"],  "index": device["index"]})
+
+        return input_device_list
+
+    def search_output_device(self):
+        device_list = sd.query_devices()
+        output_device_list = []
+
+        for device in device_list:
+            if device["max_output_channels"] > 0:
+                output_device_list.append({"name": device["name"],  "index": device["index"]})
+
+        return output_device_list
+
+    def search_default_device_index(self):
+        device_list = sd.query_devices()
+        default_device_list = []
+        for i in sd.default.device:
+            default_device_list.append({"name": device_list[i]["name"],  "index": device_list[i]["index"]})
+        return default_device_list
 
     def set_mic(self, device_name, threshold=50, is_dynamic=False):
-        if device_name in [v for v in self.input_device_dict.keys()]:
-            index = self.input_device_dict[device_name]
+        input_device_list = self.search_input_device()
+        if device_name in [input_device["name"] for input_device in input_device_list]:
+            index = [device["index"] for device in input_device_list if device["name"] == device_name][0]
+
             self.mic = sr.Microphone(device_index=index)
             self.r.energy_threshold = threshold
             if is_dynamic:

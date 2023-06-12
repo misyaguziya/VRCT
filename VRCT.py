@@ -259,7 +259,8 @@ class App(customtkinter.CTk):
 
         ## set transcription instance
         self.vr = transcription.VoiceRecognizer()
-        self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else list(self.vr.input_device_dict.keys())[0]
+        self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else self.vr.search_default_device_index()[0]["name"]
+        self.CHOICE_SPEAKER_DEVICE = self.CHOICE_SPEAKER_DEVICE if self.CHOICE_SPEAKER_DEVICE is not None else self.vr.search_default_device_index()[1]["name"]
 
         ## set checkbox enable translation
         if self.ENABLE_TRANSLATION:
