@@ -19,7 +19,8 @@ class App(customtkinter.CTk):
         self.PATH_CONFIG = "./config.json"
         ## main window
         self.ENABLE_TRANSLATION = False
-        self.ENABLE_TRANSCRIPTION = False
+        self.ENABLE_TRANSCRIPTION_SEND = False
+        self.ENABLE_TRANSCRIPTION_RECEIVE = False
         self.ENABLE_FOREGROUND = False
         ## UI
         self.TRANSPARENCY = 100
@@ -61,8 +62,10 @@ class App(customtkinter.CTk):
             # main window
             if "ENABLE_TRANSLATION" in config.keys():
                 self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
-            if "ENABLE_TRANSCRIPTION" in config.keys():
-                self.ENABLE_TRANSCRIPTION = config["ENABLE_TRANSCRIPTION"]
+            if "ENABLE_TRANSCRIPTION_SEND" in config.keys():
+                self.ENABLE_TRANSCRIPTION_SEND = config["ENABLE_TRANSCRIPTION_SEND"]
+            if "ENABLE_TRANSCRIPTION_RECEIVE" in config.keys():
+                self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
             if "ENABLE_FOREGROUND" in config.keys():
                 self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
 
@@ -121,7 +124,8 @@ class App(customtkinter.CTk):
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
                 "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
-                "ENABLE_TRANSCRIPTION": self.ENABLE_TRANSCRIPTION,
+                "ENABLE_TRANSCRIPTION_SEND": self.ENABLE_TRANSCRIPTION_SEND,
+                "ENABLE_TRANSCRIPTION_RECEIVE": self.ENABLE_TRANSCRIPTION_RECEIVE,
                 "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
@@ -172,16 +176,27 @@ class App(customtkinter.CTk):
         )
         self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
-        # add checkbox transcription
-        self.checkbox_transcription = customtkinter.CTkCheckBox(
+        # add checkbox transcription send
+        self.checkbox_transcription_send = customtkinter.CTkCheckBox(
             self.sidebar_frame,
-            text="Transcription",
+            text="TranscriptionSend",
             onvalue=True,
             offvalue=False,
-            command=self.checkbox_transcription_callback,
+            command=self.checkbox_transcription_send_callback,
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_transcription.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_transcription_send.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+
+        # add checkbox transcription receive
+        self.checkbox_transcription_receive = customtkinter.CTkCheckBox(
+            self.sidebar_frame,
+            text="TranscriptionReceive",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_transcription_receive_callback,
+            font=customtkinter.CTkFont(family=self.FONT_FAMILY)
+        )
+        self.checkbox_transcription_receive.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # add checkbox foreground
         self.checkbox_foreground = customtkinter.CTkCheckBox(
@@ -192,7 +207,7 @@ class App(customtkinter.CTk):
             command=self.checkbox_foreground_callback,
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_foreground.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_foreground.grid(row=3, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
 
         # add button information
         self.button_information = customtkinter.CTkButton(
@@ -245,7 +260,7 @@ class App(customtkinter.CTk):
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
         self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        # self.textbox_message_receive_log.configure(state='disabled')
+        self.textbox_message_receive_log.configure(state='disabled')
 
         # add textbox message system log
         self.textbox_message_system_log = customtkinter.CTkTextbox(
@@ -253,7 +268,7 @@ class App(customtkinter.CTk):
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
         self.textbox_message_system_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        # self.textbox_message_system_log.configure(state='disabled')
+        self.textbox_message_system_log.configure(state='disabled')
 
         # add entry message box
         self.entry_message_box = customtkinter.CTkEntry(
@@ -285,12 +300,19 @@ class App(customtkinter.CTk):
         else:
             self.checkbox_translation.deselect()
 
-        ## set checkbox enable transcription
-        if self.ENABLE_TRANSCRIPTION:
-            self.checkbox_transcription.select()
+        ## set checkbox enable transcription send
+        if self.ENABLE_TRANSCRIPTION_SEND:
+            self.checkbox_transcription_send.select()
         else:
-            self.checkbox_transcription.deselect()
-        self.checkbox_transcription_callback()
+            self.checkbox_transcription_send.deselect()
+        self.checkbox_transcription_send_callback()
+
+        ## set checkbox enable transcription receive
+        if self.ENABLE_TRANSCRIPTION_RECEIVE:
+            self.checkbox_transcription_receive.select()
+        else:
+            self.checkbox_transcription_receive.deselect()
+        self.checkbox_transcription_receive_callback()
 
         ## set set checkbox enable foreground
         if self.ENABLE_FOREGROUND:
@@ -317,10 +339,7 @@ class App(customtkinter.CTk):
 
     def button_config_callback(self):
         if self.config_window is None or not self.config_window.winfo_exists():
-            try:
-                self.config_window = window_config.ToplevelWindowConfig(self)
-            except Exception as e:
-                print(e)
+            self.config_window = window_config.ToplevelWindowConfig(self)
         self.config_window.focus()
 
     def button_information_callback(self):
@@ -339,30 +358,37 @@ class App(customtkinter.CTk):
         self.textbox_message_system_log.see("end")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
-    def checkbox_transcription_callback(self):
-        self.ENABLE_TRANSCRIPTION = self.checkbox_transcription.get()
-        if self.ENABLE_TRANSCRIPTION is True:
+    def checkbox_transcription_send_callback(self):
+        self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
+        if self.ENABLE_TRANSCRIPTION_SEND is True:
             # start threading
             self.vr.set_mic(self.CHOICE_MIC_DEVICE, threshold=self.INPUT_MIC_THRESHOLD, is_dynamic=self.INPUT_MIC_IS_DYNAMIC)
             self.vr.init_mic()
-
-            self.vr.set_spk(self.CHOICE_SPEAKER_DEVICE)
-            self.vr.init_spk()
-
             th_vr_listen_mic = threading.Thread(target = self.vr_listen_mic)
             th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
-            th_vr_listen_spk = threading.Thread(target = self.vr_listen_spk)
-            th_vr_recognize_spk = threading.Thread(target = self.vr_recognize_spk)
-
             th_vr_listen_mic.start()
             th_vr_recognize_mic.start()
+        utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
+
+    def checkbox_transcription_receive_callback(self):
+        self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
+        if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            # start threading
+            self.vr.set_spk(
+                self.CHOICE_SPEAKER_DEVICE,
+                # int(self.INPUT_SPEAKER_SAMPLING_RATE),
+                # int(self.INPUT_SPEAKER_INTERVAL),
+                # int(self.INPUT_SPEAKER_BUFFER_SIZE),
+            )
+            self.vr.init_spk()
+            th_vr_listen_spk = threading.Thread(target = self.vr_listen_spk)
+            th_vr_recognize_spk = threading.Thread(target = self.vr_recognize_spk)
             th_vr_listen_spk.start()
             th_vr_recognize_spk.start()
-
-        utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION", self.ENABLE_TRANSCRIPTION)
+        utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def vr_listen_mic(self):
-        while self.checkbox_transcription.get() is True:
+        while self.checkbox_transcription_send.get() is True:
             self.vr.listen_mic()
 
     def vr_recognize_mic(self):
@@ -371,7 +397,7 @@ class App(customtkinter.CTk):
         self.textbox_message_system_log.configure(state='disabled')
         self.textbox_message_system_log.see("end")
 
-        while self.checkbox_transcription.get() is True:
+        while self.checkbox_transcription_send.get() is True:
             message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
             if len(message) > 0:
                 # translate
@@ -402,11 +428,11 @@ class App(customtkinter.CTk):
                 self.textbox_message_send_log.see("end")
 
     def vr_listen_spk(self):
-        while self.checkbox_transcription.get() is True:
+        while self.checkbox_transcription_receive.get() is True:
             self.vr.listen_spk()
 
     def vr_recognize_spk(self):
-        while self.checkbox_transcription.get() is True:
+        while self.checkbox_transcription_receive.get() is True:
             message = self.vr.recognize_spk(language=self.INPUT_SPEAKER_VOICE_LANGUAGE)
             if len(message) > 0:
                 # translate
