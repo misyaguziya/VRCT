@@ -20,18 +20,18 @@ class VoiceRecognizer():
             "es-NI","es-PA","es-PY","es-PE","es-PR","es-ES","es-UY","es-US","es-VE","sv-SE","th-TH","tr-TR","uk-UA",
             "vi-VN","zu-ZA"
         ]
-        self.mic = None
-        self.enable_mic_recognize = False
-        self.queue_mic = queue.Queue()
+        self.mic_device_name = None
+        self.mic_threshold = 50
+        self.mic_is_dynamic = False
+        self.mic_queue = queue.Queue()
 
         self.spk_device_name = None
         self.spk_sample_rate = 16000
         self.spk_interval = 3
         self.spk_buffer_size = 4096
-        self.spk_language = "en-US"
         self.spk_audio = np.empty(self.spk_sample_rate * self.spk_interval + self.spk_buffer_size, dtype=np.float32)
         self.n = 0
-        self.queue_spk = queue.Queue()
+        self.spk_queue = queue.Queue()
 
     def search_input_device(self):
         device_list = sd.query_devices()
@@ -61,48 +61,34 @@ class VoiceRecognizer():
 
     def set_mic(self, device_name, threshold=50, is_dynamic=False):
         input_device_list = self.search_input_device()
-        if device_name in [input_device["name"] for input_device in input_device_list]:
-            index = [device["index"] for device in input_device_list if device["name"] == device_name][0]
+        self.mic_device_name = [device["index"] for device in input_device_list if device["name"] == device_name][0]
+        self.mic_threshold = threshold
+        self.mic_is_dynamic = is_dynamic
 
-            self.mic = sr.Microphone(device_index=index)
-            self.r.energy_threshold = threshold
-            if is_dynamic:
-                with self.mic as source:
-                    self.r.adjust_for_ambient_noise(source, 3.0)
-            return True
-        else:
-            return False
-
-    def init_mic(self, threshold=50, is_dynamic=False):
-        if isinstance(self.mic, sr.Microphone):
-            self.r.energy_threshold = threshold
-            if is_dynamic:
-                with self.mic as source:
-                    self.r.adjust_for_ambient_noise(source, 3.0)
-            return True
-        else:
-            return False
+    def init_mic(self):
+        self.r.energy_threshold = self.mic_threshold
+        if self.mic_is_dynamic:
+            with self.mic as source:
+                self.r.adjust_for_ambient_noise(source, 3.0)
 
     def listen_mic(self):
-        if self.mic != None:
-            with self.mic as source:
-                audio = self.r.listen(source)
-                self.queue_mic.put(audio)
+        with sr.Microphone(device_index=self.mic_device_name) as source:
+            audio = self.r.listen(source)
+            self.mic_queue.put(audio)
 
     def recognize_mic(self, language):
         try:
-            audio = self.queue_mic.get()
+            audio = self.mic_queue.get()
             text = self.r.recognize_google(audio, language=language)
         except:
             text = ""
         return text
 
-    def set_spk(self, device_name=str(sc.default_speaker().name), sample_rate=16000, interval=3, buffer_size=4096, language="en-US"):
+    def set_spk(self, device_name=str(sc.default_speaker().name), sample_rate=16000, interval=3, buffer_size=4096):
         self.spk_device_name = device_name
         self.spk_sample_rate = sample_rate
         self.spk_interval = interval
         self.spk_buffer_size = buffer_size
-        self.spk_language = language
 
     def init_spk(self):
         self.spk_audio = np.empty(self.spk_sample_rate * self.spk_interval + self.spk_buffer_size, dtype=np.float32)
@@ -120,23 +106,23 @@ class VoiceRecognizer():
             vol = np.convolve(audio[m:n] ** 2, np.ones(100) / 100, 'same')
             m += vol.argmin()
             audio_prev = audio.copy()
-            self.queue_spk.put(audio[:m])
+            self.spk_queue.put(audio[:m])
             audio = np.empty(self.spk_sample_rate * self.spk_interval + self.spk_buffer_size, dtype=np.float32)
             audio[:n-m] = audio_prev[m:n]
             n = n-m
         self.spk_audio = audio
         self.n = n
 
-    def recognize_spk(self):
+    def recognize_spk(self, language):
         try:
-            audio = self.queue_spk.get()
+            audio = self.spk_queue.get()
             with io.BytesIO() as memory_file:
                 sf.write(file=memory_file, data=audio, format="WAV", samplerate=self.spk_sample_rate)
                 memory_file.seek(0)
                 with sr.AudioFile(memory_file) as source:
                     audio = self.r.record(source)
-                text = self.r.recognize_google(audio, language=self.spk_language)
-        except Exception as e:
+                text = self.r.recognize_google(audio, language=language)
+        except:
             text = ""
         return text
 

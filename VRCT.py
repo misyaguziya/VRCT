@@ -35,12 +35,14 @@ class App(customtkinter.CTk):
         ## Transcription
         self.CHOICE_MIC_DEVICE = None
         self.INPUT_MIC_VOICE_LANGUAGE = "ja-JP"
-        self.ENABLE_MIC_IS_DYNAMIC = False
-        self.MIC_THRESHOLD = 300
+        self.INPUT_MIC_IS_DYNAMIC = False
+        self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = None
         self.INPUT_SPEAKER_VOICE_LANGUAGE = "ja-JP"
-        self.ENABLE_SPEAKER_IS_DYNAMIC = False
-        self.SPEAKER_THRESHOLD = 300
+        self.INPUT_SPEAKER_SAMPLING_RATE = 16000
+        self.INPUT_SPEAKER_INTERVAL = 3
+        self.INPUT_SPEAKER_BUFFER_SIZE = 4096
+
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
         self.OSC_PORT = 9000
@@ -91,18 +93,20 @@ class App(customtkinter.CTk):
                 self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
                 self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
-            if "ENABLE_MIC_IS_DYNAMIC" in config.keys():
-                self.ENABLE_MIC_IS_DYNAMIC = config["ENABLE_MIC_IS_DYNAMIC"]
-            if "MIC_THRESHOLD" in config.keys():
-                self.MIC_THRESHOLD = config["MIC_THRESHOLD"]
+            if "INPUT_MIC_IS_DYNAMIC" in config.keys():
+                self.INPUT_MIC_IS_DYNAMIC = config["INPUT_MIC_IS_DYNAMIC"]
+            if "INPUT_MIC_THRESHOLD" in config.keys():
+                self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
                 self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
                 self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
-            if "ENABLE_SPEAKER_IS_DYNAMIC" in config.keys():
-                self.ENABLE_SPEAKER_IS_DYNAMIC = config["ENABLE_SPEAKER_IS_DYNAMIC"]
-            if "SPEAKER_THRESHOLD" in config.keys():
-                self.SPEAKER_THRESHOLD = config["SPEAKER_THRESHOLD"]
+            if "INPUT_SPEAKER_SAMPLING_RATE" in config.keys():
+                self.INPUT_SPEAKER_SAMPLING_RATE = config["INPUT_SPEAKER_SAMPLING_RATE"]
+            if "INPUT_SPEAKER_INTERVAL" in config.keys():
+                self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
+            if "INPUT_SPEAKER_BUFFER_SIZE" in config.keys():
+                self.INPUT_SPEAKER_BUFFER_SIZE = config["INPUT_SPEAKER_BUFFER_SIZE"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
@@ -130,12 +134,13 @@ class App(customtkinter.CTk):
                 "OUTPUT_TARGET_LANG": self.OUTPUT_TARGET_LANG,
                 "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
                 "INPUT_MIC_VOICE_LANGUAGE": self.INPUT_MIC_VOICE_LANGUAGE,
-                "ENABLE_MIC_IS_DYNAMIC": self.ENABLE_MIC_IS_DYNAMIC,
-                "MIC_THRESHOLD": self.MIC_THRESHOLD,
+                "INPUT_MIC_IS_DYNAMIC": self.INPUT_MIC_IS_DYNAMIC,
+                "INPUT_MIC_THRESHOLD": self.INPUT_MIC_THRESHOLD,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
-                "ENABLE_SPEAKER_IS_DYNAMIC": self.ENABLE_SPEAKER_IS_DYNAMIC,
-                "SPEAKER_THRESHOLD": self.SPEAKER_THRESHOLD,
+                "INPUT_SPEAKER_SAMPLING_RATE": self.INPUT_SPEAKER_SAMPLING_RATE,
+                "INPUT_SPEAKER_INTERVAL": self.INPUT_SPEAKER_INTERVAL,
+                "INPUT_SPEAKER_BUFFER_SIZE": self.INPUT_SPEAKER_BUFFER_SIZE,
                 "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
@@ -215,29 +220,40 @@ class App(customtkinter.CTk):
         self.tabview_logs = customtkinter.CTkTabview(master=self)
         self.tabview_logs.add("send")
         self.tabview_logs.add("receive")
+        self.tabview_logs.add("system")
         self.tabview_logs.grid(row=0, column=1, padx=5, pady=0, sticky="nsew")
         self.tabview_logs._segmented_button.grid(sticky="W")
         self.tabview_logs.tab("send").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("send").grid_columnconfigure(0, weight=1)
         self.tabview_logs.tab("receive").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("receive").grid_columnconfigure(0, weight=1)
-        self.tabview_logs.configure(state='disabled')
+        self.tabview_logs.tab("system").grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab("system").grid_columnconfigure(0, weight=1)
+        # self.tabview_logs.configure(state='disabled')
 
-        # add textbox message log
-        self.textbox_message_log = customtkinter.CTkTextbox(
+        # add textbox message send log
+        self.textbox_message_send_log = customtkinter.CTkTextbox(
             self.tabview_logs.tab("send"),
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_log.configure(state='disabled')
+        self.textbox_message_send_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_send_log.configure(state='disabled')
 
-        # add textbox message log
+        # add textbox message receive log
         self.textbox_message_receive_log = customtkinter.CTkTextbox(
             self.tabview_logs.tab("receive"),
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
         self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_receive_log.configure(state='disabled')
+        # self.textbox_message_receive_log.configure(state='disabled')
+
+        # add textbox message system log
+        self.textbox_message_system_log = customtkinter.CTkTextbox(
+            self.tabview_logs.tab("system"),
+            font=customtkinter.CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_system_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        # self.textbox_message_system_log.configure(state='disabled')
 
         # add entry message box
         self.entry_message_box = customtkinter.CTkEntry(
@@ -252,10 +268,10 @@ class App(customtkinter.CTk):
         self.translator = translation.Translator()
         if self.translator.authentication(self.CHOICE_TRANSLATOR, self.AUTH_KEYS[self.CHOICE_TRANSLATOR]) is False:
             # error update Auth key
-            self.textbox_message_log.configure(state='normal')
-            self.textbox_message_log.insert("end", f"[ERROR] Auth Keyを設定してないか間違っています\n")
-            self.textbox_message_log.configure(state='disabled')
-            self.textbox_message_log.see("end")
+            self.textbox_message_system_log.configure(state='normal')
+            self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyを設定してないか間違っています\n")
+            self.textbox_message_system_log.configure(state='disabled')
+            self.textbox_message_system_log.see("end")
 
         ## set transcription instance
         self.vr = transcription.VoiceRecognizer()
@@ -301,7 +317,10 @@ class App(customtkinter.CTk):
 
     def button_config_callback(self):
         if self.config_window is None or not self.config_window.winfo_exists():
-            self.config_window = window_config.ToplevelWindowConfig(self)
+            try:
+                self.config_window = window_config.ToplevelWindowConfig(self)
+            except Exception as e:
+                print(e)
         self.config_window.focus()
 
     def button_information_callback(self):
@@ -311,30 +330,32 @@ class App(customtkinter.CTk):
 
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
-        self.textbox_message_log.configure(state='normal')
+        self.textbox_message_system_log.configure(state='normal')
         if self.ENABLE_TRANSLATION:
-            self.textbox_message_log.insert("end", f"[INFO] start translation\n")
+            self.textbox_message_system_log.insert("end", f"[INFO] start translation\n")
         else:
-            self.textbox_message_log.insert("end", f"[INFO] stop translation\n")
-        self.textbox_message_log.configure(state='disabled')
-        self.textbox_message_log.see("end")
+            self.textbox_message_system_log.insert("end", f"[INFO] stop translation\n")
+        self.textbox_message_system_log.configure(state='disabled')
+        self.textbox_message_system_log.see("end")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
     def checkbox_transcription_callback(self):
         self.ENABLE_TRANSCRIPTION = self.checkbox_transcription.get()
         if self.ENABLE_TRANSCRIPTION is True:
             # start threading
-            self.vr.set_mic(self.CHOICE_MIC_DEVICE)
-            self.vr.init_mic(threshold=self.MIC_THRESHOLD, is_dynamic=self.ENABLE_MIC_IS_DYNAMIC)
-            th_vr_listen_mic = threading.Thread(target = self.vr_listen_mic)
-            th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
-            th_vr_listen_mic.start()
-            th_vr_recognize_mic.start()
+            self.vr.set_mic(self.CHOICE_MIC_DEVICE, threshold=self.INPUT_MIC_THRESHOLD, is_dynamic=self.INPUT_MIC_IS_DYNAMIC)
+            self.vr.init_mic()
 
             self.vr.set_spk(self.CHOICE_SPEAKER_DEVICE)
             self.vr.init_spk()
+
+            th_vr_listen_mic = threading.Thread(target = self.vr_listen_mic)
+            th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
             th_vr_listen_spk = threading.Thread(target = self.vr_listen_spk)
             th_vr_recognize_spk = threading.Thread(target = self.vr_recognize_spk)
+
+            th_vr_listen_mic.start()
+            th_vr_recognize_mic.start()
             th_vr_listen_spk.start()
             th_vr_recognize_spk.start()
 
@@ -345,10 +366,10 @@ class App(customtkinter.CTk):
             self.vr.listen_mic()
 
     def vr_recognize_mic(self):
-        self.textbox_message_log.configure(state='normal')
-        self.textbox_message_log.insert("end", f"[INFO] start transcription\n")
-        self.textbox_message_log.configure(state='disabled')
-        self.textbox_message_log.see("end")
+        self.textbox_message_system_log.configure(state='normal')
+        self.textbox_message_system_log.insert("end", f"[INFO] start transcription\n")
+        self.textbox_message_system_log.configure(state='disabled')
+        self.textbox_message_system_log.see("end")
 
         while self.checkbox_transcription.get() is True:
             message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
@@ -357,10 +378,10 @@ class App(customtkinter.CTk):
                 if self.checkbox_translation.get() is False:
                     voice_message = f"{message}"
                 elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    self.textbox_message_log.configure(state='normal')
-                    self.textbox_message_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                    self.textbox_message_log.configure(state='disabled')
-                    self.textbox_message_log.see("end")
+                    self.textbox_message_system_log.configure(state='normal')
+                    self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
+                    self.textbox_message_system_log.configure(state='disabled')
+                    self.textbox_message_system_log.see("end")
                     voice_message = f"{message}"
                 else:
                     result = self.translator.translate(
@@ -375,10 +396,10 @@ class App(customtkinter.CTk):
                 osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
                 # update textbox message log
-                self.textbox_message_log.configure(state='normal')
-                self.textbox_message_log.insert("end", f"[VOICE] {voice_message}\n")
-                self.textbox_message_log.configure(state='disabled')
-                self.textbox_message_log.see("end")
+                self.textbox_message_send_log.configure(state='normal')
+                self.textbox_message_send_log.insert("end", f"[VOICE] {voice_message}\n")
+                self.textbox_message_send_log.configure(state='disabled')
+                self.textbox_message_send_log.see("end")
 
     def vr_listen_spk(self):
         while self.checkbox_transcription.get() is True:
@@ -392,10 +413,10 @@ class App(customtkinter.CTk):
                 if self.checkbox_translation.get() is False:
                     voice_message = f"{message}"
                 elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    self.textbox_message_log.configure(state='normal')
-                    self.textbox_message_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                    self.textbox_message_log.configure(state='disabled')
-                    self.textbox_message_log.see("end")
+                    self.textbox_message_system_log.configure(state='normal')
+                    self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
+                    self.textbox_message_system_log.configure(state='disabled')
+                    self.textbox_message_system_log.see("end")
                     voice_message = f"{message}"
                 else:
                     result = self.translator.translate(
@@ -409,11 +430,11 @@ class App(customtkinter.CTk):
                 # send OSC message
                 osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
-                # update textbox message log
-                self.textbox_message_log.configure(state='normal')
-                self.textbox_message_log.insert("end", f"[VOICE] {voice_message}\n")
-                self.textbox_message_log.configure(state='disabled')
-                self.textbox_message_log.see("end")
+                # update textbox message receive log
+                self.textbox_message_receive_log.configure(state='normal')
+                self.textbox_message_receive_log.insert("end", f"[VOICE] {voice_message}\n")
+                self.textbox_message_receive_log.configure(state='disabled')
+                self.textbox_message_receive_log.see("end")
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -436,10 +457,10 @@ class App(customtkinter.CTk):
             if self.checkbox_translation.get() is False:
                 chat_message = f"{message}"
             elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
-                self.textbox_message_log.configure(state='normal')
-                self.textbox_message_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                self.textbox_message_log.configure(state='disabled')
-                self.textbox_message_log.see("end")
+                self.textbox_message_system_log.configure(state='normal')
+                self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
+                self.textbox_message_system_log.configure(state='disabled')
+                self.textbox_message_system_log.see("end")
                 chat_message = f"{message}"
             else:
                 result = self.translator.translate(
@@ -451,13 +472,13 @@ class App(customtkinter.CTk):
                 chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
-            osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            # osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
             # update textbox message log
-            self.textbox_message_log.configure(state='normal')
-            self.textbox_message_log.insert("end", f"[CHAT] {chat_message}\n")
-            self.textbox_message_log.configure(state='disabled')
-            self.textbox_message_log.see("end")
+            self.textbox_message_receive_log.configure(state='normal')
+            self.textbox_message_receive_log.insert("end", f"[CHAT] {chat_message}\n")
+            self.textbox_message_receive_log.configure(state='disabled')
+            self.textbox_message_receive_log.see("end")
 
             # delete message in entry message box
             # self.entry_message_box.delete(0, customtkinter.END)
