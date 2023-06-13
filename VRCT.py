@@ -30,15 +30,15 @@ class App(customtkinter.CTk):
         self.CHOICE_TRANSLATOR = "DeepL(web)"
         self.INPUT_SOURCE_LANG = "JA"
         self.INPUT_TARGET_LANG = "EN"
-        self.OUTPUT_SOURCE_LANG = "JA"
-        self.OUTPUT_TARGET_LANG = "EN"
+        self.OUTPUT_SOURCE_LANG = "EN"
+        self.OUTPUT_TARGET_LANG = "JA"
         ## Transcription
         self.CHOICE_MIC_DEVICE = None
         self.INPUT_MIC_VOICE_LANGUAGE = "ja-JP"
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = None
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "ja-JP"
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = "en-US"
         self.INPUT_SPEAKER_SAMPLING_RATE = 16000
         self.INPUT_SPEAKER_INTERVAL = 3
         self.INPUT_SPEAKER_BUFFER_SIZE = 4096
@@ -421,14 +421,14 @@ class App(customtkinter.CTk):
                 else:
                     result = self.translator.translate(
                         translator_name=self.CHOICE_TRANSLATOR,
-                        source_language=self.INPUT_SOURCE_LANG,
-                        target_language=self.INPUT_TARGET_LANG,
+                        source_language=self.OUTPUT_SOURCE_LANG,
+                        target_language=self.OUTPUT_TARGET_LANG,
                         message=message
                     )
                     voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
                 # send OSC message
-                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
                 # update textbox message receive log
                 self.textbox_message_receive_log.configure(state='normal')
@@ -472,7 +472,7 @@ class App(customtkinter.CTk):
                 chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
-            # osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
             # update textbox message log
             self.textbox_message_receive_log.configure(state='normal')

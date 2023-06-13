@@ -158,18 +158,17 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Translation"),
             text="Output Language:",
             fg_color="transparent",
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY, overstrike=True)
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.label_translation_output_language.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
 
         ## select translation output source language
         self.optionmenu_translation_output_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
-            # command=self.optionmenu_translation_output_source_language_callback,
+            command=self.optionmenu_translation_output_source_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
-            state="disabled",
         )
         self.optionmenu_translation_output_source_language.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
 
@@ -185,11 +184,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         ## select translation output target language
         self.optionmenu_translation_output_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
-            # command=self.optionmenu_translation_output_target_language_callback,
+            command=self.optionmenu_translation_output_target_language_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
-            state="disabled",
         )
         self.optionmenu_translation_output_target_language.grid(row=2, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
 
@@ -250,7 +248,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         else:
             self.checkbox_input_mic_is_dynamic.deselect()
 
-        ## slider input mic threshold
+        ## entry input mic threshold
         self.label_input_mic_threshold = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Mic Threshold:",
@@ -258,14 +256,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.label_input_mic_threshold.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.slider_input_mic_threshold = customtkinter.CTkSlider(
+        self.entry_input_mic_threshold = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
-            from_=0,
-            to=300,
-            command=self.slider_input_mic_threshold_callback,
-            variable=tk.DoubleVar(value=self.parent.INPUT_MIC_THRESHOLD),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_THRESHOLD),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.slider_input_mic_threshold.grid(row=3, column=1, columnspan=3 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_mic_threshold.grid(row=3, column=1, columnspan=3 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_mic_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_threshold_callback)
 
         ## optionmenu input speaker device
         self.label_input_speaker_device = customtkinter.CTkLabel(
@@ -495,8 +492,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_is_dynamic.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_sampling_rate.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_sampling_rate.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
+
 
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
@@ -538,13 +540,23 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.optionmenu_translation_input_target_language.configure(
                 values=self.parent.translator.languages[choice],
                 variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+            self.optionmenu_translation_output_source_language.configure(
+                values=self.parent.translator.languages[choice],
+                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+            self.optionmenu_translation_output_target_language.configure(
+                values=self.parent.translator.languages[choice],
+                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][0]))
 
             self.parent.CHOICE_TRANSLATOR = choice
             self.parent.INPUT_SOURCE_LANG = self.parent.translator.languages[choice][0]
             self.parent.INPUT_TARGET_LANG = self.parent.translator.languages[choice][1]
+            self.parent.OUTPUT_SOURCE_LANG = self.parent.translator.languages[choice][1]
+            self.parent.OUTPUT_TARGET_LANG = self.parent.translator.languages[choice][0]
             utils.save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
+            utils.save_json(self.parent.PATH_CONFIG, "OUTPUT_SOURCE_LANG", self.parent.OUTPUT_SOURCE_LANG)
+            utils.save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
 
     def optionmenu_translation_input_source_language_callback(self, choice):
         self.parent.INPUT_SOURCE_LANG = choice
@@ -553,6 +565,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def optionmenu_translation_input_target_language_callback(self, choice):
         self.parent.INPUT_TARGET_LANG = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
+
+    def optionmenu_translation_output_source_language_callback(self, choice):
+        self.parent.OUTPUT_SOURCE_LANG = choice
+        utils.save_json(self.parent.PATH_CONFIG, "OUTPUT_SOURCE_LANG", self.parent.OUTPUT_SOURCE_LANG)
+
+    def optionmenu_translation_output_target_language_callback(self, choice):
+        self.parent.OUTPUT_TARGET_LANG = choice
+        utils.save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.parent.CHOICE_MIC_DEVICE = choice
@@ -566,12 +586,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         value = self.checkbox_input_mic_is_dynamic.get()
         self.parent.INPUT_MIC_IS_DYNAMIC = value
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_IS_DYNAMIC", self.parent.INPUT_MIC_IS_DYNAMIC)
-        self.parent.vr.set_mic(self.parent.CHOICE_MIC_DEVICE, threshold=self.parent.INPUT_MIC_THRESHOLD, is_dynamic=self.parent.INPUT_MIC_IS_DYNAMIC)
 
-    def slider_input_mic_threshold_callback(self, value):
-        self.parent.INPUT_MIC_THRESHOLD = value
+    def entry_input_mic_threshold_callback(self, event):
+        self.parent.INPUT_MIC_THRESHOLD = int(self.entry_input_mic_threshold.get())
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_THRESHOLD", self.parent.INPUT_MIC_THRESHOLD)
-        self.parent.vr.set_mic(self.parent.CHOICE_MIC_DEVICE, threshold=self.parent.INPUT_MIC_THRESHOLD, is_dynamic=self.parent.INPUT_MIC_IS_DYNAMIC)
 
     def optionmenu_input_speaker_device_callback(self, choice):
         self.parent.CHOICE_SPEAKER_DEVICE = choice
