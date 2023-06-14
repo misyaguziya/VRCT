@@ -515,7 +515,9 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.checkbox_transcription_send.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.checkbox_transcription_receive.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.checkbox_foreground.configure(font=customtkinter.CTkFont(family=choice))
-        self.parent.textbox_message_log.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.textbox_message_send_log.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.textbox_message_receive_log.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.textbox_message_system_log.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.entry_message_box.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.tabview_logs._segmented_button.configure(font=customtkinter.CTkFont(family=choice))
 
