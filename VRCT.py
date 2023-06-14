@@ -297,31 +297,29 @@ class App(customtkinter.CTk):
             self.checkbox_translation.deselect()
 
         ## set checkbox enable transcription send
+        self.th_vr_listen_mic = None
+        self.th_vr_recognize_mic = None
         if self.ENABLE_TRANSCRIPTION_SEND:
             self.checkbox_transcription_send.select()
+            self.checkbox_transcription_send_callback()
         else:
             self.checkbox_transcription_send.deselect()
-        self.checkbox_transcription_send_callback()
-
-        ## init threads send
-        self.threads_send = []
 
         ## set checkbox enable transcription receive
+        self.th_vr_listen_spk = None
+        self.th_vr_recognize_spk = None
         if self.ENABLE_TRANSCRIPTION_RECEIVE:
             self.checkbox_transcription_receive.select()
+            self.checkbox_transcription_receive_callback()
         else:
             self.checkbox_transcription_receive.deselect()
-        self.checkbox_transcription_receive_callback()
-
-        ## init threads receive
-        self.threads_receive = []
 
         ## set set checkbox enable foreground
         if self.ENABLE_FOREGROUND:
             self.checkbox_foreground.select()
+            self.checkbox_foreground_callback()
         else:
             self.checkbox_foreground.deselect()
-        self.checkbox_foreground_callback()
 
         ## set bind entry message box
         self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
@@ -363,6 +361,7 @@ class App(customtkinter.CTk):
     def checkbox_transcription_send_callback(self):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
+            utils.print_textbox(self.textbox_message_system_log, "[info] Start sending transcription from your voice")
             # start threading
             self.vr.set_mic(
                 device_name=self.CHOICE_MIC_DEVICE,
@@ -370,17 +369,23 @@ class App(customtkinter.CTk):
                 is_dynamic=self.INPUT_MIC_IS_DYNAMIC,
             )
             self.vr.init_mic()
-            th_vr_listen_mic = threading.Thread(target = self.vr_listen_mic)
-            th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
-            th_vr_listen_mic.start()
-            th_vr_recognize_mic.start()
-            self.threads_send.append(th_vr_listen_mic)
-            self.threads_send.append(th_vr_recognize_mic)
+            self.th_vr_listen_mic = utils.thread_fnc(self.vr_listen_mic)
+            self.th_vr_recognize_mic = utils.thread_fnc(self.vr_recognize_mic)
+            self.th_vr_listen_mic.start()
+            self.th_vr_recognize_mic.start()
+        else:
+            if isinstance(self.th_vr_listen_mic, utils.thread_fnc):
+                self.th_vr_listen_mic.stop()
+            if isinstance(self.th_vr_recognize_mic, utils.thread_fnc):
+                self.th_vr_recognize_mic.stop()
+
+            utils.print_textbox(self.textbox_message_system_log, "[info] Stop sending transcription from your voice")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
 
     def checkbox_transcription_receive_callback(self):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            utils.print_textbox(self.textbox_message_system_log, "[info] Start transcription of speaker's voice")
             # start threading
             self.vr.set_spk(
                 device_name=self.CHOICE_SPEAKER_DEVICE,
@@ -389,79 +394,68 @@ class App(customtkinter.CTk):
                 buffer_size=int(self.INPUT_SPEAKER_BUFFER_SIZE),
             )
             self.vr.init_spk()
-            th_vr_listen_spk = threading.Thread(target = self.vr_listen_spk)
-            th_vr_recognize_spk = threading.Thread(target = self.vr_recognize_spk)
-            th_vr_listen_spk.start()
-            th_vr_recognize_spk.start()
-            self.threads_receive.append(th_vr_listen_spk)
-            self.threads_receive.append(th_vr_recognize_spk)
+            self.th_vr_listen_spk = utils.thread_fnc(self.vr_listen_spk)
+            self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
+            self.th_vr_listen_spk.start()
+            self.th_vr_recognize_spk.start()
+        else:
+            if isinstance(self.th_vr_listen_spk, utils.thread_fnc):
+                self.th_vr_listen_spk.stop()
+            if isinstance(self.th_vr_recognize_spk, utils.thread_fnc):
+                self.th_vr_recognize_spk.stop()
+
+            utils.print_textbox(self.textbox_message_system_log, "[info] Stop transcription of speaker's voice")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def vr_listen_mic(self):
-        while self.checkbox_transcription_send.get() is True:
-            self.vr.listen_mic()
+        self.vr.listen_mic()
 
     def vr_recognize_mic(self):
-        utils.print_textbox(self.textbox_message_system_log, "[info] Start sending transcription from your voice")
-        while self.checkbox_transcription_send.get() is True:
-            message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
-            if len(message) > 0:
-                # translate
-                if self.checkbox_translation.get() is False:
-                    voice_message = f"{message}"
-                elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
-                    voice_message = f"{message}"
-                else:
-                    result = self.translator.translate(
-                        translator_name=self.CHOICE_TRANSLATOR,
-                        source_language=self.INPUT_SOURCE_LANG,
-                        target_language=self.INPUT_TARGET_LANG,
-                        message=message
-                    )
-                    voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-
-                # send OSC message
-                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-
-                # update textbox message log
-                utils.print_textbox(self.textbox_message_send_log, f"[voice] {voice_message}")
-        utils.print_textbox(self.textbox_message_system_log, "[info] Stop sending transcription from your voice")
-        for t in self.threads_send:
-            t.join()
+        message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
+        if len(message) > 0:
+            # translate
+            if self.checkbox_translation.get() is False:
+                voice_message = f"{message}"
+            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
+                voice_message = f"{message}"
+            else:
+                result = self.translator.translate(
+                    translator_name=self.CHOICE_TRANSLATOR,
+                    source_language=self.INPUT_SOURCE_LANG,
+                    target_language=self.INPUT_TARGET_LANG,
+                    message=message
+                )
+                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+            # send OSC message
+            osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            # update textbox message log
+            utils.print_textbox(self.textbox_message_send_log, f"[voice] {voice_message}")
 
     def vr_listen_spk(self):
-        while self.checkbox_transcription_receive.get() is True:
-            self.vr.listen_spk()
+        self.vr.listen_spk()
 
     def vr_recognize_spk(self):
-        utils.print_textbox(self.textbox_message_system_log, "[info] Start transcription of speaker's voice")
-        while self.checkbox_transcription_receive.get() is True:
-            message = self.vr.recognize_spk(language=self.INPUT_SPEAKER_VOICE_LANGUAGE)
-            if len(message) > 0:
-                # translate
-                if self.checkbox_translation.get() is False:
-                    voice_message = f"{message}"
-                elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
-                    voice_message = f"{message}"
-                else:
-                    result = self.translator.translate(
-                        translator_name=self.CHOICE_TRANSLATOR,
-                        source_language=self.OUTPUT_SOURCE_LANG,
-                        target_language=self.OUTPUT_TARGET_LANG,
-                        message=message
-                    )
-                    voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-
-                # send OSC message
-                # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-
-                # update textbox message receive log
-                utils.print_textbox(self.textbox_message_receive_log, f"[voice] {voice_message}")
-        utils.print_textbox(self.textbox_message_system_log, "[info] Stop transcription of speaker's voice")
-        for t in self.threads_receive:
-            t.join()
+        message = self.vr.recognize_spk(language=self.INPUT_SPEAKER_VOICE_LANGUAGE)
+        if len(message) > 0:
+            # translate
+            if self.checkbox_translation.get() is False:
+                voice_message = f"{message}"
+            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
+                voice_message = f"{message}"
+            else:
+                result = self.translator.translate(
+                    translator_name=self.CHOICE_TRANSLATOR,
+                    source_language=self.OUTPUT_SOURCE_LANG,
+                    target_language=self.OUTPUT_TARGET_LANG,
+                    message=message
+                )
+                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+            # send OSC message
+            # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            # update textbox message receive log
+            utils.print_textbox(self.textbox_message_receive_log, f"[voice] {voice_message}")
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -517,6 +511,10 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", True)
 
     def delete_window(self):
+        thread_list = threading.enumerate()
+        thread_list.remove(threading.main_thread())
+        for thread in thread_list:
+            thread.stop()
         self.destroy()
 
 if __name__ == "__main__":
