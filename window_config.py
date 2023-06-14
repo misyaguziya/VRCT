@@ -531,10 +531,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
-            self.parent.textbox_message_system_log.configure(state='normal')
-            self.parent.textbox_message_system_log.insert("end", f"[ERROR]Auth Keyを設定してないか間違っています\n")
-            self.parent.textbox_message_system_log.configure(state='disabled')
-            self.parent.textbox_message_system_log.see("end")
+            utils.print_textbox(self.parent.textbox_message_system_log, f"[error] Auth Key or language setting is incorrect")
         else:
             self.optionmenu_translation_input_source_language.configure(
                 values=self.parent.translator.languages[choice],
@@ -632,10 +629,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 self.parent.AUTH_KEYS["DeepL(auth)"] = value
                 utils.save_json(self.parent.PATH_CONFIG, "AUTH_KEYS", self.parent.AUTH_KEYS)
             else:
-                self.parent.textbox_message_system_log.configure(state='normal')
-                self.parent.textbox_message_system_log.insert("end", f"[ERROR]Auth Keyを設定してないか間違っています\n")
-                self.parent.textbox_message_system_log.configure(state='disabled')
-                self.parent.textbox_message_system_log.see("end")
+                utils.print_textbox(self.parent.textbox_message_system_log, f"[error] Auth Key or language setting is incorrect")
 
     def update_message_format(self):
         value = self.entry_message_format.get()

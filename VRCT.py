@@ -244,7 +244,6 @@ class App(customtkinter.CTk):
         self.tabview_logs.tab("receive").grid_columnconfigure(0, weight=1)
         self.tabview_logs.tab("system").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("system").grid_columnconfigure(0, weight=1)
-        # self.tabview_logs.configure(state='disabled')
 
         # add textbox message send log
         self.textbox_message_send_log = customtkinter.CTkTextbox(
@@ -283,10 +282,7 @@ class App(customtkinter.CTk):
         self.translator = translation.Translator()
         if self.translator.authentication(self.CHOICE_TRANSLATOR, self.AUTH_KEYS[self.CHOICE_TRANSLATOR]) is False:
             # error update Auth key
-            self.textbox_message_system_log.configure(state='normal')
-            self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyを設定してないか間違っています\n")
-            self.textbox_message_system_log.configure(state='disabled')
-            self.textbox_message_system_log.see("end")
+            utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
 
         ## set transcription instance
         self.vr = transcription.VoiceRecognizer()
@@ -307,12 +303,18 @@ class App(customtkinter.CTk):
             self.checkbox_transcription_send.deselect()
         self.checkbox_transcription_send_callback()
 
+        ## init threads send
+        self.threads_send = []
+
         ## set checkbox enable transcription receive
         if self.ENABLE_TRANSCRIPTION_RECEIVE:
             self.checkbox_transcription_receive.select()
         else:
             self.checkbox_transcription_receive.deselect()
         self.checkbox_transcription_receive_callback()
+
+        ## init threads receive
+        self.threads_receive = []
 
         ## set set checkbox enable foreground
         if self.ENABLE_FOREGROUND:
@@ -337,6 +339,9 @@ class App(customtkinter.CTk):
         customtkinter.set_appearance_mode(self.APPEARANCE_THEME)
         customtkinter.set_default_color_theme("blue")
 
+        # delete window
+        self.protocol("WM_DELETE_WINDOW", self.delete_window)
+
     def button_config_callback(self):
         if self.config_window is None or not self.config_window.winfo_exists():
             self.config_window = window_config.ToplevelWindowConfig(self)
@@ -349,13 +354,10 @@ class App(customtkinter.CTk):
 
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
-        self.textbox_message_system_log.configure(state='normal')
         if self.ENABLE_TRANSLATION:
-            self.textbox_message_system_log.insert("end", f"[INFO] start translation\n")
+            utils.print_textbox(self.textbox_message_system_log, "[info] Start translation")
         else:
-            self.textbox_message_system_log.insert("end", f"[INFO] stop translation\n")
-        self.textbox_message_system_log.configure(state='disabled')
-        self.textbox_message_system_log.see("end")
+            utils.print_textbox(self.textbox_message_system_log, "[info] Stop translation")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
     def checkbox_transcription_send_callback(self):
@@ -372,6 +374,8 @@ class App(customtkinter.CTk):
             th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
             th_vr_listen_mic.start()
             th_vr_recognize_mic.start()
+            self.threads_send.append(th_vr_listen_mic)
+            self.threads_send.append(th_vr_recognize_mic)
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
 
     def checkbox_transcription_receive_callback(self):
@@ -389,6 +393,8 @@ class App(customtkinter.CTk):
             th_vr_recognize_spk = threading.Thread(target = self.vr_recognize_spk)
             th_vr_listen_spk.start()
             th_vr_recognize_spk.start()
+            self.threads_receive.append(th_vr_listen_spk)
+            self.threads_receive.append(th_vr_recognize_spk)
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def vr_listen_mic(self):
@@ -396,11 +402,7 @@ class App(customtkinter.CTk):
             self.vr.listen_mic()
 
     def vr_recognize_mic(self):
-        self.textbox_message_system_log.configure(state='normal')
-        self.textbox_message_system_log.insert("end", f"[INFO] start transcription\n")
-        self.textbox_message_system_log.configure(state='disabled')
-        self.textbox_message_system_log.see("end")
-
+        utils.print_textbox(self.textbox_message_system_log, "[info] Start sending transcription from your voice")
         while self.checkbox_transcription_send.get() is True:
             message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
             if len(message) > 0:
@@ -408,10 +410,7 @@ class App(customtkinter.CTk):
                 if self.checkbox_translation.get() is False:
                     voice_message = f"{message}"
                 elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    self.textbox_message_system_log.configure(state='normal')
-                    self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                    self.textbox_message_system_log.configure(state='disabled')
-                    self.textbox_message_system_log.see("end")
+                    utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
                     voice_message = f"{message}"
                 else:
                     result = self.translator.translate(
@@ -426,16 +425,17 @@ class App(customtkinter.CTk):
                 osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
                 # update textbox message log
-                self.textbox_message_send_log.configure(state='normal')
-                self.textbox_message_send_log.insert("end", f"[VOICE] {voice_message}\n")
-                self.textbox_message_send_log.configure(state='disabled')
-                self.textbox_message_send_log.see("end")
+                utils.print_textbox(self.textbox_message_send_log, f"[voice] {voice_message}")
+        utils.print_textbox(self.textbox_message_system_log, "[info] Stop sending transcription from your voice")
+        for t in self.threads_send:
+            t.join()
 
     def vr_listen_spk(self):
         while self.checkbox_transcription_receive.get() is True:
             self.vr.listen_spk()
 
     def vr_recognize_spk(self):
+        utils.print_textbox(self.textbox_message_system_log, "[info] Start transcription of speaker's voice")
         while self.checkbox_transcription_receive.get() is True:
             message = self.vr.recognize_spk(language=self.INPUT_SPEAKER_VOICE_LANGUAGE)
             if len(message) > 0:
@@ -443,10 +443,7 @@ class App(customtkinter.CTk):
                 if self.checkbox_translation.get() is False:
                     voice_message = f"{message}"
                 elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                    self.textbox_message_system_log.configure(state='normal')
-                    self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                    self.textbox_message_system_log.configure(state='disabled')
-                    self.textbox_message_system_log.see("end")
+                    utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
                     voice_message = f"{message}"
                 else:
                     result = self.translator.translate(
@@ -461,10 +458,10 @@ class App(customtkinter.CTk):
                 # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
                 # update textbox message receive log
-                self.textbox_message_receive_log.configure(state='normal')
-                self.textbox_message_receive_log.insert("end", f"[VOICE] {voice_message}\n")
-                self.textbox_message_receive_log.configure(state='disabled')
-                self.textbox_message_receive_log.see("end")
+                utils.print_textbox(self.textbox_message_receive_log, f"[voice] {voice_message}")
+        utils.print_textbox(self.textbox_message_system_log, "[info] Stop transcription of speaker's voice")
+        for t in self.threads_receive:
+            t.join()
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -487,10 +484,7 @@ class App(customtkinter.CTk):
             if self.checkbox_translation.get() is False:
                 chat_message = f"{message}"
             elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                self.textbox_message_system_log.configure(state='normal')
-                self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
-                self.textbox_message_system_log.configure(state='disabled')
-                self.textbox_message_system_log.see("end")
+                utils.print_textbox(self.textbox_message_system_log, "[error] Auth Key or language setting is incorrect")
                 chat_message = f"{message}"
             else:
                 result = self.translator.translate(
@@ -505,10 +499,7 @@ class App(customtkinter.CTk):
             osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
             # update textbox message log
-            self.textbox_message_send_log.configure(state='normal')
-            self.textbox_message_send_log.insert("end", f"[CHAT] {chat_message}\n")
-            self.textbox_message_send_log.configure(state='disabled')
-            self.textbox_message_send_log.see("end")
+            utils.print_textbox(self.textbox_message_send_log, f"[chat] {chat_message}")
 
             # delete message in entry message box
             # self.entry_message_box.delete(0, customtkinter.END)
@@ -524,6 +515,9 @@ class App(customtkinter.CTk):
         osc_tools.send_typing(False, self.OSC_IP_ADDRESS, self.OSC_PORT)
         if self.ENABLE_FOREGROUND:
             self.attributes("-topmost", True)
+
+    def delete_window(self):
+        self.destroy()
 
 if __name__ == "__main__":
     app = App()
