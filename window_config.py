@@ -499,7 +499,6 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
 
-
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_ip_address.configure(font=customtkinter.CTkFont(family=choice))

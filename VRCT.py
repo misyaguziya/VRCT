@@ -155,8 +155,8 @@ class App(customtkinter.CTk):
         # init main window
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
-        self.geometry(f"{400}x{140}")
-        self.minsize(400, 140)
+        self.geometry(f"{400}x{170}")
+        self.minsize(400, 170)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -362,7 +362,11 @@ class App(customtkinter.CTk):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
             # start threading
-            self.vr.set_mic(self.CHOICE_MIC_DEVICE, threshold=self.INPUT_MIC_THRESHOLD, is_dynamic=self.INPUT_MIC_IS_DYNAMIC)
+            self.vr.set_mic(
+                device_name=self.CHOICE_MIC_DEVICE,
+                threshold=int(self.INPUT_MIC_THRESHOLD),
+                is_dynamic=self.INPUT_MIC_IS_DYNAMIC,
+            )
             self.vr.init_mic()
             th_vr_listen_mic = threading.Thread(target = self.vr_listen_mic)
             th_vr_recognize_mic = threading.Thread(target = self.vr_recognize_mic)
@@ -375,10 +379,10 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
             # start threading
             self.vr.set_spk(
-                self.CHOICE_SPEAKER_DEVICE,
-                # int(self.INPUT_SPEAKER_SAMPLING_RATE),
-                # int(self.INPUT_SPEAKER_INTERVAL),
-                # int(self.INPUT_SPEAKER_BUFFER_SIZE),
+                device_name=self.CHOICE_SPEAKER_DEVICE,
+                sample_rate=int(self.INPUT_SPEAKER_SAMPLING_RATE),
+                interval=int(self.INPUT_SPEAKER_INTERVAL),
+                buffer_size=int(self.INPUT_SPEAKER_BUFFER_SIZE),
             )
             self.vr.init_spk()
             th_vr_listen_spk = threading.Thread(target = self.vr_listen_spk)
@@ -482,7 +486,7 @@ class App(customtkinter.CTk):
             # translate
             if self.checkbox_translation.get() is False:
                 chat_message = f"{message}"
-            elif (self.translator.translator_status[self.CHOICE_TRANSLATOR] is False) or (self.INPUT_SOURCE_LANG == "None") or (self.INPUT_TARGET_LANG == "None"):
+            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
                 self.textbox_message_system_log.configure(state='normal')
                 self.textbox_message_system_log.insert("end", f"[ERROR] Auth Keyもしくは言語の設定が間違っています\n")
                 self.textbox_message_system_log.configure(state='disabled')
@@ -501,10 +505,10 @@ class App(customtkinter.CTk):
             osc_tools.send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
             # update textbox message log
-            self.textbox_message_receive_log.configure(state='normal')
-            self.textbox_message_receive_log.insert("end", f"[CHAT] {chat_message}\n")
-            self.textbox_message_receive_log.configure(state='disabled')
-            self.textbox_message_receive_log.see("end")
+            self.textbox_message_send_log.configure(state='normal')
+            self.textbox_message_send_log.insert("end", f"[CHAT] {chat_message}\n")
+            self.textbox_message_send_log.configure(state='disabled')
+            self.textbox_message_send_log.see("end")
 
             # delete message in entry message box
             # self.entry_message_box.delete(0, customtkinter.END)
