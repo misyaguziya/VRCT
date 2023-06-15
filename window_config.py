@@ -514,6 +514,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.checkbox_transcription_send.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.checkbox_transcription_receive.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.checkbox_foreground.configure(font=customtkinter.CTkFont(family=choice))
+        self.parent.textbox_message_log.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.textbox_message_send_log.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.textbox_message_receive_log.configure(font=customtkinter.CTkFont(family=choice))
         self.parent.textbox_message_system_log.configure(font=customtkinter.CTkFont(family=choice))
@@ -531,7 +532,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
-            utils.print_textbox(self.parent.textbox_message_system_log, f"[error] Auth Key or language setting is incorrect")
+            utils.print_textbox(self.parent.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+            utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
             self.optionmenu_translation_input_source_language.configure(
                 values=self.parent.translator.languages[choice],
@@ -625,11 +627,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def update_authkey(self):
         value = self.entry_authkey.get()
         if len(value) > 0:
-            if self.parent.translator.authentication(self.parent.CHOICE_TRANSLATOR, self.parent.AUTH_KEYS[self.parent.CHOICE_TRANSLATOR]) is True:
+            if self.parent.translator.authentication("DeepL(auth)", self.parent.AUTH_KEYS["DeepL(auth)"]) is True:
                 self.parent.AUTH_KEYS["DeepL(auth)"] = value
                 utils.save_json(self.parent.PATH_CONFIG, "AUTH_KEYS", self.parent.AUTH_KEYS)
+                utils.print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
+                utils.print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
-                utils.print_textbox(self.parent.textbox_message_system_log, f"[error] Auth Key or language setting is incorrect")
+                utils.print_textbox(self.parent.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
+                utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
 
     def update_message_format(self):
         value = self.entry_message_format.get()
