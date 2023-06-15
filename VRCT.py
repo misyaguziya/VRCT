@@ -152,11 +152,15 @@ class App(customtkinter.CTk):
             }
             json.dump(config, fp, indent=4)
 
+        ## set UI theme
+        customtkinter.set_appearance_mode(self.APPEARANCE_THEME)
+        customtkinter.set_default_color_theme("blue")
+
         # init main window
         self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
-        self.geometry(f"{400}x{170}")
-        self.minsize(400, 170)
+        self.geometry(f"{400}x{175}")
+        self.minsize(400, 175)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
 
@@ -168,7 +172,7 @@ class App(customtkinter.CTk):
         # add checkbox translation
         self.checkbox_translation = customtkinter.CTkCheckBox(
             self.sidebar_frame,
-            text="Translation",
+            text="translation",
             onvalue=True,
             offvalue=False,
             command=self.checkbox_translation_callback,
@@ -179,7 +183,7 @@ class App(customtkinter.CTk):
         # add checkbox transcription send
         self.checkbox_transcription_send = customtkinter.CTkCheckBox(
             self.sidebar_frame,
-            text="TranscriptionSend",
+            text="voice2chatbox",
             onvalue=True,
             offvalue=False,
             command=self.checkbox_transcription_send_callback,
@@ -190,7 +194,7 @@ class App(customtkinter.CTk):
         # add checkbox transcription receive
         self.checkbox_transcription_receive = customtkinter.CTkCheckBox(
             self.sidebar_frame,
-            text="TranscriptionReceive",
+            text="speaker2log",
             onvalue=True,
             offvalue=False,
             command=self.checkbox_transcription_receive_callback,
@@ -201,7 +205,7 @@ class App(customtkinter.CTk):
         # add checkbox foreground
         self.checkbox_foreground = customtkinter.CTkCheckBox(
             self.sidebar_frame,
-            text="Foreground",
+            text="foreground",
             onvalue=True,
             offvalue=False,
             command=self.checkbox_foreground_callback,
@@ -236,7 +240,7 @@ class App(customtkinter.CTk):
         self.tabview_logs.add("send")
         self.tabview_logs.add("receive")
         self.tabview_logs.add("system")
-        self.tabview_logs.grid(row=0, column=1, padx=5, pady=0, sticky="nsew")
+        self.tabview_logs.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
         self.tabview_logs._segmented_button.grid(sticky="W")
         self.tabview_logs.tab("send").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("send").grid_columnconfigure(0, weight=1)
@@ -244,6 +248,7 @@ class App(customtkinter.CTk):
         self.tabview_logs.tab("receive").grid_columnconfigure(0, weight=1)
         self.tabview_logs.tab("system").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("system").grid_columnconfigure(0, weight=1)
+        self.tabview_logs.configure(fg_color="transparent")
 
         # add textbox message send log
         self.textbox_message_send_log = customtkinter.CTkTextbox(
@@ -275,7 +280,7 @@ class App(customtkinter.CTk):
             placeholder_text="message",
             font=customtkinter.CTkFont(family=self.FONT_FAMILY)
         )
-        self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=(10, 10), pady=(5, 10), sticky="nsew")
+        self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=5, pady=(5, 10), sticky="nsew")
 
         # set default values
         ## set translator instance
@@ -332,10 +337,6 @@ class App(customtkinter.CTk):
         ## set UI scale
         new_scaling_float = int(self.UI_SCALING.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
-
-        ## set UI theme
-        customtkinter.set_appearance_mode(self.APPEARANCE_THEME)
-        customtkinter.set_default_color_theme("blue")
 
         # delete window
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
