@@ -46,7 +46,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.slider_transparency_callback,
             variable=tk.DoubleVar(value=self.parent.TRANSPARENCY),
         )
-        self.slider_transparency.grid(row=0, column=1, columnspan=3, padx=5, pady=10, sticky="nsew")
+        self.slider_transparency.grid(row=0, column=1, columnspan=1, padx=5, pady=10, sticky="nsew")
 
         ## optionmenu theme
         self.label_appearance_theme = customtkinter.CTkLabel(
@@ -62,7 +62,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.optionmenu_theme_callback,
             variable=customtkinter.StringVar(value=self.parent.APPEARANCE_THEME)
         )
-        self.optionmenu_appearance_theme.grid(row=1, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         ## optionmenu UI scaling
         self.label_ui_scaling = customtkinter.CTkLabel(
@@ -78,7 +78,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.optionmenu_ui_scaling_callback,
             variable=customtkinter.StringVar(value=self.parent.UI_SCALING)
         )
-        self.optionmenu_ui_scaling.grid(row=2, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         ## optionmenu font family
         self.label_font_family = customtkinter.CTkLabel(
@@ -95,7 +95,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.optionmenu_font_family_callback,
             variable=customtkinter.StringVar(value=self.parent.FONT_FAMILY)
         )
-        self.optionmenu_font_family.grid(row=3, column=1, columnspan=3, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_font_family.grid(row=3, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
 
         # tab Translation
         ## optionmenu translation translator
@@ -207,7 +207,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE)
         )
-        self.optionmenu_input_mic_device.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_device.grid(row=0, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
 
         ## optionmenu input mic voice language
         self.label_input_mic_voice_language = customtkinter.CTkLabel(
@@ -224,7 +224,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE)
         )
-        self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
 
         ## checkbox input mic in dynamic
         self.label_input_mic_is_dynamic = customtkinter.CTkLabel(
@@ -242,7 +242,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.checkbox_input_mic_is_dynamic_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_mic_is_dynamic.grid(row=2, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.checkbox_input_mic_is_dynamic.grid(row=2, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         if  self.parent.INPUT_MIC_IS_DYNAMIC is True:
             self.checkbox_input_mic_is_dynamic.select()
         else:
@@ -261,7 +261,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_THRESHOLD),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_threshold.grid(row=3, column=1, columnspan=3 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_mic_threshold.grid(row=3, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
         self.entry_input_mic_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_threshold_callback)
 
         ## optionmenu input speaker device
@@ -279,7 +279,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
         )
-        self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
 
         ## optionmenu input speaker voice language
         self.label_input_speaker_voice_language = customtkinter.CTkLabel(
@@ -296,7 +296,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
         )
-        self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
 
         ## entry input speaker sampling rate
         self.label_input_speaker_sampling_rate = customtkinter.CTkLabel(
@@ -311,7 +311,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_SAMPLING_RATE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_sampling_rate.grid(row=6, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.entry_input_speaker_sampling_rate.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.entry_input_speaker_sampling_rate.bind("<Any-KeyRelease>", self.entry_input_speaker_sampling_rate_callback)
 
         ## entry input speaker interval
@@ -327,7 +327,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_INTERVAL),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_interval.grid(row=7, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.entry_input_speaker_interval.grid(row=7, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.entry_input_speaker_interval.bind("<Any-KeyRelease>", self.entry_input_speaker_interval_callback)
 
         ## entry input speaker buffer size
@@ -343,7 +343,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_BUFFER_SIZE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_buffer_size.grid(row=8, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.entry_input_speaker_buffer_size.grid(row=8, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.entry_input_speaker_buffer_size.bind("<Any-KeyRelease>", self.entry_input_speaker_buffer_size_callback)
 
         # tab Parameter
@@ -361,14 +361,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_ip_address = customtkinter.CTkButton(
-            self.tabview_config.tab("Parameter"),
-            text="",
-            width=1,
-            command=self.update_ip_address,
-            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
-        )
-        self.button_ip_address.grid(row=0, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_ip_address.bind("<Any-KeyRelease>", self.entry_ip_address_callback)
 
         ## entry port
         self.label_port = customtkinter.CTkLabel(
@@ -384,14 +377,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_port = customtkinter.CTkButton(
-            self.tabview_config.tab("Parameter"),
-            text="",
-            width=1,
-            command=self.update_port,
-            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
-        )
-        self.button_port.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_port.bind("<Any-KeyRelease>", self.entry_port_callback)
 
         ## entry authkey
         self.label_authkey = customtkinter.CTkLabel(
@@ -407,14 +393,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_authkey = customtkinter.CTkButton(
-            self.tabview_config.tab("Parameter"),
-            text="",
-            width=1,
-            command=self.update_authkey,
-            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
-        )
-        self.button_authkey.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_authkey.bind("<Any-KeyRelease>", self.entry_authkey_callback)
 
         ## entry message format
         self.label_message_format = customtkinter.CTkLabel(
@@ -430,14 +409,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
-        self.button_message_format = customtkinter.CTkButton(
-            self.tabview_config.tab("Parameter"),
-            text="",
-            width=1,
-            command=self.update_message_format,
-            image=customtkinter.CTkImage(Image.open(os.path.join(os.path.dirname(__file__), "img", "save-icon.png")))
-        )
-        self.button_message_format.grid(row=3, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
 
     def slider_transparency_callback(self, value):
         self.parent.wm_attributes("-alpha", value/100)
@@ -612,19 +584,15 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_SPEAKER_BUFFER_SIZE = int(self.entry_input_speaker_buffer_size.get())
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_BUFFER_SIZE", self.parent.INPUT_SPEAKER_BUFFER_SIZE)
 
-    def update_ip_address(self):
-        value = self.entry_ip_address.get()
-        if len(value) > 0:
-            self.parent.OSC_IP_ADDRESS = value
-            utils.save_json(self.parent.PATH_CONFIG, "OSC_IP_ADDRESS", self.parent.OSC_IP_ADDRESS)
+    def entry_ip_address_callback(self, event):
+        self.parent.OSC_IP_ADDRESS = self.entry_ip_address.get()
+        utils.save_json(self.parent.PATH_CONFIG, "OSC_IP_ADDRESS", self.parent.OSC_IP_ADDRESS)
 
-    def update_port(self):
-        value = self.entry_port.get()
-        if len(value) > 0:
-            self.parent.OSC_PORT = value
-            utils.save_json(self.parent.PATH_CONFIG, "OSC_PORT", self.parent.OSC_PORT)
+    def entry_port_callback(self, event):
+        self.parent.OSC_PORT = self.entry_port.get()
+        utils.save_json(self.parent.PATH_CONFIG, "OSC_PORT", self.parent.OSC_PORT)
 
-    def update_authkey(self):
+    def entry_authkey_callback(self, event):
         value = self.entry_authkey.get()
         if len(value) > 0:
             if self.parent.translator.authentication("DeepL(auth)", self.parent.AUTH_KEYS["DeepL(auth)"]) is True:
@@ -636,7 +604,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 utils.print_textbox(self.parent.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
                 utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
 
-    def update_message_format(self):
+    def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
         if len(value) > 0:
             self.parent.MESSAGE_FORMAT = value
