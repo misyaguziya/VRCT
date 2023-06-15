@@ -118,7 +118,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         ## optionmenu translation input language
         self.label_translation_input_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
-            text="Input Language:",
+            text="Send Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
@@ -156,7 +156,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         ## optionmenu translation output language
         self.label_translation_output_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
-            text="Output Language:",
+            text="Receive Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )

@@ -18,7 +18,7 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v0.4b)
+        textbox_information_message = """VRCT(v1.0)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -41,16 +41,40 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
 
 # その他の設定
     translation チェックボックス: 翻訳の有効無効
+    voice2chatbox チェックボックス : マイクの音声を文字起こししてチャットボックスに送信する
+    speaker2log チェックボックス : スピーカーの音声から文字起こししてログに表示する
     foreground チェックボックス: 最前面表示の有効無効
+
+    テキストボックス
+        logタブ
+            すべてのログを表示
+        sendタブ
+            送信したメッセージを表示
+        receiveタブ
+            受信したメッセージを表示
+        systemタブ
+            機能についてのメッセージを表示
 
     configウィンドウ
         UIタブ
-            Select translator: 翻訳エンジンの変更
-            Select Language: 翻訳する言語[source, target]を選択
             Transparency: ウィンドウの透過度の調整
             Appearance Theme: ウィンドウテーマを選択
             UI Scaling: UIサイズを調整
             Font Family: 表示フォントを選択
+        Translationタブ
+            Select Translator: 翻訳エンジンの変更
+            Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
+            Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
+        Transcriptionタブ
+            Input Mic Device: 音声を入力するマイクを選択
+            Input Mic Voice Language: 入力する音声の言語
+            Input Mic IsDynamic: マイクの自動調整
+            Input Mic Threshold: 音声取得のしきい値
+            Input Speaker Device: 音声を受信するスピーカーを選択
+            Input Speaker Voice Language: 受信する音声の言語
+            Input Speaker SamplingRate: 受信する音声の調整
+            Input Speaker Interval: 受信する音声の調整
+            Input Speaker BufferSize: 受信する音声の調整
         Parameterタブ
             OSC IP address: 変更不要
             OSC port: 変更不要
@@ -84,6 +108,8 @@ https://twitter.com/misya_ai
 [2023-06-06: v0.4b]
 - 翻訳エンジンを追加
 - 入力と出力の翻訳言語を選択できるように変更
+[2023-06-15: v1.0]
+- 文字起こし機能を追加
 
 # 注意事項
 再配布とかはやめてね
