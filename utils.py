@@ -1,7 +1,6 @@
 import json
 import datetime
 import threading
-import tkinter as tk
 
 def save_json(path, key, value):
     with open(path, "r") as fp:

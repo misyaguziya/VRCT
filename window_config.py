@@ -1,7 +1,6 @@
 import os
 import tkinter as tk
 import customtkinter
-from PIL import Image
 import utils
 
 class ToplevelWindowConfig(customtkinter.CTkToplevel):
