@@ -1,8 +1,9 @@
 import os
 import json
-import threading
+import queue
 import customtkinter
 from PIL import Image
+import pyaudiowpatch as pyaudio
 
 import utils
 import translation
@@ -40,9 +41,7 @@ class App(customtkinter.CTk):
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = None
         self.INPUT_SPEAKER_VOICE_LANGUAGE = "en-US"
-        self.INPUT_SPEAKER_SAMPLING_RATE = 16000
-        self.INPUT_SPEAKER_INTERVAL = 3
-        self.INPUT_SPEAKER_BUFFER_SIZE = 4096
+        self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
@@ -104,12 +103,8 @@ class App(customtkinter.CTk):
                 self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
                 self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
-            if "INPUT_SPEAKER_SAMPLING_RATE" in config.keys():
-                self.INPUT_SPEAKER_SAMPLING_RATE = config["INPUT_SPEAKER_SAMPLING_RATE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
                 self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
-            if "INPUT_SPEAKER_BUFFER_SIZE" in config.keys():
-                self.INPUT_SPEAKER_BUFFER_SIZE = config["INPUT_SPEAKER_BUFFER_SIZE"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
@@ -142,9 +137,7 @@ class App(customtkinter.CTk):
                 "INPUT_MIC_THRESHOLD": self.INPUT_MIC_THRESHOLD,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
-                "INPUT_SPEAKER_SAMPLING_RATE": self.INPUT_SPEAKER_SAMPLING_RATE,
                 "INPUT_SPEAKER_INTERVAL": self.INPUT_SPEAKER_INTERVAL,
-                "INPUT_SPEAKER_BUFFER_SIZE": self.INPUT_SPEAKER_BUFFER_SIZE,
                 "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
@@ -302,7 +295,10 @@ class App(customtkinter.CTk):
             utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
 
         ## set transcription instance
-        self.vr = transcription.VoiceRecognizer()
+        self.mic_queue = queue.Queue()
+        self.spk_queue = queue.Queue()
+        self.p = pyaudio.PyAudio()
+        self.vr = transcription.VoiceRecognizer(self.p, self.mic_queue, self.spk_queue)
         self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else self.vr.search_default_device()[0]
         self.CHOICE_SPEAKER_DEVICE = self.CHOICE_SPEAKER_DEVICE if self.CHOICE_SPEAKER_DEVICE is not None else self.vr.search_default_device()[1]
 
@@ -383,6 +379,7 @@ class App(customtkinter.CTk):
                 device_name=self.CHOICE_MIC_DEVICE,
                 threshold=int(self.INPUT_MIC_THRESHOLD),
                 is_dynamic=self.INPUT_MIC_IS_DYNAMIC,
+                language=self.INPUT_MIC_VOICE_LANGUAGE,
             )
             self.vr.init_mic()
             self.th_vr_listen_mic = utils.thread_fnc(self.vr_listen_mic)
@@ -404,21 +401,18 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
             utils.print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
-            # start threading
+
             self.vr.set_spk(
                 device_name=self.CHOICE_SPEAKER_DEVICE,
-                sample_rate=int(self.INPUT_SPEAKER_SAMPLING_RATE),
                 interval=int(self.INPUT_SPEAKER_INTERVAL),
-                buffer_size=int(self.INPUT_SPEAKER_BUFFER_SIZE),
+                language=self.INPUT_SPEAKER_VOICE_LANGUAGE,
             )
-            self.vr.init_spk()
-            self.th_vr_listen_spk = utils.thread_fnc(self.vr_listen_spk)
+            self.vr.start_spk_recording()
             self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
-            self.th_vr_listen_spk.start()
             self.th_vr_recognize_spk.start()
         else:
-            if isinstance(self.th_vr_listen_spk, utils.thread_fnc):
-                self.th_vr_listen_spk.stop()
+            if self.vr.spk_stream is not None:
+                self.vr.close_spk_stream()
             if isinstance(self.th_vr_recognize_spk, utils.thread_fnc):
                 self.th_vr_recognize_spk.stop()
 
@@ -430,7 +424,7 @@ class App(customtkinter.CTk):
         self.vr.listen_mic()
 
     def vr_recognize_mic(self):
-        message = self.vr.recognize_mic(language=self.INPUT_MIC_VOICE_LANGUAGE)
+        message = self.vr.recognize_mic()
         if len(message) > 0:
             # translate
             if self.checkbox_translation.get() is False:
@@ -457,7 +451,7 @@ class App(customtkinter.CTk):
         self.vr.listen_spk()
 
     def vr_recognize_spk(self):
-        message = self.vr.recognize_spk(language=self.INPUT_SPEAKER_VOICE_LANGUAGE)
+        message = self.vr.recognize_spk()
         if len(message) > 0:
             # translate
             if self.checkbox_translation.get() is False:
@@ -540,12 +534,12 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", True)
 
     def delete_window(self):
-        thread_list = threading.enumerate()
-        thread_list.remove(threading.main_thread())
-        for thread in thread_list:
-            thread.stop()
+        self.quit()
         self.destroy()
 
 if __name__ == "__main__":
-    app = App()
-    app.mainloop()
+    try:
+        app = App()
+        app.mainloop()
+    except Exception as e:
+        print(e)
