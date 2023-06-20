@@ -273,7 +273,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_device.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=self.parent.vr.search_output_device(),
+            values=[device["name"] for device in self.parent.vr.search_output_device()],
             command=self.optionmenu_input_speaker_device_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
