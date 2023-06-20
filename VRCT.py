@@ -542,4 +542,5 @@ if __name__ == "__main__":
         app = App()
         app.mainloop()
     except Exception as e:
-        print(e)
+        with open("./error.log", "r") as fp:
+            fp.write(f"{e}")
