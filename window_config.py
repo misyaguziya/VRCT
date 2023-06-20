@@ -297,22 +297,6 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         )
         self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
 
-        ## entry input speaker sampling rate
-        self.label_input_speaker_sampling_rate = customtkinter.CTkLabel(
-            self.tabview_config.tab("Transcription"),
-            text="Input Speaker SamplingRate:",
-            fg_color="transparent",
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
-        )
-        self.label_input_speaker_sampling_rate.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_speaker_sampling_rate = customtkinter.CTkEntry(
-            self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_SAMPLING_RATE),
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
-        )
-        self.entry_input_speaker_sampling_rate.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        self.entry_input_speaker_sampling_rate.bind("<Any-KeyRelease>", self.entry_input_speaker_sampling_rate_callback)
-
         ## entry input speaker interval
         self.label_input_speaker_interval = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
@@ -320,30 +304,14 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_interval.grid(row=7, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_speaker_interval.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.entry_input_speaker_interval = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
             textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_INTERVAL),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_interval.grid(row=7, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.entry_input_speaker_interval.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.entry_input_speaker_interval.bind("<Any-KeyRelease>", self.entry_input_speaker_interval_callback)
-
-        ## entry input speaker buffer size
-        self.label_input_speaker_buffer_size = customtkinter.CTkLabel(
-            self.tabview_config.tab("Transcription"),
-            text="Input Speaker BufferSize:",
-            fg_color="transparent",
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
-        )
-        self.label_input_speaker_buffer_size.grid(row=8, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_speaker_buffer_size = customtkinter.CTkEntry(
-            self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_BUFFER_SIZE),
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
-        )
-        self.entry_input_speaker_buffer_size.grid(row=8, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        self.entry_input_speaker_buffer_size.bind("<Any-KeyRelease>", self.entry_input_speaker_buffer_size_callback)
 
         # tab Parameter
         ## entry ip address
@@ -463,12 +431,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_sampling_rate.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_speaker_sampling_rate.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_speaker_buffer_size.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
@@ -571,17 +535,9 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
-    def entry_input_speaker_sampling_rate_callback(self, event):
-        self.parent.INPUT_SPEAKER_SAMPLING_RATE = int(self.entry_input_speaker_sampling_rate.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_SAMPLING_RATE", self.parent.INPUT_SPEAKER_SAMPLING_RATE)
-
     def entry_input_speaker_interval_callback(self, event):
         self.parent.INPUT_SPEAKER_INTERVAL = int(self.entry_input_speaker_interval.get())
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_INTERVAL", self.parent.INPUT_SPEAKER_INTERVAL)
-
-    def entry_input_speaker_buffer_size_callback(self, event):
-        self.parent.INPUT_SPEAKER_BUFFER_SIZE = int(self.entry_input_speaker_buffer_size.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_BUFFER_SIZE", self.parent.INPUT_SPEAKER_BUFFER_SIZE)
 
     def entry_ip_address_callback(self, event):
         self.parent.OSC_IP_ADDRESS = self.entry_ip_address.get()

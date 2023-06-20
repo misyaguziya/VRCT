@@ -41,9 +41,7 @@ class App(customtkinter.CTk):
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = None
         self.INPUT_SPEAKER_VOICE_LANGUAGE = "en-US"
-        self.INPUT_SPEAKER_SAMPLING_RATE = 16000
         self.INPUT_SPEAKER_INTERVAL = 4
-        self.INPUT_SPEAKER_BUFFER_SIZE = 4096
 
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
@@ -105,12 +103,8 @@ class App(customtkinter.CTk):
                 self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
                 self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
-            if "INPUT_SPEAKER_SAMPLING_RATE" in config.keys():
-                self.INPUT_SPEAKER_SAMPLING_RATE = config["INPUT_SPEAKER_SAMPLING_RATE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
                 self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
-            if "INPUT_SPEAKER_BUFFER_SIZE" in config.keys():
-                self.INPUT_SPEAKER_BUFFER_SIZE = config["INPUT_SPEAKER_BUFFER_SIZE"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
@@ -143,9 +137,7 @@ class App(customtkinter.CTk):
                 "INPUT_MIC_THRESHOLD": self.INPUT_MIC_THRESHOLD,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
-                "INPUT_SPEAKER_SAMPLING_RATE": self.INPUT_SPEAKER_SAMPLING_RATE,
                 "INPUT_SPEAKER_INTERVAL": self.INPUT_SPEAKER_INTERVAL,
-                "INPUT_SPEAKER_BUFFER_SIZE": self.INPUT_SPEAKER_BUFFER_SIZE,
                 "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
