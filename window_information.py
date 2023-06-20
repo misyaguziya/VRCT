@@ -72,9 +72,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
             Input Mic Threshold: 音声取得のしきい値
             Input Speaker Device: 音声を受信するスピーカーを選択
             Input Speaker Voice Language: 受信する音声の言語
-            Input Speaker SamplingRate: 受信する音声の調整
             Input Speaker Interval: 受信する音声の調整
-            Input Speaker BufferSize: 受信する音声の調整
         Parameterタブ
             OSC IP address: 変更不要
             OSC port: 変更不要
@@ -108,8 +106,9 @@ https://twitter.com/misya_ai
 [2023-06-06: v0.4b]
 - 翻訳エンジンを追加
 - 入力と出力の翻訳言語を選択できるように変更
-[2023-06-15: v1.0]
-- 文字起こし機能を追加
+[2023-06-20: v1.0]
+- マイクからの音声の文字起こし機能を追加
+- スピーカーからの音声の文字起こし機能を追加
 
 # 注意事項
 再配布とかはやめてね
