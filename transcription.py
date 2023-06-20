@@ -1,17 +1,12 @@
-import io
-import queue
-import numpy as np
-import soundcard as sc
-import soundfile as sf
 import sounddevice as sd
 import speech_recognition as sr
 import pyaudiowpatch as pyaudio
 
 # VoiceRecognizer
 class VoiceRecognizer():
-    def __init__(self, mic_queue, spk_queue):
+    def __init__(self, p_audio, mic_queue, spk_queue):
         self.r = sr.Recognizer()
-        self.p = pyaudio.PyAudio()
+        self.p = p_audio
 
         self.languages = [
             "ja-JP","en-US","en-GB","af-ZA","ar-DZ","ar-BH","ar-EG","ar-IL","ar-IQ","ar-JO","ar-KW","ar-LB","ar-MA",
@@ -138,6 +133,7 @@ class VoiceRecognizer():
         return text
 
 if __name__ == "__main__":
+    import queue
     import threading
 
     mic_queue = queue.Queue()

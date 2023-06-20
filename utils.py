@@ -26,8 +26,8 @@ def print_textbox(textbox, message, tags=None):
     textbox.see("end")
 
 class thread_fnc(threading.Thread):
-    def __init__(self, fnc, *args, **kwargs):
-        super(thread_fnc, self).__init__(*args, **kwargs)
+    def __init__(self, fnc, daemon=True, *args, **kwargs):
+        super(thread_fnc, self).__init__(daemon=daemon, *args, **kwargs)
         self.fnc = fnc
         self._stop = threading.Event()
     def stop(self):

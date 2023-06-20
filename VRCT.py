@@ -1,9 +1,9 @@
 import os
 import json
 import queue
-import time
 import customtkinter
 from PIL import Image
+import pyaudiowpatch as pyaudio
 
 import utils
 import translation
@@ -305,7 +305,8 @@ class App(customtkinter.CTk):
         ## set transcription instance
         self.mic_queue = queue.Queue()
         self.spk_queue = queue.Queue()
-        self.vr = transcription.VoiceRecognizer(self.mic_queue, self.spk_queue)
+        self.p = pyaudio.PyAudio()
+        self.vr = transcription.VoiceRecognizer(self.p, self.mic_queue, self.spk_queue)
         self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else self.vr.search_default_device()[0]
         self.CHOICE_SPEAKER_DEVICE = self.CHOICE_SPEAKER_DEVICE if self.CHOICE_SPEAKER_DEVICE is not None else self.vr.search_default_device()[1]
 
@@ -541,20 +542,9 @@ class App(customtkinter.CTk):
             self.attributes("-topmost", True)
 
     def delete_window(self):
-        if isinstance(self.th_vr_listen_mic, utils.thread_fnc):
-            while not self.th_vr_listen_mic.stopped():
-                self.th_vr_listen_mic.stop()
-        if isinstance(self.th_vr_recognize_mic, utils.thread_fnc):
-            while not self.th_vr_recognize_mic.stopped():
-                self.th_vr_recognize_mic.stop()
-        if self.vr.spk_stream is not None:
-            self.vr.close_spk_stream()
-        if isinstance(self.th_vr_recognize_spk, utils.thread_fnc):
-            while not self.th_vr_recognize_spk.stopped():
-                self.th_vr_recognize_spk.stop()
+        self.quit()
         self.destroy()
 
-    
 if __name__ == "__main__":
     try:
         app = App()
