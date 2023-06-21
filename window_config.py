@@ -550,14 +550,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def entry_authkey_callback(self, event):
         value = self.entry_authkey.get()
         if len(value) > 0:
-            if self.parent.translator.authentication("DeepL(auth)", self.parent.AUTH_KEYS["DeepL(auth)"]) is True:
+            if self.parent.translator.authentication("DeepL(auth)", value) is True:
                 self.parent.AUTH_KEYS["DeepL(auth)"] = value
                 utils.save_json(self.parent.PATH_CONFIG, "AUTH_KEYS", self.parent.AUTH_KEYS)
                 utils.print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
                 utils.print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
-                utils.print_textbox(self.parent.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
-                utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                pass
 
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
