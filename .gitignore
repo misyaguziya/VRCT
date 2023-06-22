@@ -14,3 +14,6 @@ VRCT.spec
 deepl-translate/
 translators/
 test/
+*.pyc
+.vscode/
+lib/
