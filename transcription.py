@@ -1,12 +1,13 @@
+import queue
 import sounddevice as sd
 import speech_recognition as sr
 import pyaudiowpatch as pyaudio
 
 # VoiceRecognizer
 class VoiceRecognizer():
-    def __init__(self, p_audio, mic_queue, spk_queue):
+    def __init__(self):
         self.r = sr.Recognizer()
-        self.p = p_audio
+        self.p = pyaudio.PyAudio()
 
         self.languages = [
             "ja-JP","en-US","en-GB","af-ZA","ar-DZ","ar-BH","ar-EG","ar-IL","ar-IQ","ar-JO","ar-KW","ar-LB","ar-MA",
@@ -22,13 +23,13 @@ class VoiceRecognizer():
         self.mic_threshold = 50
         self.mic_is_dynamic = False
         self.mic_language = "ja-JP"
-        self.mic_queue = mic_queue
+        self.mic_queue = queue.Queue()
 
         self.spk_device = None
         self.spk_interval = 3
         self.spk_language = "ja-JP"
         self.spk_stream = None
-        self.spk_queue = spk_queue
+        self.spk_queue = queue.Queue()
 
     def search_input_device(self):
         devices = []
@@ -72,6 +73,9 @@ class VoiceRecognizer():
         self.mic_language = language
 
     def init_mic(self):
+        while self.mic_queue.empty() is False:
+            self.mic_queue.get()
+
         self.r.energy_threshold = self.mic_threshold
         if self.mic_is_dynamic:
             with self.mic as source:
@@ -95,6 +99,10 @@ class VoiceRecognizer():
         self.spk_device = [device for device in output_device_list if device["name"] == device_name][0]
         self.spk_interval = interval
         self.spk_language = language
+
+    def init_spk(self):
+        while self.spk_queue.empty() is False:
+            self.spk_queue.get()
 
     def spk_record_callback(self, in_data, frame_count, time_info, status):
         self.spk_queue.put(in_data)
