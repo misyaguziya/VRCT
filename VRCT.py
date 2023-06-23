@@ -235,6 +235,7 @@ class App(customtkinter.CTk):
         self.tabview_logs.add("receive")
         self.tabview_logs.add("system")
         self.tabview_logs.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        self.tabview_logs._segmented_button.configure(font=customtkinter.CTkFont(family=self.FONT_FAMILY))
         self.tabview_logs._segmented_button.grid(sticky="W")
         self.tabview_logs.tab("log").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("log").grid_columnconfigure(0, weight=1)

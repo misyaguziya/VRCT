@@ -59,9 +59,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("UI"),
             values=["Light", "Dark", "System"],
             command=self.optionmenu_theme_callback,
-            variable=customtkinter.StringVar(value=self.parent.APPEARANCE_THEME)
+            variable=customtkinter.StringVar(value=self.parent.APPEARANCE_THEME),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_appearance_theme.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu UI scaling
         self.label_ui_scaling = customtkinter.CTkLabel(
@@ -75,9 +77,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("UI"),
             values=["80%", "90%", "100%", "110%", "120%"],
             command=self.optionmenu_ui_scaling_callback,
-            variable=customtkinter.StringVar(value=self.parent.UI_SCALING)
+            variable=customtkinter.StringVar(value=self.parent.UI_SCALING),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_ui_scaling.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu font family
         self.label_font_family = customtkinter.CTkLabel(
@@ -92,9 +96,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("UI"),
             values=font_families,
             command=self.optionmenu_font_family_callback,
-            variable=customtkinter.StringVar(value=self.parent.FONT_FAMILY)
+            variable=customtkinter.StringVar(value=self.parent.FONT_FAMILY),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_font_family.grid(row=3, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_font_family._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         # tab Translation
         ## optionmenu translation translator
@@ -102,17 +108,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Translation"),
             text="Select Translator:",
             fg_color="transparent",
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.label_translation_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_translation_translator = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             values=list(self.parent.translator.translator_status.keys()),
             command=self.optionmenu_translation_translator_callback,
+            variable=customtkinter.StringVar(value=self.parent.CHOICE_TRANSLATOR),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.CHOICE_TRANSLATOR)
         )
         self.optionmenu_translation_translator.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_translator._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation input language
         self.label_translation_input_language = customtkinter.CTkLabel(
@@ -127,11 +134,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_input_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_source_language_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.INPUT_SOURCE_LANG),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_input_source_language.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation input arrow
         self.label_translation_input_arrow = customtkinter.CTkLabel(
@@ -146,11 +154,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_input_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_target_language_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.INPUT_TARGET_LANG),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_input_target_language.grid(row=1, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation output language
         self.label_translation_output_language = customtkinter.CTkLabel(
@@ -165,11 +174,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_output_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_source_language_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_output_source_language.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation output arrow
         self.label_translation_output_arrow = customtkinter.CTkLabel(
@@ -184,11 +194,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_output_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_target_language_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_output_target_language.grid(row=2, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         # tab Transcription
         ## optionmenu input mic device
@@ -203,10 +214,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Transcription"),
             values=[device["name"] for device in self.parent.vr.search_input_device()],
             command=self.optionmenu_input_mic_device_callback,
+            variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE)
         )
         self.optionmenu_input_mic_device.grid(row=0, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input mic voice language
         self.label_input_mic_voice_language = customtkinter.CTkLabel(
@@ -220,10 +232,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Transcription"),
             values=list(self.parent.vr.languages),
             command=self.optionmenu_input_mic_voice_language_callback,
+            variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
-            variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE)
         )
         self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## checkbox input mic in dynamic
         self.label_input_mic_is_dynamic = customtkinter.CTkLabel(
@@ -275,10 +288,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Transcription"),
             values=[device["name"] for device in self.parent.vr.search_output_device()],
             command=self.optionmenu_input_speaker_device_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input speaker voice language
         self.label_input_speaker_voice_language = customtkinter.CTkLabel(
@@ -292,10 +306,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             self.tabview_config.tab("Transcription"),
             values=list(self.parent.vr.languages),
             command=self.optionmenu_input_speaker_voice_language_callback,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## entry input speaker interval
         self.label_input_speaker_interval = customtkinter.CTkLabel(
@@ -402,35 +417,47 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_transparency.configure(font=customtkinter.CTkFont(family=choice))
         self.label_appearance_theme.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_appearance_theme.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_appearance_theme._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_ui_scaling.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_ui_scaling.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_ui_scaling._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_font_family.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_font_family.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_font_family._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Translation
         self.label_translation_translator.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_translation_translator.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_translation_translator._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_translation_input_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_translation_input_source_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_translation_input_arrow.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_translation_input_target_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_translation_output_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_translation_output_source_language.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_translation_output_arrow.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_translation_output_arrow.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_translation_output_target_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Transcription
         self.label_input_mic_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_device.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_input_mic_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_mic_is_dynamic.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
+        self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
 
