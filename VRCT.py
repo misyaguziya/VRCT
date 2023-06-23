@@ -143,8 +143,11 @@ class App(customtkinter.CTk):
                 if type(config["OSC_PORT"]) is int:
                     self.OSC_PORT = config["OSC_PORT"]
             if "AUTH_KEYS" in config.keys():
-                if type(config["AUTH_KEYS"]) is str:
-                    self.AUTH_KEYS = config["AUTH_KEYS"]
+                if type(config["AUTH_KEYS"]) is dict:
+                    if set(config["AUTH_KEYS"].keys()) == set(self.AUTH_KEYS.keys()):
+                        for key, value in config["AUTH_KEYS"].items():
+                            if type(value) is str:
+                                self.AUTH_KEYS[key] = config["AUTH_KEYS"][key]
             if "MESSAGE_FORMAT" in config.keys():
                 if type(config["MESSAGE_FORMAT"]) is str:
                     self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
