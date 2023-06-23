@@ -117,7 +117,7 @@ class App(customtkinter.CTk):
                 if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in self.vr.search_input_device()]:
                     self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(self.parent.vr.languages):
+                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(self.vr.languages):
                     self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
             if "INPUT_MIC_IS_DYNAMIC" in config.keys():
                 if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
@@ -129,7 +129,7 @@ class App(customtkinter.CTk):
                 if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in self.vr.search_output_device()]:
                     self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(self.parent.vr.languages):
+                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(self.vr.languages):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
                 if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
@@ -567,5 +567,6 @@ if __name__ == "__main__":
         app = App()
         app.mainloop()
     except Exception as e:
-        with open("./error.log", "r") as fp:
-            fp.write(f"{e}")
+        import traceback
+        with open('error.log', 'a') as f:
+            traceback.print_exc(file=f)
