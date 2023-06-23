@@ -1,10 +1,8 @@
 import os
 import json
-import queue
 import tkinter as tk
 import customtkinter
 from PIL import Image
-import pyaudiowpatch as pyaudio
 
 import utils
 import translation
@@ -19,10 +17,7 @@ class App(customtkinter.CTk):
 
         # init instance
         self.translator = translation.Translator()
-        self.mic_queue = queue.Queue()
-        self.spk_queue = queue.Queue()
-        self.p = pyaudio.PyAudio()
-        self.vr = transcription.VoiceRecognizer(self.p, self.mic_queue, self.spk_queue)
+        self.vr = transcription.VoiceRecognizer()
 
         # init config
         self.PATH_CONFIG = "./config.json"
@@ -435,6 +430,7 @@ class App(customtkinter.CTk):
                 interval=int(self.INPUT_SPEAKER_INTERVAL),
                 language=self.INPUT_SPEAKER_VOICE_LANGUAGE,
             )
+            self.vr.init_spk()
             self.vr.start_spk_recording()
             self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
             self.th_vr_recognize_spk.start()
@@ -449,7 +445,8 @@ class App(customtkinter.CTk):
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def vr_listen_mic(self):
-        self.vr.listen_mic()
+        if self.checkbox_transcription_send.get() is True:
+            self.vr.listen_mic()
 
     def vr_recognize_mic(self):
         message = self.vr.recognize_mic()
@@ -469,14 +466,17 @@ class App(customtkinter.CTk):
                     message=message
                 )
                 voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-            # send OSC message
-            osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-            # update textbox message log
-            utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
-            utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+
+            if self.checkbox_transcription_send.get() is True:
+                # send OSC message
+                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                # update textbox message log
+                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
+                utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
 
     def vr_listen_spk(self):
-        self.vr.listen_spk()
+        if self.checkbox_transcription_receive.get() is True:
+            self.vr.listen_spk()
 
     def vr_recognize_spk(self):
         message = self.vr.recognize_spk()
@@ -498,9 +498,11 @@ class App(customtkinter.CTk):
                 voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
             # send OSC message
             # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-            # update textbox message receive log
-            utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-            utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+
+            if self.checkbox_transcription_receive.get() is True:
+                # update textbox message receive log
+                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
