@@ -1,5 +1,4 @@
 import queue
-import sounddevice as sd
 import speech_recognition as sr
 import pyaudiowpatch as pyaudio
 
@@ -33,10 +32,13 @@ class VoiceRecognizer():
 
     def search_input_device(self):
         devices = []
-        device_list = sd.query_devices()
-        for device in device_list:
-            if device["max_input_channels"] > 0:
-                devices.append(device)
+        with pyaudio.PyAudio() as p:
+            wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
+            for host_index in range(0, p.get_host_api_count()):
+                for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
+                    device = p.get_device_info_by_host_api_device_index(host_index, device_index)
+                    if device["hostApi"] == wasapi_info["index"] and device["maxInputChannels"] > 0 and device["isLoopbackDevice"] is False:
+                        devices.append(device)
         return devices
 
     def search_output_device(self):
@@ -51,18 +53,28 @@ class VoiceRecognizer():
         return devices
 
     def search_default_device(self):
-        device_list = sd.query_devices()
-        mic_index = sd.default.device[0]
-        name_mic = device_list[mic_index]["name"]
         with pyaudio.PyAudio() as p:
             wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
-            default_speakers = p.get_device_info_by_index(wasapi_info["defaultOutputDevice"])
+            defaultInputDevice, defaultOutputDevice = wasapi_info["defaultInputDevice"], wasapi_info["defaultOutputDevice"]
 
-            if not default_speakers["isLoopbackDevice"]:
-                for loopback in p.get_loopback_device_info_generator():
-                    if default_speakers["name"] in loopback["name"]:
-                        name_spk = loopback["name"]
+            for host_index in range(0, p.get_host_api_count()):
+                for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
+                    device = p.get_device_info_by_host_api_device_index(host_index, device_index)
+                    if device["index"] == defaultInputDevice:
+                        default_mics = device
+                        name_mic = default_mics["name"]
                         break
+
+            for host_index in range(0, p.get_host_api_count()):
+                for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
+                    device = p.get_device_info_by_host_api_device_index(host_index, device_index)
+                    if device["index"] == defaultOutputDevice:
+                        default_speakers = device
+                        if not default_speakers["isLoopbackDevice"]:
+                            for loopback in p.get_loopback_device_info_generator():
+                                if default_speakers["name"] in loopback["name"]:
+                                    name_spk = loopback["name"]
+                                    break
         return name_mic, name_spk
 
     def set_mic(self, device_name, threshold=50, is_dynamic=False, language="ja-JP"):
@@ -141,45 +153,49 @@ class VoiceRecognizer():
         return text
 
 if __name__ == "__main__":
-    import queue
-    import threading
+    # import queue
+    # import threading
 
-    mic_queue = queue.Queue()
-    spk_queue = queue.Queue()
-    vr = VoiceRecognizer(mic_queue, spk_queue)
+    # mic_queue = queue.Queue()
+    # spk_queue = queue.Queue()
+    # vr = VoiceRecognizer(mic_queue, spk_queue)
 
-    mic_name, spk_name = vr.search_default_device()
-    print("mic_name", mic_name)
-    print("spk_name", spk_name)
+    # mic_name, spk_name = vr.search_default_device()
+    # print("mic_name", mic_name)
+    # print("spk_name", spk_name)
 
-    ###############################################################
-    vr.set_mic(device_name=mic_name, threshold=300, is_dynamic=False, language="ja-JP")
-    vr.init_mic()
+    # ###############################################################
+    # vr.set_mic(device_name=mic_name, threshold=300, is_dynamic=False, language="ja-JP")
+    # vr.init_mic()
 
-    def vr_listen_mic():
-        while True:
-            vr.listen_mic()
+    # def vr_listen_mic():
+    #     while True:
+    #         vr.listen_mic()
 
-    def vr_recognize_mic():
-        while True:
-            text = vr.recognize_mic()
-            if len(text) > 0:
-                print(text)
-    th_vr_listen_mic = threading.Thread(target=vr_listen_mic)
-    th_vr_listen_mic.start()
-    th_vr_recognize_mic = threading.Thread(target=vr_recognize_mic)
-    th_vr_recognize_mic.start()
-    ###############################################################
+    # def vr_recognize_mic():
+    #     while True:
+    #         text = vr.recognize_mic()
+    #         if len(text) > 0:
+    #             print(text)
+    # th_vr_listen_mic = threading.Thread(target=vr_listen_mic)
+    # th_vr_listen_mic.start()
+    # th_vr_recognize_mic = threading.Thread(target=vr_recognize_mic)
+    # th_vr_recognize_mic.start()
+    # ###############################################################
 
-    ###############################################################
-    vr.set_spk(device_name=spk_name, interval=4, language="ja-JP")
-    vr.start_spk_recording()
+    # ###############################################################
+    # vr.set_spk(device_name=spk_name, interval=4, language="ja-JP")
+    # vr.start_spk_recording()
 
-    def vr_recognize_spk():
-        while True:
-            text = vr.recognize_spk()
-            if len(text) > 0:
-                print(text)
-    th_vr_recognize_spk = threading.Thread(target=vr_recognize_spk)
-    th_vr_recognize_spk.start()
-    ###############################################################
+    # def vr_recognize_spk():
+    #     while True:
+    #         text = vr.recognize_spk()
+    #         if len(text) > 0:
+    #             print(text)
+    # th_vr_recognize_spk = threading.Thread(target=vr_recognize_spk)
+    # th_vr_recognize_spk.start()
+    # ###############################################################
+
+    vr = VoiceRecognizer()
+    print(vr.search_input_device())
+    print(vr.search_default_device())
