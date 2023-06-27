@@ -1,6 +1,7 @@
 import queue
 import speech_recognition as sr
 import pyaudiowpatch as pyaudio
+import languages
 
 # VoiceRecognizer
 class VoiceRecognizer():
@@ -8,25 +9,17 @@ class VoiceRecognizer():
         self.r = sr.Recognizer()
         self.p = pyaudio.PyAudio()
 
-        self.languages = [
-            "ja-JP","en-US","en-GB","af-ZA","ar-DZ","ar-BH","ar-EG","ar-IL","ar-IQ","ar-JO","ar-KW","ar-LB","ar-MA",
-            "ar-OM","ar-PS","ar-QA","ar-SA","ar-TN","ar-AE","eu-ES","bg-BG","ca-ES","cmn-Hans-CN","cmn-Hans-HK",
-            "cmn-Hant-TW","yue-Hant-HK","hr_HR","cs-CZ","da-DK","en-AU","en-CA","en-IN","en-IE","en-NZ","en-PH",
-            "en-ZA","fa-IR","fr-FR","fil-PH","gl-ES","de-DE","el-GR","fi-FI","he-IL","hi-IN","hu-HU","id-ID","is-IS",
-            "it-IT","it-CH","ko-KR","lt-LT","ms-MY","nl-NL","nb-NO","pl-PL","pt-BR","pt-PT","ro-RO","ru-RU","sr-RS",
-            "sk-SK","sl-SI","es-AR","es-BO","es-CL","es-CO","es-CR","es-DO","es-EC","es-SV","es-GT","es-HN","es-MX",
-            "es-NI","es-PA","es-PY","es-PE","es-PR","es-ES","es-UY","es-US","es-VE","sv-SE","th-TH","tr-TR","uk-UA",
-            "vi-VN","zu-ZA"
-        ]
+        self.dict_languages = languages.recognize_lang
+        self.languages = list(self.dict_languages.keys())
         self.mic_device_name = None
         self.mic_threshold = 50
         self.mic_is_dynamic = False
-        self.mic_language = "ja-JP"
+        self.mic_language = "Japanese Japan"
         self.mic_queue = queue.Queue(10)
 
         self.spk_device = None
         self.spk_interval = 3
-        self.spk_language = "ja-JP"
+        self.spk_language = "Japanese Japan"
         self.spk_stream = None
         self.spk_queue = queue.Queue(10)
 
@@ -77,7 +70,7 @@ class VoiceRecognizer():
                                     break
         return name_mic, name_spk
 
-    def set_mic(self, device_name, threshold=50, is_dynamic=False, language="ja-JP"):
+    def set_mic(self, device_name, threshold=50, is_dynamic=False, language="Japanese Japan"):
         input_device_list = self.search_input_device()
         self.mic_device_name = [device["index"] for device in input_device_list if device["name"] == device_name][0]
         self.mic_threshold = threshold
@@ -101,12 +94,12 @@ class VoiceRecognizer():
     def recognize_mic(self):
         try:
             audio = self.mic_queue.get()
-            text = self.r.recognize_google(audio, language=self.mic_language)
+            text = self.r.recognize_google(audio, language=self.dict_languages[self.mic_language])
         except:
             text = ""
         return text
 
-    def set_spk(self, device_name, interval, language):
+    def set_spk(self, device_name, interval=4, language="Japanese Japan"):
         output_device_list = self.search_output_device()
         self.spk_device = [device for device in output_device_list if device["name"] == device_name][0]
         self.spk_interval = interval
@@ -147,7 +140,7 @@ class VoiceRecognizer():
         try:
             in_data = self.spk_queue.get()
             audio_data = sr.AudioData(in_data, int(self.spk_device["defaultSampleRate"]), self.spk_interval)
-            text = self.r.recognize_google(audio_data, language=self.spk_language)
+            text = self.r.recognize_google(audio_data, language=self.dict_languages[self.spk_language])
         except:
             text = ""
         return text
