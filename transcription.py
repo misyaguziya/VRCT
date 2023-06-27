@@ -14,12 +14,12 @@ class VoiceRecognizer():
         self.mic_device_name = None
         self.mic_threshold = 50
         self.mic_is_dynamic = False
-        self.mic_language = "Japan"
+        self.mic_language = "Japanese Japan"
         self.mic_queue = queue.Queue(10)
 
         self.spk_device = None
         self.spk_interval = 3
-        self.spk_language = "Japan"
+        self.spk_language = "Japanese Japan"
         self.spk_stream = None
         self.spk_queue = queue.Queue(10)
 
@@ -70,7 +70,7 @@ class VoiceRecognizer():
                                     break
         return name_mic, name_spk
 
-    def set_mic(self, device_name, threshold=50, is_dynamic=False, language="Japan"):
+    def set_mic(self, device_name, threshold=50, is_dynamic=False, language="Japanese Japan"):
         input_device_list = self.search_input_device()
         self.mic_device_name = [device["index"] for device in input_device_list if device["name"] == device_name][0]
         self.mic_threshold = threshold
@@ -99,7 +99,7 @@ class VoiceRecognizer():
             text = ""
         return text
 
-    def set_spk(self, device_name, interval=4, language="Japan"):
+    def set_spk(self, device_name, interval=4, language="Japanese Japan"):
         output_device_list = self.search_output_device()
         self.spk_device = [device for device in output_device_list if device["name"] == device_name][0]
         self.spk_interval = interval

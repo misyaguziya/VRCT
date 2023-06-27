@@ -39,11 +39,11 @@ class App(customtkinter.CTk):
         self.OUTPUT_TARGET_LANG = "Japanese"
         ## Transcription
         self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
-        self.INPUT_MIC_VOICE_LANGUAGE = "Japan"
+        self.INPUT_MIC_VOICE_LANGUAGE = "Japanese Japan"
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "United States"
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = "English United States"
         self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
