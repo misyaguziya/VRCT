@@ -22,13 +22,13 @@ class VoiceRecognizer():
         self.mic_threshold = 50
         self.mic_is_dynamic = False
         self.mic_language = "ja-JP"
-        self.mic_queue = queue.Queue()
+        self.mic_queue = queue.Queue(10)
 
         self.spk_device = None
         self.spk_interval = 3
         self.spk_language = "ja-JP"
         self.spk_stream = None
-        self.spk_queue = queue.Queue()
+        self.spk_queue = queue.Queue(10)
 
     def search_input_device(self):
         devices = []
