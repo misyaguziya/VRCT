@@ -1,6 +1,7 @@
 import deepl
 import deepl_translate
 import translators as ts
+import languages
 
 # Translator
 class Translator():
@@ -11,30 +12,18 @@ class Translator():
             "Google(web)": False,
             "Bing(web)": False,
         }
+
+        self.dict_languages = {}
+        self.dict_languages["DeepL(web)"] = languages.deepl_translate_lang
+        self.dict_languages["DeepL(auth)"] = languages.deepl_lang
+        self.dict_languages["Google(web)"] = languages.translators_google_lang
+        self.dict_languages["Bing(web)"] = languages.translators_bing_lang
+
         self.languages = {}
-        self.languages["DeepL(web)"] = [
-            "JA","EN","BG","ZH","CS","DA","NL","ET","FI","FR","DE","EL","HU","IT",
-            "LV","LT","PL","PT","RO","RU","SK","SL","ES","SV",
-        ]
-        self.languages["DeepL(auth)"] = [
-            "JA","EN-US","EN-GB","BG","CS","DA","DE","EL","ES","ET","FI","FR","HU",
-            "ID","IT","KO","LT","LV","NB","NL","PL","PT","PT-BR","PT-PT","RO","RU",
-            "SK","SL","SV","TR","UK","ZH",
-        ]
-        self.languages["Google(web)"] = [
-            "ja","en","zh","ar","ru","fr","de","es","pt","it","ko","el","nl","hi",
-            "tr","ms","th","vi","id","he","pl","mn","cs","hu","et","bg","da","fi",
-            "ro","sv","sl","fa","bs","sr","tl","ht","ca","hr","lv","lt","ur","uk",
-            "cy","sw","sm","sk","af","no","bn","mg","mt","gu","ta","te","pa","am",
-            "az","be","ceb","eo","eu","ga"
-        ]
-        self.languages["Bing(web)"] = [
-            "ja","en","zh","ar","ru","fr","de","es","pt","it","ko","el","nl","hi",
-            "tr","ms","th","vi","id","he","pl","cs","hu","et","bg","da","fi","ro",
-            "sv","sl","fa","bs","sr","fj","tl","ht","ca","hr","lv","lt","ur","uk",
-            "cy","ty","to","sw","sm","sk","af","no","bn","mg","mt","otq","tlh","gu",
-            "ta","te","pa","ga"
-        ]
+        self.languages["DeepL(web)"] = list(self.dict_languages["DeepL(web)"].keys())
+        self.languages["DeepL(auth)"] = list(self.dict_languages["DeepL(auth)"].keys())
+        self.languages["Google(web)"] = list(self.dict_languages["Google(web)"].keys())
+        self.languages["Bing(web)"] = list(self.dict_languages["Bing(web)"].keys())
         self.deepl_client = None
 
     def authentication(self, translator_name, authkey=None):
@@ -62,13 +51,31 @@ class Translator():
         result = False
         try:
             if translator_name == "DeepL(web)":
-                result = deepl_translate.translate(source_language=source_language, target_language=target_language, text=message)
+                result = deepl_translate.translate(
+                    source_language=self.dict_languages["DeepL(web)"][source_language],
+                    target_language=self.dict_languages["DeepL(web)"][target_language],
+                    text=message
+                    )
             elif translator_name == "DeepL(auth)":
-                result = self.deepl_client.translate_text(message, source_lang=source_language, target_lang=target_language).text
+                result = self.deepl_client.translate_text(
+                    message,
+                    source_lang=self.dict_languages["DeepL(auth)"][source_language],
+                    target_lang=self.dict_languages["DeepL(auth)"][target_language],
+                    ).text
             elif translator_name == "Google(web)":
-                result = ts.translate_text(query_text=message, translator="google", from_language=source_language, to_language=target_language)
+                result = ts.translate_text(
+                    query_text=message,
+                    translator="google",
+                    from_language=self.dict_languages["Google(web)"][source_language],
+                    to_language=self.dict_languages["Google(web)"][target_language],
+                    )
             elif translator_name == "Bing(web)":
-                result = ts.translate_text(query_text=message, translator="bing", from_language=source_language, to_language=target_language)
+                result = ts.translate_text(
+                    query_text=message,
+                    translator="bing",
+                    from_language=self.dict_languages["Bing(web)"][source_language],
+                    to_language=self.dict_languages["Bing(web)"][target_language],
+                    )
         except:
             pass
         return result

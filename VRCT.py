@@ -33,17 +33,17 @@ class App(customtkinter.CTk):
         self.FONT_FAMILY = "Yu Gothic UI"
         ## Translation
         self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.INPUT_SOURCE_LANG = "JA"
-        self.INPUT_TARGET_LANG = "EN"
-        self.OUTPUT_SOURCE_LANG = "EN"
-        self.OUTPUT_TARGET_LANG = "JA"
+        self.INPUT_SOURCE_LANG = "Japanese"
+        self.INPUT_TARGET_LANG = "English"
+        self.OUTPUT_SOURCE_LANG = "English"
+        self.OUTPUT_TARGET_LANG = "Japanese"
         ## Transcription
         self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
-        self.INPUT_MIC_VOICE_LANGUAGE = "ja-JP"
+        self.INPUT_MIC_VOICE_LANGUAGE = "Japan"
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "en-US"
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = "United States"
         self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
