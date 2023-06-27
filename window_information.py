@@ -18,7 +18,7 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v1.0)
+        textbox_information_message = """VRCT(v1.1)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -109,6 +109,10 @@ https://twitter.com/misya_ai
 [2023-06-20: v1.0]
 - マイクからの音声の文字起こし機能を追加
 - スピーカーからの音声の文字起こし機能を追加
+[2023-06-28: v1.1]
+- いくつかのバクを修正
+- 翻訳/文字起こし言語の表記を略称からわかりやすい文字に変更
+- 文字起こしの処理の軽量化
 
 # 注意事項
 再配布とかはやめてね

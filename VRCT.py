@@ -1,9 +1,8 @@
 import os
 import json
-import queue
+import tkinter as tk
 import customtkinter
 from PIL import Image
-import pyaudiowpatch as pyaudio
 
 import utils
 import translation
@@ -15,6 +14,10 @@ import window_information
 class App(customtkinter.CTk):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # init instance
+        self.translator = translation.Translator()
+        self.vr = transcription.VoiceRecognizer()
 
         # init config
         self.PATH_CONFIG = "./config.json"
@@ -30,17 +33,17 @@ class App(customtkinter.CTk):
         self.FONT_FAMILY = "Yu Gothic UI"
         ## Translation
         self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.INPUT_SOURCE_LANG = "JA"
-        self.INPUT_TARGET_LANG = "EN"
-        self.OUTPUT_SOURCE_LANG = "EN"
-        self.OUTPUT_TARGET_LANG = "JA"
+        self.INPUT_SOURCE_LANG = "Japanese"
+        self.INPUT_TARGET_LANG = "English"
+        self.OUTPUT_SOURCE_LANG = "English"
+        self.OUTPUT_TARGET_LANG = "Japanese"
         ## Transcription
-        self.CHOICE_MIC_DEVICE = None
-        self.INPUT_MIC_VOICE_LANGUAGE = "ja-JP"
+        self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
+        self.INPUT_MIC_VOICE_LANGUAGE = "Japanese Japan"
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
-        self.CHOICE_SPEAKER_DEVICE = None
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "en-US"
+        self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = "English United States"
         self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
@@ -60,61 +63,89 @@ class App(customtkinter.CTk):
                 config = json.load(fp)
             # main window
             if "ENABLE_TRANSLATION" in config.keys():
-                self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
+                if type(config["ENABLE_TRANSLATION"]) is bool:
+                    self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
             if "ENABLE_TRANSCRIPTION_SEND" in config.keys():
-                self.ENABLE_TRANSCRIPTION_SEND = config["ENABLE_TRANSCRIPTION_SEND"]
+                if type(config["ENABLE_TRANSCRIPTION_SEND"]) is bool:
+                    self.ENABLE_TRANSCRIPTION_SEND = config["ENABLE_TRANSCRIPTION_SEND"]
             if "ENABLE_TRANSCRIPTION_RECEIVE" in config.keys():
-                self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
+                if type(config["ENABLE_TRANSCRIPTION_RECEIVE"]) is bool:
+                    self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
             if "ENABLE_FOREGROUND" in config.keys():
-                self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
+                if type(config["ENABLE_FOREGROUND"]) is bool:
+                    self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
 
             # tab ui
             if "TRANSPARENCY" in config.keys():
-                self.TRANSPARENCY = config["TRANSPARENCY"]
+                if type(config["TRANSPARENCY"]) is int:
+                    if 0 <= config["TRANSPARENCY"] <= 100:
+                        self.TRANSPARENCY = config["TRANSPARENCY"]
             if "APPEARANCE_THEME" in config.keys():
-                self.APPEARANCE_THEME = config["APPEARANCE_THEME"]
+                if config["APPEARANCE_THEME"] in ["Light", "Dark", "System"]:
+                    self.APPEARANCE_THEME = config["APPEARANCE_THEME"]
             if "UI_SCALING" in config.keys():
-                self.UI_SCALING = config["UI_SCALING"]
+                if config["UI_SCALING"] in ["80%", "90%", "100%", "110%", "120%"]:
+                    self.UI_SCALING = config["UI_SCALING"]
             if "FONT_FAMILY" in config.keys():
-                self.FONT_FAMILY = config["FONT_FAMILY"]
+                if config["FONT_FAMILY"] in list(tk.font.families()):
+                    self.FONT_FAMILY = config["FONT_FAMILY"]
 
             # translation
             if "CHOICE_TRANSLATOR" in config.keys():
-                self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
+                if config["CHOICE_TRANSLATOR"] in list(self.translator.translator_status.keys()):
+                    self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
             if "INPUT_SOURCE_LANG" in config.keys():
-                self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
+                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                    self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
             if "INPUT_TARGET_LANG" in config.keys():
-                self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
+                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                    self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
             if "OUTPUT_SOURCE_LANG" in config.keys():
-                self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
+                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                    self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
             if "OUTPUT_TARGET_LANG" in config.keys():
-                self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
+                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                    self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription
             if "CHOICE_MIC_DEVICE" in config.keys():
-                self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
+                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in self.vr.search_input_device()]:
+                    self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
-                self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
+                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(self.vr.languages):
+                    self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
             if "INPUT_MIC_IS_DYNAMIC" in config.keys():
-                self.INPUT_MIC_IS_DYNAMIC = config["INPUT_MIC_IS_DYNAMIC"]
+                if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
+                    self.INPUT_MIC_IS_DYNAMIC = config["INPUT_MIC_IS_DYNAMIC"]
             if "INPUT_MIC_THRESHOLD" in config.keys():
-                self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
+                if type(config["INPUT_MIC_THRESHOLD"]) is int:
+                    self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
-                self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
+                if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in self.vr.search_output_device()]:
+                    self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
-                self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
+                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(self.vr.languages):
+                    self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
-                self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
+                if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
+                    self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
-                self.OSC_IP_ADDRESS = config["OSC_IP_ADDRESS"]
+                if type(config["OSC_IP_ADDRESS"]) is str:
+                    self.OSC_IP_ADDRESS = config["OSC_IP_ADDRESS"]
             if "OSC_PORT" in config.keys():
-                self.OSC_PORT = config["OSC_PORT"]
+                if type(config["OSC_PORT"]) is int:
+                    self.OSC_PORT = config["OSC_PORT"]
             if "AUTH_KEYS" in config.keys():
-                self.AUTH_KEYS = config["AUTH_KEYS"]
+                if type(config["AUTH_KEYS"]) is dict:
+                    if set(config["AUTH_KEYS"].keys()) == set(self.AUTH_KEYS.keys()):
+                        for key, value in config["AUTH_KEYS"].items():
+                            if type(value) is str:
+                                self.AUTH_KEYS[key] = config["AUTH_KEYS"][key]
             if "MESSAGE_FORMAT" in config.keys():
-                self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
+                if type(config["MESSAGE_FORMAT"]) is str:
+                    self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
@@ -235,6 +266,7 @@ class App(customtkinter.CTk):
         self.tabview_logs.add("receive")
         self.tabview_logs.add("system")
         self.tabview_logs.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        self.tabview_logs._segmented_button.configure(font=customtkinter.CTkFont(family=self.FONT_FAMILY))
         self.tabview_logs._segmented_button.grid(sticky="W")
         self.tabview_logs.tab("log").grid_rowconfigure(0, weight=1)
         self.tabview_logs.tab("log").grid_columnconfigure(0, weight=1)
@@ -287,20 +319,11 @@ class App(customtkinter.CTk):
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=5, pady=(5, 10), sticky="nsew")
 
         # set default values
-        ## set translator instance
-        self.translator = translation.Translator()
+        ## set translator
         if self.translator.authentication(self.CHOICE_TRANSLATOR, self.AUTH_KEYS[self.CHOICE_TRANSLATOR]) is False:
             # error update Auth key
             utils.print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
             utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-
-        ## set transcription instance
-        self.mic_queue = queue.Queue()
-        self.spk_queue = queue.Queue()
-        self.p = pyaudio.PyAudio()
-        self.vr = transcription.VoiceRecognizer(self.p, self.mic_queue, self.spk_queue)
-        self.CHOICE_MIC_DEVICE = self.CHOICE_MIC_DEVICE if self.CHOICE_MIC_DEVICE is not None else self.vr.search_default_device()[0]
-        self.CHOICE_SPEAKER_DEVICE = self.CHOICE_SPEAKER_DEVICE if self.CHOICE_SPEAKER_DEVICE is not None else self.vr.search_default_device()[1]
 
         ## set checkbox enable translation
         if self.ENABLE_TRANSLATION:
@@ -407,6 +430,7 @@ class App(customtkinter.CTk):
                 interval=int(self.INPUT_SPEAKER_INTERVAL),
                 language=self.INPUT_SPEAKER_VOICE_LANGUAGE,
             )
+            self.vr.init_spk()
             self.vr.start_spk_recording()
             self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
             self.th_vr_recognize_spk.start()
@@ -421,7 +445,8 @@ class App(customtkinter.CTk):
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def vr_listen_mic(self):
-        self.vr.listen_mic()
+        if self.checkbox_transcription_send.get() is True:
+            self.vr.listen_mic()
 
     def vr_recognize_mic(self):
         message = self.vr.recognize_mic()
@@ -441,14 +466,17 @@ class App(customtkinter.CTk):
                     message=message
                 )
                 voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-            # send OSC message
-            osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-            # update textbox message log
-            utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
-            utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+
+            if self.checkbox_transcription_send.get() is True:
+                # send OSC message
+                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                # update textbox message log
+                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
+                utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
 
     def vr_listen_spk(self):
-        self.vr.listen_spk()
+        if self.checkbox_transcription_receive.get() is True:
+            self.vr.listen_spk()
 
     def vr_recognize_spk(self):
         message = self.vr.recognize_spk()
@@ -470,9 +498,11 @@ class App(customtkinter.CTk):
                 voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
             # send OSC message
             # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-            # update textbox message receive log
-            utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-            utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+
+            if self.checkbox_transcription_receive.get() is True:
+                # update textbox message receive log
+                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -542,5 +572,6 @@ if __name__ == "__main__":
         app = App()
         app.mainloop()
     except Exception as e:
-        with open("./error.log", "r") as fp:
-            fp.write(f"{e}")
+        import traceback
+        with open('error.log', 'a') as f:
+            traceback.print_exc(file=f)
