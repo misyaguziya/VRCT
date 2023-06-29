@@ -1,14 +1,18 @@
-
+import os
+from io import BytesIO
+import tempfile
 import threading
+import wave
 import custom_speech_recognition as sr
 from datetime import timedelta
-from heapq import merge
+import pyaudiowpatch as pyaudio
 
 PHRASE_TIMEOUT = 3.05
-MAX_PHRASES = 10
+MAX_PHRASES = 5
 
 class AudioTranscriber:
-    def __init__(self, source, language):
+    def __init__(self, speaker, source, language):
+        self.speaker = speaker
         self.language = language
         self.transcript_data = []
         self.transcript_changed_event = threading.Event()
@@ -20,6 +24,7 @@ class AudioTranscriber:
                 "last_sample": bytes(),
                 "last_spoken": None,
                 "new_phrase": True,
+                "process_data_func": self.process_speaker_data if speaker else self.process_speaker_data
         }
 
     def transcribe_audio_queue(self, audio_queue):
@@ -29,12 +34,14 @@ class AudioTranscriber:
 
             text = ''
             try:
-                audio_data = self.process_data()
+                fd, path = tempfile.mkstemp(suffix=".wav")
+                os.close(fd)
+                audio_data = self.audio_sources["process_data_func"](path)
                 text = self.audio_recognizer.recognize_google(audio_data, language=self.language)
             except Exception as e:
                 pass
             finally:
-                pass
+                os.unlink(path)
 
             if text != '':
                 self.update_transcript(text)
@@ -50,10 +57,20 @@ class AudioTranscriber:
         source_info["last_sample"] += data
         source_info["last_spoken"] = time_spoken
 
-    def process_data(self):
-        print(self.audio_sources["last_sample"])
+    def process_mic_data(self):
         audio_data = sr.AudioData(self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
         return audio_data
+
+    def process_speaker_data(self, path):
+        with wave.open(path, 'wb') as wf:
+            wf.setnchannels(self.audio_sources["channels"])
+            p = pyaudio.PyAudio()
+            wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+            wf.setframerate(self.audio_sources["sample_rate"])
+            wf.writeframes(self.audio_sources["last_sample"])
+        with sr.AudioFile(path) as source:
+            audio = self.audio_recognizer.record(source)
+        return audio
 
     def update_transcript(self, text):
         source_info = self.audio_sources
