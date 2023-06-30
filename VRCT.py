@@ -12,8 +12,8 @@ import window_config
 import window_information
 import languages
 import audio_utils
-import AudioRecorder
-import AudioTranscriber
+import audio_recorder
+import audio_transcriber
 import translation
 
 class App(customtkinter.CTk):
@@ -397,9 +397,9 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_SEND is True:
             self.mic_audio_queue = queue.Queue()
             mic_device = audio_utils.get_default_input_device()
-            self.mic_audio_recorder = AudioRecorder.SelectedMicRecorder(mic_device)
+            self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(mic_device)
             self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
-            self.mic_transcriber = AudioTranscriber.AudioTranscriber(
+            self.mic_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=False,
                 source=self.mic_audio_recorder.source,
                 language=languages.recognize_lang[self.INPUT_MIC_VOICE_LANGUAGE]
@@ -430,9 +430,9 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
             self.spk_audio_queue = queue.Queue()
             spk_device = audio_utils.get_default_output_device()
-            self.spk_audio_recorder = AudioRecorder.SelectedSpeakerRecorder(spk_device)
+            self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(spk_device)
             self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
-            self.spk_transcriber = AudioTranscriber.AudioTranscriber(
+            self.spk_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=True,
                 source=self.spk_audio_recorder.source,
                 language=languages.recognize_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE]

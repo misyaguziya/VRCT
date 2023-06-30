@@ -1,17 +1,17 @@
 import time
 import threading
 import queue
-import AudioTranscriber
-import AudioRecorder
+import audio_transcriber
+import audio_recorder
 import audio_utils
 
 try:
     mic_audio_queue = queue.Queue()
     mic_device = audio_utils.get_default_input_device()
-    mic_audio_recorder = AudioRecorder.SelectedMicRecorder(mic_device)
+    mic_audio_recorder = audio_recorder.SelectedMicRecorder(mic_device)
     mic_audio_recorder.record_into_queue(mic_audio_queue)
 
-    mic_transcriber = AudioTranscriber.AudioTranscriber(speaker=False, source=mic_audio_recorder.source, language="ja-JP")
+    mic_transcriber = audio_transcriber.AudioTranscriber(speaker=False, source=mic_audio_recorder.source, language="ja-JP")
     mic_transcribe = threading.Thread(target=mic_transcriber.transcribe_audio_queue, args=(mic_audio_queue,))
     mic_transcribe.daemon = True
     mic_transcribe.start()
@@ -20,10 +20,10 @@ try:
 
     spk_audio_queue = queue.Queue()
     spk_device = audio_utils.get_default_output_device()
-    spk_audio_recorder = AudioRecorder.SelectedSpeakerRecorder(spk_device)
+    spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(spk_device)
     spk_audio_recorder.record_into_queue(spk_audio_queue)
 
-    spk_transcriber = AudioTranscriber.AudioTranscriber(speaker=True, source=spk_audio_recorder.source, language="ja-JP")
+    spk_transcriber = audio_transcriber.AudioTranscriber(speaker=True, source=spk_audio_recorder.source, language="ja-JP")
     spk_transcribe = threading.Thread(target=spk_transcriber.transcribe_audio_queue, args=(spk_audio_queue,))
     spk_transcribe.daemon = True
     spk_transcribe.start()
