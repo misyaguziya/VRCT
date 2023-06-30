@@ -413,14 +413,14 @@ class App(customtkinter.CTk):
             self.mic_transcribe = utils.thread_fnc(self.mic_transcriber.transcribe_audio_queue, args=(self.mic_audio_queue,))
             self.mic_transcribe.daemon = True
             self.mic_transcribe.start()
-            self.print_transcript = utils.thread_fnc(self.mic_transcript_to_chatbox)
-            self.print_transcript.start()
+            self.mic_print_transcript = utils.thread_fnc(self.mic_transcript_to_chatbox)
+            self.mic_print_transcript.start()
 
             utils.print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
         else:
-            if isinstance(self.print_transcript, utils.thread_fnc):
-                self.print_transcript.stop()
+            if isinstance(self.mic_print_transcript, utils.thread_fnc):
+                self.mic_print_transcript.stop()
             if isinstance(self.mic_transcribe, utils.thread_fnc):
                 self.mic_transcribe.stop()
             if self.mic_audio_recorder.stop != None:
@@ -434,31 +434,33 @@ class App(customtkinter.CTk):
     def checkbox_transcription_receive_callback(self):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.spk_audio_queue = queue.Queue()
+            spk_device = audio_utils.get_default_output_device()
+            self.spk_audio_recorder = AudioRecorder.SelectedSpeakerRecorder(spk_device)
+            self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
+            self.spk_transcriber = AudioTranscriber.AudioTranscriber(
+                speaker=True,
+                source=self.spk_audio_recorder.source,
+                language=languages.recognize_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE]
+            )
+            self.spk_transcribe = utils.thread_fnc(self.spk_transcriber.transcribe_audio_queue, args=(self.spk_audio_queue,))
+            self.spk_transcribe.daemon = True
+            self.spk_transcribe.start()
+            self.spk_print_transcript = utils.thread_fnc(self.spk_transcript_to_textbox)
+            self.spk_print_transcript.start()
             utils.print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
-
-            self.vr.set_spk(
-                device_name=self.CHOICE_SPEAKER_DEVICE,
-                interval=int(self.INPUT_SPEAKER_INTERVAL),
-                language=self.INPUT_SPEAKER_VOICE_LANGUAGE,
-            )
-            self.vr.init_spk()
-            self.vr.start_spk_recording()
-            self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
-            self.th_vr_recognize_spk.start()
         else:
-            if self.vr.spk_stream is not None:
-                self.vr.close_spk_stream()
-            if isinstance(self.th_vr_recognize_spk, utils.thread_fnc):
-                self.th_vr_recognize_spk.stop()
-
+            if isinstance(self.spk_print_transcript, utils.thread_fnc):
+                self.spk_print_transcript.stop()
+            if isinstance(self.spk_transcribe, utils.thread_fnc):
+                self.spk_transcribe.stop()
+            if self.spk_audio_recorder.stop != None:
+                self.spk_audio_recorder.stop()
+                self.spk_audio_recorder.stop = None
             utils.print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
-
-    def vr_listen_mic(self):
-        if self.checkbox_transcription_send.get() is True:
-            self.vr.listen_mic()
 
     def mic_transcript_to_chatbox(self):
         message = self.mic_transcriber.get_transcript()
@@ -487,12 +489,8 @@ class App(customtkinter.CTk):
                 utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
         time.sleep(1)
 
-    def vr_listen_spk(self):
-        if self.checkbox_transcription_receive.get() is True:
-            self.vr.listen_spk()
-
-    def vr_recognize_spk(self):
-        message = self.vr.recognize_spk()
+    def spk_transcript_to_textbox(self):
+        message = self.spk_transcriber.get_transcript()
         if len(message) > 0:
             # translate
             if self.checkbox_translation.get() is False:
@@ -516,6 +514,7 @@ class App(customtkinter.CTk):
                 # update textbox message receive log
                 utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
                 utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+        time.sleep(1)
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()

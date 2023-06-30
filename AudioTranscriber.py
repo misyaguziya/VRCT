@@ -5,8 +5,8 @@ import custom_speech_recognition as sr
 from datetime import timedelta
 import pyaudiowpatch as pyaudio
 
-PHRASE_TIMEOUT = 3.05
-MAX_PHRASES = 2
+PHRASE_TIMEOUT = 3
+MAX_PHRASES = 10
 
 class AudioTranscriber:
     def __init__(self, speaker, source, language):
