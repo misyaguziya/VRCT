@@ -41,14 +41,18 @@ class App(customtkinter.CTk):
         self.INPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
         self.OUTPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
         self.OUTPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
-        ## Transcription
+        ## Transcription Send
         self.CHOICE_MIC_DEVICE = audio_utils.get_default_input_device()["name"]
         self.INPUT_MIC_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[0]
-        self.INPUT_MIC_IS_DYNAMIC = False
-        self.INPUT_MIC_THRESHOLD = 300
+        self.INPUT_MIC_ENERGY_THRESHOLD = 1000
+        self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
+        self.INPUT_MIC_RECORD_TIMEOUT = 3
+        ## Transcription Receive
         self.CHOICE_SPEAKER_DEVICE = audio_utils.get_default_output_device()["name"]
         self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[1]
-        self.INPUT_SPEAKER_INTERVAL = 4
+        self.INPUT_SPEAKER_ENERGY_THRESHOLD = 1000
+        self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
+        self.INPUT_SPEAKER_RECORD_TIMEOUT = 3
 
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
@@ -118,21 +122,30 @@ class App(customtkinter.CTk):
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
                 if config["INPUT_MIC_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
-            if "INPUT_MIC_IS_DYNAMIC" in config.keys():
-                if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
-                    self.INPUT_MIC_IS_DYNAMIC = config["INPUT_MIC_IS_DYNAMIC"]
-            if "INPUT_MIC_THRESHOLD" in config.keys():
-                if type(config["INPUT_MIC_THRESHOLD"]) is int:
-                    self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
+            if "INPUT_MIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_MIC_ENERGY_THRESHOLD"]) is int:
+                    self.INPUT_MIC_ENERGY_THRESHOLD = config["INPUT_MIC_ENERGY_THRESHOLD"]
+            if "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD"]) is bool:
+                    self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = config["INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD"]
+            if "INPUT_MIC_RECORD_TIMEOUT" in config.keys():
+                if type(config["INPUT_MIC_RECORD_TIMEOUT"]) is int:
+                    self.INPUT_MIC_RECORD_TIMEOUT = config["INPUT_MIC_RECORD_TIMEOUT"]
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
                 if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in audio_utils.get_output_device_list()]:
                     self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
                 if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
-            if "INPUT_SPEAKER_INTERVAL" in config.keys():
-                if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
-                    self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
+            if "INPUT_SPEAKER_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_SPEAKER_ENERGY_THRESHOLD"]) is int:
+                    self.INPUT_SPEAKER_ENERGY_THRESHOLD = config["INPUT_SPEAKER_ENERGY_THRESHOLD"]
+            if "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD"]) is bool:
+                    self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config["INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD"]
+            if "INPUT_SPEAKER_RECORD_TIMEOUT" in config.keys():
+                if type(config["INPUT_SPEAKER_RECORD_TIMEOUT"]) is int:
+                    self.INPUT_SPEAKER_RECORD_TIMEOUT = config["INPUT_SPEAKER_RECORD_TIMEOUT"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
@@ -168,11 +181,14 @@ class App(customtkinter.CTk):
                 "OUTPUT_TARGET_LANG": self.OUTPUT_TARGET_LANG,
                 "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
                 "INPUT_MIC_VOICE_LANGUAGE": self.INPUT_MIC_VOICE_LANGUAGE,
-                "INPUT_MIC_IS_DYNAMIC": self.INPUT_MIC_IS_DYNAMIC,
-                "INPUT_MIC_THRESHOLD": self.INPUT_MIC_THRESHOLD,
+                "INPUT_MIC_ENERGY_THRESHOLD": self.INPUT_MIC_ENERGY_THRESHOLD,
+                "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD": self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+                "INPUT_MIC_RECORD_TIMEOUT": self.INPUT_MIC_RECORD_TIMEOUT,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
-                "INPUT_SPEAKER_INTERVAL": self.INPUT_SPEAKER_INTERVAL,
+                "INPUT_SPEAKER_ENERGY_THRESHOLD": self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+                "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD": self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+                "INPUT_SPEAKER_RECORD_TIMEOUT": self.INPUT_SPEAKER_RECORD_TIMEOUT,
                 "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
@@ -397,7 +413,12 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_SEND is True:
             self.mic_audio_queue = queue.Queue()
             mic_device = [device for device in audio_utils.get_input_device_list() if device["name"] == self.CHOICE_MIC_DEVICE][0]
-            self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(mic_device)
+            self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(
+                mic_device,
+                self.INPUT_MIC_ENERGY_THRESHOLD,
+                self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+                self.INPUT_MIC_RECORD_TIMEOUT,
+            )
             self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
             self.mic_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=False,
@@ -430,7 +451,12 @@ class App(customtkinter.CTk):
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
             self.spk_audio_queue = queue.Queue()
             spk_device = [device for device in audio_utils.get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
-            self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(spk_device)
+            self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(
+                spk_device,
+                self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+                self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+                self.INPUT_SPEAKER_RECORD_TIMEOUT,
+            )
             self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
             self.spk_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=True,

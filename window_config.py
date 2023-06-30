@@ -240,43 +240,59 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
-        ## checkbox input mic in dynamic
-        self.label_input_mic_is_dynamic = customtkinter.CTkLabel(
+        ## entry input mic energy threshold
+        self.label_input_mic_energy_threshold = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Mic IsDynamic:",
+            text="Input Mic Energy Threshold:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_is_dynamic.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.checkbox_input_mic_is_dynamic = customtkinter.CTkCheckBox(
+        self.label_input_mic_energy_threshold.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.entry_input_mic_energy_threshold = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_mic_energy_threshold.grid(row=2, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_mic_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_energy_threshold_callback)
+
+        ## checkbox input mic dynamic energy threshold
+        self.label_input_mic_dynamic_energy_threshold = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Dynamic Energy Threshold:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_dynamic_energy_threshold.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.checkbox_input_mic_dynamic_energy_threshold = customtkinter.CTkCheckBox(
             self.tabview_config.tab("Transcription"),
             text="",
             onvalue=True,
             offvalue=False,
-            command=self.checkbox_input_mic_is_dynamic_callback,
+            command=self.checkbox_input_mic_dynamic_energy_threshold_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_mic_is_dynamic.grid(row=2, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        if  self.parent.INPUT_MIC_IS_DYNAMIC is True:
-            self.checkbox_input_mic_is_dynamic.select()
+        self.checkbox_input_mic_dynamic_energy_threshold.grid(row=3, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        if  self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.checkbox_input_mic_dynamic_energy_threshold.select()
         else:
-            self.checkbox_input_mic_is_dynamic.deselect()
+            self.checkbox_input_mic_dynamic_energy_threshold.deselect()
 
-        ## entry input mic threshold
-        self.label_input_mic_threshold = customtkinter.CTkLabel(
+        ## entry input mic record timeout
+        self.label_input_mic_record_timeout = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Mic Threshold:",
+            text="Input Mic Record Timeout:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_threshold.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_mic_threshold = customtkinter.CTkEntry(
+        self.label_input_mic_record_timeout.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.entry_input_mic_record_timeout = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_THRESHOLD),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_RECORD_TIMEOUT),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_threshold.grid(row=3, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
-        self.entry_input_mic_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_threshold_callback)
+        self.entry_input_mic_record_timeout.grid(row=4, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_mic_record_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_record_timeout_callback)
 
         ## optionmenu input speaker device
         self.label_input_speaker_device = customtkinter.CTkLabel(
@@ -285,7 +301,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_device.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_speaker_device.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
             values=[device["name"] for device in audio_utils.get_output_device_list()],
@@ -293,7 +309,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_device.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input speaker voice language
@@ -303,7 +319,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_voice_language.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_speaker_voice_language.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
             values=list(languages.transcription_lang.keys()),
@@ -311,24 +327,62 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_voice_language.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
-        ## entry input speaker interval
-        self.label_input_speaker_interval = customtkinter.CTkLabel(
+        ## entry input speaker energy threshold
+        self.label_input_speaker_energy_threshold = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Speaker Interval:",
+            text="Input Speaker Energy Threshold:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_interval.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_speaker_interval = customtkinter.CTkEntry(
+        self.label_input_speaker_energy_threshold.grid(row=7, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.entry_input_speaker_energy_threshold = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_INTERVAL),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_interval.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        self.entry_input_speaker_interval.bind("<Any-KeyRelease>", self.entry_input_speaker_interval_callback)
+        self.entry_input_speaker_energy_threshold.grid(row=7, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_speaker_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_speaker_energy_threshold_callback)
+
+        ## checkbox input speaker dynamic energy threshold
+        self.label_input_speaker_dynamic_energy_threshold = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Dynamic Energy Threshold:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_dynamic_energy_threshold.grid(row=8, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.checkbox_input_speaker_dynamic_energy_threshold = customtkinter.CTkCheckBox(
+            self.tabview_config.tab("Transcription"),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_input_speaker_dynamic_energy_threshold_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_input_speaker_dynamic_energy_threshold.grid(row=8, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        if  self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.checkbox_input_speaker_dynamic_energy_threshold.select()
+        else:
+            self.checkbox_input_speaker_dynamic_energy_threshold.deselect()
+
+        ## entry input speaker record timeout
+        self.label_input_speaker_record_timeout = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Record Timeout:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_record_timeout.grid(row=9, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.entry_input_speaker_record_timeout = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_RECORD_TIMEOUT),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_speaker_record_timeout.grid(row=9, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
+        self.entry_input_speaker_record_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_record_timeout_callback)
 
         # tab Parameter
         ## entry ip address
@@ -451,17 +505,22 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_mic_is_dynamic.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
@@ -547,14 +606,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
 
-    def checkbox_input_mic_is_dynamic_callback(self):
-        value = self.checkbox_input_mic_is_dynamic.get()
-        self.parent.INPUT_MIC_IS_DYNAMIC = value
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_IS_DYNAMIC", self.parent.INPUT_MIC_IS_DYNAMIC)
+    def entry_input_mic_energy_threshold_callback(self, event):
+        self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(self.entry_input_mic_energy_threshold.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_ENERGY_THRESHOLD)
 
-    def entry_input_mic_threshold_callback(self, event):
-        self.parent.INPUT_MIC_THRESHOLD = int(self.entry_input_mic_threshold.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_THRESHOLD", self.parent.INPUT_MIC_THRESHOLD)
+    def checkbox_input_mic_dynamic_energy_threshold_callback(self):
+        value = self.checkbox_input_mic_dynamic_energy_threshold.get()
+        self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD)
+
+    def entry_input_mic_record_timeout_callback(self, event):
+        self.parent.INPUT_MIC_RECORD_TIMEOUT = int(self.entry_input_mic_record_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_RECORD_TIMEOUT", self.parent.INPUT_MIC_RECORD_TIMEOUT)
 
     def optionmenu_input_speaker_device_callback(self, choice):
         self.parent.CHOICE_SPEAKER_DEVICE = choice
@@ -564,9 +627,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
-    def entry_input_speaker_interval_callback(self, event):
-        self.parent.INPUT_SPEAKER_INTERVAL = int(self.entry_input_speaker_interval.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_INTERVAL", self.parent.INPUT_SPEAKER_INTERVAL)
+    def entry_input_speaker_energy_threshold_callback(self, event):
+        self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(self.entry_input_speaker_energy_threshold.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD)
+
+    def checkbox_input_speaker_dynamic_energy_threshold_callback(self):
+        value = self.checkbox_input_speaker_dynamic_energy_threshold.get()
+        self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD)
+
+    def entry_input_speaker_record_timeout_callback(self, event):
+        self.parent.INPUT_SPEAKER_RECORD_TIMEOUT = int(self.entry_input_speaker_record_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_RECORD_TIMEOUT", self.parent.INPUT_SPEAKER_RECORD_TIMEOUT)
 
     def entry_ip_address_callback(self, event):
         self.parent.OSC_IP_ADDRESS = self.entry_ip_address.get()
