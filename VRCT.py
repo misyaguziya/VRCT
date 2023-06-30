@@ -36,18 +36,18 @@ class App(customtkinter.CTk):
         self.UI_SCALING = "100%"
         self.FONT_FAMILY = "Yu Gothic UI"
         ## Translation
-        self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.INPUT_SOURCE_LANG = list(languages.deepl_translate_lang.keys())[0]
-        self.INPUT_TARGET_LANG = list(languages.deepl_translate_lang.keys())[1]
-        self.OUTPUT_SOURCE_LANG = list(languages.deepl_translate_lang.keys())[1]
-        self.OUTPUT_TARGET_LANG = list(languages.deepl_translate_lang.keys())[0]
+        self.CHOICE_TRANSLATOR = languages.translators[0]
+        self.INPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
+        self.INPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
+        self.OUTPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
+        self.OUTPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
         ## Transcription
         self.CHOICE_MIC_DEVICE = audio_utils.get_default_input_device()["name"]
-        self.INPUT_MIC_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[0]
+        self.INPUT_MIC_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[0]
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = audio_utils.get_default_output_device()["name"]
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[1]
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[1]
         self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
@@ -99,16 +99,16 @@ class App(customtkinter.CTk):
                 if config["CHOICE_TRANSLATOR"] in list(self.translator.translator_status.keys()):
                     self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
             if "INPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
             if "INPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
             if "OUTPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
             if "OUTPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription
@@ -116,7 +116,7 @@ class App(customtkinter.CTk):
                 if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in audio_utils.get_input_device_list()]:
                     self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(languages.recognize_lang.keys()):
+                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
             if "INPUT_MIC_IS_DYNAMIC" in config.keys():
                 if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
@@ -128,7 +128,7 @@ class App(customtkinter.CTk):
                 if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in audio_utils.get_output_device_list()]:
                     self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(languages.recognize_lang.keys()):
+                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
                 if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
@@ -396,13 +396,13 @@ class App(customtkinter.CTk):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
             self.mic_audio_queue = queue.Queue()
-            mic_device = audio_utils.get_default_input_device()
+            mic_device = [device for device in audio_utils.get_input_device_list() if device["name"] == self.CHOICE_MIC_DEVICE][0]
             self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(mic_device)
             self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
             self.mic_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=False,
                 source=self.mic_audio_recorder.source,
-                language=languages.recognize_lang[self.INPUT_MIC_VOICE_LANGUAGE]
+                language=languages.transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE]
             )
             self.mic_transcribe = utils.thread_fnc(self.mic_transcriber.transcribe_audio_queue, args=(self.mic_audio_queue,))
             self.mic_transcribe.daemon = True
@@ -429,13 +429,13 @@ class App(customtkinter.CTk):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
             self.spk_audio_queue = queue.Queue()
-            spk_device = audio_utils.get_default_output_device()
+            spk_device = [device for device in audio_utils.get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
             self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(spk_device)
             self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
             self.spk_transcriber = audio_transcriber.AudioTranscriber(
                 speaker=True,
                 source=self.spk_audio_recorder.source,
-                language=languages.recognize_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE]
+                language=languages.transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE]
             )
             self.spk_transcribe = utils.thread_fnc(self.spk_transcriber.transcribe_audio_queue, args=(self.spk_audio_queue,))
             self.spk_transcribe.daemon = True

@@ -136,7 +136,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_input_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_source_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
@@ -156,7 +156,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_input_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_target_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
@@ -176,7 +176,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_output_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_source_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
@@ -196,7 +196,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.optionmenu_translation_output_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_target_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
@@ -232,7 +232,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_voice_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_mic_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(languages.recognize_lang.keys()),
+            values=list(languages.transcription_lang.keys()),
             command=self.optionmenu_input_mic_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
@@ -306,7 +306,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_voice_language.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(languages.recognize_lang.keys()),
+            values=list(languages.transcription_lang.keys()),
             command=self.optionmenu_input_speaker_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
@@ -500,23 +500,23 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
             self.optionmenu_translation_input_source_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][0]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[0]))
             self.optionmenu_translation_input_target_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[1]))
             self.optionmenu_translation_output_source_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[1]))
             self.optionmenu_translation_output_target_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][0]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[0]))
 
             self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.INPUT_SOURCE_LANG = self.parent.translator.languages[choice][0]
-            self.parent.INPUT_TARGET_LANG = self.parent.translator.languages[choice][1]
-            self.parent.OUTPUT_SOURCE_LANG = self.parent.translator.languages[choice][1]
-            self.parent.OUTPUT_TARGET_LANG = self.parent.translator.languages[choice][0]
+            self.parent.INPUT_SOURCE_LANG = list(languages.translation_lang[choice].keys())[0]
+            self.parent.INPUT_TARGET_LANG = list(languages.translation_lang[choice].keys())[1]
+            self.parent.OUTPUT_SOURCE_LANG = list(languages.translation_lang[choice].keys())[1]
+            self.parent.OUTPUT_TARGET_LANG = list(languages.translation_lang[choice].keys())[0]
             utils.save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
