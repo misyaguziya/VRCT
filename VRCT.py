@@ -1,5 +1,7 @@
 import os
 import json
+import queue
+import time
 import tkinter as tk
 import customtkinter
 from PIL import Image
@@ -10,6 +12,10 @@ import transcription
 import osc_tools
 import window_config
 import window_information
+import languages
+import audio_utils
+import AudioRecorder
+import AudioTranscriber
 
 class App(customtkinter.CTk):
     def __init__(self, *args, **kwargs):
@@ -33,17 +39,17 @@ class App(customtkinter.CTk):
         self.FONT_FAMILY = "Yu Gothic UI"
         ## Translation
         self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.INPUT_SOURCE_LANG = "Japanese"
-        self.INPUT_TARGET_LANG = "English"
-        self.OUTPUT_SOURCE_LANG = "English"
-        self.OUTPUT_TARGET_LANG = "Japanese"
+        self.INPUT_SOURCE_LANG = list(languages.deepl_translate_lang.keys())[0]
+        self.INPUT_TARGET_LANG = list(languages.deepl_translate_lang.keys())[1]
+        self.OUTPUT_SOURCE_LANG = list(languages.deepl_translate_lang.keys())[1]
+        self.OUTPUT_TARGET_LANG = list(languages.deepl_translate_lang.keys())[0]
         ## Transcription
         self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
-        self.INPUT_MIC_VOICE_LANGUAGE = "Japanese Japan"
+        self.INPUT_MIC_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[0]
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
         self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "English United States"
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[1]
         self.INPUT_SPEAKER_INTERVAL = 4
 
         ## Parameter
@@ -395,25 +401,31 @@ class App(customtkinter.CTk):
     def checkbox_transcription_send_callback(self):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
+            self.mic_audio_queue = queue.Queue()
+            mic_device = audio_utils.get_default_input_device()
+            self.mic_audio_recorder = AudioRecorder.SelectedMicRecorder(mic_device)
+            self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
+            self.mic_transcriber = AudioTranscriber.AudioTranscriber(
+                speaker=False,
+                source=self.mic_audio_recorder.source,
+                language=languages.recognize_lang[self.INPUT_MIC_VOICE_LANGUAGE]
+            )
+            self.mic_transcribe = utils.thread_fnc(self.mic_transcriber.transcribe_audio_queue, args=(self.mic_audio_queue,))
+            self.mic_transcribe.daemon = True
+            self.mic_transcribe.start()
+            self.print_transcript = utils.thread_fnc(self.mic_transcript_to_chatbox)
+            self.print_transcript.start()
+
             utils.print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
-            # start threading
-            self.vr.set_mic(
-                device_name=self.CHOICE_MIC_DEVICE,
-                threshold=int(self.INPUT_MIC_THRESHOLD),
-                is_dynamic=self.INPUT_MIC_IS_DYNAMIC,
-                language=self.INPUT_MIC_VOICE_LANGUAGE,
-            )
-            self.vr.init_mic()
-            self.th_vr_listen_mic = utils.thread_fnc(self.vr_listen_mic)
-            self.th_vr_recognize_mic = utils.thread_fnc(self.vr_recognize_mic)
-            self.th_vr_listen_mic.start()
-            self.th_vr_recognize_mic.start()
         else:
-            if isinstance(self.th_vr_listen_mic, utils.thread_fnc):
-                self.th_vr_listen_mic.stop()
-            if isinstance(self.th_vr_recognize_mic, utils.thread_fnc):
-                self.th_vr_recognize_mic.stop()
+            if isinstance(self.print_transcript, utils.thread_fnc):
+                self.print_transcript.stop()
+            if isinstance(self.mic_transcribe, utils.thread_fnc):
+                self.mic_transcribe.stop()
+            if self.mic_audio_recorder.stop != None:
+                self.mic_audio_recorder.stop()
+                self.mic_audio_recorder.stop = None
 
             utils.print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
@@ -448,8 +460,8 @@ class App(customtkinter.CTk):
         if self.checkbox_transcription_send.get() is True:
             self.vr.listen_mic()
 
-    def vr_recognize_mic(self):
-        message = self.vr.recognize_mic()
+    def mic_transcript_to_chatbox(self):
+        message = self.mic_transcriber.get_transcript()
         if len(message) > 0:
             # translate
             if self.checkbox_translation.get() is False:
@@ -473,6 +485,7 @@ class App(customtkinter.CTk):
                 # update textbox message log
                 utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
                 utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+        time.sleep(1)
 
     def vr_listen_spk(self):
         if self.checkbox_transcription_receive.get() is True:

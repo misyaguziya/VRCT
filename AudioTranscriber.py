@@ -1,6 +1,4 @@
 import io
-import os
-import tempfile
 import threading
 import wave
 import custom_speech_recognition as sr
@@ -28,24 +26,24 @@ class AudioTranscriber:
         }
 
     def transcribe_audio_queue(self, audio_queue):
-        while True:
-            audio, time_spoken = audio_queue.get()
-            self.update_last_sample_and_phrase_status(audio, time_spoken)
+        # while True:
+        audio, time_spoken = audio_queue.get()
+        self.update_last_sample_and_phrase_status(audio, time_spoken)
 
-            text = ''
-            try:
-                # fd, path = tempfile.mkstemp(suffix=".wav")
-                # os.close(fd)
-                audio_data = self.audio_sources["process_data_func"]()
-                text = self.audio_recognizer.recognize_google(audio_data, language=self.language)
-            except Exception as e:
-                pass
-            finally:
-                pass
-                # os.unlink(path)
+        text = ''
+        try:
+            # fd, path = tempfile.mkstemp(suffix=".wav")
+            # os.close(fd)
+            audio_data = self.audio_sources["process_data_func"]()
+            text = self.audio_recognizer.recognize_google(audio_data, language=self.language)
+        except Exception as e:
+            pass
+        finally:
+            pass
+            # os.unlink(path)
 
-            if text != '':
-                self.update_transcript(text)
+        if text != '':
+            self.update_transcript(text)
 
     def update_last_sample_and_phrase_status(self, data, time_spoken):
         source_info = self.audio_sources
@@ -87,7 +85,6 @@ class AudioTranscriber:
             transcript[0] = text
 
     def get_transcript(self):
-        print(self.transcript_data)
         if len(self.transcript_data) > 0:
             text = self.transcript_data.pop(-1)
         else:

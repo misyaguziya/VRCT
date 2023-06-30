@@ -11,6 +11,7 @@ class BaseRecorder:
         self.recorder = sr.Recognizer()
         self.recorder.energy_threshold = ENERGY_THRESHOLD
         self.recorder.dynamic_energy_threshold = DYNAMIC_ENERGY_THRESHOLD
+        self.stop = None
 
         if source is None:
             raise ValueError("audio source can't be None")
@@ -25,7 +26,7 @@ class BaseRecorder:
         def record_callback(_, audio:sr.AudioData) -> None:
             audio_queue.put((audio.get_raw_data(), datetime.now()))
 
-        self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=RECORD_TIMEOUT)
+        self.stop = self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=RECORD_TIMEOUT)
 
 class SelectedMicRecorder(BaseRecorder):
     def __init__(self, device):
