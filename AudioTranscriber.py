@@ -1,5 +1,5 @@
+import io
 import os
-from io import BytesIO
 import tempfile
 import threading
 import wave
@@ -8,7 +8,7 @@ from datetime import timedelta
 import pyaudiowpatch as pyaudio
 
 PHRASE_TIMEOUT = 3.05
-MAX_PHRASES = 5
+MAX_PHRASES = 2
 
 class AudioTranscriber:
     def __init__(self, speaker, source, language):
@@ -34,14 +34,15 @@ class AudioTranscriber:
 
             text = ''
             try:
-                fd, path = tempfile.mkstemp(suffix=".wav")
-                os.close(fd)
-                audio_data = self.audio_sources["process_data_func"](path)
+                # fd, path = tempfile.mkstemp(suffix=".wav")
+                # os.close(fd)
+                audio_data = self.audio_sources["process_data_func"]()
                 text = self.audio_recognizer.recognize_google(audio_data, language=self.language)
             except Exception as e:
                 pass
             finally:
-                os.unlink(path)
+                pass
+                # os.unlink(path)
 
             if text != '':
                 self.update_transcript(text)
@@ -61,14 +62,16 @@ class AudioTranscriber:
         audio_data = sr.AudioData(self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
         return audio_data
 
-    def process_speaker_data(self, path):
-        with wave.open(path, 'wb') as wf:
+    def process_speaker_data(self):
+        temp_file = io.BytesIO()
+        with wave.open(temp_file, 'wb') as wf:
             wf.setnchannels(self.audio_sources["channels"])
             p = pyaudio.PyAudio()
             wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
             wf.setframerate(self.audio_sources["sample_rate"])
             wf.writeframes(self.audio_sources["last_sample"])
-        with sr.AudioFile(path) as source:
+        temp_file.seek(0)
+        with sr.AudioFile(temp_file) as source:
             audio = self.audio_recognizer.record(source)
         return audio
 
@@ -84,6 +87,7 @@ class AudioTranscriber:
             transcript[0] = text
 
     def get_transcript(self):
+        print(self.transcript_data)
         if len(self.transcript_data) > 0:
             text = self.transcript_data.pop(-1)
         else:
