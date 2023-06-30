@@ -2,6 +2,8 @@ import os
 import tkinter as tk
 import customtkinter
 import utils
+import audio_utils
+import languages
 
 class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
@@ -212,7 +214,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_device.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_mic_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=[device["name"] for device in self.parent.vr.search_input_device()],
+            values=[device["name"] for device in audio_utils.get_input_device_list()],
             command=self.optionmenu_input_mic_device_callback,
             variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
@@ -230,7 +232,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_voice_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_mic_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(self.parent.vr.languages),
+            values=list(languages.recognize_lang.keys()),
             command=self.optionmenu_input_mic_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
@@ -286,7 +288,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_device.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=[device["name"] for device in self.parent.vr.search_output_device()],
+            values=[device["name"] for device in audio_utils.get_output_device_list()],
             command=self.optionmenu_input_speaker_device_callback,
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
@@ -304,7 +306,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_voice_language.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
         self.optionmenu_input_speaker_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(self.parent.vr.languages),
+            values=list(languages.recognize_lang.keys()),
             command=self.optionmenu_input_speaker_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),

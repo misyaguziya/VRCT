@@ -7,8 +7,6 @@ import customtkinter
 from PIL import Image
 
 import utils
-import translation
-import transcription
 import osc_tools
 import window_config
 import window_information
@@ -16,6 +14,7 @@ import languages
 import audio_utils
 import AudioRecorder
 import AudioTranscriber
+import translation
 
 class App(customtkinter.CTk):
     def __init__(self, *args, **kwargs):
@@ -23,7 +22,6 @@ class App(customtkinter.CTk):
 
         # init instance
         self.translator = translation.Translator()
-        self.vr = transcription.VoiceRecognizer()
 
         # init config
         self.PATH_CONFIG = "./config.json"
@@ -44,11 +42,11 @@ class App(customtkinter.CTk):
         self.OUTPUT_SOURCE_LANG = list(languages.deepl_translate_lang.keys())[1]
         self.OUTPUT_TARGET_LANG = list(languages.deepl_translate_lang.keys())[0]
         ## Transcription
-        self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
+        self.CHOICE_MIC_DEVICE = audio_utils.get_default_input_device()["name"]
         self.INPUT_MIC_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[0]
         self.INPUT_MIC_IS_DYNAMIC = False
         self.INPUT_MIC_THRESHOLD = 300
-        self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
+        self.CHOICE_SPEAKER_DEVICE = audio_utils.get_default_output_device()["name"]
         self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.recognize_lang.keys())[1]
         self.INPUT_SPEAKER_INTERVAL = 4
 
@@ -115,10 +113,10 @@ class App(customtkinter.CTk):
 
             # Transcription
             if "CHOICE_MIC_DEVICE" in config.keys():
-                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in self.vr.search_input_device()]:
+                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in audio_utils.get_input_device_list()]:
                     self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(self.vr.languages):
+                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(languages.recognize_lang.keys()):
                     self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
             if "INPUT_MIC_IS_DYNAMIC" in config.keys():
                 if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
@@ -127,10 +125,10 @@ class App(customtkinter.CTk):
                 if type(config["INPUT_MIC_THRESHOLD"]) is int:
                     self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
-                if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in self.vr.search_output_device()]:
+                if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in audio_utils.get_output_device_list()]:
                     self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(self.vr.languages):
+                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(languages.recognize_lang.keys()):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
             if "INPUT_SPEAKER_INTERVAL" in config.keys():
                 if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
@@ -339,8 +337,6 @@ class App(customtkinter.CTk):
             self.checkbox_translation.deselect()
 
         ## set checkbox enable transcription send
-        self.th_vr_listen_mic = None
-        self.th_vr_recognize_mic = None
         if self.ENABLE_TRANSCRIPTION_SEND:
             self.checkbox_transcription_send.select()
             self.checkbox_transcription_send_callback()
@@ -348,8 +344,6 @@ class App(customtkinter.CTk):
             self.checkbox_transcription_send.deselect()
 
         ## set checkbox enable transcription receive
-        self.th_vr_listen_spk = None
-        self.th_vr_recognize_spk = None
         if self.ENABLE_TRANSCRIPTION_RECEIVE:
             self.checkbox_transcription_receive.select()
             self.checkbox_transcription_receive_callback()
