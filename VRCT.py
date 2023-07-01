@@ -553,6 +553,7 @@ class App(customtkinter.CTk):
                         utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
 
             self.spk_print_transcript = utils.thread_fnc(spk_transcript_to_textbox)
+            self.spk_print_transcript.daemon = True
             self.spk_print_transcript.start()
             utils.print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
