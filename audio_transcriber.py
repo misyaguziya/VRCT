@@ -1,7 +1,7 @@
 import io
 import threading
 import wave
-import custom_speech_recognition as sr
+import speech_recognition as sr
 from datetime import timedelta
 import pyaudiowpatch as pyaudio
 
