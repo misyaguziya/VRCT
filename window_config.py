@@ -546,6 +546,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.entry_message_format.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
 
+        self.protocol("WM_DELETE_WINDOW", self.delete_window)
+
     def slider_transparency_callback(self, value):
         self.parent.wm_attributes("-alpha", value/100)
         self.parent.TRANSPARENCY = value
@@ -771,6 +773,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 utils.print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
                 pass
+
+    def delete_window(self):
+        self.parent.checkbox_translation.configure(state="normal")
+        self.parent.checkbox_transcription_send.configure(state="normal")
+        self.parent.checkbox_transcription_receive.configure(state="normal")
+        self.parent.config_window.destroy()
 
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
