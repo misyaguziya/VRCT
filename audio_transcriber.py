@@ -9,9 +9,11 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, language):
+    def __init__(self, speaker, source, language, phrase_timeout, max_phrases):
         self.speaker = speaker
         self.language = language
+        self.phrase_timeout = phrase_timeout
+        self.max_phrases = max_phrases
         self.transcript_data = []
         self.transcript_changed_event = threading.Event()
         self.audio_recognizer = sr.Recognizer()
@@ -47,7 +49,7 @@ class AudioTranscriber:
 
     def update_last_sample_and_phrase_status(self, data, time_spoken):
         source_info = self.audio_sources
-        if source_info["last_spoken"] and time_spoken - source_info["last_spoken"] > timedelta(seconds=PHRASE_TIMEOUT):
+        if source_info["last_spoken"] and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout):
             source_info["last_sample"] = bytes()
             source_info["new_phrase"] = True
         else:
@@ -78,7 +80,7 @@ class AudioTranscriber:
         transcript = self.transcript_data
 
         if source_info["new_phrase"] or len(transcript) == 0:
-            if len(transcript) > MAX_PHRASES:
+            if len(transcript) > self.max_phrases:
                 transcript.pop(-1)
             transcript.insert(0, text)
         else:

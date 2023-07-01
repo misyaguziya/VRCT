@@ -106,13 +106,16 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
         # tab Translation
         ## optionmenu translation translator
+        row = 0
+        padx = 5
+        pady = 1
         self.label_translation_translator = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Select Translator:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.label_translation_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_translator.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_translation_translator = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             values=list(self.parent.translator.translator_status.keys()),
@@ -120,17 +123,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.CHOICE_TRANSLATOR),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_translator.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_translator._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation input language
+        row +=1
         self.label_translation_input_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Send Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_input_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_input_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         ## select translation input source language
         self.optionmenu_translation_input_source_language = customtkinter.CTkOptionMenu(
@@ -140,7 +144,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_input_source_language.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation input arrow
@@ -150,7 +154,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_input_arrow.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_translation_input_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
         ## select translation input target language
         self.optionmenu_translation_input_target_language = customtkinter.CTkOptionMenu(
@@ -160,17 +164,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_input_target_language.grid(row=1, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation output language
+        row +=1
         self.label_translation_output_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Receive Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_output_language.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_output_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         ## select translation output source language
         self.optionmenu_translation_output_source_language = customtkinter.CTkOptionMenu(
@@ -180,7 +185,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_output_source_language.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation output arrow
@@ -190,7 +195,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_output_arrow.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_translation_output_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
         ## select translation output target language
         self.optionmenu_translation_output_target_language = customtkinter.CTkOptionMenu(
@@ -200,7 +205,7 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_output_target_language.grid(row=2, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         # tab Transcription
