@@ -447,10 +447,35 @@ class App(customtkinter.CTk):
                 phrase_timeout=self.INPUT_MIC_PHRASE_TIMEOUT,
                 max_phrases=self.INPUT_MIC_MAX_PHRASES,
             )
-            self.mic_transcribe = utils.thread_fnc(self.mic_transcriber.transcribe_audio_queue, args=(self.mic_audio_queue,))
-            self.mic_transcribe.daemon = True
-            self.mic_transcribe.start()
-            self.mic_print_transcript = utils.thread_fnc(self.mic_transcript_to_chatbox)
+            def mic_transcript_to_chatbox():
+                self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
+                message = self.mic_transcriber.get_transcript()
+                if len(message) > 0:
+                    # translate
+                    if self.checkbox_translation.get() is False:
+                        voice_message = f"{message}"
+                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                        utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                        utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                        voice_message = f"{message}"
+                    else:
+                        result = self.translator.translate(
+                            translator_name=self.CHOICE_TRANSLATOR,
+                            source_language=self.INPUT_SOURCE_LANG,
+                            target_language=self.INPUT_TARGET_LANG,
+                            message=message
+                        )
+                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+
+                    if self.checkbox_transcription_send.get() is True:
+                        # send OSC message
+                        osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                        # update textbox message log
+                        utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
+                        utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+
+            self.mic_print_transcript = utils.thread_fnc(mic_transcript_to_chatbox)
+            self.mic_print_transcript.daemon = True
             self.mic_print_transcript.start()
 
             utils.print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
@@ -458,8 +483,6 @@ class App(customtkinter.CTk):
         else:
             if isinstance(self.mic_print_transcript, utils.thread_fnc):
                 self.mic_print_transcript.stop()
-            if isinstance(self.mic_transcribe, utils.thread_fnc):
-                self.mic_transcribe.stop()
             if self.mic_audio_recorder.stop != None:
                 self.mic_audio_recorder.stop()
                 self.mic_audio_recorder.stop = None
@@ -487,78 +510,47 @@ class App(customtkinter.CTk):
                 phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
                 max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
             )
-            self.spk_transcribe = utils.thread_fnc(self.spk_transcriber.transcribe_audio_queue, args=(self.spk_audio_queue,))
-            self.spk_transcribe.daemon = True
-            self.spk_transcribe.start()
-            self.spk_print_transcript = utils.thread_fnc(self.spk_transcript_to_textbox)
+
+            def spk_transcript_to_textbox():
+                self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
+                message = self.spk_transcriber.get_transcript()
+                if len(message) > 0:
+                    # translate
+                    if self.checkbox_translation.get() is False:
+                        voice_message = f"{message}"
+                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                        utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                        utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                        voice_message = f"{message}"
+                    else:
+                        result = self.translator.translate(
+                            translator_name=self.CHOICE_TRANSLATOR,
+                            source_language=self.OUTPUT_SOURCE_LANG,
+                            target_language=self.OUTPUT_TARGET_LANG,
+                            message=message
+                        )
+                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+                    # send OSC message
+                    # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+
+                    if self.checkbox_transcription_receive.get() is True:
+                        # update textbox message receive log
+                        utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                        utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+
+            self.spk_print_transcript = utils.thread_fnc(spk_transcript_to_textbox)
             self.spk_print_transcript.start()
             utils.print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
         else:
             if isinstance(self.spk_print_transcript, utils.thread_fnc):
                 self.spk_print_transcript.stop()
-            if isinstance(self.spk_transcribe, utils.thread_fnc):
-                self.spk_transcribe.stop()
             if self.spk_audio_recorder.stop != None:
                 self.spk_audio_recorder.stop()
                 self.spk_audio_recorder.stop = None
             utils.print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
-
-    def mic_transcript_to_chatbox(self):
-        message = self.mic_transcriber.get_transcript()
-        if len(message) > 0:
-            # translate
-            if self.checkbox_translation.get() is False:
-                voice_message = f"{message}"
-            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                voice_message = f"{message}"
-            else:
-                result = self.translator.translate(
-                    translator_name=self.CHOICE_TRANSLATOR,
-                    source_language=self.INPUT_SOURCE_LANG,
-                    target_language=self.INPUT_TARGET_LANG,
-                    message=message
-                )
-                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-
-            if self.checkbox_transcription_send.get() is True:
-                # send OSC message
-                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-                # update textbox message log
-                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
-                utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
-        time.sleep(1)
-
-    def spk_transcript_to_textbox(self):
-        message = self.spk_transcriber.get_transcript()
-        if len(message) > 0:
-            # translate
-            if self.checkbox_translation.get() is False:
-                voice_message = f"{message}"
-            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                voice_message = f"{message}"
-            else:
-                result = self.translator.translate(
-                    translator_name=self.CHOICE_TRANSLATOR,
-                    source_language=self.OUTPUT_SOURCE_LANG,
-                    target_language=self.OUTPUT_TARGET_LANG,
-                    message=message
-                )
-                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-            # send OSC message
-            # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-
-            if self.checkbox_transcription_receive.get() is True:
-                # update textbox message receive log
-                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-                utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
-        time.sleep(1)
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
