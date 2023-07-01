@@ -609,6 +609,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
@@ -620,6 +624,10 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_speaker_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
