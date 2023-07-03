@@ -1,15 +1,19 @@
 import os
 import json
+import queue
 import tkinter as tk
 import customtkinter
 from PIL import Image
 
 import utils
-import translation
-import transcription
 import osc_tools
 import window_config
 import window_information
+import languages
+import audio_utils
+import audio_recorder
+import audio_transcriber
+import translation
 
 class App(customtkinter.CTk):
     def __init__(self, *args, **kwargs):
@@ -17,7 +21,6 @@ class App(customtkinter.CTk):
 
         # init instance
         self.translator = translation.Translator()
-        self.vr = transcription.VoiceRecognizer()
 
         # init config
         self.PATH_CONFIG = "./config.json"
@@ -32,20 +35,27 @@ class App(customtkinter.CTk):
         self.UI_SCALING = "100%"
         self.FONT_FAMILY = "Yu Gothic UI"
         ## Translation
-        self.CHOICE_TRANSLATOR = "DeepL(web)"
-        self.INPUT_SOURCE_LANG = "Japanese"
-        self.INPUT_TARGET_LANG = "English"
-        self.OUTPUT_SOURCE_LANG = "English"
-        self.OUTPUT_TARGET_LANG = "Japanese"
-        ## Transcription
-        self.CHOICE_MIC_DEVICE = self.vr.search_default_device()[0]
-        self.INPUT_MIC_VOICE_LANGUAGE = "Japanese Japan"
-        self.INPUT_MIC_IS_DYNAMIC = False
-        self.INPUT_MIC_THRESHOLD = 300
-        self.CHOICE_SPEAKER_DEVICE = self.vr.search_default_device()[1]
-        self.INPUT_SPEAKER_VOICE_LANGUAGE = "English United States"
-        self.INPUT_SPEAKER_INTERVAL = 4
-
+        self.CHOICE_TRANSLATOR = languages.translators[0]
+        self.INPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
+        self.INPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
+        self.OUTPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
+        self.OUTPUT_TARGET_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
+        ## Transcription Send
+        self.CHOICE_MIC_DEVICE = audio_utils.get_default_input_device()["name"]
+        self.INPUT_MIC_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[0]
+        self.INPUT_MIC_ENERGY_THRESHOLD = 300
+        self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
+        self.INPUT_MIC_RECORD_TIMEOUT = 3
+        self.INPUT_MIC_PHRASE_TIMEOUT = 3
+        self.INPUT_MIC_MAX_PHRASES = 10
+        ## Transcription Receive
+        self.CHOICE_SPEAKER_DEVICE = audio_utils.get_default_output_device()["name"]
+        self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[1]
+        self.INPUT_SPEAKER_ENERGY_THRESHOLD = 300
+        self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
+        self.INPUT_SPEAKER_RECORD_TIMEOUT = 3
+        self.INPUT_SPEAKER_PHRASE_TIMEOUT = 3
+        self.INPUT_SPEAKER_MAX_PHRASES = 10
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
         self.OSC_PORT = 9000
@@ -95,40 +105,62 @@ class App(customtkinter.CTk):
                 if config["CHOICE_TRANSLATOR"] in list(self.translator.translator_status.keys()):
                     self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
             if "INPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
             if "INPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
             if "OUTPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
             if "OUTPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in self.translator.languages[self.CHOICE_TRANSLATOR]:
+                if config["INPUT_SOURCE_LANG"] in list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys()):
                     self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription
             if "CHOICE_MIC_DEVICE" in config.keys():
-                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in self.vr.search_input_device()]:
+                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in audio_utils.get_input_device_list()]:
                     self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(self.vr.languages):
+                if config["INPUT_MIC_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_MIC_VOICE_LANGUAGE = config["INPUT_MIC_VOICE_LANGUAGE"]
-            if "INPUT_MIC_IS_DYNAMIC" in config.keys():
-                if type(config["INPUT_MIC_IS_DYNAMIC"]) is bool:
-                    self.INPUT_MIC_IS_DYNAMIC = config["INPUT_MIC_IS_DYNAMIC"]
-            if "INPUT_MIC_THRESHOLD" in config.keys():
-                if type(config["INPUT_MIC_THRESHOLD"]) is int:
-                    self.INPUT_MIC_THRESHOLD = config["INPUT_MIC_THRESHOLD"]
+            if "INPUT_MIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_MIC_ENERGY_THRESHOLD"]) is int:
+                    self.INPUT_MIC_ENERGY_THRESHOLD = config["INPUT_MIC_ENERGY_THRESHOLD"]
+            if "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD"]) is bool:
+                    self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = config["INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD"]
+            if "INPUT_MIC_RECORD_TIMEOUT" in config.keys():
+                if type(config["INPUT_MIC_RECORD_TIMEOUT"]) is int:
+                    self.INPUT_MIC_RECORD_TIMEOUT = config["INPUT_MIC_RECORD_TIMEOUT"]
+            if "INPUT_MIC_PHRASE_TIMEOUT" in config.keys():
+                if type(config["INPUT_MIC_PHRASE_TIMEOUT"]) is int:
+                    self.INPUT_MIC_PHRASE_TIMEOUT = config["INPUT_MIC_PHRASE_TIMEOUT"]
+            if "INPUT_MIC_MAX_PHRASES" in config.keys():
+                if type(config["INPUT_MIC_MAX_PHRASES"]) is int:
+                    self.INPUT_MIC_MAX_PHRASES = config["INPUT_MIC_MAX_PHRASES"]
+
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
-                if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in self.vr.search_output_device()]:
+                if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in audio_utils.get_output_device_list()]:
                     self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
-                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(self.vr.languages):
+                if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(languages.transcription_lang.keys()):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
-            if "INPUT_SPEAKER_INTERVAL" in config.keys():
-                if type(config["INPUT_SPEAKER_INTERVAL"]) is int:
-                    self.INPUT_SPEAKER_INTERVAL = config["INPUT_SPEAKER_INTERVAL"]
+            if "INPUT_SPEAKER_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_SPEAKER_ENERGY_THRESHOLD"]) is int:
+                    self.INPUT_SPEAKER_ENERGY_THRESHOLD = config["INPUT_SPEAKER_ENERGY_THRESHOLD"]
+            if "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD" in config.keys():
+                if type(config["INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD"]) is bool:
+                    self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config["INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD"]
+            if "INPUT_SPEAKER_RECORD_TIMEOUT" in config.keys():
+                if type(config["INPUT_SPEAKER_RECORD_TIMEOUT"]) is int:
+                    self.INPUT_SPEAKER_RECORD_TIMEOUT = config["INPUT_SPEAKER_RECORD_TIMEOUT"]
+            if "INPUT_SPEAKER_PHRASE_TIMEOUT" in config.keys():
+                if type(config["INPUT_SPEAKER_PHRASE_TIMEOUT"]) is int:
+                    self.INPUT_SPEAKER_PHRASE_TIMEOUT = config["INPUT_SPEAKER_PHRASE_TIMEOUT"]
+            if "INPUT_SPEAKER_MAX_PHRASES" in config.keys():
+                if type(config["INPUT_SPEAKER_MAX_PHRASES"]) is int:
+                    self.INPUT_MIC_MAX_PHRASES = config["INPUT_SPEAKER_MAX_PHRASES"]
 
             # Parameter
             if "OSC_IP_ADDRESS" in config.keys():
@@ -164,11 +196,18 @@ class App(customtkinter.CTk):
                 "OUTPUT_TARGET_LANG": self.OUTPUT_TARGET_LANG,
                 "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
                 "INPUT_MIC_VOICE_LANGUAGE": self.INPUT_MIC_VOICE_LANGUAGE,
-                "INPUT_MIC_IS_DYNAMIC": self.INPUT_MIC_IS_DYNAMIC,
-                "INPUT_MIC_THRESHOLD": self.INPUT_MIC_THRESHOLD,
+                "INPUT_MIC_ENERGY_THRESHOLD": self.INPUT_MIC_ENERGY_THRESHOLD,
+                "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD": self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+                "INPUT_MIC_RECORD_TIMEOUT": self.INPUT_MIC_RECORD_TIMEOUT,
+                "INPUT_MIC_PHRASE_TIMEOUT": self.INPUT_MIC_PHRASE_TIMEOUT,
+                "INPUT_MIC_MAX_PHRASES": self.INPUT_MIC_MAX_PHRASES,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
-                "INPUT_SPEAKER_INTERVAL": self.INPUT_SPEAKER_INTERVAL,
+                "INPUT_SPEAKER_ENERGY_THRESHOLD": self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+                "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD": self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+                "INPUT_SPEAKER_RECORD_TIMEOUT": self.INPUT_SPEAKER_RECORD_TIMEOUT,
+                "INPUT_SPEAKER_PHRASE_TIMEOUT": self.INPUT_SPEAKER_PHRASE_TIMEOUT,
+                "INPUT_SPEAKER_MAX_PHRASES": self.INPUT_SPEAKER_MAX_PHRASES,
                 "OSC_IP_ADDRESS": self.OSC_IP_ADDRESS,
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
@@ -333,8 +372,6 @@ class App(customtkinter.CTk):
             self.checkbox_translation.deselect()
 
         ## set checkbox enable transcription send
-        self.th_vr_listen_mic = None
-        self.th_vr_recognize_mic = None
         if self.ENABLE_TRANSCRIPTION_SEND:
             self.checkbox_transcription_send.select()
             self.checkbox_transcription_send_callback()
@@ -342,8 +379,6 @@ class App(customtkinter.CTk):
             self.checkbox_transcription_send.deselect()
 
         ## set checkbox enable transcription receive
-        self.th_vr_listen_spk = None
-        self.th_vr_recognize_spk = None
         if self.ENABLE_TRANSCRIPTION_RECEIVE:
             self.checkbox_transcription_receive.select()
             self.checkbox_transcription_receive_callback()
@@ -375,6 +410,9 @@ class App(customtkinter.CTk):
     def button_config_callback(self):
         if self.config_window is None or not self.config_window.winfo_exists():
             self.config_window = window_config.ToplevelWindowConfig(self)
+            self.checkbox_translation.configure(state="disabled")
+            self.checkbox_transcription_send.configure(state="disabled")
+            self.checkbox_transcription_receive.configure(state="disabled")
         self.config_window.focus()
 
     def button_information_callback(self):
@@ -385,9 +423,14 @@ class App(customtkinter.CTk):
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
         if self.ENABLE_TRANSLATION:
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
             utils.print_textbox(self.textbox_message_log, "Start translation", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start translation", "INFO")
         else:
+            if ((self.checkbox_translation.get() is False) and
+                (self.checkbox_transcription_send.get() is False) and
+                (self.checkbox_transcription_receive.get() is False)):
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             utils.print_textbox(self.textbox_message_log, "Stop translation", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
@@ -395,25 +438,66 @@ class App(customtkinter.CTk):
     def checkbox_transcription_send_callback(self):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+            self.mic_audio_queue = queue.Queue()
+            mic_device = [device for device in audio_utils.get_input_device_list() if device["name"] == self.CHOICE_MIC_DEVICE][0]
+            self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(
+                mic_device,
+                self.INPUT_MIC_ENERGY_THRESHOLD,
+                self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+                self.INPUT_MIC_RECORD_TIMEOUT,
+            )
+            self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
+            self.mic_transcriber = audio_transcriber.AudioTranscriber(
+                speaker=False,
+                source=self.mic_audio_recorder.source,
+                language=languages.transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE],
+                phrase_timeout=self.INPUT_MIC_PHRASE_TIMEOUT,
+                max_phrases=self.INPUT_MIC_MAX_PHRASES,
+            )
+            def mic_transcript_to_chatbox():
+                self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
+                message = self.mic_transcriber.get_transcript()
+                if len(message) > 0:
+                    # translate
+                    if self.checkbox_translation.get() is False:
+                        voice_message = f"{message}"
+                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                        utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                        utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                        voice_message = f"{message}"
+                    else:
+                        result = self.translator.translate(
+                            translator_name=self.CHOICE_TRANSLATOR,
+                            source_language=self.INPUT_SOURCE_LANG,
+                            target_language=self.INPUT_TARGET_LANG,
+                            message=message
+                        )
+                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+
+                    if self.checkbox_transcription_send.get() is True:
+                        # send OSC message
+                        osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                        # update textbox message log
+                        utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
+                        utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+
+            self.mic_print_transcript = utils.thread_fnc(mic_transcript_to_chatbox)
+            self.mic_print_transcript.daemon = True
+            self.mic_print_transcript.start()
+
             utils.print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
-            # start threading
-            self.vr.set_mic(
-                device_name=self.CHOICE_MIC_DEVICE,
-                threshold=int(self.INPUT_MIC_THRESHOLD),
-                is_dynamic=self.INPUT_MIC_IS_DYNAMIC,
-                language=self.INPUT_MIC_VOICE_LANGUAGE,
-            )
-            self.vr.init_mic()
-            self.th_vr_listen_mic = utils.thread_fnc(self.vr_listen_mic)
-            self.th_vr_recognize_mic = utils.thread_fnc(self.vr_recognize_mic)
-            self.th_vr_listen_mic.start()
-            self.th_vr_recognize_mic.start()
         else:
-            if isinstance(self.th_vr_listen_mic, utils.thread_fnc):
-                self.th_vr_listen_mic.stop()
-            if isinstance(self.th_vr_recognize_mic, utils.thread_fnc):
-                self.th_vr_recognize_mic.stop()
+            if ((self.checkbox_translation.get() is False) and
+                (self.checkbox_transcription_send.get() is False) and
+                (self.checkbox_transcription_receive.get() is False)):
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+            if isinstance(self.mic_print_transcript, utils.thread_fnc):
+                self.mic_print_transcript.stop()
+            if self.mic_audio_recorder.stop != None:
+                self.mic_audio_recorder.stop()
+                self.mic_audio_recorder.stop = None
 
             utils.print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
@@ -422,87 +506,69 @@ class App(customtkinter.CTk):
     def checkbox_transcription_receive_callback(self):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray92"])
+            self.spk_audio_queue = queue.Queue()
+            spk_device = [device for device in audio_utils.get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
+            self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(
+                spk_device,
+                self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+                self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+                self.INPUT_SPEAKER_RECORD_TIMEOUT,
+            )
+            self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
+            self.spk_transcriber = audio_transcriber.AudioTranscriber(
+                speaker=True,
+                source=self.spk_audio_recorder.source,
+                language=languages.transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
+                phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
+                max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
+            )
+
+            def spk_transcript_to_textbox():
+                self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
+                message = self.spk_transcriber.get_transcript()
+                if len(message) > 0:
+                    # translate
+                    if self.checkbox_translation.get() is False:
+                        voice_message = f"{message}"
+                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                        utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                        utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                        voice_message = f"{message}"
+                    else:
+                        result = self.translator.translate(
+                            translator_name=self.CHOICE_TRANSLATOR,
+                            source_language=self.OUTPUT_SOURCE_LANG,
+                            target_language=self.OUTPUT_TARGET_LANG,
+                            message=message
+                        )
+                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+                    # send OSC message
+                    # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+
+                    if self.checkbox_transcription_receive.get() is True:
+                        # update textbox message receive log
+                        utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                        utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+
+            self.spk_print_transcript = utils.thread_fnc(spk_transcript_to_textbox)
+            self.spk_print_transcript.daemon = True
+            self.spk_print_transcript.start()
             utils.print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
-
-            self.vr.set_spk(
-                device_name=self.CHOICE_SPEAKER_DEVICE,
-                interval=int(self.INPUT_SPEAKER_INTERVAL),
-                language=self.INPUT_SPEAKER_VOICE_LANGUAGE,
-            )
-            self.vr.init_spk()
-            self.vr.start_spk_recording()
-            self.th_vr_recognize_spk = utils.thread_fnc(self.vr_recognize_spk)
-            self.th_vr_recognize_spk.start()
         else:
-            if self.vr.spk_stream is not None:
-                self.vr.close_spk_stream()
-            if isinstance(self.th_vr_recognize_spk, utils.thread_fnc):
-                self.th_vr_recognize_spk.stop()
-
+            if ((self.checkbox_translation.get() is False) and
+                (self.checkbox_transcription_send.get() is False) and
+                (self.checkbox_transcription_receive.get() is False)):
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+            if isinstance(self.spk_print_transcript, utils.thread_fnc):
+                self.spk_print_transcript.stop()
+            if self.spk_audio_recorder.stop != None:
+                self.spk_audio_recorder.stop()
+                self.spk_audio_recorder.stop = None
             utils.print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
-
-    def vr_listen_mic(self):
-        if self.checkbox_transcription_send.get() is True:
-            self.vr.listen_mic()
-
-    def vr_recognize_mic(self):
-        message = self.vr.recognize_mic()
-        if len(message) > 0:
-            # translate
-            if self.checkbox_translation.get() is False:
-                voice_message = f"{message}"
-            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                voice_message = f"{message}"
-            else:
-                result = self.translator.translate(
-                    translator_name=self.CHOICE_TRANSLATOR,
-                    source_language=self.INPUT_SOURCE_LANG,
-                    target_language=self.INPUT_TARGET_LANG,
-                    message=message
-                )
-                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-
-            if self.checkbox_transcription_send.get() is True:
-                # send OSC message
-                osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-                # update textbox message log
-                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
-                utils.print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
-
-    def vr_listen_spk(self):
-        if self.checkbox_transcription_receive.get() is True:
-            self.vr.listen_spk()
-
-    def vr_recognize_spk(self):
-        message = self.vr.recognize_spk()
-        if len(message) > 0:
-            # translate
-            if self.checkbox_translation.get() is False:
-                voice_message = f"{message}"
-            elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                utils.print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                utils.print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                voice_message = f"{message}"
-            else:
-                result = self.translator.translate(
-                    translator_name=self.CHOICE_TRANSLATOR,
-                    source_language=self.OUTPUT_SOURCE_LANG,
-                    target_language=self.OUTPUT_TARGET_LANG,
-                    message=message
-                )
-                voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-            # send OSC message
-            # osc_tools.send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-
-            if self.checkbox_transcription_receive.get() is True:
-                # update textbox message receive log
-                utils.print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-                utils.print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
