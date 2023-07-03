@@ -506,7 +506,7 @@ class App(customtkinter.CTk):
     def checkbox_transcription_receive_callback(self):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray92"])
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
             self.spk_audio_queue = queue.Queue()
             spk_device = [device for device in audio_utils.get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
             self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(
