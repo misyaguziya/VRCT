@@ -1,7 +1,6 @@
 import os
 import json
 import queue
-import time
 import tkinter as tk
 import customtkinter
 from PIL import Image
@@ -424,14 +423,14 @@ class App(customtkinter.CTk):
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
         if self.ENABLE_TRANSLATION:
-            self.button_config.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
             utils.print_textbox(self.textbox_message_log, "Start translation", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Start translation", "INFO")
         else:
             if ((self.checkbox_translation.get() is False) and
                 (self.checkbox_transcription_send.get() is False) and
                 (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal")
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             utils.print_textbox(self.textbox_message_log, "Stop translation", "INFO")
             utils.print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
         utils.save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
@@ -439,7 +438,7 @@ class App(customtkinter.CTk):
     def checkbox_transcription_send_callback(self):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
-            self.button_config.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
             self.mic_audio_queue = queue.Queue()
             mic_device = [device for device in audio_utils.get_input_device_list() if device["name"] == self.CHOICE_MIC_DEVICE][0]
             self.mic_audio_recorder = audio_recorder.SelectedMicRecorder(
@@ -493,7 +492,7 @@ class App(customtkinter.CTk):
             if ((self.checkbox_translation.get() is False) and
                 (self.checkbox_transcription_send.get() is False) and
                 (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal")
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             if isinstance(self.mic_print_transcript, utils.thread_fnc):
                 self.mic_print_transcript.stop()
             if self.mic_audio_recorder.stop != None:
@@ -507,7 +506,7 @@ class App(customtkinter.CTk):
     def checkbox_transcription_receive_callback(self):
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.button_config.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray92"])
             self.spk_audio_queue = queue.Queue()
             spk_device = [device for device in audio_utils.get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
             self.spk_audio_recorder = audio_recorder.SelectedSpeakerRecorder(
@@ -561,7 +560,7 @@ class App(customtkinter.CTk):
             if ((self.checkbox_translation.get() is False) and
                 (self.checkbox_transcription_send.get() is False) and
                 (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal")
+                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             if isinstance(self.spk_print_transcript, utils.thread_fnc):
                 self.spk_print_transcript.stop()
             if self.spk_audio_recorder.stop != None:
