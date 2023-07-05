@@ -38,4 +38,4 @@ class thread_fnc(threading.Thread):
         while True:
             if self.stopped():
                 return
-            self.fnc()
+            self.fnc(*self._args, **self._kwargs)

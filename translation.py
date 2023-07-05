@@ -6,24 +6,9 @@ import languages
 # Translator
 class Translator():
     def __init__(self):
-        self.translator_status = {
-            "DeepL(web)": False,
-            "DeepL(auth)": False,
-            "Google(web)": False,
-            "Bing(web)": False,
-        }
-
-        self.dict_languages = {}
-        self.dict_languages["DeepL(web)"] = languages.deepl_translate_lang
-        self.dict_languages["DeepL(auth)"] = languages.deepl_lang
-        self.dict_languages["Google(web)"] = languages.translators_google_lang
-        self.dict_languages["Bing(web)"] = languages.translators_bing_lang
-
-        self.languages = {}
-        self.languages["DeepL(web)"] = list(self.dict_languages["DeepL(web)"].keys())
-        self.languages["DeepL(auth)"] = list(self.dict_languages["DeepL(auth)"].keys())
-        self.languages["Google(web)"] = list(self.dict_languages["Google(web)"].keys())
-        self.languages["Bing(web)"] = list(self.dict_languages["Bing(web)"].keys())
+        self.translator_status = {}
+        for translator in languages.translators:
+            self.translator_status[translator] = False
         self.deepl_client = None
 
     def authentication(self, translator_name, authkey=None):
@@ -48,33 +33,35 @@ class Translator():
         return result
 
     def translate(self, translator_name, source_language, target_language, message):
-        result = False
+        result = ""
         try:
+            source_language=languages.translation_lang[translator_name][source_language]
+            target_language=languages.translation_lang[translator_name][target_language]
             if translator_name == "DeepL(web)":
                 result = deepl_translate.translate(
-                    source_language=self.dict_languages["DeepL(web)"][source_language],
-                    target_language=self.dict_languages["DeepL(web)"][target_language],
+                    source_language=source_language,
+                    target_language=target_language,
                     text=message
                     )
             elif translator_name == "DeepL(auth)":
                 result = self.deepl_client.translate_text(
                     message,
-                    source_lang=self.dict_languages["DeepL(auth)"][source_language],
-                    target_lang=self.dict_languages["DeepL(auth)"][target_language],
+                    source_lang=source_language,
+                    target_lang=target_language,
                     ).text
             elif translator_name == "Google(web)":
                 result = ts.translate_text(
                     query_text=message,
                     translator="google",
-                    from_language=self.dict_languages["Google(web)"][source_language],
-                    to_language=self.dict_languages["Google(web)"][target_language],
+                    from_language=source_language,
+                    to_language=target_language,
                     )
             elif translator_name == "Bing(web)":
                 result = ts.translate_text(
                     query_text=message,
                     translator="bing",
-                    from_language=self.dict_languages["Bing(web)"][source_language],
-                    to_language=self.dict_languages["Bing(web)"][target_language],
+                    from_language=source_language,
+                    to_language=target_language,
                     )
         except:
             pass

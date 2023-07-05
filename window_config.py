@@ -2,6 +2,8 @@ import os
 import tkinter as tk
 import customtkinter
 import utils
+import audio_utils
+import languages
 
 class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
@@ -31,13 +33,16 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
         # tab UI
         ## slider transparency
+        row = 0
+        padx = 5
+        pady = 1
         self.label_transparency = customtkinter.CTkLabel(
             self.tabview_config.tab("UI"),
             text="Transparency:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_transparency.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_transparency.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.slider_transparency = customtkinter.CTkSlider(
             self.tabview_config.tab("UI"),
             from_=50,
@@ -45,16 +50,17 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             command=self.slider_transparency_callback,
             variable=tk.DoubleVar(value=self.parent.TRANSPARENCY),
         )
-        self.slider_transparency.grid(row=0, column=1, columnspan=1, padx=5, pady=10, sticky="nsew")
+        self.slider_transparency.grid(row=row, column=1, columnspan=1, padx=padx, pady=10, sticky="nsew")
 
         ## optionmenu theme
+        row += 1
         self.label_appearance_theme = customtkinter.CTkLabel(
             self.tabview_config.tab("UI"),
             text="Appearance Theme:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_appearance_theme.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_appearance_theme.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_appearance_theme = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("UI"),
             values=["Light", "Dark", "System"],
@@ -62,17 +68,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.APPEARANCE_THEME),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_appearance_theme.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_appearance_theme.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_appearance_theme._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu UI scaling
+        row += 1
         self.label_ui_scaling = customtkinter.CTkLabel(
             self.tabview_config.tab("UI"),
             text="UI Scaling:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_ui_scaling.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_ui_scaling.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_ui_scaling = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("UI"),
             values=["80%", "90%", "100%", "110%", "120%"],
@@ -80,17 +87,18 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.UI_SCALING),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_ui_scaling.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_ui_scaling.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_ui_scaling._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu font family
+        row += 1
         self.label_font_family = customtkinter.CTkLabel(
             self.tabview_config.tab("UI"),
             text="Font Family:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_font_family.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_font_family.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         font_families = list(tk.font.families())
         self.optionmenu_font_family = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("UI"),
@@ -99,18 +107,21 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.FONT_FAMILY),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_font_family.grid(row=3, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_font_family._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         # tab Translation
         ## optionmenu translation translator
+        row = 0
+        padx = 5
+        pady = 1
         self.label_translation_translator = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Select Translator:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.label_translation_translator.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_translator.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_translation_translator = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             values=list(self.parent.translator.translator_status.keys()),
@@ -118,27 +129,28 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             variable=customtkinter.StringVar(value=self.parent.CHOICE_TRANSLATOR),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_translator.grid(row=0, column=1, columnspan=3 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_translator._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation input language
+        row +=1
         self.label_translation_input_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Send Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_input_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_input_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         ## select translation input source language
         self.optionmenu_translation_input_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_source_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_input_source_language.grid(row=1, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation input arrow
@@ -148,37 +160,38 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_input_arrow.grid(row=1, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_translation_input_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
         ## select translation input target language
         self.optionmenu_translation_input_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_input_target_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_input_target_language.grid(row=1, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_input_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation output language
+        row +=1
         self.label_translation_output_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Translation"),
             text="Receive Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_output_language.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_translation_output_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         ## select translation output source language
         self.optionmenu_translation_output_source_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_source_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_output_source_language.grid(row=2, column=1, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## label translation output arrow
@@ -188,210 +201,352 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_translation_output_arrow.grid(row=2, column=2, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.label_translation_output_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
         ## select translation output target language
         self.optionmenu_translation_output_target_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Translation"),
             command=self.optionmenu_translation_output_target_language_callback,
-            values=self.parent.translator.languages[self.parent.CHOICE_TRANSLATOR],
+            values=list(languages.translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=customtkinter.StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_output_target_language.grid(row=2, column=3, columnspan=1, padx=5, pady=5, sticky="nsew")
+        self.optionmenu_translation_output_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         # tab Transcription
         ## optionmenu input mic device
+        row = 0
+        padx = 5
+        pady = 1
         self.label_input_mic_device = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Mic Device:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_device.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_mic_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=[device["name"] for device in self.parent.vr.search_input_device()],
+            values=[device["name"] for device in audio_utils.get_input_device_list()],
             command=self.optionmenu_input_mic_device_callback,
             variable=customtkinter.StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_mic_device.grid(row=0, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input mic voice language
+        row +=1
         self.label_input_mic_voice_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Mic Voice Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_voice_language.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_mic_voice_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(self.parent.vr.languages),
+            values=list(languages.transcription_lang.keys()),
             command=self.optionmenu_input_mic_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_mic_voice_language.grid(row=1, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
-        ## checkbox input mic in dynamic
-        self.label_input_mic_is_dynamic = customtkinter.CTkLabel(
+        ## entry input mic energy threshold
+        row +=1
+        self.label_input_mic_energy_threshold = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Mic IsDynamic:",
+            text="Input Mic Energy Threshold:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_is_dynamic.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.checkbox_input_mic_is_dynamic = customtkinter.CTkCheckBox(
+        self.label_input_mic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_mic_energy_threshold = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_energy_threshold_callback)
+
+        ## checkbox input mic dynamic energy threshold
+        row +=1
+        self.label_input_mic_dynamic_energy_threshold = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Dynamic Energy Threshold:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_dynamic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_input_mic_dynamic_energy_threshold = customtkinter.CTkCheckBox(
             self.tabview_config.tab("Transcription"),
             text="",
             onvalue=True,
             offvalue=False,
-            command=self.checkbox_input_mic_is_dynamic_callback,
+            command=self.checkbox_input_mic_dynamic_energy_threshold_callback,
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_mic_is_dynamic.grid(row=2, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        if  self.parent.INPUT_MIC_IS_DYNAMIC is True:
-            self.checkbox_input_mic_is_dynamic.select()
+        self.checkbox_input_mic_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        if  self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.checkbox_input_mic_dynamic_energy_threshold.select()
         else:
-            self.checkbox_input_mic_is_dynamic.deselect()
+            self.checkbox_input_mic_dynamic_energy_threshold.deselect()
 
-        ## entry input mic threshold
-        self.label_input_mic_threshold = customtkinter.CTkLabel(
+        ## entry input mic record timeout
+        row +=1
+        self.label_input_mic_record_timeout = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Mic Threshold:",
+            text="Input Mic Record Timeout:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_threshold.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_mic_threshold = customtkinter.CTkEntry(
+        self.label_input_mic_record_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_mic_record_timeout = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_THRESHOLD),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_RECORD_TIMEOUT),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_threshold.grid(row=3, column=1, columnspan=1 ,padx=5, pady=10, sticky="nsew")
-        self.entry_input_mic_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_threshold_callback)
+        self.entry_input_mic_record_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_record_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_record_timeout_callback)
+
+        ## entry input mic phrase timeout
+        row +=1
+        self.label_input_mic_phrase_timeout = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Phrase Timeout:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_phrase_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_mic_phrase_timeout = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_PHRASE_TIMEOUT),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_mic_phrase_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_phrase_timeout_callback)
+
+        ## entry input mic max phrases
+        row +=1
+        self.label_input_mic_max_phrases = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Max Phrases:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_max_phrases.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_mic_max_phrases = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_MIC_MAX_PHRASES),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_mic_max_phrases.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_max_phrases.bind("<Any-KeyRelease>", self.entry_input_mic_max_phrases_callback)
 
         ## optionmenu input speaker device
+        row +=1
         self.label_input_speaker_device = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Speaker Device:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_device.grid(row=4, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_speaker_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_speaker_device = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=[device["name"] for device in self.parent.vr.search_output_device()],
+            values=[device["name"] for device in audio_utils.get_output_device_list()],
             command=self.optionmenu_input_speaker_device_callback,
             variable=customtkinter.StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_device.grid(row=4, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input speaker voice language
+        row +=1
         self.label_input_speaker_voice_language = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Speaker Voice Language:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_voice_language.grid(row=5, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_input_speaker_voice_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_speaker_voice_language = customtkinter.CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=list(self.parent.vr.languages),
+            values=list(languages.transcription_lang.keys()),
             command=self.optionmenu_input_speaker_voice_language_callback,
             variable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_voice_language.grid(row=5, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
+        self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
 
-        ## entry input speaker interval
-        self.label_input_speaker_interval = customtkinter.CTkLabel(
+        ## entry input speaker energy threshold
+        row +=1
+        self.label_input_speaker_energy_threshold = customtkinter.CTkLabel(
             self.tabview_config.tab("Transcription"),
-            text="Input Speaker Interval:",
+            text="Input Speaker Energy Threshold:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_interval.grid(row=6, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
-        self.entry_input_speaker_interval = customtkinter.CTkEntry(
+        self.label_input_speaker_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_speaker_energy_threshold = customtkinter.CTkEntry(
             self.tabview_config.tab("Transcription"),
-            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_INTERVAL),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_interval.grid(row=6, column=1, columnspan=1 ,padx=5, pady=5, sticky="nsew")
-        self.entry_input_speaker_interval.bind("<Any-KeyRelease>", self.entry_input_speaker_interval_callback)
+        self.entry_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_speaker_energy_threshold_callback)
+
+        ## checkbox input speaker dynamic energy threshold
+        row +=1
+        self.label_input_speaker_dynamic_energy_threshold = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Dynamic Energy Threshold:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_dynamic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_input_speaker_dynamic_energy_threshold = customtkinter.CTkCheckBox(
+            self.tabview_config.tab("Transcription"),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_input_speaker_dynamic_energy_threshold_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_input_speaker_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        if  self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.checkbox_input_speaker_dynamic_energy_threshold.select()
+        else:
+            self.checkbox_input_speaker_dynamic_energy_threshold.deselect()
+
+        ## entry input speaker record timeout
+        row +=1
+        self.label_input_speaker_record_timeout = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Record Timeout:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_record_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_speaker_record_timeout = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_RECORD_TIMEOUT),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_speaker_record_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_record_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_record_timeout_callback)
+
+        ## entry input speaker phrase timeout
+        row +=1
+        self.label_input_speaker_phrase_timeout = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Phrase Timeout:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_phrase_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_speaker_phrase_timeout = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_speaker_phrase_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_phrase_timeout_callback)
+
+        ## entry input speaker max phrases
+        row +=1
+        self.label_input_speaker_max_phrases = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Speaker Max Phrases:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_speaker_max_phrases.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_speaker_max_phrases = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=self.parent.INPUT_SPEAKER_MAX_PHRASES),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_speaker_max_phrases.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_max_phrases.bind("<Any-KeyRelease>", self.entry_input_speaker_max_phrases_callback)
 
         # tab Parameter
         ## entry ip address
+        row = 0
+        padx = 5
+        pady = 1
         self.label_ip_address = customtkinter.CTkLabel(
             self.tabview_config.tab("Parameter"),
             text="OSC IP address:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_ip_address.grid(row=0, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_ip_address.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_ip_address = customtkinter.CTkEntry(
             self.tabview_config.tab("Parameter"),
             textvariable=customtkinter.StringVar(value=self.parent.OSC_IP_ADDRESS),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_ip_address.grid(row=0, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_ip_address.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_ip_address.bind("<Any-KeyRelease>", self.entry_ip_address_callback)
 
         ## entry port
+        row +=1
         self.label_port = customtkinter.CTkLabel(
             self.tabview_config.tab("Parameter"),
             text="OSC Port:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_port.grid(row=1, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_port.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_port = customtkinter.CTkEntry(
             self.tabview_config.tab("Parameter"),
             textvariable=customtkinter.StringVar(value=self.parent.OSC_PORT),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_port.grid(row=1, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_port.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_port.bind("<Any-KeyRelease>", self.entry_port_callback)
 
         ## entry authkey
+        row +=1
         self.label_authkey = customtkinter.CTkLabel(
             self.tabview_config.tab("Parameter"),
             text="DeepL Auth Key:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_authkey.grid(row=2, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_authkey.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_authkey = customtkinter.CTkEntry(
             self.tabview_config.tab("Parameter"),
             textvariable=customtkinter.StringVar(value=self.parent.AUTH_KEYS["DeepL(auth)"]),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_authkey.grid(row=2, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_authkey.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_authkey.bind("<Any-KeyRelease>", self.entry_authkey_callback)
 
         ## entry message format
+        row +=1
         self.label_message_format = customtkinter.CTkLabel(
             self.tabview_config.tab("Parameter"),
             text="Message Format:",
             fg_color="transparent",
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_message_format.grid(row=3, column=0, columnspan=1, padx=5, pady=5, sticky="nsw")
+        self.label_message_format.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_message_format = customtkinter.CTkEntry(
             self.tabview_config.tab("Parameter"),
             textvariable=customtkinter.StringVar(value=self.parent.MESSAGE_FORMAT),
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_message_format.grid(row=3, column=1, columnspan=1, padx=1, pady=5, sticky="nsew")
+        self.entry_message_format.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
+
+        self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
     def slider_transparency_callback(self, value):
         self.parent.wm_attributes("-alpha", value/100)
@@ -449,17 +604,30 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.label_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_mic_is_dynamic.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_mic_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
-        self.label_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
-        self.entry_input_speaker_interval.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_dynamic_energy_threshold.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_record_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_speaker_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_speaker_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
 
         # tab Parameter
         self.label_ip_address.configure(font=customtkinter.CTkFont(family=choice))
@@ -498,23 +666,23 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
             utils.print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
             self.optionmenu_translation_input_source_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][0]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[0]))
             self.optionmenu_translation_input_target_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[1]))
             self.optionmenu_translation_output_source_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][1]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[1]))
             self.optionmenu_translation_output_target_language.configure(
-                values=self.parent.translator.languages[choice],
-                variable=customtkinter.StringVar(value=self.parent.translator.languages[choice][0]))
+                values=list(languages.translation_lang[choice].keys()),
+                variable=customtkinter.StringVar(value=list(languages.translation_lang[choice].keys())[0]))
 
             self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.INPUT_SOURCE_LANG = self.parent.translator.languages[choice][0]
-            self.parent.INPUT_TARGET_LANG = self.parent.translator.languages[choice][1]
-            self.parent.OUTPUT_SOURCE_LANG = self.parent.translator.languages[choice][1]
-            self.parent.OUTPUT_TARGET_LANG = self.parent.translator.languages[choice][0]
+            self.parent.INPUT_SOURCE_LANG = list(languages.translation_lang[choice].keys())[0]
+            self.parent.INPUT_TARGET_LANG = list(languages.translation_lang[choice].keys())[1]
+            self.parent.OUTPUT_SOURCE_LANG = list(languages.translation_lang[choice].keys())[1]
+            self.parent.OUTPUT_TARGET_LANG = list(languages.translation_lang[choice].keys())[0]
             utils.save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
             utils.save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
@@ -545,14 +713,26 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
 
-    def checkbox_input_mic_is_dynamic_callback(self):
-        value = self.checkbox_input_mic_is_dynamic.get()
-        self.parent.INPUT_MIC_IS_DYNAMIC = value
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_IS_DYNAMIC", self.parent.INPUT_MIC_IS_DYNAMIC)
+    def entry_input_mic_energy_threshold_callback(self, event):
+        self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(self.entry_input_mic_energy_threshold.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_ENERGY_THRESHOLD)
 
-    def entry_input_mic_threshold_callback(self, event):
-        self.parent.INPUT_MIC_THRESHOLD = int(self.entry_input_mic_threshold.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_THRESHOLD", self.parent.INPUT_MIC_THRESHOLD)
+    def checkbox_input_mic_dynamic_energy_threshold_callback(self):
+        value = self.checkbox_input_mic_dynamic_energy_threshold.get()
+        self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD)
+
+    def entry_input_mic_record_timeout_callback(self, event):
+        self.parent.INPUT_MIC_RECORD_TIMEOUT = int(self.entry_input_mic_record_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_RECORD_TIMEOUT", self.parent.INPUT_MIC_RECORD_TIMEOUT)
+
+    def entry_input_mic_phrase_timeout_callback(self, event):
+        self.parent.INPUT_MIC_PHRASE_TIMEOUT = int(self.entry_input_mic_phrase_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_PHRASE_TIMEOUT", self.parent.INPUT_MIC_PHRASE_TIMEOUT)
+
+    def entry_input_mic_max_phrases_callback(self, event):
+        self.parent.INPUT_MIC_MAX_PHRASES = int(self.entry_input_mic_max_phrases.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_MAX_PHRASES", self.parent.INPUT_MIC_MAX_PHRASES)
 
     def optionmenu_input_speaker_device_callback(self, choice):
         self.parent.CHOICE_SPEAKER_DEVICE = choice
@@ -562,9 +742,26 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
-    def entry_input_speaker_interval_callback(self, event):
-        self.parent.INPUT_SPEAKER_INTERVAL = int(self.entry_input_speaker_interval.get())
-        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_INTERVAL", self.parent.INPUT_SPEAKER_INTERVAL)
+    def entry_input_speaker_energy_threshold_callback(self, event):
+        self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(self.entry_input_speaker_energy_threshold.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD)
+
+    def checkbox_input_speaker_dynamic_energy_threshold_callback(self):
+        value = self.checkbox_input_speaker_dynamic_energy_threshold.get()
+        self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD)
+
+    def entry_input_speaker_record_timeout_callback(self, event):
+        self.parent.INPUT_SPEAKER_RECORD_TIMEOUT = int(self.entry_input_speaker_record_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_RECORD_TIMEOUT", self.parent.INPUT_SPEAKER_RECORD_TIMEOUT)
+
+    def entry_input_speaker_phrase_timeout_callback(self, event):
+        self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT = int(self.entry_input_speaker_phrase_timeout.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_PHRASE_TIMEOUT", self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT)
+
+    def entry_input_speaker_max_phrases_callback(self, event):
+        self.parent.INPUT_SPEAKER_MAX_PHRASES = int(self.entry_input_speaker_max_phrases.get())
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_MAX_PHRASES", self.parent.INPUT_SPEAKER_MAX_PHRASES)
 
     def entry_ip_address_callback(self, event):
         self.parent.OSC_IP_ADDRESS = self.entry_ip_address.get()
@@ -584,6 +781,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
                 utils.print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
                 pass
+
+    def delete_window(self):
+        self.parent.checkbox_translation.configure(state="normal")
+        self.parent.checkbox_transcription_send.configure(state="normal")
+        self.parent.checkbox_transcription_receive.configure(state="normal")
+        self.parent.config_window.destroy()
 
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()

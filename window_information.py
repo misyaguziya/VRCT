@@ -18,7 +18,7 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
             font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v1.1)
+        textbox_information_message = """VRCT(v1.2)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -66,13 +66,18 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
             Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
             Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
         Transcriptionタブ
-            Input Mic Device: 音声を入力するマイクを選択
+            Input Mic Device: マイクを選択
             Input Mic Voice Language: 入力する音声の言語
-            Input Mic IsDynamic: マイクの自動調整
-            Input Mic Threshold: 音声取得のしきい値
-            Input Speaker Device: 音声を受信するスピーカーを選択
+            Input Mic Energy Threshold: 音声取得のしきい値
+            Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
+            Input Mic Record Timeout: 音声の区切りの無音時間
+            Input Mic Max Phrases: 保留する単語の上限
+            Input Speaker Device: スピーカーを選択
             Input Speaker Voice Language: 受信する音声の言語
-            Input Speaker Interval: 受信する音声の調整
+            Input Speaker Energy Threshold: 音声取得のしきい値
+            Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
+            Input Speaker Record Timeout: 音声の区切りの無音時間
+            Input Speaker Max Phrases: 保留する単語の上限
         Parameterタブ
             OSC IP address: 変更不要
             OSC port: 変更不要
