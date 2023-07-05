@@ -4,6 +4,7 @@ import queue
 import tkinter as tk
 import customtkinter
 from PIL import Image
+from flashtext import KeywordProcessor
 
 import utils
 import osc_tools
@@ -21,9 +22,11 @@ class App(customtkinter.CTk):
 
         # init instance
         self.translator = translation.Translator()
+        self.keyword_processor = KeywordProcessor()
 
         # init config
         self.PATH_CONFIG = "./config.json"
+
         ## main window
         self.ENABLE_TRANSLATION = False
         self.ENABLE_TRANSCRIPTION_SEND = False
@@ -48,6 +51,7 @@ class App(customtkinter.CTk):
         self.INPUT_MIC_RECORD_TIMEOUT = 3
         self.INPUT_MIC_PHRASE_TIMEOUT = 3
         self.INPUT_MIC_MAX_PHRASES = 10
+        self.INPUT_MIC_WORD_FILTER = []
         ## Transcription Receive
         self.CHOICE_SPEAKER_DEVICE = audio_utils.get_default_output_device()["name"]
         self.INPUT_SPEAKER_VOICE_LANGUAGE = list(languages.transcription_lang.keys())[1]
@@ -139,6 +143,9 @@ class App(customtkinter.CTk):
             if "INPUT_MIC_MAX_PHRASES" in config.keys():
                 if type(config["INPUT_MIC_MAX_PHRASES"]) is int:
                     self.INPUT_MIC_MAX_PHRASES = config["INPUT_MIC_MAX_PHRASES"]
+            if "INPUT_MIC_WORD_FILTER" in config.keys():
+                if type(config["INPUT_MIC_WORD_FILTER"]) is list:
+                    self.INPUT_MIC_WORD_FILTER = config["INPUT_MIC_WORD_FILTER"]
 
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
                 if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in audio_utils.get_output_device_list()]:
@@ -201,6 +208,7 @@ class App(customtkinter.CTk):
                 "INPUT_MIC_RECORD_TIMEOUT": self.INPUT_MIC_RECORD_TIMEOUT,
                 "INPUT_MIC_PHRASE_TIMEOUT": self.INPUT_MIC_PHRASE_TIMEOUT,
                 "INPUT_MIC_MAX_PHRASES": self.INPUT_MIC_MAX_PHRASES,
+                "INPUT_MIC_WORD_FILTER": self.INPUT_MIC_WORD_FILTER,
                 "CHOICE_SPEAKER_DEVICE": self.CHOICE_SPEAKER_DEVICE,
                 "INPUT_SPEAKER_VOICE_LANGUAGE": self.INPUT_SPEAKER_VOICE_LANGUAGE,
                 "INPUT_SPEAKER_ENERGY_THRESHOLD": self.INPUT_SPEAKER_ENERGY_THRESHOLD,
@@ -392,6 +400,10 @@ class App(customtkinter.CTk):
         else:
             self.checkbox_foreground.deselect()
 
+        ## set word filter
+        for f in self.INPUT_MIC_WORD_FILTER:
+            self.keyword_processor.add_keyword(f)
+
         ## set bind entry message box
         self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
         self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
@@ -459,6 +471,12 @@ class App(customtkinter.CTk):
                 self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
                 message = self.mic_transcriber.get_transcript()
                 if len(message) > 0:
+                    # word filter
+                    if len(self.keyword_processor.extract_keywords(message)) != 0:
+                        utils.print_textbox(self.textbox_message_log, f"Detect WordFilter :{message}", "INFO")
+                        utils.print_textbox(self.textbox_message_system_log, f"Detect WordFilter :{message}", "INFO")
+                        return
+
                     # translate
                     if self.checkbox_translation.get() is False:
                         voice_message = f"{message}"
