@@ -1,8 +1,8 @@
 from os import path as os_path
-from tkinter import DoubleVar
+from tkinter import DoubleVar, IntVar 
 from tkinter import font as tk_font
 import customtkinter
-from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox
+from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox, CTkProgressBar
 from flashtext import KeywordProcessor
 
 from utils import save_json, print_textbox
@@ -10,6 +10,9 @@ from audio_utils import get_input_device_list, get_output_device_list
 from languages import translation_lang, transcription_lang
 
 class ToplevelWindowConfig(CTkToplevel):
+    MAX_MIC_ENERGY_THRESHOLD = 2000
+    MAX_SPEAKER_ENERGY_THRESHOLD = 2000
+
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
@@ -267,14 +270,26 @@ class ToplevelWindowConfig(CTkToplevel):
             fg_color="transparent",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
-        self.entry_input_mic_energy_threshold = CTkEntry(
+        self.label_input_mic_energy_threshold.grid(row=row, column=0, rowspan=2, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.progressBar_input_mic_energy_threshold = CTkProgressBar(
             self.tabview_config.tab("Transcription"),
-            textvariable=StringVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            corner_radius=0
         )
-        self.entry_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
-        self.entry_input_mic_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_mic_energy_threshold_callback)
+        self.progressBar_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
+
+        row +=1
+        self.slider_input_mic_energy_threshold = customtkinter.CTkSlider(
+            self.tabview_config.tab("Transcription"),
+            from_=0,
+            to=self.MAX_MIC_ENERGY_THRESHOLD,
+            border_width=5,
+            button_length=0,
+            button_corner_radius=3,
+            number_of_steps=self.MAX_MIC_ENERGY_THRESHOLD,
+            command=self.slider_input_mic_energy_threshold_callback,
+            variable=IntVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
+        )
+        self.slider_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=0, sticky="nsew")
 
         ## checkbox input mic dynamic energy threshold
         row +=1
@@ -413,14 +428,27 @@ class ToplevelWindowConfig(CTkToplevel):
             fg_color="transparent",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
-        self.entry_input_speaker_energy_threshold = CTkEntry(
+        self.label_input_speaker_energy_threshold.grid(row=row, column=0, rowspan=2, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+
+        self.progressBar_input_speaker_energy_threshold = CTkProgressBar(
             self.tabview_config.tab("Transcription"),
-            textvariable=StringVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            corner_radius=0
         )
-        self.entry_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
-        self.entry_input_speaker_energy_threshold.bind("<Any-KeyRelease>", self.entry_input_speaker_energy_threshold_callback)
+        self.progressBar_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
+        
+        row +=1
+        self.slider_input_speaker_energy_threshold = customtkinter.CTkSlider(
+            self.tabview_config.tab("Transcription"),
+            from_=0,
+            to=self.MAX_SPEAKER_ENERGY_THRESHOLD,
+            border_width=5,
+            button_length=0,
+            button_corner_radius=3,
+            number_of_steps=self.MAX_SPEAKER_ENERGY_THRESHOLD,
+            command=self.slider_input_speaker_energy_threshold_callback,
+            variable=IntVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
+        )
+        self.slider_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=0, sticky="nsew")
 
         ## checkbox input speaker dynamic energy threshold
         row +=1
@@ -626,7 +654,6 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_mic_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=choice))
         self.label_input_mic_energy_threshold.configure(font=CTkFont(family=choice))
-        self.entry_input_mic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_mic_dynamic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_mic_record_timeout.configure(font=CTkFont(family=choice))
         self.entry_input_mic_record_timeout.configure(font=CTkFont(family=choice))
@@ -643,7 +670,6 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_speaker_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=CTkFont(family=choice))
         self.label_input_speaker_energy_threshold.configure(font=CTkFont(family=choice))
-        self.entry_input_speaker_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_speaker_dynamic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_speaker_record_timeout.configure(font=CTkFont(family=choice))
         self.entry_input_speaker_record_timeout.configure(font=CTkFont(family=choice))
@@ -736,8 +762,8 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
 
-    def entry_input_mic_energy_threshold_callback(self, event):
-        self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(self.entry_input_mic_energy_threshold.get())
+    def slider_input_mic_energy_threshold_callback(self, value):
+        self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(value)
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_ENERGY_THRESHOLD)
 
     def checkbox_input_mic_dynamic_energy_threshold_callback(self):
@@ -772,8 +798,8 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
-    def entry_input_speaker_energy_threshold_callback(self, event):
-        self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(self.entry_input_speaker_energy_threshold.get())
+    def slider_input_speaker_energy_threshold_callback(self, value):
+        self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
         save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD)
 
     def checkbox_input_speaker_dynamic_energy_threshold_callback(self):
