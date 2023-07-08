@@ -1,13 +1,12 @@
 from time import sleep
 from os import path as os_path
-from threading import Thread
 from tkinter import DoubleVar, IntVar 
 from tkinter import font as tk_font
 import customtkinter
 from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox, CTkProgressBar
 from flashtext import KeywordProcessor
 
-from utils import save_json, print_textbox
+from utils import save_json, print_textbox, thread_fnc
 from audio_utils import get_input_device_list, get_output_device_list
 from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from languages import translation_lang, transcription_lang
@@ -29,8 +28,8 @@ class ToplevelWindowConfig(CTkToplevel):
         # init parameter
         self.MAX_MIC_ENERGY_THRESHOLD = 2000
         self.MAX_SPEAKER_ENERGY_THRESHOLD = 4000
-        self.FLAG_LOOP_MIC = True
-        self.FLAG_LOOP_SPEAKER = True
+        self.last_mic_device_name = None
+        self.last_speaker_device_name = None
 
         # tabwiew config
         self.tabview_config = CTkTabview(self)
@@ -284,7 +283,8 @@ class ToplevelWindowConfig(CTkToplevel):
             corner_radius=0
         )
         self.progressBar_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
-        self.th_progressBar_input_mic_energy_threshold_recorder = Thread(target=self.progressBar_input_mic_energy_threshold_recorder, daemon=True)
+        self.th_progressBar_input_mic_energy_threshold_recorder = thread_fnc(fnc=self.progressBar_input_mic_energy_threshold_recorder)
+        self.th_progressBar_input_mic_energy_threshold_recorder.daemon = True
         self.th_progressBar_input_mic_energy_threshold_recorder.start()
         sleep(2)
 
@@ -446,7 +446,8 @@ class ToplevelWindowConfig(CTkToplevel):
             corner_radius=0
         )
         self.progressBar_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
-        self.th_progressBar_input_speaker_energy_threshold_recorder = Thread(target=self.progressBar_input_speaker_energy_threshold_recorder, daemon=True)
+        self.th_progressBar_input_speaker_energy_threshold_recorder = thread_fnc(fnc=self.progressBar_input_speaker_energy_threshold_recorder)
+        self.th_progressBar_input_speaker_energy_threshold_recorder.daemon=True
         self.th_progressBar_input_speaker_energy_threshold_recorder.start()
 
         row +=1
@@ -776,17 +777,20 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
 
     def progressBar_input_mic_energy_threshold_recorder(self):
-        while self.FLAG_LOOP_MIC:
-            mic_device_name = self.parent.CHOICE_MIC_DEVICE
-            mic_device = [device for device in get_input_device_list() if device["name"] == mic_device_name][0]
-            re = SelectedMicRecorder(mic_device, energy_threshold=0, dynamic_energy_threshold=False, record_timeout=0)
-            while self.FLAG_LOOP_MIC:
-                if mic_device_name != self.parent.CHOICE_MIC_DEVICE:
+        self.last_mic_device_name = self.parent.CHOICE_MIC_DEVICE
+        mic_device = [device for device in get_input_device_list() if device["name"] == self.last_mic_device_name][0]
+        re = SelectedMicRecorder(mic_device, energy_threshold=0, dynamic_energy_threshold=False, record_timeout=0)
+        try:
+            while True:
+                if self.last_mic_device_name != self.parent.CHOICE_MIC_DEVICE:
                     break
                 with re.source as source:
                     energy = re.recorder.listen_energy(source)
                     self.progressBar_input_mic_energy_threshold.set(energy/self.MAX_MIC_ENERGY_THRESHOLD)
-            sleep(2)
+                    sleep(0.05)
+        except:
+            pass
+        sleep(5)
 
     def slider_input_mic_energy_threshold_callback(self, value):
         self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(value)
@@ -825,17 +829,20 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
     def progressBar_input_speaker_energy_threshold_recorder(self):
-        while self.FLAG_LOOP_SPEAKER:
-            speaker_device_name = self.parent.CHOICE_SPEAKER_DEVICE
-            speaker_device = [device for device in get_output_device_list() if device["name"] == speaker_device_name][0]
-            re = SelectedSpeakerRecorder(speaker_device, energy_threshold=0, dynamic_energy_threshold=False, record_timeout=0)
-            while self.FLAG_LOOP_SPEAKER:
-                if speaker_device_name != self.parent.CHOICE_SPEAKER_DEVICE:
+        self.last_speaker_device_name = self.parent.CHOICE_SPEAKER_DEVICE
+        speaker_device = [device for device in get_output_device_list() if device["name"] == self.last_speaker_device_name][0]
+        re = SelectedSpeakerRecorder(speaker_device, energy_threshold=0, dynamic_energy_threshold=False, record_timeout=0)
+        try:
+            while True:
+                if self.last_speaker_device_name != self.parent.CHOICE_SPEAKER_DEVICE:
                     break
                 with re.source as source:
                     energy = re.recorder.listen_energy(source)
                     self.progressBar_input_speaker_energy_threshold.set(energy/self.MAX_SPEAKER_ENERGY_THRESHOLD)
-            sleep(2)
+                    sleep(0.05)
+        except:
+            pass
+        sleep(5)
 
     def slider_input_speaker_energy_threshold_callback(self, value):
         self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
@@ -878,11 +885,15 @@ class ToplevelWindowConfig(CTkToplevel):
                 pass
 
     def delete_window(self):
-        self.FLAG_LOOP_MIC = False
-        self.FLAG_LOOP_SPEAKER = False
-        self.th_progressBar_input_mic_energy_threshold_recorder.join()
-        self.th_progressBar_input_speaker_energy_threshold_recorder.join()
-        sleep(1)
+
+        if isinstance(self.th_progressBar_input_mic_energy_threshold_recorder, thread_fnc):
+            self.th_progressBar_input_mic_energy_threshold_recorder.stop()
+        self.last_mic_device_name = None
+        
+        if isinstance(self.th_progressBar_input_speaker_energy_threshold_recorder, thread_fnc):
+            self.th_progressBar_input_speaker_energy_threshold_recorder.stop()
+        self.last_speaker_device_name = None
+
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
