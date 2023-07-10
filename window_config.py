@@ -24,10 +24,12 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.tabview_config.add("Translation")
         self.tabview_config.add("Transcription")
         self.tabview_config.add("Parameter")
+        self.tabview_config.add("Others")
         self.tabview_config.tab("UI").grid_columnconfigure(1, weight=1)
         self.tabview_config.tab("Translation").grid_columnconfigure([1,2,3], weight=1)
         self.tabview_config.tab("Transcription").grid_columnconfigure(1, weight=1)
         self.tabview_config.tab("Parameter").grid_columnconfigure(1, weight=1)
+        self.tabview_config.tab("Others").grid_columnconfigure(1, weight=1)
         self.tabview_config._segmented_button.configure(font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY))
         self.tabview_config._segmented_button.grid(sticky="W")
 
@@ -546,6 +548,30 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.entry_message_format.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
 
+        # tab Others
+        # checkbox auto clear chat box
+        row += 1
+        self.label_checkbox_auto_clear_chatbox = customtkinter.CTkLabel(
+            self.tabview_config.tab("Others"),
+            text="Auto clear chat box",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_checkbox_auto_clear_chatbox.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_auto_clear_chatbox = customtkinter.CTkCheckBox(
+            self.tabview_config.tab("Others"),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_auto_clear_chatbox_callback,
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_auto_clear_chatbox.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
+        if  self.parent.ENABLE_AUTO_CLEAR_CHATBOX is True:
+            self.checkbox_auto_clear_chatbox.select()
+        else:
+            self.checkbox_auto_clear_chatbox.deselect()
+
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
     def slider_transparency_callback(self, value):
@@ -659,6 +685,11 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
 
         self.parent.FONT_FAMILY = choice
         utils.save_json(self.parent.PATH_CONFIG, "FONT_FAMILY", self.parent.FONT_FAMILY)
+        
+    def checkbox_auto_clear_chatbox_callback(self):
+        value = self.checkbox_auto_clear_chatbox.get()
+        self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
+        utils.save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:

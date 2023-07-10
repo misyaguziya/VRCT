@@ -34,6 +34,7 @@ class App(customtkinter.CTk):
         self.APPEARANCE_THEME = "System"
         self.UI_SCALING = "100%"
         self.FONT_FAMILY = "Yu Gothic UI"
+        self.ENABLE_AUTO_CLEAR_CHATBOX = False
         ## Translation
         self.CHOICE_TRANSLATOR = languages.translators[0]
         self.INPUT_SOURCE_LANG = list(languages.translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
@@ -99,6 +100,9 @@ class App(customtkinter.CTk):
             if "FONT_FAMILY" in config.keys():
                 if config["FONT_FAMILY"] in list(tk.font.families()):
                     self.FONT_FAMILY = config["FONT_FAMILY"]
+            if "ENABLE_AUTO_CLEAR_CHATBOX" in config.keys():
+                if type(config["ENABLE_AUTO_CLEAR_CHATBOX"]) is bool:
+                    self.ENABLE_AUTO_CLEAR_CHATBOX = config["ENABLE_AUTO_CLEAR_CHATBOX"]
 
             # translation
             if "CHOICE_TRANSLATOR" in config.keys():
@@ -189,6 +193,7 @@ class App(customtkinter.CTk):
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
                 "FONT_FAMILY": self.FONT_FAMILY,
+                "ENABLE_AUTO_CLEAR_CHATBOX": self.ENABLE_AUTO_CLEAR_CHATBOX,
                 "CHOICE_TRANSLATOR": self.CHOICE_TRANSLATOR,
                 "INPUT_SOURCE_LANG": self.INPUT_SOURCE_LANG,
                 "INPUT_TARGET_LANG": self.INPUT_TARGET_LANG,
@@ -615,7 +620,8 @@ class App(customtkinter.CTk):
             utils.print_textbox(self.textbox_message_send_log, f"{chat_message}", "SEND")
 
             # delete message in entry message box
-            # self.entry_message_box.delete(0, customtkinter.END)
+            if self.ENABLE_AUTO_CLEAR_CHATBOX == True:
+                self.entry_message_box.delete(0, customtkinter.END)
 
     def entry_message_box_press_key_any(self, event):
         # send OSC typing

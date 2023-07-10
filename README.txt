@@ -63,6 +63,8 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
 　　　　　- [message]がメッセージボックスに記入したメッセージに置換される
 　　　　　- [translation]が翻訳されたメッセージに置換される
 　　　　　- 初期フォーマット:"[message]([translation])"
+　　- Othersタブ
+　　　　- Auto clear chat box: チャット送信時にチャットボックスを空にする
 
 　設定の初期化
 　　- config.jsonを削除

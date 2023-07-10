@@ -94,6 +94,8 @@ ptyhon VRCT.py
         - [message]がメッセージボックスに記入したメッセージに置換される
         - [translation]が翻訳されたメッセージに置換される
         - 初期フォーマット:`[message]([translation])`
+- Others tab
+    - Auto clear chat box: チャット送信時にチャットボックスを空にする
 
 ## Author
 みしゃ(misyaguzi)  
