@@ -21,7 +21,7 @@ class BaseRecorder:
 
     def record_into_queue(self, audio_queue):
         def record_callback(_, audio):
-            audio_queue.put((audio[0].get_raw_data(), audio[1], datetime.now()))
+            audio_queue.put((audio.get_raw_data(), datetime.now()))
 
         self.stop = self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=self.record_timeout)
 
