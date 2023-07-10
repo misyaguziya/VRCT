@@ -24,11 +24,17 @@ pip install -r requirements.txt
 
 ```bash
 git clone https://github.com/misyaguziya/translators.git
-python ./translators/setup.py install
+cd translators
+python ./setup.py install
+cd ../
 git clone https://github.com/misyaguziya/deepl-translate.git
-python ./deepl_translate/setup.py install
+cd deepl-translate
+python ./setup.py install
+cd ../
 git clone https://github.com/misyaguziya/custom_speech_recognition.git
-python ./custom_speech_recognition/setup.py install
+cd custom_speech_recognition
+python ./setup.py install
+cd ../
 ```
 
 ## Usage
