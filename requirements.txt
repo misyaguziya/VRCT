@@ -3,3 +3,4 @@ PyAudioWPatch
 python-osc
 customtkinter
 deepl
+flashtext
