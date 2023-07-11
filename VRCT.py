@@ -264,7 +264,7 @@ class App(CTk):
             command=self.checkbox_translation_callback,
             font=CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_translation.grid(row=0, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_translation.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # add checkbox transcription send
         self.checkbox_transcription_send = CTkCheckBox(
@@ -275,7 +275,7 @@ class App(CTk):
             command=self.checkbox_transcription_send_callback,
             font=CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_transcription_send.grid(row=1, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_transcription_send.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # add checkbox transcription receive
         self.checkbox_transcription_receive = CTkCheckBox(
@@ -286,7 +286,7 @@ class App(CTk):
             command=self.checkbox_transcription_receive_callback,
             font=CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_transcription_receive.grid(row=2, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_transcription_receive.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # add checkbox foreground
         self.checkbox_foreground = CTkCheckBox(
@@ -297,7 +297,7 @@ class App(CTk):
             command=self.checkbox_foreground_callback,
             font=CTkFont(family=self.FONT_FAMILY)
         )
-        self.checkbox_foreground.grid(row=3, column=0, columnspan=2 ,padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_foreground.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
 
         # add button information
         self.button_information = CTkButton(

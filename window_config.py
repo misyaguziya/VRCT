@@ -148,7 +148,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.CHOICE_TRANSLATOR),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_translator._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu translation input language
@@ -252,7 +252,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.CHOICE_MIC_HOST),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_host._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         row += 1
@@ -270,7 +270,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input mic voice language
@@ -289,7 +289,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## slider input mic energy threshold
@@ -325,7 +325,7 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.checkbox_input_mic_threshold_check_callback,
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_mic_threshold_check.grid(row=row, column=0, columnspan=1 ,padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_input_mic_threshold_check.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         self.progressBar_input_mic_energy_threshold = CTkProgressBar(
             self.tabview_config.tab("Transcription"),
@@ -351,7 +351,7 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.checkbox_input_mic_dynamic_energy_threshold_callback,
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_mic_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.checkbox_input_mic_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         if  self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
             self.checkbox_input_mic_dynamic_energy_threshold.select()
         else:
@@ -371,7 +371,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_MIC_RECORD_TIMEOUT),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_record_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_record_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_record_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_record_timeout_callback)
 
         ## entry input mic phrase timeout
@@ -388,7 +388,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_MIC_PHRASE_TIMEOUT),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_phrase_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_phrase_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_phrase_timeout_callback)
 
         ## entry input mic max phrases
@@ -405,7 +405,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_MIC_MAX_PHRASES),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_max_phrases.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_max_phrases.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_max_phrases.bind("<Any-KeyRelease>", self.entry_input_mic_max_phrases_callback)
 
         ## entry input mic word filter
@@ -422,7 +422,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER)),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_word_filter.bind("<Any-KeyRelease>", self.entry_input_mic_word_filters_callback)
 
         ## optionmenu input speaker device
@@ -441,7 +441,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## optionmenu input speaker voice language
@@ -460,7 +460,7 @@ class ToplevelWindowConfig(CTkToplevel):
             variable=StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## entry input speaker energy threshold
@@ -497,7 +497,7 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.checkbox_input_speaker_threshold_check_callback,
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_speaker_threshold_check.grid(row=row, column=0, columnspan=1 ,padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_input_speaker_threshold_check.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         self.progressBar_input_speaker_energy_threshold = CTkProgressBar(
             self.tabview_config.tab("Transcription"),
@@ -523,7 +523,7 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.checkbox_input_speaker_dynamic_energy_threshold_callback,
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.checkbox_input_speaker_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.checkbox_input_speaker_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         if  self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
             self.checkbox_input_speaker_dynamic_energy_threshold.select()
         else:
@@ -543,7 +543,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_SPEAKER_RECORD_TIMEOUT),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_record_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_record_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_record_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_record_timeout_callback)
 
         ## entry input speaker phrase timeout
@@ -560,7 +560,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_phrase_timeout.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_phrase_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_phrase_timeout_callback)
 
         ## entry input speaker max phrases
@@ -577,7 +577,7 @@ class ToplevelWindowConfig(CTkToplevel):
             textvariable=StringVar(value=self.parent.INPUT_SPEAKER_MAX_PHRASES),
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.entry_input_speaker_max_phrases.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_speaker_max_phrases.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_max_phrases.bind("<Any-KeyRelease>", self.entry_input_speaker_max_phrases_callback)
 
         # tab Parameter
