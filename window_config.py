@@ -285,7 +285,7 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.label_input_mic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
-        self.slider_input_mic_energy_threshold = customtkinter.CTkSlider(
+        self.slider_input_mic_energy_threshold = CTkSlider(
             self.tabview_config.tab("Transcription"),
             from_=0,
             to=self.MAX_MIC_ENERGY_THRESHOLD,
