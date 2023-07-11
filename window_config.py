@@ -1,5 +1,6 @@
 from time import sleep
 from queue import Queue
+from threading import Thread
 from os import path as os_path
 from tkinter import DoubleVar, IntVar 
 from tkinter import font as tk_font
@@ -8,7 +9,7 @@ from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider,
 from flashtext import KeywordProcessor
 
 from utils import save_json, print_textbox, thread_fnc
-from audio_utils import get_input_device_list, get_output_device_list
+from audio_utils import get_input_device_list, get_output_device_list, get_default_output_device
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from languages import translation_lang, transcription_lang
 
@@ -27,9 +28,11 @@ class ToplevelWindowConfig(CTkToplevel):
 
         # init parameter
         self.MAX_MIC_ENERGY_THRESHOLD = 2000
-        self.MAX_SPEAKER_ENERGY_THRESHOLD = 2000
-        self.last_mic_device_name = None
-        self.last_speaker_device_name = None
+        self.MAX_SPEAKER_ENERGY_THRESHOLD = 4000
+        self.mic_energy_recorder = None
+        self.mic_energy_plot_progressbar = None
+        self.speaker_energy_recorder = None
+        self.speaker_energy_plot_progressbar = None
 
         # tabwiew config
         self.tabview_config = CTkTabview(self)
@@ -269,7 +272,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
-        ## entry input mic energy threshold
+        ## slider input mic energy threshold
         row +=1
         self.label_input_mic_energy_threshold = CTkLabel(
             self.tabview_config.tab("Transcription"),
@@ -277,40 +280,39 @@ class ToplevelWindowConfig(CTkToplevel):
             fg_color="transparent",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_mic_energy_threshold.grid(row=row, column=0, rowspan=2, columnspan=1, padx=padx, pady=pady, sticky="nsw")
-        self.progressBar_input_mic_energy_threshold = CTkProgressBar(
-            self.tabview_config.tab("Transcription"),
-            corner_radius=0
-        )
-        self.progressBar_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
-        
-        self.mic_energy_queue = Queue()
-        mic_device = [device for device in get_input_device_list() if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
-        
-        try:
-            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-            self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
-        except Exception as e:
-            print(e)
-        sleep(2)
+        self.label_input_mic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
-        self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
-        self.mic_energy_plot_progressbar.daemon = True
-        self.mic_energy_plot_progressbar.start()
-    
-        row +=1
         self.slider_input_mic_energy_threshold = customtkinter.CTkSlider(
             self.tabview_config.tab("Transcription"),
             from_=0,
             to=self.MAX_MIC_ENERGY_THRESHOLD,
-            border_width=5,
+            border_width=7,
             button_length=0,
             button_corner_radius=3,
             number_of_steps=self.MAX_MIC_ENERGY_THRESHOLD,
             command=self.slider_input_mic_energy_threshold_callback,
             variable=IntVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
         )
-        self.slider_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=0, sticky="nsew")
+        self.slider_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=5, sticky="nsew")
+
+        ## progressBar input mic energy threshold
+        row +=1
+        self.checkbox_input_mic_threshold_check = CTkCheckBox(
+            self.tabview_config.tab("Transcription"),
+            text="check threshold point",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_input_mic_threshold_check_callback,
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_input_mic_threshold_check.grid(row=row, column=0, columnspan=1 ,padx=padx, pady=pady, sticky="nsw")
+
+        self.progressBar_input_mic_energy_threshold = CTkProgressBar(
+            self.tabview_config.tab("Transcription"),
+            corner_radius=0
+        )
+        self.progressBar_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=5, sticky="nsew")
+        self.progressBar_input_mic_energy_threshold.set(0)
 
         ## checkbox input mic dynamic energy threshold
         row +=1
@@ -449,40 +451,40 @@ class ToplevelWindowConfig(CTkToplevel):
             fg_color="transparent",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
-        self.label_input_speaker_energy_threshold.grid(row=row, column=0, rowspan=2, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.label_input_speaker_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
-        self.progressBar_input_speaker_energy_threshold = CTkProgressBar(
-            self.tabview_config.tab("Transcription"),
-            corner_radius=0
-        )
-        self.progressBar_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=5, pady=(5,0), sticky="nsew")
-
-        self.speaker_energy_queue = Queue()
-        speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
-        try:
-            self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-            self.speaker_energy_recorder.record_into_queue(self.speaker_energy_queue)
-        except Exception as e:
-            print(e)
-        sleep(2)
-
-        self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
-        self.speaker_energy_plot_progressbar.daemon = True
-        self.speaker_energy_plot_progressbar.start()
-
-        row +=1
+        ## progressBar input speaker energy threshold
         self.slider_input_speaker_energy_threshold = customtkinter.CTkSlider(
             self.tabview_config.tab("Transcription"),
             from_=0,
             to=self.MAX_SPEAKER_ENERGY_THRESHOLD,
-            border_width=5,
+            border_width=7,
             button_length=0,
             button_corner_radius=3,
             number_of_steps=self.MAX_SPEAKER_ENERGY_THRESHOLD,
             command=self.slider_input_speaker_energy_threshold_callback,
             variable=IntVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
         )
-        self.slider_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=0, sticky="nsew")
+        self.slider_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=5, sticky="nsew")
+
+        ## progressBar input speaker energy threshold
+        row +=1
+        self.checkbox_input_speaker_threshold_check = CTkCheckBox(
+            self.tabview_config.tab("Transcription"),
+            text="check threshold point",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_input_speaker_threshold_check_callback,
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_input_speaker_threshold_check.grid(row=row, column=0, columnspan=1 ,padx=padx, pady=pady, sticky="nsw")
+
+        self.progressBar_input_speaker_energy_threshold = CTkProgressBar(
+            self.tabview_config.tab("Transcription"),
+            corner_radius=0
+        )
+        self.progressBar_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=5, sticky="nsew")
+        self.progressBar_input_speaker_energy_threshold.set(0)
 
         ## checkbox input speaker dynamic energy threshold
         row +=1
@@ -791,16 +793,8 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_input_mic_device_callback(self, choice):
         self.parent.CHOICE_MIC_DEVICE = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
-
-        self.mic_energy_recorder.stop()
-        self.mic_energy_recorder.stop = None
-        sleep(2)
-        try:
-            mic_device = [device for device in get_input_device_list() if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
-            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-            self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
-        except Exception as e:
-            print(e)
+        self.checkbox_input_mic_threshold_check.deselect()
+        self.checkbox_input_mic_threshold_check_callback()
 
     def optionmenu_input_mic_voice_language_callback(self, choice):
         self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
@@ -809,8 +803,27 @@ class ToplevelWindowConfig(CTkToplevel):
     def progressBar_input_mic_energy_plot(self):
         if self.mic_energy_queue.empty() is False:
             energy = self.mic_energy_queue.get()
-            self.progressBar_input_mic_energy_threshold.set(energy/self.MAX_MIC_ENERGY_THRESHOLD)
+            try:
+                self.progressBar_input_mic_energy_threshold.set(energy/self.MAX_MIC_ENERGY_THRESHOLD)
+            except:
+                pass
         sleep(0.01)
+
+    def checkbox_input_mic_threshold_check_callback(self):
+        if self.checkbox_input_mic_threshold_check.get():
+            self.mic_energy_queue = Queue()
+            mic_device = [device for device in get_input_device_list() if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
+            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
+            self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
+            self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
+            self.mic_energy_plot_progressbar.daemon = True
+            self.mic_energy_plot_progressbar.start()
+        else:
+            if self.mic_energy_recorder != None:
+                self.mic_energy_recorder.stop()
+            if self.mic_energy_plot_progressbar != None:
+                self.mic_energy_plot_progressbar.stop()
+            self.progressBar_input_mic_energy_threshold.set(0)
 
     def slider_input_mic_energy_threshold_callback(self, value):
         self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(value)
@@ -843,16 +856,8 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_input_speaker_device_callback(self, choice):
         self.parent.CHOICE_SPEAKER_DEVICE = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_SPEAKER_DEVICE", self.parent.CHOICE_SPEAKER_DEVICE)
-
-        self.speaker_energy_recorder.stop()
-        self.speaker_energy_recorder.stop = None
-        sleep(2)
-        try:
-            speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
-            self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-            self.speaker_energy_recorder.record_into_queue(self.speaker_energy_queue)
-        except Exception as e:
-            print(e)
+        self.checkbox_input_speaker_threshold_check.deselect()
+        self.checkbox_input_speaker_threshold_check_callback()
 
     def optionmenu_input_speaker_voice_language_callback(self, choice):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
@@ -861,8 +866,32 @@ class ToplevelWindowConfig(CTkToplevel):
     def progressBar_input_speaker_energy_plot(self):
         if self.speaker_energy_queue.empty() is False:
             energy = self.speaker_energy_queue.get()
-            self.progressBar_input_speaker_energy_threshold.set(energy/self.MAX_SPEAKER_ENERGY_THRESHOLD)
+            try:
+                self.progressBar_input_speaker_energy_threshold.set(energy/self.MAX_SPEAKER_ENERGY_THRESHOLD)
+            except:
+                pass
         sleep(0.01)
+
+    def checkbox_input_speaker_threshold_check_callback(self):
+        if self.checkbox_input_speaker_threshold_check.get():
+            self.speaker_energy_queue = Queue()
+            speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
+
+            if get_default_output_device()["index"] == speaker_device["index"]:
+                self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
+                self.speaker_energy_recorder.record_into_queue(self.speaker_energy_queue)
+                self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
+                self.speaker_energy_plot_progressbar.daemon = True
+                self.speaker_energy_plot_progressbar.start()
+            else:
+                print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+                self.checkbox_input_speaker_threshold_check.deselect()
+        else:
+            if self.speaker_energy_recorder != None:
+                self.speaker_energy_recorder.stop()
+            if self.speaker_energy_plot_progressbar != None:
+                self.speaker_energy_plot_progressbar.stop()
+            self.progressBar_input_speaker_energy_threshold.set(0)
 
     def slider_input_speaker_energy_threshold_callback(self, value):
         self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
@@ -905,11 +934,11 @@ class ToplevelWindowConfig(CTkToplevel):
                 pass
 
     def delete_window(self):
-        self.mic_energy_recorder.stop()
-        self.mic_energy_plot_progressbar.stop()
-        self.speaker_energy_recorder.stop()
-        self.speaker_energy_plot_progressbar.stop()
-        
+        self.checkbox_input_mic_threshold_check.deselect()
+        self.checkbox_input_speaker_threshold_check.deselect()
+        self.checkbox_input_mic_threshold_check_callback()
+        self.checkbox_input_speaker_threshold_check_callback()
+
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
