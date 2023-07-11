@@ -457,7 +457,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_speaker_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
         ## progressBar input speaker energy threshold
-        self.slider_input_speaker_energy_threshold = customtkinter.CTkSlider(
+        self.slider_input_speaker_energy_threshold = CTkSlider(
             self.tabview_config.tab("Transcription"),
             from_=0,
             to=self.MAX_SPEAKER_ENERGY_THRESHOLD,
