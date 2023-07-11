@@ -712,7 +712,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def checkbox_auto_clear_chatbox_callback(self):
         value = self.checkbox_auto_clear_chatbox.get()
         self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
-        utils.save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
+        save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
