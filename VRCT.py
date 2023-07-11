@@ -47,7 +47,8 @@ class App(CTk):
         self.OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
         self.OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
         ## Transcription Send
-        self.CHOICE_MIC_DEVICE = get_default_input_device()["name"]
+        self.CHOICE_MIC_HOST = get_default_input_device()["host"]["name"]
+        self.CHOICE_MIC_DEVICE = get_default_input_device()["device"]["name"]
         self.INPUT_MIC_VOICE_LANGUAGE = list(transcription_lang.keys())[0]
         self.INPUT_MIC_ENERGY_THRESHOLD = 300
         self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
@@ -128,8 +129,11 @@ class App(CTk):
                     self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription
+            if "CHOICE_MIC_HOST" in config.keys():
+                if config["CHOICE_MIC_HOST"] in [host for host in get_input_device_list().keys()]:
+                    self.CHOICE_MIC_HOST = config["CHOICE_MIC_HOST"]
             if "CHOICE_MIC_DEVICE" in config.keys():
-                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in get_input_device_list()]:
+                if config["CHOICE_MIC_DEVICE"] in [device["name"] for device in get_input_device_list()[self.CHOICE_MIC_HOST]]:
                     self.CHOICE_MIC_DEVICE = config["CHOICE_MIC_DEVICE"]
             if "INPUT_MIC_VOICE_LANGUAGE" in config.keys():
                 if config["INPUT_MIC_VOICE_LANGUAGE"] in list(transcription_lang.keys()):
@@ -208,6 +212,7 @@ class App(CTk):
                 "INPUT_TARGET_LANG": self.INPUT_TARGET_LANG,
                 "OUTPUT_SOURCE_LANG": self.OUTPUT_SOURCE_LANG,
                 "OUTPUT_TARGET_LANG": self.OUTPUT_TARGET_LANG,
+                "CHOICE_MIC_HOST": self.CHOICE_MIC_HOST,
                 "CHOICE_MIC_DEVICE": self.CHOICE_MIC_DEVICE,
                 "INPUT_MIC_VOICE_LANGUAGE": self.INPUT_MIC_VOICE_LANGUAGE,
                 "INPUT_MIC_ENERGY_THRESHOLD": self.INPUT_MIC_ENERGY_THRESHOLD,
@@ -459,7 +464,7 @@ class App(CTk):
         if self.ENABLE_TRANSCRIPTION_SEND is True:
             self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
             self.mic_audio_queue = Queue()
-            mic_device = [device for device in get_input_device_list() if device["name"] == self.CHOICE_MIC_DEVICE][0]
+            mic_device = [device for device in get_input_device_list()[self.CHOICE_MIC_HOST] if device["name"] == self.CHOICE_MIC_DEVICE][0]
             self.mic_audio_recorder = SelectedMicRecorder(
                 mic_device,
                 self.INPUT_MIC_ENERGY_THRESHOLD,

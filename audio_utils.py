@@ -1,14 +1,17 @@
 from pyaudiowpatch import PyAudio, paWASAPI
 
 def get_input_device_list():
-    devices = []
+    devices = {}
     with PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(paWASAPI)
         for host_index in range(0, p.get_host_api_count()):
-            for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
+            host = p.get_host_api_info_by_index(host_index)
+            for device_index in range(0, p.get_host_api_info_by_index(host_index)['deviceCount']):
                 device = p.get_device_info_by_host_api_device_index(host_index, device_index)
-                if device["hostApi"] == wasapi_info["index"] and device["maxInputChannels"] > 0 and device["isLoopbackDevice"] is False:
-                    devices.append(device)
+                if device["maxInputChannels"] > 0 and device["isLoopbackDevice"] is False:
+                    if host["name"] in devices.keys():
+                        devices[host["name"]].append(device)
+                    else:
+                        devices[host["name"]] = [device]
     return devices
 
 def get_output_device_list():
@@ -22,15 +25,15 @@ def get_output_device_list():
 
 def get_default_input_device():
     with PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(paWASAPI)
-        defaultInputDevice = wasapi_info["defaultInputDevice"]
+        api_info = p.get_default_host_api_info()
+        defaultInputDevice = api_info["defaultInputDevice"]
 
         for host_index in range(0, p.get_host_api_count()):
+            host = p.get_host_api_info_by_index(host_index)
             for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
                 device = p.get_device_info_by_host_api_device_index(host_index, device_index)
                 if device["index"] == defaultInputDevice:
-                    default_device = device
-                    return default_device
+                    return {"host":host, "device": device}
 
 def get_default_output_device():
     with PyAudio() as p:
