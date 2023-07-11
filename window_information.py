@@ -1,7 +1,7 @@
 import os
-import customtkinter
+from customtkinter import CTkToplevel, CTkTextbox, CTkFont
 
-class ToplevelWindowInformation(customtkinter.CTkToplevel):
+class ToplevelWindowInformation(CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
@@ -13,9 +13,9 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
         # create textbox information
-        self.textbox_information = customtkinter.CTkTextbox(
+        self.textbox_information = CTkTextbox(
             self,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
         textbox_information_message = """VRCT(v1.2)

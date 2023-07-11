@@ -1,16 +1,16 @@
-import json
-import datetime
-import threading
+from json import load, dump
+from datetime import datetime
+from threading import Thread, Event
 
 def save_json(path, key, value):
     with open(path, "r") as fp:
-        json_data = json.load(fp)
+        json_data = load(fp)
     json_data[key] = value
     with open(path, "w") as fp:
-        json.dump(json_data, fp, indent=4)
+        dump(json_data, fp, indent=4)
 
 def print_textbox(textbox, message, tags=None):
-    now = datetime.datetime.now()
+    now = datetime.now()
     now = now.strftime('%H:%M:%S')
 
     textbox.tag_config("ERROR", foreground="#FF0000")
@@ -25,11 +25,11 @@ def print_textbox(textbox, message, tags=None):
     textbox.configure(state='disabled')
     textbox.see("end")
 
-class thread_fnc(threading.Thread):
+class thread_fnc(Thread):
     def __init__(self, fnc, daemon=True, *args, **kwargs):
         super(thread_fnc, self).__init__(daemon=daemon, *args, **kwargs)
         self.fnc = fnc
-        self._stop = threading.Event()
+        self._stop = Event()
     def stop(self):
         self._stop.set()
     def stopped(self):
