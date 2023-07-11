@@ -897,8 +897,6 @@ class ToplevelWindowConfig(CTkToplevel):
         else:
             if self.speaker_energy_get_progressbar != None:
                 self.speaker_energy_get_progressbar.stop()
-            # if self.speaker_energy_recorder != None:
-            #     self.speaker_energy_recorder.stop()
             if self.speaker_energy_plot_progressbar != None:
                 self.speaker_energy_plot_progressbar.stop()
             self.progressBar_input_speaker_energy_threshold.set(0)
