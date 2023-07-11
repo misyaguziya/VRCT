@@ -32,6 +32,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
         self.speaker_energy_recorder = None
+        self.speaker_energy_get_progressbar = None
         self.speaker_energy_plot_progressbar = None
 
         # tabwiew config
@@ -872,6 +873,11 @@ class ToplevelWindowConfig(CTkToplevel):
                 pass
         sleep(0.01)
 
+    def progressBar_input_speaker_energy_get(self):
+        with self.speaker_energy_recorder.source as source:
+            energy = self.speaker_energy_recorder.recorder.listen_energy(source)
+            self.speaker_energy_queue.put(energy)
+
     def checkbox_input_speaker_threshold_check_callback(self):
         if self.checkbox_input_speaker_threshold_check.get():
             self.speaker_energy_queue = Queue()
@@ -879,7 +885,9 @@ class ToplevelWindowConfig(CTkToplevel):
 
             if get_default_output_device()["index"] == speaker_device["index"]:
                 self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-                self.speaker_energy_recorder.record_into_queue(self.speaker_energy_queue)
+                self.speaker_energy_get_progressbar = thread_fnc(self.progressBar_input_speaker_energy_get)
+                self.speaker_energy_get_progressbar.daemon = True
+                self.speaker_energy_get_progressbar.start()
                 self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
                 self.speaker_energy_plot_progressbar.daemon = True
                 self.speaker_energy_plot_progressbar.start()
@@ -887,8 +895,10 @@ class ToplevelWindowConfig(CTkToplevel):
                 print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
                 self.checkbox_input_speaker_threshold_check.deselect()
         else:
-            if self.speaker_energy_recorder != None:
-                self.speaker_energy_recorder.stop()
+            if self.speaker_energy_get_progressbar != None:
+                self.speaker_energy_get_progressbar.stop()
+            # if self.speaker_energy_recorder != None:
+            #     self.speaker_energy_recorder.stop()
             if self.speaker_energy_plot_progressbar != None:
                 self.speaker_energy_plot_progressbar.stop()
             self.progressBar_input_speaker_energy_threshold.set(0)
