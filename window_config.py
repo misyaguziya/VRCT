@@ -652,7 +652,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
 
         # tab Others
-        # checkbox auto clear chat box
+        ## checkbox auto clear chat box
         row += 1
         self.label_checkbox_auto_clear_chatbox = CTkLabel(
             self.tabview_config.tab("Others"),
@@ -796,11 +796,6 @@ class ToplevelWindowConfig(CTkToplevel):
 
         self.parent.FONT_FAMILY = choice
         save_json(self.parent.PATH_CONFIG, "FONT_FAMILY", self.parent.FONT_FAMILY)
-        
-    def checkbox_auto_clear_chatbox_callback(self):
-        value = self.checkbox_auto_clear_chatbox.get()
-        self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
-        save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
@@ -1001,6 +996,11 @@ class ToplevelWindowConfig(CTkToplevel):
                 print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
                 pass
+
+    def checkbox_auto_clear_chatbox_callback(self):
+        value = self.checkbox_auto_clear_chatbox.get()
+        self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
+        save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
     def delete_window(self):
         self.checkbox_input_mic_threshold_check.deselect()

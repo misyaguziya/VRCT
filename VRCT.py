@@ -39,7 +39,6 @@ class App(CTk):
         self.APPEARANCE_THEME = "System"
         self.UI_SCALING = "100%"
         self.FONT_FAMILY = "Yu Gothic UI"
-        self.ENABLE_AUTO_CLEAR_CHATBOX = False
         ## Translation
         self.CHOICE_TRANSLATOR = translators[0]
         self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
@@ -74,6 +73,8 @@ class App(CTk):
             "Google(web)": None,
         }
         self.MESSAGE_FORMAT = "[message]([translation])"
+        # Others
+        self.ENABLE_AUTO_CLEAR_CHATBOX = False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -107,9 +108,6 @@ class App(CTk):
             if "FONT_FAMILY" in config.keys():
                 if config["FONT_FAMILY"] in list(tk.font.families()):
                     self.FONT_FAMILY = config["FONT_FAMILY"]
-            if "ENABLE_AUTO_CLEAR_CHATBOX" in config.keys():
-                if type(config["ENABLE_AUTO_CLEAR_CHATBOX"]) is bool:
-                    self.ENABLE_AUTO_CLEAR_CHATBOX = config["ENABLE_AUTO_CLEAR_CHATBOX"]
 
             # translation
             if "CHOICE_TRANSLATOR" in config.keys():
@@ -196,6 +194,11 @@ class App(CTk):
                 if type(config["MESSAGE_FORMAT"]) is str:
                     self.MESSAGE_FORMAT = config["MESSAGE_FORMAT"]
 
+            # Others
+            if "ENABLE_AUTO_CLEAR_CHATBOX" in config.keys():
+                if type(config["ENABLE_AUTO_CLEAR_CHATBOX"]) is bool:
+                    self.ENABLE_AUTO_CLEAR_CHATBOX = config["ENABLE_AUTO_CLEAR_CHATBOX"]
+
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
                 "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
@@ -206,7 +209,6 @@ class App(CTk):
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
                 "FONT_FAMILY": self.FONT_FAMILY,
-                "ENABLE_AUTO_CLEAR_CHATBOX": self.ENABLE_AUTO_CLEAR_CHATBOX,
                 "CHOICE_TRANSLATOR": self.CHOICE_TRANSLATOR,
                 "INPUT_SOURCE_LANG": self.INPUT_SOURCE_LANG,
                 "INPUT_TARGET_LANG": self.INPUT_TARGET_LANG,
@@ -232,6 +234,7 @@ class App(CTk):
                 "OSC_PORT": self.OSC_PORT,
                 "AUTH_KEYS": self.AUTH_KEYS,
                 "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
+                "ENABLE_AUTO_CLEAR_CHATBOX": self.ENABLE_AUTO_CLEAR_CHATBOX,
             }
             json_dump(config, fp, indent=4)
 
