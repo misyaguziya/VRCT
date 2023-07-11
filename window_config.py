@@ -1,6 +1,5 @@
 from time import sleep
 from queue import Queue
-from threading import Thread
 from os import path as os_path
 from tkinter import DoubleVar, IntVar 
 from tkinter import font as tk_font
@@ -239,6 +238,24 @@ class ToplevelWindowConfig(CTkToplevel):
         row = 0
         padx = 5
         pady = 1
+        self.label_input_mic_host = CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Host:",
+            fg_color="transparent",
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_host.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.optionmenu_input_mic_host = CTkOptionMenu(
+            self.tabview_config.tab("Transcription"),
+            values=[host for host in get_input_device_list().keys()],
+            command=self.optionmenu_input_mic_host_callback,
+            variable=StringVar(value=self.parent.CHOICE_MIC_HOST),
+            font=CTkFont(family=self.parent.FONT_FAMILY),
+        )
+        self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_input_mic_host._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        row += 1
         self.label_input_mic_device = CTkLabel(
             self.tabview_config.tab("Transcription"),
             text="Input Mic Device:",
@@ -248,7 +265,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_mic_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_device = CTkOptionMenu(
             self.tabview_config.tab("Transcription"),
-            values=[device["name"] for device in get_input_device_list()],
+            values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]],
             command=self.optionmenu_input_mic_device_callback,
             variable=StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -710,6 +727,9 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=CTkFont(family=choice))
 
         # tab Transcription
+        self.label_input_mic_host.configure(font=CTkFont(family=choice))
+        self.optionmenu_input_mic_host.configure(font=CTkFont(family=choice))
+        self.optionmenu_input_mic_host._dropdown_menu.configure(font=CTkFont(family=choice))
         self.label_input_mic_device.configure(font=CTkFont(family=choice))
         self.optionmenu_input_mic_device.configure(font=CTkFont(family=choice))
         self.optionmenu_input_mic_device._dropdown_menu.configure(font=CTkFont(family=choice))
@@ -822,6 +842,11 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.OUTPUT_TARGET_LANG = choice
         save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
 
+    def optionmenu_input_mic_host_callback(self, choice):
+        self.parent.CHOICE_MIC_HOST = choice
+        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
+        self.optionmenu_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
+
     def optionmenu_input_mic_device_callback(self, choice):
         self.parent.CHOICE_MIC_DEVICE = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
@@ -844,7 +869,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def checkbox_input_mic_threshold_check_callback(self):
         if self.checkbox_input_mic_threshold_check.get():
             self.mic_energy_queue = Queue()
-            mic_device = [device for device in get_input_device_list() if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
+            mic_device = [device for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST] if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
             self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
             self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
             self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
