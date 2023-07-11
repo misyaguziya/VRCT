@@ -656,7 +656,7 @@ class ToplevelWindowConfig(CTkToplevel):
         row += 1
         self.label_checkbox_auto_clear_chatbox = CTkLabel(
             self.tabview_config.tab("Others"),
-            text="Auto clear chat box",
+            text="Auto clear chat box:",
             fg_color="transparent",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
@@ -736,6 +736,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_mic_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=choice))
+        self.checkbox_input_mic_threshold_check.configure(font=CTkFont(family=choice))
         self.label_input_mic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_mic_dynamic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_mic_record_timeout.configure(font=CTkFont(family=choice))
@@ -752,6 +753,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_speaker_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language.configure(font=CTkFont(family=choice))
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=CTkFont(family=choice))
+        self.checkbox_input_speaker_threshold_check.configure(font=CTkFont(family=choice))
         self.label_input_speaker_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_speaker_dynamic_energy_threshold.configure(font=CTkFont(family=choice))
         self.label_input_speaker_record_timeout.configure(font=CTkFont(family=choice))
@@ -770,6 +772,9 @@ class ToplevelWindowConfig(CTkToplevel):
         self.entry_authkey.configure(font=CTkFont(family=choice))
         self.label_message_format.configure(font=CTkFont(family=choice))
         self.entry_message_format.configure(font=CTkFont(family=choice))
+
+        # tab Others
+        self.label_checkbox_auto_clear_chatbox.configure(font=CTkFont(family=choice))
 
         # main window
         self.parent.checkbox_translation.configure(font=CTkFont(family=choice))
