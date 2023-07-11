@@ -1,6 +1,8 @@
 import os
 import tkinter as tk
 import customtkinter
+from flashtext import KeywordProcessor
+
 import utils
 import audio_utils
 import languages
@@ -348,6 +350,23 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.entry_input_mic_max_phrases.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_max_phrases.bind("<Any-KeyRelease>", self.entry_input_mic_max_phrases_callback)
 
+        ## entry input mic word filter
+        row +=1
+        self.label_input_mic_word_filter = customtkinter.CTkLabel(
+            self.tabview_config.tab("Transcription"),
+            text="Input Mic Word Filter:",
+            fg_color="transparent",
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_input_mic_word_filter.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.entry_input_mic_word_filter = customtkinter.CTkEntry(
+            self.tabview_config.tab("Transcription"),
+            textvariable=customtkinter.StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER)),
+            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1 ,padx=padx, pady=pady, sticky="nsew")
+        self.entry_input_mic_word_filter.bind("<Any-KeyRelease>", self.entry_input_mic_word_filters_callback)
+
         ## optionmenu input speaker device
         row +=1
         self.label_input_speaker_device = customtkinter.CTkLabel(
@@ -639,6 +658,8 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
         self.entry_input_mic_phrase_timeout.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
         self.entry_input_mic_max_phrases.configure(font=customtkinter.CTkFont(family=choice))
+        self.label_input_mic_word_filter.configure(font=customtkinter.CTkFont(family=choice))
+        self.entry_input_mic_word_filter.configure(font=customtkinter.CTkFont(family=choice))
         self.label_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device.configure(font=customtkinter.CTkFont(family=choice))
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=customtkinter.CTkFont(family=choice))
@@ -764,6 +785,13 @@ class ToplevelWindowConfig(customtkinter.CTkToplevel):
     def entry_input_mic_max_phrases_callback(self, event):
         self.parent.INPUT_MIC_MAX_PHRASES = int(self.entry_input_mic_max_phrases.get())
         utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_MAX_PHRASES", self.parent.INPUT_MIC_MAX_PHRASES)
+
+    def entry_input_mic_word_filters_callback(self, event):
+        self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+        self.parent.keyword_processor = KeywordProcessor()
+        for f in self.parent.INPUT_MIC_WORD_FILTER:
+            self.parent.keyword_processor.add_keyword(f)
+        utils.save_json(self.parent.PATH_CONFIG, "INPUT_MIC_WORD_FILTER", self.parent.INPUT_MIC_WORD_FILTER)
 
     def optionmenu_input_speaker_device_callback(self, choice):
         self.parent.CHOICE_SPEAKER_DEVICE = choice
