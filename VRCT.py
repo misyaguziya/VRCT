@@ -8,11 +8,11 @@ from customtkinter import CTk, CTkFrame, CTkCheckBox, CTkFont, CTkButton, CTkIma
 from PIL.Image import open as Image_open
 from flashtext import KeywordProcessor
 
-from utils import save_json, print_textbox, thread_fnc
+from utils import save_json, print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
 from osc_tools import send_typing, send_message
 from window_config import ToplevelWindowConfig
 from window_information import ToplevelWindowInformation
-from languages import transcription_lang, translators, translation_lang
+from languages import transcription_lang, translators, translation_lang, selectable_languages
 from audio_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
 from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_transcriber import AudioTranscriber
@@ -39,6 +39,7 @@ class App(CTk):
         self.APPEARANCE_THEME = "System"
         self.UI_SCALING = "100%"
         self.FONT_FAMILY = "Yu Gothic UI"
+        self.UI_LANGUAGE = "en"
         ## Translation
         self.CHOICE_TRANSLATOR = translators[0]
         self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
@@ -108,6 +109,9 @@ class App(CTk):
             if "FONT_FAMILY" in config.keys():
                 if config["FONT_FAMILY"] in list(tk.font.families()):
                     self.FONT_FAMILY = config["FONT_FAMILY"]
+            if "UI_LANGUAGE" in config.keys():
+                if config["UI_LANGUAGE"] in list(selectable_languages.keys()):
+                    self.UI_LANGUAGE = config["UI_LANGUAGE"]
 
             # translation
             if "CHOICE_TRANSLATOR" in config.keys():
@@ -208,6 +212,7 @@ class App(CTk):
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
+                "UI_LANGUAGE": self.UI_LANGUAGE,
                 "FONT_FAMILY": self.FONT_FAMILY,
                 "CHOICE_TRANSLATOR": self.CHOICE_TRANSLATOR,
                 "INPUT_SOURCE_LANG": self.INPUT_SOURCE_LANG,
@@ -255,10 +260,12 @@ class App(CTk):
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
         self.sidebar_frame.grid_rowconfigure(5, weight=1)
 
+        init_lang_text = "Loading..."
+
         # add checkbox translation
         self.checkbox_translation = CTkCheckBox(
             self.sidebar_frame,
-            text="translation",
+            text=init_lang_text,
             onvalue=True,
             offvalue=False,
             command=self.checkbox_translation_callback,
@@ -269,7 +276,7 @@ class App(CTk):
         # add checkbox transcription send
         self.checkbox_transcription_send = CTkCheckBox(
             self.sidebar_frame,
-            text="voice2chatbox",
+            text=init_lang_text,
             onvalue=True,
             offvalue=False,
             command=self.checkbox_transcription_send_callback,
@@ -280,7 +287,7 @@ class App(CTk):
         # add checkbox transcription receive
         self.checkbox_transcription_receive = CTkCheckBox(
             self.sidebar_frame,
-            text="speaker2log",
+            text=init_lang_text,
             onvalue=True,
             offvalue=False,
             command=self.checkbox_transcription_receive_callback,
@@ -291,7 +298,7 @@ class App(CTk):
         # add checkbox foreground
         self.checkbox_foreground = CTkCheckBox(
             self.sidebar_frame,
-            text="foreground",
+            text=init_lang_text,
             onvalue=True,
             offvalue=False,
             command=self.checkbox_foreground_callback,
@@ -321,56 +328,10 @@ class App(CTk):
         self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
         self.config_window = None
 
+        # load ui language data
+        language_yaml_data = get_localized_text(f"{self.UI_LANGUAGE}")
         # add tabview textbox
-        self.tabview_logs = CTkTabview(master=self)
-        self.tabview_logs.add("log")
-        self.tabview_logs.add("send")
-        self.tabview_logs.add("receive")
-        self.tabview_logs.add("system")
-        self.tabview_logs.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
-        self.tabview_logs._segmented_button.configure(font=CTkFont(family=self.FONT_FAMILY))
-        self.tabview_logs._segmented_button.grid(sticky="W")
-        self.tabview_logs.tab("log").grid_rowconfigure(0, weight=1)
-        self.tabview_logs.tab("log").grid_columnconfigure(0, weight=1)
-        self.tabview_logs.tab("send").grid_rowconfigure(0, weight=1)
-        self.tabview_logs.tab("send").grid_columnconfigure(0, weight=1)
-        self.tabview_logs.tab("receive").grid_rowconfigure(0, weight=1)
-        self.tabview_logs.tab("receive").grid_columnconfigure(0, weight=1)
-        self.tabview_logs.tab("system").grid_rowconfigure(0, weight=1)
-        self.tabview_logs.tab("system").grid_columnconfigure(0, weight=1)
-        self.tabview_logs.configure(fg_color="transparent")
-
-        # add textbox message log
-        self.textbox_message_log = CTkTextbox(
-            self.tabview_logs.tab("log"),
-            font=CTkFont(family=self.FONT_FAMILY)
-        )
-        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_log.configure(state='disabled')
-
-        # add textbox message send log
-        self.textbox_message_send_log = CTkTextbox(
-            self.tabview_logs.tab("send"),
-            font=CTkFont(family=self.FONT_FAMILY)
-        )
-        self.textbox_message_send_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_send_log.configure(state='disabled')
-
-        # add textbox message receive log
-        self.textbox_message_receive_log = CTkTextbox(
-            self.tabview_logs.tab("receive"),
-            font=CTkFont(family=self.FONT_FAMILY)
-        )
-        self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_receive_log.configure(state='disabled')
-
-        # add textbox message system log
-        self.textbox_message_system_log = CTkTextbox(
-            self.tabview_logs.tab("system"),
-            font=CTkFont(family=self.FONT_FAMILY)
-        )
-        self.textbox_message_system_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_system_log.configure(state='disabled')
+        self.add_tabview_logs(language_yaml_data)
 
         # add entry message box
         self.entry_message_box = CTkEntry(
@@ -666,6 +627,71 @@ class App(CTk):
     def delete_window(self):
         self.quit()
         self.destroy()
+
+    def delete_tabview_logs(self, pre_language_yaml_data):
+        self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_log"])
+        self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_send"])
+        self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_receive"])
+        self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_system"])
+
+    def add_tabview_logs(self, language_yaml_data):
+        main_tab_title_log = language_yaml_data["main_tab_title_log"]
+        main_tab_title_send = language_yaml_data["main_tab_title_send"]
+        main_tab_title_receive = language_yaml_data["main_tab_title_receive"]
+        main_tab_title_system = language_yaml_data["main_tab_title_system"]
+
+        # add tabview textbox
+        self.tabview_logs = CTkTabview(master=self)
+        self.tabview_logs.add(main_tab_title_log)
+        self.tabview_logs.add(main_tab_title_send)
+        self.tabview_logs.add(main_tab_title_receive)
+        self.tabview_logs.add(main_tab_title_system)
+        self.tabview_logs.grid(row=0, column=1, padx=0, pady=0, sticky="nsew")
+        self.tabview_logs._segmented_button.configure(font=CTkFont(family=self.FONT_FAMILY))
+        self.tabview_logs._segmented_button.grid(sticky="W")
+        self.tabview_logs.tab(main_tab_title_log).grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_log).grid_columnconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_send).grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_send).grid_columnconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_receive).grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_receive).grid_columnconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_system).grid_rowconfigure(0, weight=1)
+        self.tabview_logs.tab(main_tab_title_system).grid_columnconfigure(0, weight=1)
+        self.tabview_logs.configure(fg_color="transparent")
+
+        # add textbox message log
+        self.textbox_message_log = CTkTextbox(
+            self.tabview_logs.tab(main_tab_title_log),
+            font=CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_log.configure(state='disabled')
+
+        # add textbox message send log
+        self.textbox_message_send_log = CTkTextbox(
+            self.tabview_logs.tab(main_tab_title_send),
+            font=CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_send_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_send_log.configure(state='disabled')
+
+        # add textbox message receive log
+        self.textbox_message_receive_log = CTkTextbox(
+            self.tabview_logs.tab(main_tab_title_receive),
+            font=CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_receive_log.configure(state='disabled')
+
+        # add textbox message system log
+        self.textbox_message_system_log = CTkTextbox(
+            self.tabview_logs.tab(main_tab_title_system),
+            font=CTkFont(family=self.FONT_FAMILY)
+        )
+        self.textbox_message_system_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_system_log.configure(state='disabled')
+
+        widget_main_window_label_setter(self, language_yaml_data)
 
 if __name__ == "__main__":
     try:

@@ -279,3 +279,9 @@ translation_lang["Bing(web)"] = {
     "punjabi":"pa",
     "irish":"ga"
 }
+
+selectable_languages = {
+    "en": "English",
+    "ja": "日本語",
+    # 新しい言語とキーを追加する場合はここに追記してください
+}
