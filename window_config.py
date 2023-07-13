@@ -16,6 +16,7 @@ class ToplevelWindowConfig(CTkToplevel):
 
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.withdraw()
         self.parent = parent
         # self.geometry(f"{350}x{270}")
         # self.resizable(False, False)
@@ -167,6 +168,7 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "FONT_FAMILY", self.parent.FONT_FAMILY)
 
     def optionmenu_ui_language_callback(self, choice):
+        self.withdraw()
         pre_language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
         self.parent.UI_LANGUAGE = get_key_by_value(selectable_languages, choice)
         language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
@@ -186,6 +188,7 @@ class ToplevelWindowConfig(CTkToplevel):
         #     self.parent.information_window.textbox_information.configure(font=customtkinter.CTkFont(family=choice))
         # except:
         #     pass
+        self.deiconify()
 
     def optionmenu_translation_translator_callback(self, choice):
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
