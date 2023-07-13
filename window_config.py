@@ -12,6 +12,8 @@ from audio_utils import get_input_device_list, get_output_device_list, get_defau
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from languages import translation_lang, transcription_lang, selectable_languages
 
+from CTkScrollableDropdown import CTkScrollableDropdown
+
 class ToplevelWindowConfig(CTkToplevel):
 
     def __init__(self, parent, *args, **kwargs):
@@ -61,6 +63,9 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "UI_SCALING", self.parent.UI_SCALING)
 
     def optionmenu_font_family_callback(self, choice):
+        # set choice font
+        self.optionmenu_font_family.set(choice)
+
         # tab menu
         self.tabview_config._segmented_button.configure(font=CTkFont(family=choice))
 
@@ -75,6 +80,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_font_family.configure(font=CTkFont(family=choice))
         self.optionmenu_font_family.configure(font=CTkFont(family=choice))
         self.optionmenu_font_family._dropdown_menu.configure(font=CTkFont(family=choice))
+        self.scrollableDropdown_font_family.configure(font=CTkFont(family=choice))
         self.label_ui_language.configure(font=CTkFont(family=choice))
         self.optionmenu_ui_language.configure(font=CTkFont(family=choice))
         self.optionmenu_ui_language._dropdown_menu.configure(font=CTkFont(family=choice))
@@ -520,13 +526,21 @@ class ToplevelWindowConfig(CTkToplevel):
         font_families = list(tk_font.families())
         self.optionmenu_font_family = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_ui),
-            values=font_families,
-            command=self.optionmenu_font_family_callback,
             variable=StringVar(value=self.parent.FONT_FAMILY),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_font_family._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown font family
+        self.scrollableDropdown_font_family = CTkScrollableDropdown(
+            self.optionmenu_font_family,
+            values=font_families,
+            justify="left",
+            button_color="transparent",
+            command=self.optionmenu_font_family_callback,
+            font=CTkFont(family=self.parent.FONT_FAMILY),
+        )
+        self.scrollableDropdown_font_family.frame.bind("<Leave>", lambda e: self.scrollableDropdown_font_family._iconify())
 
         ## optionmenu ui language
         row += 1
