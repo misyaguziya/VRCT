@@ -397,12 +397,16 @@ class App(CTk):
         # delete window
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
+        self.config_window = ToplevelWindowConfig(self)
+        self.config_window.withdraw()
+
     def button_config_callback(self):
-        if self.config_window is None or not self.config_window.winfo_exists():
-            self.config_window = ToplevelWindowConfig(self)
-            self.checkbox_translation.configure(state="disabled")
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
+        # if self.config_window is None or not self.config_window.winfo_exists():
+        #     # self.config_window = ToplevelWindowConfig(self)
+        self.config_window.deiconify()
+        self.checkbox_translation.configure(state="disabled")
+        self.checkbox_transcription_send.configure(state="disabled")
+        self.checkbox_transcription_receive.configure(state="disabled")
         self.config_window.focus()
 
     def button_information_callback(self):
