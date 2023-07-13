@@ -301,10 +301,14 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_WORD_FILTER", self.parent.INPUT_MIC_WORD_FILTER)
 
     def optionmenu_input_speaker_device_callback(self, choice):
-        self.parent.CHOICE_SPEAKER_DEVICE = choice
-        save_json(self.parent.PATH_CONFIG, "CHOICE_SPEAKER_DEVICE", self.parent.CHOICE_SPEAKER_DEVICE)
-        self.checkbox_input_speaker_threshold_check.deselect()
-        self.checkbox_input_speaker_threshold_check_callback()
+        speaker_device = [device for device in get_output_device_list() if device["name"] == choice][0]
+        if get_default_output_device()["index"] == speaker_device["index"]:
+            self.parent.CHOICE_SPEAKER_DEVICE = choice
+            save_json(self.parent.PATH_CONFIG, "CHOICE_SPEAKER_DEVICE", self.parent.CHOICE_SPEAKER_DEVICE)
+        else:
+            print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+            print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+            self.optionmenu_input_speaker_device.configure(variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE))
 
     def optionmenu_input_speaker_voice_language_callback(self, choice):
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
@@ -339,6 +343,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 self.speaker_energy_plot_progressbar.start()
             else:
                 print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+                print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
                 self.checkbox_input_speaker_threshold_check.deselect()
         else:
             if self.speaker_energy_get_progressbar != None:
