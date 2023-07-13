@@ -161,7 +161,9 @@ class App(CTk):
 
             if "CHOICE_SPEAKER_DEVICE" in config.keys():
                 if config["CHOICE_SPEAKER_DEVICE"] in [device["name"] for device in get_output_device_list()]:
-                    self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
+                    speaker_device = [device for device in get_output_device_list() if device["name"] == config["CHOICE_SPEAKER_DEVICE"]][0]
+                    if get_default_output_device()["index"] == speaker_device["index"]:
+                        self.CHOICE_SPEAKER_DEVICE = config["CHOICE_SPEAKER_DEVICE"]
             if "INPUT_SPEAKER_VOICE_LANGUAGE" in config.keys():
                 if config["INPUT_SPEAKER_VOICE_LANGUAGE"] in list(transcription_lang.keys()):
                     self.INPUT_SPEAKER_VOICE_LANGUAGE = config["INPUT_SPEAKER_VOICE_LANGUAGE"]
