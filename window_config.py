@@ -12,7 +12,7 @@ from audio_utils import get_input_device_list, get_output_device_list, get_defau
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from languages import translation_lang, transcription_lang, selectable_languages
 
-from CTkScrollableDropdown import CTkScrollableDropdown
+from ctk_scrollable_dropdown import CTkScrollableDropdown
 
 class ToplevelWindowConfig(CTkToplevel):
 
