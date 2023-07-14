@@ -415,6 +415,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
+        self.parent.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
         self.parent.config_window.withdraw()
 
     def entry_message_format_callback(self, event):
