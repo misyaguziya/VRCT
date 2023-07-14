@@ -14,10 +14,13 @@ from languages import translation_lang, transcription_lang, selectable_languages
 
 from ctk_scrollable_dropdown import CTkScrollableDropdown
 
+SCROLLABLE_DROPDOWN = True
+
 class ToplevelWindowConfig(CTkToplevel):
 
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+
         self.withdraw()
         self.parent = parent
         # self.geometry(f"{350}x{270}")
@@ -51,19 +54,22 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.TRANSPARENCY = value
         save_json(self.parent.PATH_CONFIG, "TRANSPARENCY", self.parent.TRANSPARENCY)
 
-    def optionmenu_theme_callback(self, choice):
+    def optionmenu_appearance_theme_callback(self, choice):
+        self.optionmenu_appearance_theme.set(choice)
+
         customtkinter.set_appearance_mode(choice)
         self.parent.APPEARANCE_THEME = choice
         save_json(self.parent.PATH_CONFIG, "APPEARANCE_THEME", self.parent.APPEARANCE_THEME)
 
     def optionmenu_ui_scaling_callback(self, choice):
+        self.optionmenu_ui_scaling.set(choice)
+
         new_scaling_float = int(choice.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
         self.parent.UI_SCALING = choice
         save_json(self.parent.PATH_CONFIG, "UI_SCALING", self.parent.UI_SCALING)
 
     def optionmenu_font_family_callback(self, choice):
-        # set choice font
         self.optionmenu_font_family.set(choice)
 
         # tab menu
@@ -174,6 +180,8 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "FONT_FAMILY", self.parent.FONT_FAMILY)
 
     def optionmenu_ui_language_callback(self, choice):
+        self.optionmenu_ui_language.set(choice)
+
         self.withdraw()
         pre_language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
         self.parent.UI_LANGUAGE = get_key_by_value(selectable_languages, choice)
@@ -187,7 +195,7 @@ class ToplevelWindowConfig(CTkToplevel):
         # add tabview textbox
         self.parent.add_tabview_logs(language_yaml_data)
         self.add_tabview_config(language_yaml_data, selectable_languages)
-        
+
         # 翻訳予定
         # window information
         # try:
@@ -197,6 +205,8 @@ class ToplevelWindowConfig(CTkToplevel):
         self.deiconify()
 
     def optionmenu_translation_translator_callback(self, choice):
+        self.optionmenu_translation_translator.set(choice)
+
         if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
             print_textbox(self.parent.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
             print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
@@ -226,33 +236,47 @@ class ToplevelWindowConfig(CTkToplevel):
             save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
 
     def optionmenu_translation_input_source_language_callback(self, choice):
+        self.optionmenu_translation_input_source_language.set(choice)
+
         self.parent.INPUT_SOURCE_LANG = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
 
     def optionmenu_translation_input_target_language_callback(self, choice):
+        self.optionmenu_translation_input_target_language.set(choice)
+
         self.parent.INPUT_TARGET_LANG = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
 
     def optionmenu_translation_output_source_language_callback(self, choice):
+        self.optionmenu_translation_output_source_language.set(choice)
+
         self.parent.OUTPUT_SOURCE_LANG = choice
         save_json(self.parent.PATH_CONFIG, "OUTPUT_SOURCE_LANG", self.parent.OUTPUT_SOURCE_LANG)
 
     def optionmenu_translation_output_target_language_callback(self, choice):
+        self.optionmenu_translation_output_target_language.set(choice)
+
         self.parent.OUTPUT_TARGET_LANG = choice
         save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
 
     def optionmenu_input_mic_host_callback(self, choice):
+        self.optionmenu_input_mic_host.set(choice)
+
         self.parent.CHOICE_MIC_HOST = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
         self.optionmenu_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
 
     def optionmenu_input_mic_device_callback(self, choice):
+        self.optionmenu_input_mic_device.set(choice)
+
         self.parent.CHOICE_MIC_DEVICE = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
         self.checkbox_input_mic_threshold_check.deselect()
         self.checkbox_input_mic_threshold_check_callback()
 
     def optionmenu_input_mic_voice_language_callback(self, choice):
+        self.optionmenu_input_mic_voice_language.set(choice)
+
         self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
 
@@ -312,6 +336,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_input_speaker_device_callback(self, choice):
         speaker_device = [device for device in get_output_device_list() if device["name"] == choice][0]
         if get_default_output_device()["index"] == speaker_device["index"]:
+            self.optionmenu_input_speaker_device.set(choice)
             self.parent.CHOICE_SPEAKER_DEVICE = choice
             save_json(self.parent.PATH_CONFIG, "CHOICE_SPEAKER_DEVICE", self.parent.CHOICE_SPEAKER_DEVICE)
         else:
@@ -320,6 +345,8 @@ class ToplevelWindowConfig(CTkToplevel):
             self.optionmenu_input_speaker_device.configure(variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE))
 
     def optionmenu_input_speaker_voice_language_callback(self, choice):
+        self.optionmenu_input_speaker_voice_language.set(choice)
+
         self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
         save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
 
@@ -489,12 +516,27 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_appearance_theme = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_ui),
             values=["Light", "Dark", "System"],
-            command=self.optionmenu_theme_callback,
+            command=self.optionmenu_appearance_theme_callback,
             variable=StringVar(value=self.parent.APPEARANCE_THEME),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_appearance_theme.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_appearance_theme._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown appearance theme
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_appearance_theme = CTkScrollableDropdown(
+                self.optionmenu_appearance_theme,
+                values=["Light", "Dark", "System"],
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_appearance_theme_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_appearance_theme.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_appearance_theme._iconify(),
+            )
 
         ## optionmenu UI scaling
         row += 1
@@ -515,6 +557,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_ui_scaling.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_ui_scaling._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown ui scaling
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_ui_scaling = CTkScrollableDropdown(
+                self.optionmenu_ui_scaling,
+                values=["80%", "90%", "100%", "110%", "120%"],
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_ui_scaling_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_ui_scaling.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_ui_scaling._iconify(),
+            )
+
         ## optionmenu font family
         row += 1
         self.label_font_family = CTkLabel(
@@ -533,19 +590,19 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
         ## scrollableDropdown font family
-        self.scrollableDropdown_font_family = CTkScrollableDropdown(
-            self.optionmenu_font_family,
-            values=font_families,
-            justify="left",
-            button_color="transparent",
-            command=self.optionmenu_font_family_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-        )
-        self.scrollableDropdown_font_family.bind(
-            "<Leave>",
-            lambda e: self.scrollableDropdown_font_family._withdraw() if not str(e.widget).startswith(".!ctkscrollabledropdown.") else None,
-            add="+"
-        )
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_font_family = CTkScrollableDropdown(
+                self.optionmenu_font_family,
+                values=font_families,
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_font_family_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_font_family.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_font_family._iconify(),
+            )
 
         ## optionmenu ui language
         row += 1
@@ -566,6 +623,21 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.optionmenu_ui_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_ui_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown ui language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_ui_language = CTkScrollableDropdown(
+                self.optionmenu_ui_language,
+                values=selectable_languages_values,
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_ui_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_ui_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_ui_language._iconify(),
+            )
 
         # tab Translation
         ## optionmenu translation translator
@@ -589,6 +661,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_translator._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown translation translator
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_translation_translator = CTkScrollableDropdown(
+                self.optionmenu_translation_translator,
+                values=list(self.parent.translator.translator_status.keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_translation_translator_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_translation_translator.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_translation_translator._iconify(),
+            )
+
         ## optionmenu translation input language
         row +=1
         self.label_translation_input_language = CTkLabel(
@@ -610,6 +697,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown translation input source language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_translation_input_source_language = CTkScrollableDropdown(
+                self.optionmenu_translation_input_source_language,
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_translation_input_source_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_translation_input_source_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_translation_input_source_language._iconify(),
+            )
+
         ## label translation input arrow
         self.label_translation_input_arrow = CTkLabel(
             self.tabview_config.tab(config_tab_title_translation),
@@ -629,6 +731,21 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.optionmenu_translation_input_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown translation input target language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_translation_input_target_language = CTkScrollableDropdown(
+                self.optionmenu_translation_input_target_language,
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_translation_input_target_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_translation_input_target_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_translation_input_target_language._iconify(),
+            )
 
         ## optionmenu translation output language
         row +=1
@@ -651,6 +768,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown translation output source language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_translation_output_source_language = CTkScrollableDropdown(
+                self.optionmenu_translation_output_source_language,
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_translation_output_source_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_translation_output_source_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_translation_output_source_language._iconify(),
+            )
+
         ## label translation output arrow
         self.label_translation_output_arrow = CTkLabel(
             self.tabview_config.tab(config_tab_title_translation),
@@ -670,6 +802,21 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.optionmenu_translation_output_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown translation output target language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_translation_output_target_language = CTkScrollableDropdown(
+                self.optionmenu_translation_output_target_language,
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_translation_output_target_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_translation_output_target_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_translation_output_target_language._iconify(),
+            )
 
         # tab Transcription
         ## optionmenu input mic device's host
@@ -693,6 +840,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_host._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown input mic device's host
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_mic_host = CTkScrollableDropdown(
+                self.optionmenu_input_mic_host,
+                values=[host for host in get_input_device_list().keys()],
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_input_mic_host_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_input_mic_host.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_input_mic_host._iconify(),
+            )
+
         ## optionmenu input mic device
         row += 1
         self.label_input_mic_device = CTkLabel(
@@ -712,6 +874,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown input mic device
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_mic_device = CTkScrollableDropdown(
+                self.optionmenu_input_mic_device,
+                values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]],
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_input_mic_device_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_input_mic_device.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_input_mic_device._iconify(),
+            )
+
         ## optionmenu input mic voice language
         row +=1
         self.label_input_mic_voice_language = CTkLabel(
@@ -730,6 +907,21 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown input mic voice language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_voice_language = CTkScrollableDropdown(
+                self.optionmenu_input_mic_voice_language,
+                values=list(transcription_lang.keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_input_mic_voice_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_input_voice_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_input_voice_language._iconify(),
+            )
 
         ## slider input mic energy threshold
         row +=1
@@ -883,6 +1075,21 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
+        ## scrollableDropdown input speaker device
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_speaker_device = CTkScrollableDropdown(
+                self.optionmenu_input_speaker_device,
+                values=[device["name"] for device in get_output_device_list()],
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_input_speaker_device_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_input_speaker_device.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_input_speaker_device._iconify(),
+            )
+
         ## optionmenu input speaker voice language
         row +=1
         self.label_input_speaker_voice_language = CTkLabel(
@@ -901,6 +1108,21 @@ class ToplevelWindowConfig(CTkToplevel):
         )
         self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+
+        ## scrollableDropdown input speaker voice language
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_speaker_voice_language = CTkScrollableDropdown(
+                self.optionmenu_input_speaker_voice_language,
+                values=list(transcription_lang.keys()),
+                justify="left",
+                button_color="transparent",
+                command=self.optionmenu_input_speaker_voice_language_callback,
+                font=CTkFont(family=self.parent.FONT_FAMILY),
+            )
+            self.scrollableDropdown_input_speaker_voice_language.frame.bind(
+                "<Leave>",
+                lambda e: self.scrollableDropdown_input_speaker_voice_language._iconify(),
+            )
 
         ## entry input speaker energy threshold
         row +=1
