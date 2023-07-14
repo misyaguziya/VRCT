@@ -167,7 +167,7 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
     def _init_buttons(self, **button_kwargs):
         self.i = 0
         self.widgets = {}
-        for row in self.values:                                
+        for row in self.values:
             self.widgets[self.i] = customtkinter.CTkButton(self.frame,
                                                           text=row,
                                                           height=self.button_height,

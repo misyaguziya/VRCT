@@ -1,7 +1,7 @@
 from time import sleep
 from queue import Queue
 from os import path as os_path
-from tkinter import DoubleVar, IntVar 
+from tkinter import DoubleVar, IntVar
 from tkinter import font as tk_font
 import customtkinter
 from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox, CTkProgressBar
@@ -540,7 +540,11 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_font_family_callback,
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
-        self.scrollableDropdown_font_family.frame.bind("<Leave>", lambda e: self.scrollableDropdown_font_family._iconify())
+        self.scrollableDropdown_font_family.bind(
+            "<Leave>",
+            lambda e: self.scrollableDropdown_font_family._withdraw() if not str(e.widget).startswith(".!ctkscrollabledropdown.") else None,
+            add="+"
+        )
 
         ## optionmenu ui language
         row += 1
