@@ -125,7 +125,7 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
         if self.autocomplete:
             self.bind_autocomplete()
 
-        self.deiconify()
+        # self.deiconify()
         self.withdraw()
 
         self.attributes("-alpha", self.alpha)
