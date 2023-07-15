@@ -533,9 +533,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_appearance_theme_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_appearance_theme.frame.bind(
+            self.scrollableDropdown_appearance_theme.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_appearance_theme._iconify(),
+                lambda e: self.scrollableDropdown_appearance_theme._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_appearance_theme.frame._parent_frame)) else None,
             )
 
         ## optionmenu UI scaling
@@ -567,9 +567,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_ui_scaling_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_ui_scaling.frame.bind(
+            self.scrollableDropdown_ui_scaling.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_ui_scaling._iconify(),
+                lambda e: self.scrollableDropdown_ui_scaling._iconify() if not str(e.widget).startswith(str(self.scrollableDropdown_ui_scaling.frame._parent_frame)) else None,
             )
 
         ## optionmenu font family
@@ -599,9 +599,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_font_family_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_font_family.frame.bind(
+            self.scrollableDropdown_font_family.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_font_family._iconify(),
+                lambda e: self.scrollableDropdown_font_family._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_font_family.frame._parent_frame)) else None,
             )
 
         ## optionmenu ui language
@@ -634,9 +634,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_ui_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_ui_language.frame.bind(
+            self.scrollableDropdown_ui_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_ui_language._iconify(),
+                lambda e: self.scrollableDropdown_ui_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_ui_language.frame._parent_frame)) else None,
             )
 
         # tab Translation
@@ -671,9 +671,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_translation_translator_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_translation_translator.frame.bind(
+            self.scrollableDropdown_translation_translator.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_translation_translator._iconify(),
+                lambda e: self.scrollableDropdown_translation_translator._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_translation_translator.frame._parent_frame)) else None,
             )
 
         ## optionmenu translation input language
@@ -707,9 +707,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_translation_input_source_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_translation_input_source_language.frame.bind(
+            self.scrollableDropdown_translation_input_source_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_translation_input_source_language._iconify(),
+                lambda e: self.scrollableDropdown_translation_input_source_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_translation_input_source_language.frame._parent_frame)) else None,
             )
 
         ## label translation input arrow
@@ -742,9 +742,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_translation_input_target_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_translation_input_target_language.frame.bind(
+            self.scrollableDropdown_translation_input_target_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_translation_input_target_language._iconify(),
+                lambda e: self.scrollableDropdown_translation_input_target_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_translation_input_target_language.frame._parent_frame)) else None,
             )
 
         ## optionmenu translation output language
@@ -778,9 +778,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_translation_output_source_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_translation_output_source_language.frame.bind(
+            self.scrollableDropdown_translation_output_source_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_translation_output_source_language._iconify(),
+                lambda e: self.scrollableDropdown_translation_output_source_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_translation_output_source_language.frame._parent_frame)) else None,
             )
 
         ## label translation output arrow
@@ -813,9 +813,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_translation_output_target_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_translation_output_target_language.frame.bind(
+            self.scrollableDropdown_translation_output_target_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_translation_output_target_language._iconify(),
+                lambda e: self.scrollableDropdown_translation_output_target_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_translation_output_target_language.frame._parent_frame)) else None,
             )
 
         # tab Transcription
@@ -850,9 +850,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_input_mic_host_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_input_mic_host.frame.bind(
+            self.scrollableDropdown_input_mic_host.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_input_mic_host._iconify(),
+                lambda e: self.scrollableDropdown_input_mic_host._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_input_mic_host.frame._parent_frame)) else None,
             )
 
         ## optionmenu input mic device
@@ -884,9 +884,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_input_mic_device_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_input_mic_device.frame.bind(
+            self.scrollableDropdown_input_mic_device.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_input_mic_device._iconify(),
+                lambda e: self.scrollableDropdown_input_mic_device._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_input_mic_device.frame._parent_frame)) else None,
             )
 
         ## optionmenu input mic voice language
@@ -918,9 +918,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_input_mic_voice_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_input_voice_language.frame.bind(
+            self.scrollableDropdown_input_voice_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_input_voice_language._iconify(),
+                lambda e: self.scrollableDropdown_input_voice_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_input_voice_language.frame._parent_frame)) else None,
             )
 
         ## slider input mic energy threshold
@@ -1085,9 +1085,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_input_speaker_device_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_input_speaker_device.frame.bind(
+            self.scrollableDropdown_input_speaker_device.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_input_speaker_device._iconify(),
+                lambda e: self.scrollableDropdown_input_speaker_device._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_input_speaker_device.frame._parent_frame)) else None,
             )
 
         ## optionmenu input speaker voice language
@@ -1119,9 +1119,9 @@ class ToplevelWindowConfig(CTkToplevel):
                 command=self.optionmenu_input_speaker_voice_language_callback,
                 font=CTkFont(family=self.parent.FONT_FAMILY),
             )
-            self.scrollableDropdown_input_speaker_voice_language.frame.bind(
+            self.scrollableDropdown_input_speaker_voice_language.bind(
                 "<Leave>",
-                lambda e: self.scrollableDropdown_input_speaker_voice_language._iconify(),
+                lambda e: self.scrollableDropdown_input_speaker_voice_language._withdraw() if not str(e.widget).startswith(str(self.scrollableDropdown_input_speaker_voice_language.frame._parent_frame)) else None,
             )
 
         ## entry input speaker energy threshold
