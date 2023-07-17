@@ -331,7 +331,6 @@ class App(CTk):
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "config-icon-white.png")))
         )
         self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
-        self.config_window = None
 
         # load ui language data
         language_yaml_data = get_localized_text(f"{self.UI_LANGUAGE}")
@@ -400,12 +399,16 @@ class App(CTk):
         # delete window
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
+        self.config_window = ToplevelWindowConfig(self)
+
     def button_config_callback(self):
-        if self.config_window is None or not self.config_window.winfo_exists():
-            self.config_window = ToplevelWindowConfig(self)
-            self.checkbox_translation.configure(state="disabled")
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
+        self.checkbox_translation.configure(state="disabled")
+        self.checkbox_transcription_send.configure(state="disabled")
+        self.checkbox_transcription_receive.configure(state="disabled")
+        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+
+        self.config_window.deiconify()
+        self.config_window.focus_set()
         self.config_window.focus()
 
     def button_information_callback(self):
