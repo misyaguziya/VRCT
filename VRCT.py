@@ -85,12 +85,15 @@ class App(CTk):
             if "ENABLE_TRANSLATION" in config.keys():
                 if type(config["ENABLE_TRANSLATION"]) is bool:
                     self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
-            if "ENABLE_TRANSCRIPTION_SEND" in config.keys():
-                if type(config["ENABLE_TRANSCRIPTION_SEND"]) is bool:
-                    self.ENABLE_TRANSCRIPTION_SEND = config["ENABLE_TRANSCRIPTION_SEND"]
-            if "ENABLE_TRANSCRIPTION_RECEIVE" in config.keys():
-                if type(config["ENABLE_TRANSCRIPTION_RECEIVE"]) is bool:
-                    self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
+
+            # 環境に依ってマイクとスピーカーを同時起動するとエラーが発生するため、起動時は強制的にOFFにする
+            # if "ENABLE_TRANSCRIPTION_SEND" in config.keys():
+            #     if type(config["ENABLE_TRANSCRIPTION_SEND"]) is bool:
+            #         self.ENABLE_TRANSCRIPTION_SEND = config["ENABLE_TRANSCRIPTION_SEND"]
+            # if "ENABLE_TRANSCRIPTION_RECEIVE" in config.keys():
+            #     if type(config["ENABLE_TRANSCRIPTION_RECEIVE"]) is bool:
+            #         self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
+
             if "ENABLE_FOREGROUND" in config.keys():
                 if type(config["ENABLE_FOREGROUND"]) is bool:
                     self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
@@ -208,8 +211,8 @@ class App(CTk):
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
                 "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
-                "ENABLE_TRANSCRIPTION_SEND": self.ENABLE_TRANSCRIPTION_SEND,
-                "ENABLE_TRANSCRIPTION_RECEIVE": self.ENABLE_TRANSCRIPTION_RECEIVE,
+                # "ENABLE_TRANSCRIPTION_SEND": self.ENABLE_TRANSCRIPTION_SEND,
+                # "ENABLE_TRANSCRIPTION_RECEIVE": self.ENABLE_TRANSCRIPTION_RECEIVE,
                 "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
@@ -357,19 +360,19 @@ class App(CTk):
         else:
             self.checkbox_translation.deselect()
 
-        ## set checkbox enable transcription send
-        if self.ENABLE_TRANSCRIPTION_SEND:
-            self.checkbox_transcription_send.select()
-            self.checkbox_transcription_send_callback()
-        else:
-            self.checkbox_transcription_send.deselect()
+        # ## set checkbox enable transcription send
+        # if self.ENABLE_TRANSCRIPTION_SEND:
+        #     self.checkbox_transcription_send.select()
+        #     self.checkbox_transcription_send_callback()
+        # else:
+        #     self.checkbox_transcription_send.deselect()
 
-        ## set checkbox enable transcription receive
-        if self.ENABLE_TRANSCRIPTION_RECEIVE:
-            self.checkbox_transcription_receive.select()
-            self.checkbox_transcription_receive_callback()
-        else:
-            self.checkbox_transcription_receive.deselect()
+        # ## set checkbox enable transcription receive
+        # if self.ENABLE_TRANSCRIPTION_RECEIVE:
+        #     self.checkbox_transcription_receive.select()
+        #     self.checkbox_transcription_receive_callback()
+        # else:
+        #     self.checkbox_transcription_receive.deselect()
 
         ## set set checkbox enable foreground
         if self.ENABLE_FOREGROUND:
