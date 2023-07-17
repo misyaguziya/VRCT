@@ -339,7 +339,7 @@ class App(CTk):
         self.entry_message_box = CTkEntry(
             self,
             placeholder_text="message",
-            font=CTkFont(family=self.FONT_FAMILY)
+            font=CTkFont(family=self.FONT_FAMILY),
         )
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=5, pady=(5, 10), sticky="nsew")
 
@@ -614,11 +614,20 @@ class App(CTk):
             if self.ENABLE_AUTO_CLEAR_CHATBOX == True:
                 self.entry_message_box.delete(0, customtkinter.END)
 
+    BREAK_KEYSYM_LIST = [
+        "Delete", "Select", "Up", "Down", "Next", "End", "Print",
+        "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
+    ]
     def entry_message_box_press_key_any(self, event):
         # send OSC typing
         send_typing(True, self.OSC_IP_ADDRESS, self.OSC_PORT)
         if self.ENABLE_FOREGROUND:
             self.attributes("-topmost", False)
+
+        if event.keysym != "??":
+            if len(event.char) != 0 and event.keysym in self.BREAK_KEYSYM_LIST:
+                self.entry_message_box.insert("end", event.char)
+                return "break"
 
     def entry_message_box_leave(self, event):
         # send OSC typing
