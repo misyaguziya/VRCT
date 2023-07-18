@@ -82,9 +82,10 @@ class App(CTk):
             with open(self.PATH_CONFIG, 'r') as fp:
                 config = json_load(fp)
             # main window
-            if "ENABLE_TRANSLATION" in config.keys():
-                if type(config["ENABLE_TRANSLATION"]) is bool:
-                    self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
+            # main windowは初期はすべてOFFにする
+            # if "ENABLE_TRANSLATION" in config.keys():
+            #     if type(config["ENABLE_TRANSLATION"]) is bool:
+            #         self.ENABLE_TRANSLATION = config["ENABLE_TRANSLATION"]
 
             # 環境に依ってマイクとスピーカーを同時起動するとエラーが発生するため、起動時は強制的にOFFにする
             # if "ENABLE_TRANSCRIPTION_SEND" in config.keys():
@@ -94,9 +95,9 @@ class App(CTk):
             #     if type(config["ENABLE_TRANSCRIPTION_RECEIVE"]) is bool:
             #         self.ENABLE_TRANSCRIPTION_RECEIVE = config["ENABLE_TRANSCRIPTION_RECEIVE"]
 
-            if "ENABLE_FOREGROUND" in config.keys():
-                if type(config["ENABLE_FOREGROUND"]) is bool:
-                    self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
+            # if "ENABLE_FOREGROUND" in config.keys():
+            #     if type(config["ENABLE_FOREGROUND"]) is bool:
+            #         self.ENABLE_FOREGROUND = config["ENABLE_FOREGROUND"]
 
             # tab ui
             if "TRANSPARENCY" in config.keys():
@@ -210,10 +211,10 @@ class App(CTk):
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
-                "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
+                # "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
                 # "ENABLE_TRANSCRIPTION_SEND": self.ENABLE_TRANSCRIPTION_SEND,
                 # "ENABLE_TRANSCRIPTION_RECEIVE": self.ENABLE_TRANSCRIPTION_RECEIVE,
-                "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
+                # "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
@@ -353,12 +354,12 @@ class App(CTk):
             print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
             print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
 
-        ## set checkbox enable translation
-        if self.ENABLE_TRANSLATION:
-            self.checkbox_translation.select()
-            self.checkbox_translation_callback()
-        else:
-            self.checkbox_translation.deselect()
+        # ## set checkbox enable translation
+        # if self.ENABLE_TRANSLATION:
+        #     self.checkbox_translation.select()
+        #     self.checkbox_translation_callback()
+        # else:
+        #     self.checkbox_translation.deselect()
 
         # ## set checkbox enable transcription send
         # if self.ENABLE_TRANSCRIPTION_SEND:
@@ -374,12 +375,12 @@ class App(CTk):
         # else:
         #     self.checkbox_transcription_receive.deselect()
 
-        ## set set checkbox enable foreground
-        if self.ENABLE_FOREGROUND:
-            self.checkbox_foreground.select()
-            self.checkbox_foreground_callback()
-        else:
-            self.checkbox_foreground.deselect()
+        # ## set set checkbox enable foreground
+        # if self.ENABLE_FOREGROUND:
+        #     self.checkbox_foreground.select()
+        #     self.checkbox_foreground_callback()
+        # else:
+        #     self.checkbox_foreground.deselect()
 
         ## set word filter
         for f in self.INPUT_MIC_WORD_FILTER:
