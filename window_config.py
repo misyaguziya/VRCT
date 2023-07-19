@@ -224,6 +224,16 @@ class ToplevelWindowConfig(CTkToplevel):
                 values=list(translation_lang[choice].keys()),
                 variable=StringVar(value=list(translation_lang[choice].keys())[0]))
 
+            if SCROLLABLE_DROPDOWN:
+                self.scrollableDropdown_translation_input_source_language.configure(
+                values=list(translation_lang[choice].keys()))
+                self.scrollableDropdown_translation_input_target_language.configure(
+                values=list(translation_lang[choice].keys()))
+                self.scrollableDropdown_translation_output_source_language.configure(
+                values=list(translation_lang[choice].keys()))
+                self.scrollableDropdown_translation_output_target_language.configure(
+                values=list(translation_lang[choice].keys()))
+
             self.parent.CHOICE_TRANSLATOR = choice
             self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice].keys())[0]
             self.parent.INPUT_TARGET_LANG = list(translation_lang[choice].keys())[1]
@@ -265,6 +275,8 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.CHOICE_MIC_HOST = choice
         save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
         self.optionmenu_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
+        if SCROLLABLE_DROPDOWN:
+            self.scrollableDropdown_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.optionmenu_input_mic_device.set(choice)
