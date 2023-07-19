@@ -272,11 +272,17 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_input_mic_host_callback(self, choice):
         self.optionmenu_input_mic_host.set(choice)
 
-        self.parent.CHOICE_MIC_HOST = choice
-        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
-        self.optionmenu_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
+        self.optionmenu_input_mic_device.configure(
+            values=[device["name"] for device in get_input_device_list()[choice]],
+            variable=StringVar(value=[device["name"] for device in get_input_device_list()[choice]][0]))
+
         if SCROLLABLE_DROPDOWN:
-            self.scrollableDropdown_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]])
+            self.scrollableDropdown_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[choice]])
+
+        self.parent.CHOICE_MIC_HOST = choice
+        self.parent.CHOICE_MIC_DEVICE = [device["name"] for device in get_input_device_list()[choice]][0]
+        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
+        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.optionmenu_input_mic_device.set(choice)
