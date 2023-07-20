@@ -14,7 +14,7 @@ from languages import translation_lang, transcription_lang, selectable_languages
 
 from ctk_scrollable_dropdown import CTkScrollableDropdown
 
-SCROLLABLE_DROPDOWN = True
+SCROLLABLE_DROPDOWN = False
 
 class ToplevelWindowConfig(CTkToplevel):
 
