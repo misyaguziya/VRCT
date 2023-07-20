@@ -32,7 +32,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
         (任意)
         1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
         2. ギアアイコンのボタンでconfigウィンドウを開く
-        3. ParameterタブのDeepL Auth Keyに認証キーを記載し、フロッピーアイコンのボタンを押す
+        3. ParameterタブのDeepL Auth Keyに認証キーを記載
         4. configウィンドウを閉じる
 
     通常使用時
