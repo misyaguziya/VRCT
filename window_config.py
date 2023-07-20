@@ -86,7 +86,6 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_font_family.configure(font=CTkFont(family=choice))
         self.optionmenu_font_family.configure(font=CTkFont(family=choice))
         self.optionmenu_font_family._dropdown_menu.configure(font=CTkFont(family=choice))
-        self.scrollableDropdown_font_family.configure(font=CTkFont(family=choice))
         self.label_ui_language.configure(font=CTkFont(family=choice))
         self.optionmenu_ui_language.configure(font=CTkFont(family=choice))
         self.optionmenu_ui_language._dropdown_menu.configure(font=CTkFont(family=choice))
@@ -602,10 +601,13 @@ class ToplevelWindowConfig(CTkToplevel):
         font_families = list(tk_font.families())
         self.optionmenu_font_family = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_ui),
+            values=font_families,
+            command=self.optionmenu_font_family_callback,
             variable=StringVar(value=self.parent.FONT_FAMILY),
             font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
+        self.optionmenu_font_family._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown font family
         if SCROLLABLE_DROPDOWN:
