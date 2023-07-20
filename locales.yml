@@ -101,17 +101,20 @@ ja:
   label_input_mic_device: "マイク入力デバイス"
   label_input_mic_voice_language: "マイクで話す言語"
   label_input_mic_energy_threshold: "音声取得のしきい値"
+  checkbox_input_mic_threshold_check: "音声取得のしきい値の視覚化"
   label_input_mic_dynamic_energy_threshold: "音声取得のしきい値の自動調整"
   label_input_mic_record_timeout: "マイク音声の区切りの無音時間"
-  # label_input_mic_phrase_timeout: ""
+  label_input_mic_phrase_timeout: "文字起こしする音声時間の上限"
   label_input_mic_max_phrases: "保留する単語の上限(マイク)"
+  label_input_mic_word_filter: "ワードフィルタ"
 
   label_input_speaker_device: "スピーカー(聞き取りたいデバイス)"
   label_input_speaker_voice_language: "聞き取る音声の言語"
   label_input_speaker_energy_threshold: "音声取得のしきい値"
+  checkbox_input_speaker_threshold_check: "音声取得のしきい値の視覚化"
   label_input_speaker_dynamic_energy_threshold: "音声取得のしきい値の自動調整"
   label_input_speaker_record_timeout: "スピーカー音声の区切りの無音時間"
-  # label_input_speaker_phrase_timeout: ""
+  label_input_speaker_phrase_timeout: "文字起こしする音声時間の上限"
   label_input_speaker_max_phrases: "保留する単語の上限(スピーカー)"
 
   # tab Parameter

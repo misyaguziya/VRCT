@@ -14,7 +14,7 @@ from languages import translation_lang, transcription_lang, selectable_languages
 
 from ctk_scrollable_dropdown import CTkScrollableDropdown
 
-SCROLLABLE_DROPDOWN = True
+SCROLLABLE_DROPDOWN = False
 
 class ToplevelWindowConfig(CTkToplevel):
 
@@ -344,7 +344,11 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_MAX_PHRASES", self.parent.INPUT_MIC_MAX_PHRASES)
 
     def entry_input_mic_word_filters_callback(self, event):
-        self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+        word_filter = self.entry_input_mic_word_filter.get()
+        if len(word_filter) > 0:
+            self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+        else:
+            self.parent.INPUT_MIC_WORD_FILTER = []
         self.parent.keyword_processor = KeywordProcessor()
         for f in self.parent.INPUT_MIC_WORD_FILTER:
             self.parent.keyword_processor.add_keyword(f)
@@ -536,9 +540,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_appearance_theme_callback,
             variable=StringVar(value=self.parent.APPEARANCE_THEME),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_appearance_theme.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_appearance_theme._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown appearance theme
         if SCROLLABLE_DROPDOWN:
@@ -570,9 +574,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_ui_scaling_callback,
             variable=StringVar(value=self.parent.UI_SCALING),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_ui_scaling.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_ui_scaling._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown ui scaling
         if SCROLLABLE_DROPDOWN:
@@ -605,9 +609,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_font_family_callback,
             variable=StringVar(value=self.parent.FONT_FAMILY),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_font_family._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown font family
         if SCROLLABLE_DROPDOWN:
@@ -640,9 +644,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_ui_language_callback,
             variable=StringVar(value=selectable_languages[self.parent.UI_LANGUAGE]),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_ui_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_ui_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown ui language
         if SCROLLABLE_DROPDOWN:
@@ -677,9 +681,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_translation_translator_callback,
             variable=StringVar(value=self.parent.CHOICE_TRANSLATOR),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_translation_translator._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown translation translator
         if SCROLLABLE_DROPDOWN:
@@ -713,9 +717,9 @@ class ToplevelWindowConfig(CTkToplevel):
             values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_input_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_translation_input_source_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown translation input source language
         if SCROLLABLE_DROPDOWN:
@@ -748,9 +752,9 @@ class ToplevelWindowConfig(CTkToplevel):
             values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_input_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_translation_input_target_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown translation input target language
         if SCROLLABLE_DROPDOWN:
@@ -784,9 +788,9 @@ class ToplevelWindowConfig(CTkToplevel):
             values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_output_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_translation_output_source_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown translation output source language
         if SCROLLABLE_DROPDOWN:
@@ -819,9 +823,9 @@ class ToplevelWindowConfig(CTkToplevel):
             values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
             variable=StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_translation_output_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_translation_output_target_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown translation output target language
         if SCROLLABLE_DROPDOWN:
@@ -856,9 +860,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_input_mic_host_callback,
             variable=StringVar(value=self.parent.CHOICE_MIC_HOST),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_input_mic_host._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown input mic device's host
         if SCROLLABLE_DROPDOWN:
@@ -890,9 +894,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_input_mic_device_callback,
             variable=StringVar(value=self.parent.CHOICE_MIC_DEVICE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_input_mic_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown input mic device
         if SCROLLABLE_DROPDOWN:
@@ -924,9 +928,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_input_mic_voice_language_callback,
             variable=StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_input_mic_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown input mic voice language
         if SCROLLABLE_DROPDOWN:
@@ -1068,9 +1072,14 @@ class ToplevelWindowConfig(CTkToplevel):
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.label_input_mic_word_filter.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        if len(self.parent.INPUT_MIC_WORD_FILTER) > 0:
+            textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER))
+        else:
+            textvariable=None
         self.entry_input_mic_word_filter = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER)),
+            textvariable=textvariable,
+            placeholder_text="AAA,BBB,CCC",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
@@ -1091,9 +1100,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_input_speaker_device_callback,
             variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_input_speaker_device._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown input speaker device
         if SCROLLABLE_DROPDOWN:
@@ -1125,9 +1134,9 @@ class ToplevelWindowConfig(CTkToplevel):
             command=self.optionmenu_input_speaker_voice_language_callback,
             variable=StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
             font=CTkFont(family=self.parent.FONT_FAMILY),
+            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        self.optionmenu_input_speaker_voice_language._dropdown_menu.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
 
         ## scrollableDropdown input speaker voice language
         if SCROLLABLE_DROPDOWN:

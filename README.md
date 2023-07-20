@@ -50,7 +50,7 @@ ptyhon VRCT.py
 (任意)
 1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
 2. ギアアイコンのボタンでconfigウィンドウを開く
-3. ParameterタブのDeepL Auth Keyに認証キーを記載し、フロッピーアイコンのボタンを押す
+3. ParameterタブのDeepL Auth Keyに認証キーを記載
 4. configウィンドウを閉じる
 
 ### Normal use
@@ -75,22 +75,29 @@ ptyhon VRCT.py
     - Appearance Theme: ウィンドウテーマを選択
     - UI Scaling: UIサイズを調整
     - Font Family: 表示フォントを選択
+    - **(New!) UI Language: UIの表示言語を選択**
 - Translation tab
     - Select Translator: 翻訳エンジンの変更
     - Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
     - Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
 - Transcription tab
+    - **(New!) Input Mic Host: マイクのホストAPIを選択**
     - Input Mic Device: マイクを選択
     - Input Mic Voice Language: 入力する音声の言語
     - Input Mic Energy Threshold: 音声取得のしきい値
+    - **(New!) Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化**
     - Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
+    - Input Mic Phase Timeout: 文字起こしする音声時間の上限
     - Input Mic Record Timeout: 音声の区切りの無音時間
     - Input Mic Max Phrases: 保留する単語の上限
+    - **(New!) Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)**
     - Input Speaker Device: スピーカーを選択
     - Input Speaker Voice Language: 受信する音声の言語
     - Input Speaker Energy Threshold: 音声取得のしきい値
+    - **(New!) Check threshold point: (New!)Input Speaker Energy Thresholdのしきい値を視覚化**
     - Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
     - Input Speaker Record Timeout: 音声の区切りの無音時間
+    - Input Speaker Phase Timeout: 文字起こしする音声時間の上限
     - Input Speaker Max Phrases: 保留する単語の上限
 - Parameter tab
     - OSC IP address: 変更不要
@@ -101,9 +108,11 @@ ptyhon VRCT.py
         - [translation]が翻訳されたメッセージに置換される
         - 初期フォーマット:`[message]([translation])`
 - Others tab
-    - Auto clear chat box: チャット送信時にチャットボックスを空にする
+    - **(New!) Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする**
 
 ## Author
 みしゃ(misyaguzi)  
 twitter: https://twitter.com/misya_ai  
-booth: https://misyaguziya.booth.pm/items/4814313
+booth: https://misyaguziya.booth.pm/items/4814313  
+
+Shiina_12siy  
