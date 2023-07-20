@@ -74,6 +74,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
             (New!) Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化
             Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
             Input Mic Record Timeout: 音声の区切りの無音時間
+            Input Mic Phase Timeout: 文字起こしする音声時間の上限
             Input Mic Max Phrases: 保留する単語の上限
             (New!) Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)
             Input Speaker Device: スピーカーを選択
@@ -82,6 +83,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
             (New!) Check threshold point: (New!)Input Speaker Energy Thresholdのしきい値を視覚化
             Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
             Input Speaker Record Timeout: 音声の区切りの無音時間
+            Input Speaker Phase Timeout: 文字起こしする音声時間の上限
             Input Speaker Max Phrases: 保留する単語の上限
         Parameterタブ
             OSC IP address: 変更不要
