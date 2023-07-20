@@ -344,7 +344,11 @@ class ToplevelWindowConfig(CTkToplevel):
         save_json(self.parent.PATH_CONFIG, "INPUT_MIC_MAX_PHRASES", self.parent.INPUT_MIC_MAX_PHRASES)
 
     def entry_input_mic_word_filters_callback(self, event):
-        self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+        word_filter = self.entry_input_mic_word_filter.get()
+        if len(word_filter) > 0:
+            self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+        else:
+            self.parent.INPUT_MIC_WORD_FILTER = []
         self.parent.keyword_processor = KeywordProcessor()
         for f in self.parent.INPUT_MIC_WORD_FILTER:
             self.parent.keyword_processor.add_keyword(f)
@@ -1068,9 +1072,14 @@ class ToplevelWindowConfig(CTkToplevel):
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.label_input_mic_word_filter.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        if len(self.parent.INPUT_MIC_WORD_FILTER) > 0:
+            textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER))
+        else:
+            textvariable=None
         self.entry_input_mic_word_filter = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER)),
+            textvariable=textvariable,
+            placeholder_text="AAA,BBB,CCC",
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
