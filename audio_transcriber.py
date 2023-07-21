@@ -1,9 +1,9 @@
-import io
-import threading
+from io import BytesIO
+from threading import Event
 import wave
-import speech_recognition as sr
+from speech_recognition import Recognizer, AudioData, AudioFile
 from datetime import timedelta
-import pyaudiowpatch as pyaudio
+from pyaudiowpatch import get_sample_size, paInt16
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
@@ -15,8 +15,8 @@ class AudioTranscriber:
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
         self.transcript_data = []
-        self.transcript_changed_event = threading.Event()
-        self.audio_recognizer = sr.Recognizer()
+        self.transcript_changed_event = Event()
+        self.audio_recognizer = Recognizer()
         self.audio_sources = {
                 "sample_rate": source.SAMPLE_RATE,
                 "sample_width": source.SAMPLE_WIDTH,
@@ -59,19 +59,18 @@ class AudioTranscriber:
         source_info["last_spoken"] = time_spoken
 
     def process_mic_data(self):
-        audio_data = sr.AudioData(self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
+        audio_data = AudioData(self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
         return audio_data
 
     def process_speaker_data(self):
-        temp_file = io.BytesIO()
+        temp_file = BytesIO()
         with wave.open(temp_file, 'wb') as wf:
             wf.setnchannels(self.audio_sources["channels"])
-            p = pyaudio.PyAudio()
-            wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+            wf.setsampwidth(get_sample_size(paInt16))
             wf.setframerate(self.audio_sources["sample_rate"])
             wf.writeframes(self.audio_sources["last_sample"])
         temp_file.seek(0)
-        with sr.AudioFile(temp_file) as source:
+        with AudioFile(temp_file) as source:
             audio = self.audio_recognizer.record(source)
         return audio
 
