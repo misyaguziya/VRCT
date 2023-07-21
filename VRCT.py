@@ -8,6 +8,7 @@ from customtkinter import CTk, CTkFrame, CTkCheckBox, CTkFont, CTkButton, CTkIma
 from PIL.Image import open as Image_open
 from flashtext import KeywordProcessor
 
+from threading import Thread
 from utils import save_json, print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
 from osc_tools import send_typing, send_message
 from window_config import ToplevelWindowConfig
@@ -432,84 +433,103 @@ class App(CTk):
             print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
         save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
+    def transcription_send_start(self):
+        self.mic_audio_queue = Queue()
+        mic_device = [device for device in get_input_device_list()[self.CHOICE_MIC_HOST] if device["name"] == self.CHOICE_MIC_DEVICE][0]
+        self.mic_audio_recorder = SelectedMicRecorder(
+            mic_device,
+            self.INPUT_MIC_ENERGY_THRESHOLD,
+            self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+            self.INPUT_MIC_RECORD_TIMEOUT,
+        )
+        self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
+        self.mic_transcriber = AudioTranscriber(
+            speaker=False,
+            source=self.mic_audio_recorder.source,
+            language=transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE],
+            phrase_timeout=self.INPUT_MIC_PHRASE_TIMEOUT,
+            max_phrases=self.INPUT_MIC_MAX_PHRASES,
+        )
+        def mic_transcript_to_chatbox():
+            self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
+            message = self.mic_transcriber.get_transcript()
+            if len(message) > 0:
+                # word filter
+                if len(self.keyword_processor.extract_keywords(message)) != 0:
+                    print_textbox(self.textbox_message_log, f"Detect WordFilter :{message}", "INFO")
+                    print_textbox(self.textbox_message_system_log, f"Detect WordFilter :{message}", "INFO")
+                    return
+
+                # translate
+                if self.checkbox_translation.get() is False:
+                    voice_message = f"{message}"
+                elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                    print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                    print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                    voice_message = f"{message}"
+                else:
+                    result = self.translator.translate(
+                        translator_name=self.CHOICE_TRANSLATOR,
+                        source_language=self.INPUT_SOURCE_LANG,
+                        target_language=self.INPUT_TARGET_LANG,
+                        message=message
+                    )
+                    voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+
+                if self.checkbox_transcription_send.get() is True:
+                    # send OSC message
+                    send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    # update textbox message log
+                    print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
+                    print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
+
+        self.mic_print_transcript = thread_fnc(mic_transcript_to_chatbox)
+        self.mic_print_transcript.daemon = True
+        self.mic_print_transcript.start()
+        print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
+        print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
+        self.checkbox_transcription_send.configure(state="normal")
+        self.checkbox_transcription_receive.configure(state="normal")
+
+    def transcription_send_stop(self):
+        if isinstance(self.mic_print_transcript, thread_fnc):
+            self.mic_print_transcript.stop()
+        if self.mic_audio_recorder.stop != None:
+            self.mic_audio_recorder.stop()
+            self.mic_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
+        if ((self.checkbox_translation.get() is False) and
+            (self.checkbox_transcription_send.get() is False) and
+            (self.checkbox_transcription_receive.get() is False)):
+            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+        self.checkbox_transcription_send.configure(state="normal")
+        self.checkbox_transcription_receive.configure(state="normal")
+
     def checkbox_transcription_send_callback(self):
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
+            self.checkbox_transcription_send.configure(state="disabled")
+            self.checkbox_transcription_receive.configure(state="disabled")
             self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-            self.mic_audio_queue = Queue()
-            mic_device = [device for device in get_input_device_list()[self.CHOICE_MIC_HOST] if device["name"] == self.CHOICE_MIC_DEVICE][0]
-            self.mic_audio_recorder = SelectedMicRecorder(
-                mic_device,
-                self.INPUT_MIC_ENERGY_THRESHOLD,
-                self.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
-                self.INPUT_MIC_RECORD_TIMEOUT,
-            )
-            self.mic_audio_recorder.record_into_queue(self.mic_audio_queue)
-            self.mic_transcriber = AudioTranscriber(
-                speaker=False,
-                source=self.mic_audio_recorder.source,
-                language=transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE],
-                phrase_timeout=self.INPUT_MIC_PHRASE_TIMEOUT,
-                max_phrases=self.INPUT_MIC_MAX_PHRASES,
-            )
-            def mic_transcript_to_chatbox():
-                self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
-                message = self.mic_transcriber.get_transcript()
-                if len(message) > 0:
-                    # word filter
-                    if len(self.keyword_processor.extract_keywords(message)) != 0:
-                        print_textbox(self.textbox_message_log, f"Detect WordFilter :{message}", "INFO")
-                        print_textbox(self.textbox_message_system_log, f"Detect WordFilter :{message}", "INFO")
-                        return
+            self.update()
 
-                    # translate
-                    if self.checkbox_translation.get() is False:
-                        voice_message = f"{message}"
-                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                        print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                        print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                        voice_message = f"{message}"
-                    else:
-                        result = self.translator.translate(
-                            translator_name=self.CHOICE_TRANSLATOR,
-                            source_language=self.INPUT_SOURCE_LANG,
-                            target_language=self.INPUT_TARGET_LANG,
-                            message=message
-                        )
-                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-
-                    if self.checkbox_transcription_send.get() is True:
-                        # send OSC message
-                        send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
-                        # update textbox message log
-                        print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
-                        print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
-
-            self.mic_print_transcript = thread_fnc(mic_transcript_to_chatbox)
-            self.mic_print_transcript.daemon = True
-            self.mic_print_transcript.start()
-
-            print_textbox(self.textbox_message_log, "Start voice2chatbox", "INFO")
-            print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
+            th_transcription_send_start = Thread(target=self.transcription_send_start)
+            th_transcription_send_start.daemon = True
+            th_transcription_send_start.start()
         else:
-            if ((self.checkbox_translation.get() is False) and
-                (self.checkbox_transcription_send.get() is False) and
-                (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
-            if isinstance(self.mic_print_transcript, thread_fnc):
-                self.mic_print_transcript.stop()
-            if self.mic_audio_recorder.stop != None:
-                self.mic_audio_recorder.stop()
-                self.mic_audio_recorder.stop = None
+            self.checkbox_transcription_send.configure(state="disabled")
+            self.checkbox_transcription_receive.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+            self.update()
 
-            print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
-            print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
+            th_transcription_send_stop = Thread(target=self.transcription_send_stop)
+            th_transcription_send_stop.daemon = True
+            th_transcription_send_stop.start()
         save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
 
-    def checkbox_transcription_receive_callback(self):
-        self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
-        if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+    def transcription_receive_start(self):
             self.spk_audio_queue = Queue()
             spk_device = [device for device in get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
             self.spk_audio_recorder = SelectedSpeakerRecorder(
@@ -559,18 +579,45 @@ class App(CTk):
             self.spk_print_transcript.start()
             print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
             print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
+            self.checkbox_transcription_send.configure(state="normal")
+            self.checkbox_transcription_receive.configure(state="normal")
+
+    def transcription_receive_stop(self):
+        if isinstance(self.spk_print_transcript, thread_fnc):
+            self.spk_print_transcript.stop()
+        if self.spk_audio_recorder.stop != None:
+            self.spk_audio_recorder.stop()
+            self.spk_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
+        if ((self.checkbox_translation.get() is False) and
+            (self.checkbox_transcription_send.get() is False) and
+            (self.checkbox_transcription_receive.get() is False)):
+            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+        self.checkbox_transcription_send.configure(state="normal")
+        self.checkbox_transcription_receive.configure(state="normal")
+
+    def checkbox_transcription_receive_callback(self):
+        self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
+        if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.checkbox_transcription_send.configure(state="disabled")
+            self.checkbox_transcription_receive.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+            self.update()
+
+            th_transcription_receive_start = Thread(target=self.transcription_receive_start)
+            th_transcription_receive_start.daemon = True
+            th_transcription_receive_start.start()
         else:
-            if ((self.checkbox_translation.get() is False) and
-                (self.checkbox_transcription_send.get() is False) and
-                (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
-            if isinstance(self.spk_print_transcript, thread_fnc):
-                self.spk_print_transcript.stop()
-            if self.spk_audio_recorder.stop != None:
-                self.spk_audio_recorder.stop()
-                self.spk_audio_recorder.stop = None
-            print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
-            print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
+            self.checkbox_transcription_send.configure(state="disabled")
+            self.checkbox_transcription_receive.configure(state="disabled")
+            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+            self.update()
+            th_transcription_receive_stop = Thread(target=self.transcription_receive_stop)
+            th_transcription_receive_stop.daemon = True
+            th_transcription_receive_stop.start()
+
         save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
 
     def checkbox_foreground_callback(self):
