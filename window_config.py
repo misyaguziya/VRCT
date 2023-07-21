@@ -7,6 +7,7 @@ import customtkinter
 from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox, CTkProgressBar
 from flashtext import KeywordProcessor
 
+from threading import Thread
 from utils import save_json, print_textbox, thread_fnc, get_localized_text, get_key_by_value, widget_config_window_label_setter
 from audio_utils import get_input_device_list, get_output_device_list, get_default_output_device
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
@@ -306,21 +307,38 @@ class ToplevelWindowConfig(CTkToplevel):
                 pass
         sleep(0.01)
 
+    def mic_threshold_check_start(self):
+        self.mic_energy_queue = Queue()
+        mic_device = [device for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST] if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
+        self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
+        self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
+        self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
+        self.mic_energy_plot_progressbar.daemon = True
+        self.mic_energy_plot_progressbar.start()
+        self.checkbox_input_mic_threshold_check.configure(state="normal")
+        self.checkbox_input_speaker_threshold_check.configure(state="normal")
+
+    def mic_threshold_check_stop(self):
+        if self.mic_energy_recorder != None:
+            self.mic_energy_recorder.stop()
+        if self.mic_energy_plot_progressbar != None:
+            self.mic_energy_plot_progressbar.stop()
+        self.progressBar_input_mic_energy_threshold.set(0)
+        self.checkbox_input_mic_threshold_check.configure(state="normal")
+        self.checkbox_input_speaker_threshold_check.configure(state="normal")
+
     def checkbox_input_mic_threshold_check_callback(self):
+        self.checkbox_input_mic_threshold_check.configure(state="disabled")
+        self.checkbox_input_speaker_threshold_check.configure(state="disabled")
+        self.update()
         if self.checkbox_input_mic_threshold_check.get():
-            self.mic_energy_queue = Queue()
-            mic_device = [device for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST] if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
-            self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-            self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
-            self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
-            self.mic_energy_plot_progressbar.daemon = True
-            self.mic_energy_plot_progressbar.start()
+            th_mic_threshold_check_start = Thread(target=self.mic_threshold_check_start)
+            th_mic_threshold_check_start.daemon = True
+            th_mic_threshold_check_start.start()
         else:
-            if self.mic_energy_recorder != None:
-                self.mic_energy_recorder.stop()
-            if self.mic_energy_plot_progressbar != None:
-                self.mic_energy_plot_progressbar.stop()
-            self.progressBar_input_mic_energy_threshold.set(0)
+            th_mic_threshold_check_stop = Thread(target=self.mic_threshold_check_stop)
+            th_mic_threshold_check_stop.daemon = True
+            th_mic_threshold_check_stop.start()
 
     def slider_input_mic_energy_threshold_callback(self, value):
         self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(value)
@@ -387,29 +405,47 @@ class ToplevelWindowConfig(CTkToplevel):
             energy = self.speaker_energy_recorder.recorder.listen_energy(source)
             self.speaker_energy_queue.put(energy)
 
-    def checkbox_input_speaker_threshold_check_callback(self):
-        if self.checkbox_input_speaker_threshold_check.get():
-            self.speaker_energy_queue = Queue()
-            speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
+    def speaker_threshold_check_start(self):
+        speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
 
-            if get_default_output_device()["index"] == speaker_device["index"]:
-                self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-                self.speaker_energy_get_progressbar = thread_fnc(self.progressBar_input_speaker_energy_get)
-                self.speaker_energy_get_progressbar.daemon = True
-                self.speaker_energy_get_progressbar.start()
-                self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
-                self.speaker_energy_plot_progressbar.daemon = True
-                self.speaker_energy_plot_progressbar.start()
-            else:
-                print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
-                print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
-                self.checkbox_input_speaker_threshold_check.deselect()
+        if get_default_output_device()["index"] == speaker_device["index"]:
+            self.speaker_energy_queue = Queue()
+            self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
+            self.speaker_energy_get_progressbar = thread_fnc(self.progressBar_input_speaker_energy_get)
+            self.speaker_energy_get_progressbar.daemon = True
+            self.speaker_energy_get_progressbar.start()
+            self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
+            self.speaker_energy_plot_progressbar.daemon = True
+            self.speaker_energy_plot_progressbar.start()
         else:
-            if self.speaker_energy_get_progressbar != None:
-                self.speaker_energy_get_progressbar.stop()
-            if self.speaker_energy_plot_progressbar != None:
-                self.speaker_energy_plot_progressbar.stop()
-            self.progressBar_input_speaker_energy_threshold.set(0)
+            print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+            print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+            self.checkbox_input_speaker_threshold_check.deselect()
+        self.checkbox_input_mic_threshold_check.configure(state="normal")
+        self.checkbox_input_speaker_threshold_check.configure(state="normal")
+
+    def speaker_threshold_check_stop(self):
+        if self.speaker_energy_get_progressbar != None:
+            self.speaker_energy_get_progressbar.stop()
+        if self.speaker_energy_plot_progressbar != None:
+            self.speaker_energy_plot_progressbar.stop()
+
+        self.progressBar_input_speaker_energy_threshold.set(0)
+        self.checkbox_input_mic_threshold_check.configure(state="normal")
+        self.checkbox_input_speaker_threshold_check.configure(state="normal")
+
+    def checkbox_input_speaker_threshold_check_callback(self):
+        self.checkbox_input_mic_threshold_check.configure(state="disabled")
+        self.checkbox_input_speaker_threshold_check.configure(state="disabled")
+        self.update()
+        if self.checkbox_input_speaker_threshold_check.get():
+            th_speaker_threshold_check_start = Thread(target=self.speaker_threshold_check_start)
+            th_speaker_threshold_check_start.daemon = True
+            th_speaker_threshold_check_start.start()
+        else:
+            th_speaker_threshold_check_stop = Thread(target=self.speaker_threshold_check_stop)
+            th_speaker_threshold_check_stop.daemon = True
+            th_speaker_threshold_check_stop.start()
 
     def slider_input_speaker_energy_threshold_callback(self, value):
         self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
