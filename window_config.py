@@ -345,8 +345,10 @@ class ToplevelWindowConfig(CTkToplevel):
 
     def entry_input_mic_word_filters_callback(self, event):
         word_filter = self.entry_input_mic_word_filter.get()
+        word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
+        word_filter = ",".join(word_filter)
         if len(word_filter) > 0:
-            self.parent.INPUT_MIC_WORD_FILTER = self.entry_input_mic_word_filter.get().split(",")
+            self.parent.INPUT_MIC_WORD_FILTER = word_filter.split(",")
         else:
             self.parent.INPUT_MIC_WORD_FILTER = []
         self.parent.keyword_processor = KeywordProcessor()
