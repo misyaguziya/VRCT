@@ -508,22 +508,16 @@ class App(CTk):
         self.checkbox_transcription_receive.configure(state="normal")
 
     def checkbox_transcription_send_callback(self):
+        self.checkbox_transcription_send.configure(state="disabled")
+        self.checkbox_transcription_receive.configure(state="disabled")
+        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+        self.update()
         self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
         if self.ENABLE_TRANSCRIPTION_SEND is True:
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-            self.update()
-
             th_transcription_send_start = Thread(target=self.transcription_send_start)
             th_transcription_send_start.daemon = True
             th_transcription_send_start.start()
         else:
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-            self.update()
-
             th_transcription_send_stop = Thread(target=self.transcription_send_stop)
             th_transcription_send_stop.daemon = True
             th_transcription_send_stop.start()
@@ -599,21 +593,16 @@ class App(CTk):
         self.checkbox_transcription_receive.configure(state="normal")
 
     def checkbox_transcription_receive_callback(self):
+        self.checkbox_transcription_send.configure(state="disabled")
+        self.checkbox_transcription_receive.configure(state="disabled")
+        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+        self.update()
         self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
         if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-            self.update()
-
             th_transcription_receive_start = Thread(target=self.transcription_receive_start)
             th_transcription_receive_start.daemon = True
             th_transcription_receive_start.start()
         else:
-            self.checkbox_transcription_send.configure(state="disabled")
-            self.checkbox_transcription_receive.configure(state="disabled")
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-            self.update()
             th_transcription_receive_stop = Thread(target=self.transcription_receive_stop)
             th_transcription_receive_stop.daemon = True
             th_transcription_receive_stop.start()
