@@ -1,7 +1,7 @@
 import os
-import customtkinter
+from customtkinter import CTkToplevel, CTkTextbox, CTkFont
 
-class ToplevelWindowInformation(customtkinter.CTkToplevel):
+class ToplevelWindowInformation(CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
         self.parent = parent
@@ -13,12 +13,12 @@ class ToplevelWindowInformation(customtkinter.CTkToplevel):
         self.after(200, lambda: self.iconbitmap(os.path.join(os.path.dirname(__file__), "img", "app.ico")))
         self.title("Information")
         # create textbox information
-        self.textbox_information = customtkinter.CTkTextbox(
+        self.textbox_information = CTkTextbox(
             self,
-            font=customtkinter.CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v1.2)
+        textbox_information_message = """VRCT(v1.3)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -32,7 +32,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
         (任意)
         1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
         2. ギアアイコンのボタンでconfigウィンドウを開く
-        3. ParameterタブのDeepL Auth Keyに認証キーを記載し、フロッピーアイコンのボタンを押す
+        3. ParameterタブのDeepL Auth Keyに認証キーを記載
         4. configウィンドウを閉じる
 
     通常使用時
@@ -61,22 +61,29 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
             Appearance Theme: ウィンドウテーマを選択
             UI Scaling: UIサイズを調整
             Font Family: 表示フォントを選択
+            (New!) UI Language: UIの表示言語を選択
         Translationタブ
             Select Translator: 翻訳エンジンの変更
             Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
             Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
         Transcriptionタブ
+            (New!) Input Mic Host: マイクのホストAPIを選択
             Input Mic Device: マイクを選択
             Input Mic Voice Language: 入力する音声の言語
             Input Mic Energy Threshold: 音声取得のしきい値
+            (New!) Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化
             Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
             Input Mic Record Timeout: 音声の区切りの無音時間
+            Input Mic Phase Timeout: 文字起こしする音声時間の上限
             Input Mic Max Phrases: 保留する単語の上限
+            (New!) Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)
             Input Speaker Device: スピーカーを選択
             Input Speaker Voice Language: 受信する音声の言語
             Input Speaker Energy Threshold: 音声取得のしきい値
+            (New!) Check threshold point: (New!)Input Speaker Energy Thresholdのしきい値を視覚化
             Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
             Input Speaker Record Timeout: 音声の区切りの無音時間
+            Input Speaker Phase Timeout: 文字起こしする音声時間の上限
             Input Speaker Max Phrases: 保留する単語の上限
         Parameterタブ
             OSC IP address: 変更不要
@@ -86,6 +93,8 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
                 [message]がメッセージボックスに記入したメッセージに置換される
                 [translation]が翻訳されたメッセージに置換される
                 初期フォーマット:"[message]([translation])"
+        Othersタブ
+            (New!) Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする
 
     設定の初期化
         config.jsonを削除
@@ -118,6 +127,17 @@ https://twitter.com/misya_ai
 - いくつかのバクを修正
 - 翻訳/文字起こし言語の表記を略称からわかりやすい文字に変更
 - 文字起こしの処理の軽量化
+[2023-07-05: v1.2]
+- 文字起こし精度の向上
+[2023-07-21: v1.3]
+- UIの表示言語を日本語/英語を選択できる機能を追加
+- Energy Thresholdの視覚化機能を追加
+- 文字起こしの誤認識対策のため、Word Filterを追加
+- WASAPI以外のHostAPIでもマイクとして使用できるようにHostAPIを選択できる機能を追加
+- メッセージ送信後に書き込んだメッセージを空にするか選択できる機能を追加
+- バグ対策のため、translation/voice2chatbox/speaker2log/foregroundは起動時はOFFになるように変更
+- バグ対策のため、スピーカーについて既定デバイス以外を選択した時にERRORが出るように変更
+- 半角入力時に一部の文字が書き込めないバグを修正
 
 # 注意事項
 再配布とかはやめてね
