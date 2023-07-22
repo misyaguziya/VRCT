@@ -111,8 +111,13 @@ ptyhon VRCT.py
     - **(New!) Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする**
 
 ## Author
-みしゃ(misyaguzi)  
-twitter: https://twitter.com/misya_ai  
-booth: https://misyaguziya.booth.pm/items/4814313  
+みしゃ(misyaguzi)
+- Main開発
+- twitter: https://twitter.com/misya_ai
+- booth: https://misyaguziya.booth.pm/items/4814313
 
-Shiina_12siy  
+しいな(Shiina_12siy)
+- Main開発, 翻訳(英語)
+
+レラ
+- 翻訳(韓国語)
