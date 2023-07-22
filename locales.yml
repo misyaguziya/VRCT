@@ -126,3 +126,66 @@ ja:
   # tab Others
   label_checkbox_auto_clear_chatbox: "送信後はチャットボックスを空にする"
 
+
+ko:
+  # main window
+  checkbox_translation: "번역"
+  checkbox_transcription_send: "마이크 -> 챗박스"
+  checkbox_transcription_receive: "스피커 -> 로그"
+  checkbox_foreground: "항상 위로"
+
+  # main tabview
+  main_tab_title_log: "로그"
+  main_tab_title_send: "전송"
+  main_tab_title_receive: "수신"
+  main_tab_title_system: "시스템"
+
+
+  # configure window
+  # config tabview
+  config_tab_title_ui: "UI"
+  config_tab_title_translation: "번역"
+  config_tab_title_transcription: "음성인식"
+  config_tab_title_parameter: "파라미터"
+  config_tab_title_others: "기타"
+  # tab UI
+  label_transparency: "투명도"
+  label_appearance_theme: "테마"
+  label_ui_scaling: "UI 크기"
+  label_font_family: "폰트"
+  label_ui_language: "UI 언어"
+
+  # tab Translation
+  label_translation_translator: "번역기 선택"
+  label_translation_input_language: "전송시 번역 언어"
+  label_translation_output_language: "수신시 번역 언어"
+
+  # tab Transcription
+  label_input_mic_host: "마이크 호스트"
+  label_input_mic_device: "마이크 장치"
+  label_input_mic_voice_language: "입력 언어"
+  label_input_mic_energy_threshold: "음성 입력 최소 볼륨"
+  checkbox_input_mic_threshold_check: "임계점 확인"
+  label_input_mic_dynamic_energy_threshold: "동적 임계값"
+  label_input_mic_record_timeout: "최대 무음 시간"
+  label_input_mic_phrase_timeout: "최대 인식 시간"
+  label_input_mic_max_phrases: "최대 입력 절(phrases) 수"
+  label_input_mic_word_filter: "단어 필터"
+
+  label_input_speaker_device: "스피커 장치"
+  label_input_speaker_voice_language: "입력 언어"
+  label_input_speaker_energy_threshold: "음성 입력 최소 볼륨"
+  checkbox_input_speaker_threshold_check: "임계점 확인"
+  label_input_speaker_dynamic_energy_threshold: "동적 임계값"
+  label_input_speaker_record_timeout: "최대 무음 시간"
+  label_input_speaker_phrase_timeout: "최대 인식 시간"
+  label_input_speaker_max_phrases: "최대 입력 절(phrases) 수"
+
+  # tab Parameter
+  label_ip_address: "OSC IP 주소"
+  label_port: "OSC 포트"
+  label_authkey: "DeepL 인증키"
+  label_message_format: "전송 형식"
+
+  # tab Others
+  label_checkbox_auto_clear_chatbox: "챗박스 자동 삭제"
