@@ -18,7 +18,7 @@ class ToplevelWindowInformation(CTkToplevel):
             font=CTkFont(family=self.parent.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
-        textbox_information_message = """VRCT(v1.3)
+        textbox_information_message = """VRCT(v1.3.1)
 
 # 概要
 VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツールになります。
@@ -138,6 +138,8 @@ https://twitter.com/misya_ai
 - バグ対策のため、translation/voice2chatbox/speaker2log/foregroundは起動時はOFFになるように変更
 - バグ対策のため、スピーカーについて既定デバイス以外を選択した時にERRORが出るように変更
 - 半角入力時に一部の文字が書き込めないバグを修正
+[2023-07-22: v1.3.1]
+- UIの表示言語選択に韓国語を追加
 
 # 注意事項
 再配布とかはやめてね
