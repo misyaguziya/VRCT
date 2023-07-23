@@ -492,6 +492,11 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
         save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
+    def checkbox_notice_xsoverlay_callback(self):
+        value = self.checkbox_notice_xsoverlay.get()
+        self.parent.ENABLE_NOTICE_XSOVERLAY = value
+        save_json(self.parent.PATH_CONFIG, "ENABLE_NOTICE_XSOVERLAY", self.parent.ENABLE_NOTICE_XSOVERLAY)
+
     def delete_window(self):
         self.checkbox_input_mic_threshold_check.deselect()
         self.checkbox_input_speaker_threshold_check.deselect()
@@ -1381,7 +1386,7 @@ class ToplevelWindowConfig(CTkToplevel):
 
         # tab Others
         ## checkbox auto clear chat box
-        row += 1
+        row = 0
         self.label_checkbox_auto_clear_chatbox = CTkLabel(
             self.tabview_config.tab(config_tab_title_others),
             text=init_lang_text,
@@ -1403,4 +1408,26 @@ class ToplevelWindowConfig(CTkToplevel):
         else:
             self.checkbox_auto_clear_chatbox.deselect()
 
+        # checkbox notice xsoverlay
+        row += 1
+        self.label_checkbox_notice_xsoverlay = CTkLabel(
+            self.tabview_config.tab(config_tab_title_others),
+            text=init_lang_text,
+            fg_color="transparent",
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_checkbox_notice_xsoverlay.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_notice_xsoverlay = CTkCheckBox(
+            self.tabview_config.tab(config_tab_title_others),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_notice_xsoverlay_callback,
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_notice_xsoverlay.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
+        if  self.parent.ENABLE_NOTICE_XSOVERLAY is True:
+            self.checkbox_notice_xsoverlay.select()
+        else:
+            self.checkbox_notice_xsoverlay.deselect()
         widget_config_window_label_setter(self, language_yaml_data)
