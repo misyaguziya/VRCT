@@ -18,6 +18,7 @@ from audio_utils import get_input_device_list, get_output_device_list, get_defau
 from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_transcriber import AudioTranscriber
 from translation import Translator
+from notification import notification_xsoverlay_for_vrct
 
 class App(CTk):
     def __init__(self, *args, **kwargs):
@@ -65,6 +66,7 @@ class App(CTk):
         self.INPUT_SPEAKER_RECORD_TIMEOUT = 3
         self.INPUT_SPEAKER_PHRASE_TIMEOUT = 3
         self.INPUT_SPEAKER_MAX_PHRASES = 10
+
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
         self.OSC_PORT = 9000
@@ -77,6 +79,7 @@ class App(CTk):
         self.MESSAGE_FORMAT = "[message]([translation])"
         # Others
         self.ENABLE_AUTO_CLEAR_CHATBOX = False
+        self.ENABLE_NOTICE_XSOVERLAY =False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -209,6 +212,9 @@ class App(CTk):
             if "ENABLE_AUTO_CLEAR_CHATBOX" in config.keys():
                 if type(config["ENABLE_AUTO_CLEAR_CHATBOX"]) is bool:
                     self.ENABLE_AUTO_CLEAR_CHATBOX = config["ENABLE_AUTO_CLEAR_CHATBOX"]
+            if "ENABLE_NOTICE_XSOVERLAY" in config.keys():
+                if type(config["ENABLE_NOTICE_XSOVERLAY"]) is bool:
+                    self.ENABLE_NOTICE_XSOVERLAY = config["ENABLE_NOTICE_XSOVERLAY"]
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
@@ -247,6 +253,7 @@ class App(CTk):
                 "AUTH_KEYS": self.AUTH_KEYS,
                 "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
                 "ENABLE_AUTO_CLEAR_CHATBOX": self.ENABLE_AUTO_CLEAR_CHATBOX,
+                "ENABLE_NOTICE_XSOVERLAY": self.ENABLE_NOTICE_XSOVERLAY,
             }
             json_dump(config, fp, indent=4)
 
@@ -567,6 +574,8 @@ class App(CTk):
                         # update textbox message receive log
                         print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
                         print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+                        if self.ENABLE_NOTICE_XSOVERLAY is True:
+                            notification_xsoverlay_for_vrct(content=f"{voice_message}")
 
             self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
             self.spk_print_transcript.daemon = True
@@ -654,7 +663,7 @@ class App(CTk):
             print_textbox(self.textbox_message_send_log, f"{chat_message}", "SEND")
 
             # delete message in entry message box
-            if self.ENABLE_AUTO_CLEAR_CHATBOX == True:
+            if self.ENABLE_AUTO_CLEAR_CHATBOX is True:
                 self.entry_message_box.delete(0, customtkinter.END)
 
     BREAK_KEYSYM_LIST = [
