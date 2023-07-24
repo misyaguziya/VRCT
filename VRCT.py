@@ -10,7 +10,7 @@ from flashtext import KeywordProcessor
 
 from threading import Thread
 from utils import save_json, print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
-from osc_tools import send_typing, send_message
+from osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
 from window_config import ToplevelWindowConfig
 from window_information import ToplevelWindowInformation
 from languages import transcription_lang, translators, translation_lang, selectable_languages
@@ -77,6 +77,7 @@ class App(CTk):
         self.MESSAGE_FORMAT = "[message]([translation])"
         # Others
         self.ENABLE_AUTO_CLEAR_CHATBOX = False
+        self.ENABLE_OSC = False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -403,6 +404,14 @@ class App(CTk):
 
         self.config_window = ToplevelWindowConfig(self)
 
+        # start receive osc
+        th_receive_osc_parameters = Thread(target=receive_osc_parameters, args=(self.check_osc_receive,))
+        th_receive_osc_parameters.daemon = True
+        th_receive_osc_parameters.start()
+
+        # check osc started
+        send_test_action()
+
     def button_config_callback(self):
         self.checkbox_translation.configure(state="disabled")
         self.checkbox_transcription_send.configure(state="disabled")
@@ -477,8 +486,12 @@ class App(CTk):
                     voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
                 if self.checkbox_transcription_send.get() is True:
-                    # send OSC message
-                    send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    if self.ENABLE_OSC is True:
+                        # send OSC message
+                        send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    else:
+                        print_textbox(self.textbox_message_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
+                        print_textbox(self.textbox_message_system_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
                     # update textbox message log
                     print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
                     print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
@@ -647,7 +660,11 @@ class App(CTk):
                 chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
-            send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            if self.ENABLE_OSC is True:
+                send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            else:
+                print_textbox(self.textbox_message_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
+                print_textbox(self.textbox_message_system_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
 
             # update textbox message log
             print_textbox(self.textbox_message_log,  f"{chat_message}", "SEND")
@@ -746,6 +763,11 @@ class App(CTk):
         self.textbox_message_system_log.configure(state='disabled')
 
         widget_main_window_label_setter(self, language_yaml_data)
+
+    def check_osc_receive(self, address, osc_arguments):
+        if self.ENABLE_OSC is False:
+            self.ENABLE_OSC = True
+        # print(address, osc_arguments)
 
 if __name__ == "__main__":
     try:
