@@ -60,6 +60,7 @@ en:
 
   # tab Others
   label_checkbox_auto_clear_chatbox: "Auto clear chat box"
+  label_checkbox_notice_xsoverlay: "Notification XSOverlay"
 
 
 ja:
@@ -125,6 +126,7 @@ ja:
 
   # tab Others
   label_checkbox_auto_clear_chatbox: "送信後はチャットボックスを空にする"
+  label_checkbox_notice_xsoverlay: "XSOverlayの通知機能を有効"
 
 
 ko:
