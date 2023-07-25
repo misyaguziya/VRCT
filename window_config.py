@@ -506,8 +506,17 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
+        self.parent.checkbox_foreground.configure(state="normal")
+        self.parent.tabview_logs.configure(state="normal")
+        self.parent.textbox_message_log.configure(state="normal")
+        self.parent.textbox_message_send_log.configure(state="normal")
+        self.parent.textbox_message_receive_log.configure(state="normal")
+        self.parent.textbox_message_system_log.configure(state="normal")
+        self.parent.entry_message_box.configure(state="normal")
         self.parent.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
-        self.parent.config_window.withdraw()
+        self.parent.button_information.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+        self.withdraw()
+        self.grab_release()
 
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
