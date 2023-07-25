@@ -20,8 +20,8 @@ import json
 import base64
 
 def notification_xsoverlay(
-    endpoint:tuple=("127.0.0.1", 42069), messageType:int=0, index:int=0, timeout:float=1,
-    height:float=120.0, opacity:float=1.0, volume:float=0.5, audioPath:str="default",
+    endpoint:tuple=("127.0.0.1", 42069), messageType:int=1, index:int=0, timeout:float=2,
+    height:float=120.0, opacity:float=1.0, volume:float=0.0, audioPath:str="",
     title:str="", content:str="", useBase64Icon:bool=False, icon:str="default", sourceApp:str=""
 ) -> int:
 
@@ -54,8 +54,7 @@ def notification_xsoverlay(
         "sourceApp": sourceApp,
     }
     msg_str = json.dumps(data_msg)
-    msg_byte = msg_str.encode("utf-8")
-    response = sock.sendto(msg_byte, endpoint)
+    response = sock.sendto(msg_str.encode("utf-8"), endpoint)
     sock.close()
     return response
 
@@ -64,7 +63,7 @@ def notification_xsoverlay_for_vrct(content:str="") -> int:
         title="VRCT",
         content=content,
         useBase64Icon=True,
-        icon="./img/app.ico",
+        icon="./img/xsoverlay.png",
         sourceApp="VRCT"
     )
     return response
