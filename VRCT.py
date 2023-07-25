@@ -423,11 +423,20 @@ class App(CTk):
         self.checkbox_translation.configure(state="disabled")
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
+        self.checkbox_foreground.configure(state="disabled")
+        self.tabview_logs.configure(state="disabled")
+        self.textbox_message_log.configure(state="disabled")
+        self.textbox_message_send_log.configure(state="disabled")
+        self.textbox_message_receive_log.configure(state="disabled")
+        self.textbox_message_system_log.configure(state="disabled")
+        self.entry_message_box.configure(state="disabled")
         self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+        self.button_information.configure(state="disabled", fg_color=["gray92", "gray14"])
 
         self.config_window.deiconify()
         self.config_window.focus_set()
         self.config_window.focus()
+        self.config_window.grab_set()
 
     def button_information_callback(self):
         if self.information_window is None or not self.information_window.winfo_exists():
