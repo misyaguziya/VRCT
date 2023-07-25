@@ -95,6 +95,7 @@ translation_lang = {}
 translation_lang["DeepL(web)"] = {
     "Japanese":"JA",
     "English":"EN",
+    "Korean":"KO",
     "Bulgarian":"BG",
     "Chinese":"ZH",
     "Czech":"CS",
@@ -116,7 +117,11 @@ translation_lang["DeepL(web)"] = {
     "Slovak":"SK",
     "Slovenian":"SL",
     "Spanish":"ES",
-    "Swedish":"SV"
+    "Swedish":"SV",
+    "Indonesian":"ID",
+    "Ukrainian":"UK",
+    "Turkish":"TR",
+    "Norwegian":"NB",
 }
 translation_lang["DeepL(auth)"] = {
     "Japanese":"ja",
