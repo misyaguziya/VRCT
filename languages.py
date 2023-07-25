@@ -25,7 +25,7 @@ transcription_lang = {
     "Chinese, Mandarin (Simplified, Hong Kong)":"cmn-Hans-HK",
     "Chinese, Mandarin (Traditional, Taiwan)":"cmn-Hant-TW",
     "Chinese, Cantonese (Traditional Hong Kong)":"yue-Hant-HK",
-    "Croatian (Croatia)":"hr_HR",
+    "Croatian (Croatia)":"hr-HR",
     "Czech (Czech Republic)":"cs-CZ",
     "Danish (Denmark)":"da-DK",
     "English (Australia)":"en-AU",
