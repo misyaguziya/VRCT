@@ -1,3 +1,4 @@
+from time import sleep
 from os import path as os_path
 from json import load as json_load
 from json import dump as json_dump
@@ -33,8 +34,8 @@ class App(CTk):
 
         ## main window
         self.ENABLE_TRANSLATION = False
-        self.ENABLE_TRANSCRIPTION_SEND = False
-        self.ENABLE_TRANSCRIPTION_RECEIVE = False
+        # self.ENABLE_TRANSCRIPTION_SEND = False
+        # self.ENABLE_TRANSCRIPTION_RECEIVE = False
         self.ENABLE_FOREGROUND = False
         ## UI
         self.TRANSPARENCY = 100
@@ -420,6 +421,8 @@ class App(CTk):
         send_test_action()
 
     def button_config_callback(self):
+        self.foreground_stop()
+        self.transcription_stop()
         self.checkbox_translation.configure(state="disabled")
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
@@ -432,7 +435,6 @@ class App(CTk):
         self.entry_message_box.configure(state="disabled")
         self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
         self.button_information.configure(state="disabled", fg_color=["gray92", "gray14"])
-
         self.config_window.deiconify()
         self.config_window.focus_set()
         self.config_window.focus()
@@ -445,18 +447,13 @@ class App(CTk):
 
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
-        if self.ENABLE_TRANSLATION:
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+        if self.ENABLE_TRANSLATION is True:
             print_textbox(self.textbox_message_log, "Start translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Start translation", "INFO")
         else:
-            if ((self.checkbox_translation.get() is False) and
-                (self.checkbox_transcription_send.get() is False) and
-                (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             print_textbox(self.textbox_message_log, "Stop translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
+
 
     def transcription_send_start(self):
         self.mic_audio_queue = Queue()
@@ -529,20 +526,24 @@ class App(CTk):
 
         print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
         print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
-        if ((self.checkbox_translation.get() is False) and
-            (self.checkbox_transcription_send.get() is False) and
-            (self.checkbox_transcription_receive.get() is False)):
-            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+
+    def transcription_send_stop_for_config(self):
+        if isinstance(self.mic_print_transcript, thread_fnc):
+            self.mic_print_transcript.stop()
+        if self.mic_audio_recorder.stop != None:
+            self.mic_audio_recorder.stop()
+            self.mic_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
 
     def checkbox_transcription_send_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
-        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
         self.update()
-        self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
-        if self.ENABLE_TRANSCRIPTION_SEND is True:
+        if self.checkbox_transcription_send.get() is True:
             th_transcription_send_start = Thread(target=self.transcription_send_start)
             th_transcription_send_start.daemon = True
             th_transcription_send_start.start()
@@ -550,7 +551,6 @@ class App(CTk):
             th_transcription_send_stop = Thread(target=self.transcription_send_stop)
             th_transcription_send_stop.daemon = True
             th_transcription_send_stop.start()
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
 
     def transcription_receive_start(self):
             self.spk_audio_queue = Queue()
@@ -578,7 +578,7 @@ class App(CTk):
                     if self.checkbox_translation.get() is False:
                         voice_message = f"{message}"
                     elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                        print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
+                        print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
                         print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
                         voice_message = f"{message}"
                     else:
@@ -616,20 +616,24 @@ class App(CTk):
 
         print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
         print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
-        if ((self.checkbox_translation.get() is False) and
-            (self.checkbox_transcription_send.get() is False) and
-            (self.checkbox_transcription_receive.get() is False)):
-            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+
+    def transcription_receive_stop_for_config(self):
+        if isinstance(self.spk_print_transcript, thread_fnc):
+            self.spk_print_transcript.stop()
+        if self.spk_audio_recorder.stop != None:
+            self.spk_audio_recorder.stop()
+            self.spk_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
 
     def checkbox_transcription_receive_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
-        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
         self.update()
-        self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
-        if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        if self.checkbox_transcription_receive.get() is True:
             th_transcription_receive_start = Thread(target=self.transcription_receive_start)
             th_transcription_receive_start.daemon = True
             th_transcription_receive_start.start()
@@ -638,7 +642,26 @@ class App(CTk):
             th_transcription_receive_stop.daemon = True
             th_transcription_receive_stop.start()
 
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
+    def transcription_start(self):
+        if self.checkbox_transcription_send.get() is True:
+            th_transcription_send_start = Thread(target=self.transcription_send_start)
+            th_transcription_send_start.daemon = True
+            th_transcription_send_start.start()
+            sleep(2)
+        if self.checkbox_transcription_receive.get() is True:
+            th_transcription_receive_start = Thread(target=self.transcription_receive_start)
+            th_transcription_receive_start.daemon = True
+            th_transcription_receive_start.start()
+
+    def transcription_stop(self):
+        if self.checkbox_transcription_send.get() is True:
+            th_transcription_send_stop = Thread(target=self.transcription_send_stop_for_config)
+            th_transcription_send_stop.daemon = True
+            th_transcription_send_stop.start()
+        if self.checkbox_transcription_receive.get() is True:
+            th_transcription_receive_stop = Thread(target=self.transcription_receive_stop_for_config)
+            th_transcription_receive_stop.daemon = True
+            th_transcription_receive_stop.start()
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -650,7 +673,19 @@ class App(CTk):
             self.attributes("-topmost", False)
             print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
-        save_json(self.PATH_CONFIG, "ENABLE_FOREGROUND", self.ENABLE_FOREGROUND)
+
+    def foreground_start(self):
+        self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
+        if self.ENABLE_FOREGROUND:
+            self.attributes("-topmost", True)
+            print_textbox(self.textbox_message_log,  "Start foreground", "INFO")
+            print_textbox(self.textbox_message_system_log, "Start foreground", "INFO")
+
+    def foreground_stop(self):
+        self.ENABLE_FOREGROUND = False
+        self.attributes("-topmost", False)
+        print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
 
     def entry_message_box_press_key_enter(self, event):
         # send OSC typing
