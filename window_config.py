@@ -212,33 +212,33 @@ class ToplevelWindowConfig(CTkToplevel):
             print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
             self.optionmenu_translation_input_source_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[0]))
+                values=list(translation_lang[choice]["source"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["source"].keys())[0]))
             self.optionmenu_translation_input_target_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[1]))
+                values=list(translation_lang[choice]["target"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["target"].keys())[1]))
             self.optionmenu_translation_output_source_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[1]))
+                values=list(translation_lang[choice]["source"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["source"].keys())[1]))
             self.optionmenu_translation_output_target_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[0]))
+                values=list(translation_lang[choice]["target"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["target"].keys())[0]))
 
             if SCROLLABLE_DROPDOWN:
                 self.scrollableDropdown_translation_input_source_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["source"].keys()))
                 self.scrollableDropdown_translation_input_target_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["target"].keys()))
                 self.scrollableDropdown_translation_output_source_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["source"].keys()))
                 self.scrollableDropdown_translation_output_target_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["target"].keys()))
 
             self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice].keys())[0]
-            self.parent.INPUT_TARGET_LANG = list(translation_lang[choice].keys())[1]
-            self.parent.OUTPUT_SOURCE_LANG = list(translation_lang[choice].keys())[1]
-            self.parent.OUTPUT_TARGET_LANG = list(translation_lang[choice].keys())[0]
+            self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[0]
+            self.parent.INPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[1]
+            self.parent.OUTPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[1]
+            self.parent.OUTPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[0]
             save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
             save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
             save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
@@ -757,7 +757,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
             variable=StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -768,7 +768,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_source_language_callback,
@@ -792,7 +792,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
             variable=StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -803,7 +803,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_target_language_callback,
@@ -828,7 +828,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
             variable=StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -839,7 +839,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_source_language_callback,
@@ -863,7 +863,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
             variable=StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -874,7 +874,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_target_language_callback,

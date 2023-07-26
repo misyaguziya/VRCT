@@ -44,10 +44,10 @@ class App(CTk):
         self.UI_LANGUAGE = "en"
         ## Translation
         self.CHOICE_TRANSLATOR = translators[0]
-        self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
-        self.INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
-        self.OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
-        self.OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
+        self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[0]
+        self.INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[1]
+        self.OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[1]
+        self.OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[0]
         ## Transcription Send
         self.CHOICE_MIC_HOST = get_default_input_device()["host"]["name"]
         self.CHOICE_MIC_DEVICE = get_default_input_device()["device"]["name"]
@@ -127,16 +127,16 @@ class App(CTk):
                 if config["CHOICE_TRANSLATOR"] in list(self.translator.translator_status.keys()):
                     self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
             if "INPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
                     self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
             if "INPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["INPUT_TARGET_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
                     self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
             if "OUTPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["OUTPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
                     self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
             if "OUTPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["OUTPUT_TARGET_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
                     self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription

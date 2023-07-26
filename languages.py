@@ -1,5 +1,5 @@
 transcription_lang = {
-    "Japanese Japan":"ja-JP",
+    "Japanese (Japan)":"ja-JP",
     "English (United States)":"en-US",
     "English (United Kingdom)":"en-GB",
     "Afrikaans (South Africa)":"af-ZA",
@@ -92,7 +92,7 @@ transcription_lang = {
 
 translators = ["DeepL(web)", "DeepL(auth)", "Google(web)", "Bing(web)"]
 translation_lang = {}
-translation_lang["DeepL(web)"] = {
+dict_deepl_web_languages = {
     "Japanese":"JA",
     "English":"EN",
     "Korean":"KO",
@@ -123,7 +123,43 @@ translation_lang["DeepL(web)"] = {
     "Turkish":"TR",
     "Norwegian":"NB",
 }
-translation_lang["DeepL(auth)"] = {
+translation_lang["DeepL(web)"] = {
+    "source":dict_deepl_web_languages,
+    "target":dict_deepl_web_languages,
+}
+
+dict_deepl_auth_source_languages = {
+    "Japanese":"ja",
+    "English":"en",
+    "Bulgarian":"bg",
+    "Czech":"cs",
+    "Danish":"da",
+    "German":"de",
+    "Greek":"el",
+    "Spanish":"es",
+    "Estonian":"et",
+    "Finnish":"fi",
+    "French":"fr",
+    "Hungarian":"hu",
+    "Indonesian":"id",
+    "Italian":"it",
+    "Korean":"ko",
+    "Lithuanian":"lt",
+    "Latvian":"lv",
+    "Norwegian":"nb",
+    "Dutch":"nl",
+    "Polish":"pl",
+    "Portuguese":"pt",
+    "Romanian":"ro",
+    "Russian":"ru",
+    "Slovak":"sk",
+    "Slovenian":"sl",
+    "Swedish":"sv",
+    "Turkish":"tr",
+    "Ukrainian":"uk",
+    "Chinese":"zh"
+}
+dict_deepl_auth_target_languages = {
     "Japanese":"ja",
     "English American":"en-US",
     "English British":"en-GB",
@@ -146,7 +182,6 @@ translation_lang["DeepL(auth)"] = {
     "Norwegian":"nb",
     "Dutch":"nl",
     "Polish":"pl",
-    "Portuguese":"pt",
     "Portuguese Brazilian":"pt-BR",
     "Portuguese European":"pt-PT",
     "Romanian":"ro",
@@ -158,7 +193,12 @@ translation_lang["DeepL(auth)"] = {
     "Ukrainian":"uk",
     "Chinese":"zh"
 }
-translation_lang["Google(web)"] = {
+translation_lang["DeepL(auth)"] = {
+    "source": dict_deepl_auth_source_languages,
+    "target": dict_deepl_auth_target_languages,
+}
+
+dict_google_web_languages = {
     "Japanese":"ja",
     "English":"en",
     "Chinese":"zh",
@@ -222,7 +262,12 @@ translation_lang["Google(web)"] = {
     "Basque":"eu",
     "Irish":"ga"
 }
-translation_lang["Bing(web)"] = {
+translation_lang["Google(web)"] = {
+    "source":dict_google_web_languages,
+    "target":dict_google_web_languages,
+}
+
+dict_bing_web_languages = {
     "Japanese":"ja",
     "English":"en",
     "Chinese":"zh",
@@ -283,6 +328,10 @@ translation_lang["Bing(web)"] = {
     "Telugu":"te",
     "Punjabi":"pa",
     "Irish":"ga"
+}
+translation_lang["Bing(web)"] = {
+    "source":dict_bing_web_languages,
+    "target":dict_bing_web_languages,
 }
 
 selectable_languages = {
