@@ -502,7 +502,8 @@ class ToplevelWindowConfig(CTkToplevel):
         self.checkbox_input_speaker_threshold_check.deselect()
         self.checkbox_input_mic_threshold_check_callback()
         self.checkbox_input_speaker_threshold_check_callback()
-
+        self.parent.transcription_start()
+        self.parent.foreground_start()
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
