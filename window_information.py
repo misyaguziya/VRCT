@@ -4,6 +4,7 @@ from customtkinter import CTkToplevel, CTkTextbox, CTkFont
 class ToplevelWindowInformation(CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
+        self.withdraw()
         self.parent = parent
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -147,3 +148,7 @@ https://twitter.com/misya_ai
 
         self.textbox_information.insert("end", textbox_information_message)
         self.textbox_information.configure(state='disabled')
+        self.protocol("WM_DELETE_WINDOW", self.delete_window)
+
+    def delete_window(self):
+        self.withdraw()
