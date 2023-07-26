@@ -411,6 +411,7 @@ class App(CTk):
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
         self.config_window = ToplevelWindowConfig(self)
+        self.information_window = ToplevelWindowInformation(self)
 
         # start receive osc
         th_receive_osc_parameters = Thread(target=receive_osc_parameters, args=(self.check_osc_receive,))
@@ -441,8 +442,8 @@ class App(CTk):
         self.config_window.grab_set()
 
     def button_information_callback(self):
-        if self.information_window is None or not self.information_window.winfo_exists():
-            self.information_window = ToplevelWindowInformation(self)
+        self.information_window.deiconify()
+        self.information_window.focus_set()
         self.information_window.focus()
 
     def checkbox_translation_callback(self):
@@ -453,7 +454,6 @@ class App(CTk):
         else:
             print_textbox(self.textbox_message_log, "Stop translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
-
 
     def transcription_send_start(self):
         self.mic_audio_queue = Queue()
@@ -682,10 +682,11 @@ class App(CTk):
             print_textbox(self.textbox_message_system_log, "Start foreground", "INFO")
 
     def foreground_stop(self):
-        self.ENABLE_FOREGROUND = False
-        self.attributes("-topmost", False)
-        print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
-        print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
+        if self.ENABLE_FOREGROUND:
+            self.attributes("-topmost", False)
+            print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
+            print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
+            self.ENABLE_FOREGROUND = False
 
     def entry_message_box_press_key_enter(self, event):
         # send OSC typing
