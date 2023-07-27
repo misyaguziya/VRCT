@@ -516,6 +516,7 @@ class App(CTk):
         print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_send_stop(self):
         if isinstance(self.mic_print_transcript, thread_fnc):
@@ -528,6 +529,7 @@ class App(CTk):
         print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_send_stop_for_config(self):
         if isinstance(self.mic_print_transcript, thread_fnc):
@@ -542,7 +544,7 @@ class App(CTk):
     def checkbox_transcription_send_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
-        self.update()
+        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
         if self.checkbox_transcription_send.get() is True:
             th_transcription_send_start = Thread(target=self.transcription_send_start)
             th_transcription_send_start.daemon = True
@@ -618,6 +620,7 @@ class App(CTk):
         print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_receive_stop_for_config(self):
         if isinstance(self.spk_print_transcript, thread_fnc):
@@ -632,7 +635,7 @@ class App(CTk):
     def checkbox_transcription_receive_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
-        self.update()
+        self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
         if self.checkbox_transcription_receive.get() is True:
             th_transcription_receive_start = Thread(target=self.transcription_receive_start)
             th_transcription_receive_start.daemon = True
