@@ -331,7 +331,6 @@ class App(CTk):
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "info-icon-white.png")))
         )
         self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(5, 5), sticky="wse")
-        self.information_window = None
 
         # add button config
         self.button_config = CTkButton(
@@ -555,59 +554,60 @@ class App(CTk):
             th_transcription_send_stop.start()
 
     def transcription_receive_start(self):
-            self.spk_audio_queue = Queue()
-            spk_device = [device for device in get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
-            self.spk_audio_recorder = SelectedSpeakerRecorder(
-                spk_device,
-                self.INPUT_SPEAKER_ENERGY_THRESHOLD,
-                self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
-                self.INPUT_SPEAKER_RECORD_TIMEOUT,
-            )
-            self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
-            self.spk_transcriber = AudioTranscriber(
-                speaker=True,
-                source=self.spk_audio_recorder.source,
-                language=transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
-                phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
-                max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
-            )
+        self.spk_audio_queue = Queue()
+        spk_device = [device for device in get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
+        self.spk_audio_recorder = SelectedSpeakerRecorder(
+            spk_device,
+            self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+            self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+            self.INPUT_SPEAKER_RECORD_TIMEOUT,
+        )
+        self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
+        self.spk_transcriber = AudioTranscriber(
+            speaker=True,
+            source=self.spk_audio_recorder.source,
+            language=transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
+            phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
+            max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
+        )
 
-            def spk_transcript_to_textbox():
-                self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
-                message = self.spk_transcriber.get_transcript()
-                if len(message) > 0:
-                    # translate
-                    if self.checkbox_translation.get() is False:
-                        voice_message = f"{message}"
-                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                        print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
-                        print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                        voice_message = f"{message}"
-                    else:
-                        result = self.translator.translate(
-                            translator_name=self.CHOICE_TRANSLATOR,
-                            source_language=self.OUTPUT_SOURCE_LANG,
-                            target_language=self.OUTPUT_TARGET_LANG,
-                            message=message
-                        )
-                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-                    # send OSC message
-                    # send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+        def spk_transcript_to_textbox():
+            self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
+            message = self.spk_transcriber.get_transcript()
+            if len(message) > 0:
+                # translate
+                if self.checkbox_translation.get() is False:
+                    voice_message = f"{message}"
+                elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                    print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
+                    print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                    voice_message = f"{message}"
+                else:
+                    result = self.translator.translate(
+                        translator_name=self.CHOICE_TRANSLATOR,
+                        source_language=self.OUTPUT_SOURCE_LANG,
+                        target_language=self.OUTPUT_TARGET_LANG,
+                        message=message
+                    )
+                    voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+                # send OSC message
+                # send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
-                    if self.checkbox_transcription_receive.get() is True:
-                        # update textbox message receive log
-                        print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-                        print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
-                        if self.ENABLE_NOTICE_XSOVERLAY is True:
-                            notification_xsoverlay_for_vrct(content=f"{voice_message}")
+                if self.checkbox_transcription_receive.get() is True:
+                    # update textbox message receive log
+                    print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                    print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+                    if self.ENABLE_NOTICE_XSOVERLAY is True:
+                        notification_xsoverlay_for_vrct(content=f"{voice_message}")
 
-            self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
-            self.spk_print_transcript.daemon = True
-            self.spk_print_transcript.start()
-            print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
-            print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
-            self.checkbox_transcription_send.configure(state="normal")
-            self.checkbox_transcription_receive.configure(state="normal")
+        self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
+        self.spk_print_transcript.daemon = True
+        self.spk_print_transcript.start()
+        print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
+        print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
+        self.checkbox_transcription_send.configure(state="normal")
+        self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_receive_stop(self):
         if isinstance(self.spk_print_transcript, thread_fnc):
