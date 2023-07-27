@@ -325,8 +325,8 @@ class App(CTk):
         # add button information
         self.button_information = CTkButton(
             self.sidebar_frame,
-            text="",
-            width=25,
+            text=None,
+            width=36,
             command=self.button_information_callback,
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "info-icon-white.png")))
         )
@@ -336,8 +336,8 @@ class App(CTk):
         # add button config
         self.button_config = CTkButton(
             self.sidebar_frame,
-            text="",
-            width=25,
+            text=None,
+            width=36,
             command=self.button_config_callback,
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "config-icon-white.png")))
         )
