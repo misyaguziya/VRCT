@@ -212,33 +212,33 @@ class ToplevelWindowConfig(CTkToplevel):
             print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
             self.optionmenu_translation_input_source_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[0]))
+                values=list(translation_lang[choice]["source"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["source"].keys())[0]))
             self.optionmenu_translation_input_target_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[1]))
+                values=list(translation_lang[choice]["target"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["target"].keys())[1]))
             self.optionmenu_translation_output_source_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[1]))
+                values=list(translation_lang[choice]["source"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["source"].keys())[1]))
             self.optionmenu_translation_output_target_language.configure(
-                values=list(translation_lang[choice].keys()),
-                variable=StringVar(value=list(translation_lang[choice].keys())[0]))
+                values=list(translation_lang[choice]["target"].keys()),
+                variable=StringVar(value=list(translation_lang[choice]["target"].keys())[0]))
 
             if SCROLLABLE_DROPDOWN:
                 self.scrollableDropdown_translation_input_source_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["source"].keys()))
                 self.scrollableDropdown_translation_input_target_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["target"].keys()))
                 self.scrollableDropdown_translation_output_source_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["source"].keys()))
                 self.scrollableDropdown_translation_output_target_language.configure(
-                values=list(translation_lang[choice].keys()))
+                values=list(translation_lang[choice]["target"].keys()))
 
             self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice].keys())[0]
-            self.parent.INPUT_TARGET_LANG = list(translation_lang[choice].keys())[1]
-            self.parent.OUTPUT_SOURCE_LANG = list(translation_lang[choice].keys())[1]
-            self.parent.OUTPUT_TARGET_LANG = list(translation_lang[choice].keys())[0]
+            self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[0]
+            self.parent.INPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[1]
+            self.parent.OUTPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[1]
+            self.parent.OUTPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[0]
             save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
             save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
             save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
@@ -492,17 +492,32 @@ class ToplevelWindowConfig(CTkToplevel):
         self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
         save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
 
+    def checkbox_notice_xsoverlay_callback(self):
+        value = self.checkbox_notice_xsoverlay.get()
+        self.parent.ENABLE_NOTICE_XSOVERLAY = value
+        save_json(self.parent.PATH_CONFIG, "ENABLE_NOTICE_XSOVERLAY", self.parent.ENABLE_NOTICE_XSOVERLAY)
+
     def delete_window(self):
         self.checkbox_input_mic_threshold_check.deselect()
         self.checkbox_input_speaker_threshold_check.deselect()
         self.checkbox_input_mic_threshold_check_callback()
         self.checkbox_input_speaker_threshold_check_callback()
-
+        self.parent.transcription_start()
+        self.parent.foreground_start()
         self.parent.checkbox_translation.configure(state="normal")
         self.parent.checkbox_transcription_send.configure(state="normal")
         self.parent.checkbox_transcription_receive.configure(state="normal")
+        self.parent.checkbox_foreground.configure(state="normal")
+        self.parent.tabview_logs.configure(state="normal")
+        self.parent.textbox_message_log.configure(state="normal")
+        self.parent.textbox_message_send_log.configure(state="normal")
+        self.parent.textbox_message_receive_log.configure(state="normal")
+        self.parent.textbox_message_system_log.configure(state="normal")
+        self.parent.entry_message_box.configure(state="normal")
         self.parent.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
-        self.parent.config_window.withdraw()
+        self.parent.button_information.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+        self.withdraw()
+        self.grab_release()
 
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
@@ -752,7 +767,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
             variable=StringVar(value=self.parent.INPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -763,7 +778,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_source_language_callback,
@@ -787,7 +802,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
             variable=StringVar(value=self.parent.INPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -798,7 +813,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_target_language_callback,
@@ -823,7 +838,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
             variable=StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -834,7 +849,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_source_language_callback,
@@ -858,7 +873,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
             variable=StringVar(value=self.parent.OUTPUT_TARGET_LANG),
             font=CTkFont(family=self.parent.FONT_FAMILY),
             dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
@@ -869,7 +884,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR].keys()),
+                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_target_language_callback,
@@ -1381,7 +1396,7 @@ class ToplevelWindowConfig(CTkToplevel):
 
         # tab Others
         ## checkbox auto clear chat box
-        row += 1
+        row = 0
         self.label_checkbox_auto_clear_chatbox = CTkLabel(
             self.tabview_config.tab(config_tab_title_others),
             text=init_lang_text,
@@ -1403,4 +1418,26 @@ class ToplevelWindowConfig(CTkToplevel):
         else:
             self.checkbox_auto_clear_chatbox.deselect()
 
+        # checkbox notice xsoverlay
+        row += 1
+        self.label_checkbox_notice_xsoverlay = CTkLabel(
+            self.tabview_config.tab(config_tab_title_others),
+            text=init_lang_text,
+            fg_color="transparent",
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.label_checkbox_notice_xsoverlay.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
+        self.checkbox_notice_xsoverlay = CTkCheckBox(
+            self.tabview_config.tab(config_tab_title_others),
+            text="",
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_notice_xsoverlay_callback,
+            font=CTkFont(family=self.parent.FONT_FAMILY)
+        )
+        self.checkbox_notice_xsoverlay.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
+        if  self.parent.ENABLE_NOTICE_XSOVERLAY is True:
+            self.checkbox_notice_xsoverlay.select()
+        else:
+            self.checkbox_notice_xsoverlay.deselect()
         widget_config_window_label_setter(self, language_yaml_data)

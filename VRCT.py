@@ -1,3 +1,4 @@
+from time import sleep
 from os import path as os_path
 from json import load as json_load
 from json import dump as json_dump
@@ -10,7 +11,7 @@ from flashtext import KeywordProcessor
 
 from threading import Thread
 from utils import save_json, print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
-from osc_tools import send_typing, send_message
+from osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
 from window_config import ToplevelWindowConfig
 from window_information import ToplevelWindowInformation
 from languages import transcription_lang, translators, translation_lang, selectable_languages
@@ -18,6 +19,7 @@ from audio_utils import get_input_device_list, get_output_device_list, get_defau
 from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_transcriber import AudioTranscriber
 from translation import Translator
+from notification import notification_xsoverlay_for_vrct
 
 class App(CTk):
     def __init__(self, *args, **kwargs):
@@ -32,8 +34,8 @@ class App(CTk):
 
         ## main window
         self.ENABLE_TRANSLATION = False
-        self.ENABLE_TRANSCRIPTION_SEND = False
-        self.ENABLE_TRANSCRIPTION_RECEIVE = False
+        # self.ENABLE_TRANSCRIPTION_SEND = False
+        # self.ENABLE_TRANSCRIPTION_RECEIVE = False
         self.ENABLE_FOREGROUND = False
         ## UI
         self.TRANSPARENCY = 100
@@ -43,10 +45,10 @@ class App(CTk):
         self.UI_LANGUAGE = "en"
         ## Translation
         self.CHOICE_TRANSLATOR = translators[0]
-        self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
-        self.INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
-        self.OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[1]
-        self.OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR].keys())[0]
+        self.INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[0]
+        self.INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[1]
+        self.OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[1]
+        self.OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[0]
         ## Transcription Send
         self.CHOICE_MIC_HOST = get_default_input_device()["host"]["name"]
         self.CHOICE_MIC_DEVICE = get_default_input_device()["device"]["name"]
@@ -65,6 +67,7 @@ class App(CTk):
         self.INPUT_SPEAKER_RECORD_TIMEOUT = 3
         self.INPUT_SPEAKER_PHRASE_TIMEOUT = 3
         self.INPUT_SPEAKER_MAX_PHRASES = 10
+
         ## Parameter
         self.OSC_IP_ADDRESS = "127.0.0.1"
         self.OSC_PORT = 9000
@@ -77,6 +80,8 @@ class App(CTk):
         self.MESSAGE_FORMAT = "[message]([translation])"
         # Others
         self.ENABLE_AUTO_CLEAR_CHATBOX = False
+        self.ENABLE_OSC = False
+        self.ENABLE_NOTICE_XSOVERLAY =False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -123,16 +128,16 @@ class App(CTk):
                 if config["CHOICE_TRANSLATOR"] in list(self.translator.translator_status.keys()):
                     self.CHOICE_TRANSLATOR = config["CHOICE_TRANSLATOR"]
             if "INPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
                     self.INPUT_SOURCE_LANG = config["INPUT_SOURCE_LANG"]
             if "INPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["INPUT_TARGET_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
                     self.INPUT_TARGET_LANG = config["INPUT_TARGET_LANG"]
             if "OUTPUT_SOURCE_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["OUTPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
                     self.OUTPUT_SOURCE_LANG = config["OUTPUT_SOURCE_LANG"]
             if "OUTPUT_TARGET_LANG" in config.keys():
-                if config["INPUT_SOURCE_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR].keys()):
+                if config["OUTPUT_TARGET_LANG"] in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
                     self.OUTPUT_TARGET_LANG = config["OUTPUT_TARGET_LANG"]
 
             # Transcription
@@ -209,6 +214,9 @@ class App(CTk):
             if "ENABLE_AUTO_CLEAR_CHATBOX" in config.keys():
                 if type(config["ENABLE_AUTO_CLEAR_CHATBOX"]) is bool:
                     self.ENABLE_AUTO_CLEAR_CHATBOX = config["ENABLE_AUTO_CLEAR_CHATBOX"]
+            if "ENABLE_NOTICE_XSOVERLAY" in config.keys():
+                if type(config["ENABLE_NOTICE_XSOVERLAY"]) is bool:
+                    self.ENABLE_NOTICE_XSOVERLAY = config["ENABLE_NOTICE_XSOVERLAY"]
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
@@ -247,6 +255,7 @@ class App(CTk):
                 "AUTH_KEYS": self.AUTH_KEYS,
                 "MESSAGE_FORMAT": self.MESSAGE_FORMAT,
                 "ENABLE_AUTO_CLEAR_CHATBOX": self.ENABLE_AUTO_CLEAR_CHATBOX,
+                "ENABLE_NOTICE_XSOVERLAY": self.ENABLE_NOTICE_XSOVERLAY,
             }
             json_dump(config, fp, indent=4)
 
@@ -316,19 +325,18 @@ class App(CTk):
         # add button information
         self.button_information = CTkButton(
             self.sidebar_frame,
-            text="",
-            width=25,
+            text=None,
+            width=36,
             command=self.button_information_callback,
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "info-icon-white.png")))
         )
         self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(5, 5), sticky="wse")
-        self.information_window = None
 
         # add button config
         self.button_config = CTkButton(
             self.sidebar_frame,
-            text="",
-            width=25,
+            text=None,
+            width=36,
             command=self.button_config_callback,
             image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "config-icon-white.png")))
         )
@@ -402,36 +410,49 @@ class App(CTk):
         self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
         self.config_window = ToplevelWindowConfig(self)
+        self.information_window = ToplevelWindowInformation(self)
+
+        # start receive osc
+        th_receive_osc_parameters = Thread(target=receive_osc_parameters, args=(self.check_osc_receive,))
+        th_receive_osc_parameters.daemon = True
+        th_receive_osc_parameters.start()
+
+        # check osc started
+        send_test_action()
 
     def button_config_callback(self):
+        self.foreground_stop()
+        self.transcription_stop()
         self.checkbox_translation.configure(state="disabled")
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
+        self.checkbox_foreground.configure(state="disabled")
+        self.tabview_logs.configure(state="disabled")
+        self.textbox_message_log.configure(state="disabled")
+        self.textbox_message_send_log.configure(state="disabled")
+        self.textbox_message_receive_log.configure(state="disabled")
+        self.textbox_message_system_log.configure(state="disabled")
+        self.entry_message_box.configure(state="disabled")
         self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-
+        self.button_information.configure(state="disabled", fg_color=["gray92", "gray14"])
         self.config_window.deiconify()
         self.config_window.focus_set()
         self.config_window.focus()
+        self.config_window.grab_set()
 
     def button_information_callback(self):
-        if self.information_window is None or not self.information_window.winfo_exists():
-            self.information_window = ToplevelWindowInformation(self)
+        self.information_window.deiconify()
+        self.information_window.focus_set()
         self.information_window.focus()
 
     def checkbox_translation_callback(self):
         self.ENABLE_TRANSLATION = self.checkbox_translation.get()
-        if self.ENABLE_TRANSLATION:
-            self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
+        if self.ENABLE_TRANSLATION is True:
             print_textbox(self.textbox_message_log, "Start translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Start translation", "INFO")
         else:
-            if ((self.checkbox_translation.get() is False) and
-                (self.checkbox_transcription_send.get() is False) and
-                (self.checkbox_transcription_receive.get() is False)):
-                self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
             print_textbox(self.textbox_message_log, "Stop translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop translation", "INFO")
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSLATION", self.ENABLE_TRANSLATION)
 
     def transcription_send_start(self):
         self.mic_audio_queue = Queue()
@@ -477,8 +498,12 @@ class App(CTk):
                     voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
                 if self.checkbox_transcription_send.get() is True:
-                    # send OSC message
-                    send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    if self.ENABLE_OSC is True:
+                        # send OSC message
+                        send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+                    else:
+                        print_textbox(self.textbox_message_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
+                        print_textbox(self.textbox_message_system_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
                     # update textbox message log
                     print_textbox(self.textbox_message_log,  f"{voice_message}", "SEND")
                     print_textbox(self.textbox_message_send_log, f"{voice_message}", "SEND")
@@ -490,6 +515,7 @@ class App(CTk):
         print_textbox(self.textbox_message_system_log, "Start voice2chatbox", "INFO")
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_send_stop(self):
         if isinstance(self.mic_print_transcript, thread_fnc):
@@ -500,20 +526,25 @@ class App(CTk):
 
         print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
         print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
-        if ((self.checkbox_translation.get() is False) and
-            (self.checkbox_transcription_send.get() is False) and
-            (self.checkbox_transcription_receive.get() is False)):
-            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+
+    def transcription_send_stop_for_config(self):
+        if isinstance(self.mic_print_transcript, thread_fnc):
+            self.mic_print_transcript.stop()
+        if self.mic_audio_recorder.stop != None:
+            self.mic_audio_recorder.stop()
+            self.mic_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log, "Stop voice2chatbox", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop voice2chatbox", "INFO")
 
     def checkbox_transcription_send_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
         self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-        self.update()
-        self.ENABLE_TRANSCRIPTION_SEND = self.checkbox_transcription_send.get()
-        if self.ENABLE_TRANSCRIPTION_SEND is True:
+        if self.checkbox_transcription_send.get() is True:
             th_transcription_send_start = Thread(target=self.transcription_send_start)
             th_transcription_send_start.daemon = True
             th_transcription_send_start.start()
@@ -521,60 +552,62 @@ class App(CTk):
             th_transcription_send_stop = Thread(target=self.transcription_send_stop)
             th_transcription_send_stop.daemon = True
             th_transcription_send_stop.start()
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_SEND", self.ENABLE_TRANSCRIPTION_SEND)
 
     def transcription_receive_start(self):
-            self.spk_audio_queue = Queue()
-            spk_device = [device for device in get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
-            self.spk_audio_recorder = SelectedSpeakerRecorder(
-                spk_device,
-                self.INPUT_SPEAKER_ENERGY_THRESHOLD,
-                self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
-                self.INPUT_SPEAKER_RECORD_TIMEOUT,
-            )
-            self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
-            self.spk_transcriber = AudioTranscriber(
-                speaker=True,
-                source=self.spk_audio_recorder.source,
-                language=transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
-                phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
-                max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
-            )
+        self.spk_audio_queue = Queue()
+        spk_device = [device for device in get_output_device_list() if device["name"] == self.CHOICE_SPEAKER_DEVICE][0]
+        self.spk_audio_recorder = SelectedSpeakerRecorder(
+            spk_device,
+            self.INPUT_SPEAKER_ENERGY_THRESHOLD,
+            self.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+            self.INPUT_SPEAKER_RECORD_TIMEOUT,
+        )
+        self.spk_audio_recorder.record_into_queue(self.spk_audio_queue)
+        self.spk_transcriber = AudioTranscriber(
+            speaker=True,
+            source=self.spk_audio_recorder.source,
+            language=transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
+            phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
+            max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
+        )
 
-            def spk_transcript_to_textbox():
-                self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
-                message = self.spk_transcriber.get_transcript()
-                if len(message) > 0:
-                    # translate
-                    if self.checkbox_translation.get() is False:
-                        voice_message = f"{message}"
-                    elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
-                        print_textbox(self.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
-                        print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
-                        voice_message = f"{message}"
-                    else:
-                        result = self.translator.translate(
-                            translator_name=self.CHOICE_TRANSLATOR,
-                            source_language=self.OUTPUT_SOURCE_LANG,
-                            target_language=self.OUTPUT_TARGET_LANG,
-                            message=message
-                        )
-                        voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
-                    # send OSC message
-                    # send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+        def spk_transcript_to_textbox():
+            self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
+            message = self.spk_transcriber.get_transcript()
+            if len(message) > 0:
+                # translate
+                if self.checkbox_translation.get() is False:
+                    voice_message = f"{message}"
+                elif self.translator.translator_status[self.CHOICE_TRANSLATOR] is False:
+                    print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
+                    print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
+                    voice_message = f"{message}"
+                else:
+                    result = self.translator.translate(
+                        translator_name=self.CHOICE_TRANSLATOR,
+                        source_language=self.OUTPUT_SOURCE_LANG,
+                        target_language=self.OUTPUT_TARGET_LANG,
+                        message=message
+                    )
+                    voice_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
+                # send OSC message
+                # send_message(voice_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
-                    if self.checkbox_transcription_receive.get() is True:
-                        # update textbox message receive log
-                        print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
-                        print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+                if self.checkbox_transcription_receive.get() is True:
+                    # update textbox message receive log
+                    print_textbox(self.textbox_message_log,  f"{voice_message}", "RECEIVE")
+                    print_textbox(self.textbox_message_receive_log, f"{voice_message}", "RECEIVE")
+                    if self.ENABLE_NOTICE_XSOVERLAY is True:
+                        notification_xsoverlay_for_vrct(content=f"{voice_message}")
 
-            self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
-            self.spk_print_transcript.daemon = True
-            self.spk_print_transcript.start()
-            print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
-            print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
-            self.checkbox_transcription_send.configure(state="normal")
-            self.checkbox_transcription_receive.configure(state="normal")
+        self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
+        self.spk_print_transcript.daemon = True
+        self.spk_print_transcript.start()
+        print_textbox(self.textbox_message_log,  "Start speaker2log", "INFO")
+        print_textbox(self.textbox_message_system_log, "Start speaker2log", "INFO")
+        self.checkbox_transcription_send.configure(state="normal")
+        self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
 
     def transcription_receive_stop(self):
         if isinstance(self.spk_print_transcript, thread_fnc):
@@ -585,20 +618,25 @@ class App(CTk):
 
         print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
         print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
-        if ((self.checkbox_translation.get() is False) and
-            (self.checkbox_transcription_send.get() is False) and
-            (self.checkbox_transcription_receive.get() is False)):
-            self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
         self.checkbox_transcription_send.configure(state="normal")
         self.checkbox_transcription_receive.configure(state="normal")
+        self.button_config.configure(state="normal", fg_color=["#3B8ED0", "#1F6AA5"])
+
+    def transcription_receive_stop_for_config(self):
+        if isinstance(self.spk_print_transcript, thread_fnc):
+            self.spk_print_transcript.stop()
+        if self.spk_audio_recorder.stop != None:
+            self.spk_audio_recorder.stop()
+            self.spk_audio_recorder.stop = None
+
+        print_textbox(self.textbox_message_log,  "Stop speaker2log", "INFO")
+        print_textbox(self.textbox_message_system_log, "Stop speaker2log", "INFO")
 
     def checkbox_transcription_receive_callback(self):
         self.checkbox_transcription_send.configure(state="disabled")
         self.checkbox_transcription_receive.configure(state="disabled")
         self.button_config.configure(state="disabled", fg_color=["gray92", "gray14"])
-        self.update()
-        self.ENABLE_TRANSCRIPTION_RECEIVE = self.checkbox_transcription_receive.get()
-        if self.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        if self.checkbox_transcription_receive.get() is True:
             th_transcription_receive_start = Thread(target=self.transcription_receive_start)
             th_transcription_receive_start.daemon = True
             th_transcription_receive_start.start()
@@ -607,7 +645,26 @@ class App(CTk):
             th_transcription_receive_stop.daemon = True
             th_transcription_receive_stop.start()
 
-        save_json(self.PATH_CONFIG, "ENABLE_TRANSCRIPTION_RECEIVE", self.ENABLE_TRANSCRIPTION_RECEIVE)
+    def transcription_start(self):
+        if self.checkbox_transcription_send.get() is True:
+            th_transcription_send_start = Thread(target=self.transcription_send_start)
+            th_transcription_send_start.daemon = True
+            th_transcription_send_start.start()
+            sleep(2)
+        if self.checkbox_transcription_receive.get() is True:
+            th_transcription_receive_start = Thread(target=self.transcription_receive_start)
+            th_transcription_receive_start.daemon = True
+            th_transcription_receive_start.start()
+
+    def transcription_stop(self):
+        if self.checkbox_transcription_send.get() is True:
+            th_transcription_send_stop = Thread(target=self.transcription_send_stop_for_config)
+            th_transcription_send_stop.daemon = True
+            th_transcription_send_stop.start()
+        if self.checkbox_transcription_receive.get() is True:
+            th_transcription_receive_stop = Thread(target=self.transcription_receive_stop_for_config)
+            th_transcription_receive_stop.daemon = True
+            th_transcription_receive_stop.start()
 
     def checkbox_foreground_callback(self):
         self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
@@ -619,7 +676,20 @@ class App(CTk):
             self.attributes("-topmost", False)
             print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
-        save_json(self.PATH_CONFIG, "ENABLE_FOREGROUND", self.ENABLE_FOREGROUND)
+
+    def foreground_start(self):
+        self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
+        if self.ENABLE_FOREGROUND:
+            self.attributes("-topmost", True)
+            print_textbox(self.textbox_message_log,  "Start foreground", "INFO")
+            print_textbox(self.textbox_message_system_log, "Start foreground", "INFO")
+
+    def foreground_stop(self):
+        if self.ENABLE_FOREGROUND:
+            self.attributes("-topmost", False)
+            print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
+            print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
+            self.ENABLE_FOREGROUND = False
 
     def entry_message_box_press_key_enter(self, event):
         # send OSC typing
@@ -647,14 +717,18 @@ class App(CTk):
                 chat_message = self.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
-            send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            if self.ENABLE_OSC is True:
+                send_message(chat_message, self.OSC_IP_ADDRESS, self.OSC_PORT)
+            else:
+                print_textbox(self.textbox_message_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
+                print_textbox(self.textbox_message_system_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
 
             # update textbox message log
             print_textbox(self.textbox_message_log,  f"{chat_message}", "SEND")
             print_textbox(self.textbox_message_send_log, f"{chat_message}", "SEND")
 
             # delete message in entry message box
-            if self.ENABLE_AUTO_CLEAR_CHATBOX == True:
+            if self.ENABLE_AUTO_CLEAR_CHATBOX is True:
                 self.entry_message_box.delete(0, customtkinter.END)
 
     BREAK_KEYSYM_LIST = [
@@ -746,6 +820,11 @@ class App(CTk):
         self.textbox_message_system_log.configure(state='disabled')
 
         widget_main_window_label_setter(self, language_yaml_data)
+
+    def check_osc_receive(self, address, osc_arguments):
+        if self.ENABLE_OSC is False:
+            self.ENABLE_OSC = True
+        # print(address, osc_arguments)
 
 if __name__ == "__main__":
     try:

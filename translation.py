@@ -35,8 +35,8 @@ class Translator():
     def translate(self, translator_name, source_language, target_language, message):
         result = ""
         try:
-            source_language=translation_lang[translator_name][source_language]
-            target_language=translation_lang[translator_name][target_language]
+            source_language=translation_lang[translator_name]["source"][source_language]
+            target_language=translation_lang[translator_name]["target"][target_language]
             if translator_name == "DeepL(web)":
                 result = deepl_web_Translator(
                     source_language=source_language,
