@@ -1,4 +1,10 @@
+<div align="center">
+
+![](docs/vrct_logo.png)
+
 # VRCT (VRChat Chatbox Translator & Transcription)
+
+<div align="left">
 
 ## Overview
 VRChatのChatBoxにOSC経由でメッセージを送信するツール  
@@ -15,31 +21,17 @@ VRChatのChatBoxにOSC経由でメッセージを送信するツール
 - translators(https://github.com/misyaguziya/translators)
 - custom_speech_recognition(https://github.com/misyaguziya/custom_speech_recognition)
 
-deepl-translate/translators/custom_speech_recognitionについては追加実装をしています。`pip install`でinstallした場合、動かないので注意
+**deepl-translate/translators/custom_speech_recognitionについては追加実装をしています**  
+**`pip install`でinstallした場合、動かないので注意**
 
 ## install
 ```bash
-pip install -r requirements.txt
-```
-
-```bash
-git clone https://github.com/misyaguziya/translators.git
-cd translators
-python ./setup.py install
-cd ../
-git clone https://github.com/misyaguziya/deepl-translate.git
-cd deepl-translate
-python ./setup.py install
-cd ../
-git clone https://github.com/misyaguziya/custom_speech_recognition.git
-cd custom_speech_recognition
-python ./setup.py install
-cd ../
+./install.bat
 ```
 
 ## Usage
 ```bash
-ptyhon VRCT.py
+python VRCT.py
 ```
 
 ## Features
@@ -75,26 +67,26 @@ ptyhon VRCT.py
     - Appearance Theme: ウィンドウテーマを選択
     - UI Scaling: UIサイズを調整
     - Font Family: 表示フォントを選択
-    - **(New!) UI Language: UIの表示言語を選択**
+    - UI Language: UIの表示言語を選択
 - Translation tab
     - Select Translator: 翻訳エンジンの変更
     - Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
     - Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
 - Transcription tab
-    - **(New!) Input Mic Host: マイクのホストAPIを選択**
+    - Input Mic Host: マイクのホストAPIを選択
     - Input Mic Device: マイクを選択
     - Input Mic Voice Language: 入力する音声の言語
     - Input Mic Energy Threshold: 音声取得のしきい値
-    - **(New!) Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化**
+    - Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化
     - Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
     - Input Mic Phase Timeout: 文字起こしする音声時間の上限
     - Input Mic Record Timeout: 音声の区切りの無音時間
     - Input Mic Max Phrases: 保留する単語の上限
-    - **(New!) Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)**
+    - Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)
     - Input Speaker Device: スピーカーを選択
     - Input Speaker Voice Language: 受信する音声の言語
     - Input Speaker Energy Threshold: 音声取得のしきい値
-    - **(New!) Check threshold point: (New!)Input Speaker Energy Thresholdのしきい値を視覚化**
+    - Check threshold point: Input Speaker Energy Thresholdのしきい値を視覚化
     - Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
     - Input Speaker Record Timeout: 音声の区切りの無音時間
     - Input Speaker Phase Timeout: 文字起こしする音声時間の上限
@@ -108,7 +100,8 @@ ptyhon VRCT.py
         - [translation]が翻訳されたメッセージに置換される
         - 初期フォーマット:`[message]([translation])`
 - Others tab
-    - **(New!) Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする**
+    - Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする
+    - **(New!) Notification XSOverlay: XSOverlayの通知機能を有効(VR only)**
 
 ## Author
 みしゃ(misyaguzi)

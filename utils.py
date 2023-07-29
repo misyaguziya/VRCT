@@ -100,15 +100,15 @@ def widget_config_window_label_setter(self, language_yaml_data):
         "label_input_speaker_phrase_timeout",
         "label_input_speaker_max_phrases",
 
-        
         # tab Parameter
         "label_ip_address",
         "label_port",
         "label_authkey",
         "label_message_format",
-    
+
         # tab Others
-        "label_checkbox_auto_clear_chatbox"
+        "label_checkbox_auto_clear_chatbox",
+        "label_checkbox_notice_xsoverlay",
     ]
     for name in widget_names:
         widget = getattr(self, name)
