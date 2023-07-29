@@ -31,7 +31,7 @@ VRChatのChatBoxにOSC経由でメッセージを送信するツール
 
 ## Usage
 ```bash
-ptyhon VRCT.py
+python VRCT.py
 ```
 
 ## Features
