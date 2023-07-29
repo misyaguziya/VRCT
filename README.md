@@ -15,26 +15,12 @@ VRChatのChatBoxにOSC経由でメッセージを送信するツール
 - translators(https://github.com/misyaguziya/translators)
 - custom_speech_recognition(https://github.com/misyaguziya/custom_speech_recognition)
 
-deepl-translate/translators/custom_speech_recognitionについては追加実装をしています。`pip install`でinstallした場合、動かないので注意
+**deepl-translate/translators/custom_speech_recognitionについては追加実装をしています**  
+**`pip install`でinstallした場合、動かないので注意**
 
 ## install
 ```bash
-pip install -r requirements.txt
-```
-
-```bash
-git clone https://github.com/misyaguziya/translators.git
-cd translators
-python ./setup.py install
-cd ../
-git clone https://github.com/misyaguziya/deepl-translate.git
-cd deepl-translate
-python ./setup.py install
-cd ../
-git clone https://github.com/misyaguziya/custom_speech_recognition.git
-cd custom_speech_recognition
-python ./setup.py install
-cd ../
+./install.bat
 ```
 
 ## Usage
