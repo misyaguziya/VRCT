@@ -88,6 +88,7 @@ class App(CTk):
         self.ENABLE_AUTO_CLEAR_CHATBOX = False
         self.ENABLE_OSC = False
         self.ENABLE_NOTICE_XSOVERLAY =False
+        self.UPDATE_FLAG = False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -426,19 +427,11 @@ class App(CTk):
         # check osc started
         send_test_action()
 
-        # auto update
+        # check update
         response = requests_get("https://api.github.com/repos/misyaguziya/VRCT/releases/latest")
         tag_name = response.json()["tag_name"]
         if tag_name != __version__:
-            url = response.json()["assets"][0]["browser_download_url"]
-            res = requests_get(url, stream=True)
-            os_makedirs("./tmp", exist_ok=True)
-            with open("./tmp/download.zip", 'wb') as file:
-                for chunk in res.iter_content(chunk_size=1024):
-                    file.write(chunk)
-            unpack_archive('./tmp/download.zip', './tmp')
-            command = "update.cmd"
-            subprocess.Popen(command.split())
+            self.UPDATE_FLAG = True
 
     def button_config_callback(self):
         self.foreground_stop()
