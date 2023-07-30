@@ -1,7 +1,11 @@
 from time import sleep
 from os import path as os_path
+from os import makedirs as os_makedirs
+import subprocess
+from shutil import unpack_archive
 from json import load as json_load
 from json import dump as json_dump
+from requests import get as requests_get
 from queue import Queue
 import tkinter as tk
 import customtkinter
@@ -20,6 +24,8 @@ from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_transcriber import AudioTranscriber
 from translation import Translator
 from notification import notification_xsoverlay_for_vrct
+
+__version__ = "1.3.1"
 
 class App(CTk):
     def __init__(self, *args, **kwargs):
@@ -419,6 +425,20 @@ class App(CTk):
 
         # check osc started
         send_test_action()
+
+        # auto update
+        response = requests_get("https://api.github.com/repos/misyaguziya/VRCT/releases/latest")
+        tag_name = response.json()["tag_name"]
+        if tag_name != __version__:
+            url = response.json()["assets"][0]["browser_download_url"]
+            res = requests_get(url, stream=True)
+            os_makedirs("./tmp", exist_ok=True)
+            with open("./tmp/download.zip", 'wb') as file:
+                for chunk in res.iter_content(chunk_size=1024):
+                    file.write(chunk)
+            unpack_archive('./tmp/download.zip', './tmp')
+            command = "update.cmd"
+            subprocess.Popen(command.split())
 
     def button_config_callback(self):
         self.foreground_stop()
