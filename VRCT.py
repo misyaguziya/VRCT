@@ -1,7 +1,11 @@
 from time import sleep
 from os import path as os_path
+from os import makedirs as os_makedirs
+import subprocess
+from shutil import unpack_archive
 from json import load as json_load
 from json import dump as json_dump
+from requests import get as requests_get
 from queue import Queue
 import tkinter as tk
 import customtkinter
@@ -20,6 +24,8 @@ from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_transcriber import AudioTranscriber
 from translation import Translator
 from notification import notification_xsoverlay_for_vrct
+
+__version__ = "1.3.1"
 
 class App(CTk):
     def __init__(self, *args, **kwargs):
@@ -82,6 +88,7 @@ class App(CTk):
         self.ENABLE_AUTO_CLEAR_CHATBOX = False
         self.ENABLE_OSC = False
         self.ENABLE_NOTICE_XSOVERLAY =False
+        self.UPDATE_FLAG = False
 
         # load config
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -419,6 +426,12 @@ class App(CTk):
 
         # check osc started
         send_test_action()
+
+        # check update
+        response = requests_get("https://api.github.com/repos/misyaguziya/VRCT/releases/latest")
+        tag_name = response.json()["tag_name"]
+        if tag_name != __version__:
+            self.UPDATE_FLAG = True
 
     def button_config_callback(self):
         self.foreground_stop()
