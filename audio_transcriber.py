@@ -9,9 +9,8 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, language, phrase_timeout, max_phrases):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases):
         self.speaker = speaker
-        self.language = language
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
         self.transcript_data = []
@@ -27,7 +26,7 @@ class AudioTranscriber:
                 "process_data_func": self.process_speaker_data if speaker else self.process_speaker_data
         }
 
-    def transcribe_audio_queue(self, audio_queue):
+    def transcribe_audio_queue(self, audio_queue, language):
         # while True:
         audio, time_spoken = audio_queue.get()
         self.update_last_sample_and_phrase_status(audio, time_spoken)
@@ -37,7 +36,7 @@ class AudioTranscriber:
             # fd, path = tempfile.mkstemp(suffix=".wav")
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
-            text = self.audio_recognizer.recognize_google(audio_data, language=self.language)
+            text = self.audio_recognizer.recognize_google(audio_data, language=language)
         except Exception as e:
             pass
         finally:
