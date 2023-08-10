@@ -467,12 +467,11 @@ class App(CTk):
         self.mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
-            language=transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE],
             phrase_timeout=self.INPUT_MIC_PHRASE_TIMEOUT,
             max_phrases=self.INPUT_MIC_MAX_PHRASES,
         )
         def mic_transcript_to_chatbox():
-            self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue)
+            self.mic_transcriber.transcribe_audio_queue(self.mic_audio_queue, transcription_lang[self.INPUT_MIC_VOICE_LANGUAGE])
             message = self.mic_transcriber.get_transcript()
             if len(message) > 0:
                 # word filter
@@ -566,13 +565,12 @@ class App(CTk):
         self.spk_transcriber = AudioTranscriber(
             speaker=True,
             source=self.spk_audio_recorder.source,
-            language=transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE],
             phrase_timeout=self.INPUT_SPEAKER_PHRASE_TIMEOUT,
             max_phrases=self.INPUT_SPEAKER_MAX_PHRASES,
         )
 
         def spk_transcript_to_textbox():
-            self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue)
+            self.spk_transcriber.transcribe_audio_queue(self.spk_audio_queue, transcription_lang[self.INPUT_SPEAKER_VOICE_LANGUAGE])
             message = self.spk_transcriber.get_transcript()
             if len(message) > 0:
                 # translate
