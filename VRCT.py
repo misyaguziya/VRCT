@@ -1,8 +1,5 @@
 from time import sleep
 from os import path as os_path
-from os import makedirs as os_makedirs
-import subprocess
-from shutil import unpack_archive
 from json import load as json_load
 from json import dump as json_dump
 from requests import get as requests_get
@@ -14,7 +11,7 @@ from PIL.Image import open as Image_open
 from flashtext import KeywordProcessor
 
 from threading import Thread
-from utils import save_json, print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
+from utils import print_textbox, thread_fnc, get_localized_text, widget_main_window_label_setter
 from osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
 from window_config import ToplevelWindowConfig
 from window_information import ToplevelWindowInformation
