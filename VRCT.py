@@ -36,10 +36,11 @@ class App(CTk):
         self.PATH_CONFIG = "./config.json"
 
         ## main window
-        self.ENABLE_TRANSLATION = False
+        # self.ENABLE_TRANSLATION = False
         # self.ENABLE_TRANSCRIPTION_SEND = False
         # self.ENABLE_TRANSCRIPTION_RECEIVE = False
-        self.ENABLE_FOREGROUND = False
+        # self.ENABLE_FOREGROUND = False
+
         ## UI
         self.TRANSPARENCY = 100
         self.APPEARANCE_THEME = "System"
@@ -224,10 +225,6 @@ class App(CTk):
 
         with open(self.PATH_CONFIG, 'w') as fp:
             config = {
-                # "ENABLE_TRANSLATION": self.ENABLE_TRANSLATION,
-                # "ENABLE_TRANSCRIPTION_SEND": self.ENABLE_TRANSCRIPTION_SEND,
-                # "ENABLE_TRANSCRIPTION_RECEIVE": self.ENABLE_TRANSCRIPTION_RECEIVE,
-                # "ENABLE_FOREGROUND": self.ENABLE_FOREGROUND,
                 "TRANSPARENCY": self.TRANSPARENCY,
                 "APPEARANCE_THEME": self.APPEARANCE_THEME,
                 "UI_SCALING": self.UI_SCALING,
@@ -456,8 +453,7 @@ class App(CTk):
         self.information_window.focus()
 
     def checkbox_translation_callback(self):
-        self.ENABLE_TRANSLATION = self.checkbox_translation.get()
-        if self.ENABLE_TRANSLATION is True:
+        if self.checkbox_translation.get() is True:
             print_textbox(self.textbox_message_log, "Start translation", "INFO")
             print_textbox(self.textbox_message_system_log, "Start translation", "INFO")
         else:
@@ -675,8 +671,7 @@ class App(CTk):
             th_transcription_receive_stop.start()
 
     def checkbox_foreground_callback(self):
-        self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", True)
             print_textbox(self.textbox_message_log,  "Start foreground", "INFO")
             print_textbox(self.textbox_message_system_log, "Start foreground", "INFO")
@@ -686,24 +681,22 @@ class App(CTk):
             print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
 
     def foreground_start(self):
-        self.ENABLE_FOREGROUND = self.checkbox_foreground.get()
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", True)
             print_textbox(self.textbox_message_log,  "Start foreground", "INFO")
             print_textbox(self.textbox_message_system_log, "Start foreground", "INFO")
 
     def foreground_stop(self):
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", False)
             print_textbox(self.textbox_message_log,  "Stop foreground", "INFO")
             print_textbox(self.textbox_message_system_log, "Stop foreground", "INFO")
-            self.ENABLE_FOREGROUND = False
 
     def entry_message_box_press_key_enter(self, event):
         # send OSC typing
         send_typing(False, self.OSC_IP_ADDRESS, self.OSC_PORT)
 
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", True)
 
         message = self.entry_message_box.get()
@@ -746,7 +739,7 @@ class App(CTk):
     def entry_message_box_press_key_any(self, event):
         # send OSC typing
         send_typing(True, self.OSC_IP_ADDRESS, self.OSC_PORT)
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", False)
 
         if event.keysym != "??":
@@ -757,7 +750,7 @@ class App(CTk):
     def entry_message_box_leave(self, event):
         # send OSC typing
         send_typing(False, self.OSC_IP_ADDRESS, self.OSC_PORT)
-        if self.ENABLE_FOREGROUND:
+        if self.checkbox_foreground.get():
             self.attributes("-topmost", True)
 
     def delete_window(self):
