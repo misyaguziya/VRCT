@@ -1,5 +1,6 @@
 import os
 from customtkinter import CTkToplevel, CTkTextbox, CTkFont
+from config import config
 
 class ToplevelWindowInformation(CTkToplevel):
     def __init__(self, parent, *args, **kwargs):
@@ -16,7 +17,7 @@ class ToplevelWindowInformation(CTkToplevel):
         # create textbox information
         self.textbox_information = CTkTextbox(
             self,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.textbox_information.grid(row=0, column=0, padx=(10, 10), pady=(10, 10), sticky="nsew")
         textbox_information_message = """VRCT(v1.3.2)
