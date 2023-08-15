@@ -437,7 +437,9 @@ class ToplevelWindowConfig(CTkToplevel):
         value = self.entry_authkey.get()
         if len(value) > 0:
             if self.parent.translator.authentication("DeepL(auth)", value) is True:
-                config.AUTH_KEYS["DeepL(auth)"] = value
+                auth_keys = config.AUTH_KEYS
+                auth_keys["DeepL(auth)"] = value
+                config.AUTH_KEYS = auth_keys
                 print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
                 print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
