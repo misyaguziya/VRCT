@@ -349,6 +349,28 @@ class Config:
             self._ENABLE_NOTICE_XSOVERLAY = value
             save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    @property
+    def ENABLE_OSC(self):
+        return self._ENABLE_OSC
+
+    @ENABLE_OSC.setter
+    def ENABLE_OSC(self, value):
+        if type(value) is bool:
+            self._ENABLE_OSC = value
+
+    @property
+    def UPDATE_FLAG(self):
+        return self._UPDATE_FLAG
+
+    @UPDATE_FLAG.setter
+    def UPDATE_FLAG(self, value):
+        if type(value) is bool:
+            self._UPDATE_FLAG = value
+
+    @property
+    def GITHUB_URL(self):
+        return self._GITHUB_URL
+
     def init_config(self):
         self._PATH_CONFIG = "./config.json"
         self._TRANSPARENCY = 100
@@ -388,6 +410,9 @@ class Config:
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_CHATBOX = False
         self._ENABLE_NOTICE_XSOVERLAY = False
+        self._ENABLE_OSC = False
+        self._UPDATE_FLAG = False
+        self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:

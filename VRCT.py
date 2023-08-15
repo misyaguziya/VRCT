@@ -34,10 +34,6 @@ class App(CTk):
         customtkinter.set_appearance_mode(config.APPEARANCE_THEME)
         customtkinter.set_default_color_theme("blue")
 
-        ## flags
-        self.ENABLE_OSC = False
-        self.UPDATE_FLAG = False
-
         # init main window
         self.iconbitmap(os_path.join(os_path.dirname(__file__), "img", "app.ico"))
         self.title("VRCT")
@@ -45,82 +41,12 @@ class App(CTk):
         self.minsize(400, 175)
         self.grid_columnconfigure(1, weight=1)
         self.grid_rowconfigure(0, weight=1)
+        self.wm_attributes("-alpha", config.TRANSPARENCY/100)
+        customtkinter.set_widget_scaling(int(config.UI_SCALING.replace("%", "")) / 100)
+        self.protocol("WM_DELETE_WINDOW", self.delete_window)
 
-        # add sidebar left
-        self.sidebar_frame = CTkFrame(self, corner_radius=0)
-        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
-        self.sidebar_frame.grid_rowconfigure(5, weight=1)
-
-        init_lang_text = "Loading..."
-
-        # add checkbox translation
-        self.checkbox_translation = CTkCheckBox(
-            self.sidebar_frame,
-            text=init_lang_text,
-            onvalue=True,
-            offvalue=False,
-            command=self.checkbox_translation_callback,
-            font=CTkFont(family=config.FONT_FAMILY)
-        )
-        self.checkbox_translation.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
-
-        # add checkbox transcription send
-        self.checkbox_transcription_send = CTkCheckBox(
-            self.sidebar_frame,
-            text=init_lang_text,
-            onvalue=True,
-            offvalue=False,
-            command=self.checkbox_transcription_send_callback,
-            font=CTkFont(family=config.FONT_FAMILY)
-        )
-        self.checkbox_transcription_send.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
-
-        # add checkbox transcription receive
-        self.checkbox_transcription_receive = CTkCheckBox(
-            self.sidebar_frame,
-            text=init_lang_text,
-            onvalue=True,
-            offvalue=False,
-            command=self.checkbox_transcription_receive_callback,
-            font=CTkFont(family=config.FONT_FAMILY)
-        )
-        self.checkbox_transcription_receive.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
-
-        # add checkbox foreground
-        self.checkbox_foreground = CTkCheckBox(
-            self.sidebar_frame,
-            text=init_lang_text,
-            onvalue=True,
-            offvalue=False,
-            command=self.checkbox_foreground_callback,
-            font=CTkFont(family=config.FONT_FAMILY)
-        )
-        self.checkbox_foreground.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
-
-        # add button information
-        self.button_information = CTkButton(
-            self.sidebar_frame,
-            text=None,
-            width=36,
-            command=self.button_information_callback,
-            image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "info-icon-white.png")))
-        )
-        self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(5, 5), sticky="wse")
-
-        # add button config
-        self.button_config = CTkButton(
-            self.sidebar_frame,
-            text=None,
-            width=36,
-            command=self.button_config_callback,
-            image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "config-icon-white.png")))
-        )
-        self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
-
-        # load ui language data
-        language_yaml_data = get_localized_text(f"{config.UI_LANGUAGE}")
-        # add tabview textbox
-        self.add_tabview_logs(language_yaml_data)
+        # add sidebar
+        self.add_sidebar()
 
         # add entry message box
         self.entry_message_box = CTkEntry(
@@ -129,63 +55,27 @@ class App(CTk):
             font=CTkFont(family=config.FONT_FAMILY),
         )
         self.entry_message_box.grid(row=1, column=1, columnspan=2, padx=5, pady=(5, 10), sticky="nsew")
+        self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
+        self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
+        self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
 
-        # set default values
-        ## set translator
+        # add tabview textbox
+        self.add_tabview_logs(get_localized_text(f"{config.UI_LANGUAGE}"))
+
+        self.config_window = ToplevelWindowConfig(self)
+        self.information_window = ToplevelWindowInformation(self)
+        self.init_process()
+
+    def init_process(self):
+        # set translator
         if self.translator.authentication(config.CHOICE_TRANSLATOR, config.AUTH_KEYS[config.CHOICE_TRANSLATOR]) is False:
             # error update Auth key
             print_textbox(self.textbox_message_log, "Auth Key or language setting is incorrect", "ERROR")
             print_textbox(self.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
 
-        # ## set checkbox enable translation
-        # if self.ENABLE_TRANSLATION:
-        #     self.checkbox_translation.select()
-        #     self.checkbox_translation_callback()
-        # else:
-        #     self.checkbox_translation.deselect()
-
-        # ## set checkbox enable transcription send
-        # if self.ENABLE_TRANSCRIPTION_SEND:
-        #     self.checkbox_transcription_send.select()
-        #     self.checkbox_transcription_send_callback()
-        # else:
-        #     self.checkbox_transcription_send.deselect()
-
-        # ## set checkbox enable transcription receive
-        # if self.ENABLE_TRANSCRIPTION_RECEIVE:
-        #     self.checkbox_transcription_receive.select()
-        #     self.checkbox_transcription_receive_callback()
-        # else:
-        #     self.checkbox_transcription_receive.deselect()
-
-        # ## set set checkbox enable foreground
-        # if self.ENABLE_FOREGROUND:
-        #     self.checkbox_foreground.select()
-        #     self.checkbox_foreground_callback()
-        # else:
-        #     self.checkbox_foreground.deselect()
-
-        ## set word filter
+        # set word filter
         for f in config.INPUT_MIC_WORD_FILTER:
             self.keyword_processor.add_keyword(f)
-
-        ## set bind entry message box
-        self.entry_message_box.bind("<Return>", self.entry_message_box_press_key_enter)
-        self.entry_message_box.bind("<Any-KeyPress>", self.entry_message_box_press_key_any)
-        self.entry_message_box.bind("<Leave>", self.entry_message_box_leave)
-
-        ## set transparency for main window
-        self.wm_attributes("-alpha", config.TRANSPARENCY/100)
-
-        ## set UI scale
-        new_scaling_float = int(config.UI_SCALING.replace("%", "")) / 100
-        customtkinter.set_widget_scaling(new_scaling_float)
-
-        # delete window
-        self.protocol("WM_DELETE_WINDOW", self.delete_window)
-
-        self.config_window = ToplevelWindowConfig(self)
-        self.information_window = ToplevelWindowInformation(self)
 
         # start receive osc
         th_receive_osc_parameters = Thread(target=receive_osc_parameters, args=(self.check_osc_receive,))
@@ -196,10 +86,10 @@ class App(CTk):
         send_test_action()
 
         # check update
-        response = requests_get("https://api.github.com/repos/misyaguziya/VRCT/releases/latest")
+        response = requests_get(config.GITHUB_URL)
         tag_name = response.json()["tag_name"]
         if tag_name != __version__:
-            self.UPDATE_FLAG = True
+            config.UPDATE_FLAG = True
 
     def button_config_callback(self):
         self.foreground_stop()
@@ -277,7 +167,7 @@ class App(CTk):
                     voice_message = config.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
                 if self.checkbox_transcription_send.get() is True:
-                    if self.ENABLE_OSC is True:
+                    if config.ENABLE_OSC is True:
                         # send OSC message
                         send_message(voice_message, config.OSC_IP_ADDRESS, config.OSC_PORT)
                     else:
@@ -492,7 +382,7 @@ class App(CTk):
                 chat_message = config.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", result)
 
             # send OSC message
-            if self.ENABLE_OSC is True:
+            if config.ENABLE_OSC is True:
                 send_message(chat_message, config.OSC_IP_ADDRESS, config.OSC_PORT)
             else:
                 print_textbox(self.textbox_message_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
@@ -531,6 +421,77 @@ class App(CTk):
         self.quit()
         self.destroy()
 
+    def add_sidebar(self):
+        init_lang_text = "Loading..."
+        self.sidebar_frame = CTkFrame(master=self, corner_radius=0)
+
+        # add checkbox translation
+        self.checkbox_translation = CTkCheckBox(
+            self.sidebar_frame,
+            text=init_lang_text,
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_translation_callback,
+            font=CTkFont(family=config.FONT_FAMILY)
+        )
+
+        # add checkbox transcription send
+        self.checkbox_transcription_send = CTkCheckBox(
+            self.sidebar_frame,
+            text=init_lang_text,
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_transcription_send_callback,
+            font=CTkFont(family=config.FONT_FAMILY)
+        )
+
+        # add checkbox transcription receive
+        self.checkbox_transcription_receive = CTkCheckBox(
+            self.sidebar_frame,
+            text=init_lang_text,
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_transcription_receive_callback,
+            font=CTkFont(family=config.FONT_FAMILY)
+        )
+
+        # add checkbox foreground
+        self.checkbox_foreground = CTkCheckBox(
+            self.sidebar_frame,
+            text=init_lang_text,
+            onvalue=True,
+            offvalue=False,
+            command=self.checkbox_foreground_callback,
+            font=CTkFont(family=config.FONT_FAMILY)
+        )
+
+        # add button information
+        self.button_information = CTkButton(
+            self.sidebar_frame,
+            text=None,
+            width=36,
+            command=self.button_information_callback,
+            image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "info-icon-white.png")))
+        )
+
+        # add button config
+        self.button_config = CTkButton(
+            self.sidebar_frame,
+            text=None,
+            width=36,
+            command=self.button_config_callback,
+            image=CTkImage(Image_open(os_path.join(os_path.dirname(__file__), "img", "config-icon-white.png")))
+        )
+
+        self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsw")
+        self.sidebar_frame.grid_rowconfigure(5, weight=1)
+        self.checkbox_translation.grid(row=0, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_transcription_send.grid(row=1, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_transcription_receive.grid(row=2, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
+        self.checkbox_foreground.grid(row=3, column=0, columnspan=2, padx=10, pady=(5, 5), sticky="we")
+        self.button_information.grid(row=5, column=0, padx=(10, 5), pady=(5, 5), sticky="wse")
+        self.button_config.grid(row=5, column=1, padx=(5, 10), pady=(5, 5), sticky="wse")
+
     def delete_tabview_logs(self, pre_language_yaml_data):
         self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_log"])
         self.tabview_logs.delete(pre_language_yaml_data["main_tab_title_send"])
@@ -567,39 +528,40 @@ class App(CTk):
             self.tabview_logs.tab(main_tab_title_log),
             font=CTkFont(family=config.FONT_FAMILY)
         )
-        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_log.configure(state='disabled')
 
         # add textbox message send log
         self.textbox_message_send_log = CTkTextbox(
             self.tabview_logs.tab(main_tab_title_send),
             font=CTkFont(family=config.FONT_FAMILY)
         )
-        self.textbox_message_send_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_send_log.configure(state='disabled')
 
         # add textbox message receive log
         self.textbox_message_receive_log = CTkTextbox(
             self.tabview_logs.tab(main_tab_title_receive),
             font=CTkFont(family=config.FONT_FAMILY)
         )
-        self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
-        self.textbox_message_receive_log.configure(state='disabled')
 
         # add textbox message system log
         self.textbox_message_system_log = CTkTextbox(
             self.tabview_logs.tab(main_tab_title_system),
             font=CTkFont(family=config.FONT_FAMILY)
         )
+
+        self.textbox_message_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_send_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_receive_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
         self.textbox_message_system_log.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        self.textbox_message_log.configure(state='disabled')
+        self.textbox_message_send_log.configure(state='disabled')
+        self.textbox_message_receive_log.configure(state='disabled')
         self.textbox_message_system_log.configure(state='disabled')
 
         widget_main_window_label_setter(self, language_yaml_data)
 
     def check_osc_receive(self, address, osc_arguments):
-        if self.ENABLE_OSC is False:
-            self.ENABLE_OSC = True
-        # print(address, osc_arguments)
+        print(address, osc_arguments)
+        if config.ENABLE_OSC is False:
+            config.ENABLE_OSC = True
 
 if __name__ == "__main__":
     try:
