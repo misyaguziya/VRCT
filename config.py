@@ -340,16 +340,6 @@ class Config:
             save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def ENABLE_OSC(self):
-        return self._ENABLE_OSC
-
-    @ENABLE_OSC.setter
-    def ENABLE_OSC(self, value):
-        if type(value) is bool:
-            self._ENABLE_OSC = value
-            save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     def ENABLE_NOTICE_XSOVERLAY(self):
         return self._ENABLE_NOTICE_XSOVERLAY
 
@@ -357,16 +347,6 @@ class Config:
     def ENABLE_NOTICE_XSOVERLAY(self, value):
         if type(value) is bool:
             self._ENABLE_NOTICE_XSOVERLAY = value
-            save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
-    def UPDATE_FLAG(self):
-        return self._UPDATE_FLAG
-
-    @UPDATE_FLAG.setter
-    def UPDATE_FLAG(self, value):
-        if type(value) is bool:
-            self._UPDATE_FLAG = value
             save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     def init_config(self):
@@ -407,9 +387,7 @@ class Config:
         }
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_CHATBOX = False
-        self._ENABLE_OSC = False
         self._ENABLE_NOTICE_XSOVERLAY = False
-        self._UPDATE_FLAG = False
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -429,5 +407,4 @@ class Config:
                 config[method] = getattr(self, method)
             json_dump(config, fp, indent=4)
 
-if __name__ == "__main__":
-    instance = Config()
+config = Config()
