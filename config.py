@@ -316,7 +316,7 @@ class Config:
         if type(value) is dict and set(value.keys()) == set(self.AUTH_KEYS.keys()):
             for key, value in value.items():
                 if type(value) is str:
-                    self._AUTH_KEYS[key] = value[key]
+                    self._AUTH_KEYS[key] = value
             save_json(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
