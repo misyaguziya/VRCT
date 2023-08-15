@@ -8,7 +8,8 @@ from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider,
 from flashtext import KeywordProcessor
 
 from threading import Thread
-from utils import save_json, print_textbox, thread_fnc, get_localized_text, get_key_by_value, widget_config_window_label_setter
+from config import config
+from utils import print_textbox, thread_fnc, get_localized_text, get_key_by_value, widget_config_window_label_setter
 from audio_utils import get_input_device_list, get_output_device_list, get_default_output_device
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from languages import translation_lang, transcription_lang, selectable_languages
@@ -42,7 +43,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.speaker_energy_plot_progressbar = None
 
         # load ui language data
-        language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
+        language_yaml_data = get_localized_text(f"{config.UI_LANGUAGE}")
         # add tabview config
         self.add_tabview_config(language_yaml_data, selectable_languages)
         # set all config window labels
@@ -52,23 +53,20 @@ class ToplevelWindowConfig(CTkToplevel):
 
     def slider_transparency_callback(self, value):
         self.parent.wm_attributes("-alpha", value/100)
-        self.parent.TRANSPARENCY = value
-        save_json(self.parent.PATH_CONFIG, "TRANSPARENCY", self.parent.TRANSPARENCY)
+        config.TRANSPARENCY = value
 
     def optionmenu_appearance_theme_callback(self, choice):
         self.optionmenu_appearance_theme.set(choice)
 
         customtkinter.set_appearance_mode(choice)
-        self.parent.APPEARANCE_THEME = choice
-        save_json(self.parent.PATH_CONFIG, "APPEARANCE_THEME", self.parent.APPEARANCE_THEME)
+        config.APPEARANCE_THEME = choice
 
     def optionmenu_ui_scaling_callback(self, choice):
         self.optionmenu_ui_scaling.set(choice)
 
         new_scaling_float = int(choice.replace("%", "")) / 100
         customtkinter.set_widget_scaling(new_scaling_float)
-        self.parent.UI_SCALING = choice
-        save_json(self.parent.PATH_CONFIG, "UI_SCALING", self.parent.UI_SCALING)
+        config.UI_SCALING = choice
 
     def optionmenu_font_family_callback(self, choice):
         self.optionmenu_font_family.set(choice)
@@ -176,18 +174,15 @@ class ToplevelWindowConfig(CTkToplevel):
         except:
             pass
 
-        self.parent.FONT_FAMILY = choice
-        save_json(self.parent.PATH_CONFIG, "FONT_FAMILY", self.parent.FONT_FAMILY)
+        config.FONT_FAMILY = choice
 
     def optionmenu_ui_language_callback(self, choice):
         self.optionmenu_ui_language.set(choice)
 
         self.withdraw()
-        pre_language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
-        self.parent.UI_LANGUAGE = get_key_by_value(selectable_languages, choice)
-        language_yaml_data = get_localized_text(f"{self.parent.UI_LANGUAGE}")
-        save_json(self.parent.PATH_CONFIG, "UI_LANGUAGE", self.parent.UI_LANGUAGE)
-
+        pre_language_yaml_data = get_localized_text(f"{config.UI_LANGUAGE}")
+        config.UI_LANGUAGE = get_key_by_value(selectable_languages, choice)
+        language_yaml_data = get_localized_text(f"{config.UI_LANGUAGE}")
 
         # delete
         self.parent.delete_tabview_logs(pre_language_yaml_data)
@@ -207,7 +202,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_translation_translator_callback(self, choice):
         self.optionmenu_translation_translator.set(choice)
 
-        if self.parent.translator.authentication(choice, self.parent.AUTH_KEYS[choice]) is False:
+        if self.parent.translator.authentication(choice, config.AUTH_KEYS[choice]) is False:
             print_textbox(self.parent.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
             print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
@@ -234,44 +229,30 @@ class ToplevelWindowConfig(CTkToplevel):
                 self.scrollableDropdown_translation_output_target_language.configure(
                 values=list(translation_lang[choice]["target"].keys()))
 
-            self.parent.CHOICE_TRANSLATOR = choice
-            self.parent.INPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[0]
-            self.parent.INPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[1]
-            self.parent.OUTPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[1]
-            self.parent.OUTPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[0]
-            save_json(self.parent.PATH_CONFIG, "CHOICE_TRANSLATOR", self.parent.CHOICE_TRANSLATOR)
-            save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
-            save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
-            save_json(self.parent.PATH_CONFIG, "OUTPUT_SOURCE_LANG", self.parent.OUTPUT_SOURCE_LANG)
-            save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
+            config.CHOICE_TRANSLATOR = choice
+            config.INPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[0]
+            config.INPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[1]
+            config.OUTPUT_SOURCE_LANG = list(translation_lang[choice]["source"].keys())[1]
+            config.OUTPUT_TARGET_LANG = list(translation_lang[choice]["target"].keys())[0]
 
     def optionmenu_translation_input_source_language_callback(self, choice):
         self.optionmenu_translation_input_source_language.set(choice)
-
-        self.parent.INPUT_SOURCE_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "INPUT_SOURCE_LANG", self.parent.INPUT_SOURCE_LANG)
+        config.INPUT_SOURCE_LANG = choice
 
     def optionmenu_translation_input_target_language_callback(self, choice):
         self.optionmenu_translation_input_target_language.set(choice)
-
-        self.parent.INPUT_TARGET_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "INPUT_TARGET_LANG", self.parent.INPUT_TARGET_LANG)
+        config.INPUT_TARGET_LANG = choice
 
     def optionmenu_translation_output_source_language_callback(self, choice):
         self.optionmenu_translation_output_source_language.set(choice)
-
-        self.parent.OUTPUT_SOURCE_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "OUTPUT_SOURCE_LANG", self.parent.OUTPUT_SOURCE_LANG)
+        config.OUTPUT_SOURCE_LANG = choice
 
     def optionmenu_translation_output_target_language_callback(self, choice):
         self.optionmenu_translation_output_target_language.set(choice)
-
-        self.parent.OUTPUT_TARGET_LANG = choice
-        save_json(self.parent.PATH_CONFIG, "OUTPUT_TARGET_LANG", self.parent.OUTPUT_TARGET_LANG)
+        config.OUTPUT_TARGET_LANG = choice
 
     def optionmenu_input_mic_host_callback(self, choice):
         self.optionmenu_input_mic_host.set(choice)
-
         self.optionmenu_input_mic_device.configure(
             values=[device["name"] for device in get_input_device_list()[choice]],
             variable=StringVar(value=[device["name"] for device in get_input_device_list()[choice]][0]))
@@ -279,24 +260,18 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[choice]])
 
-        self.parent.CHOICE_MIC_HOST = choice
-        self.parent.CHOICE_MIC_DEVICE = [device["name"] for device in get_input_device_list()[choice]][0]
-        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_HOST", self.parent.CHOICE_MIC_HOST)
-        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
+        config.CHOICE_MIC_HOST = choice
+        config.CHOICE_MIC_DEVICE = [device["name"] for device in get_input_device_list()[choice]][0]
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.optionmenu_input_mic_device.set(choice)
-
-        self.parent.CHOICE_MIC_DEVICE = choice
-        save_json(self.parent.PATH_CONFIG, "CHOICE_MIC_DEVICE", self.parent.CHOICE_MIC_DEVICE)
+        config.CHOICE_MIC_DEVICE = choice
         self.checkbox_input_mic_threshold_check.deselect()
         self.checkbox_input_mic_threshold_check_callback()
 
     def optionmenu_input_mic_voice_language_callback(self, choice):
         self.optionmenu_input_mic_voice_language.set(choice)
-
-        self.parent.INPUT_MIC_VOICE_LANGUAGE = choice
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_VOICE_LANGUAGE", self.parent.INPUT_MIC_VOICE_LANGUAGE)
+        config.INPUT_MIC_VOICE_LANGUAGE = choice
 
     def progressBar_input_mic_energy_plot(self):
         if self.mic_energy_queue.empty() is False:
@@ -309,7 +284,7 @@ class ToplevelWindowConfig(CTkToplevel):
 
     def mic_threshold_check_start(self):
         self.mic_energy_queue = Queue()
-        mic_device = [device for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST] if device["name"] == self.parent.CHOICE_MIC_DEVICE][0]
+        mic_device = [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
         self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
@@ -341,55 +316,45 @@ class ToplevelWindowConfig(CTkToplevel):
             th_mic_threshold_check_stop.start()
 
     def slider_input_mic_energy_threshold_callback(self, value):
-        self.parent.INPUT_MIC_ENERGY_THRESHOLD = int(value)
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_ENERGY_THRESHOLD)
+        config.INPUT_MIC_ENERGY_THRESHOLD = int(value)
 
     def checkbox_input_mic_dynamic_energy_threshold_callback(self):
-        value = self.checkbox_input_mic_dynamic_energy_threshold.get()
-        self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD)
+        config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = self.checkbox_input_mic_dynamic_energy_threshold.get()
 
     def entry_input_mic_record_timeout_callback(self, event):
-        self.parent.INPUT_MIC_RECORD_TIMEOUT = int(self.entry_input_mic_record_timeout.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_RECORD_TIMEOUT", self.parent.INPUT_MIC_RECORD_TIMEOUT)
+        config.INPUT_MIC_RECORD_TIMEOUT = int(self.entry_input_mic_record_timeout.get())
 
     def entry_input_mic_phrase_timeout_callback(self, event):
-        self.parent.INPUT_MIC_PHRASE_TIMEOUT = int(self.entry_input_mic_phrase_timeout.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_PHRASE_TIMEOUT", self.parent.INPUT_MIC_PHRASE_TIMEOUT)
+        config.INPUT_MIC_PHRASE_TIMEOUT = int(self.entry_input_mic_phrase_timeout.get())
 
     def entry_input_mic_max_phrases_callback(self, event):
-        self.parent.INPUT_MIC_MAX_PHRASES = int(self.entry_input_mic_max_phrases.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_MAX_PHRASES", self.parent.INPUT_MIC_MAX_PHRASES)
+        config.INPUT_MIC_MAX_PHRASES = int(self.entry_input_mic_max_phrases.get())
 
     def entry_input_mic_word_filters_callback(self, event):
         word_filter = self.entry_input_mic_word_filter.get()
         word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
         word_filter = ",".join(word_filter)
         if len(word_filter) > 0:
-            self.parent.INPUT_MIC_WORD_FILTER = word_filter.split(",")
+            config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
         else:
-            self.parent.INPUT_MIC_WORD_FILTER = []
+            config.INPUT_MIC_WORD_FILTER = []
         self.parent.keyword_processor = KeywordProcessor()
         for f in self.parent.INPUT_MIC_WORD_FILTER:
             self.parent.keyword_processor.add_keyword(f)
-        save_json(self.parent.PATH_CONFIG, "INPUT_MIC_WORD_FILTER", self.parent.INPUT_MIC_WORD_FILTER)
 
     def optionmenu_input_speaker_device_callback(self, choice):
         speaker_device = [device for device in get_output_device_list() if device["name"] == choice][0]
         if get_default_output_device()["index"] == speaker_device["index"]:
             self.optionmenu_input_speaker_device.set(choice)
-            self.parent.CHOICE_SPEAKER_DEVICE = choice
-            save_json(self.parent.PATH_CONFIG, "CHOICE_SPEAKER_DEVICE", self.parent.CHOICE_SPEAKER_DEVICE)
+            config.CHOICE_SPEAKER_DEVICE = choice
         else:
             print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
             print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
-            self.optionmenu_input_speaker_device.configure(variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE))
+            self.optionmenu_input_speaker_device.configure(variable=StringVar(value=config.CHOICE_SPEAKER_DEVICE))
 
     def optionmenu_input_speaker_voice_language_callback(self, choice):
         self.optionmenu_input_speaker_voice_language.set(choice)
-
-        self.parent.INPUT_SPEAKER_VOICE_LANGUAGE = choice
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_VOICE_LANGUAGE", self.parent.INPUT_SPEAKER_VOICE_LANGUAGE)
+        config.INPUT_SPEAKER_VOICE_LANGUAGE = choice
 
     def progressBar_input_speaker_energy_plot(self):
         if self.speaker_energy_queue.empty() is False:
@@ -406,7 +371,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.speaker_energy_queue.put(energy)
 
     def speaker_threshold_check_start(self):
-        speaker_device = [device for device in get_output_device_list() if device["name"] == self.parent.CHOICE_SPEAKER_DEVICE][0]
+        speaker_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
 
         if get_default_output_device()["index"] == speaker_device["index"]:
             self.speaker_energy_queue = Queue()
@@ -448,54 +413,43 @@ class ToplevelWindowConfig(CTkToplevel):
             th_speaker_threshold_check_stop.start()
 
     def slider_input_speaker_energy_threshold_callback(self, value):
-        self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD)
+        config.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
 
     def checkbox_input_speaker_dynamic_energy_threshold_callback(self):
-        value = self.checkbox_input_speaker_dynamic_energy_threshold.get()
-        self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD", self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD)
+        config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = self.checkbox_input_speaker_dynamic_energy_threshold.get()
 
     def entry_input_speaker_record_timeout_callback(self, event):
-        self.parent.INPUT_SPEAKER_RECORD_TIMEOUT = int(self.entry_input_speaker_record_timeout.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_RECORD_TIMEOUT", self.parent.INPUT_SPEAKER_RECORD_TIMEOUT)
+        config.INPUT_SPEAKER_RECORD_TIMEOUT = int(self.entry_input_speaker_record_timeout.get())
 
     def entry_input_speaker_phrase_timeout_callback(self, event):
-        self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT = int(self.entry_input_speaker_phrase_timeout.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_PHRASE_TIMEOUT", self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT)
+        config.INPUT_SPEAKER_PHRASE_TIMEOUT = int(self.entry_input_speaker_phrase_timeout.get())
 
     def entry_input_speaker_max_phrases_callback(self, event):
-        self.parent.INPUT_SPEAKER_MAX_PHRASES = int(self.entry_input_speaker_max_phrases.get())
-        save_json(self.parent.PATH_CONFIG, "INPUT_SPEAKER_MAX_PHRASES", self.parent.INPUT_SPEAKER_MAX_PHRASES)
+        config.INPUT_SPEAKER_MAX_PHRASES = int(self.entry_input_speaker_max_phrases.get())
 
     def entry_ip_address_callback(self, event):
-        self.parent.OSC_IP_ADDRESS = self.entry_ip_address.get()
-        save_json(self.parent.PATH_CONFIG, "OSC_IP_ADDRESS", self.parent.OSC_IP_ADDRESS)
+        config.OSC_IP_ADDRESS = self.entry_ip_address.get()
 
     def entry_port_callback(self, event):
-        self.parent.OSC_PORT = self.entry_port.get()
-        save_json(self.parent.PATH_CONFIG, "OSC_PORT", self.parent.OSC_PORT)
+        config.OSC_PORT = self.entry_port.get()
 
     def entry_authkey_callback(self, event):
         value = self.entry_authkey.get()
         if len(value) > 0:
             if self.parent.translator.authentication("DeepL(auth)", value) is True:
-                self.parent.AUTH_KEYS["DeepL(auth)"] = value
-                save_json(self.parent.PATH_CONFIG, "AUTH_KEYS", self.parent.AUTH_KEYS)
+                auth_keys = config.AUTH_KEYS
+                auth_keys["DeepL(auth)"] = value
+                config.AUTH_KEYS = auth_keys
                 print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
                 print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
                 pass
 
     def checkbox_auto_clear_chatbox_callback(self):
-        value = self.checkbox_auto_clear_chatbox.get()
-        self.parent.ENABLE_AUTO_CLEAR_CHATBOX = value
-        save_json(self.parent.PATH_CONFIG, "ENABLE_AUTO_CLEAR_CHATBOX", self.parent.ENABLE_AUTO_CLEAR_CHATBOX)
+        config.ENABLE_AUTO_CLEAR_CHATBOX = self.checkbox_auto_clear_chatbox.get()
 
     def checkbox_notice_xsoverlay_callback(self):
-        value = self.checkbox_notice_xsoverlay.get()
-        self.parent.ENABLE_NOTICE_XSOVERLAY = value
-        save_json(self.parent.PATH_CONFIG, "ENABLE_NOTICE_XSOVERLAY", self.parent.ENABLE_NOTICE_XSOVERLAY)
+        config.ENABLE_NOTICE_XSOVERLAY = self.checkbox_notice_xsoverlay.get()
 
     def delete_window(self):
         self.checkbox_input_mic_threshold_check.deselect()
@@ -522,8 +476,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def entry_message_format_callback(self, event):
         value = self.entry_message_format.get()
         if len(value) > 0:
-            self.parent.MESSAGE_FORMAT = value
-            save_json(self.parent.PATH_CONFIG, "MESSAGE_FORMAT", self.parent.MESSAGE_FORMAT)
+            config.MESSAGE_FORMAT = value
 
     def delete_tabview_config(self, pre_language_yaml_data):
         self.tabview_config.delete(pre_language_yaml_data["config_tab_title_ui"])
@@ -554,7 +507,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.tabview_config.tab(config_tab_title_transcription).grid_columnconfigure(1, weight=1)
         self.tabview_config.tab(config_tab_title_parameter).grid_columnconfigure(1, weight=1)
         self.tabview_config.tab(config_tab_title_others).grid_columnconfigure(1, weight=1)
-        self.tabview_config._segmented_button.configure(font=CTkFont(family=self.parent.FONT_FAMILY))
+        self.tabview_config._segmented_button.configure(font=CTkFont(family=config.FONT_FAMILY))
         self.tabview_config._segmented_button.grid(sticky="W")
 
         # tab UI
@@ -566,7 +519,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_transparency.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.slider_transparency = CTkSlider(
@@ -574,7 +527,7 @@ class ToplevelWindowConfig(CTkToplevel):
             from_=50,
             to=100,
             command=self.slider_transparency_callback,
-            variable=DoubleVar(value=self.parent.TRANSPARENCY),
+            variable=DoubleVar(value=config.TRANSPARENCY),
         )
         self.slider_transparency.grid(row=row, column=1, columnspan=1, padx=padx, pady=10, sticky="nsew")
 
@@ -584,16 +537,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_appearance_theme.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_appearance_theme = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_ui),
             values=["Light", "Dark", "System"],
             command=self.optionmenu_appearance_theme_callback,
-            variable=StringVar(value=self.parent.APPEARANCE_THEME),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.APPEARANCE_THEME),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_appearance_theme.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -605,7 +558,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_appearance_theme_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_appearance_theme.bind(
                 "<Leave>",
@@ -618,16 +571,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_ui_scaling.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_ui_scaling = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_ui),
             values=["80%", "90%", "100%", "110%", "120%"],
             command=self.optionmenu_ui_scaling_callback,
-            variable=StringVar(value=self.parent.UI_SCALING),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.UI_SCALING),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_ui_scaling.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -639,7 +592,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_ui_scaling_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_ui_scaling.bind(
                 "<Leave>",
@@ -652,7 +605,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_font_family.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         font_families = list(tk_font.families())
@@ -660,9 +613,9 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             values=font_families,
             command=self.optionmenu_font_family_callback,
-            variable=StringVar(value=self.parent.FONT_FAMILY),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.FONT_FAMILY),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_font_family.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -674,7 +627,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_font_family_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_font_family.bind(
                 "<Leave>",
@@ -687,7 +640,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_ui_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         selectable_languages_values = list(selectable_languages.values())
@@ -695,9 +648,9 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_ui),
             values=selectable_languages_values,
             command=self.optionmenu_ui_language_callback,
-            variable=StringVar(value=selectable_languages[self.parent.UI_LANGUAGE]),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_ui_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -709,7 +662,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_ui_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_ui_language.bind(
                 "<Leave>",
@@ -725,16 +678,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_translation),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY),
+            font=CTkFont(family=config.FONT_FAMILY),
         )
         self.label_translation_translator.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_translation_translator = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             values=list(self.parent.translator.translator_status.keys()),
             command=self.optionmenu_translation_translator_callback,
-            variable=StringVar(value=self.parent.CHOICE_TRANSLATOR),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.CHOICE_TRANSLATOR),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_translation_translator.grid(row=row, column=1, columnspan=3, padx=padx, pady=pady, sticky="nsew")
 
@@ -746,7 +699,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_translator_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_translation_translator.bind(
                 "<Leave>",
@@ -759,7 +712,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_translation),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_translation_input_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -767,10 +720,10 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
-            variable=StringVar(value=self.parent.INPUT_SOURCE_LANG),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            values=list(translation_lang[config.CHOICE_TRANSLATOR]["source"].keys()),
+            variable=StringVar(value=config.INPUT_SOURCE_LANG),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_translation_input_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -778,11 +731,11 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
+                values=list(translation_lang[config.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_source_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_translation_input_source_language.bind(
                 "<Leave>",
@@ -794,7 +747,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_translation),
             text="-->",
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_translation_input_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -802,10 +755,10 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_input_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_input_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
-            variable=StringVar(value=self.parent.INPUT_TARGET_LANG),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            values=list(translation_lang[config.CHOICE_TRANSLATOR]["target"].keys()),
+            variable=StringVar(value=config.INPUT_TARGET_LANG),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_translation_input_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -813,11 +766,11 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_input_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_input_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
+                values=list(translation_lang[config.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_input_target_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_translation_input_target_language.bind(
                 "<Leave>",
@@ -830,7 +783,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_translation),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_translation_output_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -838,10 +791,10 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_source_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_source_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
-            variable=StringVar(value=self.parent.OUTPUT_SOURCE_LANG),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            values=list(translation_lang[config.CHOICE_TRANSLATOR]["source"].keys()),
+            variable=StringVar(value=config.OUTPUT_SOURCE_LANG),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_translation_output_source_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -849,11 +802,11 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_source_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_source_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["source"].keys()),
+                values=list(translation_lang[config.CHOICE_TRANSLATOR]["source"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_source_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_translation_output_source_language.bind(
                 "<Leave>",
@@ -865,7 +818,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_translation),
             text="-->",
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_translation_output_arrow.grid(row=row, column=2, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -873,10 +826,10 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_translation_output_target_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
             command=self.optionmenu_translation_output_target_language_callback,
-            values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
-            variable=StringVar(value=self.parent.OUTPUT_TARGET_LANG),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            values=list(translation_lang[config.CHOICE_TRANSLATOR]["target"].keys()),
+            variable=StringVar(value=config.OUTPUT_TARGET_LANG),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_translation_output_target_language.grid(row=row, column=3, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -884,11 +837,11 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_output_target_language = CTkScrollableDropdown(
                 self.optionmenu_translation_output_target_language,
-                values=list(translation_lang[self.parent.CHOICE_TRANSLATOR]["target"].keys()),
+                values=list(translation_lang[config.CHOICE_TRANSLATOR]["target"].keys()),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_output_target_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_translation_output_target_language.bind(
                 "<Leave>",
@@ -904,16 +857,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_host.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_host = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
             values=[host for host in get_input_device_list().keys()],
             command=self.optionmenu_input_mic_host_callback,
-            variable=StringVar(value=self.parent.CHOICE_MIC_HOST),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.CHOICE_MIC_HOST),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_input_mic_host.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -925,7 +878,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_mic_host_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_input_mic_host.bind(
                 "<Leave>",
@@ -938,16 +891,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_device = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
-            values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]],
+            values=[device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]],
             command=self.optionmenu_input_mic_device_callback,
-            variable=StringVar(value=self.parent.CHOICE_MIC_DEVICE),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.CHOICE_MIC_DEVICE),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_input_mic_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -955,11 +908,11 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_input_mic_device = CTkScrollableDropdown(
                 self.optionmenu_input_mic_device,
-                values=[device["name"] for device in get_input_device_list()[self.parent.CHOICE_MIC_HOST]],
+                values=[device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]],
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_mic_device_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_input_mic_device.bind(
                 "<Leave>",
@@ -972,16 +925,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_voice_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_voice_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
             values=list(transcription_lang.keys()),
             command=self.optionmenu_input_mic_voice_language_callback,
-            variable=StringVar(value=self.parent.INPUT_MIC_VOICE_LANGUAGE),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.INPUT_MIC_VOICE_LANGUAGE),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_input_mic_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -993,7 +946,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_mic_voice_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_input_voice_language.bind(
                 "<Leave>",
@@ -1006,7 +959,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -1019,7 +972,7 @@ class ToplevelWindowConfig(CTkToplevel):
             button_corner_radius=3,
             number_of_steps=self.MAX_MIC_ENERGY_THRESHOLD,
             command=self.slider_input_mic_energy_threshold_callback,
-            variable=IntVar(value=self.parent.INPUT_MIC_ENERGY_THRESHOLD),
+            variable=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
         )
         self.slider_input_mic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=5, sticky="nsew")
 
@@ -1031,7 +984,7 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_input_mic_threshold_check_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_input_mic_threshold_check.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -1048,7 +1001,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_dynamic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.checkbox_input_mic_dynamic_energy_threshold = CTkCheckBox(
@@ -1057,10 +1010,10 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_input_mic_dynamic_energy_threshold_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_input_mic_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        if  self.parent.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+        if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
             self.checkbox_input_mic_dynamic_energy_threshold.select()
         else:
             self.checkbox_input_mic_dynamic_energy_threshold.deselect()
@@ -1071,13 +1024,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_record_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_mic_record_timeout = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_MIC_RECORD_TIMEOUT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_mic_record_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_record_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_record_timeout_callback)
@@ -1088,13 +1041,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_phrase_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_mic_phrase_timeout = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_MIC_PHRASE_TIMEOUT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_mic_phrase_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_mic_phrase_timeout_callback)
@@ -1105,13 +1058,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_max_phrases.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_mic_max_phrases = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_MIC_MAX_PHRASES),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_mic_max_phrases.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_max_phrases.bind("<Any-KeyRelease>", self.entry_input_mic_max_phrases_callback)
@@ -1122,18 +1075,18 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_mic_word_filter.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
-        if len(self.parent.INPUT_MIC_WORD_FILTER) > 0:
-            textvariable=StringVar(value=",".join(self.parent.INPUT_MIC_WORD_FILTER))
+        if len(config.INPUT_MIC_WORD_FILTER) > 0:
+            textvariable=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER))
         else:
             textvariable=None
         self.entry_input_mic_word_filter = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
             textvariable=textvariable,
             placeholder_text="AAA,BBB,CCC",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_mic_word_filter.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_mic_word_filter.bind("<Any-KeyRelease>", self.entry_input_mic_word_filters_callback)
@@ -1144,16 +1097,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_speaker_device = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
             values=[device["name"] for device in get_output_device_list()],
             command=self.optionmenu_input_speaker_device_callback,
-            variable=StringVar(value=self.parent.CHOICE_SPEAKER_DEVICE),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_device.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -1165,7 +1118,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_speaker_device_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_input_speaker_device.bind(
                 "<Leave>",
@@ -1178,16 +1131,16 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_voice_language.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_speaker_voice_language = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
             values=list(transcription_lang.keys()),
             command=self.optionmenu_input_speaker_voice_language_callback,
-            variable=StringVar(value=self.parent.INPUT_SPEAKER_VOICE_LANGUAGE),
-            font=CTkFont(family=self.parent.FONT_FAMILY),
-            dropdown_font=CTkFont(family=self.parent.FONT_FAMILY),
+            variable=StringVar(value=config.INPUT_SPEAKER_VOICE_LANGUAGE),
+            font=CTkFont(family=config.FONT_FAMILY),
+            dropdown_font=CTkFont(family=config.FONT_FAMILY),
         )
         self.optionmenu_input_speaker_voice_language.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
 
@@ -1199,7 +1152,7 @@ class ToplevelWindowConfig(CTkToplevel):
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_speaker_voice_language_callback,
-                font=CTkFont(family=self.parent.FONT_FAMILY),
+                font=CTkFont(family=config.FONT_FAMILY),
             )
             self.scrollableDropdown_input_speaker_voice_language.bind(
                 "<Leave>",
@@ -1212,7 +1165,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -1226,7 +1179,7 @@ class ToplevelWindowConfig(CTkToplevel):
             button_corner_radius=3,
             number_of_steps=self.MAX_SPEAKER_ENERGY_THRESHOLD,
             command=self.slider_input_speaker_energy_threshold_callback,
-            variable=IntVar(value=self.parent.INPUT_SPEAKER_ENERGY_THRESHOLD),
+            variable=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
         )
         self.slider_input_speaker_energy_threshold.grid(row=row, column=1, columnspan=1, padx=0, pady=5, sticky="nsew")
 
@@ -1238,7 +1191,7 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_input_speaker_threshold_check_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_input_speaker_threshold_check.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
 
@@ -1255,7 +1208,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_dynamic_energy_threshold.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.checkbox_input_speaker_dynamic_energy_threshold = CTkCheckBox(
@@ -1264,10 +1217,10 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_input_speaker_dynamic_energy_threshold_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_input_speaker_dynamic_energy_threshold.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        if  self.parent.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+        if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
             self.checkbox_input_speaker_dynamic_energy_threshold.select()
         else:
             self.checkbox_input_speaker_dynamic_energy_threshold.deselect()
@@ -1278,13 +1231,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_record_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_speaker_record_timeout = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_SPEAKER_RECORD_TIMEOUT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_speaker_record_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_record_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_record_timeout_callback)
@@ -1295,13 +1248,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_phrase_timeout.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_speaker_phrase_timeout = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_SPEAKER_PHRASE_TIMEOUT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_speaker_phrase_timeout.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_phrase_timeout.bind("<Any-KeyRelease>", self.entry_input_speaker_phrase_timeout_callback)
@@ -1312,13 +1265,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_transcription),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_input_speaker_max_phrases.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_input_speaker_max_phrases = CTkEntry(
             self.tabview_config.tab(config_tab_title_transcription),
-            textvariable=StringVar(value=self.parent.INPUT_SPEAKER_MAX_PHRASES),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_input_speaker_max_phrases.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_input_speaker_max_phrases.bind("<Any-KeyRelease>", self.entry_input_speaker_max_phrases_callback)
@@ -1332,13 +1285,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_parameter),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_ip_address.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_ip_address = CTkEntry(
             self.tabview_config.tab(config_tab_title_parameter),
-            textvariable=StringVar(value=self.parent.OSC_IP_ADDRESS),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.OSC_IP_ADDRESS),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_ip_address.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_ip_address.bind("<Any-KeyRelease>", self.entry_ip_address_callback)
@@ -1349,13 +1302,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_parameter),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_port.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_port = CTkEntry(
             self.tabview_config.tab(config_tab_title_parameter),
-            textvariable=StringVar(value=self.parent.OSC_PORT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.OSC_PORT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_port.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_port.bind("<Any-KeyRelease>", self.entry_port_callback)
@@ -1366,13 +1319,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_parameter),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_authkey.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_authkey = CTkEntry(
             self.tabview_config.tab(config_tab_title_parameter),
-            textvariable=StringVar(value=self.parent.AUTH_KEYS["DeepL(auth)"]),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.AUTH_KEYS["DeepL(auth)"]),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_authkey.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_authkey.bind("<Any-KeyRelease>", self.entry_authkey_callback)
@@ -1383,13 +1336,13 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_parameter),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_message_format.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.entry_message_format = CTkEntry(
             self.tabview_config.tab(config_tab_title_parameter),
-            textvariable=StringVar(value=self.parent.MESSAGE_FORMAT),
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            textvariable=StringVar(value=config.MESSAGE_FORMAT),
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.entry_message_format.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
         self.entry_message_format.bind("<Any-KeyRelease>", self.entry_message_format_callback)
@@ -1401,7 +1354,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_others),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_checkbox_auto_clear_chatbox.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.checkbox_auto_clear_chatbox = CTkCheckBox(
@@ -1410,10 +1363,10 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_auto_clear_chatbox_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_auto_clear_chatbox.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        if  self.parent.ENABLE_AUTO_CLEAR_CHATBOX is True:
+        if config.ENABLE_AUTO_CLEAR_CHATBOX is True:
             self.checkbox_auto_clear_chatbox.select()
         else:
             self.checkbox_auto_clear_chatbox.deselect()
@@ -1424,7 +1377,7 @@ class ToplevelWindowConfig(CTkToplevel):
             self.tabview_config.tab(config_tab_title_others),
             text=init_lang_text,
             fg_color="transparent",
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.label_checkbox_notice_xsoverlay.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.checkbox_notice_xsoverlay = CTkCheckBox(
@@ -1433,10 +1386,10 @@ class ToplevelWindowConfig(CTkToplevel):
             onvalue=True,
             offvalue=False,
             command=self.checkbox_notice_xsoverlay_callback,
-            font=CTkFont(family=self.parent.FONT_FAMILY)
+            font=CTkFont(family=config.FONT_FAMILY)
         )
         self.checkbox_notice_xsoverlay.grid(row=row, column=1, columnspan=1, padx=padx, pady=pady, sticky="nsew")
-        if  self.parent.ENABLE_NOTICE_XSOVERLAY is True:
+        if config.ENABLE_NOTICE_XSOVERLAY is True:
             self.checkbox_notice_xsoverlay.select()
         else:
             self.checkbox_notice_xsoverlay.deselect()
