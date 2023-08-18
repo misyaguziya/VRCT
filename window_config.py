@@ -1,17 +1,13 @@
-from time import sleep
-from queue import Queue
 from os import path as os_path
 from tkinter import DoubleVar, IntVar
 from tkinter import font as tk_font
 import customtkinter
 from customtkinter import CTkToplevel, CTkTabview, CTkFont, CTkLabel, CTkSlider, CTkOptionMenu, StringVar, CTkEntry, CTkCheckBox, CTkProgressBar
-from flashtext import KeywordProcessor
 
 from threading import Thread
 from config import config
-from utils import print_textbox, thread_fnc, get_localized_text, get_key_by_value, widget_config_window_label_setter
-from audio_utils import get_input_device_list, get_output_device_list, get_default_output_device
-from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
+from model import model
+from utils import print_textbox, get_localized_text, get_key_by_value, widget_config_window_label_setter
 from languages import translation_lang, transcription_lang, selectable_languages
 
 from ctk_scrollable_dropdown import CTkScrollableDropdown
@@ -32,15 +28,6 @@ class ToplevelWindowConfig(CTkToplevel):
 
         self.after(200, lambda: self.iconbitmap(os_path.join(os_path.dirname(__file__), "img", "app.ico")))
         self.title("Config")
-
-        # init parameter
-        self.MAX_MIC_ENERGY_THRESHOLD = 2000
-        self.MAX_SPEAKER_ENERGY_THRESHOLD = 4000
-        self.mic_energy_recorder = None
-        self.mic_energy_plot_progressbar = None
-        self.speaker_energy_recorder = None
-        self.speaker_energy_get_progressbar = None
-        self.speaker_energy_plot_progressbar = None
 
         # load ui language data
         language_yaml_data = get_localized_text(f"{config.UI_LANGUAGE}")
@@ -202,7 +189,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def optionmenu_translation_translator_callback(self, choice):
         self.optionmenu_translation_translator.set(choice)
 
-        if self.parent.translator.authentication(choice, config.AUTH_KEYS[choice]) is False:
+        if model.authenticationTranslator(choice_translator=choice) is False:
             print_textbox(self.parent.textbox_message_log,  "Auth Key or language setting is incorrect", "ERROR")
             print_textbox(self.parent.textbox_message_system_log, "Auth Key or language setting is incorrect", "ERROR")
         else:
@@ -253,15 +240,15 @@ class ToplevelWindowConfig(CTkToplevel):
 
     def optionmenu_input_mic_host_callback(self, choice):
         self.optionmenu_input_mic_host.set(choice)
+        config.CHOICE_MIC_HOST = choice
+        config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
+
         self.optionmenu_input_mic_device.configure(
-            values=[device["name"] for device in get_input_device_list()[choice]],
-            variable=StringVar(value=[device["name"] for device in get_input_device_list()[choice]][0]))
+            values=model.getListInputDevice(),
+            variable=StringVar(value=model.getInputDefaultDevice()))
 
         if SCROLLABLE_DROPDOWN:
-            self.scrollableDropdown_input_mic_device.configure(values=[device["name"] for device in get_input_device_list()[choice]])
-
-        config.CHOICE_MIC_HOST = choice
-        config.CHOICE_MIC_DEVICE = [device["name"] for device in get_input_device_list()[choice]][0]
+            self.scrollableDropdown_input_mic_device.configure(values=model.getListInputDevice())
 
     def optionmenu_input_mic_device_callback(self, choice):
         self.optionmenu_input_mic_device.set(choice)
@@ -273,31 +260,13 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_mic_voice_language.set(choice)
         config.INPUT_MIC_VOICE_LANGUAGE = choice
 
-    def progressBar_input_mic_energy_plot(self):
-        if self.mic_energy_queue.empty() is False:
-            energy = self.mic_energy_queue.get()
-            try:
-                self.progressBar_input_mic_energy_threshold.set(energy/self.MAX_MIC_ENERGY_THRESHOLD)
-            except:
-                pass
-        sleep(0.01)
-
     def mic_threshold_check_start(self):
-        self.mic_energy_queue = Queue()
-        mic_device = [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
-        self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-        self.mic_energy_recorder.record_into_queue(self.mic_energy_queue)
-        self.mic_energy_plot_progressbar = thread_fnc(self.progressBar_input_mic_energy_plot)
-        self.mic_energy_plot_progressbar.daemon = True
-        self.mic_energy_plot_progressbar.start()
+        model.startCheckMicEnergy(self.progressBar_input_mic_energy_threshold)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
 
     def mic_threshold_check_stop(self):
-        if self.mic_energy_recorder != None:
-            self.mic_energy_recorder.stop()
-        if self.mic_energy_plot_progressbar != None:
-            self.mic_energy_plot_progressbar.stop()
+        model.stopCheckMicEnergy()
         self.progressBar_input_mic_energy_threshold.set(0)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
@@ -338,13 +307,11 @@ class ToplevelWindowConfig(CTkToplevel):
             config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
         else:
             config.INPUT_MIC_WORD_FILTER = []
-        self.parent.keyword_processor = KeywordProcessor()
-        for f in self.parent.INPUT_MIC_WORD_FILTER:
-            self.parent.keyword_processor.add_keyword(f)
+        model.resetKeywordProcessor()
+        model.addKeywords()
 
     def optionmenu_input_speaker_device_callback(self, choice):
-        speaker_device = [device for device in get_output_device_list() if device["name"] == choice][0]
-        if get_default_output_device()["index"] == speaker_device["index"]:
+        if model.checkSpeakerStatus(choice):
             self.optionmenu_input_speaker_device.set(choice)
             config.CHOICE_SPEAKER_DEVICE = choice
         else:
@@ -356,45 +323,13 @@ class ToplevelWindowConfig(CTkToplevel):
         self.optionmenu_input_speaker_voice_language.set(choice)
         config.INPUT_SPEAKER_VOICE_LANGUAGE = choice
 
-    def progressBar_input_speaker_energy_plot(self):
-        if self.speaker_energy_queue.empty() is False:
-            energy = self.speaker_energy_queue.get()
-            try:
-                self.progressBar_input_speaker_energy_threshold.set(energy/self.MAX_SPEAKER_ENERGY_THRESHOLD)
-            except:
-                pass
-        sleep(0.01)
-
-    def progressBar_input_speaker_energy_get(self):
-        with self.speaker_energy_recorder.source as source:
-            energy = self.speaker_energy_recorder.recorder.listen_energy(source)
-            self.speaker_energy_queue.put(energy)
-
     def speaker_threshold_check_start(self):
-        speaker_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
-
-        if get_default_output_device()["index"] == speaker_device["index"]:
-            self.speaker_energy_queue = Queue()
-            self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-            self.speaker_energy_get_progressbar = thread_fnc(self.progressBar_input_speaker_energy_get)
-            self.speaker_energy_get_progressbar.daemon = True
-            self.speaker_energy_get_progressbar.start()
-            self.speaker_energy_plot_progressbar = thread_fnc(self.progressBar_input_speaker_energy_plot)
-            self.speaker_energy_plot_progressbar.daemon = True
-            self.speaker_energy_plot_progressbar.start()
-        else:
-            print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
-            print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
-            self.checkbox_input_speaker_threshold_check.deselect()
+        model.startCheckSpeakerEnergy(self.progressBar_input_speaker_energy_threshold)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
 
     def speaker_threshold_check_stop(self):
-        if self.speaker_energy_get_progressbar != None:
-            self.speaker_energy_get_progressbar.stop()
-        if self.speaker_energy_plot_progressbar != None:
-            self.speaker_energy_plot_progressbar.stop()
-
+        model.stopCheckSpeakerEnergy()
         self.progressBar_input_speaker_energy_threshold.set(0)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
@@ -404,9 +339,14 @@ class ToplevelWindowConfig(CTkToplevel):
         self.checkbox_input_speaker_threshold_check.configure(state="disabled")
         self.update()
         if self.checkbox_input_speaker_threshold_check.get():
-            th_speaker_threshold_check_start = Thread(target=self.speaker_threshold_check_start)
-            th_speaker_threshold_check_start.daemon = True
-            th_speaker_threshold_check_start.start()
+            if model.checkSpeakerStatus():
+                th_speaker_threshold_check_start = Thread(target=self.speaker_threshold_check_start)
+                th_speaker_threshold_check_start.daemon = True
+                th_speaker_threshold_check_start.start()
+            else:
+                print_textbox(self.parent.textbox_message_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+                print_textbox(self.parent.textbox_message_system_log,  "Windows playback device and selected device do not match. Change the Windows playback device.", "ERROR")
+                self.checkbox_input_speaker_threshold_check.deselect()
         else:
             th_speaker_threshold_check_stop = Thread(target=self.speaker_threshold_check_stop)
             th_speaker_threshold_check_stop.daemon = True
@@ -436,10 +376,7 @@ class ToplevelWindowConfig(CTkToplevel):
     def entry_authkey_callback(self, event):
         value = self.entry_authkey.get()
         if len(value) > 0:
-            if self.parent.translator.authentication("DeepL(auth)", value) is True:
-                auth_keys = config.AUTH_KEYS
-                auth_keys["DeepL(auth)"] = value
-                config.AUTH_KEYS = auth_keys
+            if model.authenticationTranslator(choice_translator="DeepL(auth)", auth_key=value) is True:
                 print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
                 print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
             else:
@@ -683,7 +620,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_translation_translator.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_translation_translator = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_translation),
-            values=list(self.parent.translator.translator_status.keys()),
+            values=model.getListTranslatorName(),
             command=self.optionmenu_translation_translator_callback,
             variable=StringVar(value=config.CHOICE_TRANSLATOR),
             font=CTkFont(family=config.FONT_FAMILY),
@@ -695,7 +632,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_translation_translator = CTkScrollableDropdown(
                 self.optionmenu_translation_translator,
-                values=list(self.parent.translator.translator_status.keys()),
+                values=model.getListTranslatorName(),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_translation_translator_callback,
@@ -862,7 +799,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_mic_host.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_host = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
-            values=[host for host in get_input_device_list().keys()],
+            values=model.getListInputHost(),
             command=self.optionmenu_input_mic_host_callback,
             variable=StringVar(value=config.CHOICE_MIC_HOST),
             font=CTkFont(family=config.FONT_FAMILY),
@@ -874,7 +811,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_input_mic_host = CTkScrollableDropdown(
                 self.optionmenu_input_mic_host,
-                values=[host for host in get_input_device_list().keys()],
+                values=model.getListInputHost(),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_mic_host_callback,
@@ -896,7 +833,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_mic_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_mic_device = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
-            values=[device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]],
+            values=model.getListInputDevice(),
             command=self.optionmenu_input_mic_device_callback,
             variable=StringVar(value=config.CHOICE_MIC_DEVICE),
             font=CTkFont(family=config.FONT_FAMILY),
@@ -908,7 +845,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_input_mic_device = CTkScrollableDropdown(
                 self.optionmenu_input_mic_device,
-                values=[device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]],
+                values=model.getListInputDevice(),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_mic_device_callback,
@@ -966,11 +903,11 @@ class ToplevelWindowConfig(CTkToplevel):
         self.slider_input_mic_energy_threshold = CTkSlider(
             self.tabview_config.tab(config_tab_title_transcription),
             from_=0,
-            to=self.MAX_MIC_ENERGY_THRESHOLD,
+            to=config.MAX_MIC_ENERGY_THRESHOLD,
             border_width=7,
             button_length=0,
             button_corner_radius=3,
-            number_of_steps=self.MAX_MIC_ENERGY_THRESHOLD,
+            number_of_steps=config.MAX_MIC_ENERGY_THRESHOLD,
             command=self.slider_input_mic_energy_threshold_callback,
             variable=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
         )
@@ -1102,7 +1039,7 @@ class ToplevelWindowConfig(CTkToplevel):
         self.label_input_speaker_device.grid(row=row, column=0, columnspan=1, padx=padx, pady=pady, sticky="nsw")
         self.optionmenu_input_speaker_device = CTkOptionMenu(
             self.tabview_config.tab(config_tab_title_transcription),
-            values=[device["name"] for device in get_output_device_list()],
+            values=model.getListOutputDevice(),
             command=self.optionmenu_input_speaker_device_callback,
             variable=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
             font=CTkFont(family=config.FONT_FAMILY),
@@ -1114,7 +1051,7 @@ class ToplevelWindowConfig(CTkToplevel):
         if SCROLLABLE_DROPDOWN:
             self.scrollableDropdown_input_speaker_device = CTkScrollableDropdown(
                 self.optionmenu_input_speaker_device,
-                values=[device["name"] for device in get_output_device_list()],
+                values=model.getListOutputDevice(),
                 justify="left",
                 button_color="transparent",
                 command=self.optionmenu_input_speaker_device_callback,
@@ -1173,11 +1110,11 @@ class ToplevelWindowConfig(CTkToplevel):
         self.slider_input_speaker_energy_threshold = CTkSlider(
             self.tabview_config.tab(config_tab_title_transcription),
             from_=0,
-            to=self.MAX_SPEAKER_ENERGY_THRESHOLD,
+            to=config.MAX_SPEAKER_ENERGY_THRESHOLD,
             border_width=7,
             button_length=0,
             button_corner_radius=3,
-            number_of_steps=self.MAX_SPEAKER_ENERGY_THRESHOLD,
+            number_of_steps=config.MAX_SPEAKER_ENERGY_THRESHOLD,
             command=self.slider_input_speaker_energy_threshold_callback,
             variable=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
         )

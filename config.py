@@ -19,8 +19,48 @@ class Config:
         return cls._instance
 
     @property
+    def VERSION(self):
+        return self._VERSION
+
+    @property
     def PATH_CONFIG(self):
         return self._PATH_CONFIG
+
+    @property
+    def ENABLE_TRANSLATION(self):
+        return self._ENABLE_TRANSLATION
+
+    @ENABLE_TRANSLATION.setter
+    def ENABLE_TRANSLATION(self, value):
+        if type(value) is bool:
+            self._ENABLE_TRANSLATION = value
+
+    @property
+    def ENABLE_TRANSCRIPTION_SEND(self):
+        return self._ENABLE_TRANSCRIPTION_SEND
+
+    @ENABLE_TRANSCRIPTION_SEND.setter
+    def ENABLE_TRANSCRIPTION_SEND(self, value):
+        if type(value) is bool:
+            self._ENABLE_TRANSCRIPTION_SEND = value
+
+    @property
+    def ENABLE_TRANSCRIPTION_RECEIVE(self):
+        return self._ENABLE_TRANSCRIPTION_RECEIVE
+
+    @ENABLE_TRANSCRIPTION_RECEIVE.setter
+    def ENABLE_TRANSCRIPTION_RECEIVE(self, value):
+        if type(value) is bool:
+            self._ENABLE_TRANSCRIPTION_RECEIVE = value
+
+    @property
+    def ENABLE_FOREGROUND(self):
+        return self._ENABLE_FOREGROUND
+
+    @ENABLE_FOREGROUND.setter
+    def ENABLE_FOREGROUND(self, value):
+        if type(value) is bool:
+            self._ENABLE_FOREGROUND = value
 
     @property
     def TRANSPARENCY(self):
@@ -371,8 +411,25 @@ class Config:
     def GITHUB_URL(self):
         return self._GITHUB_URL
 
+    @property
+    def BREAK_KEYSYM_LIST(self):
+        return self._BREAK_KEYSYM_LIST
+
+    @property
+    def MAX_MIC_ENERGY_THRESHOLD(self):
+        return self._MAX_MIC_ENERGY_THRESHOLD
+
+    @property
+    def MAX_SPEAKER_ENERGY_THRESHOLD(self):
+        return self._MAX_SPEAKER_ENERGY_THRESHOLD
+
     def init_config(self):
+        self._VERSION = "1.3.2"
         self._PATH_CONFIG = "./config.json"
+        self._ENABLE_TRANSLATION = False
+        self._ENABLE_TRANSCRIPTION_SEND = False
+        self._ENABLE_TRANSCRIPTION_RECEIVE = False
+        self._ENABLE_FOREGROUND = False
         self._TRANSPARENCY = 100
         self._APPEARANCE_THEME = "System"
         self._UI_SCALING = "100%"
@@ -413,6 +470,12 @@ class Config:
         self._ENABLE_OSC = False
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+        self._BREAK_KEYSYM_LIST = [
+            "Delete", "Select", "Up", "Down", "Next", "End", "Print",
+            "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
+        ]
+        self._MAX_MIC_ENERGY_THRESHOLD = 2000
+        self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
