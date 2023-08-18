@@ -160,7 +160,6 @@ class Model:
             mic_transcriber.transcribe_audio_queue(mic_audio_queue, transcription_lang[config.INPUT_MIC_VOICE_LANGUAGE])
             message = mic_transcriber.get_transcript()
             if len(message) > 0:
-                print(message)
                 # word filter
                 if self.checkKeywords(message):
                     print_textbox(log, f"Detect WordFilter :{message}", "INFO")
