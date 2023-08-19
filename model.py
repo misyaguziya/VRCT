@@ -5,7 +5,7 @@ from requests import get as requests_get
 
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
+from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
@@ -133,31 +133,31 @@ class Model:
 
     @staticmethod
     def getListInputHost():
-        return [host for host in get_input_device_list().keys()]
+        return [host for host in getInputDevices().keys()]
 
     @staticmethod
     def getListInputDevice():
-        return [device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]]
+        return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]]
 
     @staticmethod
     def getInputDefaultDevice():
-        return [device["name"] for device in get_input_device_list()[config.CHOICE_MIC_HOST]][0]
+        return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]][0]
 
     @staticmethod
     def getListOutputDevice():
-        return [device["name"] for device in get_output_device_list()]
+        return [device["name"] for device in getOutputDevices()]
 
     @staticmethod
     def checkSpeakerStatus(choice=config.CHOICE_SPEAKER_DEVICE):
-        speaker_device = [device for device in get_output_device_list() if device["name"] == choice][0]
-        if get_default_output_device()["index"] == speaker_device["index"]:
+        speaker_device = [device for device in getOutputDevices() if device["name"] == choice][0]
+        if getDefaultOutputDevice()["index"] == speaker_device["index"]:
             return True
         return False
 
     def startMicTranscript(self, fnc):
         mic_audio_queue = Queue()
         self.mic_audio_recorder = SelectedMicRecorder(
-            [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0],
+            [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0],
             config.INPUT_MIC_ENERGY_THRESHOLD,
             config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             config.INPUT_MIC_RECORD_TIMEOUT,
@@ -192,7 +192,7 @@ class Model:
                 fnc(energy)
             sleep(0.01)
         mic_energy_queue = Queue()
-        mic_device = [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.record_into_queue(mic_energy_queue)
         self.mic_energy_plot_progressbar = threadFnc(progressBarInputMicEnergyPlot)
@@ -207,7 +207,7 @@ class Model:
 
     def startSpeakerTranscript(self, fnc):
         spk_audio_queue = Queue()
-        spk_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        spk_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         self.spk_audio_recorder = SelectedSpeakerRecorder(
             spk_device,
             config.INPUT_SPEAKER_ENERGY_THRESHOLD,
@@ -249,7 +249,7 @@ class Model:
                 energy = self.speaker_energy_recorder.recorder.listen_energy(source)
                 speaker_energy_queue.put(energy)
 
-        speaker_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
         self.speaker_energy_get_progressbar = threadFnc(progressBar_input_speaker_energy_get)

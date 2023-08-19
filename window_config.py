@@ -332,7 +332,6 @@ class ToplevelWindowConfig(CTkToplevel):
     def speaker_threshold_check_start(self):
         def plotProgressBar(energy):
             try:
-                print(energy)
                 self.progressBar_input_speaker_energy_threshold.set(energy/config.MAX_MIC_ENERGY_THRESHOLD)
             except:
                 pass

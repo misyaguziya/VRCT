@@ -8,7 +8,7 @@ from tkinter import font
 from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine, translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.transcription.transcription_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
+from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 
 def saveJson(path, key, value):
     with open(path, "r") as fp:
@@ -180,7 +180,7 @@ class Config:
 
     @CHOICE_MIC_HOST.setter
     def CHOICE_MIC_HOST(self, value):
-        if value in [host for host in get_input_device_list().keys()]:
+        if value in [host for host in getInputDevices().keys()]:
             self._CHOICE_MIC_HOST = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -190,7 +190,7 @@ class Config:
 
     @CHOICE_MIC_DEVICE.setter
     def CHOICE_MIC_DEVICE(self, value):
-        if value in [device["name"] for device in get_input_device_list()[self.CHOICE_MIC_HOST]]:
+        if value in [device["name"] for device in getInputDevices()[self.CHOICE_MIC_HOST]]:
             self._CHOICE_MIC_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -270,9 +270,9 @@ class Config:
 
     @CHOICE_SPEAKER_DEVICE.setter
     def CHOICE_SPEAKER_DEVICE(self, value):
-        if value in [device["name"] for device in get_output_device_list()]:
-            speaker_device = [device for device in get_output_device_list() if device["name"] == value][0]
-            if get_default_output_device()["index"] == speaker_device["index"]:
+        if value in [device["name"] for device in getOutputDevices()]:
+            speaker_device = [device for device in getOutputDevices() if device["name"] == value][0]
+            if getDefaultOutputDevice()["index"] == speaker_device["index"]:
                 self._CHOICE_SPEAKER_DEVICE = value
                 saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -449,8 +449,8 @@ class Config:
         self._INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[1]
         self._OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[1]
         self._OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[0]
-        self._CHOICE_MIC_HOST = get_default_input_device()["host"]["name"]
-        self._CHOICE_MIC_DEVICE = get_default_input_device()["device"]["name"]
+        self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
+        self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_VOICE_LANGUAGE = list(transcription_lang.keys())[0]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
         self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
@@ -458,7 +458,7 @@ class Config:
         self._INPUT_MIC_PHRASE_TIMEOUT = 3
         self._INPUT_MIC_MAX_PHRASES = 10
         self._INPUT_MIC_WORD_FILTER = []
-        self._CHOICE_SPEAKER_DEVICE = get_default_output_device()["name"]
+        self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["name"]
         self._INPUT_SPEAKER_VOICE_LANGUAGE = list(transcription_lang.keys())[1]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True

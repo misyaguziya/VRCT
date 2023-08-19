@@ -1,6 +1,6 @@
 from pyaudiowpatch import PyAudio, paWASAPI
 
-def get_input_device_list():
+def getInputDevices():
     devices = {}
     with PyAudio() as p:
         for host_index in range(0, p.get_host_api_count()):
@@ -14,7 +14,7 @@ def get_input_device_list():
                         devices[host["name"]] = [device]
     return devices
 
-def get_output_device_list():
+def getOutputDevices():
     devices =[]
     with PyAudio() as p:
         wasapi_info = p.get_host_api_info_by_type(paWASAPI)
@@ -23,7 +23,7 @@ def get_output_device_list():
                 devices.append(device)
     return devices
 
-def get_default_input_device():
+def getDefaultInputDevice():
     with PyAudio() as p:
         api_info = p.get_default_host_api_info()
         defaultInputDevice = api_info["defaultInputDevice"]
@@ -35,7 +35,7 @@ def get_default_input_device():
                 if device["index"] == defaultInputDevice:
                     return {"host":host, "device": device}
 
-def get_default_output_device():
+def getDefaultOutputDevice():
     with PyAudio() as p:
         wasapi_info = p.get_host_api_info_by_type(paWASAPI)
         defaultOutputDevice = wasapi_info["defaultOutputDevice"]
