@@ -4,6 +4,7 @@ import wave
 from speech_recognition import Recognizer, AudioData, AudioFile
 from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
+from .transcription_languages import transcription_lang
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
@@ -23,20 +24,20 @@ class AudioTranscriber:
                 "last_sample": bytes(),
                 "last_spoken": None,
                 "new_phrase": True,
-                "process_data_func": self.process_speaker_data if speaker else self.process_speaker_data
+                "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
 
-    def transcribe_audio_queue(self, audio_queue, language):
+    def transcribeAudioQueue(self, audio_queue, language):
         # while True:
         audio, time_spoken = audio_queue.get()
-        self.update_last_sample_and_phrase_status(audio, time_spoken)
+        self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
         text = ''
         try:
             # fd, path = tempfile.mkstemp(suffix=".wav")
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
-            text = self.audio_recognizer.recognize_google(audio_data, language=language)
+            text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language])
         except Exception as e:
             pass
         finally:
@@ -44,9 +45,9 @@ class AudioTranscriber:
             # os.unlink(path)
 
         if text != '':
-            self.update_transcript(text)
+            self.updateTranscript(text)
 
-    def update_last_sample_and_phrase_status(self, data, time_spoken):
+    def updateLastSampleAndPhraseStatus(self, data, time_spoken):
         source_info = self.audio_sources
         if source_info["last_spoken"] and time_spoken - source_info["last_spoken"] > timedelta(seconds=self.phrase_timeout):
             source_info["last_sample"] = bytes()
@@ -57,11 +58,11 @@ class AudioTranscriber:
         source_info["last_sample"] += data
         source_info["last_spoken"] = time_spoken
 
-    def process_mic_data(self):
+    def processMicData(self):
         audio_data = AudioData(self.audio_sources["last_sample"], self.audio_sources["sample_rate"], self.audio_sources["sample_width"])
         return audio_data
 
-    def process_speaker_data(self):
+    def processSpeakerData(self):
         temp_file = BytesIO()
         with wave.open(temp_file, 'wb') as wf:
             wf.setnchannels(self.audio_sources["channels"])
@@ -73,7 +74,7 @@ class AudioTranscriber:
             audio = self.audio_recognizer.record(source)
         return audio
 
-    def update_transcript(self, text):
+    def updateTranscript(self, text):
         source_info = self.audio_sources
         transcript = self.transcript_data
 
@@ -84,14 +85,14 @@ class AudioTranscriber:
         else:
             transcript[0] = text
 
-    def get_transcript(self):
+    def getTranscript(self):
         if len(self.transcript_data) > 0:
             text = self.transcript_data.pop(-1)
         else:
             text = ""
         return text
 
-    def clear_transcript_data(self):
+    def clearTranscriptData(self):
         self.transcript_data.clear()
         self.audio_sources["last_sample"] = bytes()
         self.audio_sources["new_phrase"] = True
