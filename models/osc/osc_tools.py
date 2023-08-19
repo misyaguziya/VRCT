@@ -6,7 +6,7 @@ from pythonosc import dispatcher
 from pythonosc import osc_server
 
 # send OSC message typing
-def send_typing(flag=False, ip_address="127.0.0.1", port=9000):
+def sendTyping(flag=False, ip_address="127.0.0.1", port=9000):
     typing = osc_message_builder.OscMessageBuilder(address="/chatbox/typing")
     typing.add_arg(flag)
     b_typing = typing.build()
@@ -14,7 +14,7 @@ def send_typing(flag=False, ip_address="127.0.0.1", port=9000):
     client.send(b_typing)
 
 # send OSC message
-def send_message(message=None, ip_address="127.0.0.1", port=9000):
+def sendMessage(message=None, ip_address="127.0.0.1", port=9000):
     if message != None:
         msg = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
         msg.add_arg(f"{message}")
@@ -24,13 +24,13 @@ def send_message(message=None, ip_address="127.0.0.1", port=9000):
         client = udp_client.SimpleUDPClient(ip_address, port)
         client.send(b_msg)
 
-def send_test_action(ip_address="127.0.0.1", port=9000):
+def sendTestAction(ip_address="127.0.0.1", port=9000):
     client = udp_client.SimpleUDPClient(ip_address, port)
     client.send_message("/input/Vertical", 1)
     sleep(0.01)
     client.send_message("/input/Vertical", False)
 
-def receive_osc_parameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
+def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
     _dispatcher = dispatcher.Dispatcher()
     _dispatcher.map(filter, target)
     server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
