@@ -417,8 +417,8 @@ class App(CTk):
         print_textbox(self.textbox_message_send_log, f"{message}", "SEND")
 
     def printLogReceiveMessage(self, message):
-            print_textbox(self.textbox_message_log,  f"{message}", "RECEIVE")
-            print_textbox(self.textbox_message_receive_log, f"{message}", "RECEIVE")
+        print_textbox(self.textbox_message_log,  f"{message}", "RECEIVE")
+        print_textbox(self.textbox_message_receive_log, f"{message}", "RECEIVE")
 
     def sendChatMessage(self, message):
         if len(message) > 0:

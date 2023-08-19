@@ -4,6 +4,7 @@ import wave
 from speech_recognition import Recognizer, AudioData, AudioFile
 from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
+from .transcription_languages import transcription_lang
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
@@ -36,7 +37,7 @@ class AudioTranscriber:
             # fd, path = tempfile.mkstemp(suffix=".wav")
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
-            text = self.audio_recognizer.recognize_google(audio_data, language=language)
+            text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language])
         except Exception as e:
             pass
         finally:

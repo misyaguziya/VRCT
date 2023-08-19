@@ -8,8 +8,9 @@ from threading import Thread
 from config import config
 from model import model
 from utils import print_textbox, get_localized_text, get_key_by_value, widget_config_window_label_setter
-from languages import translation_lang, transcription_lang, selectable_languages
-
+from languages import selectable_languages
+from models.translation.translation_languages import translation_lang
+from models.transcription.transcription_languages import transcription_lang
 from ctk_scrollable_dropdown import CTkScrollableDropdown
 
 SCROLLABLE_DROPDOWN = False
@@ -261,7 +262,12 @@ class ToplevelWindowConfig(CTkToplevel):
         config.INPUT_MIC_VOICE_LANGUAGE = choice
 
     def mic_threshold_check_start(self):
-        model.startCheckMicEnergy(self.progressBar_input_mic_energy_threshold)
+        def plotProgressBar(energy):
+            try:
+                self.progressBar_input_mic_energy_threshold.set(energy/config.MAX_MIC_ENERGY_THRESHOLD)
+            except:
+                pass
+        model.startCheckMicEnergy(plotProgressBar)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
 
@@ -324,7 +330,13 @@ class ToplevelWindowConfig(CTkToplevel):
         config.INPUT_SPEAKER_VOICE_LANGUAGE = choice
 
     def speaker_threshold_check_start(self):
-        model.startCheckSpeakerEnergy(self.progressBar_input_speaker_energy_threshold)
+        def plotProgressBar(energy):
+            try:
+                print(energy)
+                self.progressBar_input_speaker_energy_threshold.set(energy/config.MAX_MIC_ENERGY_THRESHOLD)
+            except:
+                pass
+        model.startCheckSpeakerEnergy(plotProgressBar)
         self.checkbox_input_mic_threshold_check.configure(state="normal")
         self.checkbox_input_speaker_threshold_check.configure(state="normal")
 

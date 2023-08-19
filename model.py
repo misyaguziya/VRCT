@@ -1,19 +1,32 @@
 from time import sleep
 from queue import Queue
-from threading import Thread
+from threading import Thread, Event
 from requests import get as requests_get
 
-from translation import Translator
 from flashtext import KeywordProcessor
-from osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
-from languages import transcription_lang
-from audio_utils import get_input_device_list, get_output_device_list, get_default_output_device
-from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
-from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
-from audio_transcriber import AudioTranscriber
-from notification import notification_xsoverlay_for_vrct
-from utils import thread_fnc
+from models.translation.translation_translator import Translator
+from models.osc.osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
+from models.transcription.transcription_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
+from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
+from models.transcription.transcription_transcriber import AudioTranscriber
+from models.xsoverlay.notification import notification_xsoverlay_for_vrct
 from config import config
+
+class thread_fnc(Thread):
+    def __init__(self, fnc, daemon=True, *args, **kwargs):
+        super(thread_fnc, self).__init__(daemon=daemon, *args, **kwargs)
+        self.fnc = fnc
+        self._stop = Event()
+    def stop(self):
+        self._stop.set()
+    def stopped(self):
+        return self._stop.isSet()
+    def run(self):
+        while True:
+            if self.stopped():
+                return
+            self.fnc(*self._args, **self._kwargs)
 
 class Model:
     _instance = None
@@ -157,7 +170,7 @@ class Model:
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
         )
         def mic_transcript_to_chatbox():
-            mic_transcriber.transcribe_audio_queue(mic_audio_queue, transcription_lang[config.INPUT_MIC_VOICE_LANGUAGE])
+            mic_transcriber.transcribe_audio_queue(mic_audio_queue, config.INPUT_MIC_VOICE_LANGUAGE)
             message = mic_transcriber.get_transcript()
             fnc(message)
 
@@ -172,14 +185,11 @@ class Model:
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder.stop = None
 
-    def startCheckMicEnergy(self, progressBar):
+    def startCheckMicEnergy(self, fnc):
         def progressBarInputMicEnergyPlot():
             if mic_energy_queue.empty() is False:
                 energy = mic_energy_queue.get()
-                try:
-                    progressBar.set(energy/config.MAX_MIC_ENERGY_THRESHOLD)
-                except:
-                    pass
+                fnc(energy)
             sleep(0.01)
         mic_energy_queue = Queue()
         mic_device = [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
@@ -212,7 +222,7 @@ class Model:
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
         def spk_transcript_to_textbox():
-            spk_transcriber.transcribe_audio_queue(spk_audio_queue, transcription_lang[config.INPUT_SPEAKER_VOICE_LANGUAGE])
+            spk_transcriber.transcribe_audio_queue(spk_audio_queue, config.INPUT_SPEAKER_VOICE_LANGUAGE)
             message = spk_transcriber.get_transcript()
             fnc(message)
 
@@ -227,20 +237,17 @@ class Model:
             self.spk_audio_recorder.stop()
             self.spk_audio_recorder.stop = None
 
-    def startCheckSpeakerEnergy(self, progressBar):
+    def startCheckSpeakerEnergy(self, fnc):
         def progressBar_input_speaker_energy_plot():
             if speaker_energy_queue.empty() is False:
                 energy = speaker_energy_queue.get()
-                try:
-                    progressBar.set(energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
-                except:
-                    pass
+                fnc(energy)
             sleep(0.01)
 
         def progressBar_input_speaker_energy_get():
             with self.speaker_energy_recorder.source as source:
                 energy = self.speaker_energy_recorder.recorder.listen_energy(source)
-                self.speaker_energy_queue.put(energy)
+                speaker_energy_queue.put(energy)
 
         speaker_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()

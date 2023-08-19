@@ -1,7 +1,6 @@
 from os import path as os_path
 import yaml
 from datetime import datetime
-from threading import Thread, Event
 
 def print_textbox(textbox, message, tags=None):
     now = datetime.now()
@@ -18,21 +17,6 @@ def print_textbox(textbox, message, tags=None):
     textbox.insert("end", f"]{message}\n")
     textbox.configure(state='disabled')
     textbox.see("end")
-
-class thread_fnc(Thread):
-    def __init__(self, fnc, daemon=True, *args, **kwargs):
-        super(thread_fnc, self).__init__(daemon=daemon, *args, **kwargs)
-        self.fnc = fnc
-        self._stop = Event()
-    def stop(self):
-        self._stop.set()
-    def stopped(self):
-        return self._stop.isSet()
-    def run(self):
-        while True:
-            if self.stopped():
-                return
-            self.fnc(*self._args, **self._kwargs)
 
 def get_localized_text(language):
     file_path = os_path.join(os_path.dirname(__file__), "locales.yml")
