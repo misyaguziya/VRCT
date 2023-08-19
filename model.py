@@ -5,17 +5,17 @@ from requests import get as requests_get
 
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
-from models.osc.osc_tools import send_typing, send_message, send_test_action, receive_osc_parameters
 from models.transcription.transcription_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
+from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import notification_xsoverlay_for_vrct
 from config import config
 
-class thread_fnc(Thread):
+class threadFnc(Thread):
     def __init__(self, fnc, daemon=True, *args, **kwargs):
-        super(thread_fnc, self).__init__(daemon=daemon, *args, **kwargs)
+        super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
         self.fnc = fnc
         self._stop = Event()
     def stop(self):
@@ -101,15 +101,15 @@ class Model:
 
     @staticmethod
     def oscStartSendTyping():
-        send_typing(True, config.OSC_IP_ADDRESS, config.OSC_PORT)
+        sendTyping(True, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     @staticmethod
     def oscStopSendTyping():
-        send_typing(False, config.OSC_IP_ADDRESS, config.OSC_PORT)
+        sendTyping(False, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     @staticmethod
     def oscSendMessage(message):
-        send_message(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
+        sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     @staticmethod
     def oscCheck():
@@ -118,12 +118,12 @@ class Model:
                 config.ENABLE_OSC = True
 
         # start receive osc
-        th_receive_osc_parameters = Thread(target=receive_osc_parameters, args=(check_osc_receive,))
+        th_receive_osc_parameters = Thread(target=receiveOscParameters, args=(check_osc_receive,))
         th_receive_osc_parameters.daemon = True
         th_receive_osc_parameters.start()
 
         # check osc started
-        send_test_action()
+        sendTestAction()
 
         # check update
         response = requests_get(config.GITHUB_URL)
@@ -174,12 +174,12 @@ class Model:
             message = mic_transcriber.get_transcript()
             fnc(message)
 
-        self.mic_print_transcript = thread_fnc(mic_transcript_to_chatbox)
+        self.mic_print_transcript = threadFnc(mic_transcript_to_chatbox)
         self.mic_print_transcript.daemon = True
         self.mic_print_transcript.start()
 
     def stopMicTranscript(self):
-        if isinstance(self.mic_print_transcript, thread_fnc):
+        if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
         if self.mic_audio_recorder.stop != None:
             self.mic_audio_recorder.stop()
@@ -195,7 +195,7 @@ class Model:
         mic_device = [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.record_into_queue(mic_energy_queue)
-        self.mic_energy_plot_progressbar = thread_fnc(progressBarInputMicEnergyPlot)
+        self.mic_energy_plot_progressbar = threadFnc(progressBarInputMicEnergyPlot)
         self.mic_energy_plot_progressbar.daemon = True
         self.mic_energy_plot_progressbar.start()
 
@@ -226,12 +226,12 @@ class Model:
             message = spk_transcriber.get_transcript()
             fnc(message)
 
-        self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
+        self.spk_print_transcript = threadFnc(spk_transcript_to_textbox)
         self.spk_print_transcript.daemon = True
         self.spk_print_transcript.start()
 
     def stopSpeakerTranscript(self):
-        if isinstance(self.spk_print_transcript, thread_fnc):
+        if isinstance(self.spk_print_transcript, threadFnc):
             self.spk_print_transcript.stop()
         if self.spk_audio_recorder.stop != None:
             self.spk_audio_recorder.stop()
@@ -252,10 +252,10 @@ class Model:
         speaker_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-        self.speaker_energy_get_progressbar = thread_fnc(progressBar_input_speaker_energy_get)
+        self.speaker_energy_get_progressbar = threadFnc(progressBar_input_speaker_energy_get)
         self.speaker_energy_get_progressbar.daemon = True
         self.speaker_energy_get_progressbar.start()
-        self.speaker_energy_plot_progressbar = thread_fnc(progressBar_input_speaker_energy_plot)
+        self.speaker_energy_plot_progressbar = threadFnc(progressBar_input_speaker_energy_plot)
         self.speaker_energy_plot_progressbar.daemon = True
         self.speaker_energy_plot_progressbar.start()
 
