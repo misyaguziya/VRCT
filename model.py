@@ -11,9 +11,9 @@ from audio_utils import get_input_device_list, get_output_device_list, get_defau
 from audio_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from audio_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from audio_transcriber import AudioTranscriber
-from utils import print_textbox, thread_fnc
-from config import config
 from notification import notification_xsoverlay_for_vrct
+from utils import thread_fnc
+from config import config
 
 class Model:
     _instance = None
@@ -141,7 +141,7 @@ class Model:
             return True
         return False
 
-    def startMicTranscript(self, log, send_log, system_log):
+    def startMicTranscript(self, fnc):
         mic_audio_queue = Queue()
         self.mic_audio_recorder = SelectedMicRecorder(
             [device for device in get_input_device_list()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0],
@@ -159,33 +159,7 @@ class Model:
         def mic_transcript_to_chatbox():
             mic_transcriber.transcribe_audio_queue(mic_audio_queue, transcription_lang[config.INPUT_MIC_VOICE_LANGUAGE])
             message = mic_transcriber.get_transcript()
-            if len(message) > 0:
-                # word filter
-                if self.checkKeywords(message):
-                    print_textbox(log, f"Detect WordFilter :{message}", "INFO")
-                    print_textbox(system_log, f"Detect WordFilter :{message}", "INFO")
-                    return
-
-                # translate
-                if config.ENABLE_TRANSLATION is False:
-                    voice_message = f"{message}"
-                elif self.getTranslatorStatus() is False:
-                    print_textbox(log,  "Auth Key or language setting is incorrect", "ERROR")
-                    print_textbox(system_log, "Auth Key or language setting is incorrect", "ERROR")
-                    voice_message = f"{message}"
-                else:
-                    voice_message = self.getInputTranslate(message)
-
-                if config.ENABLE_TRANSCRIPTION_SEND is True:
-                    if config.ENABLE_OSC is True:
-                        # osc send message
-                        model.oscSendMessage(voice_message)
-                    else:
-                        print_textbox(log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
-                        print_textbox(system_log, "OSC is not enabled, please enable OSC and rejoin.", "ERROR")
-                    # update textbox message log
-                    print_textbox(log,  f"{voice_message}", "SEND")
-                    print_textbox(send_log, f"{voice_message}", "SEND")
+            fnc(message)
 
         self.mic_print_transcript = thread_fnc(mic_transcript_to_chatbox)
         self.mic_print_transcript.daemon = True
@@ -221,7 +195,7 @@ class Model:
         if self.mic_energy_plot_progressbar != None:
             self.mic_energy_plot_progressbar.stop()
 
-    def startSpeakerTranscript(self, log, receive_log, system_log):
+    def startSpeakerTranscript(self, fnc):
         spk_audio_queue = Queue()
         spk_device = [device for device in get_output_device_list() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         self.spk_audio_recorder = SelectedSpeakerRecorder(
@@ -240,23 +214,7 @@ class Model:
         def spk_transcript_to_textbox():
             spk_transcriber.transcribe_audio_queue(spk_audio_queue, transcription_lang[config.INPUT_SPEAKER_VOICE_LANGUAGE])
             message = spk_transcriber.get_transcript()
-            if len(message) > 0:
-                # translate
-                if config.ENABLE_TRANSLATION is False:
-                    voice_message = f"{message}"
-                elif model.getTranslatorStatus() is False:
-                    print_textbox(log, "Auth Key or language setting is incorrect", "ERROR")
-                    print_textbox(system_log, "Auth Key or language setting is incorrect", "ERROR")
-                    voice_message = f"{message}"
-                else:
-                    voice_message = model.getOutputTranslate(message)
-
-                if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                    # update textbox message receive log
-                    print_textbox(log,  f"{voice_message}", "RECEIVE")
-                    print_textbox(receive_log, f"{voice_message}", "RECEIVE")
-                    if config.ENABLE_NOTICE_XSOVERLAY is True:
-                        notification_xsoverlay_for_vrct(content=f"{voice_message}")
+            fnc(message)
 
         self.spk_print_transcript = thread_fnc(spk_transcript_to_textbox)
         self.spk_print_transcript.daemon = True
@@ -299,5 +257,8 @@ class Model:
             self.speaker_energy_get_progressbar.stop()
         if self.speaker_energy_plot_progressbar != None:
             self.speaker_energy_plot_progressbar.stop()
+
+    def notificationXsoverlay(self, message):
+        notification_xsoverlay_for_vrct(content=f"{message}")
 
 model = Model()
