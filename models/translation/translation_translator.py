@@ -1,13 +1,13 @@
 from deepl import Translator as deepl_Translator
 from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
-from languages import translators, translation_lang
+from .translation_languages import translatorEngine, translation_lang
 
 # Translator
 class Translator():
     def __init__(self):
         self.translator_status = {}
-        for translator in translators:
+        for translator in translatorEngine:
             self.translator_status[translator] = False
         self.deepl_client = None
 

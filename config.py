@@ -5,8 +5,10 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from languages import transcription_lang, translators, translation_lang, selectable_languages
-from audio_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
+from languages import selectable_languages
+from models.translation.translation_languages import translatorEngine, translation_lang
+from models.transcription.transcription_languages import transcription_lang
+from models.transcription.transcription_utils import get_input_device_list, get_output_device_list, get_default_input_device, get_default_output_device
 
 def saveJson(path, key, value):
     with open(path, "r") as fp:
@@ -128,7 +130,7 @@ class Config:
 
     @CHOICE_TRANSLATOR.setter
     def CHOICE_TRANSLATOR(self, value):
-        if value in translators:
+        if value in translatorEngine:
             self._CHOICE_TRANSLATOR = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -442,7 +444,7 @@ class Config:
         self._UI_SCALING = "100%"
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
-        self._CHOICE_TRANSLATOR = translators[0]
+        self._CHOICE_TRANSLATOR = translatorEngine[0]
         self._INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[0]
         self._INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[1]
         self._OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[1]
