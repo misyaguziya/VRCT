@@ -1,15 +1,7 @@
-from json import load, dump
 from os import path as os_path
 import yaml
 from datetime import datetime
 from threading import Thread, Event
-
-def save_json(path, key, value):
-    with open(path, "r") as fp:
-        json_data = load(fp)
-    json_data[key] = value
-    with open(path, "w") as fp:
-        dump(json_data, fp, indent=4)
 
 def print_textbox(textbox, message, tags=None):
     now = datetime.now()
@@ -58,7 +50,7 @@ def get_localized_text(language):
             return localized_text
     else:
         return None
-    
+
 def get_key_by_value(dictionary, value):
     for key, val in dictionary.items():
         if val == value:
