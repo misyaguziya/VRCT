@@ -15,11 +15,11 @@ class BaseRecorder:
 
         self.source = source
 
-    def adjust_for_noise(self):
+    def adjustForNoise(self):
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
-    def record_into_queue(self, audio_queue):
+    def recordIntoQueue(self, audio_queue):
         def record_callback(_, audio):
             audio_queue.put((audio.get_raw_data(), datetime.now()))
 
@@ -32,7 +32,7 @@ class SelectedMicRecorder(BaseRecorder):
             sample_rate=int(device["defaultSampleRate"]),
         )
         super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
-        # self.adjust_for_noise()
+        # self.adjustForNoise()
 
 class SelectedSpeakerRecorder(BaseRecorder):
     def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
@@ -44,7 +44,7 @@ class SelectedSpeakerRecorder(BaseRecorder):
             channels=device["maxInputChannels"]
         )
         super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
-        # self.adjust_for_noise()
+        # self.adjustForNoise()
 
 class BaseEnergyRecorder:
     def __init__(self, source):
@@ -59,15 +59,15 @@ class BaseEnergyRecorder:
 
         self.source = source
 
-    def adjust_for_noise(self):
+    def adjustForNoise(self):
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
-    def record_into_queue(self, energy_queue):
-        def record_callback(_, energy):
+    def recordIntoQueue(self, energy_queue):
+        def recordCallback(_, energy):
             energy_queue.put(energy)
 
-        self.stop = self.recorder.listen_energy_in_background(self.source, record_callback)
+        self.stop = self.recorder.listen_energy_in_background(self.source, recordCallback)
 
 class SelectedMicEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
@@ -76,7 +76,7 @@ class SelectedMicEnergyRecorder(BaseEnergyRecorder):
             sample_rate=int(device["defaultSampleRate"]),
         )
         super().__init__(source=source)
-        # self.adjust_for_noise()
+        # self.adjustForNoise()
 
 class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
@@ -88,4 +88,4 @@ class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
             channels=device["maxInputChannels"]
         )
         super().__init__(source=source)
-        # self.adjust_for_noise()
+        # self.adjustForNoise()

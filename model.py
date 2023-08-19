@@ -10,7 +10,7 @@ from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiv
 from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
-from models.xsoverlay.notification import notification_xsoverlay_for_vrct
+from models.xsoverlay.notification import xsoverlayForVRCT
 from config import config
 
 class threadFnc(Thread):
@@ -162,19 +162,19 @@ class Model:
             config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             config.INPUT_MIC_RECORD_TIMEOUT,
         )
-        self.mic_audio_recorder.record_into_queue(mic_audio_queue)
+        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue)
         mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
             phrase_timeout=config.INPUT_MIC_PHRASE_TIMEOUT,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
         )
-        def mic_transcript_to_chatbox():
-            mic_transcriber.transcribe_audio_queue(mic_audio_queue, config.INPUT_MIC_VOICE_LANGUAGE)
-            message = mic_transcriber.get_transcript()
+        def sendMicTranscript():
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.INPUT_MIC_VOICE_LANGUAGE)
+            message = mic_transcriber.getTranscript()
             fnc(message)
 
-        self.mic_print_transcript = threadFnc(mic_transcript_to_chatbox)
+        self.mic_print_transcript = threadFnc(sendMicTranscript)
         self.mic_print_transcript.daemon = True
         self.mic_print_transcript.start()
 
@@ -186,7 +186,7 @@ class Model:
             self.mic_audio_recorder.stop = None
 
     def startCheckMicEnergy(self, fnc):
-        def progressBarInputMicEnergyPlot():
+        def sendMicEnergy():
             if mic_energy_queue.empty() is False:
                 energy = mic_energy_queue.get()
                 fnc(energy)
@@ -194,8 +194,8 @@ class Model:
         mic_energy_queue = Queue()
         mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
-        self.mic_energy_recorder.record_into_queue(mic_energy_queue)
-        self.mic_energy_plot_progressbar = threadFnc(progressBarInputMicEnergyPlot)
+        self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
+        self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy)
         self.mic_energy_plot_progressbar.daemon = True
         self.mic_energy_plot_progressbar.start()
 
@@ -214,19 +214,19 @@ class Model:
             config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             config.INPUT_SPEAKER_RECORD_TIMEOUT,
         )
-        self.spk_audio_recorder.record_into_queue(spk_audio_queue)
+        self.spk_audio_recorder.recordIntoQueue(spk_audio_queue)
         spk_transcriber = AudioTranscriber(
             speaker=True,
             source=self.spk_audio_recorder.source,
             phrase_timeout=config.INPUT_SPEAKER_PHRASE_TIMEOUT,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
-        def spk_transcript_to_textbox():
-            spk_transcriber.transcribe_audio_queue(spk_audio_queue, config.INPUT_SPEAKER_VOICE_LANGUAGE)
-            message = spk_transcriber.get_transcript()
+        def sendSpkTranscript():
+            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.INPUT_SPEAKER_VOICE_LANGUAGE)
+            message = spk_transcriber.getTranscript()
             fnc(message)
 
-        self.spk_print_transcript = threadFnc(spk_transcript_to_textbox)
+        self.spk_print_transcript = threadFnc(sendSpkTranscript)
         self.spk_print_transcript.daemon = True
         self.spk_print_transcript.start()
 
@@ -238,13 +238,13 @@ class Model:
             self.spk_audio_recorder.stop = None
 
     def startCheckSpeakerEnergy(self, fnc):
-        def progressBar_input_speaker_energy_plot():
+        def sendSpeakerEnergy():
             if speaker_energy_queue.empty() is False:
                 energy = speaker_energy_queue.get()
                 fnc(energy)
             sleep(0.01)
 
-        def progressBar_input_speaker_energy_get():
+        def getSpeakerEnergy():
             with self.speaker_energy_recorder.source as source:
                 energy = self.speaker_energy_recorder.recorder.listen_energy(source)
                 speaker_energy_queue.put(energy)
@@ -252,10 +252,10 @@ class Model:
         speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-        self.speaker_energy_get_progressbar = threadFnc(progressBar_input_speaker_energy_get)
+        self.speaker_energy_get_progressbar = threadFnc(getSpeakerEnergy)
         self.speaker_energy_get_progressbar.daemon = True
         self.speaker_energy_get_progressbar.start()
-        self.speaker_energy_plot_progressbar = threadFnc(progressBar_input_speaker_energy_plot)
+        self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy)
         self.speaker_energy_plot_progressbar.daemon = True
         self.speaker_energy_plot_progressbar.start()
 
@@ -265,7 +265,7 @@ class Model:
         if self.speaker_energy_plot_progressbar != None:
             self.speaker_energy_plot_progressbar.stop()
 
-    def notificationXsoverlay(self, message):
-        notification_xsoverlay_for_vrct(content=f"{message}")
+    def notificationXSOverlay(self, message):
+        xsoverlayForVRCT(content=f"{message}")
 
 model = Model()
