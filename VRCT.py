@@ -62,7 +62,10 @@ class App(CTk):
         model.addKeywords()
 
         # check OSC started
-        model.oscCheck()
+        model.checkOSCStarted()
+
+        # check Software Updated
+        model.checkSoftwareUpdated()
 
     def button_config_callback(self):
         self.foreground_stop()
