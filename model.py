@@ -112,19 +112,21 @@ class Model:
         sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     @staticmethod
-    def oscCheck():
-        def check_osc_receive(address, osc_arguments):
+    def checkOSCStarted():
+        def checkOscReceive(address, osc_arguments):
             if config.ENABLE_OSC is False:
                 config.ENABLE_OSC = True
 
         # start receive osc
-        th_receive_osc_parameters = Thread(target=receiveOscParameters, args=(check_osc_receive,))
+        th_receive_osc_parameters = Thread(target=receiveOscParameters, args=(checkOscReceive,))
         th_receive_osc_parameters.daemon = True
         th_receive_osc_parameters.start()
 
         # check osc started
         sendTestAction()
 
+    @staticmethod
+    def checkSoftwareUpdated():
         # check update
         response = requests_get(config.GITHUB_URL)
         tag_name = response.json()["tag_name"]
