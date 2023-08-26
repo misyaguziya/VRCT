@@ -15,19 +15,25 @@ import time
 class CTkScrollableDropdown(customtkinter.CTkToplevel):
 
     def __init__(self, attach, x=None, y=None, button_color=None, height: int = 200, width: int = None,
-                 fg_color=None, button_height: int = 20, justify="center", scrollbar_button_color=None,
+                 fg_color=None, max_button_height: int = 20, justify="center", scrollbar_button_color=None,
                  scrollbar=True, scrollbar_button_hover_color=None, frame_border_width=2, values=[],
-                 command=None, image_values=[], alpha: float = 0.97, frame_corner_radius=20, double_click=False,
-                 resize=True, frame_border_color=None, text_color=None, autocomplete=False, **button_kwargs):
+                 command=None, image_values=[], alpha: float = 0.97, double_click=False,
+                 resize=True, frame_border_color=None, text_color=None, autocomplete=False,
+                 max_height: int = None, button_pady: int = 0, min_show_button_num: int = 1,
+                 button_corner_radius: int = None, frame_corner_radius=0,
+                 **button_kwargs):
 
         super().__init__(takefocus=1)
         self.transient(self.master)
         self.alpha = alpha
         self.attach = attach
         self.corner = frame_corner_radius
+        # とりあえずframe_corner_radiusはframe_corner_radiusの名前のまま使いたい
+        self.frame_corner_radius = frame_corner_radius
         self.padding = 0
         self.focus_something = False
         self.disable = True
+        self.font_size = 12 if button_kwargs.get("font", None) is None else button_kwargs["font"]._size
 
         if sys.platform.startswith("win"):
             self.after(100, lambda: self.overrideredirect(True))
@@ -48,7 +54,7 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
         self.hide = True
         self.attach.bind('<Configure>', lambda e: self._withdraw() if not self.disable else None, add="+")
         self.attach.winfo_toplevel().bind('<Configure>', lambda e: self._withdraw() if not self.disable else None, add="+")
-        self.attach.winfo_toplevel().bind("<Triple-Button-1>", lambda e: self._withdraw() if not self.disable else None, add="+")        
+        self.attach.winfo_toplevel().bind("<Triple-Button-1>", lambda e: self._withdraw() if not self.disable else None, add="+")
         self.attach.winfo_toplevel().bind("<Button-3>", lambda e: self._withdraw() if not self.disable else None, add="+")
         self.attach.winfo_toplevel().bind("<Button-2>", lambda e: self._withdraw() if not self.disable else None, add="+")
 
@@ -84,6 +90,10 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
         self.autocomplete = autocomplete
         self.var_update = customtkinter.StringVar()
         self.appear = False
+        self.max_height = max_height
+        self.button_pady = button_pady
+        self.min_show_button_num = min_show_button_num
+        self.button_corner_radius = button_corner_radius
 
         if justify.lower()=="left":
             self.justify = "w"
@@ -92,7 +102,7 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
         else:
             self.justify = "c"
 
-        self.button_height = button_height
+        self.button_height = max_button_height + self.font_size
         self.values = values
         self.button_num = len(self.values)
         self.image_values = None if len(image_values)!=len(self.values) else image_values
@@ -179,8 +189,10 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
                                                           text_color=self.text_color,
                                                           image=self.image_values[i] if self.image_values is not None else None,
                                                           anchor=self.justify,
+                                                          corner_radius= self.button_corner_radius,
                                                           command=lambda k=row: self._attach_key_press(k), **button_kwargs)
-            self.widgets[self.i].pack(fill="x", pady=2, padx=(self.padding, 0))
+            pady = 0 if self.button_num-1 == self.i else self.button_pady
+            self.widgets[self.i].pack(fill="x", pady=(0, pady), padx=(self.padding, 0))
             self.i+=1
 
         self.hide = False
@@ -195,12 +207,25 @@ class CTkScrollableDropdown(customtkinter.CTkToplevel):
         self.width_new = self.attach.winfo_width() if self.width is None else self.width
 
         if self.resize:
-            if self.button_num==1:
-                self.height_new = self.button_height * self.button_num + 45
+            button_height_include_pady = self.button_height + self.button_pady
+
+            if self.min_show_button_num < self.button_num:
+                min_buttons_height = button_height_include_pady * self.min_show_button_num
             else:
-                self.height_new = self.button_height * self.button_num + 35
-            if self.height_new>self.height:
-                self.height_new = self.height
+                min_buttons_height = button_height_include_pady * self.button_num
+            # delete last one's pady px
+            min_buttons_height -= self.button_pady
+
+            # minor adjustment + 5px
+            min_buttons_height += 5
+            # adjust by frame_corner_radius
+            min_buttons_height += (self.frame_corner_radius * 2)
+
+            if self.max_height:
+                if min_buttons_height>self.max_height:
+                    min_buttons_height = self.max_height
+
+            self.height_new = min_buttons_height
 
         self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new,
                                            self.x_pos, self.y_pos))
