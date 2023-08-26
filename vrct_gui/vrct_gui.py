@@ -53,14 +53,10 @@ class VRCT_GUI(CTk):
 
         # self.information_window = ToplevelWindowInformation(self)
 
-
-
-    def start(self):
+    def createUI(self):
         createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
-        # self.printToTextbox(self.textbox_all, "Translation started. You: Japanese (japan). Target: English (American english)", "", "INFO")
-        # self.printToTextbox(self.textbox_all, "テキスト送信テスト", "Test send text", "SEND")
-        # self.printToTextbox(self.textbox_all, "こんにちは、こんにちは。", "Hi hi hello.", "SEND")
-        # self.printToTextbox(self.textbox_all, "Hi~ how are you doing.", "やあ～、元気かい？", "RECEIVE")
+
+    def startMainLoop(self):
         self.mainloop()
 
 
