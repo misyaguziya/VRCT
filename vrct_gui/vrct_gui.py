@@ -53,7 +53,7 @@ class VRCT_GUI(CTk):
 
         # self.information_window = ToplevelWindowInformation(self)
 
-    def createUI(self):
+    def createGUI(self):
         createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
 
     def startMainLoop(self):
