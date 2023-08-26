@@ -21,7 +21,6 @@ def createSidebar(settings, main_window):
         is_turned_on = getattr(main_window, "translation_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
-    toggleTranslationFeatures = [toggleTranslationFeature]
 
     def toggleTranscriptionSendFeature():
         is_turned_on = getattr(main_window, "transcription_send_switch_box").get()
@@ -254,7 +253,7 @@ def createSidebar(settings, main_window):
     sidebar_features_settings = [
         {
             "frame_attr_name": "translation_frame",
-            "command": lambda:[func() for func in toggleTranslationFeatures],
+            "command": toggleTranslationFeature,
             "switch_box_attr_name": "translation_switch_box",
             "toggle_switch_box_command": toggleTranslationSwitchBox,
             "label_attr_name": "label_translation",
