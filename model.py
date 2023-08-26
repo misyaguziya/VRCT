@@ -79,8 +79,7 @@ class Model:
                         target_language=config.INPUT_TARGET_LANG,
                         message=message
                 )
-        message = config.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", translation)
-        return message
+        return translation
 
     def getOutputTranslate(self, message):
         translation = self.translator.translate(
@@ -89,8 +88,7 @@ class Model:
                         target_language=config.OUTPUT_TARGET_LANG,
                         message=message
                 )
-        message = config.MESSAGE_FORMAT.replace("[message]", message).replace("[translation]", translation)
-        return message
+        return translation
 
     def addKeywords(self):
         for f in config.INPUT_MIC_WORD_FILTER:
