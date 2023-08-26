@@ -1,0 +1,193 @@
+en:
+  # main window
+  checkbox_translation: "Translation"
+  checkbox_transcription_send: "Voice2chatbox"
+  checkbox_transcription_receive: "Speaker2log"
+  checkbox_foreground: "Foreground"
+
+  # main tabview
+  main_tab_title_log: "Log"
+  main_tab_title_send: "Send"
+  main_tab_title_receive: "Receive"
+  main_tab_title_system: "System"
+
+
+  # configure window
+  # config tabview
+  config_tab_title_ui: "UI"
+  config_tab_title_translation: "Translation"
+  config_tab_title_transcription: "Transcription"
+  config_tab_title_parameter: "Parameter"
+  config_tab_title_others: "Others"
+  # tab UI
+  label_transparency: "Transparency"
+  label_appearance_theme: "Appearance Theme"
+  label_ui_scaling: "UI Scaling"
+  label_font_family: "Font Family"
+  label_ui_language: "UI Language"
+
+  # tab Translation
+  label_translation_translator: "Select Translator"
+  label_translation_input_language: "Send Language"
+  label_translation_output_language: "Receive Language"
+
+  # tab Transcription
+  label_input_mic_host: "Input Mic Host"
+  label_input_mic_device: "Input Mic Device"
+  label_input_mic_voice_language: "Input Mic Voice Language"
+  label_input_mic_energy_threshold: "Input Mic Energy Threshold"
+  checkbox_input_mic_threshold_check: "Check threshold point"
+  label_input_mic_dynamic_energy_threshold: "Input Mic Dynamic Energy Threshold"
+  label_input_mic_record_timeout: "Input Mic Record Timeout"
+  label_input_mic_phrase_timeout: "Input Mic Phrase Timeout"
+  label_input_mic_max_phrases: "Input Mic Max Phrases"
+  label_input_mic_word_filter: "Input Mic Word Filter"
+
+  label_input_speaker_device: "Input Speaker Device"
+  label_input_speaker_voice_language: "Input Speaker Voice Language"
+  label_input_speaker_energy_threshold: "Input Speaker Energy Threshold"
+  checkbox_input_speaker_threshold_check: "Check threshold point"
+  label_input_speaker_dynamic_energy_threshold: "Input Speaker Dynamic Energy Threshold"
+  label_input_speaker_record_timeout: "Input Speaker Record Timeout"
+  label_input_speaker_phrase_timeout: "Input Speaker Phrase Timeout"
+  label_input_speaker_max_phrases: "Input Speaker Max Phrases"
+
+  # tab Parameter
+  label_ip_address: "OSC IP address"
+  label_port: "OSC Port"
+  label_authkey: "DeepL Auth Key"
+  label_message_format: "Message Format"
+
+  # tab Others
+  label_checkbox_auto_clear_chatbox: "Auto clear chat box"
+  label_checkbox_notice_xsoverlay: "Notification XSOverlay"
+
+
+ja:
+  # main window
+  checkbox_translation: "翻訳"
+  checkbox_transcription_send: "マイク->チャットボックス"
+  checkbox_transcription_receive: "スピーカー->ログ"
+  checkbox_foreground: "最前面表示"
+
+  # main tabview
+  main_tab_title_log: "ログ"
+  main_tab_title_send: "送信"
+  main_tab_title_receive: "受信"
+  main_tab_title_system: "システム"
+
+
+  # configure window
+  # config tabview
+  config_tab_title_ui: "UI"
+  config_tab_title_translation: "翻訳方法"
+  config_tab_title_transcription: "音声認識"
+  config_tab_title_parameter: "パラメーター"
+  config_tab_title_others: "その他"
+
+  # tab UI
+  label_transparency: "透過度"
+  label_appearance_theme: "外観テーマを選択"
+  label_ui_scaling: "UIの拡大縮小"
+  label_font_family: "使用フォントの変更"
+  label_ui_language: "UI 言語"
+
+  # tab Translation
+  label_translation_translator: "翻訳エンジンの選択"
+  label_translation_input_language: "送信言語-->翻訳言語"
+  label_translation_output_language: "受信言語-->翻訳言語"
+
+  # tab Transcription
+  label_input_mic_host: "マイク入力ホスト"
+  label_input_mic_device: "マイク入力デバイス"
+  label_input_mic_voice_language: "マイクで話す言語"
+  label_input_mic_energy_threshold: "音声取得のしきい値"
+  checkbox_input_mic_threshold_check: "音声取得のしきい値の視覚化"
+  label_input_mic_dynamic_energy_threshold: "音声取得のしきい値の自動調整"
+  label_input_mic_record_timeout: "マイク音声の区切りの無音時間"
+  label_input_mic_phrase_timeout: "文字起こしする音声時間の上限"
+  label_input_mic_max_phrases: "保留する単語の上限(マイク)"
+  label_input_mic_word_filter: "ワードフィルタ"
+
+  label_input_speaker_device: "スピーカー(聞き取りたいデバイス)"
+  label_input_speaker_voice_language: "聞き取る音声の言語"
+  label_input_speaker_energy_threshold: "音声取得のしきい値"
+  checkbox_input_speaker_threshold_check: "音声取得のしきい値の視覚化"
+  label_input_speaker_dynamic_energy_threshold: "音声取得のしきい値の自動調整"
+  label_input_speaker_record_timeout: "スピーカー音声の区切りの無音時間"
+  label_input_speaker_phrase_timeout: "文字起こしする音声時間の上限"
+  label_input_speaker_max_phrases: "保留する単語の上限(スピーカー)"
+
+  # tab Parameter
+  # label_ip_address: ""
+  # label_port: ""
+  # label_authkey: ""
+  label_message_format: "送信するメッセージのフォーマット"
+
+  # tab Others
+  label_checkbox_auto_clear_chatbox: "送信後はチャットボックスを空にする"
+  label_checkbox_notice_xsoverlay: "XSOverlayの通知機能を有効"
+
+
+ko:
+  # main window
+  checkbox_translation: "번역"
+  checkbox_transcription_send: "마이크 -> 챗박스"
+  checkbox_transcription_receive: "스피커 -> 로그"
+  checkbox_foreground: "항상 위로"
+
+  # main tabview
+  main_tab_title_log: "로그"
+  main_tab_title_send: "전송"
+  main_tab_title_receive: "수신"
+  main_tab_title_system: "시스템"
+
+
+  # configure window
+  # config tabview
+  config_tab_title_ui: "UI"
+  config_tab_title_translation: "번역"
+  config_tab_title_transcription: "음성인식"
+  config_tab_title_parameter: "파라미터"
+  config_tab_title_others: "기타"
+  # tab UI
+  label_transparency: "투명도"
+  label_appearance_theme: "테마"
+  label_ui_scaling: "UI 크기"
+  label_font_family: "폰트"
+  label_ui_language: "UI 언어"
+
+  # tab Translation
+  label_translation_translator: "번역기 선택"
+  label_translation_input_language: "전송시 번역 언어"
+  label_translation_output_language: "수신시 번역 언어"
+
+  # tab Transcription
+  label_input_mic_host: "마이크 호스트"
+  label_input_mic_device: "마이크 장치"
+  label_input_mic_voice_language: "입력 언어"
+  label_input_mic_energy_threshold: "음성 입력 최소 볼륨"
+  checkbox_input_mic_threshold_check: "임계점 확인"
+  label_input_mic_dynamic_energy_threshold: "동적 임계값"
+  label_input_mic_record_timeout: "최대 무음 시간"
+  label_input_mic_phrase_timeout: "최대 인식 시간"
+  label_input_mic_max_phrases: "최대 입력 절(phrases) 수"
+  label_input_mic_word_filter: "단어 필터"
+
+  label_input_speaker_device: "스피커 장치"
+  label_input_speaker_voice_language: "입력 언어"
+  label_input_speaker_energy_threshold: "음성 입력 최소 볼륨"
+  checkbox_input_speaker_threshold_check: "임계점 확인"
+  label_input_speaker_dynamic_energy_threshold: "동적 임계값"
+  label_input_speaker_record_timeout: "최대 무음 시간"
+  label_input_speaker_phrase_timeout: "최대 인식 시간"
+  label_input_speaker_max_phrases: "최대 입력 절(phrases) 수"
+
+  # tab Parameter
+  label_ip_address: "OSC IP 주소"
+  label_port: "OSC 포트"
+  label_authkey: "DeepL 인증키"
+  label_message_format: "전송 형식"
+
+  # tab Others
+  label_checkbox_auto_clear_chatbox: "챗박스 자동 삭제"
