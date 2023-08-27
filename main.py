@@ -112,6 +112,16 @@ def logOSCError():
     vrct_gui.printToTextbox(textbox_all, "OSC is not enabled, please enable OSC and rejoin", "", "INFO")
     vrct_gui.printToTextbox(textbox_system, "OSC is not enabled, please enable OSC and rejoin", "", "INFO")
 
+def logForegroundStatusChange():
+    textbox_all = getattr(vrct_gui, "textbox_all")
+    textbox_system = getattr(vrct_gui, "textbox_system")
+    if config.ENABLE_FOREGROUND is True:
+        vrct_gui.printToTextbox(textbox_all, "Start foreground", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Start foreground", "", "INFO")
+    else:
+        vrct_gui.printToTextbox(textbox_all, "Stop foreground", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Stop foreground", "", "INFO")
+
 # command func
 def toggleTranslationFeature():
     config.ENABLE_TRANSLATION = getattr(vrct_gui, "translation_switch_box").get()
@@ -143,6 +153,14 @@ def toggleTranscriptionReceiveFeature():
         th_stopTranscriptionReceiveMessage.start()
     logTranscriptionSendStatusChange()
 
+def toggleForegroundFeature():
+    config.ENABLE_FOREGROUND = getattr(vrct_gui, "foreground_switch_box").get()
+    if config.ENABLE_FOREGROUND is True:
+        vrct_gui.attributes("-topmost", True)
+    else:
+        vrct_gui.attributes("-topmost", False)
+    logForegroundStatusChange()
+
 # create GUI
 vrct_gui.createGUI()
 
@@ -167,6 +185,8 @@ transcription_send_switch_box = getattr(vrct_gui, "transcription_send_switch_box
 transcription_send_switch_box.configure(command=toggleTranscriptionSendFeature)
 transcription_receive_switch_box = getattr(vrct_gui, "transcription_receive_switch_box")
 transcription_receive_switch_box.configure(command=toggleTranscriptionReceiveFeature)
+foreground_switch_box = getattr(vrct_gui, "foreground_switch_box")
+foreground_switch_box.configure(command=toggleForegroundFeature)
 
 if __name__ == "__main__":
     vrct_gui.startMainLoop()
