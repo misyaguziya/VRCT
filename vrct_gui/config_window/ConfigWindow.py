@@ -9,6 +9,7 @@ from config import config
 class ConfigWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings):
         super().__init__()
+        self.withdraw()
 
         self.INPUT_MIC_RECORD_TIMEOUT = 3
         self.INPUT_SOURCE_LANG = "aaaaaaaaa"

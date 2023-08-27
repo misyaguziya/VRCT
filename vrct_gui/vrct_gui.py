@@ -49,8 +49,6 @@ class VRCT_GUI(CTk):
 
 
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
-        self.config_window.withdraw()
-
         # self.information_window = ToplevelWindowInformation(self)
 
     def createGUI(self):
