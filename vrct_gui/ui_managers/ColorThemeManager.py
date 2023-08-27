@@ -232,22 +232,22 @@ class ColorThemeManager():
         self.main.TEXTBOX_TAB_BG_HOVERED_COLOR = self.LIGHT_300_COLOR
         self.main.TEXTBOX_TAB_BG_CLICKED_COLOR = self.LIGHT_350_COLOR
         self.main.TEXTBOX_TAB_TEXT_ACTIVE_COLOR = self.main.BASIC_TEXT_COLOR
-        self.main.TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.LIGHT_500_COLOR
+        self.main.TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.LIGHT_600_COLOR
 
         self.main.TEXTBOX_ENTRY_TEXT_COLOR = self.LIGHT_800_COLOR
         self.main.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR = self.LIGHT_500_COLOR
         self.main.TEXTBOX_ENTRY_BG_COLOR = self.LIGHT_325_COLOR
-        self.main.TEXTBOX_ENTRY_BORDER_COLOR = self.LIGHT_450_COLOR
+        self.main.TEXTBOX_ENTRY_BORDER_COLOR = self.LIGHT_400_COLOR
         self.main.TEXTBOX_ENTRY_PLACEHOLDER_COLOR = self.LIGHT_600_COLOR
         self.main.TEXTBOX_ENTRY_PLACEHOLDER_DISABLED_COLOR = self.LIGHT_700_COLOR
 
 
 
         # Sidebar
-        self.main.SIDEBAR_BG_COLOR = self.LIGHT_375_COLOR
+        self.main.SIDEBAR_BG_COLOR = self.LIGHT_350_COLOR
 
         # Sidebar Features
-        self.main.SF__BG_COLOR = self.LIGHT_350_COLOR
+        self.main.SF__BG_COLOR = self.LIGHT_375_COLOR
         self.main.SF__HOVERED_BG_COLOR = self.LIGHT_300_COLOR
         self.main.SF__CLICKED_BG_COLOR = self.LIGHT_200_COLOR
         self.main.SF__TEXT_DISABLED_COLOR = self.LIGHT_500_COLOR
