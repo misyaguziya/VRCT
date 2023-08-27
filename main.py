@@ -20,8 +20,11 @@ def sendMicMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_OSC is True:
-                osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                osc_message = osc_message.replace("[translation]", translation)
+                if len(translation) > 0:
+                    osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
+                    osc_message = osc_message.replace("[translation]", translation)
+                else:
+                    osc_message = message
                 model.oscSendMessage(osc_message)
             else:
                 logOSCError()
@@ -75,8 +78,11 @@ def sendChatMessage(message):
 
         # send OSC message
         if config.ENABLE_OSC is True:
-            osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-            osc_message = osc_message.replace("[translation]", translation)
+            if len(translation) > 0:
+                osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
+                osc_message = osc_message.replace("[translation]", translation)
+            else:
+                osc_message = message
             model.oscSendMessage(osc_message)
         else:
             logOSCError()
