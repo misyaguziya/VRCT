@@ -1,4 +1,5 @@
 from threading import Thread
+import customtkinter
 from vrct_gui import vrct_gui
 from config import config
 from model import model
@@ -25,7 +26,7 @@ def sendMicMessage(message):
             else:
                 logOSCError()
 
-            logTranscriptionSendMessage(message, translation)
+            logSendMessage(message, translation)
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage)
@@ -51,7 +52,7 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
                 xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
                 model.notificationXSOverlay(xsoverlay_message)
-            logTranscriptionReceiveMessage(message, translation)
+            logReceiveMessage(message, translation)
 
 def startTranscriptionReceiveMessage():
     model.startSpeakerTranscript(receiveSpeakerMessage)
@@ -60,6 +61,55 @@ def startTranscriptionReceiveMessage():
 def stopTranscriptionReceiveMessage():
     model.stopSpeakerTranscript()
     vrct_gui.changeMainWindowWidgetsStatus("normal", "All")
+
+# func message box
+def sendChatMessage(message):
+    if len(message) > 0:
+        translation = ""
+        if config.ENABLE_TRANSLATION is False:
+            pass
+        elif model.getTranslatorStatus() is False:
+            logAuthenticationError()
+        else:
+            translation = model.getInputTranslate(message)
+
+        # send OSC message
+        if config.ENABLE_OSC is True:
+            osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
+            osc_message = osc_message.replace("[translation]", translation)
+            model.oscSendMessage(osc_message)
+        else:
+            logOSCError()
+
+        # update textbox message log
+        logSendMessage(message, translation)
+
+        # delete message in entry message box
+        if config.ENABLE_AUTO_CLEAR_CHATBOX is True:
+            entry_message_box = getattr(vrct_gui, "entry_message_box")
+            entry_message_box.delete(0, customtkinter.END)
+
+def messageBoxPressKeyEnter(e):
+    model.oscStopSendTyping()
+    entry_message_box = getattr(vrct_gui, "entry_message_box")
+    message = entry_message_box.get()
+    sendChatMessage(message)
+
+def messageBoxPressKeyAny(e):
+    model.oscStartSendTyping()
+    entry_message_box = getattr(vrct_gui, "entry_message_box")
+    if e.keysym != "??":
+        if len(e.char) != 0 and e.keysym in config.BREAK_KEYSYM_LIST:
+            entry_message_box.insert("end", e.char)
+            return "break"
+
+def foregroundOffForcefully(e):
+    if config.ENABLE_FOREGROUND:
+        vrct_gui.attributes("-topmost", False)
+
+def foregroundOnForcefully(e):
+    if config.ENABLE_FOREGROUND:
+        vrct_gui.attributes("-topmost", True)
 
 # func print textbox
 def logTranslationStatusChange():
@@ -82,13 +132,13 @@ def logTranscriptionSendStatusChange():
         vrct_gui.printToTextbox(textbox_all, "Voice2chatbox機能をOFFにしました", "", "INFO")
         vrct_gui.printToTextbox(textbox_system, "Voice2chatbox機能をOFFにしました", "", "INFO")
 
-def logTranscriptionSendMessage(message, translate):
+def logSendMessage(message, translate):
     textbox_all = getattr(vrct_gui, "textbox_all")
     textbox_sent = getattr(vrct_gui, "textbox_sent")
     vrct_gui.printToTextbox(textbox_all, message, translate, "SEND")
     vrct_gui.printToTextbox(textbox_sent, message, translate, "SEND")
 
-def logTranscriptionReceiveMessage(message, translate):
+def logReceiveMessage(message, translate):
     textbox_all = getattr(vrct_gui, "textbox_all")
     textbox_sent = getattr(vrct_gui, "textbox_received")
     vrct_gui.printToTextbox(textbox_all, message, translate, "RECEIVE")
@@ -187,6 +237,12 @@ transcription_receive_switch_box = getattr(vrct_gui, "transcription_receive_swit
 transcription_receive_switch_box.configure(command=toggleTranscriptionReceiveFeature)
 foreground_switch_box = getattr(vrct_gui, "foreground_switch_box")
 foreground_switch_box.configure(command=toggleForegroundFeature)
+
+entry_message_box = getattr(vrct_gui, "entry_message_box")
+entry_message_box.bind("<Return>", messageBoxPressKeyEnter)
+entry_message_box.bind("<Any-KeyPress>", messageBoxPressKeyAny)
+entry_message_box.bind("<FocusIn>", foregroundOffForcefully)
+entry_message_box.bind("<FocusOut>", foregroundOnForcefully)
 
 if __name__ == "__main__":
     vrct_gui.startMainLoop()
