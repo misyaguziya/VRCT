@@ -3,6 +3,7 @@ from ctk_scrollable_dropdown import CTkScrollableDropdown
 
 from vrct_gui.ui_utils import createButtonWithImage
 
+from typing import Union
 
 
 class SettingBoxGenerator():
@@ -154,7 +155,7 @@ class SettingBoxGenerator():
 
 
 
-    def createSettingBoxSlider(self, parent_widget, label_text, desc_text, slider_attr_name, slider_range, slider_number_of_steps, command, variable):
+    def createSettingBoxSlider(self, parent_widget, label_text, desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
         (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
 
         setting_box_slider_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)

@@ -7,7 +7,7 @@ from ..SettingBoxGenerator import SettingBoxGenerator
 
 from config import config
 
-def createSettingBox_General(setting_box_wrapper, config_window, settings):
+def __tmp(setting_box_wrapper, config_window, settings):
 
 
     sbg = SettingBoxGenerator(config_window, settings)
