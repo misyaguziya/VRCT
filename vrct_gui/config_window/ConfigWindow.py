@@ -11,12 +11,6 @@ class ConfigWindow(CTkToplevel):
         super().__init__()
         self.withdraw()
 
-        self.INPUT_MIC_RECORD_TIMEOUT = 3
-        self.INPUT_SOURCE_LANG = "aaaaaaaaa"
-        self.INPUT_SPEAKER_ENERGY_THRESHOLD = 300
-        self.MAX_SPEAKER_ENERGY_THRESHOLD = 4000
-        self.INPUT_MIC_PHRASE_TIMEOUT = 3
-
 
         # configure window
         self.title("test config_window.py")
