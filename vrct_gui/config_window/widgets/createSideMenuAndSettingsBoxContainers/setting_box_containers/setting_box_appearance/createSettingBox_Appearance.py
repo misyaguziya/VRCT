@@ -22,9 +22,15 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
 
 
     # 関数名は変えるかもしれない。
-    def slider_transparency_callback(value, slider_widget):
+    # テーマ変更、フォント変更時、 Widget再生成か再起動かは検討中
+
+
+    def slider_transparency_callback(value):
         # self.parent.wm_attributes("-alpha", int(value/100))
         config.TRANSPARENCY = int(value)
+
+    def optionmenu_appearance_theme_callback(value):
+        config.APPEARANCE_THEME = value
 
 
 
@@ -32,10 +38,10 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
     config_window.sb__transparency = createSettingBoxSlider(
         parent_widget=setting_box_wrapper,
         label_text="Transparency",
-        desc_text="It'll change window's transparency. (50% ~ 100%)",
+        desc_text="It will change window's transparency. 50% to 100%. (Default: 100%)",
         slider_attr_name="sb__transparency_slider",
         slider_range=(50, 100),
-        command=lambda value: slider_transparency_callback(value, config_window.sb__transparency_slider),
+        command=lambda value: slider_transparency_callback(value),
         variable=IntVar(value=config.TRANSPARENCY),
     )
     config_window.sb__transparency.grid(row=row)
@@ -43,18 +49,18 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
 
 
 
-    # config_window.sb__dropdown_menu_1 = createSettingBoxDropdownMenu(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Option Menu",
-    #     desc_text="Select your preferences from the options menu.\nYou can choose your preferred language.",
-    #     optionmenu_attr_name="optionmenu_attr_name_1",
-    #     dropdown_menu_attr_name="dropdown_menu_attr_name_1",
-    #     dropdown_menu_values=["tt", "Japanese", "English"],
-    #     command=lambda value: dropdownMenuFun(value, config_window.optionmenu_attr_name_1, config_window.dropdown_menu_attr_name_1),
-    #     variable=StringVar(value=config.INPUT_SOURCE_LANG)
-    # )
-    # config_window.sb__dropdown_menu_1.grid(row=row)
-    # row+=1
+    config_window.sb__appearance_theme = createSettingBoxDropdownMenu(
+        parent_widget=setting_box_wrapper,
+        label_text="Theme",
+        desc_text="You can choose the color theme from \"Light\" and \"Dark\". If you select \"System\", It will adjust based on your Windows theme. (Default: System)",
+        optionmenu_attr_name="sb__appearance_theme_optionmenu",
+        dropdown_menu_attr_name="sb__appearance_theme_optionmenu_dropdown",
+        dropdown_menu_values=["Light", "Dark", "System"],
+        command=lambda value: optionmenu_appearance_theme_callback(value),
+        variable=StringVar(value=config.APPEARANCE_THEME)
+    )
+    config_window.sb__appearance_theme.grid(row=row)
+    row+=1
 
 
     # config_window.sb__dropdown_menu_2 = createSettingBoxDropdownMenu(
