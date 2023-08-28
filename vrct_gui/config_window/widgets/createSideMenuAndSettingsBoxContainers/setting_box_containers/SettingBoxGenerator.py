@@ -294,6 +294,9 @@ class SettingBoxGenerator():
         setting_box_entry_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_entry_frame.grid(row=0, column=1, padx=0, sticky="e")
 
+        def adjusted_command__for_entry_bind__Any_KeyRelease(e):
+            entry_bind__Any_KeyRelease(e.widget.get())
+
         entry_widget = CTkEntry(
             setting_box_entry_frame,
             width=entry_width,
@@ -301,7 +304,7 @@ class SettingBoxGenerator():
             textvariable=entry_textvariable,
             font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
         )
-        entry_widget.bind("<Any-KeyRelease>", entry_bind__Any_KeyRelease)
+        entry_widget.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
         setattr(self.config_window, entry_attr_name, entry_widget)
 
 
