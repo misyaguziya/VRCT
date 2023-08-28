@@ -29,6 +29,15 @@ class threadFnc(Thread):
             self.fnc(*self._args, **self._kwargs)
 
 class Model:
+    # Languages available for both transcription and translation
+    SUPPORTED_LANGUAGES = [
+        'Afrikaans', 'Arabic', 'Basque', 'Bulgarian', 'Catalan', 'Chinese', 'Croatian',
+        'Czech', 'Danish', 'Dutch', 'English', 'Filipino', 'Finnish', 'French', 'German',
+        'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese',
+        'Korean', 'Lithuanian', 'Malay', 'Norwegian', 'Polish', 'Portuguese', 'Romanian',
+        'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swedish', 'Thai', 'Turkish',
+        'Ukrainian', 'Vietnamese'
+        ]
     _instance = None
 
     def __new__(cls):
@@ -75,8 +84,8 @@ class Model:
     def getInputTranslate(self, message):
         translation = self.translator.translate(
                         translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.INPUT_SOURCE_LANG,
-                        target_language=config.INPUT_TARGET_LANG,
+                        source_language=config.SOURCE_LANGUAGE,
+                        target_language=config.TARGET_LANGUAGE,
                         message=message
                 )
         return translation
@@ -170,7 +179,7 @@ class Model:
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.INPUT_MIC_VOICE_LANGUAGE)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
             message = mic_transcriber.getTranscript()
             fnc(message)
 
@@ -222,7 +231,7 @@ class Model:
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
         def sendSpkTranscript():
-            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.INPUT_SPEAKER_VOICE_LANGUAGE)
+            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = spk_transcriber.getTranscript()
             fnc(message)
 

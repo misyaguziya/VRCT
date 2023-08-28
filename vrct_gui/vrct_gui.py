@@ -47,6 +47,9 @@ class VRCT_GUI(CTk):
         self.YOUR_LANGUAGE = "Japanese\n(Japan)"
         self.TARGET_LANGUAGE = "English\n(United States)"
 
+        self.CALLBACK_SELECTED_TAB_NO_1 = None
+        self.CALLBACK_SELECTED_TAB_NO_2 = None
+        self.CALLBACK_SELECTED_TAB_NO_3 = None
 
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
         # self.information_window = ToplevelWindowInformation(self)
