@@ -6,7 +6,7 @@ from .addConfigSideMenuItem import addConfigSideMenuItem
 from .createSettingBoxContainer import createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_Appearance
+from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -55,12 +55,11 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                     { "section_title": None, "setting_box": createSettingBox_Appearance },
                 ]
             },
-            "activate_by_default": True,
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_translation",
             "label_attr_name": "label_translation",
-            "selected_mark_attr_name": "transcription_send_selected_mark",
+            "selected_mark_attr_name": "selected_mark_translation",
             "text": "Translation",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_translation",
@@ -72,19 +71,20 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         {
             "side_menu_tab_attr_name": "side_menu_tab_transcription",
             "label_attr_name": "label_transcription",
-            "selected_mark_attr_name": "transcription_receive_selected_mark",
+            "selected_mark_attr_name": "selected_mark_transcription",
             "text": "Transcription",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_transcription",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": None },
+                    { "section_title": "Mic", "setting_box": createSettingBox_Mic },
                 ]
             },
+            "activate_by_default": True,
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_parameters",
             "label_attr_name": "label_parameters",
-            "selected_mark_attr_name": "foreground_selected_mark",
+            "selected_mark_attr_name": "selected_mark_foreground",
             "text": "Parameters",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_parameters",
@@ -96,7 +96,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
-            "selected_mark_attr_name": "foreground_selected_mark",
+            "selected_mark_attr_name": "selected_mark_foreground",
             "text": "Others",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_others",
