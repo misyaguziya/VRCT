@@ -3,7 +3,7 @@ from time import sleep
 from customtkinter import StringVar, IntVar
 
 
-from ..SettingBoxGenerator import SettingBoxGenerator
+from .SettingBoxGenerator import SettingBoxGenerator
 
 from config import config
 
