@@ -224,7 +224,7 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
         entry_textvariable=None
     config_window.sb__mic_word_filter = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Max Phrases",
+        label_text="Mic Word Filter",
         desc_text="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC",
         entry_attr_name="sb__entry_mic_word_filter",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
