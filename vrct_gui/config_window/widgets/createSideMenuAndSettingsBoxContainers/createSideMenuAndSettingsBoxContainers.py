@@ -6,7 +6,7 @@ from .addConfigSideMenuItem import addConfigSideMenuItem
 from .createSettingBoxContainer import createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_General
+from .setting_box_containers import createSettingBox_Appearance
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -45,16 +45,14 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
 
     side_menu_and_setting_box_containers_settings = [
         {
-            "side_menu_tab_attr_name": "side_menu_tab_general",
-            "label_attr_name": "label_general",
-            "selected_mark_attr_name": "translation_selected_mark",
-            "text": "General",
+            "side_menu_tab_attr_name": "side_menu_tab_appearance",
+            "label_attr_name": "label_appearance",
+            "selected_mark_attr_name": "selected_mark_appearance",
+            "text": "Appearance",
             "setting_box_container_settings": {
-                "setting_box_container_attr_name": "setting_box_container_general",
+                "setting_box_container_attr_name": "setting_box_container_appearance",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": createSettingBox_General },
-                    # { "section_title": "General Section Title", "setting_box": createSettingBox_General },
-                    # { "section_title": None, "setting_box": createSettingBox_General },
+                    { "section_title": None, "setting_box": createSettingBox_Appearance },
                 ]
             },
             "activate_by_default": True,
