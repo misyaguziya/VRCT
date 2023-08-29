@@ -1,8 +1,10 @@
 from threading import Thread
 import customtkinter
+from customtkinter import StringVar
 from vrct_gui import vrct_gui
 from config import config
 from model import model
+from vrct_gui.ui_utils import setDefaultActiveTab
 
 # func transcription send message
 def sendMicMessage(message):
@@ -117,6 +119,73 @@ def foregroundOnForcefully(e):
     if config.ENABLE_FOREGROUND:
         vrct_gui.attributes("-topmost", True)
 
+# func select languages
+def setYourLanguageAndCountry(select):
+    languages = config.SELECTED_TAB_YOUR_LANGUAGES
+    languages[config.SELECTED_TAB_NO] = select
+    config.SELECTED_TAB_YOUR_LANGUAGES = languages
+    language, country = model.getLanguageAndCountry(select)
+    config.SOURCE_LANGUAGE = language
+    config.SOURCE_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
+def setTargetLanguageAndCountry(select):
+    languages = config.SELECTED_TAB_TARGET_LANGUAGES
+    languages[config.SELECTED_TAB_NO] = select
+    config.SELECTED_TAB_TARGET_LANGUAGES = languages
+    language, country = model.getLanguageAndCountry(select)
+    config.TARGET_LANGUAGE = language
+    config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
+def callbackSelectedTabNo1():
+    config.SELECTED_TAB_NO = "1"
+    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    languages = config.SELECTED_TAB_YOUR_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.SOURCE_LANGUAGE = language
+    config.SOURCE_COUNTRY = country
+    languages = config.SELECTED_TAB_TARGET_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.TARGET_LANGUAGE = language
+    config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
+def callbackSelectedTabNo2():
+    config.SELECTED_TAB_NO = "2"
+    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    languages = config.SELECTED_TAB_YOUR_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.SOURCE_LANGUAGE = language
+    config.SOURCE_COUNTRY = country
+    languages = config.SELECTED_TAB_TARGET_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.TARGET_LANGUAGE = language
+    config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
+def callbackSelectedTabNo3():
+    config.SELECTED_TAB_NO = "3"
+    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    languages = config.SELECTED_TAB_YOUR_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.SOURCE_LANGUAGE = language
+    config.SOURCE_COUNTRY = country
+    languages = config.SELECTED_TAB_TARGET_LANGUAGES
+    select = languages[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.TARGET_LANGUAGE = language
+    config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
 # func print textbox
 def logTranslationStatusChange():
     textbox_all = getattr(vrct_gui, "textbox_all")
@@ -137,6 +206,16 @@ def logTranscriptionSendStatusChange():
     else:
         vrct_gui.printToTextbox(textbox_all, "Voice2chatbox機能をOFFにしました", "", "INFO")
         vrct_gui.printToTextbox(textbox_system, "Voice2chatbox機能をOFFにしました", "", "INFO")
+
+def logTranscriptionReceiveStatusChange():
+    textbox_all = getattr(vrct_gui, "textbox_all")
+    textbox_system = getattr(vrct_gui, "textbox_system")
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        vrct_gui.printToTextbox(textbox_all, "Speaker2chatbox機能をONにしました", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Speaker2chatbox機能をONにしました", "", "INFO")
+    else:
+        vrct_gui.printToTextbox(textbox_all, "Speaker2chatbox機能をOFFにしました", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Speaker2chatbox機能をOFFにしました", "", "INFO")
 
 def logSendMessage(message, translate):
     textbox_all = getattr(vrct_gui, "textbox_all")
@@ -179,11 +258,11 @@ def logForegroundStatusChange():
         vrct_gui.printToTextbox(textbox_system, "Stop foreground", "", "INFO")
 
 # command func
-def toggleTranslationFeature():
+def callbackToggleTranslation():
     config.ENABLE_TRANSLATION = getattr(vrct_gui, "translation_switch_box").get()
     logTranslationStatusChange()
 
-def toggleTranscriptionSendFeature():
+def callbackToggleTranscriptionSend():
     vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
     config.ENABLE_TRANSCRIPTION_SEND = getattr(vrct_gui, "transcription_send_switch_box").get()
     if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -196,7 +275,7 @@ def toggleTranscriptionSendFeature():
         th_stopTranscriptionSendMessage.start()
     logTranscriptionSendStatusChange()
 
-def toggleTranscriptionReceiveFeature():
+def callbackToggleTranscriptionReceive():
     vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
     config.ENABLE_TRANSCRIPTION_RECEIVE = getattr(vrct_gui, "transcription_receive_switch_box").get()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -207,9 +286,9 @@ def toggleTranscriptionReceiveFeature():
         th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
-    logTranscriptionSendStatusChange()
+    logTranscriptionReceiveStatusChange()
 
-def toggleForegroundFeature():
+def callbackToggleForeground():
     config.ENABLE_FOREGROUND = getattr(vrct_gui, "foreground_switch_box").get()
     if config.ENABLE_FOREGROUND is True:
         vrct_gui.attributes("-topmost", True)
@@ -234,21 +313,38 @@ model.checkOSCStarted()
 # check Software Updated
 model.checkSoftwareUpdated()
 
-# set commands
-translation_switch_box = getattr(vrct_gui, "translation_switch_box")
-translation_switch_box.configure(command=toggleTranslationFeature)
-transcription_send_switch_box = getattr(vrct_gui, "transcription_send_switch_box")
-transcription_send_switch_box.configure(command=toggleTranscriptionSendFeature)
-transcription_receive_switch_box = getattr(vrct_gui, "transcription_receive_switch_box")
-transcription_receive_switch_box.configure(command=toggleTranscriptionReceiveFeature)
-foreground_switch_box = getattr(vrct_gui, "foreground_switch_box")
-foreground_switch_box.configure(command=toggleForegroundFeature)
+# set UI and callback
+vrct_gui.CALLBACK_TOGGLE_TRANSLATION = callbackToggleTranslation
+vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = callbackToggleTranscriptionSend
+vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = callbackToggleTranscriptionReceive
+vrct_gui.CALLBACK_TOGGLE_FOREGROUND = callbackToggleForeground
 
 entry_message_box = getattr(vrct_gui, "entry_message_box")
 entry_message_box.bind("<Return>", messageBoxPressKeyEnter)
 entry_message_box.bind("<Any-KeyPress>", messageBoxPressKeyAny)
 entry_message_box.bind("<FocusIn>", foregroundOffForcefully)
 entry_message_box.bind("<FocusOut>", foregroundOnForcefully)
+
+sqls__optionmenu_your_language = getattr(vrct_gui, "sqls__optionmenu_your_language")
+sqls__optionmenu_your_language.configure(values=model.getListLanguageAndCountry())
+sqls__optionmenu_your_language.configure(command=setYourLanguageAndCountry)
+sqls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
+
+sqls__optionmenu_target_language = getattr(vrct_gui, "sqls__optionmenu_target_language")
+sqls__optionmenu_target_language.configure(values=model.getListLanguageAndCountry())
+sqls__optionmenu_target_language.configure(command=setTargetLanguageAndCountry)
+sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
+
+vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = callbackSelectedTabNo1
+vrct_gui.CALLBACK_SELECTED_TAB_NO_2 = callbackSelectedTabNo2
+vrct_gui.CALLBACK_SELECTED_TAB_NO_3 = callbackSelectedTabNo3
+
+vrct_gui.current_active_preset_tab = getattr(vrct_gui, f"sqls__presets_button_{config.SELECTED_TAB_NO}")
+setDefaultActiveTab(
+    active_tab_widget=vrct_gui.current_active_preset_tab,
+    active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+    active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+)
 
 if __name__ == "__main__":
     vrct_gui.startMainLoop()

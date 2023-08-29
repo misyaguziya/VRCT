@@ -11,6 +11,8 @@ from models.transcription.transcription_recorder import SelectedMicRecorder, Sel
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
+from models.translation.translation_languages import translatorEngine, translation_lang
+from models.transcription.transcription_languages import transcription_lang
 from config import config
 
 class threadFnc(Thread):
@@ -29,6 +31,15 @@ class threadFnc(Thread):
             self.fnc(*self._args, **self._kwargs)
 
 class Model:
+    # Languages available for both transcription and translation
+    SUPPORTED_LANGUAGES = [
+        'Afrikaans', 'Arabic', 'Basque', 'Bulgarian', 'Catalan', 'Chinese', 'Croatian',
+        'Czech', 'Danish', 'Dutch', 'English', 'Filipino', 'Finnish', 'French', 'German',
+        'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese',
+        'Korean', 'Lithuanian', 'Malay', 'Norwegian', 'Polish', 'Portuguese', 'Romanian',
+        'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swedish', 'Thai', 'Turkish',
+        'Ukrainian', 'Vietnamese'
+        ]
     _instance = None
 
     def __new__(cls):
@@ -66,6 +77,31 @@ class Model:
             config.AUTH_KEYS = auth_keys
         return result
 
+    @staticmethod
+    def getListLanguageAndCountry():
+        langs = []
+        for lang in model.SUPPORTED_LANGUAGES:
+            for country in transcription_lang[lang]:
+                langs.append(f"{lang}\n({country})")
+        return langs
+
+    @staticmethod
+    def getLanguageAndCountry(select):
+        parts = select.split("\n")
+        language = parts[0]
+        country = parts[1][1:-1]
+        return language, country
+
+    @staticmethod
+    def findTranslationEngine(source_lang, target_lang):
+        compatible_engines = []
+        for engine in translatorEngine:
+            source_languages = translation_lang.get(engine, {}).get("source", {})
+            target_languages = translation_lang.get(engine, {}).get("target", {})
+            if source_lang in source_languages and target_lang in target_languages:
+                compatible_engines.append(engine)
+        return compatible_engines[0]
+
     def getTranslatorStatus(self):
         return self.translator.translator_status[config.CHOICE_TRANSLATOR]
 
@@ -75,8 +111,8 @@ class Model:
     def getInputTranslate(self, message):
         translation = self.translator.translate(
                         translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.INPUT_SOURCE_LANG,
-                        target_language=config.INPUT_TARGET_LANG,
+                        source_language=config.SOURCE_LANGUAGE,
+                        target_language=config.TARGET_LANGUAGE,
                         message=message
                 )
         return translation
@@ -84,8 +120,8 @@ class Model:
     def getOutputTranslate(self, message):
         translation = self.translator.translate(
                         translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.OUTPUT_SOURCE_LANG,
-                        target_language=config.OUTPUT_TARGET_LANG,
+                        source_language=config.TARGET_LANGUAGE,
+                        target_language=config.SOURCE_LANGUAGE,
                         message=message
                 )
         return translation
@@ -170,7 +206,7 @@ class Model:
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.INPUT_MIC_VOICE_LANGUAGE)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
             message = mic_transcriber.getTranscript()
             fnc(message)
 
@@ -222,7 +258,7 @@ class Model:
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
         def sendSpkTranscript():
-            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.INPUT_SPEAKER_VOICE_LANGUAGE)
+            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = spk_transcriber.getTranscript()
             fnc(message)
 
