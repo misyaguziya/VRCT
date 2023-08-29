@@ -207,6 +207,16 @@ def logTranscriptionSendStatusChange():
         vrct_gui.printToTextbox(textbox_all, "Voice2chatbox機能をOFFにしました", "", "INFO")
         vrct_gui.printToTextbox(textbox_system, "Voice2chatbox機能をOFFにしました", "", "INFO")
 
+def logTranscriptionReceiveStatusChange():
+    textbox_all = getattr(vrct_gui, "textbox_all")
+    textbox_system = getattr(vrct_gui, "textbox_system")
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        vrct_gui.printToTextbox(textbox_all, "Speaker2chatbox機能をONにしました", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Speaker2chatbox機能をONにしました", "", "INFO")
+    else:
+        vrct_gui.printToTextbox(textbox_all, "Speaker2chatbox機能をOFFにしました", "", "INFO")
+        vrct_gui.printToTextbox(textbox_system, "Speaker2chatbox機能をOFFにしました", "", "INFO")
+
 def logSendMessage(message, translate):
     textbox_all = getattr(vrct_gui, "textbox_all")
     textbox_sent = getattr(vrct_gui, "textbox_sent")
@@ -248,11 +258,11 @@ def logForegroundStatusChange():
         vrct_gui.printToTextbox(textbox_system, "Stop foreground", "", "INFO")
 
 # command func
-def toggleTranslationFeature():
+def callbackToggleTranslation():
     config.ENABLE_TRANSLATION = getattr(vrct_gui, "translation_switch_box").get()
     logTranslationStatusChange()
 
-def toggleTranscriptionSendFeature():
+def callbackToggleTranscriptionSend():
     vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
     config.ENABLE_TRANSCRIPTION_SEND = getattr(vrct_gui, "transcription_send_switch_box").get()
     if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -265,7 +275,7 @@ def toggleTranscriptionSendFeature():
         th_stopTranscriptionSendMessage.start()
     logTranscriptionSendStatusChange()
 
-def toggleTranscriptionReceiveFeature():
+def callbackToggleTranscriptionReceive():
     vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
     config.ENABLE_TRANSCRIPTION_RECEIVE = getattr(vrct_gui, "transcription_receive_switch_box").get()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -276,9 +286,9 @@ def toggleTranscriptionReceiveFeature():
         th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
-    logTranscriptionSendStatusChange()
+    logTranscriptionReceiveStatusChange()
 
-def toggleForegroundFeature():
+def callbackToggleForeground():
     config.ENABLE_FOREGROUND = getattr(vrct_gui, "foreground_switch_box").get()
     if config.ENABLE_FOREGROUND is True:
         vrct_gui.attributes("-topmost", True)
@@ -303,15 +313,11 @@ model.checkOSCStarted()
 # check Software Updated
 model.checkSoftwareUpdated()
 
-# set commands
-translation_switch_box = getattr(vrct_gui, "translation_switch_box")
-translation_switch_box.configure(command=toggleTranslationFeature)
-transcription_send_switch_box = getattr(vrct_gui, "transcription_send_switch_box")
-transcription_send_switch_box.configure(command=toggleTranscriptionSendFeature)
-transcription_receive_switch_box = getattr(vrct_gui, "transcription_receive_switch_box")
-transcription_receive_switch_box.configure(command=toggleTranscriptionReceiveFeature)
-foreground_switch_box = getattr(vrct_gui, "foreground_switch_box")
-foreground_switch_box.configure(command=toggleForegroundFeature)
+# set UI and callback
+vrct_gui.CALLBACK_TOGGLE_TRANSLATION = callbackToggleTranslation
+vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = callbackToggleTranscriptionSend
+vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = callbackToggleTranscriptionReceive
+vrct_gui.CALLBACK_TOGGLE_FOREGROUND = callbackToggleForeground
 
 entry_message_box = getattr(vrct_gui, "entry_message_box")
 entry_message_box.bind("<Return>", messageBoxPressKeyEnter)

@@ -18,30 +18,30 @@ def createSidebar(settings, main_window):
 
 
     def toggleTranslationFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSLATION) is True:
+            main_window.CALLBACK_TOGGLE_TRANSLATION()
         is_turned_on = getattr(main_window, "translation_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
 
     def toggleTranscriptionSendFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND) is True:
+            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND()
         is_turned_on = getattr(main_window, "transcription_send_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
-        if is_turned_on is True:
-            changeMainWindowWidgetsStatus("disabled", "All")
-            sleep(1.5)
-            changeMainWindowWidgetsStatus("normal", "All")
 
     def toggleTranscriptionReceiveFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE) is True:
+            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE()
         is_turned_on = getattr(main_window, "transcription_receive_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
-        if is_turned_on is True:
-            changeMainWindowWidgetsStatus("disabled", "All")
-            sleep(1.5)
-            changeMainWindowWidgetsStatus("normal", "All")
 
 
     def toggleForegroundFeature():
+        if callable(main_window.CALLBACK_TOGGLE_FOREGROUND) is True:
+            main_window.CALLBACK_TOGGLE_FOREGROUND()
         is_turned_on = getattr(main_window, "foreground_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
