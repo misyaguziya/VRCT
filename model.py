@@ -11,6 +11,8 @@ from models.transcription.transcription_recorder import SelectedMicRecorder, Sel
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
+from models.translation.translation_languages import translatorEngine, translation_lang
+from models.transcription.transcription_languages import transcription_lang
 from config import config
 
 class threadFnc(Thread):
@@ -75,6 +77,31 @@ class Model:
             config.AUTH_KEYS = auth_keys
         return result
 
+    @staticmethod
+    def getListLanguageAndCountry():
+        langs = []
+        for lang in model.SUPPORTED_LANGUAGES:
+            for country in transcription_lang[lang]:
+                langs.append(f"{lang}\n({country})")
+        return langs
+
+    @staticmethod
+    def getLanguageAndCountry(select):
+        parts = select.split("\n")
+        language = parts[0]
+        country = parts[1][1:-1]
+        return language, country
+
+    @staticmethod
+    def findTranslationEngine(source_lang, target_lang):
+        compatible_engines = []
+        for engine in translatorEngine:
+            source_languages = translation_lang.get(engine, {}).get("source", {})
+            target_languages = translation_lang.get(engine, {}).get("target", {})
+            if source_lang in source_languages and target_lang in target_languages:
+                compatible_engines.append(engine)
+        return compatible_engines[0]
+
     def getTranslatorStatus(self):
         return self.translator.translator_status[config.CHOICE_TRANSLATOR]
 
@@ -93,8 +120,8 @@ class Model:
     def getOutputTranslate(self, message):
         translation = self.translator.translate(
                         translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.OUTPUT_SOURCE_LANG,
-                        target_language=config.OUTPUT_TARGET_LANG,
+                        source_language=config.TARGET_LANGUAGE,
+                        target_language=config.SOURCE_LANGUAGE,
                         message=message
                 )
         return translation
