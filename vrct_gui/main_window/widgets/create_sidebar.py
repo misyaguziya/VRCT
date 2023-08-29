@@ -513,12 +513,12 @@ def createSidebar(settings, main_window):
         column+=1
 
     # Set default active preset tab
-    main_window.current_active_preset_tab = getattr(main_window, "sqls__presets_button_1")
-    setDefaultActiveTab(
-        active_tab_widget=main_window.current_active_preset_tab,
-        active_bg_color=settings.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-        active_text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
-    )
+    # main_window.current_active_preset_tab = getattr(main_window, "sqls__presets_button_1")
+    # setDefaultActiveTab(
+    #     active_tab_widget=main_window.current_active_preset_tab,
+    #     active_bg_color=settings.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+    #     active_text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+    # )
 
 
     # Quick Language settings BOX
