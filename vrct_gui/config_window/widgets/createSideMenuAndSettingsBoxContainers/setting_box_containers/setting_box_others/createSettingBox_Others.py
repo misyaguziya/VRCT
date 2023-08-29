@@ -12,11 +12,7 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
 
     sbg = SettingBoxGenerator(config_window, settings)
 
-    createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
-    createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
-    createSettingBoxSlider = sbg.createSettingBoxSlider
-    createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
