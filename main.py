@@ -1,8 +1,10 @@
 from threading import Thread
 import customtkinter
+from customtkinter import StringVar
 from vrct_gui import vrct_gui
 from config import config
 from model import model
+from vrct_gui.ui_utils import setDefaultActiveTab
 
 # func transcription send message
 def sendMicMessage(message):
@@ -137,7 +139,7 @@ def setTargetLanguageAndCountry(select):
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo1():
-    config.SELECTED_TAB_NO = "tab_1"
+    config.SELECTED_TAB_NO = "1"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
@@ -153,7 +155,7 @@ def callbackSelectedTabNo1():
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo2():
-    config.SELECTED_TAB_NO = "tab_2"
+    config.SELECTED_TAB_NO = "2"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
@@ -169,7 +171,7 @@ def callbackSelectedTabNo2():
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo3():
-    config.SELECTED_TAB_NO = "tab_3"
+    config.SELECTED_TAB_NO = "3"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
@@ -320,15 +322,23 @@ entry_message_box.bind("<FocusOut>", foregroundOnForcefully)
 sqls__optionmenu_your_language = getattr(vrct_gui, "sqls__optionmenu_your_language")
 sqls__optionmenu_your_language.configure(values=model.getListLanguageAndCountry())
 sqls__optionmenu_your_language.configure(command=setYourLanguageAndCountry)
+sqls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
 
 sqls__optionmenu_target_language = getattr(vrct_gui, "sqls__optionmenu_target_language")
 sqls__optionmenu_target_language.configure(values=model.getListLanguageAndCountry())
 sqls__optionmenu_target_language.configure(command=setTargetLanguageAndCountry)
+sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
 
 vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = callbackSelectedTabNo1
 vrct_gui.CALLBACK_SELECTED_TAB_NO_2 = callbackSelectedTabNo2
 vrct_gui.CALLBACK_SELECTED_TAB_NO_3 = callbackSelectedTabNo3
 
+vrct_gui.current_active_preset_tab = getattr(vrct_gui, f"sqls__presets_button_{config.SELECTED_TAB_NO}")
+setDefaultActiveTab(
+    active_tab_widget=vrct_gui.current_active_preset_tab,
+    active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+    active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+)
 
 if __name__ == "__main__":
     vrct_gui.startMainLoop()

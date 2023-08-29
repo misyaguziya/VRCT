@@ -493,16 +493,16 @@ class Config:
         ]
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
-        self._SELECTED_TAB_NO = "tab_1"
+        self._SELECTED_TAB_NO = "1"
         self._SELECTED_TAB_YOUR_LANGUAGES = {
-            "tab_1":"Japanese\n(Japan)",
-            "tab_2":"Japanese\n(Japan)",
-            "tab_3":"Japanese\n(Japan)",
+            "1":"Japanese\n(Japan)",
+            "2":"Japanese\n(Japan)",
+            "3":"Japanese\n(Japan)",
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
-            "tab_1":"English\n(United States)",
-            "tab_2":"English\n(United States)",
-            "tab_3":"English\n(United States)",
+            "1":"English\n(United States)",
+            "2":"English\n(United States)",
+            "3":"English\n(United States)",
         }
 
     def load_config(self):
