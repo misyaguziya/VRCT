@@ -6,7 +6,7 @@ from vrct_gui.ui_utils import createButtonWithImage
 from typing import Union
 
 
-class SettingBoxGenerator():
+class _SettingBoxGenerator():
     def __init__(self, config_window, settings):
 
         self.IS_CONFIG_WINDOW_COMPACT_MODE = settings.IS_CONFIG_WINDOW_COMPACT_MODE
