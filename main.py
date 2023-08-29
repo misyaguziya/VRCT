@@ -3,8 +3,6 @@ import customtkinter
 from vrct_gui import vrct_gui
 from config import config
 from model import model
-from models.translation.translation_languages import translatorEngine, translation_lang
-from models.transcription.transcription_languages import transcription_lang
 
 # func transcription send message
 def sendMicMessage(message):
@@ -120,84 +118,71 @@ def foregroundOnForcefully(e):
         vrct_gui.attributes("-topmost", True)
 
 # func select languages
-def getListLanguageAndCountry():
-    langs = []
-    for lang in model.SUPPORTED_LANGUAGES:
-        for country in transcription_lang[lang]:
-            langs.append(f"{lang}\n({country})")
-    return langs
-
-def getLanguageAndState(select):
-    parts = select.split("\n")
-    language = parts[0]
-    country = parts[1][1:-1]
-    return language, country
-
 def setYourLanguageAndCountry(select):
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
-
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def setTargetLanguageAndCountry(select):
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
-
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo1():
     config.SELECTED_TAB_NO = "tab_1"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo2():
     config.SELECTED_TAB_NO = "tab_2"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 def callbackSelectedTabNo3():
     config.SELECTED_TAB_NO = "tab_3"
     vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = getLanguageAndState(select)
+    language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
 # func print textbox
 def logTranslationStatusChange():
@@ -333,11 +318,11 @@ entry_message_box.bind("<FocusIn>", foregroundOffForcefully)
 entry_message_box.bind("<FocusOut>", foregroundOnForcefully)
 
 sqls__optionmenu_your_language = getattr(vrct_gui, "sqls__optionmenu_your_language")
-sqls__optionmenu_your_language.configure(values=getListLanguageAndCountry())
+sqls__optionmenu_your_language.configure(values=model.getListLanguageAndCountry())
 sqls__optionmenu_your_language.configure(command=setYourLanguageAndCountry)
 
 sqls__optionmenu_target_language = getattr(vrct_gui, "sqls__optionmenu_target_language")
-sqls__optionmenu_target_language.configure(values=getListLanguageAndCountry())
+sqls__optionmenu_target_language.configure(values=model.getListLanguageAndCountry())
 sqls__optionmenu_target_language.configure(command=setTargetLanguageAndCountry)
 
 vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = callbackSelectedTabNo1
