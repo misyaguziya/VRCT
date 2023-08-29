@@ -20,24 +20,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
-
-    # def dropdownMenuFun(selected_value):
-    #     print(selected_value)
-    #     config.INPUT_SOURCE_LANG = selected_value
-
-    # def switchFun(_, switch_box_widget):
-    #     print(switch_box_widget.get())
-
-    # def checkboxFun(_, checkbox_box_widget):
-    #     print(checkbox_box_widget.get())
-
-    # def sliderFun(value):
-    #     print(value)
-
-    # def entryFun(value):
-    #     config_window.INPUT_MIC_PHRASE_TIMEOUT = int(value)
-    #     print(config_window.INPUT_MIC_PHRASE_TIMEOUT)
-
     def checkbox_input_speaker_threshold_check_callback(e, passive_button_wrapper_widget, active_button_wrapper_widget, is_turned_on):
         print("is_turned_on", is_turned_on)
 
@@ -81,11 +63,11 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
 
     def entry_input_mic_phrase_timeout_callback(value):
         print(int(value))
-        config.INPUT_MIC_RECORD_TIMEOUT = int(value)
+        config.INPUT_MIC_PHRASE_TIMEOUT = int(value)
 
     def entry_input_mic_max_phrases_callback(value):
-        print(str(value))
-        config.INPUT_MIC_MAX_PHRASES = str(value)
+        print(int(value))
+        config.INPUT_MIC_MAX_PHRASES = int(value)
 
     def entry_input_mic_word_filters_callback(value):
         word_filter = str(value)
@@ -119,7 +101,7 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     config_window.sb__mic_device = createSettingBoxDropdownMenu(
         parent_widget=setting_box_wrapper,
         label_text="Mic Device",
-        desc_text="Select the mic host. (Default: ?)",
+        desc_text="Select the mic devise. (Default: ?)",
         optionmenu_attr_name="sb__mic_device_optionmenu",
         dropdown_menu_attr_name="sb__mic_device_dropdown",
         # dropdown_menu_values=model.getListInputDevice(),
@@ -233,122 +215,3 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     )
     config_window.sb__mic_word_filter.grid(row=row)
     row+=1
-
-
-
-
-    # config_window.sb__switch_1 = createSettingBoxSwitch(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Switch",
-    #     desc_text="Turning this switch on will bring happiness.\nAs for turning it off... I leave that to your imagination",
-    #     switch_attr_name="switch_attr_name_1",
-    #     command=lambda: switchFun(config_window.switch_attr_name_1),
-    #     is_checked=True,
-    # )
-    # config_window.sb__switch_1.grid(row=row)
-    # row+=1
-
-    # config_window.sb__checkbox_1 = createSettingBoxCheckbox(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Checkbox",
-    #     desc_text="Checkbox ticked, a checkmark.",
-    #     checkbox_attr_name="checkbox_attr_name_1",
-    #     command=lambda: checkboxFun(config_window.checkbox_attr_name_1),
-    #     is_checked=False,
-    # )
-    # config_window.sb__checkbox_1.grid(row=row)
-    # row+=1
-
-    # config_window.sb__slider_1 = createSettingBoxSlider(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Slider",
-    #     desc_text="Adjust using the slider; the balance is up to you.",
-    #     slider_attr_name="slider_attr_name_1",
-    #     slider_range=(0, config_window.MAX_SPEAKER_ENERGY_THRESHOLD),
-    #     slider_number_of_steps=config_window.MAX_SPEAKER_ENERGY_THRESHOLD,
-    #     command=lambda value: sliderFun(value, config_window.slider_attr_name_1),
-    #     variable=IntVar(value=config_window.INPUT_SPEAKER_ENERGY_THRESHOLD),
-    # )
-    # config_window.sb__slider_1.grid(row=row)
-    # row+=1
-
-
-    # config_window.sb__progressbar_x_slider_1 = createSettingBoxProgressbarXSlider(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Progressbar and Slider for check the threshold",
-    #     desc_text="just the slider to modify the threshold for activating voice input.\nPress the microphone button to start input, and you can adjust it while monitoring the actual volume.",
-    #     command=set_input_threshold, # ?
-    #     variable=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
-    #     entry_attr_name="progressbar_x_slider__entry_attr_name_1",
-
-
-    #     slider_attr_name="progressbar_x_slider__slider_attr_name_1",
-    #     slider_range=(0, config_window.MAX_SPEAKER_ENERGY_THRESHOLD),
-    #     slider_number_of_steps=config_window.MAX_SPEAKER_ENERGY_THRESHOLD,
-
-    #     progressbar_attr_name="progressbar_x_slider__progressbar_attr_name_1",
-
-    #     passive_button_attr_name="progressbar_x_slider__passive_button_attr_name_1",
-    #     passive_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-    #         e,
-    #         config_window.progressbar_x_slider__passive_button_attr_name_1,
-    #         config_window.progressbar_x_slider__active_button_attr_name_1,
-    #         is_turned_on=True,
-    #     ),
-    #     active_button_attr_name="progressbar_x_slider__active_button_attr_name_1",
-    #     active_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-    #         e,
-    #         config_window.progressbar_x_slider__passive_button_attr_name_1,
-    #         config_window.progressbar_x_slider__active_button_attr_name_1,
-    #         is_turned_on=False,
-    #     ),
-    #     button_image_filename="mic_icon_white.png"
-    # )
-    # config_window.sb__progressbar_x_slider_1.grid(row=row)
-    # row+=1
-
-    # config_window.sb__progressbar_x_slider_2 = createSettingBoxProgressbarXSlider(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Progressbar and Slider for check the threshold2",
-    #     desc_text="just the slider to modify the threshold for activating voice input.\nPress the microphone button to start input, and you can adjust it while monitoring the actual volume.",
-    #     command=set_input_threshold, # ?
-    #     variable=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
-
-    #     entry_attr_name="progressbar_x_slider__entry_attr_name_2",
-
-
-    #     slider_attr_name="progressbar_x_slider__slider_attr_name_2",
-    #     slider_range=(0, config_window.MAX_SPEAKER_ENERGY_THRESHOLD),
-    #     slider_number_of_steps=config_window.MAX_SPEAKER_ENERGY_THRESHOLD,
-    #     progressbar_attr_name="progressbar_x_slider__progressbar_attr_name_2",
-
-    #     passive_button_attr_name="progressbar_x_slider__passive_button_attr_name_2",
-    #     passive_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-    #         e,
-    #         config_window.progressbar_x_slider__passive_button_attr_name_2,
-    #         config_window.progressbar_x_slider__active_button_attr_name_2,
-    #         is_turned_on=True,
-    #     ),
-    #     active_button_attr_name="progressbar_x_slider__active_button_attr_name_2",
-    #     active_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-    #         e,
-    #         config_window.progressbar_x_slider__passive_button_attr_name_2,
-    #         config_window.progressbar_x_slider__active_button_attr_name_2,
-    #         is_turned_on=False,
-    #     ),
-    #     button_image_filename="headphones_icon_white.png"
-    # )
-    # config_window.sb__progressbar_x_slider_2.grid(row=row)
-    # row+=1
-
-    # config_window.sb__entry_1 = createSettingBoxEntry(
-    #     parent_widget=setting_box_wrapper,
-    #     label_text="Entry",
-    #     desc_text="Please input a numerical value.",
-    #     entry_attr_name="entry_attr_name_1",
-    #     entry_width=settings.uism.SB__ENTRY_WIDTH_100,
-    #     entry_bind__Any_KeyRelease=lambda value: entryFun(value, config_window.entry_attr_name_1),
-    #     entry_textvariable=IntVar(value=config_window.INPUT_MIC_PHRASE_TIMEOUT),
-    # )
-    # config_window.sb__entry_1.grid(row=row, pady=0)
-    # row+=1

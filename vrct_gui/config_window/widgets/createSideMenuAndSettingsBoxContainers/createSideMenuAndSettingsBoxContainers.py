@@ -6,7 +6,7 @@ from .addConfigSideMenuItem import addConfigSideMenuItem
 from .createSettingBoxContainer import createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic
+from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic, createSettingBox_Speaker
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -77,6 +77,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                 "setting_box_container_attr_name": "setting_box_container_transcription",
                 "setting_boxes": [
                     { "section_title": "Mic", "setting_box": createSettingBox_Mic },
+                    { "section_title": "Speaker", "setting_box": createSettingBox_Speaker },
                 ]
             },
             "activate_by_default": True,
