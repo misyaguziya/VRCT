@@ -157,7 +157,7 @@ class UiScalingManager():
         self.config_window.SB__ENTRY_HEIGHT = self._calculateUiSize(30)
 
         # SB__ENTRY_WIDTH_10 ... SB__ENTRY_WIDTH_200
-        for i in range(10, 201, 10):
+        for i in range(10, 301, 10):
             setattr(self.config_window, f'SB__ENTRY_WIDTH_{i}', self._calculateUiSize(i))
 
 

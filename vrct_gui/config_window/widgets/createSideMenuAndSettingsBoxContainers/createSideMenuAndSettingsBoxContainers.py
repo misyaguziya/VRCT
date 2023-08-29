@@ -6,7 +6,7 @@ from .addConfigSideMenuItem import addConfigSideMenuItem
 from .createSettingBoxContainer import createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic, createSettingBox_Speaker
+from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic, createSettingBox_Speaker, createSettingBox_Others
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -80,7 +80,6 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                     { "section_title": "Speaker", "setting_box": createSettingBox_Speaker },
                 ]
             },
-            "activate_by_default": True,
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_parameters",
@@ -97,14 +96,15 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
-            "selected_mark_attr_name": "selected_mark_foreground",
+            "selected_mark_attr_name": "selected_mark_others",
             "text": "Others",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_others",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": None },
+                    { "section_title": None, "setting_box": createSettingBox_Others },
                 ]
             },
+            "activate_by_default": True,
         },
     ]
 
