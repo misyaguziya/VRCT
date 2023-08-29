@@ -1,7 +1,7 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
 
-def createSettingBoxContainer(config_window, settings, setting_box_container_settings):
+def _createSettingBoxContainer(config_window, settings, setting_box_container_settings):
 
 
     def createSectionTitle(container_widget, section_title):

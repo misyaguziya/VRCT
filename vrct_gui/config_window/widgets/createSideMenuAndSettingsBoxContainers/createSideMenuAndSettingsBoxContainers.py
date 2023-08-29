@@ -2,11 +2,15 @@ from customtkinter import CTkFrame, CTkScrollableFrame
 
 from ....ui_utils import setDefaultActiveTab
 
-from .addConfigSideMenuItem import addConfigSideMenuItem
-from .createSettingBoxContainer import createSettingBoxContainer
+from ._addConfigSideMenuItem import _addConfigSideMenuItem
+from ._createSettingBoxContainer import _createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Translation, createSettingBox_Mic, createSettingBox_Speaker, createSettingBox_Others, createSettingBox_AdvancedSettings
+from .setting_box_containers.setting_box_appearance import createSettingBox_Appearance
+from .setting_box_containers.setting_box_transcription import createSettingBox_Mic, createSettingBox_Speaker
+from .setting_box_containers.setting_box_others import createSettingBox_Others
+from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
+from .setting_box_containers.setting_box_translation import createSettingBox_Translation
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -55,6 +59,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                     { "section_title": None, "setting_box": createSettingBox_Appearance },
                 ]
             },
+            "activate_by_default": True,
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_translation",
@@ -104,7 +109,6 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                     { "section_title": None, "setting_box": createSettingBox_AdvancedSettings },
                 ]
             },
-            "activate_by_default": True,
         },
     ]
 
@@ -112,7 +116,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
 
     side_menu_row=0
     for sm_and_sbc_setting in side_menu_and_setting_box_containers_settings:
-        addConfigSideMenuItem(
+        _addConfigSideMenuItem(
             config_window=config_window,
             settings=settings,
             side_menu_settings=sm_and_sbc_setting,
@@ -122,7 +126,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         side_menu_row+=1
 
 
-        createSettingBoxContainer(
+        _createSettingBoxContainer(
             config_window=config_window,
             settings=settings,
             setting_box_container_settings=sm_and_sbc_setting["setting_box_container_settings"],
@@ -144,5 +148,3 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
             # Set default active setting box container
             config_window.current_active_setting_box_container = getattr(config_window, sm_and_sbc_setting["setting_box_container_settings"]["setting_box_container_attr_name"])
             config_window.current_active_setting_box_container.grid()
-
-

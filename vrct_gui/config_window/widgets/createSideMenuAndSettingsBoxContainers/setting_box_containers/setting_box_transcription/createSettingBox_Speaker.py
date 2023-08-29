@@ -3,15 +3,12 @@ from time import sleep
 from customtkinter import StringVar, IntVar
 
 
-from ..SettingBoxGenerator import SettingBoxGenerator
+from .._SettingBoxGenerator import _SettingBoxGenerator
 
 from config import config
 
 def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
-
-
-    sbg = SettingBoxGenerator(config_window, settings)
-
+    sbg = _SettingBoxGenerator(config_window, settings)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
