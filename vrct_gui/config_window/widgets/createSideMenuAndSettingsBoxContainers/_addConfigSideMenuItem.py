@@ -4,7 +4,7 @@ from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButto
 
 
 
-def addConfigSideMenuItem(config_window, settings, side_menu_settings, side_menu_row, all_side_menu_tab_attr_name):
+def _addConfigSideMenuItem(config_window, settings, side_menu_settings, side_menu_row, all_side_menu_tab_attr_name):
 
 
     def switchActiveAndPassiveSettingBoxContainerTabsColor(target_active_widget):

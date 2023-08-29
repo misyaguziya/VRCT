@@ -6,15 +6,12 @@ from languages import selectable_languages
 from utils import get_key_by_value
 
 
-from ..SettingBoxGenerator import SettingBoxGenerator
+from .._SettingBoxGenerator import _SettingBoxGenerator
 
 from config import config
 
 def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
-
-
-    sbg = SettingBoxGenerator(config_window, settings)
-
+    sbg = _SettingBoxGenerator(config_window, settings)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSlider = sbg.createSettingBoxSlider
 
