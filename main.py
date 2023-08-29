@@ -339,12 +339,12 @@ vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = callbackSelectedTabNo1
 vrct_gui.CALLBACK_SELECTED_TAB_NO_2 = callbackSelectedTabNo2
 vrct_gui.CALLBACK_SELECTED_TAB_NO_3 = callbackSelectedTabNo3
 
-vrct_gui.current_active_preset_tab = getattr(vrct_gui, f"sqls__presets_button_{config.SELECTED_TAB_NO}")
-setDefaultActiveTab(
-    active_tab_widget=vrct_gui.current_active_preset_tab,
-    active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-    active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
-)
+# vrct_gui.current_active_preset_tab = getattr(vrct_gui, f"sqls__presets_button_{config.SELECTED_TAB_NO}")
+# setDefaultActiveTab(
+#     active_tab_widget=vrct_gui.current_active_preset_tab,
+#     active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+#     active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+# )
 
 if __name__ == "__main__":
     vrct_gui.startMainLoop()
