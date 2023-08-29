@@ -1,4 +1,5 @@
-translatorEngine = ["DeepL(web)", "DeepL(auth)", "Google(web)", "Bing(web)"]
+# translatorEngine = ["DeepL(web)", "DeepL(auth)", "Google(web)", "Bing(web)"]
+translatorEngine = ["DeepL(web)", "Google(web)", "Bing(web)"]
 translation_lang = {}
 dict_deepl_web_languages = {
     "Japanese":"JA",
