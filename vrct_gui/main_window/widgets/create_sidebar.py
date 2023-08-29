@@ -18,30 +18,30 @@ def createSidebar(settings, main_window):
 
 
     def toggleTranslationFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSLATION) is True:
+            main_window.CALLBACK_TOGGLE_TRANSLATION()
         is_turned_on = getattr(main_window, "translation_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
 
     def toggleTranscriptionSendFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND) is True:
+            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND()
         is_turned_on = getattr(main_window, "transcription_send_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
-        if is_turned_on is True:
-            changeMainWindowWidgetsStatus("disabled", "All")
-            sleep(1.5)
-            changeMainWindowWidgetsStatus("normal", "All")
 
     def toggleTranscriptionReceiveFeature():
+        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE) is True:
+            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE()
         is_turned_on = getattr(main_window, "transcription_receive_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
-        if is_turned_on is True:
-            changeMainWindowWidgetsStatus("disabled", "All")
-            sleep(1.5)
-            changeMainWindowWidgetsStatus("normal", "All")
 
 
     def toggleForegroundFeature():
+        if callable(main_window.CALLBACK_TOGGLE_FOREGROUND) is True:
+            main_window.CALLBACK_TOGGLE_FOREGROUND()
         is_turned_on = getattr(main_window, "foreground_switch_box").get()
         print(is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
@@ -120,22 +120,28 @@ def createSidebar(settings, main_window):
 
     def switchToPreset1(e):
         print("1")
-        main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        main_window.TARGET_LANGUAGE = "English\n(United States)"
+        if callable(main_window.CALLBACK_SELECTED_TAB_NO_1) is True:
+            main_window.CALLBACK_SELECTED_TAB_NO_1()
+        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
+        # main_window.TARGET_LANGUAGE = "English\n(United States)"
         target_active_widget = getattr(main_window, "sqls__presets_button_1")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset2(e):
         print("2")
-        main_window.YOUR_LANGUAGE = "English\n(United States)"
-        main_window.TARGET_LANGUAGE = "Japanese\n(Japan)"
+        if callable(main_window.CALLBACK_SELECTED_TAB_NO_2) is True:
+            main_window.CALLBACK_SELECTED_TAB_NO_2()
+        # main_window.YOUR_LANGUAGE = "English\n(United States)"
+        # main_window.TARGET_LANGUAGE = "Japanese\n(Japan)"
         target_active_widget = getattr(main_window, "sqls__presets_button_2")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset3(e):
         print("3")
-        main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        main_window.TARGET_LANGUAGE = "Chinese, Cantonese\n(Traditional Hong Kong)"
+        if callable(main_window.CALLBACK_SELECTED_TAB_NO_3) is True:
+            main_window.CALLBACK_SELECTED_TAB_NO_3()
+        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
+        # main_window.TARGET_LANGUAGE = "Chinese, Cantonese\n(Traditional Hong Kong)"
         target_active_widget = getattr(main_window, "sqls__presets_button_3")
         switchPresetTabFunction(target_active_widget)
 
@@ -507,12 +513,12 @@ def createSidebar(settings, main_window):
         column+=1
 
     # Set default active preset tab
-    main_window.current_active_preset_tab = getattr(main_window, "sqls__presets_button_1")
-    setDefaultActiveTab(
-        active_tab_widget=main_window.current_active_preset_tab,
-        active_bg_color=settings.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-        active_text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
-    )
+    # main_window.current_active_preset_tab = getattr(main_window, "sqls__presets_button_1")
+    # setDefaultActiveTab(
+    #     active_tab_widget=main_window.current_active_preset_tab,
+    #     active_bg_color=settings.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+    #     active_text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+    # )
 
 
     # Quick Language settings BOX

@@ -135,43 +135,43 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def INPUT_SOURCE_LANG(self):
-        return self._INPUT_SOURCE_LANG
+    def SOURCE_LANGUAGE(self):
+        return self._SOURCE_LANGUAGE
 
-    @INPUT_SOURCE_LANG.setter
-    def INPUT_SOURCE_LANG(self, value):
-        if value in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
-            self._INPUT_SOURCE_LANG = value
+    @SOURCE_LANGUAGE.setter
+    def SOURCE_LANGUAGE(self, value):
+        if type(value) is str:
+            self._SOURCE_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def INPUT_TARGET_LANG(self):
-        return self._INPUT_TARGET_LANG
+    def SOURCE_COUNTRY(self):
+        return self._SOURCE_COUNTRY
 
-    @INPUT_TARGET_LANG.setter
-    def INPUT_TARGET_LANG(self, value):
-        if value in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
-            self._INPUT_TARGET_LANG = value
+    @SOURCE_COUNTRY.setter
+    def SOURCE_COUNTRY(self, value):
+        if type(value) is str:
+            self._SOURCE_COUNTRY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def OUTPUT_SOURCE_LANG(self):
-        return self._OUTPUT_SOURCE_LANG
+    def TARGET_LANGUAGE(self):
+        return self._TARGET_LANGUAGE
 
-    @OUTPUT_SOURCE_LANG.setter
-    def OUTPUT_SOURCE_LANG(self, value):
-        if value in list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys()):
-            self._OUTPUT_SOURCE_LANG = value
+    @TARGET_LANGUAGE.setter
+    def TARGET_LANGUAGE(self, value):
+        if type(value) is str:
+            self._TARGET_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def OUTPUT_TARGET_LANG(self):
-        return self._OUTPUT_TARGET_LANG
+    def TARGET_COUNTRY(self):
+        return self._TARGET_COUNTRY
 
-    @OUTPUT_TARGET_LANG.setter
-    def OUTPUT_TARGET_LANG(self, value):
-        if value in list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys()):
-            self._OUTPUT_TARGET_LANG = value
+    @TARGET_COUNTRY.setter
+    def TARGET_COUNTRY(self, value):
+        if type(value) is str:
+            self._TARGET_COUNTRY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -192,16 +192,6 @@ class Config:
     def CHOICE_MIC_DEVICE(self, value):
         if value in [device["name"] for device in getInputDevices()[self.CHOICE_MIC_HOST]]:
             self._CHOICE_MIC_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
-    def INPUT_MIC_VOICE_LANGUAGE(self):
-        return self._INPUT_MIC_VOICE_LANGUAGE
-
-    @INPUT_MIC_VOICE_LANGUAGE.setter
-    def INPUT_MIC_VOICE_LANGUAGE(self, value):
-        if value in list(transcription_lang.keys()):
-            self._INPUT_MIC_VOICE_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -275,16 +265,6 @@ class Config:
             if getDefaultOutputDevice()["index"] == speaker_device["index"]:
                 self._CHOICE_SPEAKER_DEVICE = value
                 saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
-    def INPUT_SPEAKER_VOICE_LANGUAGE(self):
-        return self._INPUT_SPEAKER_VOICE_LANGUAGE
-
-    @INPUT_SPEAKER_VOICE_LANGUAGE.setter
-    def INPUT_SPEAKER_VOICE_LANGUAGE(self, value):
-        if value in list(transcription_lang.keys()):
-            self._INPUT_SPEAKER_VOICE_LANGUAGE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     def INPUT_SPEAKER_ENERGY_THRESHOLD(self):
@@ -432,6 +412,36 @@ class Config:
     def MAX_SPEAKER_ENERGY_THRESHOLD(self):
         return self._MAX_SPEAKER_ENERGY_THRESHOLD
 
+    @property
+    def SELECTED_TAB_NO(self):
+        return self._SELECTED_TAB_NO
+
+    @SELECTED_TAB_NO.setter
+    def SELECTED_TAB_NO(self, value):
+        if type(value) is str:
+            self._SELECTED_TAB_NO = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    def SELECTED_TAB_YOUR_LANGUAGES(self):
+        return self._SELECTED_TAB_YOUR_LANGUAGES
+
+    @SELECTED_TAB_YOUR_LANGUAGES.setter
+    def SELECTED_TAB_YOUR_LANGUAGES(self, value):
+        if type(value) is dict:
+            self._SELECTED_TAB_YOUR_LANGUAGES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    def SELECTED_TAB_TARGET_LANGUAGES(self):
+        return self._SELECTED_TAB_TARGET_LANGUAGES
+
+    @SELECTED_TAB_TARGET_LANGUAGES.setter
+    def SELECTED_TAB_TARGET_LANGUAGES(self, value):
+        if type(value) is dict:
+            self._SELECTED_TAB_TARGET_LANGUAGES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     def init_config(self):
         self._VERSION = "1.3.2"
         self._PATH_CONFIG = "./config.json"
@@ -445,13 +455,12 @@ class Config:
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
         self._CHOICE_TRANSLATOR = translatorEngine[0]
-        self._INPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[0]
-        self._INPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[1]
-        self._OUTPUT_SOURCE_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["source"].keys())[1]
-        self._OUTPUT_TARGET_LANG = list(translation_lang[self.CHOICE_TRANSLATOR]["target"].keys())[0]
+        self._SOURCE_LANGUAGE = "Japanese"
+        self._SOURCE_COUNTRY = "Japan"
+        self._TARGET_LANGUAGE = "English"
+        self._TARGET_COUNTRY = "United States"
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
-        self._INPUT_MIC_VOICE_LANGUAGE = list(transcription_lang.keys())[0]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
         self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
         self._INPUT_MIC_RECORD_TIMEOUT = 3
@@ -459,7 +468,6 @@ class Config:
         self._INPUT_MIC_MAX_PHRASES = 10
         self._INPUT_MIC_WORD_FILTER = []
         self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["name"]
-        self._INPUT_SPEAKER_VOICE_LANGUAGE = list(transcription_lang.keys())[1]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
         self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
@@ -485,6 +493,17 @@ class Config:
         ]
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
+        self._SELECTED_TAB_NO = "1"
+        self._SELECTED_TAB_YOUR_LANGUAGES = {
+            "1":"Japanese\n(Japan)",
+            "2":"Japanese\n(Japan)",
+            "3":"Japanese\n(Japan)",
+        }
+        self._SELECTED_TAB_TARGET_LANGUAGES = {
+            "1":"English\n(United States)",
+            "2":"English\n(United States)",
+            "3":"English\n(United States)",
+        }
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
