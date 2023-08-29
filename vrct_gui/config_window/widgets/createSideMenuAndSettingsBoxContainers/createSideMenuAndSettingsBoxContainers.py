@@ -6,7 +6,7 @@ from .addConfigSideMenuItem import addConfigSideMenuItem
 from .createSettingBoxContainer import createSettingBoxContainer
 
 
-from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic
+from .setting_box_containers import createSettingBox_Appearance, createSettingBox_Mic, createSettingBox_Speaker, createSettingBox_Others, createSettingBox_AdvancedSettings
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings):
@@ -77,33 +77,34 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
                 "setting_box_container_attr_name": "setting_box_container_transcription",
                 "setting_boxes": [
                     { "section_title": "Mic", "setting_box": createSettingBox_Mic },
-                ]
-            },
-            "activate_by_default": True,
-        },
-        {
-            "side_menu_tab_attr_name": "side_menu_tab_parameters",
-            "label_attr_name": "label_parameters",
-            "selected_mark_attr_name": "selected_mark_foreground",
-            "text": "Parameters",
-            "setting_box_container_settings": {
-                "setting_box_container_attr_name": "setting_box_container_parameters",
-                "setting_boxes": [
-                    { "section_title": None, "setting_box": None },
+                    { "section_title": "Speaker", "setting_box": createSettingBox_Speaker },
                 ]
             },
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
-            "selected_mark_attr_name": "selected_mark_foreground",
+            "selected_mark_attr_name": "selected_mark_others",
             "text": "Others",
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_others",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": None },
+                    { "section_title": None, "setting_box": createSettingBox_Others },
                 ]
             },
+        },
+        {
+            "side_menu_tab_attr_name": "side_menu_tab_advanced",
+            "label_attr_name": "label_advanced",
+            "selected_mark_attr_name": "selected_mark_advanced",
+            "text": "Advanced Settings",
+            "setting_box_container_settings": {
+                "setting_box_container_attr_name": "setting_box_container_advanced",
+                "setting_boxes": [
+                    { "section_title": None, "setting_box": createSettingBox_AdvancedSettings },
+                ]
+            },
+            "activate_by_default": True,
         },
     ]
 
