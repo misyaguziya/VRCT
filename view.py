@@ -1,14 +1,14 @@
-from customtkinter import StringVar
+from customtkinter import StringVar, END as CTK_END
 from vrct_gui import vrct_gui
 
 from config import config
 
-class view():
+class View():
     def __init__(self):
         pass
 
 
-    def initializer(self, sidebar_features, language_presets, entry_message_box):
+    def initializer(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress):
 
         vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
@@ -30,8 +30,11 @@ class view():
 
 
         entry_message_box = getattr(vrct_gui, "entry_message_box")
-        entry_message_box.bind("<Return>", lambda: entry_message_box["bind_Return"])
-        entry_message_box.bind("<Any-KeyPress>", lambda: entry_message_box["bind_Any_KeyPress"])
+        # entry_message_box.bind("<Return>", lambda e: entry_message_box["bind_Return"](e))
+        # entry_message_box.bind("<Any-KeyPress>", lambda e: entry_message_box["bind_Any_KeyPress"](e))
+        entry_message_box.bind("<Return>", entry_message_box_bind_Return)
+        entry_message_box.bind("<Any-KeyPress>", entry_message_box_bind_Any_KeyPress)
+
         entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
         entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
 
@@ -45,15 +48,25 @@ class view():
 
 
 
-    def _foregroundOffForcefully(self, _e):
-        if config.ENABLE_FOREGROUND:
-            vrct_gui.attributes("-topmost", False)
-
     def _foregroundOnForcefully(self, _e):
         if config.ENABLE_FOREGROUND:
-            vrct_gui.attributes("-topmost", True)
+            self.foregroundOn()
+
+    def _foregroundOffForcefully(self, _e):
+        if config.ENABLE_FOREGROUND:
+            self.foregroundOff()
 
 
+    def foregroundOn(self):
+        vrct_gui.attributes("-topmost", True)
+
+    def foregroundOff(self):
+        vrct_gui.attributes("-topmost", False)
+
+
+    def updateGuiVariableByPresetTabNo(self, tab_no:str):
+        vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no]
+        vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no]
 
 
 
@@ -88,14 +101,51 @@ class view():
         self._printToTextbox_Info("Stop foreground")
 
 
+    def printToTextbox_AuthenticationError(self):
+        self._printToTextbox_Info("Auth Key or language setting is incorrect")
+
+    def printToTextbox_OSCError(self):
+        self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin")
+
+    def printToTextbox_DetectedByWordFilter(self, detected_message):
+        self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
+
+
     def _printToTextbox_Info(self, info_message):
         vrct_gui.printToTextbox(vrct_gui.textbox_all, info_message, "", "INFO")
         vrct_gui.printToTextbox(vrct_gui.textbox_system, info_message, "", "INFO")
-        pass
 
+
+
+    def printToTextbox_SentMessage(self, original_message, translated_message):
+        self._printToTextbox_Sent(original_message, translated_message)
+
+    def _printToTextbox_Sent(self, original_message, translated_message):
+        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "SEND")
+        vrct_gui.printToTextbox(vrct_gui.textbox_sent, original_message, translated_message, "SEND")
+
+
+    def printToTextbox_ReceivedMessage(self, original_message, translated_message):
+        self._printToTextbox_Received(original_message, translated_message)
+
+    def _printToTextbox_Received(self, original_message, translated_message):
+        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "RECEIVE")
+        vrct_gui.printToTextbox(vrct_gui.textbox_received, original_message, translated_message, "RECEIVE")
 
 
     def getTextFromMessageBox(self):
         return vrct_gui.entry_message_box.get()
 
-view = view()
+    def clearMessageBox(self):
+        vrct_gui.entry_message_box.delete(0, CTK_END)
+
+
+
+
+    def createGUI(self):
+        vrct_gui.createGUI()
+
+    def startMainLoop(self):
+        vrct_gui.startMainLoop()
+
+view = View()

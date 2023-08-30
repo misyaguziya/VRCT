@@ -11,12 +11,12 @@ def sendMicMessage(message):
     if len(message) > 0:
         translation = ""
         if model.checkKeywords(message):
-            logDetectWordFilter(message)
+            view.printToTextbox_DetectedByWordFilter(detected_message=message)
             return
         elif config.ENABLE_TRANSLATION is False:
             pass
         elif model.getTranslatorStatus() is False:
-            logAuthenticationError()
+            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
 
@@ -29,9 +29,9 @@ def sendMicMessage(message):
                     osc_message = message
                 model.oscSendMessage(osc_message)
             else:
-                logOSCError()
+                view.printToTextbox_OSCError()
 
-            logSendMessage(message, translation)
+            view.printToTextbox_SentMessage(message, translation)
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage)
@@ -48,7 +48,7 @@ def receiveSpeakerMessage(message):
         if config.ENABLE_TRANSLATION is False:
             pass
         elif model.getTranslatorStatus() is False:
-            logAuthenticationError()
+            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getOutputTranslate(message)
 
@@ -57,7 +57,7 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
                 xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
                 model.notificationXSOverlay(xsoverlay_message)
-            logReceiveMessage(message, translation)
+            view.printToTextbox_ReceivedMessage(message, translation)
 
 def startTranscriptionReceiveMessage():
     model.startSpeakerTranscript(receiveSpeakerMessage)
@@ -74,7 +74,7 @@ def sendChatMessage(message):
         if config.ENABLE_TRANSLATION is False:
             pass
         elif model.getTranslatorStatus() is False:
-            logAuthenticationError()
+            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
 
@@ -87,15 +87,14 @@ def sendChatMessage(message):
                 osc_message = message
             model.oscSendMessage(osc_message)
         else:
-            logOSCError()
+            view.printToTextbox_OSCError()
 
         # update textbox message log
-        logSendMessage(message, translation)
+        view.printToTextbox_SentMessage(message, translation)
 
         # delete message in entry message box
         if config.ENABLE_AUTO_CLEAR_CHATBOX is True:
-            entry_message_box = getattr(vrct_gui, "entry_message_box")
-            entry_message_box.delete(0, customtkinter.END)
+            view.clearMessageBox()
 
 def messageBoxPressKeyEnter(e):
     model.oscStopSendTyping()
@@ -131,8 +130,7 @@ def setTargetLanguageAndCountry(select):
 
 def callbackSelectedTabNo1():
     config.SELECTED_TAB_NO = "1"
-    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
     language, country = model.getLanguageAndCountry(select)
@@ -147,8 +145,7 @@ def callbackSelectedTabNo1():
 
 def callbackSelectedTabNo2():
     config.SELECTED_TAB_NO = "2"
-    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
     language, country = model.getLanguageAndCountry(select)
@@ -163,8 +160,7 @@ def callbackSelectedTabNo2():
 
 def callbackSelectedTabNo3():
     config.SELECTED_TAB_NO = "3"
-    vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
     language, country = model.getLanguageAndCountry(select)
@@ -176,37 +172,6 @@ def callbackSelectedTabNo3():
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
-# func print textbox
-def logSendMessage(message, translate):
-    textbox_all = getattr(vrct_gui, "textbox_all")
-    textbox_sent = getattr(vrct_gui, "textbox_sent")
-    vrct_gui.printToTextbox(textbox_all, message, translate, "SEND")
-    vrct_gui.printToTextbox(textbox_sent, message, translate, "SEND")
-
-def logReceiveMessage(message, translate):
-    textbox_all = getattr(vrct_gui, "textbox_all")
-    textbox_sent = getattr(vrct_gui, "textbox_received")
-    vrct_gui.printToTextbox(textbox_all, message, translate, "RECEIVE")
-    vrct_gui.printToTextbox(textbox_sent, message, translate, "RECEIVE")
-
-def logDetectWordFilter(message):
-    textbox_all = getattr(vrct_gui, "textbox_all")
-    textbox_system = getattr(vrct_gui, "textbox_system")
-    vrct_gui.printToTextbox(textbox_all, f"Detect WordFilter :{message}", "", "INFO")
-    vrct_gui.printToTextbox(textbox_system, f"Detect WordFilter :{message}", "", "INFO")
-
-def logAuthenticationError():
-    textbox_all = getattr(vrct_gui, "textbox_all")
-    textbox_system = getattr(vrct_gui, "textbox_system")
-    vrct_gui.printToTextbox(textbox_all, "Auth Key or language setting is incorrect", "", "INFO")
-    vrct_gui.printToTextbox(textbox_system, "Auth Key or language setting is incorrect", "", "INFO")
-
-def logOSCError():
-    textbox_all = getattr(vrct_gui, "textbox_all")
-    textbox_system = getattr(vrct_gui, "textbox_system")
-    vrct_gui.printToTextbox(textbox_all, "OSC is not enabled, please enable OSC and rejoin", "", "INFO")
-    vrct_gui.printToTextbox(textbox_system, "OSC is not enabled, please enable OSC and rejoin", "", "INFO")
 
 
 # command func
@@ -249,18 +214,18 @@ def callbackToggleForeground():
     config.ENABLE_FOREGROUND = view.getForegroundButtonStatus()
     if config.ENABLE_FOREGROUND is True:
         view.printToTextbox_enableForeground()
-        vrct_gui.attributes("-topmost", True)
+        view.foregroundOn()
     else:
         view.printToTextbox_disableForeground()
-        vrct_gui.attributes("-topmost", False)
+        view.foregroundOff()
 
 # create GUI
-vrct_gui.createGUI()
+view.createGUI()
 
 # init config
 if model.authenticationTranslator() is False:
     # error update Auth key
-    logAuthenticationError()
+    view.printToTextbox_AuthenticationError()
 
 # set word filter
 model.addKeywords()
@@ -290,11 +255,17 @@ view.initializer(
         "callback_selected_tab_no_3": callbackSelectedTabNo3,
     },
 
-    entry_message_box={
-        "bind_Return": messageBoxPressKeyEnter,
-        "bind_Any_KeyPress": messageBoxPressKeyAny,
-    },
+    # 辞書型で関数を渡しても上手く行かず、仕方なくタプルで渡してる。
+    # 本当はコメントアウト（以下とview.py内33,34行目)しているようにできたらいいけど、
+    # _tkinter.TclError: unknown option "-bind_Any_KeyPress"みたいにエラーがでる。
+    entry_message_box=None,
+    # entry_message_box={
+    #     "bind_Return": messageBoxPressKeyEnter,
+    #     "bind_Any_KeyPress": messageBoxPressKeyAny,
+    # },
+    entry_message_box_bind_Return=messageBoxPressKeyEnter,
+    entry_message_box_bind_Any_KeyPress=messageBoxPressKeyAny,
 )
 
 if __name__ == "__main__":
-    vrct_gui.startMainLoop()
+    view.startMainLoop()
