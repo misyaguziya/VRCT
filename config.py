@@ -400,9 +400,9 @@ class Config:
     def GITHUB_URL(self):
         return self._GITHUB_URL
 
-    @property
-    def BREAK_KEYSYM_LIST(self):
-        return self._BREAK_KEYSYM_LIST
+    # @property
+    # def BREAK_KEYSYM_LIST(self):
+    #     return self._BREAK_KEYSYM_LIST
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
@@ -487,10 +487,10 @@ class Config:
         self._ENABLE_OSC = False
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
-        self._BREAK_KEYSYM_LIST = [
-            "Delete", "Select", "Up", "Down", "Next", "End", "Print",
-            "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
-        ]
+        # self._BREAK_KEYSYM_LIST = [
+        #     "Delete", "Select", "Up", "Down", "Next", "End", "Print",
+        #     "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
+        # ]
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
         self._SELECTED_TAB_NO = "1"
