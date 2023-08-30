@@ -1,10 +1,10 @@
 from threading import Thread
 import customtkinter
-from customtkinter import StringVar
 from vrct_gui import vrct_gui
 from config import config
 from model import model
-from vrct_gui.ui_utils import setDefaultActiveTab
+
+from view import viewInitializer
 
 # func transcription send message
 def sendMicMessage(message):
@@ -110,14 +110,6 @@ def messageBoxPressKeyAny(e):
         if len(e.char) != 0 and e.keysym in config.BREAK_KEYSYM_LIST:
             entry_message_box.insert("end", e.char)
             return "break"
-
-def foregroundOffForcefully(e):
-    if config.ENABLE_FOREGROUND:
-        vrct_gui.attributes("-topmost", False)
-
-def foregroundOnForcefully(e):
-    if config.ENABLE_FOREGROUND:
-        vrct_gui.attributes("-topmost", True)
 
 # func select languages
 def setYourLanguageAndCountry(select):
@@ -314,36 +306,28 @@ model.checkOSCStarted()
 model.checkSoftwareUpdated()
 
 # set UI and callback
-vrct_gui.CALLBACK_TOGGLE_TRANSLATION = callbackToggleTranslation
-vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = callbackToggleTranscriptionSend
-vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = callbackToggleTranscriptionReceive
-vrct_gui.CALLBACK_TOGGLE_FOREGROUND = callbackToggleForeground
+viewInitializer(
+    sidebar_features={
+        "callback_toggle_translation": callbackToggleTranslation,
+        "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
+        "callback_toggle_transcription_receive": callbackToggleTranscriptionReceive,
+        "callback_toggle_foreground": callbackToggleForeground,
+    },
 
-entry_message_box = getattr(vrct_gui, "entry_message_box")
-entry_message_box.bind("<Return>", messageBoxPressKeyEnter)
-entry_message_box.bind("<Any-KeyPress>", messageBoxPressKeyAny)
-entry_message_box.bind("<FocusIn>", foregroundOffForcefully)
-entry_message_box.bind("<FocusOut>", foregroundOnForcefully)
+    language_presets={
+        "callback_your_language": setYourLanguageAndCountry,
+        "callback_target_language": setTargetLanguageAndCountry,
+        "values": model.getListLanguageAndCountry(),
 
-sqls__optionmenu_your_language = getattr(vrct_gui, "sqls__optionmenu_your_language")
-sqls__optionmenu_your_language.configure(values=model.getListLanguageAndCountry())
-sqls__optionmenu_your_language.configure(command=setYourLanguageAndCountry)
-sqls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
+        "callback_selected_tab_no_1": callbackSelectedTabNo1,
+        "callback_selected_tab_no_2": callbackSelectedTabNo2,
+        "callback_selected_tab_no_3": callbackSelectedTabNo3,
+    },
 
-sqls__optionmenu_target_language = getattr(vrct_gui, "sqls__optionmenu_target_language")
-sqls__optionmenu_target_language.configure(values=model.getListLanguageAndCountry())
-sqls__optionmenu_target_language.configure(command=setTargetLanguageAndCountry)
-sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
-
-vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = callbackSelectedTabNo1
-vrct_gui.CALLBACK_SELECTED_TAB_NO_2 = callbackSelectedTabNo2
-vrct_gui.CALLBACK_SELECTED_TAB_NO_3 = callbackSelectedTabNo3
-
-vrct_gui.current_active_preset_tab = getattr(vrct_gui, f"sqls__presets_button_{config.SELECTED_TAB_NO}")
-setDefaultActiveTab(
-    active_tab_widget=vrct_gui.current_active_preset_tab,
-    active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-    active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+    entry_message_box={
+        "bind_Return": messageBoxPressKeyEnter,
+        "bind_Any_KeyPress": messageBoxPressKeyAny,
+    },
 )
 
 if __name__ == "__main__":

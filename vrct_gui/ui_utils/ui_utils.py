@@ -83,7 +83,7 @@ def unbindEventFromActiveTabWidget(active_tab_widget):
         active_tab_widget.unbind(event_name)
         active_tab_widget.children["!ctklabel"].unbind(event_name)
 
-def setDefaultActiveTab(active_tab_widget, active_bg_color, active_text_color):
+def _setDefaultActiveTab(active_tab_widget, active_bg_color, active_text_color):
     active_tab_widget.configure(fg_color=active_bg_color, cursor="")
     active_tab_widget.children["!ctklabel"].configure(fg_color=active_bg_color, text_color=active_text_color)
     unbindEventFromActiveTabWidget(active_tab_widget)
