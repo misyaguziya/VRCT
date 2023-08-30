@@ -19,3 +19,17 @@ def createEntryMessageBox(settings, main_window):
     )
     main_window.entry_message_box.grid(row=0, column=0, padx=settings.uism.TEXTBOX_ENTRY_PADX, pady=settings.uism.TEXTBOX_ENTRY_PADY, sticky="nsew")
     main_window.entry_message_box._entry.grid(padx=settings.uism.TEXTBOX_ENTRY_IPADX, pady=settings.uism.TEXTBOX_ENTRY_IPADY)
+
+
+    def messageBoxAnyKeyPress(e):
+        BREAK_KEYSYM_LIST = [
+            "Delete", "Select", "Up", "Down", "Next", "End", "Print",
+            "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
+        ]
+        if e.keysym != "??":
+            if len(e.char) != 0 and e.keysym in BREAK_KEYSYM_LIST:
+                main_window.entry_message_box.insert("end", e.char)
+                return "break"
+
+    main_window.entry_message_box.bind("<Any-KeyPress>", messageBoxAnyKeyPress)
+

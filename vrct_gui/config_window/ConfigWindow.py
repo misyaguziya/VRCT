@@ -2,8 +2,6 @@ from .widgets import createConfigWindowTitle, createSettingBoxTitle, createSideM
 
 from customtkinter import CTkToplevel
 
-from ..ui_utils import setDefaultActiveTab
-
 from config import config
 
 class ConfigWindow(CTkToplevel):
