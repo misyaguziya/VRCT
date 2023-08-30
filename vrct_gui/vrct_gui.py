@@ -10,6 +10,7 @@ from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
+from .ui_utils import _setDefaultActiveTab
 
 from config import config
 
@@ -103,6 +104,15 @@ class VRCT_GUI(CTk):
             translated_message=translated_message,
             tags=tags,
         )
+
+    def setDefaultActiveLanguagePresetTab(self, tab_no:str):
+        vrct_gui.current_active_preset_tab = getattr(self, f"sqls__presets_button_{tab_no}")
+        _setDefaultActiveTab(
+            active_tab_widget=vrct_gui.current_active_preset_tab,
+            active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+            active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+        )
+
 
 
 vrct_gui = VRCT_GUI()
