@@ -1,9 +1,6 @@
 from threading import Thread
-import customtkinter
-from vrct_gui import vrct_gui
 from config import config
 from model import model
-from customtkinter import StringVar
 from view import view
 
 # func transcription send message
@@ -103,11 +100,6 @@ def messageBoxPressKeyEnter(e):
 
 def messageBoxPressKeyAny(e):
     model.oscStartSendTyping()
-    entry_message_box = getattr(vrct_gui, "entry_message_box")
-    if e.keysym != "??":
-        if len(e.char) != 0 and e.keysym in config.BREAK_KEYSYM_LIST:
-            entry_message_box.insert("end", e.char)
-            return "break"
 
 # func select languages
 def setYourLanguageAndCountry(select):
