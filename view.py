@@ -64,10 +64,49 @@ class View():
         entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
 
 
+        # Config Window
+        # Compact Mode Switch
         vrct_gui.config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_disable_config_window_compact_mode"]
         vrct_gui.config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
 
 
+        # Appearance Tab
+        vrct_gui.config_window.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
+        vrct_gui.config_window.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
+        vrct_gui.config_window.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
+        vrct_gui.config_window.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
+        vrct_gui.config_window.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
+
+
+        # Translation Tab
+        vrct_gui.config_window.CALLBACK_SET_DEEPL_AUTHKEY = config_window["callback_set_deepl_authkey"]
+
+        # Transcription Tab (Mic)
+        vrct_gui.config_window.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window["callback_set_mic_record_timeout"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window["callback_set_mic_phrase_timeout"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_MAX_PHRASES = config_window["callback_set_mic_max_phrases"]
+        vrct_gui.config_window.CALLBACK_SET_MIC_WORD_FILTER = config_window["callback_set_mic_word_filter"]
+
+        # Transcription Tab (Speaker)
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_DEVICE = config_window["callback_set_speaker_device"]
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window["callback_set_speaker_energy_threshold"]
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_speaker_dynamic_energy_threshold"]
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window["callback_set_speaker_record_timeout"]
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window["callback_set_speaker_phrase_timeout"]
+        vrct_gui.config_window.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window["callback_set_speaker_max_phrases"]
+
+        # Others Tab
+        vrct_gui.config_window.CALLBACK_SET_ENABLE_AUTO_CLEAR_CHATBOX = config_window["callback_set_enable_auto_clear_chatbox"]
+        vrct_gui.config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
+        vrct_gui.config_window.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
+
+        # Advanced Settings Tab
+        vrct_gui.config_window.CALLBACK_SET_OSC_IP_ADDRESS = config_window["callback_set_osc_ip_address"]
+        vrct_gui.config_window.CALLBACK_SET_OSC_PORT = config_window["callback_set_osc_port"]
 
 
 

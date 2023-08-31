@@ -2,6 +2,7 @@ from time import sleep
 
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -15,16 +16,13 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
 
     # 関数名 chatbox から messagebox に変える予定 config.ENABLE_AUTO_CLEAR_CHATBOX も MESSAGEBOXに変えるかな。
     def checkbox_auto_clear_chatbox_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.ENABLE_AUTO_CLEAR_CHATBOX = checkbox_box_widget.get()
+        callFunctionIfCallable(config_window.CALLBACK_SET_DEEPL_AUTHKEY, checkbox_box_widget.get())
 
     def checkbox_notice_xsoverlay_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.ENABLE_NOTICE_XSOVERLAY = checkbox_box_widget.get()
+        callFunctionIfCallable(config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, checkbox_box_widget.get())
 
     def entry_message_format_callback(value):
-        if len(value) > 0:
-            config.MESSAGE_FORMAT = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, value)
 
 
     row=0
