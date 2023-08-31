@@ -4,7 +4,7 @@ from customtkinter import CTk, get_appearance_mode
 
 # from window_help_and_info import ToplevelWindowInformation
 
-from .ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
+# from .ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
 
@@ -18,6 +18,7 @@ from config import config
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
+        self.settings = SimpleNamespace()
         self.YOUR_LANGUAGE = "Japanese\n(Japan)"
         self.TARGET_LANGUAGE = "English\n(United States)"
 
@@ -31,31 +32,7 @@ class VRCT_GUI(CTk):
 
 
     def createGUI(self, settings):
-        self.settings = SimpleNamespace()
-        theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
-        all_ctm = ColorThemeManager(theme)
-        all_uism = UiScalingManager(config.UI_SCALING)
-        image_filename = ImageFilenameManager(theme)
-
-        common_args = {
-            "image_filename": image_filename,
-            "FONT_FAMILY": config.FONT_FAMILY,
-        }
-
-        self.settings.main = SimpleNamespace(
-            ctm=all_ctm.main,
-            uism=all_uism.main,
-            IS_SIDEBAR_COMPACT_MODE=False,
-            COMPACT_MODE_ICON_SIZE=0,
-            **common_args
-        )
-
-        self.settings.config_window = SimpleNamespace(
-            ctm=all_ctm.config_window,
-            uism=all_uism.config_window,
-            IS_CONFIG_WINDOW_COMPACT_MODE=settings.config_window.is_config_window_compact_mode,
-            **common_args
-        )
+        self.settings = settings
 
         createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
