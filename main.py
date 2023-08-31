@@ -257,16 +257,10 @@ view.register(
         "callback_selected_tab_no_3": callbackSelectedTabNo3,
     },
 
-    # 辞書型で関数を渡しても上手く行かず、仕方なくタプルで渡してる。
-    # 本当はコメントアウト（以下とview.py内33,34行目)しているようにできたらいいけど、
-    # _tkinter.TclError: unknown option "-bind_Any_KeyPress"みたいにエラーがでる。
-    # entry_message_box=None,
     entry_message_box_commands={
         "bind_Return": messageBoxPressKeyEnter,
         "bind_Any_KeyPress": messageBoxPressKeyAny,
     },
-    # entry_message_box_bind_Return=messageBoxPressKeyEnter,
-    # entry_message_box_bind_Any_KeyPress=messageBoxPressKeyAny,
 
     config_window={
         "callback_disable_config_window_compact_mode": callbackEnableConfigWindowCompactMode,
