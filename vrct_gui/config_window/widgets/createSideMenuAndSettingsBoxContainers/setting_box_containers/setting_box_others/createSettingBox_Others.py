@@ -1,5 +1,3 @@
-from time import sleep
-
 from customtkinter import StringVar, IntVar
 
 from utils import callFunctionIfCallable

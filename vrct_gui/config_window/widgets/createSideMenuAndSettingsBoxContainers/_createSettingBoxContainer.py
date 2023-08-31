@@ -19,7 +19,6 @@ def _createSettingBoxContainer(config_window, settings, setting_box_container_se
 
         return setting_box_wrapper_section_title_frame
 
-    # Common setting
 
     # Setting box container
     setting_box_container_widget = CTkFrame(config_window.main_setting_box_bg_wrapper, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
