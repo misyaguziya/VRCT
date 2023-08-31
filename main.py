@@ -211,6 +211,16 @@ def callbackToggleForeground():
         view.printToTextbox_disableForeground()
         view.foregroundOff()
 
+
+# Config Window
+def callbackEnableConfigWindowCompactMode():
+    config.IS_CONFIG_WINDOW_COMPACT_MODE = True
+    view.reloadConfigWindowSettingBoxContainer()
+
+def callbackDisableConfigWindowCompactMode():
+    config.IS_CONFIG_WINDOW_COMPACT_MODE = False
+    view.reloadConfigWindowSettingBoxContainer()
+
 # create GUI
 view.createGUI()
 
@@ -257,6 +267,11 @@ view.initializer(
     # },
     entry_message_box_bind_Return=messageBoxPressKeyEnter,
     entry_message_box_bind_Any_KeyPress=messageBoxPressKeyAny,
+
+    config_window={
+        "callback_disable_config_window_compact_mode": callbackEnableConfigWindowCompactMode,
+        "callback_enable_config_window_compact_mode": callbackDisableConfigWindowCompactMode,
+    },
 )
 
 if __name__ == "__main__":

@@ -18,6 +18,19 @@ from config import config
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
+        self.YOUR_LANGUAGE = "Japanese\n(Japan)"
+        self.TARGET_LANGUAGE = "English\n(United States)"
+
+        self.CALLBACK_TOGGLE_TRANSLATION = None
+        self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
+        self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
+        self.CALLBACK_TOGGLE_FOREGROUND = None
+        self.CALLBACK_SELECTED_TAB_NO_1 = None
+        self.CALLBACK_SELECTED_TAB_NO_2 = None
+        self.CALLBACK_SELECTED_TAB_NO_3 = None
+
+
+    def createGUI(self, settings):
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
         all_ctm = ColorThemeManager(theme)
@@ -40,27 +53,13 @@ class VRCT_GUI(CTk):
         self.settings.config_window = SimpleNamespace(
             ctm=all_ctm.config_window,
             uism=all_uism.config_window,
-            IS_CONFIG_WINDOW_COMPACT_MODE=False,
+            IS_CONFIG_WINDOW_COMPACT_MODE=settings.config_window.is_config_window_compact_mode,
             **common_args
         )
 
-
-        self.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        self.TARGET_LANGUAGE = "English\n(United States)"
-
-        self.CALLBACK_TOGGLE_TRANSLATION = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
-        self.CALLBACK_TOGGLE_FOREGROUND = None
-        self.CALLBACK_SELECTED_TAB_NO_1 = None
-        self.CALLBACK_SELECTED_TAB_NO_2 = None
-        self.CALLBACK_SELECTED_TAB_NO_3 = None
-
+        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
         # self.information_window = ToplevelWindowInformation(self)
-
-    def createGUI(self):
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
 
     def startMainLoop(self):
         self.mainloop()
@@ -106,11 +105,11 @@ class VRCT_GUI(CTk):
         )
 
     def setDefaultActiveLanguagePresetTab(self, tab_no:str):
-        vrct_gui.current_active_preset_tab = getattr(self, f"sqls__presets_button_{tab_no}")
+        self.current_active_preset_tab = getattr(self, f"sqls__presets_button_{tab_no}")
         _setDefaultActiveTab(
-            active_tab_widget=vrct_gui.current_active_preset_tab,
-            active_bg_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-            active_text_color=vrct_gui.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+            active_tab_widget=self.current_active_preset_tab,
+            active_bg_color=self.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+            active_text_color=self.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
         )
 
 
