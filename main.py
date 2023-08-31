@@ -224,30 +224,31 @@ def callbackDisableConfigWindowCompactMode():
 
 # Appearance Tab
 def callbackSetTransparency(value):
-    print(int(value))
-    # self.parent.wm_attributes("-alpha", int(value/100))
+    print("callbackSetTransparency", int(value))
     config.TRANSPARENCY = int(value)
+    # self.parent.wm_attributes("-alpha", int(value/100))
 
 def callbackSetAppearance(value):
-    print(value)
+    print("callbackSetAppearance", value)
     config.APPEARANCE_THEME = value
 
 def callbackSetUiScaling(value):
-    print(value)
+    print("callbackSetUiScaling", value)
     config.UI_SCALING = value
     new_scaling_float = int(value.replace("%", "")) / 100
+    print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
 
 def callbackSetFontFamily(value):
-    print(value)
+    print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
 
 def callbackSetUiLanguage(value):
-    print(value)
+    print("callbackSetUiLanguage", value)
     config.UI_LANGUAGE = value
 
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
-    print(str(value))
+    print("callbackSetDeeplAuthkey", str(value))
     # config.AUTH_KEYS["DeepL(auth)"] = str(value)
     # if len(value) > 0:
     #     if model.authenticationTranslator(choice_translator="DeepL(auth)", auth_key=value) is True:
@@ -258,38 +259,48 @@ def callbackSetDeeplAuthkey(value):
 
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
-    print(value)
+    print("callbackSetMicHost", value)
     config.CHOICE_MIC_HOST = value
 
 def callbackSetMicDevice(value):
-    print(value)
+    print("callbackSetMicDevice", value)
     config.CHOICE_MIC_DEVICE = value
 
 def callbackSetMicEnergyThreshold(value):
-    print(int(value))
+    print("callbackSetMicEnergyThreshold", int(value))
     config.INPUT_MIC_ENERGY_THRESHOLD = int(value)
 
 def callbackSetMicDynamicEnergyThreshold(value):
-    print(value)
+    print("callbackSetMicDynamicEnergyThreshold", value)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
 
+def callbackCheckMicThreshold(is_turned_on):
+    print("callbackCheckMicThreshold", is_turned_on)
+    if is_turned_on is True:
+        # UIの処理あり
+        pass
+    else:
+        # UIの処理あり
+        pass
+
 def callbackSetMicRecordTimeout(value):
-    print(int(value))
+    print("callbackSetMicRecordTimeout", int(value))
     config.INPUT_MIC_RECORD_TIMEOUT = int(value)
 
 def callbackSetMicPhraseTimeout(value):
-    print(int(value))
+    print("callbackSetMicPhraseTimeout", int(value))
     config.INPUT_MIC_PHRASE_TIMEOUT = int(value)
 
 def callbackSetMicMaxPhrases(value):
-    print(int(value))
+    print("callbackSetMicMaxPhrases", int(value))
     config.INPUT_MIC_MAX_PHRASES = int(value)
 
 def callbackSetMicWordFilter(value):
+    print("callbackSetMicWordFilter", value)
     word_filter = str(value)
     word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
     word_filter = ",".join(word_filter)
-    print(word_filter)
+    print("callbackSetMicWordFilter_afterSplitting", word_filter)
     if len(word_filter) > 0:
         config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
     else:
@@ -299,52 +310,61 @@ def callbackSetMicWordFilter(value):
 
 # Transcription Tab (Speaker)
 def callbackSetSpeakerDevice(value):
-    print(value)
+    print("callbackSetSpeakerDevice", value)
     config.CHOICE_SPEAKER_DEVICE = value
 
 def callbackSetSpeakerEnergyThreshold(value):
-    print(int(value))
+    print("callbackSetSpeakerEnergyThreshold", int(value))
     config.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
 
 def callbackSetSpeakerDynamicEnergyThreshold(value):
-    print(value)
+    print("callbackSetSpeakerDynamicEnergyThreshold", value)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
 
+def callbackCheckSpeakerThreshold(is_turned_on):
+    print("callbackCheckSpeakerThreshold", is_turned_on)
+    if is_turned_on is True:
+        # UIの処理あり
+        pass
+    else:
+        # UIの処理あり
+        pass
+
 def callbackSetSpeakerRecordTimeout(value):
-    print(int(value))
+    print("callbackSetSpeakerRecordTimeout", int(value))
     config.INPUT_SPEAKER_RECORD_TIMEOUT = int(value)
 
 def callbackSetSpeakerPhraseTimeout(value):
-    print(int(value))
+    print("callbackSetSpeakerPhraseTimeout", int(value))
     config.INPUT_SPEAKER_PHRASE_TIMEOUT = int(value)
 
 def callbackSetSpeakerMaxPhrases(value):
-    print(int(value))
+    print("callbackSetSpeakerMaxPhrases", int(value))
     config.INPUT_SPEAKER_MAX_PHRASES = int(value)
 
 
 # Others Tab
 def callbackSetEnableAutoClearChatbox(value):
-    print(value)
+    print("callbackSetEnableAutoClearChatbox", value)
     config.ENABLE_AUTO_CLEAR_CHATBOX = value
 
 def callbackSetEnableNoticeXsoverlay(value):
-    print(value)
+    print("callbackSetEnableNoticeXsoverlay", value)
     config.ENABLE_NOTICE_XSOVERLAY = value
 
 def callbackSetMessageFormat(value):
-    print(value)
+    print("callbackSetMessageFormat", value)
     if len(value) > 0:
         config.MESSAGE_FORMAT = value
 
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
-    print(value)
+    print("callbackSetOscIpAddress", value)
     config.OSC_IP_ADDRESS = value
 
 def callbackSetOscPort(value):
-    print(int(value))
+    print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
 
@@ -361,7 +381,7 @@ if model.authenticationTranslator() is False:
 model.addKeywords()
 
 # check OSC started
-# model.checkOSCStarted()
+model.checkOSCStarted()
 
 # check Software Updated
 model.checkSoftwareUpdated()
@@ -410,6 +430,7 @@ view.register(
         "callback_set_mic_device": callbackSetMicDevice,
         "callback_set_mic_energy_threshold": callbackSetMicEnergyThreshold,
         "callback_set_mic_dynamic_energy_threshold": callbackSetMicDynamicEnergyThreshold,
+        "callback_check_mic_threshold": callbackCheckMicThreshold,
         "callback_set_mic_record_timeout": callbackSetMicRecordTimeout,
         "callback_set_mic_phrase_timeout": callbackSetMicPhraseTimeout,
         "callback_set_mic_max_phrases": callbackSetMicMaxPhrases,
@@ -419,6 +440,7 @@ view.register(
         "callback_set_speaker_device": callbackSetSpeakerDevice,
         "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
         "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
+        "callback_check_speaker_threshold": callbackCheckSpeakerThreshold,
         "callback_set_speaker_record_timeout": callbackSetSpeakerRecordTimeout,
         "callback_set_speaker_phrase_timeout": callbackSetSpeakerPhraseTimeout,
         "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
