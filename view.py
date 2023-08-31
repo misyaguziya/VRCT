@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 from customtkinter import StringVar, END as CTK_END
 from vrct_gui import vrct_gui
 
@@ -5,6 +7,11 @@ from config import config
 
 class View():
     def __init__(self):
+        self.settings = SimpleNamespace()
+        self.settings.config_window = SimpleNamespace()
+        self.settings.config_window = SimpleNamespace(
+            is_config_window_compact_mode=config.IS_CONFIG_WINDOW_COMPACT_MODE
+        )
         pass
 
 
@@ -43,8 +50,7 @@ class View():
         vrct_gui.config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
 
 
-        # Config Window
-        vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
+
 
 
 
@@ -151,7 +157,7 @@ class View():
 
 
     def createGUI(self):
-        vrct_gui.createGUI()
+        vrct_gui.createGUI(settings=self.settings)
 
     def startMainLoop(self):
         vrct_gui.startMainLoop()
