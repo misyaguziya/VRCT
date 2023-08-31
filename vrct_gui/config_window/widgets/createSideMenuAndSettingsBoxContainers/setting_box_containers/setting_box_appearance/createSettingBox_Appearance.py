@@ -1,10 +1,7 @@
-from time import sleep
-
 from customtkinter import StringVar, IntVar
 from tkinter import font as tk_font
 from languages import selectable_languages
 from utils import get_key_by_value, callFunctionIfCallable
-
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -16,7 +13,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
     createSettingBoxSlider = sbg.createSettingBoxSlider
 
     # 関数名は変えるかもしれない。
-    # テーマ変更、フォント変更時、 Widget再生成か再起動かは検討中\
+    # テーマ変更、フォント変更時、 Widget再生成か再起動かは検討中
     def slider_transparency_callback(value):
         callFunctionIfCallable(config_window.CALLBACK_SET_TRANSPARENCY, value)
 
@@ -25,7 +22,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
 
     def optionmenu_ui_scaling_callback(value):
         callFunctionIfCallable(config_window.CALLBACK_SET_UI_SCALING, value)
-        # self.optionmenu_ui_scaling.set(choice)
 
     def optionmenu_font_family_callback(value):
         callFunctionIfCallable(config_window.CALLBACK_SET_FONT_FAMILY, value)
