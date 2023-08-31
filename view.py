@@ -102,7 +102,7 @@ class View():
         vrct_gui.config_window.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window["callback_set_speaker_max_phrases"]
 
         # Others Tab
-        vrct_gui.config_window.CALLBACK_SET_ENABLE_AUTO_CLEAR_CHATBOX = config_window["callback_set_enable_auto_clear_chatbox"]
+        vrct_gui.config_window.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window["callback_set_enable_auto_clear_chatbox"]
         vrct_gui.config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
         vrct_gui.config_window.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
 
