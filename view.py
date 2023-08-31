@@ -8,7 +8,7 @@ class View():
         pass
 
 
-    def initializer(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress):
+    def initializer(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress, config_window):
 
         vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
@@ -37,6 +37,14 @@ class View():
 
         entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
         entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
+
+
+        vrct_gui.config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_disable_config_window_compact_mode"]
+        vrct_gui.config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
+
+
+        # Config Window
+        vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
 
 
 
@@ -147,5 +155,11 @@ class View():
 
     def startMainLoop(self):
         vrct_gui.startMainLoop()
+
+
+    # Config Window
+    def reloadConfigWindowSettingBoxContainer(self):
+        vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
+        vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
 
 view = View()

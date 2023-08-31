@@ -17,6 +17,7 @@ class ConfigWindow(CTkToplevel):
         self.configure(fg_color="#ff7f50")
         self.protocol("WM_DELETE_WINDOW", vrct_gui.closeConfigWindow)
 
+        self.settings = settings
 
 
 
@@ -26,3 +27,10 @@ class ConfigWindow(CTkToplevel):
 
 
         createSideMenuAndSettingsBoxContainers(config_window=self, settings=settings)
+
+
+
+
+    def reloadConfigWindowSettingBoxContainer(self):
+        self.main_bg_container.destroy()
+        createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings)

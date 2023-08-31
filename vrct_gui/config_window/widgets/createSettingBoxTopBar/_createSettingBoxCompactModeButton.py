@@ -2,6 +2,17 @@ from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkSwitch
 
 def _createSettingBoxCompactModeButton(parent_widget, config_window, settings):
 
+    def switchConfigWindowCompactMode():
+        print(config_window.setting_box_compact_mode_switch_box.get())
+        if config_window.setting_box_compact_mode_switch_box.get() is True:
+            if callable(config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
+                config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE()
+        else:
+            if callable(config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
+                config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE()
+
+
+
     config_window.setting_box_compact_mode_button_container = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.TOP_BAR_BG_COLOR, width=0, height=0)
     config_window.setting_box_compact_mode_button_container.grid(row=0, column=1, padx=(0, 20), sticky="nsw")
 
@@ -44,7 +55,7 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings):
         switch_height=16,
         onvalue=True,
         offvalue=False,
-        # command=command,
+        command=switchConfigWindowCompactMode,
         # fg_color="",
         # bg_color="red",
         progress_color=settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR, # SB__SWITCH_BOX_ACTIVE_BG_COLOR is for SB. change it later.
