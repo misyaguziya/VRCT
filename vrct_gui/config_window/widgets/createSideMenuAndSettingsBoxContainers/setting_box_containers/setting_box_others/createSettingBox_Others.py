@@ -1,7 +1,6 @@
-from time import sleep
-
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -13,30 +12,27 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
-    # 関数名 chatbox から messagebox に変える予定 config.ENABLE_AUTO_CLEAR_CHATBOX も MESSAGEBOXに変えるかな。
-    def checkbox_auto_clear_chatbox_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.ENABLE_AUTO_CLEAR_CHATBOX = checkbox_box_widget.get()
+    # 元 checkbox_auto_clear_chatbox_callback
+    def checkbox_auto_clear_message_box_callback(checkbox_box_widget):
+        callFunctionIfCallable(config_window.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX, checkbox_box_widget.get())
 
     def checkbox_notice_xsoverlay_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.ENABLE_NOTICE_XSOVERLAY = checkbox_box_widget.get()
+        callFunctionIfCallable(config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, checkbox_box_widget.get())
 
     def entry_message_format_callback(value):
-        if len(value) > 0:
-            config.MESSAGE_FORMAT = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, value)
 
 
     row=0
-    config_window.sb__auto_clear_chatbox = createSettingBoxCheckbox(
+    config_window.sb__auto_clear_message_box = createSettingBoxCheckbox(
         parent_widget=setting_box_wrapper,
         label_text="Auto Clear The Message Box",
         desc_text="Clear the message box after sending your message.",
-        checkbox_attr_name="sb__checkbox_auto_clear_chatbox",
-        command=lambda: checkbox_auto_clear_chatbox_callback(config_window.sb__checkbox_auto_clear_chatbox),
+        checkbox_attr_name="sb__checkbox_auto_clear_message_box",
+        command=lambda: checkbox_auto_clear_message_box_callback(config_window.sb__checkbox_auto_clear_message_box),
         is_checked=False
     )
-    config_window.sb__auto_clear_chatbox.grid(row=row)
+    config_window.sb__auto_clear_message_box.grid(row=row)
     row+=1
 
 
