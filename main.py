@@ -90,7 +90,7 @@ def sendChatMessage(message):
         view.printToTextbox_SentMessage(message, translation)
 
         # delete message in entry message box
-        if config.ENABLE_AUTO_CLEAR_CHATBOX is True:
+        if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
             view.clearMessageBox()
 
 def messageBoxPressKeyEnter(e):
@@ -344,9 +344,9 @@ def callbackSetSpeakerMaxPhrases(value):
 
 
 # Others Tab
-def callbackSetEnableAutoClearChatbox(value):
-    print("callbackSetEnableAutoClearChatbox", value)
-    config.ENABLE_AUTO_CLEAR_CHATBOX = value
+def callbackSetEnableAutoClearMessageBox(value):
+    print("callbackSetEnableAutoClearMessageBox", value)
+    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
 
 def callbackSetEnableNoticeXsoverlay(value):
     print("callbackSetEnableNoticeXsoverlay", value)
@@ -446,7 +446,7 @@ view.register(
         "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
 
         # Others Tab
-        "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearChatbox,
+        "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
         "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
         "callback_set_message_format": callbackSetMessageFormat,
 
