@@ -10,3 +10,6 @@ def get_key_by_value(dictionary, value):
         if val == value:
             return key
     return None
+
+def callFunctionIfCallable(function, *args):
+    if callable(function) is True: function(*args)

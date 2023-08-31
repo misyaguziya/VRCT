@@ -2,6 +2,7 @@ from time import sleep
 
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -16,7 +17,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
 
 
     def checkbox_input_speaker_threshold_check_callback(e, passive_button_wrapper_widget, active_button_wrapper_widget, is_turned_on):
-        print("is_turned_on", is_turned_on)
+        callFunctionIfCallable(config_window.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
 
         if is_turned_on is True:
             passive_button_widget = passive_button_wrapper_widget.children["!ctklabel"]
@@ -39,27 +40,23 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
             passive_button_wrapper_widget.grid()
 
     def optionmenu_input_speaker_device_callback(value):
-        config.CHOICE_SPEAKER_DEVICE = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_DEVICE, value)
 
     def slider_input_speaker_energy_threshold_callback(value):
-        config.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD, value)
 
     def checkbox_input_speaker_dynamic_energy_threshold_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = checkbox_box_widget.get()
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD, checkbox_box_widget.get())
 
 
     def entry_input_speaker_record_timeout_callback(value):
-        print(int(value))
-        config.INPUT_SPEAKER_RECORD_TIMEOUT = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT, value)
 
     def entry_input_speaker_phrase_timeout_callback(value):
-        print(int(value))
-        config.INPUT_SPEAKER_PHRASE_TIMEOUT = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT, value)
 
     def entry_input_speaker_max_phrases_callback(value):
-        print(int(value))
-        config.INPUT_SPEAKER_MAX_PHRASES = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_SPEAKER_MAX_PHRASES, value)
 
 
 

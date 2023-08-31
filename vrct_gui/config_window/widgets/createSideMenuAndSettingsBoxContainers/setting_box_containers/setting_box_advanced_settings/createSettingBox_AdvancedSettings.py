@@ -1,7 +1,6 @@
-from time import sleep
-
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -13,10 +12,10 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
 
 
     def entry_ip_address_callback(value):
-        config.OSC_IP_ADDRESS = str(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_OSC_IP_ADDRESS, value)
 
     def entry_port_callback(value):
-        config.OSC_PORT = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_OSC_PORT, value)
 
     row=0
     config_window.sb__ip_address = createSettingBoxEntry(

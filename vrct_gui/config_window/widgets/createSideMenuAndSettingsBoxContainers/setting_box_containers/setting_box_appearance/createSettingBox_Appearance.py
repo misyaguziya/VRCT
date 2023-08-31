@@ -1,10 +1,7 @@
-from time import sleep
-
 from customtkinter import StringVar, IntVar
 from tkinter import font as tk_font
 from languages import selectable_languages
-from utils import get_key_by_value
-
+from utils import get_key_by_value, callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -15,28 +12,24 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSlider = sbg.createSettingBoxSlider
 
-
     # 関数名は変えるかもしれない。
     # テーマ変更、フォント変更時、 Widget再生成か再起動かは検討中
-
-
     def slider_transparency_callback(value):
-        # self.parent.wm_attributes("-alpha", int(value/100))
-        config.TRANSPARENCY = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_TRANSPARENCY, value)
 
     def optionmenu_appearance_theme_callback(value):
-        config.APPEARANCE_THEME = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_APPEARANCE, value)
 
     def optionmenu_ui_scaling_callback(value):
-        # self.optionmenu_ui_scaling.set(choice)
-        # new_scaling_float = int(choice.replace("%", "")) / 100
-        config.UI_SCALING = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_UI_SCALING, value)
 
     def optionmenu_font_family_callback(value):
-        config.FONT_FAMILY = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_FONT_FAMILY, value)
 
     def optionmenu_ui_language_callback(value):
-        config.UI_LANGUAGE = get_key_by_value(selectable_languages, value)
+        value = get_key_by_value(selectable_languages, value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_UI_LANGUAGE, value)
+
 
     row=0
     config_window.sb__transparency = createSettingBoxSlider(
