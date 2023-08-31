@@ -213,6 +213,7 @@ def callbackToggleForeground():
 
 
 # Config Window
+# Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     view.reloadConfigWindowSettingBoxContainer()
@@ -220,6 +221,133 @@ def callbackEnableConfigWindowCompactMode():
 def callbackDisableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     view.reloadConfigWindowSettingBoxContainer()
+
+# Appearance Tab
+def callbackSetTransparency(value):
+    print(int(value))
+    # self.parent.wm_attributes("-alpha", int(value/100))
+    config.TRANSPARENCY = int(value)
+
+def callbackSetAppearance(value):
+    print(value)
+    config.APPEARANCE_THEME = value
+
+def callbackSetUiScaling(value):
+    print(value)
+    config.UI_SCALING = value
+    new_scaling_float = int(value.replace("%", "")) / 100
+
+def callbackSetFontFamily(value):
+    print(value)
+    config.FONT_FAMILY = value
+
+def callbackSetUiLanguage(value):
+    print(value)
+    config.UI_LANGUAGE = value
+
+# Translation Tab
+def callbackSetDeeplAuthkey(value):
+    print(str(value))
+    # config.AUTH_KEYS["DeepL(auth)"] = str(value)
+    # if len(value) > 0:
+    #     if model.authenticationTranslator(choice_translator="DeepL(auth)", auth_key=value) is True:
+    #         print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
+    #         print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
+    #     else:
+    #         pass
+
+# Transcription Tab (Mic)
+def callbackSetMicHost(value):
+    print(value)
+    config.CHOICE_MIC_HOST = value
+
+def callbackSetMicDevice(value):
+    print(value)
+    config.CHOICE_MIC_DEVICE = value
+
+def callbackSetMicEnergyThreshold(value):
+    print(int(value))
+    config.INPUT_MIC_ENERGY_THRESHOLD = int(value)
+
+def callbackSetMicDynamicEnergyThreshold(value):
+    print(value)
+    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+
+def callbackSetMicRecordTimeout(value):
+    print(int(value))
+    config.INPUT_MIC_RECORD_TIMEOUT = int(value)
+
+def callbackSetMicPhraseTimeout(value):
+    print(int(value))
+    config.INPUT_MIC_PHRASE_TIMEOUT = int(value)
+
+def callbackSetMicMaxPhrases(value):
+    print(int(value))
+    config.INPUT_MIC_MAX_PHRASES = int(value)
+
+def callbackSetMicWordFilter(value):
+    word_filter = str(value)
+    word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
+    word_filter = ",".join(word_filter)
+    print(word_filter)
+    if len(word_filter) > 0:
+        config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
+    else:
+        config.INPUT_MIC_WORD_FILTER = []
+    # model.resetKeywordProcessor()
+    # model.addKeywords()
+
+# Transcription Tab (Speaker)
+def callbackSetSpeakerDevice(value):
+    print(value)
+    config.CHOICE_SPEAKER_DEVICE = value
+
+def callbackSetSpeakerEnergyThreshold(value):
+    print(int(value))
+    config.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
+
+def callbackSetSpeakerDynamicEnergyThreshold(value):
+    print(value)
+    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+
+def callbackSetSpeakerRecordTimeout(value):
+    print(int(value))
+    config.INPUT_SPEAKER_RECORD_TIMEOUT = int(value)
+
+def callbackSetSpeakerPhraseTimeout(value):
+    print(int(value))
+    config.INPUT_SPEAKER_PHRASE_TIMEOUT = int(value)
+
+def callbackSetSpeakerMaxPhrases(value):
+    print(int(value))
+    config.INPUT_SPEAKER_MAX_PHRASES = int(value)
+
+
+# Others Tab
+def callbackSetEnableAutoClearChatbox(value):
+    print(value)
+    config.ENABLE_AUTO_CLEAR_CHATBOX = value
+
+def callbackSetEnableNoticeXsoverlay(value):
+    print(value)
+    config.ENABLE_NOTICE_XSOVERLAY = value
+
+def callbackSetMessageFormat(value):
+    print(value)
+    if len(value) > 0:
+        config.MESSAGE_FORMAT = value
+
+
+# Advanced Settings Tab
+def callbackSetOscIpAddress(value):
+    print(value)
+    config.OSC_IP_ADDRESS = value
+
+def callbackSetOscPort(value):
+    print(int(value))
+    config.OSC_PORT = int(value)
+
+
 
 # create GUI
 view.createGUI()
@@ -233,7 +361,7 @@ if model.authenticationTranslator() is False:
 model.addKeywords()
 
 # check OSC started
-model.checkOSCStarted()
+# model.checkOSCStarted()
 
 # check Software Updated
 model.checkSoftwareUpdated()
@@ -263,8 +391,46 @@ view.register(
     },
 
     config_window={
+        # Compact Mode Switch
         "callback_disable_config_window_compact_mode": callbackEnableConfigWindowCompactMode,
         "callback_enable_config_window_compact_mode": callbackDisableConfigWindowCompactMode,
+
+        # Appearance Tab
+        "callback_set_transparency": callbackSetTransparency,
+        "callback_set_appearance": callbackSetAppearance,
+        "callback_set_ui_scaling": callbackSetUiScaling,
+        "callback_set_font_family": callbackSetFontFamily,
+        "callback_set_ui_language": callbackSetUiLanguage,
+
+        # Translation Tab
+        "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
+
+        # Transcription Tab (Mic)
+        "callback_set_mic_host": callbackSetMicHost,
+        "callback_set_mic_device": callbackSetMicDevice,
+        "callback_set_mic_energy_threshold": callbackSetMicEnergyThreshold,
+        "callback_set_mic_dynamic_energy_threshold": callbackSetMicDynamicEnergyThreshold,
+        "callback_set_mic_record_timeout": callbackSetMicRecordTimeout,
+        "callback_set_mic_phrase_timeout": callbackSetMicPhraseTimeout,
+        "callback_set_mic_max_phrases": callbackSetMicMaxPhrases,
+        "callback_set_mic_word_filter": callbackSetMicWordFilter,
+
+        # Transcription Tab (Speaker)
+        "callback_set_speaker_device": callbackSetSpeakerDevice,
+        "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
+        "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
+        "callback_set_speaker_record_timeout": callbackSetSpeakerRecordTimeout,
+        "callback_set_speaker_phrase_timeout": callbackSetSpeakerPhraseTimeout,
+        "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
+
+        # Others Tab
+        "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearChatbox,
+        "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
+        "callback_set_message_format": callbackSetMessageFormat,
+
+        # Advanced Settings Tab
+        "callback_set_osc_ip_address": callbackSetOscIpAddress,
+        "callback_set_osc_port": callbackSetOscPort,
     },
 )
 

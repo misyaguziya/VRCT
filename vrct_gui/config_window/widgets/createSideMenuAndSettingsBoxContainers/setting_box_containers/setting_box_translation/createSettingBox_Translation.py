@@ -2,6 +2,7 @@ from time import sleep
 
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -13,14 +14,7 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings):
 
 
     def deepl_authkey_callback(value):
-        print(str(value))
-        # config.AUTH_KEYS["DeepL(auth)"] = str(value)
-        # if len(value) > 0:
-        #     if model.authenticationTranslator(choice_translator="DeepL(auth)", auth_key=value) is True:
-        #         print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
-        #         print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
-        #     else:
-        #         pass
+        callFunctionIfCallable(config_window.CALLBACK_SET_DEEPL_AUTHKEY, value)
 
 
     row=0

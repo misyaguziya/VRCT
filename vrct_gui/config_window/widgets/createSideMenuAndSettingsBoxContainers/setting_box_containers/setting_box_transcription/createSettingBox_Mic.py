@@ -2,6 +2,7 @@ from time import sleep
 
 from customtkinter import StringVar, IntVar
 
+from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
@@ -39,42 +40,29 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
             passive_button_wrapper_widget.grid()
 
     def optionmenu_mic_host_callback(value):
-        config.CHOICE_MIC_HOST = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_HOST, value)
 
     def optionmenu_input_mic_device_callback(value):
-        config.CHOICE_MIC_DEVICE = value
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_DEVICE, value)
 
     def slider_input_mic_energy_threshold_callback(value):
-        config.INPUT_MIC_ENERGY_THRESHOLD = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD, value)
 
     def checkbox_input_mic_dynamic_energy_threshold_callback(checkbox_box_widget):
-        print(checkbox_box_widget.get())
-        config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = checkbox_box_widget.get()
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD, checkbox_box_widget.get())
 
 
     def entry_input_mic_record_timeout_callback(value):
-        print(int(value))
-        config.INPUT_MIC_RECORD_TIMEOUT = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_RECORD_TIMEOUT, value)
 
     def entry_input_mic_phrase_timeout_callback(value):
-        print(int(value))
-        config.INPUT_MIC_PHRASE_TIMEOUT = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_PHRASE_TIMEOUT, value)
 
     def entry_input_mic_max_phrases_callback(value):
-        print(int(value))
-        config.INPUT_MIC_MAX_PHRASES = int(value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_MAX_PHRASES, value)
 
     def entry_input_mic_word_filters_callback(value):
-        word_filter = str(value)
-        word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
-        word_filter = ",".join(word_filter)
-        print(word_filter)
-        if len(word_filter) > 0:
-            config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
-        else:
-            config.INPUT_MIC_WORD_FILTER = []
-        # model.resetKeywordProcessor()
-        # model.addKeywords()
+        callFunctionIfCallable(config_window.CALLBACK_SET_MIC_WORD_FILTER, value)
 
 
     row=0
