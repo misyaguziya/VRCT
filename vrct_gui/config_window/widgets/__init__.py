@@ -1,4 +1,4 @@
 from .createConfigWindowTitle import createConfigWindowTitle
-from .createSettingBoxTitle import createSettingBoxTitle
+from .createSettingBoxTopBar import createSettingBoxTopBar
 
 from .createSideMenuAndSettingsBoxContainers import createSideMenuAndSettingsBoxContainers
