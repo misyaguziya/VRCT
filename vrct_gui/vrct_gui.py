@@ -18,6 +18,19 @@ from config import config
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
+        self.YOUR_LANGUAGE = "Japanese\n(Japan)"
+        self.TARGET_LANGUAGE = "English\n(United States)"
+
+        self.CALLBACK_TOGGLE_TRANSLATION = None
+        self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
+        self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
+        self.CALLBACK_TOGGLE_FOREGROUND = None
+        self.CALLBACK_SELECTED_TAB_NO_1 = None
+        self.CALLBACK_SELECTED_TAB_NO_2 = None
+        self.CALLBACK_SELECTED_TAB_NO_3 = None
+
+
+    def createGUI(self, settings):
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
         all_ctm = ColorThemeManager(theme)
@@ -40,27 +53,13 @@ class VRCT_GUI(CTk):
         self.settings.config_window = SimpleNamespace(
             ctm=all_ctm.config_window,
             uism=all_uism.config_window,
-            IS_CONFIG_WINDOW_COMPACT_MODE=False,
+            IS_CONFIG_WINDOW_COMPACT_MODE=settings.config_window.is_config_window_compact_mode,
             **common_args
         )
 
-
-        self.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        self.TARGET_LANGUAGE = "English\n(United States)"
-
-        self.CALLBACK_TOGGLE_TRANSLATION = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
-        self.CALLBACK_TOGGLE_FOREGROUND = None
-        self.CALLBACK_SELECTED_TAB_NO_1 = None
-        self.CALLBACK_SELECTED_TAB_NO_2 = None
-        self.CALLBACK_SELECTED_TAB_NO_3 = None
-
+        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
         # self.information_window = ToplevelWindowInformation(self)
-
-    def createGUI(self):
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
 
     def startMainLoop(self):
         self.mainloop()
