@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 
-from customtkinter import StringVar, END as CTK_END
+from customtkinter import StringVar, END as CTK_END, get_appearance_mode
+from vrct_gui.ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
 from vrct_gui import vrct_gui
 
 from config import config
@@ -8,14 +9,33 @@ from config import config
 class View():
     def __init__(self):
         self.settings = SimpleNamespace()
-        self.settings.config_window = SimpleNamespace()
-        self.settings.config_window = SimpleNamespace(
-            is_config_window_compact_mode=config.IS_CONFIG_WINDOW_COMPACT_MODE
+        theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
+        all_ctm = ColorThemeManager(theme)
+        all_uism = UiScalingManager(config.UI_SCALING)
+        image_filename = ImageFilenameManager(theme)
+
+        common_args = {
+            "image_filename": image_filename,
+            "FONT_FAMILY": config.FONT_FAMILY,
+        }
+
+        self.settings.main = SimpleNamespace(
+            ctm=all_ctm.main,
+            uism=all_uism.main,
+            IS_SIDEBAR_COMPACT_MODE=False,
+            COMPACT_MODE_ICON_SIZE=0,
+            **common_args
         )
-        pass
+
+        self.settings.config_window = SimpleNamespace(
+            ctm=all_ctm.config_window,
+            uism=all_uism.config_window,
+            IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
+            **common_args
+        )
 
 
-    def initializer(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress, config_window):
+    def register(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress, config_window):
 
         vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]

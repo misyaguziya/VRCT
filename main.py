@@ -239,7 +239,7 @@ model.checkOSCStarted()
 model.checkSoftwareUpdated()
 
 # set UI and callback
-view.initializer(
+view.register(
     sidebar_features={
         "callback_toggle_translation": callbackToggleTranslation,
         "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
