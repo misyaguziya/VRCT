@@ -35,7 +35,7 @@ class View():
         )
 
 
-    def register(self, sidebar_features, language_presets, entry_message_box, entry_message_box_bind_Return, entry_message_box_bind_Any_KeyPress, config_window):
+    def register(self, sidebar_features, language_presets, entry_message_box_commands, config_window):
 
         vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
@@ -57,10 +57,8 @@ class View():
 
 
         entry_message_box = getattr(vrct_gui, "entry_message_box")
-        # entry_message_box.bind("<Return>", lambda e: entry_message_box["bind_Return"](e))
-        # entry_message_box.bind("<Any-KeyPress>", lambda e: entry_message_box["bind_Any_KeyPress"](e))
-        entry_message_box.bind("<Return>", entry_message_box_bind_Return)
-        entry_message_box.bind("<Any-KeyPress>", entry_message_box_bind_Any_KeyPress)
+        entry_message_box.bind("<Return>", entry_message_box_commands["bind_Return"])
+        entry_message_box.bind("<Any-KeyPress>", entry_message_box_commands["bind_Any_KeyPress"])
 
         entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
         entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
