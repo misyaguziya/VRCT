@@ -442,6 +442,17 @@ class Config:
             self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    # Config Window
+    @property
+    def IS_CONFIG_WINDOW_COMPACT_MODE(self):
+        return self._IS_CONFIG_WINDOW_COMPACT_MODE
+
+    @IS_CONFIG_WINDOW_COMPACT_MODE.setter
+    def IS_CONFIG_WINDOW_COMPACT_MODE(self, value):
+        if type(value) is bool:
+            self._IS_CONFIG_WINDOW_COMPACT_MODE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     def init_config(self):
         self._VERSION = "1.3.2"
         self._PATH_CONFIG = "./config.json"
@@ -504,6 +515,9 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
+
+        # Config Window
+        self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
