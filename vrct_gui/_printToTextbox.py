@@ -1,7 +1,5 @@
 from datetime import datetime
 from customtkinter import CTkFont
-from config import config
-
 
 def _printToTextbox(settings, target_textbox, original_message, translated_message, tags=None):
     now_raw_data = datetime.now()
@@ -23,10 +21,10 @@ def _printToTextbox(settings, target_textbox, original_message, translated_messa
 
     target_textbox._textbox.tag_configure("START", spacing1=10)
 
-    target_textbox._textbox.tag_configure("LABEL", font=CTkFont(family=config.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("TIMESTAMP", font=CTkFont(family=config.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("ORIGINAL_MESSAGE", font=CTkFont(family=config.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("TRANSLATED_MESSAGE", font=CTkFont(family=config.FONT_FAMILY, size=16, weight="normal"))
+    target_textbox._textbox.tag_configure("LABEL", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
+    target_textbox._textbox.tag_configure("TIMESTAMP", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
+    target_textbox._textbox.tag_configure("ORIGINAL_MESSAGE", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
+    target_textbox._textbox.tag_configure("TRANSLATED_MESSAGE", font=CTkFont(family=settings.FONT_FAMILY, size=16, weight="normal"))
 
     target_textbox.configure(state='normal')
     target_textbox.insert("end", f"[{tags}]  ", ("START", "LABEL", tags, f"{tags}_COLOR"))
