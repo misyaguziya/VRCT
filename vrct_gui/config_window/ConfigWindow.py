@@ -51,7 +51,7 @@ class ConfigWindow(CTkToplevel):
         self.CALLBACK_SET_SPEAKER_MAX_PHRASES = None
 
         # Others Tab
-        self.CALLBACK_SET_ENABLE_AUTO_CLEAR_CHATBOX = None
+        self.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = None
         self.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = None
         self.CALLBACK_SET_MESSAGE_FORMAT = None
 

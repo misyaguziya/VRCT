@@ -359,13 +359,13 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def ENABLE_AUTO_CLEAR_CHATBOX(self):
-        return self._ENABLE_AUTO_CLEAR_CHATBOX
+    def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self):
+        return self._ENABLE_AUTO_CLEAR_MESSAGE_BOX
 
-    @ENABLE_AUTO_CLEAR_CHATBOX.setter
-    def ENABLE_AUTO_CLEAR_CHATBOX(self, value):
+    @ENABLE_AUTO_CLEAR_MESSAGE_BOX.setter
+    def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self, value):
         if type(value) is bool:
-            self._ENABLE_AUTO_CLEAR_CHATBOX = value
+            self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -493,7 +493,7 @@ class Config:
             "Google(web)": None,
         }
         self._MESSAGE_FORMAT = "[message]([translation])"
-        self._ENABLE_AUTO_CLEAR_CHATBOX = False
+        self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_OSC = False
         self._UPDATE_FLAG = False
