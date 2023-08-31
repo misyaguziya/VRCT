@@ -17,7 +17,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
 
 
     def checkbox_input_speaker_threshold_check_callback(e, passive_button_wrapper_widget, active_button_wrapper_widget, is_turned_on):
-        print("is_turned_on", is_turned_on)
+        callFunctionIfCallable(config_window.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
 
         if is_turned_on is True:
             passive_button_widget = passive_button_wrapper_widget.children["!ctklabel"]
