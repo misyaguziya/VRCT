@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from customtkinter import CTk, get_appearance_mode
+from customtkinter import CTk
 
 # from window_help_and_info import ToplevelWindowInformation
 
@@ -11,8 +11,6 @@ from ._printToTextbox import _printToTextbox
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab
-
-from config import config
 
 
 class VRCT_GUI(CTk):
