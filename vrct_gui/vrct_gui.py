@@ -16,10 +16,6 @@ from .ui_utils import _setDefaultActiveTab
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
-        # self.settings = SimpleNamespace()
-        self.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        self.TARGET_LANGUAGE = "English\n(United States)"
-
 
     def createGUI(self, settings, view_variable):
         self.settings = settings

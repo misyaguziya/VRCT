@@ -93,8 +93,8 @@ def createSidebar(settings, main_window):
         switchActiveAndPassivePresetsTabsColor(target_active_widget)
         switchActiveTabAndPassiveTab(target_active_widget, main_window.current_active_preset_tab, main_window.current_active_preset_tab.passive_function, settings.ctm.SQLS__PRESETS_TAB_BG_HOVERED_COLOR, settings.ctm.SQLS__PRESETS_TAB_BG_CLICKED_COLOR, settings.ctm.SQLS__PRESETS_TAB_BG_PASSIVE_COLOR)
 
-        main_window.sqls__optionmenu_your_language.configure(variable=StringVar(value=main_window.YOUR_LANGUAGE))
-        main_window.sqls__optionmenu_target_language.configure(variable=StringVar(value=main_window.TARGET_LANGUAGE))
+        main_window.sqls__optionmenu_your_language.set(main_window.view_variable.VAR_YOUR_LANGUAGE.get())
+        main_window.sqls__optionmenu_target_language.set(main_window.view_variable.VAR_TARGET_LANGUAGE.get())
         main_window.current_active_preset_tab = target_active_widget
 
 
@@ -499,7 +499,7 @@ def createSidebar(settings, main_window):
         optionmenu_attr_name="sqls__optionmenu_your_language",
         dropdown_menu_attr_name="sqls__dropdown_menu_your_language",
         dropdown_menu_values=["1""2","pppp\npppp"],
-        variable=StringVar(value=main_window.YOUR_LANGUAGE)
+        variable=main_window.view_variable.VAR_YOUR_LANGUAGE
     )
     main_window.sqls__box_your_language.grid(row=2, column=0, padx=0, pady=(settings.uism.SQLS__BOX_TOP_PADY,0),sticky="ew")
 
@@ -549,7 +549,7 @@ def createSidebar(settings, main_window):
         optionmenu_attr_name="sqls__optionmenu_target_language",
         dropdown_menu_attr_name="sqls__dropdown_menu_target_language",
         dropdown_menu_values=["1""2","pppp\npppp2"],
-        variable=StringVar(value=main_window.TARGET_LANGUAGE)
+        variable=main_window.view_variable.VAR_TARGET_LANGUAGE
     )
     main_window.sqls__box_target_language.grid(row=4, column=0, padx=0, pady=(0,0),sticky="ew")
 
