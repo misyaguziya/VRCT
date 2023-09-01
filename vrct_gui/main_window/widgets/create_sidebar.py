@@ -2,48 +2,33 @@ from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkSwitch,
 
 from ...ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveColor, bindButtonPressColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction, bindButtonFunctionAndColor, switchActiveTabAndPassiveTab, switchTabsColor
 
-from time import sleep
+from utils import callFunctionIfCallable
 
 
 def createSidebar(settings, main_window):
-    from vrct_gui import vrct_gui
-    changeMainWindowWidgetsStatus = vrct_gui.changeMainWindowWidgetsStatus
-
-
-
-
 
     def toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, mark):
         mark.place(relx=0.85) if is_turned_on else mark.place(relx=-1)
 
 
     def toggleTranslationFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSLATION) is True:
-            main_window.CALLBACK_TOGGLE_TRANSLATION()
-        is_turned_on = getattr(main_window, "translation_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.translation_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSLATION, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
 
     def toggleTranscriptionSendFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND) is True:
-            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND()
-        is_turned_on = getattr(main_window, "transcription_send_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.transcription_send_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
 
     def toggleTranscriptionReceiveFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE) is True:
-            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE()
-        is_turned_on = getattr(main_window, "transcription_receive_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.transcription_receive_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
 
-
     def toggleForegroundFeature():
-        if callable(main_window.CALLBACK_TOGGLE_FOREGROUND) is True:
-            main_window.CALLBACK_TOGGLE_FOREGROUND()
-        is_turned_on = getattr(main_window, "foreground_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.foreground_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_FOREGROUND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
 
 

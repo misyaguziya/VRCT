@@ -37,6 +37,18 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
+
+            # Main Window
+            CALLBACK_TOGGLE_TRANSLATION=None,
+            CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
+            CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
+            CALLBACK_TOGGLE_FOREGROUND=None,
+            # CALLBACK_SELECTED_TAB_NO_1=None,
+            # CALLBACK_SELECTED_TAB_NO_2=None,
+            # CALLBACK_SELECTED_TAB_NO_3=None,
+
+
+
             # Config Window
             # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
@@ -309,15 +321,6 @@ class View():
         vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no]
 
 
-
-    def getTranslationButtonStatus(self):
-        return vrct_gui.translation_switch_box.get()
-    def getTranscriptionSendButtonStatus(self):
-        return vrct_gui.transcription_send_switch_box.get()
-    def getTranscriptionReceiveButtonStatus(self):
-        return vrct_gui.transcription_receive_switch_box.get()
-    def getForegroundButtonStatus(self):
-        return vrct_gui.foreground_switch_box.get()
 
 
     def printToTextbox_enableTranslation(self):

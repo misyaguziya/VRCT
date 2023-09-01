@@ -20,10 +20,10 @@ class VRCT_GUI(CTk):
         self.YOUR_LANGUAGE = "Japanese\n(Japan)"
         self.TARGET_LANGUAGE = "English\n(United States)"
 
-        self.CALLBACK_TOGGLE_TRANSLATION = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
-        self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
-        self.CALLBACK_TOGGLE_FOREGROUND = None
+        # self.CALLBACK_TOGGLE_TRANSLATION = None
+        # self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
+        # self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
+        # self.CALLBACK_TOGGLE_FOREGROUND = None
         self.CALLBACK_SELECTED_TAB_NO_1 = None
         self.CALLBACK_SELECTED_TAB_NO_2 = None
         self.CALLBACK_SELECTED_TAB_NO_3 = None
@@ -33,7 +33,7 @@ class VRCT_GUI(CTk):
         self.settings = settings
         self.view_variable = view_variable
 
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main, view_variable=self.view_variable)
+        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
         self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window, view_variable=self.view_variable)
         # self.information_window = ToplevelWindowInformation(self)
 
