@@ -1,4 +1,4 @@
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END
+from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END, StringVar, IntVar
 from ctk_scrollable_dropdown import CTkScrollableDropdown
 
 from vrct_gui.ui_utils import createButtonWithImage
@@ -23,22 +23,22 @@ class _SettingBoxGenerator():
         setting_box_frame_wrapper.grid_columnconfigure((0,1), weight=1, minsize=int(self.uism.SB__MAIN_WIDTH / 2))
         return setting_box_frame_wrapper
 
-    def _createSettingBoxFrame(self, parent_widget, label_text, desc_text):
+    def _createSettingBoxFrame(self, parent_widget, for_var_label_text, for_var_desc_text):
         setting_box_frame = CTkFrame(parent_widget, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_frame_wrapper = self._createSettingBoxFrameWrapper(setting_box_frame)
-        self._setSettingBoxLabels(setting_box_frame_wrapper, label_text, desc_text)
+        self._setSettingBoxLabels(setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
 
         # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
         setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
         return (setting_box_frame, setting_box_frame_wrapper)
 
-    def _setSettingBoxLabels(self, setting_box_frame, label_text, desc_text=False):
+    def _setSettingBoxLabels(self, setting_box_frame, for_var_label_text, for_var_desc_text=None):
 
         setting_box_labels_frame = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
 
         setting_box_label = CTkLabel(
             setting_box_labels_frame,
-            text=label_text,
+            textvariable=for_var_label_text,
             anchor="w",
             # height=0,
             font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__LABEL_FONT_SIZE, weight="normal"),
@@ -46,12 +46,12 @@ class _SettingBoxGenerator():
         )
         setting_box_label.grid(row=0, column=0, padx=0, pady=0, sticky="ew")
 
-        if desc_text == False or self.IS_CONFIG_WINDOW_COMPACT_MODE is True:
+        if for_var_desc_text == None or self.IS_CONFIG_WINDOW_COMPACT_MODE is True:
             pass
         else:
             self.setting_box_desc = CTkLabel(
                 setting_box_labels_frame,
-                text=desc_text,
+                textvariable=for_var_desc_text,
                 anchor="w",
                 justify="left",
                 # height=0,
@@ -65,8 +65,8 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxDropdownMenu(self, parent_widget, label_text, desc_text, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values, command, variable):
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+    def createSettingBoxDropdownMenu(self, parent_widget, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_attr_name=None, dropdown_menu_values=None):
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_dropdown_menu_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_dropdown_menu_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -74,7 +74,6 @@ class _SettingBoxGenerator():
         self.createOption_DropdownMenu(
             setting_box_dropdown_menu_frame=setting_box_dropdown_menu_frame,
             optionmenu_attr_name=optionmenu_attr_name,
-            dropdown_menu_attr_name=dropdown_menu_attr_name,
             dropdown_menu_values=dropdown_menu_values,
             command=command,
             variable=variable,
@@ -85,8 +84,8 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSwitch(self, parent_widget, label_text, desc_text, switch_attr_name, is_checked, command):
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+    def createSettingBoxSwitch(self, parent_widget, for_var_label_text, for_var_desc_text, switch_attr_name, is_checked, command):
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_switch_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_switch_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -117,8 +116,8 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxCheckbox(self, parent_widget, label_text, desc_text, checkbox_attr_name, is_checked, command):
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+    def createSettingBoxCheckbox(self, parent_widget, for_var_label_text, for_var_desc_text, checkbox_attr_name, variable, command):
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_checkbox_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_checkbox_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -131,6 +130,7 @@ class _SettingBoxGenerator():
             checkbox_height=self.uism.SB__CHECKBOX_SIZE,
             onvalue=True,
             offvalue=False,
+            variable=variable,
             command=command,
             corner_radius=self.uism.SB__CHECKBOX_CORNER_RADIUS,
             border_width=self.uism.SB__CHECKBOX_BORDER_WIDTH,
@@ -144,7 +144,7 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
 
-        checkbox_widget.select() if is_checked else checkbox_widget.deselect()
+        # checkbox_widget.select() if is_checked else checkbox_widget.deselect()
 
         checkbox_widget.grid(row=0, column=0)
 
@@ -155,8 +155,8 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSlider(self, parent_widget, label_text, desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+    def createSettingBoxSlider(self, parent_widget, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_slider_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_slider_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -181,18 +181,20 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxProgressbarXSlider(self,
-        parent_widget, label_text, desc_text, command,
+        parent_widget, for_var_label_text, for_var_desc_text, command,
         entry_attr_name,
-        slider_attr_name, slider_range, slider_number_of_steps,
+        slider_attr_name, slider_range,
         progressbar_attr_name,
         passive_button_attr_name, passive_button_command,
         active_button_attr_name, active_button_command,
         button_image_filename,
         variable,
+
+        slider_number_of_steps: Union[int, None] = None,
         ):
 
 
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_progressbar_x_slider_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_progressbar_x_slider_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -288,8 +290,8 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxEntry(self, parent_widget, label_text, desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable):
-        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, label_text, desc_text)
+    def createSettingBoxEntry(self, parent_widget, for_var_label_text, for_var_desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable):
+        (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(parent_widget, for_var_label_text, for_var_desc_text)
 
         setting_box_entry_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.ctm.SB__BG_COLOR)
         setting_box_entry_frame.grid(row=0, column=1, padx=0, sticky="e")
@@ -414,50 +416,54 @@ class _SettingBoxGenerator():
 
 
 
-    def createOption_DropdownMenu(self, setting_box_dropdown_menu_frame, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values, command, variable):
+    def createOption_DropdownMenu(self, setting_box_dropdown_menu_frame, optionmenu_attr_name, command, variable, dropdown_menu_values):
+
+        # set the value to the option menu's variable automatically
+        # def adjustedCommand(selected_value):
+        #     option_menu_widget.set(selected_value)
+        #     command(selected_value)
+
         option_menu_widget = CTkOptionMenu(
             setting_box_dropdown_menu_frame,
             height=self.uism.SB__OPTIONMENU_HEIGHT,
             width=self.uism.SB__OPTIONMENU_WIDTH,
+            values=dropdown_menu_values,
             button_color=self.ctm.SB__OPTIONMENU_BG_COLOR,
             button_hover_color=self.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
             fg_color=self.ctm.SB__OPTIONMENU_BG_COLOR,
             font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
             variable=variable,
+            command=command,
             anchor="w",
         )
         option_menu_widget.grid(row=0, column=0, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
 
-        # set the value to the option menu's variable automatically
-        def adjustedCommand(selected_value):
-            option_menu_widget.set(selected_value)
-            command(selected_value)
+        # option_menu_widget.configure(command=adjustedCommand)
 
-        dropdown_menu_widget = CTkScrollableDropdown(
-            option_menu_widget,
-            values=dropdown_menu_values,
-            justify="left",
-            width=self.uism.SB__DROPDOWN_MENU_WIDTH,
-            min_show_button_num=6,
-            button_pady=0,
-            frame_corner_radius=self.uism.SB__DROPDOWN_MENU_FRAME_CORNER_RADIUS,
-            max_button_height=self.uism.SB__DROPDOWN_MENU_MAX_BUTTON_HEIGHT,
-            max_height=self.uism.SB__DROPDOWN_MENU_FRAME_MAX_HEIGHT,
-            font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-            command=adjustedCommand,
-        )
+        # dropdown_menu_widget = CTkScrollableDropdown(
+        #     option_menu_widget,
+        #     justify="left",
+        #     width=self.uism.SB__DROPDOWN_MENU_WIDTH,
+        #     min_show_button_num=6,
+        #     button_pady=0,
+        #     frame_corner_radius=self.uism.SB__DROPDOWN_MENU_FRAME_CORNER_RADIUS,
+        #     max_button_height=self.uism.SB__DROPDOWN_MENU_MAX_BUTTON_HEIGHT,
+        #     max_height=self.uism.SB__DROPDOWN_MENU_FRAME_MAX_HEIGHT,
+        #     font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
+        #     command=adjustedCommand,
+        # )
 
         # dropdown_menu_widget.bind(
         #     "<Leave>",
         #     lambda e: dropdown_menu_widget._withdraw() if not str(e.widget).startswith(str(dropdown_menu_widget.frame._parent_frame)) else None,
         # )
-        dropdown_menu_widget.bind(
-            "<Enter>",
-            lambda e: print(e),
-        )
+        # dropdown_menu_widget.bind(
+        #     "<Enter>",
+        #     lambda e: print(e),
+        # )
 
-        setattr(self.config_window, dropdown_menu_attr_name, dropdown_menu_widget)
+        # setattr(self.config_window, dropdown_menu_attr_name, dropdown_menu_widget)
         return option_menu_widget
 
 

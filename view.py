@@ -1,6 +1,8 @@
 from types import SimpleNamespace
+from tkinter import font as tk_font
+from languages import selectable_languages
 
-from customtkinter import StringVar, END as CTK_END, get_appearance_mode
+from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
 from vrct_gui import vrct_gui
 
@@ -33,6 +35,170 @@ class View():
             IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
             **common_args
         )
+
+        self.view_variable = SimpleNamespace(
+            VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
+            VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
+            SLIDER_RANGE_TRANSPARENCY=(50, 100),
+            CALLBACK_SET_TRANSPARENCY=None,
+            VAR_TRANSPARENCY=IntVar(value=config.TRANSPARENCY),
+
+            VAR_LABEL_APPEARANCE_THEME=StringVar(value="Theme"),
+            VAR_DESC_APPEARANCE_THEME=StringVar(value="Change the color theme from \"Light\" and \"Dark\". If you select \"System\", It will adjust based on your Windows theme. (Default: System)"),
+            LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
+            CALLBACK_SET_APPEARANCE_THEME=None,
+            VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
+
+            VAR_LABEL_UI_SCALING=StringVar(value="UI Size"),
+            VAR_DESC_UI_SCALING=StringVar(value="(Default: 100%)"),
+            LIST_UI_SCALING=["80%", "90%", "100%", "110%", "120%"],
+            CALLBACK_SET_UI_SCALING=None,
+            VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
+
+            VAR_LABEL_FONT_FAMILY=StringVar(value="Font Family"),
+            VAR_DESC_FONT_FAMILY=StringVar(value="(Default: Yu Gothic UI)"),
+            LIST_FONT_FAMILY=list(tk_font.families()),
+            CALLBACK_SET_FONT_FAMILY=None,
+            VAR_FONT_FAMILY=StringVar(value=config.FONT_FAMILY),
+
+            VAR_LABEL_UI_LANGUAGE=StringVar(value="UI Language"),
+            VAR_DESC_UI_LANGUAGE=StringVar(value="(Default: English)"),
+            LIST_UI_LANGUAGE=list(selectable_languages.values()),
+            CALLBACK_SET_UI_LANGUAGE=None,
+            VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
+
+
+
+            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value="DeepL Auth Key"),
+            VAR_DESC_DEEPL_AUTH_KEY=None,
+            # VAR_DESC_DEEPL_AUTH_KEY=StringVar(value=""),
+            CALLBACK_SET_DEEPL_AUTH_KEY=None,
+            VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL(auth)"]),
+
+
+
+            VAR_LABEL_MIC_HOST=StringVar(value="Mic Host"),
+            VAR_DESC_MIC_HOST=StringVar(value="Select the mic host. (Default: ?)"),
+            LIST_MIC_HOST=[], # model.getListInputHost(),
+            CALLBACK_SET_MIC_HOST=None,
+            VAR_MIC_HOST=StringVar(value=config.CHOICE_MIC_HOST),
+
+            VAR_LABEL_MIC_DEVICE=StringVar(value="Mic Device"),
+            VAR_DESC_MIC_DEVICE=StringVar(value="Select the mic devise. (Default: ?)"),
+            LIST_MIC_DEVICE=[], # model.getListInputDevice(),
+            CALLBACK_SET_MIC_DEVICE=None,
+            VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
+
+            VAR_LABEL_MIC_ENERGY_THRESHOLD=StringVar(value="Mic Energy Threshold"),
+            VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the microphone button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 2000 (Default: 300)"),
+            SLIDER_RANGE_MIC_ENERGY_THRESHOLD=(0, config.MAX_MIC_ENERGY_THRESHOLD),
+            CALLBACK_CHECK_MIC_THRESHOLD=None,
+            VAR_MIC_ENERGY_THRESHOLD=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
+
+            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Mic Dynamic Energy Threshold"),
+            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold."),
+            CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
+
+            VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value="Mic Record Timeout"),
+            VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
+            CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
+            VAR_MIC_RECORD_TIMEOUT=IntVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
+
+            VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value="Mic Phrase Timeout"),
+            VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value="(Default: 3)"),
+            CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
+            VAR_MIC_PHRASE_TIMEOUT=IntVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
+
+            VAR_LABEL_MIC_MAX_PHRASES=StringVar(value="Mic Max Phrases"),
+            VAR_DESC_MIC_MAX_PHRASES=StringVar(value="It will stop recording and send the recordings when the set count of phrase(s) is reached. (Default: 10)"),
+            CALLBACK_SET_MIC_MAX_PHRASES=None,
+            VAR_MIC_MAX_PHRASES=IntVar(value=config.INPUT_MIC_MAX_PHRASES),
+
+
+            VAR_LABEL_MIC_WORD_FILTER=StringVar(value="Mic Word Filter"),
+            VAR_DESC_MIC_WORD_FILTER=StringVar(value="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"),
+            CALLBACK_SET_MIC_WORD_FILTER=None,
+            VAR_MIC_WORD_FILTER=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER) if len(config.INPUT_MIC_WORD_FILTER) > 0 else ""),
+
+
+
+
+
+
+
+
+
+
+
+            VAR_LABEL_SPEAKER_DEVICE=StringVar(value="Speaker Device"),
+            VAR_DESC_SPEAKER_DEVICE=StringVar(value="Select the speaker devise. (Default: ?)"),
+            LIST_SPEAKER_DEVICE=[], # model.getListOutputDevice(),
+            CALLBACK_SET_SPEAKER_DEVICE=None,
+            VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
+
+            VAR_LABEL_SPEAKER_ENERGY_THRESHOLD=StringVar(value="Mic Energy Threshold"),
+            VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 4000 (Default: 300)"),
+            SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
+            CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
+            VAR_SPEAKER_ENERGY_THRESHOLD=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
+
+            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Speaker Dynamic Energy Threshold"),
+            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold."),
+            CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
+
+            VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value="Speaker Record Timeout"),
+            VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
+            CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
+            VAR_SPEAKER_RECORD_TIMEOUT=IntVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
+
+            VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value="Speaker Phrase Timeout"),
+            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value="It will stop recording and receive the recordings when the set second(s) is reached. (Default: 3)"),
+            CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
+            VAR_SPEAKER_PHRASE_TIMEOUT=IntVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
+
+            VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value="Speaker Max Phrases"),
+            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value="It will stop recording and receive the recordings when the set count of phrase(s) is reached. (Default: 10)"),
+            CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
+            VAR_SPEAKER_MAX_PHRASES=IntVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
+
+
+
+
+
+
+            VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Auto Clear The Message Box"),
+            VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Clear the message box after sending your message."),
+            CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
+            VAR_ENABLE_AUTO_CLEAR_MESSAGE_BOX=BooleanVar(value=config.ENABLE_AUTO_CLEAR_MESSAGE_BOX),
+
+            VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value="Notification XSOverlay (VR Only)"),
+            VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value="Notify received messages by using XSOverlay's notification feature."),
+            CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
+            VAR_ENABLE_NOTICE_XSOVERLAY=BooleanVar(value=config.ENABLE_NOTICE_XSOVERLAY),
+
+            VAR_LABEL_MESSAGE_FORMAT=StringVar(value="Message Format"),
+            VAR_DESC_MESSAGE_FORMAT=StringVar(value="You can change the decoration of the message you want to send. (Default: \"[message]([translation])\" )"),
+            CALLBACK_SET_MESSAGE_FORMAT=None,
+            VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
+
+
+
+
+
+            VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
+            VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
+            CALLBACK_SET_OSC_IP_ADDRESS=None,
+            VAR_OSC_IP_ADDRESS=IntVar(value=config.OSC_IP_ADDRESS),
+
+            VAR_LABEL_OSC_PORT=StringVar(value="OSC Port"),
+            VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
+            CALLBACK_SET_OSC_PORT=None,
+            VAR_OSC_PORT=IntVar(value=config.OSC_PORT),
+
+        )
+
 
 
     def register(self, sidebar_features, language_presets, entry_message_box_commands, config_window):
@@ -72,9 +238,23 @@ class View():
 
         # Appearance Tab
         vrct_gui.config_window.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
+        # vrct_gui.config_window.sb__transparency_slider.configure(variable=IntVar(value=config.TRANSPARENCY))
+
         vrct_gui.config_window.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
         vrct_gui.config_window.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
-        vrct_gui.config_window.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
+
+        self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
+
+        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=self.view_variable.LIST_FONT_FAMILY)
+
+        # self.view_variable.VAR_FONT_FAMILY = StringVar(value=config.FONT_FAMILY)
+        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=self.view_variable.VAR_FONT_FAMILY)
+
+
+
+        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=StringVar(value=config.FONT_FAMILY))
+        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=["test", "from", "view.py"])
+
         vrct_gui.config_window.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
 
 
@@ -216,7 +396,7 @@ class View():
 
 
     def createGUI(self):
-        vrct_gui.createGUI(settings=self.settings)
+        vrct_gui.createGUI(settings=self.settings, view_variable=self.view_variable)
 
     def startMainLoop(self):
         vrct_gui.startMainLoop()

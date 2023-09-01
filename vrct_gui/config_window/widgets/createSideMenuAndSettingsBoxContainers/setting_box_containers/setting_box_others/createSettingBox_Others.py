@@ -26,11 +26,11 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
     row=0
     config_window.sb__auto_clear_message_box = createSettingBoxCheckbox(
         parent_widget=setting_box_wrapper,
-        label_text="Auto Clear The Message Box",
-        desc_text="Clear the message box after sending your message.",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX,
         checkbox_attr_name="sb__checkbox_auto_clear_message_box",
         command=lambda: checkbox_auto_clear_message_box_callback(config_window.sb__checkbox_auto_clear_message_box),
-        is_checked=False
+        variable=config_window.view_variable.VAR_ENABLE_AUTO_CLEAR_MESSAGE_BOX,
     )
     config_window.sb__auto_clear_message_box.grid(row=row)
     row+=1
@@ -38,11 +38,11 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
 
     config_window.sb__notice_xsoverlay = createSettingBoxCheckbox(
         parent_widget=setting_box_wrapper,
-        label_text="Notification XSOverlay (VR Only)",
-        desc_text="Notify received messages by using XSOverlay's notification feature.",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_ENABLE_NOTICE_XSOVERLAY,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_ENABLE_NOTICE_XSOVERLAY,
         checkbox_attr_name="sb__checkbox_notice_xsoverlay",
         command=lambda: checkbox_notice_xsoverlay_callback(config_window.sb__checkbox_notice_xsoverlay),
-        is_checked=False
+        variable=config_window.view_variable.VAR_ENABLE_NOTICE_XSOVERLAY,
     )
     config_window.sb__notice_xsoverlay.grid(row=row)
     row+=1
@@ -50,12 +50,12 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings):
 
     config_window.sb__message_format = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Message Format",
-        desc_text="You can change the decoration of the message you want to send. (Default: \"[message]([translation])\" )",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MESSAGE_FORMAT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MESSAGE_FORMAT,
         entry_attr_name="sb__entry_message_format",
         entry_width=settings.uism.SB__ENTRY_WIDTH_250,
         entry_bind__Any_KeyRelease=lambda value: entry_message_format_callback(value),
-        entry_textvariable=StringVar(value=config.MESSAGE_FORMAT),
+        entry_textvariable=config_window.view_variable.VAR_MESSAGE_FORMAT,
     )
     config_window.sb__message_format.grid(row=row)
     row+=1

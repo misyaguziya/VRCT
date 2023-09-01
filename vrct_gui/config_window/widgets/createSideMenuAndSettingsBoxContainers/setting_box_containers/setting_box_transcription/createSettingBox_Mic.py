@@ -6,7 +6,6 @@ from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
-from config import config
 
 def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     sbg = _SettingBoxGenerator(config_window, settings)
@@ -69,28 +68,25 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     # Mic Host と Mic Device は一つの項目として引っ付ける予定
     config_window.sb__mic_host = createSettingBoxDropdownMenu(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Host",
-        desc_text="Select the mic host. (Default: ?)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_HOST,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_HOST,
         optionmenu_attr_name="sb__optionmenu_mic_host",
-        dropdown_menu_attr_name="sb__dropdown_mic_host",
-        # dropdown_menu_values=model.getListInputHost(),
-        dropdown_menu_values=["host1", "host2", "host3"],
+        dropdown_menu_values=config_window.view_variable.LIST_MIC_HOST,
         command=lambda value: optionmenu_mic_host_callback(value),
-        variable=StringVar(value=config.CHOICE_MIC_HOST)
+        variable=config_window.view_variable.VAR_MIC_HOST,
     )
     config_window.sb__mic_host.grid(row=row)
     row+=1
 
     config_window.sb__mic_device = createSettingBoxDropdownMenu(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Device",
-        desc_text="Select the mic devise. (Default: ?)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_DEVICE,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_DEVICE,
         optionmenu_attr_name="sb__optionmenu_mic_device",
         dropdown_menu_attr_name="sb__dropdown_mic_device",
-        # dropdown_menu_values=model.getListInputDevice(),
-        dropdown_menu_values=["device1", "device2", "device3"],
+        dropdown_menu_values=config_window.view_variable.LIST_MIC_DEVICE,
         command=lambda value: optionmenu_input_mic_device_callback(value),
-        variable=StringVar(value=config.CHOICE_MIC_DEVICE)
+        variable=config_window.view_variable.VAR_MIC_DEVICE,
     )
     config_window.sb__mic_device.grid(row=row)
     row+=1
@@ -98,16 +94,15 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
 
     config_window.sb__mic_energy_threshold = createSettingBoxProgressbarXSlider(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Energy Threshold",
-        desc_text="Slider to modify the threshold for activating voice input.\nPress the microphone button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 2000 (Default: 300)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_ENERGY_THRESHOLD,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_ENERGY_THRESHOLD,
         command=slider_input_mic_energy_threshold_callback,
-        variable=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
+        variable=config_window.view_variable.VAR_MIC_ENERGY_THRESHOLD,
         entry_attr_name="sb__progressbar_x_slider__entry_mic_energy_threshold",
 
 
         slider_attr_name="progressbar_x_slider__slider_mic_energy_threshold",
-        slider_range=(0, config.MAX_MIC_ENERGY_THRESHOLD),
-        slider_number_of_steps=config.MAX_MIC_ENERGY_THRESHOLD,
+        slider_range=config_window.view_variable.SLIDER_RANGE_MIC_ENERGY_THRESHOLD,
 
         progressbar_attr_name="sb__progressbar_x_slider__progressbar_mic_energy_threshold",
 
@@ -133,11 +128,11 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     # Mic Dynamic Energy Thresholdも上に引っ付ける予定
     config_window.sb__mic_dynamic_energy_threshold = createSettingBoxCheckbox(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Dynamic Energy Threshold",
-        desc_text="When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold.",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD,
         checkbox_attr_name="sb__checkbox_mic_dynamic_energy_threshold",
         command=lambda: checkbox_input_mic_dynamic_energy_threshold_callback(config_window.sb__checkbox_mic_dynamic_energy_threshold),
-        is_checked=False
+        variable=config_window.view_variable.VAR_MIC_DYNAMIC_ENERGY_THRESHOLD
     )
     config_window.sb__mic_dynamic_energy_threshold.grid(row=row)
     row+=1
@@ -146,55 +141,50 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     # 以下３つも一つの項目にまとめるかもしれない
     config_window.sb__mic_record_timeout = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Record Timeout",
-        desc_text="(Default: 3)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_RECORD_TIMEOUT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_RECORD_TIMEOUT,
         entry_attr_name="sb__entry_mic_record_timeout",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_mic_record_timeout_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
+        entry_textvariable=config_window.view_variable.VAR_MIC_RECORD_TIMEOUT,
     )
     config_window.sb__mic_record_timeout.grid(row=row)
     row+=1
 
     config_window.sb__mic_phrase_timeout = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Phrase Timeout",
-        desc_text="It will stop recording and send the recordings when the set second(s) is reached. (Default: 3)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_PHRASE_TIMEOUT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_PHRASE_TIMEOUT,
         entry_attr_name="sb__entry_mic_phrase_timeout",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_mic_phrase_timeout_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
+        entry_textvariable=config_window.view_variable.VAR_MIC_PHRASE_TIMEOUT,
     )
     config_window.sb__mic_phrase_timeout.grid(row=row)
     row+=1
 
     config_window.sb__mic_max_phrases = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Max Phrases",
-        desc_text="It will stop recording and send the recordings when the set count of phrase(s) is reached. (Default: 10)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_MAX_PHRASES,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_MAX_PHRASES,
         entry_attr_name="sb__entry_mic_max_phrases",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_mic_max_phrases_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_MIC_MAX_PHRASES),
+        entry_textvariable=config_window.view_variable.VAR_MIC_MAX_PHRASES,
     )
     config_window.sb__mic_max_phrases.grid(row=row)
     row+=1
-    # ＿＿＿＿＿＿＿＿＿＿
+    # # ＿＿＿＿＿＿＿＿＿＿
 
 
-
-    if len(config.INPUT_MIC_WORD_FILTER) > 0:
-        entry_textvariable=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER))
-    else:
-        entry_textvariable=None
     config_window.sb__mic_word_filter = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Mic Word Filter",
-        desc_text="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_MIC_WORD_FILTER,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_MIC_WORD_FILTER,
         entry_attr_name="sb__entry_mic_word_filter",
-        entry_width=settings.uism.SB__ENTRY_WIDTH_100,
+        entry_width=settings.uism.SB__ENTRY_WIDTH_300,
         entry_bind__Any_KeyRelease=lambda value: entry_input_mic_word_filters_callback(value),
-        entry_textvariable=entry_textvariable,
+        entry_textvariable=config_window.view_variable.VAR_MIC_WORD_FILTER,
     )
     config_window.sb__mic_word_filter.grid(row=row)
     row+=1

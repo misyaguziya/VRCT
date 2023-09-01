@@ -63,14 +63,13 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
     row=0
     config_window.sb__speaker_device = createSettingBoxDropdownMenu(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Device",
-        desc_text="Select the speaker devise. (Default: ?)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_DEVICE,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_DEVICE,
         optionmenu_attr_name="sb__optionmenu_speaker_device",
         dropdown_menu_attr_name="sb__dropdown_speaker_device",
-        # dropdown_menu_values=model.getListOutputDevice(),
-        dropdown_menu_values=["device1", "device2", "device3"],
+        dropdown_menu_values=config_window.view_variable.LIST_SPEAKER_DEVICE,
         command=lambda value: optionmenu_input_speaker_device_callback(value),
-        variable=StringVar(value=config.CHOICE_SPEAKER_DEVICE)
+        variable=config_window.view_variable.VAR_SPEAKER_DEVICE,
     )
     config_window.sb__speaker_device.grid(row=row)
     row+=1
@@ -78,16 +77,15 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
 
     config_window.sb__speaker_energy_threshold = createSettingBoxProgressbarXSlider(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Energy Threshold",
-        desc_text="Slider to modify the threshold for activating voice input.\nPress the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 4000 (Default: 300)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_ENERGY_THRESHOLD,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_ENERGY_THRESHOLD,
         command=slider_input_speaker_energy_threshold_callback,
-        variable=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
+        variable=config_window.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD,
         entry_attr_name="sb__progressbar_x_slider__entry_speaker_energy_threshold",
 
 
         slider_attr_name="progressbar_x_slider__slider_speaker_energy_threshold",
-        slider_range=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
-        slider_number_of_steps=config.MAX_SPEAKER_ENERGY_THRESHOLD,
+        slider_range=config_window.view_variable.SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD,
 
         progressbar_attr_name="sb__progressbar_x_slider__progressbar_speaker_energy_threshold",
 
@@ -113,11 +111,11 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
     # Speaker Dynamic Energy Thresholdも上に引っ付ける予定
     config_window.sb__speaker_dynamic_energy_threshold = createSettingBoxCheckbox(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Dynamic Energy Threshold",
-        desc_text="When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold.",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
         checkbox_attr_name="sb__checkbox_speaker_dynamic_energy_threshold",
         command=lambda: checkbox_input_speaker_dynamic_energy_threshold_callback(config_window.sb__checkbox_speaker_dynamic_energy_threshold),
-        is_checked=False
+        variable=config_window.view_variable.VAR_MIC_DYNAMIC_ENERGY_THRESHOLD,
     )
     config_window.sb__speaker_dynamic_energy_threshold.grid(row=row)
     row+=1
@@ -126,36 +124,36 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings):
     # 以下３つも一つの項目にまとめるかもしれない
     config_window.sb__speaker_record_timeout = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Record Timeout",
-        desc_text="(Default: 3)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_RECORD_TIMEOUT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_RECORD_TIMEOUT,
         entry_attr_name="sb__entry_speaker_record_timeout",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_record_timeout_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
+        entry_textvariable=config_window.view_variable.VAR_SPEAKER_RECORD_TIMEOUT,
     )
     config_window.sb__speaker_record_timeout.grid(row=row)
     row+=1
 
     config_window.sb__speaker_phrase_timeout = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Phrase Timeout",
-        desc_text="It will stop recording and receive the recordings when the set second(s) is reached. (Default: 3)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_PHRASE_TIMEOUT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_PHRASE_TIMEOUT,
         entry_attr_name="sb__entry_speaker_phrase_timeout",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_phrase_timeout_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
+        entry_textvariable=config_window.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT,
     )
     config_window.sb__speaker_phrase_timeout.grid(row=row)
     row+=1
 
     config_window.sb__speaker_max_phrases = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="Speaker Max Phrases",
-        desc_text="It will stop recording and receive the recordings when the set count of phrase(s) is reached. (Default: 10)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_SPEAKER_MAX_PHRASES,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_SPEAKER_MAX_PHRASES,
         entry_attr_name="sb__entry_speaker_max_phrases",
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_max_phrases_callback(value),
-        entry_textvariable=IntVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
+        entry_textvariable=config_window.view_variable.VAR_SPEAKER_MAX_PHRASES,
     )
     config_window.sb__speaker_max_phrases.grid(row=row)
     row+=1

@@ -20,12 +20,12 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
     row=0
     config_window.sb__ip_address = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="OSC IP Address",
-        desc_text="(Default: 127.0.0.1)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_OSC_IP_ADDRESS,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_OSC_IP_ADDRESS,
         entry_attr_name="sb__entry_ip_address",
         entry_width=settings.uism.SB__ENTRY_WIDTH_150,
         entry_bind__Any_KeyRelease=lambda value: entry_ip_address_callback(value),
-        entry_textvariable=StringVar(value=config.OSC_IP_ADDRESS),
+        entry_textvariable=config_window.view_variable.VAR_OSC_IP_ADDRESS,
     )
     config_window.sb__ip_address.grid(row=row)
     row+=1
@@ -33,12 +33,12 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
 
     config_window.sb__port = createSettingBoxEntry(
         parent_widget=setting_box_wrapper,
-        label_text="OSC Port",
-        desc_text="(Default: 9000)",
+        for_var_label_text=config_window.view_variable.VAR_LABEL_OSC_PORT,
+        for_var_desc_text=config_window.view_variable.VAR_DESC_OSC_PORT,
         entry_attr_name="sb__entry_port",
         entry_width=settings.uism.SB__ENTRY_WIDTH_150,
         entry_bind__Any_KeyRelease=lambda value: entry_port_callback(value),
-        entry_textvariable=IntVar(value=config.OSC_PORT),
+        entry_textvariable=config_window.view_variable.VAR_OSC_PORT,
     )
     config_window.sb__port.grid(row=row)
     row+=1
