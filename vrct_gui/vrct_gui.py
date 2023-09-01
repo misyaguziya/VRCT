@@ -20,14 +20,6 @@ class VRCT_GUI(CTk):
         self.YOUR_LANGUAGE = "Japanese\n(Japan)"
         self.TARGET_LANGUAGE = "English\n(United States)"
 
-        # self.CALLBACK_TOGGLE_TRANSLATION = None
-        # self.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = None
-        # self.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = None
-        # self.CALLBACK_TOGGLE_FOREGROUND = None
-        self.CALLBACK_SELECTED_TAB_NO_1 = None
-        self.CALLBACK_SELECTED_TAB_NO_2 = None
-        self.CALLBACK_SELECTED_TAB_NO_3 = None
-
 
     def createGUI(self, settings, view_variable):
         self.settings = settings
