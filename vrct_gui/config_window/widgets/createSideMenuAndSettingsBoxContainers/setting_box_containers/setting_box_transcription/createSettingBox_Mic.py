@@ -1,11 +1,8 @@
 from time import sleep
 
-from customtkinter import StringVar, IntVar
-
 from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
-
 
 def createSettingBox_Mic(setting_box_wrapper, config_window, settings):
     sbg = _SettingBoxGenerator(config_window, settings)

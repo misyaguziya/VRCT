@@ -1,10 +1,8 @@
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END, StringVar, IntVar
-from ctk_scrollable_dropdown import CTkScrollableDropdown
+from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END
 
 from vrct_gui.ui_utils import createButtonWithImage
 
 from typing import Union
-
 
 class _SettingBoxGenerator():
     def __init__(self, config_window, settings):

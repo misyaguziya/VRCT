@@ -2,8 +2,6 @@ from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
-from config import config
-
 def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
     sbg = _SettingBoxGenerator(config_window, settings)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
