@@ -99,34 +99,21 @@ def createSidebar(settings, main_window):
 
 
 
-
-
-
-
     def switchToPreset1(e):
         print("1")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_1) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_1()
-        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        # main_window.TARGET_LANGUAGE = "English\n(United States)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "1")
         target_active_widget = getattr(main_window, "sqls__presets_button_1")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset2(e):
         print("2")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_2) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_2()
-        # main_window.YOUR_LANGUAGE = "English\n(United States)"
-        # main_window.TARGET_LANGUAGE = "Japanese\n(Japan)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "2")
         target_active_widget = getattr(main_window, "sqls__presets_button_2")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset3(e):
         print("3")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_3) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_3()
-        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        # main_window.TARGET_LANGUAGE = "Chinese, Cantonese\n(Traditional Hong Kong)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "3")
         target_active_widget = getattr(main_window, "sqls__presets_button_3")
         switchPresetTabFunction(target_active_widget)
 

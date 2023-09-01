@@ -122,8 +122,8 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
-def callbackSelectedTabNo1():
-    config.SELECTED_TAB_NO = "1"
+def callbackSelectedLanguagePresetTab(selected_tab_no):
+    config.SELECTED_TAB_NO = selected_tab_no
     view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
@@ -136,37 +136,6 @@ def callbackSelectedTabNo1():
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
-def callbackSelectedTabNo2():
-    config.SELECTED_TAB_NO = "2"
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.SOURCE_LANGUAGE = language
-    config.SOURCE_COUNTRY = country
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.TARGET_LANGUAGE = language
-    config.TARGET_COUNTRY = country
-    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
-def callbackSelectedTabNo3():
-    config.SELECTED_TAB_NO = "3"
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.SOURCE_LANGUAGE = language
-    config.SOURCE_COUNTRY = country
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.TARGET_LANGUAGE = language
-    config.TARGET_COUNTRY = country
-    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
 
 # command func
 def callbackToggleTranslation(is_turned_on):
@@ -404,9 +373,7 @@ view.register(
         "callback_target_language": setTargetLanguageAndCountry,
         "values": model.getListLanguageAndCountry(),
 
-        "callback_selected_tab_no_1": callbackSelectedTabNo1,
-        "callback_selected_tab_no_2": callbackSelectedTabNo2,
-        "callback_selected_tab_no_3": callbackSelectedTabNo3,
+        "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
     },
 
     entry_message_box_commands={

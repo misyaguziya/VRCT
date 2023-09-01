@@ -43,9 +43,8 @@ class View():
             CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
             CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
             CALLBACK_TOGGLE_FOREGROUND=None,
-            # CALLBACK_SELECTED_TAB_NO_1=None,
-            # CALLBACK_SELECTED_TAB_NO_2=None,
-            # CALLBACK_SELECTED_TAB_NO_3=None,
+
+            CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
 
 
 
@@ -215,9 +214,7 @@ class View():
         vrct_gui.sqls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
         vrct_gui.sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
 
-        vrct_gui.CALLBACK_SELECTED_TAB_NO_1 = language_presets["callback_selected_tab_no_1"]
-        vrct_gui.CALLBACK_SELECTED_TAB_NO_2 = language_presets["callback_selected_tab_no_2"]
-        vrct_gui.CALLBACK_SELECTED_TAB_NO_3 = language_presets["callback_selected_tab_no_3"]
+        vrct_gui.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
 
