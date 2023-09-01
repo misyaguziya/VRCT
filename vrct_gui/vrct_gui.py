@@ -16,7 +16,7 @@ from .ui_utils import _setDefaultActiveTab
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
-        self.settings = SimpleNamespace()
+        # self.settings = SimpleNamespace()
         self.YOUR_LANGUAGE = "Japanese\n(Japan)"
         self.TARGET_LANGUAGE = "English\n(United States)"
 
@@ -29,11 +29,12 @@ class VRCT_GUI(CTk):
         self.CALLBACK_SELECTED_TAB_NO_3 = None
 
 
-    def createGUI(self, settings):
+    def createGUI(self, settings, view_variable):
         self.settings = settings
+        self.view_variable = view_variable
 
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
-        self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window)
+        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main, view_variable=self.view_variable)
+        self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window, view_variable=self.view_variable)
         # self.information_window = ToplevelWindowInformation(self)
 
     def startMainLoop(self):

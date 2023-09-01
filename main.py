@@ -2,6 +2,8 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
+from utils import get_key_by_value
+from languages import selectable_languages
 
 # func transcription send message
 def sendMicMessage(message):
@@ -244,6 +246,8 @@ def callbackSetFontFamily(value):
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
+    value = get_key_by_value(selectable_languages, value)
+    print("callbackSetUiLanguage__after_get_key_by_value", value)
     config.UI_LANGUAGE = value
 
 # Translation Tab

@@ -5,7 +5,7 @@ from customtkinter import CTkFrame
 from ..ui_utils import createButtonWithImage, getImagePath
 
 
-def createMainWindowWidgets(vrct_gui, settings):
+def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
 
     # self.IS_DEVELOPER_MODE = False
