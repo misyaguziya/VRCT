@@ -169,16 +169,16 @@ def callbackSelectedTabNo3():
 
 
 # command func
-def callbackToggleTranslation():
-    config.ENABLE_TRANSLATION = view.getTranslationButtonStatus()
+def callbackToggleTranslation(is_turned_on):
+    config.ENABLE_TRANSLATION = is_turned_on
     if config.ENABLE_TRANSLATION is True:
         view.printToTextbox_enableTranslation()
     else:
         view.printToTextbox_disableTranslation()
 
-def callbackToggleTranscriptionSend():
+def callbackToggleTranscriptionSend(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_SEND = view.getTranscriptionSendButtonStatus()
+    config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         view.printToTextbox_enableTranscriptionSend()
         th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage)
@@ -190,9 +190,9 @@ def callbackToggleTranscriptionSend():
         th_stopTranscriptionSendMessage.daemon = True
         th_stopTranscriptionSendMessage.start()
 
-def callbackToggleTranscriptionReceive():
+def callbackToggleTranscriptionReceive(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_RECEIVE = view.getTranscriptionReceiveButtonStatus()
+    config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         view.printToTextbox_enableTranscriptionReceive()
         th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessage)
@@ -204,8 +204,8 @@ def callbackToggleTranscriptionReceive():
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
 
-def callbackToggleForeground():
-    config.ENABLE_FOREGROUND = view.getForegroundButtonStatus()
+def callbackToggleForeground(is_turned_on):
+    config.ENABLE_FOREGROUND = is_turned_on
     if config.ENABLE_FOREGROUND is True:
         view.printToTextbox_enableForeground()
         view.foregroundOn()
