@@ -37,14 +37,17 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
-
             # Main Window
+            # Sidebar Features
             CALLBACK_TOGGLE_TRANSLATION=None,
             CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
             CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
             CALLBACK_TOGGLE_FOREGROUND=None,
 
+            # Language Settings
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
+            VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
+            VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
 
 
 
@@ -241,6 +244,8 @@ class View():
 
         self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
 
+
+
         # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=self.view_variable.LIST_FONT_FAMILY)
 
         # self.view_variable.VAR_FONT_FAMILY = StringVar(value=config.FONT_FAMILY)
@@ -314,10 +319,8 @@ class View():
 
 
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
-        vrct_gui.YOUR_LANGUAGE = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no]
-        vrct_gui.TARGET_LANGUAGE = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no]
-
-
+        self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
+        self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
 
 
     def printToTextbox_enableTranslation(self):

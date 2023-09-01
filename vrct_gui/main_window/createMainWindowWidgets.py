@@ -8,14 +8,6 @@ from ..ui_utils import createButtonWithImage, getImagePath
 def createMainWindowWidgets(vrct_gui, settings):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
 
-    # self.IS_DEVELOPER_MODE = False
-    # self.IS_DEVELOPER_MODE = True
-
-
-
-
-    # self.YOUR_LANGUAGE = "Japanese\n(Japan)"
-    # self.TARGET_LANGUAGE = "English\n(United States)"
 
     vrct_gui.iconbitmap(getImagePath("app.ico"))
     vrct_gui.title("VRCT")
@@ -27,7 +19,6 @@ def createMainWindowWidgets(vrct_gui, settings):
     vrct_gui.grid_columnconfigure(1, weight=1)
 
     vrct_gui.configure(fg_color="#ff7f50")
-    # return
 
 
     # Main Container
