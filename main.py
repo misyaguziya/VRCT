@@ -2,6 +2,8 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
+from utils import get_key_by_value
+from languages import selectable_languages
 
 # func transcription send message
 def sendMicMessage(message):
@@ -120,8 +122,8 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
-def callbackSelectedTabNo1():
-    config.SELECTED_TAB_NO = "1"
+def callbackSelectedLanguagePresetTab(selected_tab_no):
+    config.SELECTED_TAB_NO = selected_tab_no
     view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
@@ -134,49 +136,18 @@ def callbackSelectedTabNo1():
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
-def callbackSelectedTabNo2():
-    config.SELECTED_TAB_NO = "2"
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.SOURCE_LANGUAGE = language
-    config.SOURCE_COUNTRY = country
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.TARGET_LANGUAGE = language
-    config.TARGET_COUNTRY = country
-    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
-def callbackSelectedTabNo3():
-    config.SELECTED_TAB_NO = "3"
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.SOURCE_LANGUAGE = language
-    config.SOURCE_COUNTRY = country
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
-    config.TARGET_LANGUAGE = language
-    config.TARGET_COUNTRY = country
-    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-
 
 # command func
-def callbackToggleTranslation():
-    config.ENABLE_TRANSLATION = view.getTranslationButtonStatus()
+def callbackToggleTranslation(is_turned_on):
+    config.ENABLE_TRANSLATION = is_turned_on
     if config.ENABLE_TRANSLATION is True:
         view.printToTextbox_enableTranslation()
     else:
         view.printToTextbox_disableTranslation()
 
-def callbackToggleTranscriptionSend():
+def callbackToggleTranscriptionSend(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_SEND = view.getTranscriptionSendButtonStatus()
+    config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         view.printToTextbox_enableTranscriptionSend()
         th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage)
@@ -188,9 +159,9 @@ def callbackToggleTranscriptionSend():
         th_stopTranscriptionSendMessage.daemon = True
         th_stopTranscriptionSendMessage.start()
 
-def callbackToggleTranscriptionReceive():
+def callbackToggleTranscriptionReceive(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_RECEIVE = view.getTranscriptionReceiveButtonStatus()
+    config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         view.printToTextbox_enableTranscriptionReceive()
         th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessage)
@@ -202,8 +173,8 @@ def callbackToggleTranscriptionReceive():
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
 
-def callbackToggleForeground():
-    config.ENABLE_FOREGROUND = view.getForegroundButtonStatus()
+def callbackToggleForeground(is_turned_on):
+    config.ENABLE_FOREGROUND = is_turned_on
     if config.ENABLE_FOREGROUND is True:
         view.printToTextbox_enableForeground()
         view.foregroundOn()
@@ -244,6 +215,8 @@ def callbackSetFontFamily(value):
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
+    value = get_key_by_value(selectable_languages, value)
+    print("callbackSetUiLanguage__after_get_key_by_value", value)
     config.UI_LANGUAGE = value
 
 # Translation Tab
@@ -400,9 +373,7 @@ view.register(
         "callback_target_language": setTargetLanguageAndCountry,
         "values": model.getListLanguageAndCountry(),
 
-        "callback_selected_tab_no_1": callbackSelectedTabNo1,
-        "callback_selected_tab_no_2": callbackSelectedTabNo2,
-        "callback_selected_tab_no_3": callbackSelectedTabNo3,
+        "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
     },
 
     entry_message_box_commands={

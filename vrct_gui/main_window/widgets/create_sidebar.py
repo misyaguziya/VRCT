@@ -2,48 +2,33 @@ from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkSwitch,
 
 from ...ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveColor, bindButtonPressColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction, bindButtonFunctionAndColor, switchActiveTabAndPassiveTab, switchTabsColor
 
-from time import sleep
+from utils import callFunctionIfCallable
 
 
 def createSidebar(settings, main_window):
-    from vrct_gui import vrct_gui
-    changeMainWindowWidgetsStatus = vrct_gui.changeMainWindowWidgetsStatus
-
-
-
-
 
     def toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, mark):
         mark.place(relx=0.85) if is_turned_on else mark.place(relx=-1)
 
 
     def toggleTranslationFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSLATION) is True:
-            main_window.CALLBACK_TOGGLE_TRANSLATION()
-        is_turned_on = getattr(main_window, "translation_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.translation_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSLATION, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
 
     def toggleTranscriptionSendFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND) is True:
-            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND()
-        is_turned_on = getattr(main_window, "transcription_send_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.transcription_send_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
 
     def toggleTranscriptionReceiveFeature():
-        if callable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE) is True:
-            main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE()
-        is_turned_on = getattr(main_window, "transcription_receive_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.transcription_receive_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
 
-
     def toggleForegroundFeature():
-        if callable(main_window.CALLBACK_TOGGLE_FOREGROUND) is True:
-            main_window.CALLBACK_TOGGLE_FOREGROUND()
-        is_turned_on = getattr(main_window, "foreground_switch_box").get()
-        print(is_turned_on)
+        is_turned_on = main_window.foreground_switch_box.get()
+        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_FOREGROUND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
 
 
@@ -108,40 +93,27 @@ def createSidebar(settings, main_window):
         switchActiveAndPassivePresetsTabsColor(target_active_widget)
         switchActiveTabAndPassiveTab(target_active_widget, main_window.current_active_preset_tab, main_window.current_active_preset_tab.passive_function, settings.ctm.SQLS__PRESETS_TAB_BG_HOVERED_COLOR, settings.ctm.SQLS__PRESETS_TAB_BG_CLICKED_COLOR, settings.ctm.SQLS__PRESETS_TAB_BG_PASSIVE_COLOR)
 
-        main_window.sqls__optionmenu_your_language.configure(variable=StringVar(value=main_window.YOUR_LANGUAGE))
-        main_window.sqls__optionmenu_target_language.configure(variable=StringVar(value=main_window.TARGET_LANGUAGE))
+        main_window.sqls__optionmenu_your_language.set(main_window.view_variable.VAR_YOUR_LANGUAGE.get())
+        main_window.sqls__optionmenu_target_language.set(main_window.view_variable.VAR_TARGET_LANGUAGE.get())
         main_window.current_active_preset_tab = target_active_widget
-
-
-
-
 
 
 
     def switchToPreset1(e):
         print("1")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_1) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_1()
-        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        # main_window.TARGET_LANGUAGE = "English\n(United States)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "1")
         target_active_widget = getattr(main_window, "sqls__presets_button_1")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset2(e):
         print("2")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_2) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_2()
-        # main_window.YOUR_LANGUAGE = "English\n(United States)"
-        # main_window.TARGET_LANGUAGE = "Japanese\n(Japan)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "2")
         target_active_widget = getattr(main_window, "sqls__presets_button_2")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset3(e):
         print("3")
-        if callable(main_window.CALLBACK_SELECTED_TAB_NO_3) is True:
-            main_window.CALLBACK_SELECTED_TAB_NO_3()
-        # main_window.YOUR_LANGUAGE = "Japanese\n(Japan)"
-        # main_window.TARGET_LANGUAGE = "Chinese, Cantonese\n(Traditional Hong Kong)"
+        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "3")
         target_active_widget = getattr(main_window, "sqls__presets_button_3")
         switchPresetTabFunction(target_active_widget)
 
@@ -527,7 +499,7 @@ def createSidebar(settings, main_window):
         optionmenu_attr_name="sqls__optionmenu_your_language",
         dropdown_menu_attr_name="sqls__dropdown_menu_your_language",
         dropdown_menu_values=["1""2","pppp\npppp"],
-        variable=StringVar(value=main_window.YOUR_LANGUAGE)
+        variable=main_window.view_variable.VAR_YOUR_LANGUAGE
     )
     main_window.sqls__box_your_language.grid(row=2, column=0, padx=0, pady=(settings.uism.SQLS__BOX_TOP_PADY,0),sticky="ew")
 
@@ -577,7 +549,7 @@ def createSidebar(settings, main_window):
         optionmenu_attr_name="sqls__optionmenu_target_language",
         dropdown_menu_attr_name="sqls__dropdown_menu_target_language",
         dropdown_menu_values=["1""2","pppp\npppp2"],
-        variable=StringVar(value=main_window.TARGET_LANGUAGE)
+        variable=main_window.view_variable.VAR_TARGET_LANGUAGE
     )
     main_window.sqls__box_target_language.grid(row=4, column=0, padx=0, pady=(0,0),sticky="ew")
 
