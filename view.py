@@ -37,6 +37,8 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
+            # Config Window
+            # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
             VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
@@ -68,7 +70,7 @@ class View():
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
 
-
+            # Translation Tab
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value="DeepL Auth Key"),
             VAR_DESC_DEEPL_AUTH_KEY=None,
             # VAR_DESC_DEEPL_AUTH_KEY=StringVar(value=""),
@@ -76,7 +78,7 @@ class View():
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL(auth)"]),
 
 
-
+            # Transcription Tab (Mic)
             VAR_LABEL_MIC_HOST=StringVar(value="Mic Host"),
             VAR_DESC_MIC_HOST=StringVar(value="Select the mic host. (Default: ?)"),
             LIST_MIC_HOST=[], # model.getListInputHost(),
@@ -115,22 +117,13 @@ class View():
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=IntVar(value=config.INPUT_MIC_MAX_PHRASES),
 
-
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value="Mic Word Filter"),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"),
             CALLBACK_SET_MIC_WORD_FILTER=None,
             VAR_MIC_WORD_FILTER=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER) if len(config.INPUT_MIC_WORD_FILTER) > 0 else ""),
 
 
-
-
-
-
-
-
-
-
-
+            # Transcription Tab (Speaker)
             VAR_LABEL_SPEAKER_DEVICE=StringVar(value="Speaker Device"),
             VAR_DESC_SPEAKER_DEVICE=StringVar(value="Select the speaker devise. (Default: ?)"),
             LIST_SPEAKER_DEVICE=[], # model.getListOutputDevice(),
@@ -164,10 +157,7 @@ class View():
             VAR_SPEAKER_MAX_PHRASES=IntVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
 
 
-
-
-
-
+            # Others Tab
             VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Auto Clear The Message Box"),
             VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Clear the message box after sending your message."),
             CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
@@ -184,9 +174,7 @@ class View():
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
 
 
-
-
-
+            # Advanced Settings Tab
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
             VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
             CALLBACK_SET_OSC_IP_ADDRESS=None,
@@ -196,7 +184,6 @@ class View():
             VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
             CALLBACK_SET_OSC_PORT=None,
             VAR_OSC_PORT=IntVar(value=config.OSC_PORT),
-
         )
 
 
