@@ -69,11 +69,11 @@ class VRCT_GUI(CTk):
         )
 
     def setDefaultActiveLanguagePresetTab(self, tab_no:str):
-        self.current_active_preset_tab = getattr(self, f"sqls__presets_button_{tab_no}")
+        self.current_active_preset_tab = getattr(self, f"sls__presets_button_{tab_no}")
         _setDefaultActiveTab(
             active_tab_widget=self.current_active_preset_tab,
-            active_bg_color=self.settings.main.ctm.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR,
-            active_text_color=self.settings.main.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
+            active_bg_color=self.settings.main.ctm.SLS__PRESETS_TAB_BG_ACTIVE_COLOR,
+            active_text_color=self.settings.main.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
         )
 
 

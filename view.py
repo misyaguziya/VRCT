@@ -217,12 +217,12 @@ class View():
         vrct_gui.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
 
 
-        vrct_gui.sqls__optionmenu_your_language.configure(values=language_presets["values"])
-        vrct_gui.sqls__optionmenu_your_language.configure(command=language_presets["callback_your_language"])
-        vrct_gui.sqls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
-        vrct_gui.sqls__optionmenu_target_language.configure(values=language_presets["values"])
-        vrct_gui.sqls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
-        vrct_gui.sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
+        vrct_gui.sls__optionmenu_your_language.configure(values=language_presets["values"])
+        vrct_gui.sls__optionmenu_your_language.configure(command=language_presets["callback_your_language"])
+        vrct_gui.sls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
+        vrct_gui.sls__optionmenu_target_language.configure(values=language_presets["values"])
+        vrct_gui.sls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
+        vrct_gui.sls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
 
         vrct_gui.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
