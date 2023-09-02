@@ -82,23 +82,23 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
 
             case "quick_language_settings":
                 if status == "disabled":
-                    vrct_gui.sqls__container_title.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
-                    vrct_gui.sqls__title_text_your_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
-                    vrct_gui.sqls__title_text_target_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
+                    vrct_gui.sls__container_title.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
+                    vrct_gui.sls__title_text_your_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
+                    vrct_gui.sls__title_text_target_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
                     if settings.IS_SIDEBAR_COMPACT_MODE is False:
-                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE)
-                    vrct_gui.sqls__optionmenu_your_language.configure(state="disabled")
-                    vrct_gui.sqls__optionmenu_target_language.configure(state="disabled")
+                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE)
+                    vrct_gui.sls__optionmenu_your_language.configure(state="disabled")
+                    vrct_gui.sls__optionmenu_target_language.configure(state="disabled")
 
                 elif status == "normal":
-                    vrct_gui.sqls__container_title.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
-                    vrct_gui.sqls__title_text_your_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
-                    vrct_gui.sqls__title_text_target_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
+                    vrct_gui.sls__container_title.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
+                    vrct_gui.sls__title_text_your_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
+                    vrct_gui.sls__title_text_target_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
                     if settings.IS_SIDEBAR_COMPACT_MODE is False:
-                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
-                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
-                    vrct_gui.sqls__optionmenu_your_language.configure(state="normal")
-                    vrct_gui.sqls__optionmenu_target_language.configure(state="normal")
+                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
+                        vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
+                    vrct_gui.sls__optionmenu_your_language.configure(state="normal")
+                    vrct_gui.sls__optionmenu_target_language.configure(state="normal")
 
 
             case "config_button":

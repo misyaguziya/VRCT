@@ -52,7 +52,7 @@ def createTextbox(settings, main_window):
             target_widget=target_active_widget,
             tab_buttons=textbox_tabs,
             active_bg_color=settings.ctm.TEXTBOX_BG_COLOR,
-            active_text_color=settings.ctm.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR,
+            active_text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR,
             passive_bg_color=settings.ctm.TEXTBOX_TAB_BG_PASSIVE_COLOR,
             passive_text_color=settings.ctm.TEXTBOX_TAB_TEXT_PASSIVE_COLOR
         )
