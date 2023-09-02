@@ -248,7 +248,7 @@ def createSidebar(settings, main_window):
             "label_attr_name": "label_transcription_send",
             "compact_mode_icon_attr_name": "transcription_send_compact_mode_icon",
             "selected_mark_attr_name": "transcription_send_selected_mark",
-            "text": "Voice2chatbox",
+            "text": "Voice2Chatbox",
             "icon_file_name": settings.image_filename.MIC_ICON,
         },
         {
@@ -259,7 +259,7 @@ def createSidebar(settings, main_window):
             "label_attr_name": "label_transcription_receive",
             "compact_mode_icon_attr_name": "transcription_receive_compact_mode_icon",
             "selected_mark_attr_name": "transcription_receive_selected_mark",
-            "text": "Speaker2chatbox",
+            "text": "Speaker2Log",
             "icon_file_name": settings.image_filename.HEADPHONES_ICON,
         },
         {
