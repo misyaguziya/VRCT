@@ -39,9 +39,16 @@ class View():
         self.view_variable = SimpleNamespace(
             # Main Window
             # Sidebar Features
+            VAR_LABEL_TRANSLATION=StringVar(value="Translation"),
             CALLBACK_TOGGLE_TRANSLATION=None,
+
+            VAR_LABEL_TRANSCRIPTION_SEND=StringVar(value="Voice2Chatbox"),
             CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
+
+            VAR_LABEL_TRANSCRIPTION_RECEIVE=StringVar(value="Speaker2Log"),
             CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
+
+            VAR_LABEL_FOREGROUND=StringVar(value="Foreground"),
             CALLBACK_TOGGLE_FOREGROUND=None,
 
             # Language Settings
