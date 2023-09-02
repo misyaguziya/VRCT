@@ -39,9 +39,16 @@ class View():
         self.view_variable = SimpleNamespace(
             # Main Window
             # Sidebar Features
+            VAR_LABEL_TRANSLATION=StringVar(value="Translation"),
             CALLBACK_TOGGLE_TRANSLATION=None,
+
+            VAR_LABEL_TRANSCRIPTION_SEND=StringVar(value="Voice2Chatbox"),
             CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
+
+            VAR_LABEL_TRANSCRIPTION_RECEIVE=StringVar(value="Speaker2Log"),
             CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
+
+            VAR_LABEL_FOREGROUND=StringVar(value="Foreground"),
             CALLBACK_TOGGLE_FOREGROUND=None,
 
             # Language Settings
@@ -210,12 +217,12 @@ class View():
         vrct_gui.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
 
 
-        vrct_gui.sqls__optionmenu_your_language.configure(values=language_presets["values"])
-        vrct_gui.sqls__optionmenu_your_language.configure(command=language_presets["callback_your_language"])
-        vrct_gui.sqls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
-        vrct_gui.sqls__optionmenu_target_language.configure(values=language_presets["values"])
-        vrct_gui.sqls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
-        vrct_gui.sqls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
+        vrct_gui.sls__optionmenu_your_language.configure(values=language_presets["values"])
+        vrct_gui.sls__optionmenu_your_language.configure(command=language_presets["callback_your_language"])
+        vrct_gui.sls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
+        vrct_gui.sls__optionmenu_target_language.configure(values=language_presets["values"])
+        vrct_gui.sls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
+        vrct_gui.sls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
 
         vrct_gui.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
