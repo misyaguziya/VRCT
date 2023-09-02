@@ -34,19 +34,6 @@ def createSidebar(settings, main_window):
 
 
 
-    def toggleTranslationSwitchBox(e):
-        main_window.translation_switch_box.toggle()
-
-    def toggleTranscriptionSendSwitchBox(e):
-        main_window.transcription_send_switch_box.toggle()
-
-    def toggleTranscriptionReceiveSwitchBox(e):
-        main_window.transcription_receive_switch_box.toggle()
-
-    def toggleForegroundSwitchBox(e):
-        main_window.foreground_switch_box.toggle()
-
-
     def changeSidebarFeaturesColorByEvents(ww, event_name):
         target_frame_widget = getattr(main_window, ww)
         if event_name == "enter":
@@ -233,44 +220,44 @@ def createSidebar(settings, main_window):
             "frame_attr_name": "translation_frame",
             "command": toggleTranslationFeature,
             "switch_box_attr_name": "translation_switch_box",
-            "toggle_switch_box_command": toggleTranslationSwitchBox,
+            "toggle_switch_box_command": lambda e: main_window.translation_switch_box.toggle(),
             "label_attr_name": "label_translation",
             "compact_mode_icon_attr_name": "translation_compact_mode_icon",
             "selected_mark_attr_name": "translation_selected_mark",
-            "text": "Translation",
+            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSLATION,
             "icon_file_name": settings.image_filename.TRANSLATION_ICON,
         },
         {
             "frame_attr_name": "transcription_send_frame",
             "command": toggleTranscriptionSendFeature,
             "switch_box_attr_name": "transcription_send_switch_box",
-            "toggle_switch_box_command": toggleTranscriptionSendSwitchBox,
+            "toggle_switch_box_command": lambda e: main_window.transcription_send_switch_box.toggle(),
             "label_attr_name": "label_transcription_send",
             "compact_mode_icon_attr_name": "transcription_send_compact_mode_icon",
             "selected_mark_attr_name": "transcription_send_selected_mark",
-            "text": "Voice2Chatbox",
+            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSCRIPTION_SEND,
             "icon_file_name": settings.image_filename.MIC_ICON,
         },
         {
             "frame_attr_name": "transcription_receive_frame",
             "command": toggleTranscriptionReceiveFeature,
             "switch_box_attr_name": "transcription_receive_switch_box",
-            "toggle_switch_box_command": toggleTranscriptionReceiveSwitchBox,
+            "toggle_switch_box_command": lambda e: main_window.transcription_receive_switch_box.toggle(),
             "label_attr_name": "label_transcription_receive",
             "compact_mode_icon_attr_name": "transcription_receive_compact_mode_icon",
             "selected_mark_attr_name": "transcription_receive_selected_mark",
-            "text": "Speaker2Log",
+            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSCRIPTION_RECEIVE,
             "icon_file_name": settings.image_filename.HEADPHONES_ICON,
         },
         {
             "frame_attr_name": "foreground_frame",
             "command": toggleForegroundFeature,
             "switch_box_attr_name": "foreground_switch_box",
-            "toggle_switch_box_command": toggleForegroundSwitchBox,
+            "toggle_switch_box_command": lambda e: main_window.foreground_switch_box.toggle(),
             "label_attr_name": "label_foreground",
             "compact_mode_icon_attr_name": "foreground_compact_mode_icon",
             "selected_mark_attr_name": "foreground_selected_mark",
-            "text": "Foreground",
+            "var_label_text": main_window.view_variable.VAR_LABEL_FOREGROUND,
             "icon_file_name": settings.image_filename.FOREGROUND_ICON,
         },
     ]
@@ -286,7 +273,7 @@ def createSidebar(settings, main_window):
         label_attr_name = sfs["label_attr_name"]
         compact_mode_icon_attr_name = sfs["compact_mode_icon_attr_name"]
         selected_mark_attr_name = sfs["selected_mark_attr_name"]
-        text = sfs["text"]
+        var_label_text = sfs["var_label_text"]
         icon_file_name = sfs["icon_file_name"]
 
         frame_widget = CTkFrame(main_window.sidebar_features_container, corner_radius=0, fg_color=settings.ctm.SF__BG_COLOR, cursor="hand2", width=0, height=0)
@@ -297,7 +284,7 @@ def createSidebar(settings, main_window):
 
         label_widget = CTkLabel(
             frame_widget,
-            text=text,
+            textvariable=var_label_text,
             height=0,
             corner_radius=0,
             font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SF__LABEL_FONT_SIZE, weight="normal"),
