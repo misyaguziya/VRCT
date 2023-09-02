@@ -31,6 +31,8 @@ def sendMicMessage(message):
                 view.printToTextbox_OSCError()
 
             view.printToTextbox_SentMessage(message, translation)
+            if config.ENABLE_LOGGER is True:
+                model.logger.info(f"[SEND] {message} ({translation})")
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage)
@@ -57,6 +59,8 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
                 model.notificationXSOverlay(xsoverlay_message)
             view.printToTextbox_ReceivedMessage(message, translation)
+            if config.ENABLE_LOGGER is True:
+                model.logger.info(f"[RECEIVE] {message} ({translation})")
 
 def startTranscriptionReceiveMessage():
     model.startSpeakerTranscript(receiveSpeakerMessage)
@@ -90,6 +94,8 @@ def sendChatMessage(message):
 
         # update textbox message log
         view.printToTextbox_SentMessage(message, translation)
+        if config.ENABLE_LOGGER is True:
+            model.logger.info(f"[SEND] {message} ({translation})")
 
         # delete message in entry message box
         if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
@@ -358,6 +364,10 @@ model.checkOSCStarted()
 
 # check Software Updated
 model.checkSoftwareUpdated()
+
+# init logger
+if config.ENABLE_LOGGER is True:
+    model.startLogger()
 
 # set UI and callback
 view.register(

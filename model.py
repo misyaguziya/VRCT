@@ -1,3 +1,6 @@
+from os import makedirs
+from datetime import datetime
+from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
 from threading import Thread, Event
@@ -49,6 +52,7 @@ class Model:
         return cls._instance
 
     def init(self):
+        self.logger = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
         self.speaker_energy_get_progressbar = None
@@ -76,6 +80,21 @@ class Model:
             auth_keys[choice_translator] = auth_key
             config.AUTH_KEYS = auth_keys
         return result
+
+    def startLogger(self):
+        makedirs("./logs", exist_ok=True)
+        logger = getLogger()
+        logger.setLevel(INFO)
+        file_name = f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        file_handler = FileHandler(file_name, encoding="utf-8", delay=True)
+        formatter = Formatter("[%(asctime)s] %(message)s")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+        self.logger = logger
+
+    def stopLogger(self):
+        self.logger.disabled = True
+        self.logger = None
 
     @staticmethod
     def getListLanguageAndCountry():

@@ -442,6 +442,16 @@ class Config:
             self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    @property
+    def ENABLE_LOGGER(self):
+        return self._ENABLE_LOGGER
+
+    @ENABLE_LOGGER.setter
+    def ENABLE_LOGGER(self, value):
+        if type(value) is bool:
+            self._ENABLE_LOGGER = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     # Config Window
     @property
     def IS_CONFIG_WINDOW_COMPACT_MODE(self):
@@ -515,6 +525,7 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
+        self._ENABLE_LOGGER = False
 
         # Config Window
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
