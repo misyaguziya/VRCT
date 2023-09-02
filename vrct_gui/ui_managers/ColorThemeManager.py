@@ -116,23 +116,23 @@ class ColorThemeManager():
         self.main.SF__SELECTED_MARK_DISABLE_BG_COLOR = self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR
 
 
-        # Sidebar quick settings
-        self.main.SQLS__TITLE_TEXT_COLOR = self.DARK_400_COLOR
+        # Sidebar Languages Settings
+        self.main.SLS__TITLE_TEXT_COLOR = self.DARK_400_COLOR
 
-        self.main.SQLS__BG_COLOR = self.DARK_825_COLOR
+        self.main.SLS__BG_COLOR = self.DARK_825_COLOR
 
-        self.main.SQLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_850_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_888_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SQLS__BG_COLOR
-        self.main.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.DARK_600_COLOR
-        self.main.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+        self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_850_COLOR
+        self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_888_COLOR
+        self.main.SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
+        self.main.SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SLS__BG_COLOR
+        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.DARK_600_COLOR
+        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
 
-        self.main.SQLS__BOX_BG_COLOR = self.DARK_850_COLOR
-        self.main.SQLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR
-        self.main.SQLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
+        self.main.SLS__BOX_BG_COLOR = self.DARK_850_COLOR
+        self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR
+        self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
 
-        self.main.SQLS__DROPDOWN_MENU_BG_COLOR = self.DARK_900_COLOR
+        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.DARK_900_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
@@ -267,22 +267,22 @@ class ColorThemeManager():
 
 
         # Sidebar quick settings
-        self.main.SQLS__TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
+        self.main.SLS__TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
 
-        self.main.SQLS__BG_COLOR = self.LIGHT_300_COLOR
+        self.main.SLS__BG_COLOR = self.LIGHT_300_COLOR
 
-        self.main.SQLS__PRESETS_TAB_BG_HOVERED_COLOR = self.LIGHT_350_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_CLICKED_COLOR = self.LIGHT_800_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.main.SQLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SQLS__BG_COLOR
-        self.main.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.LIGHT_600_COLOR
-        self.main.SQLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+        self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.LIGHT_350_COLOR
+        self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.LIGHT_800_COLOR
+        self.main.SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
+        self.main.SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SLS__BG_COLOR
+        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.LIGHT_600_COLOR
+        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
 
-        self.main.SQLS__BOX_BG_COLOR = self.LIGHT_350_COLOR
-        self.main.SQLS__BOX_SECTION_TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
-        self.main.SQLS__BOX_ARROWS_TEXT_COLOR = self.LIGHT_700_COLOR
+        self.main.SLS__BOX_BG_COLOR = self.LIGHT_350_COLOR
+        self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
+        self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.LIGHT_700_COLOR
 
-        self.main.SQLS__DROPDOWN_MENU_BG_COLOR = self.LIGHT_500_COLOR
+        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.LIGHT_500_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR

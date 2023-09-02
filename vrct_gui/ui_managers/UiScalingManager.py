@@ -55,21 +55,21 @@ class UiScalingManager():
 
 
         # Sidebar Quick Language Settings, SQLS
-        self.main.SQLS__TITLE_FONT_SIZE = self._calculateUiSize(16)
-        self.main.SQLS__TITLE_PADY = (self._calculateUiSize(12), self._calculateUiSize(6))
+        self.main.SLS__TITLE_FONT_SIZE = self._calculateUiSize(16)
+        self.main.SLS__TITLE_PADY = (self._calculateUiSize(12), self._calculateUiSize(6))
 
-        self.main.SQLS__PRESET_TAB_NUMBER_FONT_SIZE = self._calculateUiSize(16)
+        self.main.SLS__PRESET_TAB_NUMBER_FONT_SIZE = self._calculateUiSize(16)
 
-        self.main.SQLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
-        self.main.SQLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
-        self.main.SQLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(18))
-        self.main.SQLS__BOX_DROPDOWN_MENU_FONT_SIZE = self._calculateUiSize(14)
-        self.main.SQLS__BOX_DROPDOWN_MENU_WIDTH = self._calculateUiSize(200)
-        self.main.SQLS__BOX_ARROWS_PADY = self._calculateUiSize(10)
-        self.main.SQLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
-        self.main.SQLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
-        self.main.SQLS__BOX_ARROWS_DESC_PADX = self._calculateUiSize(6)
-        self.main.SQLS__BOX_TOP_PADY = self._calculateUiSize(16)
+        self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
+        self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
+        self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(18))
+        self.main.SLS__BOX_DROPDOWN_MENU_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__BOX_DROPDOWN_MENU_WIDTH = self._calculateUiSize(200)
+        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(10)
+        self.main.SLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
+        self.main.SLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
+        self.main.SLS__BOX_ARROWS_DESC_PADX = self._calculateUiSize(6)
+        self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(16)
 
         self.main.SIDEBAR_CONFIG_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SIDEBAR_CONFIG_BUTTON_PADX = self._calculateUiSize(10)
