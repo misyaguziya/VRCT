@@ -12,6 +12,8 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab
 
+from .main_window.widgets import createSidebar, createMinimizeSidebarButton
+
 
 class VRCT_GUI(CTk):
     def __init__(self):
@@ -76,6 +78,11 @@ class VRCT_GUI(CTk):
             active_text_color=self.settings.main.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
         )
 
+    def recreateMainWindowSidebar(self):
+        self.minimize_sidebar_button_container.destroy()
+        createMinimizeSidebarButton(self.settings.main, self)
+        self.sidebar_bg_container.destroy()
+        createSidebar(self.settings.main, self)
 
 
 vrct_gui = VRCT_GUI()

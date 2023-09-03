@@ -24,7 +24,6 @@ class View():
         self.settings.main = SimpleNamespace(
             ctm=all_ctm.main,
             uism=all_uism.main,
-            IS_SIDEBAR_COMPACT_MODE=False,
             COMPACT_MODE_ICON_SIZE=0,
             **common_args
         )
@@ -38,6 +37,10 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Main Window
+            # Sidebar Compact Mode
+            IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=False,
+            CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=None,
+
             # Sidebar Features
             VAR_LABEL_TRANSLATION=StringVar(value="Translation"),
             CALLBACK_TOGGLE_TRANSLATION=None,
@@ -211,6 +214,8 @@ class View():
 
     def register(self, sidebar_features, language_presets, entry_message_box_commands, config_window):
 
+        self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
+
         vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
         vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features["callback_toggle_transcription_receive"]
@@ -323,6 +328,11 @@ class View():
 
     def foregroundOff(self):
         vrct_gui.attributes("-topmost", False)
+
+
+    def _toggleMainWindowSidebarCompactMode(self, is_turned_on):
+        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = is_turned_on
+        vrct_gui.recreateMainWindowSidebar()
 
 
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
