@@ -175,7 +175,7 @@ def createSidebar(settings, main_window):
     main_window.sidebar_bg_container.grid(row=0, column=0, sticky="nsew")
 
 
-    MIN_SIDEBAR_WIDTH = settings.uism.COMPACT_MODE_SIDEBAR_WIDTH if settings.IS_SIDEBAR_COMPACT_MODE is True else settings.uism.SIDEBAR_WIDTH
+    MIN_SIDEBAR_WIDTH = settings.uism.COMPACT_MODE_SIDEBAR_WIDTH if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True else settings.uism.SIDEBAR_WIDTH
     main_window.sidebar_bg_container.grid_columnconfigure(0, weight=0, minsize=MIN_SIDEBAR_WIDTH)
     main_window.grid_rowconfigure(0, weight=1)
 
@@ -200,7 +200,7 @@ def createSidebar(settings, main_window):
         image=CTkImage(img, size=(width,height))
     )
 
-    if settings.IS_SIDEBAR_COMPACT_MODE is True:
+    if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
         main_window.sidebar_compact_mode_logo.grid(row=0, column=0, pady=(
             int(settings.uism.SF__LOGO_PADY[0]+a_s/2),
             int(settings.uism.SF__LOGO_PADY[1]+a_s/2)
@@ -338,7 +338,7 @@ def createSidebar(settings, main_window):
 
 
         # Arrange
-        if settings.IS_SIDEBAR_COMPACT_MODE is True:
+        if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
             compact_mode_icon_widget.grid(row=row, column=0, pady=settings.uism.SF__COMPACT_MODE_ICON_PADY)
             selected_mark_widget.place(relx=-1, rely=0.5, relheight=0.75, anchor="center")
         else:
@@ -386,7 +386,7 @@ def createSidebar(settings, main_window):
     # Sidebar Quick Language Settings, SQLS
     main_window.sls__container = CTkFrame(main_window.sidebar_bg_container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=0)
 
-    if settings.IS_SIDEBAR_COMPACT_MODE is False:
+    if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
         main_window.sls__container.grid(row=2, column=0, sticky="new")
 
     main_window.sls__container.grid_columnconfigure(0, weight=1)
