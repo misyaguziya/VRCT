@@ -81,8 +81,13 @@ class VRCT_GUI(CTk):
     def recreateMainWindowSidebar(self):
         self.minimize_sidebar_button_container.destroy()
         createMinimizeSidebarButton(self.settings.main, self)
-        self.sidebar_bg_container.destroy()
-        createSidebar(self.settings.main, self)
+
+        if self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE:
+            self.sidebar_bg_container.grid_remove()
+            self.sidebar_compact_mode_bg_container.grid()
+        else:
+            self.sidebar_compact_mode_bg_container.grid_remove()
+            self.sidebar_bg_container.grid()
 
 
 vrct_gui = VRCT_GUI()
