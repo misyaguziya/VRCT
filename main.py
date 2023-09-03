@@ -143,6 +143,15 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
+def callbackSetAuthKeys(keys):
+    config.AUTH_KEYS = keys
+
+def callbackChangeStatusOSC(value):
+    config.ENABLE_OSC = value
+
+def callbackChangeStatusSoftwareUpdated(value):
+    config.UPDATE_FLAG = value
+
 # command func
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
@@ -230,7 +239,7 @@ def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
     # config.AUTH_KEYS["DeepL(auth)"] = str(value)
     # if len(value) > 0:
-    #     if model.authenticationTranslator(choice_translator="DeepL(auth)", auth_key=value) is True:
+    #     if model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
     #         print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
     #         print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
     #     else:
@@ -352,7 +361,7 @@ def callbackSetOscPort(value):
 view.createGUI()
 
 # init config
-if model.authenticationTranslator() is False:
+if model.authenticationTranslator(callbackSetAuthKeys) is False:
     # error update Auth key
     view.printToTextbox_AuthenticationError()
 
@@ -360,10 +369,10 @@ if model.authenticationTranslator() is False:
 model.addKeywords()
 
 # check OSC started
-model.checkOSCStarted()
+model.checkOSCStarted(callbackChangeStatusOSC)
 
 # check Software Updated
-model.checkSoftwareUpdated()
+model.checkSoftwareUpdated(callbackChangeStatusSoftwareUpdated)
 
 # init logger
 if config.ENABLE_LOGGER is True:
