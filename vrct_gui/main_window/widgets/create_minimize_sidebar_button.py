@@ -3,24 +3,16 @@ from customtkinter import CTkFrame, CTkLabel, CTkImage
 
 from ...ui_utils import getImageFileFromUiUtils, bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction
 
-from .create_sidebar import createSidebar
-
+from utils import callFunctionIfCallable
 
 def createMinimizeSidebarButton(settings, main_window):
 
     def enableCompactMode(e):
-        settings.IS_SIDEBAR_COMPACT_MODE = True
-        main_window.minimize_sidebar_button_container.destroy()
-        createMinimizeSidebarButton(settings, main_window)
-        main_window.sidebar_bg_container.destroy()
-        createSidebar(settings, main_window)
+        callFunctionIfCallable(main_window.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, True)
 
     def disableCompactMode(e):
-        settings.IS_SIDEBAR_COMPACT_MODE = False
-        main_window.minimize_sidebar_button_container.destroy()
-        createMinimizeSidebarButton(settings, main_window)
-        main_window.sidebar_bg_container.destroy()
-        createSidebar(settings, main_window)
+        callFunctionIfCallable(main_window.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, False)
+
 
 
     main_window.minimize_sidebar_button_container = CTkFrame(main_window.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR, cursor="hand2", width=0, height=0)
@@ -36,7 +28,7 @@ def createMinimizeSidebarButton(settings, main_window):
     )
 
 
-    if settings.IS_SIDEBAR_COMPACT_MODE is True:
+    if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
         bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], disableCompactMode)
 
