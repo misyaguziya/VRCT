@@ -1,6 +1,6 @@
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkSwitch, CTkImage, StringVar
+from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ....ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveColor, bindButtonPressColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction, bindButtonFunctionAndColor, switchActiveTabAndPassiveTab, switchTabsColor
+from ....ui_utils import getImageFileFromUiUtils, bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, bindButtonFunctionAndColor, switchActiveTabAndPassiveTab, switchTabsColor
 
 from utils import callFunctionIfCallable
 

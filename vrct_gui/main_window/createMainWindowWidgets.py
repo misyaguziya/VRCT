@@ -63,22 +63,3 @@ def createMainWindowWidgets(vrct_gui, settings):
     createTextbox(settings, vrct_gui)
 
     createEntryMessageBox(settings, vrct_gui)
-
-
-
-
-
-    # def delete_window(self):
-    #     self.vrct_gui.quit()
-    #     self.vrct_gui.destroy()
-
-    # def openConfigWindow(self, e):
-    #     self.config_window.deiconify()
-    #     self.config_window.focus_set()
-    #     self.config_window.focus()
-    #     self.config_window.grab_set()
-
-    # def openHelpAndInfoWindow(self, e):
-    #     self.information_window.deiconify()
-    #     self.information_window.focus_set()
-    #     self.information_window.focus()
