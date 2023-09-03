@@ -1,8 +1,4 @@
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkSwitch, CTkImage, StringVar
-
-from ...ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveColor, bindButtonPressColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction, bindButtonFunctionAndColor, switchActiveTabAndPassiveTab, switchTabsColor
-
-from utils import callFunctionIfCallable
+from customtkinter import CTkFrame
 
 from ._create_sidebar import createSidebarFeatures, createSidebarLanguagesSettings
 
