@@ -120,8 +120,7 @@ def createSidebarLanguagesSettings(settings, main_window):
     # Sidebar Languages Settings, SLS
     main_window.sls__container = CTkFrame(main_window.sidebar_bg_container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=0)
 
-    if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
-        main_window.sls__container.grid(row=2, column=0, sticky="new")
+    main_window.sls__container.grid(row=2, column=0, sticky="new")
 
     main_window.sls__container.grid_columnconfigure(0, weight=1)
 
