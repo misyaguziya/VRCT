@@ -68,7 +68,7 @@ class Model:
         del self.translator
         self.keyword_processor = KeywordProcessor()
 
-    def authenticationTranslator(self, choice_translator=None, auth_key=None):
+    def authenticationTranslator(self, fnc, choice_translator=None, auth_key=None):
         if choice_translator == None:
             choice_translator = config.CHOICE_TRANSLATOR
         if auth_key == None:
@@ -78,7 +78,7 @@ class Model:
         if result:
             auth_keys = config.AUTH_KEYS
             auth_keys[choice_translator] = auth_key
-            config.AUTH_KEYS = auth_keys
+            fnc(auth_key)
         return result
 
     def startLogger(self):
@@ -165,10 +165,10 @@ class Model:
         sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     @staticmethod
-    def checkOSCStarted():
+    def checkOSCStarted(fnc):
         def checkOscReceive(address, osc_arguments):
             if config.ENABLE_OSC is False:
-                config.ENABLE_OSC = True
+                fnc(True)
 
         # start receive osc
         th_receive_osc_parameters = Thread(target=receiveOscParameters, args=(checkOscReceive,))
@@ -179,12 +179,12 @@ class Model:
         sendTestAction()
 
     @staticmethod
-    def checkSoftwareUpdated():
+    def checkSoftwareUpdated(fnc):
         # check update
         response = requests_get(config.GITHUB_URL)
         tag_name = response.json()["tag_name"]
         if tag_name != config.VERSION:
-            config.UPDATE_FLAG = True
+            fnc(True)
 
     @staticmethod
     def getListInputHost():
