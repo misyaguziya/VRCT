@@ -105,13 +105,13 @@ class View():
             # Transcription Tab (Mic)
             VAR_LABEL_MIC_HOST=StringVar(value="Mic Host"),
             VAR_DESC_MIC_HOST=StringVar(value="Select the mic host. (Default: ?)"),
-            LIST_MIC_HOST=[], # model.getListInputHost(),
+            LIST_MIC_HOST=[],
             CALLBACK_SET_MIC_HOST=None,
             VAR_MIC_HOST=StringVar(value=config.CHOICE_MIC_HOST),
 
             VAR_LABEL_MIC_DEVICE=StringVar(value="Mic Device"),
             VAR_DESC_MIC_DEVICE=StringVar(value="Select the mic devise. (Default: ?)"),
-            LIST_MIC_DEVICE=[], # model.getListInputDevice(),
+            LIST_MIC_DEVICE=[],
             CALLBACK_SET_MIC_DEVICE=None,
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
@@ -150,7 +150,7 @@ class View():
             # Transcription Tab (Speaker)
             VAR_LABEL_SPEAKER_DEVICE=StringVar(value="Speaker Device"),
             VAR_DESC_SPEAKER_DEVICE=StringVar(value="Select the speaker devise. (Default: ?)"),
-            LIST_SPEAKER_DEVICE=[], # model.getListOutputDevice(),
+            LIST_SPEAKER_DEVICE=[],
             CALLBACK_SET_SPEAKER_DEVICE=None,
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
@@ -276,11 +276,11 @@ class View():
 
         # Transcription Tab (Mic)
         vrct_gui.config_window.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
-        # vrct_gui.config_window.LIST_MIC_HOST = config_window["list_mic_host"]
-        self.updateList_MicHost(vrct_gui.config_window.LIST_MIC_HOST)
+        self.updateList_MicHost(config_window["list_mic_host"])
 
         vrct_gui.config_window.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
-        vrct_gui.config_window.LIST_MIC_DEVISE = config_window["list_mic_device"]
+        self.updateList_MicDevice(config_window["list_mic_device"])
+
 
         vrct_gui.config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
         vrct_gui.config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
@@ -292,6 +292,8 @@ class View():
 
         # Transcription Tab (Speaker)
         vrct_gui.config_window.CALLBACK_SET_SPEAKER_DEVICE = config_window["callback_set_speaker_device"]
+        self.updateList_SpeakerDevice(config_window["list_speaker_device"])
+
         vrct_gui.config_window.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window["callback_set_speaker_energy_threshold"]
         vrct_gui.config_window.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_speaker_dynamic_energy_threshold"]
         vrct_gui.config_window.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window["callback_check_speaker_threshold"]
@@ -422,8 +424,24 @@ class View():
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
 
 
-    def updateList_MicHost(self, list__mic_host):
-        vrct_gui.config_window.LIST_MIC_HOST = list__mic_host
+    def updateList_MicHost(self, new_mic_host_list:list):
+        vrct_gui.config_window.LIST_MIC_HOST = new_mic_host_list
+        vrct_gui.config_window.sb__optionmenu_mic_host.configure(values=new_mic_host_list)
 
+    def updateSelected_MicHost(self, selected_mic_host_name:str):
+        vrct_gui.config_window.VAR_MIC_HOST.set(selected_mic_host_name)
+
+    def updateList_MicDevice(self, new_mic_device_list):
+        vrct_gui.config_window.LIST_MIC_DEVICE = new_mic_device_list
+        vrct_gui.config_window.sb__optionmenu_mic_device.configure(values=new_mic_device_list)
+
+    def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
+        self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
+
+
+
+    def updateList_SpeakerDevice(self, new_speaker_device_list):
+        vrct_gui.config_window.LIST_SPEAKER_DEVICE = new_speaker_device_list
+        vrct_gui.config_window.sb__optionmenu_speaker_device.configure(values=new_speaker_device_list)
 
 view = View()
