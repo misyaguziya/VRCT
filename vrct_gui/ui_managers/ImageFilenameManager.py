@@ -1,9 +1,9 @@
 class ImageFilenameManager():
     def __init__(self, theme:str ="Dark"):
         if theme == "Dark":
-            return self._createDarkModeImages()
+            self._createDarkModeImages()
         elif theme == "Light":
-            return self._createLightModeImages()
+            self._createLightModeImages()
 
 
     def _createDarkModeImages(self):

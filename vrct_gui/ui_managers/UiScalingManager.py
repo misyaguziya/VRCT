@@ -8,7 +8,7 @@ class UiScalingManager():
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
 
-        return self._calculatedUiSizes()
+        self._calculatedUiSizes()
 
 
 
