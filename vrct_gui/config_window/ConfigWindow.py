@@ -18,19 +18,18 @@ class ConfigWindow(CTkToplevel):
         self.protocol("WM_DELETE_WINDOW", vrct_gui.closeConfigWindow)
 
         self.settings = settings
-        self.view_variable = view_variable
+        self._view_variable = view_variable
+
+        createConfigWindowTitle(config_window=self, settings=self.settings)
+
+        createSettingBoxTopBar(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
 
-        createConfigWindowTitle(config_window=self, settings=settings)
-
-        createSettingBoxTopBar(config_window=self, settings=settings)
-
-
-        createSideMenuAndSettingsBoxContainers(config_window=self, settings=settings)
+        createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
 
 
 
     def reloadConfigWindowSettingBoxContainer(self):
         self.main_bg_container.destroy()
-        createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings)
+        createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
