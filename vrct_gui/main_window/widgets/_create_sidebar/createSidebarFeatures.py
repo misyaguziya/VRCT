@@ -5,7 +5,7 @@ from ....ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, reta
 from utils import callFunctionIfCallable
 
 
-def createSidebarFeatures(settings, main_window):
+def createSidebarFeatures(settings, main_window, view_variable):
 
     def toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, mark):
         mark.place(relx=0.85) if is_turned_on else mark.place(relx=-1)
@@ -13,22 +13,22 @@ def createSidebarFeatures(settings, main_window):
 
     def toggleTranslationFeature():
         is_turned_on = main_window.translation_switch_box.get()
-        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSLATION, is_turned_on)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSLATION, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
 
     def toggleTranscriptionSendFeature():
         is_turned_on = main_window.transcription_send_switch_box.get()
-        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_SEND, is_turned_on)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
 
     def toggleTranscriptionReceiveFeature():
         is_turned_on = main_window.transcription_receive_switch_box.get()
-        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE, is_turned_on)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
 
     def toggleForegroundFeature():
         is_turned_on = main_window.foreground_switch_box.get()
-        callFunctionIfCallable(main_window.CALLBACK_TOGGLE_FOREGROUND, is_turned_on)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_FOREGROUND, is_turned_on)
         toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
 
 
@@ -118,7 +118,7 @@ def createSidebarFeatures(settings, main_window):
             "compact_mode_icon_attr_name": "translation_compact_mode_icon",
             "compact_mode_frame_attr_name": "compact_mode_translation_frame",
             "selected_mark_attr_name": "translation_selected_mark",
-            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSLATION,
+            "var_label_text": view_variable.VAR_LABEL_TRANSLATION,
             "icon_file_name": settings.image_filename.TRANSLATION_ICON,
         },
         {
@@ -130,7 +130,7 @@ def createSidebarFeatures(settings, main_window):
             "compact_mode_icon_attr_name": "transcription_send_compact_mode_icon",
             "compact_mode_frame_attr_name": "compact_mode_transcription_send_frame",
             "selected_mark_attr_name": "transcription_send_selected_mark",
-            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSCRIPTION_SEND,
+            "var_label_text": view_variable.VAR_LABEL_TRANSCRIPTION_SEND,
             "icon_file_name": settings.image_filename.MIC_ICON,
         },
         {
@@ -142,7 +142,7 @@ def createSidebarFeatures(settings, main_window):
             "compact_mode_icon_attr_name": "transcription_receive_compact_mode_icon",
             "compact_mode_frame_attr_name": "compact_mode_transcription_receive_frame",
             "selected_mark_attr_name": "transcription_receive_selected_mark",
-            "var_label_text": main_window.view_variable.VAR_LABEL_TRANSCRIPTION_RECEIVE,
+            "var_label_text": view_variable.VAR_LABEL_TRANSCRIPTION_RECEIVE,
             "icon_file_name": settings.image_filename.HEADPHONES_ICON,
         },
         {
@@ -154,7 +154,7 @@ def createSidebarFeatures(settings, main_window):
             "compact_mode_icon_attr_name": "foreground_compact_mode_icon",
             "compact_mode_frame_attr_name": "compact_mode_foreground_frame",
             "selected_mark_attr_name": "foreground_selected_mark",
-            "var_label_text": main_window.view_variable.VAR_LABEL_FOREGROUND,
+            "var_label_text": view_variable.VAR_LABEL_FOREGROUND,
             "icon_file_name": settings.image_filename.FOREGROUND_ICON,
         },
     ]
