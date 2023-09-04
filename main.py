@@ -247,6 +247,10 @@ def callbackSetDeeplAuthkey(value):
 def callbackSetMicHost(value):
     print("callbackSetMicHost", value)
     config.CHOICE_MIC_HOST = value
+    config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
+
+    view.updateSelected_MicDevice(config.CHOICE_MIC_DEVICE)
+    view.updateList_MicDevice(model.getListInputDevice())
 
 def callbackSetMicDevice(value):
     print("callbackSetMicDevice", value)
@@ -415,9 +419,9 @@ view.register(
 
         # Transcription Tab (Mic)
         "callback_set_mic_host": callbackSetMicHost,
-        "list_mic_host": ["list_mic_host"],
+        "list_mic_host": model.getListInputHost(),
         "callback_set_mic_device": callbackSetMicDevice,
-        "list_mic_device": ["list_mic_device"],
+        "list_mic_device": model.getListInputDevice(),
         "callback_set_mic_energy_threshold": callbackSetMicEnergyThreshold,
         "callback_set_mic_dynamic_energy_threshold": callbackSetMicDynamicEnergyThreshold,
         "callback_check_mic_threshold": callbackCheckMicThreshold,
@@ -428,6 +432,7 @@ view.register(
 
         # Transcription Tab (Speaker)
         "callback_set_speaker_device": callbackSetSpeakerDevice,
+        "list_speaker_device": model.getListOutputDevice(),
         "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
         "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
         "callback_check_speaker_threshold": callbackCheckSpeakerThreshold,
