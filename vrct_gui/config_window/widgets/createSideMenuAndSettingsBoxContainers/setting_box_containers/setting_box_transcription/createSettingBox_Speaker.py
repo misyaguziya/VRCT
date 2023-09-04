@@ -1,4 +1,3 @@
-
 from utils import callFunctionIfCallable
 
 from .._SettingBoxGenerator import _SettingBoxGenerator
@@ -11,27 +10,9 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
-    def checkbox_input_speaker_threshold_check_callback(e, passive_button_wrapper_widget, active_button_wrapper_widget, is_turned_on):
+    def checkbox_input_speaker_threshold_check_callback(is_turned_on):
         callFunctionIfCallable(view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
 
-        if is_turned_on is True:
-            passive_button_widget = passive_button_wrapper_widget.children["!ctklabel"]
-            passive_button_wrapper_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
-            passive_button_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
-            passive_button_wrapper_widget.update_idletasks()
-
-            passive_button_wrapper_widget.grid_remove()
-            active_button_wrapper_widget.grid()
-
-        elif is_turned_on is False:
-            # active_button_widget = active_button_wrapper_widget.children["!ctklabel"]
-            # active_button_wrapper_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
-            # active_button_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
-            # active_button_wrapper_widget.update_idletasks()
-            # sleep(3)
-
-            active_button_wrapper_widget.grid_remove()
-            passive_button_wrapper_widget.grid()
 
     def optionmenu_input_speaker_device_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_SPEAKER_DEVICE, value)
@@ -84,19 +65,9 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         progressbar_attr_name="sb__progressbar_x_slider__progressbar_speaker_energy_threshold",
 
         passive_button_attr_name="sb__progressbar_x_slider__passive_button_speaker_energy_threshold",
-        passive_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-            e,
-            config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold,
-            config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold,
-            is_turned_on=True,
-        ),
+        passive_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(True),
         active_button_attr_name="sb__progressbar_x_slider__active_button_speaker_energy_threshold",
-        active_button_command=lambda e: checkbox_input_speaker_threshold_check_callback(
-            e,
-            config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold,
-            config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold,
-            is_turned_on=False,
-        ),
+        active_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(False),
         button_image_file=settings.image_file.HEADPHONES_ICON
     )
     config_window.sb__speaker_energy_threshold.grid(row=row)

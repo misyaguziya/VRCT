@@ -403,6 +403,50 @@ class View():
 
 
     # Config Window
+    def setConfigWindowCompactModeSwitchStatusToDisabled(self):
+        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
+
+    def setConfigWindowCompactModeSwitchStatusToNormal(self):
+        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
+
+    def setConfigWindowThresholdCheckWidgetsStatusToDisabled(self):
+        vrct_gui.changeConfigWindowWidgetsStatus(
+            status="disabled",
+            target_names=[
+                "mic_energy_threshold_check_button",
+                "speaker_energy_threshold_check_button",
+            ]
+        )
+
+    def setConfigWindowThresholdCheckWidgetsStatusToNormal(self):
+        vrct_gui.changeConfigWindowWidgetsStatus(
+            status="normal",
+            target_names=[
+                "mic_energy_threshold_check_button",
+                "speaker_energy_threshold_check_button",
+            ]
+        )
+
+    def replaceConfigWindowMicThresholdCheckButtonToActive(self):
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
+
+    def replaceConfigWindowMicThresholdCheckButtonToPassive(self):
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
+
+
+
+    def replaceConfigWindowSpeakerThresholdCheckButtonToActive(self):
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
+
+    def replaceConfigWindowSpeakerThresholdCheckButtonToPassive(self):
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
+
+
+
     def reloadConfigWindowSettingBoxContainer(self):
         vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
