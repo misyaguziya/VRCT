@@ -249,25 +249,10 @@ class View():
 
         # Appearance Tab
         vrct_gui.config_window.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
-        # vrct_gui.config_window.sb__transparency_slider.configure(variable=IntVar(value=config.TRANSPARENCY))
 
         vrct_gui.config_window.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
         vrct_gui.config_window.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
-
-        self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
-
-
-
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=self.view_variable.LIST_FONT_FAMILY)
-
-        # self.view_variable.VAR_FONT_FAMILY = StringVar(value=config.FONT_FAMILY)
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=self.view_variable.VAR_FONT_FAMILY)
-
-
-
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=StringVar(value=config.FONT_FAMILY))
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=["test", "from", "view.py"])
-
+        vrct_gui.config_window.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
         vrct_gui.config_window.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
 
 
@@ -280,7 +265,6 @@ class View():
 
         vrct_gui.config_window.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
         self.updateList_MicDevice(config_window["list_mic_device"])
-
 
         vrct_gui.config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
         vrct_gui.config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]

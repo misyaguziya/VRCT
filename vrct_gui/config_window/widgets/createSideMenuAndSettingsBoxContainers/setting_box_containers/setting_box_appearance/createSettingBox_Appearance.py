@@ -19,7 +19,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings):
         callFunctionIfCallable(config_window.CALLBACK_SET_UI_SCALING, value)
 
     def optionmenu_font_family_callback(value):
-        callFunctionIfCallable(config_window.view_variable.CALLBACK_SET_FONT_FAMILY, value)
+        callFunctionIfCallable(config_window.CALLBACK_SET_FONT_FAMILY, value)
 
     def optionmenu_ui_language_callback(value):
         callFunctionIfCallable(config_window.CALLBACK_SET_UI_LANGUAGE, value)
