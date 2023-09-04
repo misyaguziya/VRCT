@@ -237,13 +237,11 @@ def callbackSetUiLanguage(value):
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
-    # config.AUTH_KEYS["DeepL(auth)"] = str(value)
-    # if len(value) > 0:
-    #     if model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
-    #         print_textbox(self.parent.textbox_message_log, "Auth key update completed", "INFO")
-    #         print_textbox(self.parent.textbox_message_system_log, "Auth key update completed", "INFO")
-    #     else:
-    #         pass
+    if len(value) > 0 and model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
+        config.CHOICE_TRANSLATOR = "DeepL(auth)"
+        view.printToTextbox_AuthenticationSuccess()
+    else:
+        view.printToTextbox_AuthenticationError()
 
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
