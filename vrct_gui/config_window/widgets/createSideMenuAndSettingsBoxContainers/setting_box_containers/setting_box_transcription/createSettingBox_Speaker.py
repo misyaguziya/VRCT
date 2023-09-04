@@ -99,7 +99,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
             config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold,
             is_turned_on=False,
         ),
-        button_image_filename="headphones_icon_white.png"
+        button_image_file=settings.image_file.HEADPHONES_ICON
     )
     config_window.sb__speaker_energy_threshold.grid(row=row)
     row+=1
