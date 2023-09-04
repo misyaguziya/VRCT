@@ -78,7 +78,7 @@ class Model:
         if result:
             auth_keys = config.AUTH_KEYS
             auth_keys[choice_translator] = auth_key
-            fnc(auth_key)
+            fnc(auth_keys)
         return result
 
     def startLogger(self):
@@ -119,7 +119,11 @@ class Model:
             target_languages = translation_lang.get(engine, {}).get("target", {})
             if source_lang in source_languages and target_lang in target_languages:
                 compatible_engines.append(engine)
-        return compatible_engines[0]
+        engine_name = compatible_engines[0]
+
+        if engine_name == "DeepL(web)" and config.AUTH_KEYS["DeepL(auth)"] != None:
+            engine_name = "DeepL(auth)"
+        return engine_name
 
     def getTranslatorStatus(self):
         return self.translator.translator_status[config.CHOICE_TRANSLATOR]
