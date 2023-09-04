@@ -5,7 +5,7 @@ from ....ui_utils import getImageFileFromUiUtils, bindEnterAndLeaveColor, bindBu
 from utils import callFunctionIfCallable
 
 
-def createSidebarLanguagesSettings(settings, main_window):
+def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     def switchActiveAndPassivePresetsTabsColor(target_active_widget):
@@ -28,27 +28,27 @@ def createSidebarLanguagesSettings(settings, main_window):
         switchActiveAndPassivePresetsTabsColor(target_active_widget)
         switchActiveTabAndPassiveTab(target_active_widget, main_window.current_active_preset_tab, main_window.current_active_preset_tab.passive_function, settings.ctm.SLS__PRESETS_TAB_BG_HOVERED_COLOR, settings.ctm.SLS__PRESETS_TAB_BG_CLICKED_COLOR, settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR)
 
-        main_window.sls__optionmenu_your_language.set(main_window.view_variable.VAR_YOUR_LANGUAGE.get())
-        main_window.sls__optionmenu_target_language.set(main_window.view_variable.VAR_TARGET_LANGUAGE.get())
+        main_window.sls__optionmenu_your_language.set(view_variable.VAR_YOUR_LANGUAGE.get())
+        main_window.sls__optionmenu_target_language.set(view_variable.VAR_TARGET_LANGUAGE.get())
         main_window.current_active_preset_tab = target_active_widget
 
 
 
     def switchToPreset1(e):
         print("1")
-        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "1")
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "1")
         target_active_widget = getattr(main_window, "sls__presets_button_1")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset2(e):
         print("2")
-        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "2")
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "2")
         target_active_widget = getattr(main_window, "sls__presets_button_2")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset3(e):
         print("3")
-        callFunctionIfCallable(main_window.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "3")
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "3")
         target_active_widget = getattr(main_window, "sls__presets_button_3")
         switchPresetTabFunction(target_active_widget)
 
@@ -219,7 +219,7 @@ def createSidebarLanguagesSettings(settings, main_window):
         optionmenu_attr_name="sls__optionmenu_your_language",
         dropdown_menu_attr_name="sls__dropdown_menu_your_language",
         dropdown_menu_values=["1""2","pppp\npppp"],
-        variable=main_window.view_variable.VAR_YOUR_LANGUAGE
+        variable=view_variable.VAR_YOUR_LANGUAGE
     )
     main_window.sls__box_your_language.grid(row=2, column=0, padx=0, pady=(settings.uism.SLS__BOX_TOP_PADY,0),sticky="ew")
 
@@ -269,7 +269,7 @@ def createSidebarLanguagesSettings(settings, main_window):
         optionmenu_attr_name="sls__optionmenu_target_language",
         dropdown_menu_attr_name="sls__dropdown_menu_target_language",
         dropdown_menu_values=["1""2","pppp\npppp2"],
-        variable=main_window.view_variable.VAR_TARGET_LANGUAGE
+        variable=view_variable.VAR_TARGET_LANGUAGE
     )
     main_window.sls__box_target_language.grid(row=4, column=0, padx=0, pady=(0,0),sticky="ew")
 

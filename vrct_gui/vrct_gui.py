@@ -21,10 +21,10 @@ class VRCT_GUI(CTk):
 
     def createGUI(self, settings, view_variable):
         self.settings = settings
-        self.view_variable = view_variable
+        self._view_variable = view_variable
 
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main)
-        self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window, view_variable=self.view_variable)
+        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main, view_variable=self._view_variable)
+        self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window, view_variable=self._view_variable)
         # self.information_window = ToplevelWindowInformation(self)
 
     def startMainLoop(self):
@@ -57,6 +57,7 @@ class VRCT_GUI(CTk):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,
             settings=self.settings.main,
+            view_variable=self._view_variable,
             status=status,
             target_names=target_names,
         )
@@ -80,9 +81,9 @@ class VRCT_GUI(CTk):
 
     def recreateMainWindowSidebar(self):
         self.minimize_sidebar_button_container.destroy()
-        createMinimizeSidebarButton(self.settings.main, self)
+        createMinimizeSidebarButton(self.settings.main, self, view_variable=self._view_variable)
 
-        if self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE:
+        if self._view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE:
             self.sidebar_bg_container.grid_remove()
             self.sidebar_compact_mode_bg_container.grid()
         else:

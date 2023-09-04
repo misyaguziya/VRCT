@@ -3,7 +3,7 @@ from customtkinter import CTkImage
 from .ui_utils import getImageFileFromUiUtils
 
 
-def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
+def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names):
     COMPACT_MODE_ICON_SIZE_TUPLES = (settings.COMPACT_MODE_ICON_SIZE, settings.COMPACT_MODE_ICON_SIZE)
 
     if target_names == "All":
@@ -85,7 +85,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
                     vrct_gui.sls__container_title.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
                     vrct_gui.sls__title_text_your_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
                     vrct_gui.sls__title_text_target_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
-                    if vrct_gui.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
+                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE)
                     vrct_gui.sls__optionmenu_your_language.configure(state="disabled")
                     vrct_gui.sls__optionmenu_target_language.configure(state="disabled")
@@ -94,7 +94,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
                     vrct_gui.sls__container_title.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
                     vrct_gui.sls__title_text_your_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
                     vrct_gui.sls__title_text_target_language.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
-                    if vrct_gui.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
+                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
                     vrct_gui.sls__optionmenu_your_language.configure(state="normal")
@@ -120,7 +120,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
                     vrct_gui.minimize_sidebar_button_container.configure(cursor="")
 
 
-                    if vrct_gui.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
                         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT_DISABLED).rotate(180), size=LOGO_SIZE)
                     else:
                         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT_DISABLED), size=LOGO_SIZE)
@@ -128,7 +128,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, status, target_names):
 
                 elif status == "normal":
                     vrct_gui.minimize_sidebar_button_container.configure(cursor="hand2")
-                    if vrct_gui.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
                         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT).rotate(180), size=LOGO_SIZE)
                     else:
                         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT), size=LOGO_SIZE)

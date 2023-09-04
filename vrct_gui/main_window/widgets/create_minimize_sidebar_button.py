@@ -5,13 +5,13 @@ from ...ui_utils import getImageFileFromUiUtils, bindEnterAndLeaveColor, bindBut
 
 from utils import callFunctionIfCallable
 
-def createMinimizeSidebarButton(settings, main_window):
+def createMinimizeSidebarButton(settings, main_window, view_variable):
 
     def enableCompactMode(e):
-        callFunctionIfCallable(main_window.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, True)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, True)
 
     def disableCompactMode(e):
-        callFunctionIfCallable(main_window.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, False)
+        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, False)
 
 
 
@@ -28,7 +28,7 @@ def createMinimizeSidebarButton(settings, main_window):
     )
 
 
-    if main_window.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
         image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
         bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], disableCompactMode)
 

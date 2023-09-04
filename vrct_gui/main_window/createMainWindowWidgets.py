@@ -5,7 +5,7 @@ from customtkinter import CTkFrame
 from ..ui_utils import createButtonWithImage, getImagePath
 
 
-def createMainWindowWidgets(vrct_gui, settings):
+def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
 
 
@@ -56,9 +56,9 @@ def createMainWindowWidgets(vrct_gui, settings):
     )
     vrct_gui.help_and_info_button_container.grid(row=0, column=3, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.HELP_AND_INFO_BUTTON_PADY, sticky="e")
 
-    createSidebar(settings, vrct_gui)
+    createSidebar(settings, vrct_gui, view_variable)
 
-    createMinimizeSidebarButton(settings, vrct_gui)
+    createMinimizeSidebarButton(settings, vrct_gui, view_variable)
 
     createTextbox(settings, vrct_gui)
 
