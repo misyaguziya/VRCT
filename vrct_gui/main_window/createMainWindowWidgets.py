@@ -48,7 +48,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         button_fg_color=settings.ctm.HELP_AND_INFO_BUTTON_BG_COLOR,
         button_enter_color=settings.ctm.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR,
         button_clicked_color=settings.ctm.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR,
-        button_image_filename=settings.image_filename.HELP_ICON,
+        button_image_file=settings.image_file.HELP_ICON,
         button_image_size=settings.uism.HELP_AND_INFO_BUTTON_SIZE,
         button_ipadxy=settings.uism.HELP_AND_INFO_BUTTON_IPADXY,
         button_command=vrct_gui.openHelpAndInfoWindow,

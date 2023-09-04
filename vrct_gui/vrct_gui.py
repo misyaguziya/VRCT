@@ -4,7 +4,7 @@ from customtkinter import CTk
 
 # from window_help_and_info import ToplevelWindowInformation
 
-# from .ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
+# from .ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
 

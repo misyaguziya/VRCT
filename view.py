@@ -3,7 +3,7 @@ from tkinter import font as tk_font
 from languages import selectable_languages
 
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, ImageFilenameManager, UiScalingManager
+from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from vrct_gui import vrct_gui
 
 from config import config
@@ -14,10 +14,10 @@ class View():
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
         all_ctm = ColorThemeManager(theme)
         all_uism = UiScalingManager(config.UI_SCALING)
-        image_filename = ImageFilenameManager(theme)
+        image_file = ImageFileManager(theme)
 
         common_args = {
-            "image_filename": image_filename,
+            "image_file": image_file,
             "FONT_FAMILY": config.FONT_FAMILY,
         }
 

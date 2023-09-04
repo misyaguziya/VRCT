@@ -234,7 +234,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         main_window.sls__arrow_direction_box,
         text=None,
         height=0,
-        image=CTkImage(getImageFileFromUiUtils(settings.image_filename.NARROW_ARROW_DOWN).rotate(180),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
+        image=CTkImage((settings.image_file.NARROW_ARROW_DOWN).rotate(180),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
 
     )
     main_window.sls__both_direction_up.grid(row=0, column=1, pady=0)
@@ -253,7 +253,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         main_window.sls__arrow_direction_box,
         text=None,
         height=0,
-        image=CTkImage(getImageFileFromUiUtils(settings.image_filename.NARROW_ARROW_DOWN).rotate(0),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
+        image=CTkImage((settings.image_file.NARROW_ARROW_DOWN).rotate(0),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
 
     )
     main_window.sls__both_direction_label_down.grid(row=0, column=3, pady=0)
@@ -296,7 +296,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         main_window.sidebar_config_button_wrapper,
         text=None,
         height=0,
-        image=CTkImage(getImageFileFromUiUtils(settings.image_filename.CONFIGURATION_ICON),size=(settings.COMPACT_MODE_ICON_SIZE,settings.COMPACT_MODE_ICON_SIZE))
+        image=CTkImage((settings.image_file.CONFIGURATION_ICON),size=(settings.COMPACT_MODE_ICON_SIZE,settings.COMPACT_MODE_ICON_SIZE))
     )
     main_window.sidebar_config_button.grid(row=0, column=0, padx=0, pady=settings.uism.SIDEBAR_CONFIG_BUTTON_IPADY)
 

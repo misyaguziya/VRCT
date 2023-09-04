@@ -185,7 +185,7 @@ class _SettingBoxGenerator():
         progressbar_attr_name,
         passive_button_attr_name, passive_button_command,
         active_button_attr_name, active_button_command,
-        button_image_filename,
+        button_image_file,
         variable,
 
         slider_number_of_steps: Union[int, None] = None,
@@ -276,10 +276,10 @@ class _SettingBoxGenerator():
 
 
 
-        passive_button_wrapper = self._createPassiveButtonForProgressbarXSlider(setting_box_progressbar_x_slider_frame, BUTTON_PADDING, passive_button_command, button_image_filename)
+        passive_button_wrapper = self._createPassiveButtonForProgressbarXSlider(setting_box_progressbar_x_slider_frame, BUTTON_PADDING, passive_button_command, button_image_file)
         setattr(self.config_window, passive_button_attr_name, passive_button_wrapper)
 
-        active_button_wrapper = self._createActiveButtonForProgressbarXSlider(setting_box_progressbar_x_slider_frame, BUTTON_PADDING, active_button_command, button_image_filename)
+        active_button_wrapper = self._createActiveButtonForProgressbarXSlider(setting_box_progressbar_x_slider_frame, BUTTON_PADDING, active_button_command, button_image_file)
         setattr(self.config_window, active_button_attr_name, active_button_wrapper)
 
         passive_button_wrapper.grid()
@@ -467,13 +467,13 @@ class _SettingBoxGenerator():
 
 
 
-    def _createPassiveButtonForProgressbarXSlider(self, setting_box_progressbar_x_slider_frame, BUTTON_PADDING, button_command, button_image_filename):
+    def _createPassiveButtonForProgressbarXSlider(self, setting_box_progressbar_x_slider_frame, BUTTON_PADDING, button_command, button_image_file):
         button_wrapper = createButtonWithImage(
             parent_widget=setting_box_progressbar_x_slider_frame,
             button_fg_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR,
             button_enter_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_HOVERED_COLOR,
             button_clicked_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_CLICKED_COLOR,
-            button_image_filename=button_image_filename,
+            button_image_file=button_image_file,
             button_image_size=self.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE,
             button_ipadxy=self.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY,
             button_command=button_command,
@@ -485,13 +485,13 @@ class _SettingBoxGenerator():
 
 
 
-    def _createActiveButtonForProgressbarXSlider(self, setting_box_progressbar_x_slider_frame, BUTTON_PADDING, button_command, button_image_filename):
+    def _createActiveButtonForProgressbarXSlider(self, setting_box_progressbar_x_slider_frame, BUTTON_PADDING, button_command, button_image_file):
         button_wrapper = createButtonWithImage(
             parent_widget=setting_box_progressbar_x_slider_frame,
             button_fg_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR,
             button_enter_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR,
             button_clicked_color=self.ctm.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR,
-            button_image_filename=button_image_filename,
+            button_image_file=button_image_file,
             button_image_size=self.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE,
             button_ipadxy=self.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY,
             button_command=button_command,

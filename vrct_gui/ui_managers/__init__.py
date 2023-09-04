@@ -1,3 +1,3 @@
 from .ColorThemeManager import ColorThemeManager
-from .ImageFilenameManager import ImageFilenameManager
+from .ImageFileManager import ImageFileManager
 from .UiScalingManager import UiScalingManager
