@@ -264,14 +264,15 @@ def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
 
+def setProgressBarMicEnergy(energy):
+    view.updateSetProgressBar_MicEnergy(energy)
+
 def callbackCheckMicThreshold(is_turned_on):
     print("callbackCheckMicThreshold", is_turned_on)
     if is_turned_on is True:
-        # UIの処理あり
-        pass
+        model.startCheckMicEnergy(setProgressBarMicEnergy)
     else:
-        # UIの処理あり
-        pass
+        model.stopCheckMicEnergy()
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", int(value))
@@ -311,14 +312,15 @@ def callbackSetSpeakerDynamicEnergyThreshold(value):
     print("callbackSetSpeakerDynamicEnergyThreshold", value)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
 
+def setProgressBarSpeakerEnergy(energy):
+    view.updateSetProgressBar_SpeakerEnergy(energy)
+
 def callbackCheckSpeakerThreshold(is_turned_on):
     print("callbackCheckSpeakerThreshold", is_turned_on)
     if is_turned_on is True:
-        # UIの処理あり
-        pass
+        model.startCheckSpeakerEnergy(setProgressBarSpeakerEnergy)
     else:
-        # UIの処理あり
-        pass
+        model.stopCheckSpeakerEnergy()
 
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", int(value))
