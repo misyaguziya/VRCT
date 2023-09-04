@@ -34,6 +34,6 @@ def createConfigWindowTitle(config_window, settings):
         text=None,
         height=0,
         anchor="w",
-        image=CTkImage(getImageFileFromUiUtils(settings.image_filename.VRCT_LOGO_MARK),size=settings.uism.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE),
+        image=CTkImage(settings.image_file.VRCT_LOGO_MARK, size=settings.uism.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE),
     )
     config_window.side_menu_config_window_title_logo.place(relx=0.08, rely=0.59, anchor="w")
