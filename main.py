@@ -417,7 +417,9 @@ view.register(
 
         # Transcription Tab (Mic)
         "callback_set_mic_host": callbackSetMicHost,
+        "list_mic_host": ["list_mic_host"],
         "callback_set_mic_device": callbackSetMicDevice,
+        "list_mic_device": ["list_mic_device"],
         "callback_set_mic_energy_threshold": callbackSetMicEnergyThreshold,
         "callback_set_mic_dynamic_energy_threshold": callbackSetMicDynamicEnergyThreshold,
         "callback_check_mic_threshold": callbackCheckMicThreshold,

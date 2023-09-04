@@ -276,7 +276,12 @@ class View():
 
         # Transcription Tab (Mic)
         vrct_gui.config_window.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
+        # vrct_gui.config_window.LIST_MIC_HOST = config_window["list_mic_host"]
+        self.updateList_MicHost(vrct_gui.config_window.LIST_MIC_HOST)
+
         vrct_gui.config_window.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
+        vrct_gui.config_window.LIST_MIC_DEVISE = config_window["list_mic_device"]
+
         vrct_gui.config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
         vrct_gui.config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
         vrct_gui.config_window.CALLBACK_CHECK_MIC_THRESHOLD = config_window["callback_check_mic_threshold"]
@@ -413,5 +418,10 @@ class View():
     def reloadConfigWindowSettingBoxContainer(self):
         vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
+
+
+    def updateList_MicHost(self, list__mic_host):
+        vrct_gui.config_window.LIST_MIC_HOST = list__mic_host
+
 
 view = View()
