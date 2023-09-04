@@ -13,7 +13,7 @@ from .setting_box_containers.setting_box_advanced_settings import createSettingB
 from .setting_box_containers.setting_box_translation import createSettingBox_Translation
 
 
-def createSideMenuAndSettingsBoxContainers(config_window, settings):
+def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variable):
 
     # Main container
     config_window.main_bg_container = CTkFrame(config_window, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
@@ -119,6 +119,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         _addConfigSideMenuItem(
             config_window=config_window,
             settings=settings,
+            # view_variable=view_variable,
             side_menu_settings=sm_and_sbc_setting,
             side_menu_row=side_menu_row,
             all_side_menu_tab_attr_name=all_side_menu_tab_attr_name,
@@ -129,6 +130,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings):
         _createSettingBoxContainer(
             config_window=config_window,
             settings=settings,
+            view_variable=view_variable,
             setting_box_container_settings=sm_and_sbc_setting["setting_box_container_settings"],
 
         )
