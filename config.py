@@ -1,3 +1,4 @@
+import sys
 from json import load, dump
 import inspect
 from os import path as os_path
@@ -465,7 +466,7 @@ class Config:
 
     def init_config(self):
         self._VERSION = "1.3.2"
-        self._PATH_CONFIG = "./config.json"
+        self._PATH_CONFIG = os_path.join(os_path.dirname(sys.argv[0]), "config.json")
         self._ENABLE_TRANSLATION = False
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
