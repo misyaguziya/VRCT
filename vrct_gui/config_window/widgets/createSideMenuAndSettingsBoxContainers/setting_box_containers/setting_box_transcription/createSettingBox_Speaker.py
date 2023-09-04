@@ -1,4 +1,3 @@
-from time import sleep
 
 from utils import callFunctionIfCallable
 
@@ -13,14 +12,13 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
 
 
     def checkbox_input_speaker_threshold_check_callback(e, passive_button_wrapper_widget, active_button_wrapper_widget, is_turned_on):
-        callFunctionIfCallable(config_window.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
+        callFunctionIfCallable(view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
 
         if is_turned_on is True:
             passive_button_widget = passive_button_wrapper_widget.children["!ctklabel"]
             passive_button_wrapper_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
             passive_button_widget.configure(fg_color=settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR)
             passive_button_wrapper_widget.update_idletasks()
-            sleep(1)
 
             passive_button_wrapper_widget.grid_remove()
             active_button_wrapper_widget.grid()
