@@ -360,6 +360,8 @@ class View():
     def printToTextbox_disableForeground(self):
         self._printToTextbox_Info("Stop foreground")
 
+    def printToTextbox_AuthenticationSuccess(self):
+        self._printToTextbox_Info("Auth key update completed")
 
     def printToTextbox_AuthenticationError(self):
         self._printToTextbox_Info("Auth Key or language setting is incorrect")
