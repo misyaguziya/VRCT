@@ -350,8 +350,8 @@ def callbackSetMessageFormat(value):
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
-    print("callbackSetOscIpAddress", value)
-    config.OSC_IP_ADDRESS = value
+    print("callbackSetOscIpAddress", str(value))
+    config.OSC_IP_ADDRESS = str(value)
 
 def callbackSetOscPort(value):
     print("callbackSetOscPort", int(value))

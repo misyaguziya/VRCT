@@ -202,7 +202,7 @@ class View():
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
             VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
             CALLBACK_SET_OSC_IP_ADDRESS=None,
-            VAR_OSC_IP_ADDRESS=IntVar(value=config.OSC_IP_ADDRESS),
+            VAR_OSC_IP_ADDRESS=StringVar(value=config.OSC_IP_ADDRESS),
 
             VAR_LABEL_OSC_PORT=StringVar(value="OSC Port"),
             VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
