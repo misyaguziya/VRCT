@@ -6,6 +6,7 @@ from customtkinter import CTk
 
 # from .ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
+from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
@@ -57,6 +58,15 @@ class VRCT_GUI(CTk):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,
             settings=self.settings.main,
+            view_variable=self._view_variable,
+            status=status,
+            target_names=target_names,
+        )
+
+    def changeConfigWindowWidgetsStatus(self, status, target_names):
+        _changeConfigWindowWidgetsStatus(
+            config_window=self.config_window,
+            settings=self.settings.config_window,
             view_variable=self._view_variable,
             status=status,
             target_names=target_names,
