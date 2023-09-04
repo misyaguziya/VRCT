@@ -1,7 +1,7 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
 
-def _createSettingBoxContainer(config_window, settings, setting_box_container_settings):
+def _createSettingBoxContainer(config_window, settings, view_variable, setting_box_container_settings):
 
 
     def createSectionTitle(container_widget, section_title):
@@ -56,5 +56,10 @@ def _createSettingBoxContainer(config_window, settings, setting_box_container_se
         setting_box_and_section_title_wrapper.grid(row=setting_box_row, column=0, sticky="ew", padx=0, pady=(SB__TOP_PADY, SB__BOTTOM_PADY))
 
         if setting_box_setting["setting_box"] is not None:
-            setting_box_setting["setting_box"](setting_box_wrapper=setting_box_wrapper, config_window=config_window, settings=settings)
+            setting_box_setting["setting_box"](
+                setting_box_wrapper=setting_box_wrapper,
+                config_window=config_window,
+                settings=settings,
+                view_variable=view_variable,
+            )
 

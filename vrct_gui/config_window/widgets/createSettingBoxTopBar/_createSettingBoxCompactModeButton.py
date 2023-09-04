@@ -1,15 +1,15 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkSwitch
 
-def _createSettingBoxCompactModeButton(parent_widget, config_window, settings):
+def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, view_variable):
 
     def switchConfigWindowCompactMode():
         print(config_window.setting_box_compact_mode_switch_box.get())
         if config_window.setting_box_compact_mode_switch_box.get() is True:
-            if callable(config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
-                config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE()
+            if callable(view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
+                view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE()
         else:
-            if callable(config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
-                config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE()
+            if callable(view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE) is True:
+                view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE()
 
 
 

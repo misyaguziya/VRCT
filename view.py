@@ -105,13 +105,13 @@ class View():
             # Transcription Tab (Mic)
             VAR_LABEL_MIC_HOST=StringVar(value="Mic Host"),
             VAR_DESC_MIC_HOST=StringVar(value="Select the mic host. (Default: ?)"),
-            LIST_MIC_HOST=[], # model.getListInputHost(),
+            LIST_MIC_HOST=[],
             CALLBACK_SET_MIC_HOST=None,
             VAR_MIC_HOST=StringVar(value=config.CHOICE_MIC_HOST),
 
             VAR_LABEL_MIC_DEVICE=StringVar(value="Mic Device"),
             VAR_DESC_MIC_DEVICE=StringVar(value="Select the mic devise. (Default: ?)"),
-            LIST_MIC_DEVICE=[], # model.getListInputDevice(),
+            LIST_MIC_DEVICE=[],
             CALLBACK_SET_MIC_DEVICE=None,
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
@@ -150,7 +150,7 @@ class View():
             # Transcription Tab (Speaker)
             VAR_LABEL_SPEAKER_DEVICE=StringVar(value="Speaker Device"),
             VAR_DESC_SPEAKER_DEVICE=StringVar(value="Select the speaker devise. (Default: ?)"),
-            LIST_SPEAKER_DEVICE=[], # model.getListOutputDevice(),
+            LIST_SPEAKER_DEVICE=[],
             CALLBACK_SET_SPEAKER_DEVICE=None,
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
@@ -202,7 +202,7 @@ class View():
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
             VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
             CALLBACK_SET_OSC_IP_ADDRESS=None,
-            VAR_OSC_IP_ADDRESS=IntVar(value=config.OSC_IP_ADDRESS),
+            VAR_OSC_IP_ADDRESS=StringVar(value=config.OSC_IP_ADDRESS),
 
             VAR_LABEL_OSC_PORT=StringVar(value="OSC Port"),
             VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
@@ -216,10 +216,10 @@ class View():
 
         self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
 
-        vrct_gui.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
-        vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
-        vrct_gui.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features["callback_toggle_transcription_receive"]
-        vrct_gui.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
+        self.view_variable.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
+        self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
+        self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features["callback_toggle_transcription_receive"]
+        self.view_variable.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
 
 
         vrct_gui.sls__optionmenu_your_language.configure(values=language_presets["values"])
@@ -229,7 +229,7 @@ class View():
         vrct_gui.sls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
         vrct_gui.sls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
 
-        vrct_gui.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
+        self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
 
@@ -243,65 +243,56 @@ class View():
 
         # Config Window
         # Compact Mode Switch
-        vrct_gui.config_window.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_disable_config_window_compact_mode"]
-        vrct_gui.config_window.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
+        self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_disable_config_window_compact_mode"]
+        self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
 
 
         # Appearance Tab
-        vrct_gui.config_window.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
-        # vrct_gui.config_window.sb__transparency_slider.configure(variable=IntVar(value=config.TRANSPARENCY))
+        self.view_variable.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
 
-        vrct_gui.config_window.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
-        vrct_gui.config_window.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
-
+        self.view_variable.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
+        self.view_variable.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
         self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
-
-
-
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=self.view_variable.LIST_FONT_FAMILY)
-
-        # self.view_variable.VAR_FONT_FAMILY = StringVar(value=config.FONT_FAMILY)
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=self.view_variable.VAR_FONT_FAMILY)
-
-
-
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(variable=StringVar(value=config.FONT_FAMILY))
-        # vrct_gui.config_window.sb__optionmenu_font_family.configure(values=["test", "from", "view.py"])
-
-        vrct_gui.config_window.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
+        self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
 
 
         # Translation Tab
-        vrct_gui.config_window.CALLBACK_SET_DEEPL_AUTHKEY = config_window["callback_set_deepl_authkey"]
+        self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window["callback_set_deepl_authkey"]
 
         # Transcription Tab (Mic)
-        vrct_gui.config_window.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
-        vrct_gui.config_window.CALLBACK_CHECK_MIC_THRESHOLD = config_window["callback_check_mic_threshold"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window["callback_set_mic_record_timeout"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window["callback_set_mic_phrase_timeout"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_MAX_PHRASES = config_window["callback_set_mic_max_phrases"]
-        vrct_gui.config_window.CALLBACK_SET_MIC_WORD_FILTER = config_window["callback_set_mic_word_filter"]
+        self.view_variable.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
+        self.updateList_MicHost(config_window["list_mic_host"])
+
+        self.view_variable.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
+        self.updateList_MicDevice(config_window["list_mic_device"])
+
+        self.view_variable.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
+        self.view_variable.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
+        self.view_variable.CALLBACK_CHECK_MIC_THRESHOLD = config_window["callback_check_mic_threshold"]
+        self.view_variable.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window["callback_set_mic_record_timeout"]
+        self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window["callback_set_mic_phrase_timeout"]
+        self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window["callback_set_mic_max_phrases"]
+        self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window["callback_set_mic_word_filter"]
 
         # Transcription Tab (Speaker)
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_DEVICE = config_window["callback_set_speaker_device"]
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window["callback_set_speaker_energy_threshold"]
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_speaker_dynamic_energy_threshold"]
-        vrct_gui.config_window.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window["callback_check_speaker_threshold"]
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window["callback_set_speaker_record_timeout"]
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window["callback_set_speaker_phrase_timeout"]
-        vrct_gui.config_window.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window["callback_set_speaker_max_phrases"]
+        self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window["callback_set_speaker_device"]
+        self.updateList_SpeakerDevice(config_window["list_speaker_device"])
+
+        self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window["callback_set_speaker_energy_threshold"]
+        self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_speaker_dynamic_energy_threshold"]
+        self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window["callback_check_speaker_threshold"]
+        self.view_variable.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window["callback_set_speaker_record_timeout"]
+        self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window["callback_set_speaker_phrase_timeout"]
+        self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window["callback_set_speaker_max_phrases"]
 
         # Others Tab
-        vrct_gui.config_window.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window["callback_set_enable_auto_clear_chatbox"]
-        vrct_gui.config_window.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
-        vrct_gui.config_window.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
+        self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window["callback_set_enable_auto_clear_chatbox"]
+        self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
+        self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
 
         # Advanced Settings Tab
-        vrct_gui.config_window.CALLBACK_SET_OSC_IP_ADDRESS = config_window["callback_set_osc_ip_address"]
-        vrct_gui.config_window.CALLBACK_SET_OSC_PORT = config_window["callback_set_osc_port"]
+        self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window["callback_set_osc_ip_address"]
+        self.view_variable.CALLBACK_SET_OSC_PORT = config_window["callback_set_osc_port"]
 
 
 
@@ -415,5 +406,26 @@ class View():
     def reloadConfigWindowSettingBoxContainer(self):
         vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
+
+
+    def updateList_MicHost(self, new_mic_host_list:list):
+        self.view_variable.LIST_MIC_HOST = new_mic_host_list
+        vrct_gui.config_window.sb__optionmenu_mic_host.configure(values=new_mic_host_list)
+
+    def updateSelected_MicHost(self, selected_mic_host_name:str):
+        self.view_variable.VAR_MIC_HOST.set(selected_mic_host_name)
+
+    def updateList_MicDevice(self, new_mic_device_list):
+        self.view_variable.LIST_MIC_DEVICE = new_mic_device_list
+        vrct_gui.config_window.sb__optionmenu_mic_device.configure(values=new_mic_device_list)
+
+    def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
+        self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
+
+
+
+    def updateList_SpeakerDevice(self, new_speaker_device_list):
+        self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
+        vrct_gui.config_window.sb__optionmenu_speaker_device.configure(values=new_speaker_device_list)
 
 view = View()
