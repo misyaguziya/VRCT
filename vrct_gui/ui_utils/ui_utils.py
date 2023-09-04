@@ -12,11 +12,10 @@ def getImageFileFromUiUtils(file_name):
     img = Image_open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", file_name))
     return img
 
-def openImageKeepAspectRatio(file_name, desired_width):
-    img = getImageFileFromUiUtils(file_name)
-    wpercent = (desired_width/float(img.size[0]))
-    hsize = int((float(img.size[1])*float(wpercent)))
-    img = img.resize((desired_width,hsize), LANCZOS)
+def openImageKeepAspectRatio(image_file, desired_width):
+    wpercent = (desired_width/float(image_file.size[0]))
+    hsize = int((float(image_file.size[1])*float(wpercent)))
+    img = image_file.resize((desired_width,hsize), LANCZOS)
     return (img, desired_width, hsize)
 
 def retag(tag, *args):
@@ -121,14 +120,14 @@ def switchTabsColor(target_widget, tab_buttons, active_bg_color, active_text_col
 
 
 
-def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, button_clicked_color, button_image_filename, button_image_size, button_ipadxy, button_command, corner_radius: int = 0 ,shape: str = "normal"):
+def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, button_clicked_color, button_image_file, button_image_size, button_ipadxy, button_command, corner_radius: int = 0 ,shape: str = "normal"):
         button_wrapper = CTkFrame(parent_widget, corner_radius=corner_radius, fg_color=button_fg_color, height=0, width=0, cursor="hand2")
 
         button_widget = CTkLabel(
             button_wrapper,
             text=None,
             height=0,
-            image=CTkImage(getImageFileFromUiUtils(button_image_filename),size=(button_image_size,button_image_size)),
+            image=CTkImage((button_image_file),size=(button_image_size,button_image_size)),
         )
         button_widget.grid(row=0, column=0, padx=button_ipadxy, pady=button_ipadxy)
 

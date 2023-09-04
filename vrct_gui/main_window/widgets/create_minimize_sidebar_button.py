@@ -24,16 +24,16 @@ def createMinimizeSidebarButton(settings, main_window, view_variable):
         text=None,
         corner_radius=0,
         height=0,
-        image=CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
+        image=CTkImage((settings.image_file.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
     )
 
 
     if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-        image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
+        image_file = CTkImage((settings.image_file.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
         bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], disableCompactMode)
 
     else:
-        image_file = CTkImage(getImageFileFromUiUtils(settings.image_filename.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
+        image_file = CTkImage((settings.image_file.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
         bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], enableCompactMode)
 
     main_window.minimize_sidebar_button_container.grid_rowconfigure((0,2), weight=1)

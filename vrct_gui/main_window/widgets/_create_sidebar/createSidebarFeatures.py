@@ -69,7 +69,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
 
 
 
-    (img, width, height) = openImageKeepAspectRatio(settings.image_filename.VRCT_LOGO, settings.uism.SF__LOGO_MAX_SIZE)
+    (img, width, height) = openImageKeepAspectRatio(settings.image_file.VRCT_LOGO, settings.uism.SF__LOGO_MAX_SIZE)
     main_window.sidebar_logo = CTkLabel(
         main_window.sidebar_bg_container,
         fg_color=settings.ctm.SIDEBAR_BG_COLOR,
@@ -81,7 +81,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
 
     # "height-a_s" represents the adjustment in size, and the "pady+a_s/2" indicates a padding increase of 4 pixels to compensate for the reduction.
     a_s = settings.uism.SF__LOGO_HEIGHT_FOR_ADJUSTMENT
-    (img, width, height) = openImageKeepAspectRatio(settings.image_filename.VRCT_LOGO_MARK, height-a_s)
+    (img, width, height) = openImageKeepAspectRatio(settings.image_file.VRCT_LOGO_MARK, height-a_s)
     main_window.sidebar_compact_mode_logo = CTkLabel(
         main_window.sidebar_compact_mode_bg_container,
         fg_color=settings.ctm.SIDEBAR_BG_COLOR,
@@ -119,7 +119,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             "compact_mode_frame_attr_name": "compact_mode_translation_frame",
             "selected_mark_attr_name": "translation_selected_mark",
             "var_label_text": view_variable.VAR_LABEL_TRANSLATION,
-            "icon_file_name": settings.image_filename.TRANSLATION_ICON,
+            "icon_file": settings.image_file.TRANSLATION_ICON,
         },
         {
             "frame_attr_name": "transcription_send_frame",
@@ -131,7 +131,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             "compact_mode_frame_attr_name": "compact_mode_transcription_send_frame",
             "selected_mark_attr_name": "transcription_send_selected_mark",
             "var_label_text": view_variable.VAR_LABEL_TRANSCRIPTION_SEND,
-            "icon_file_name": settings.image_filename.MIC_ICON,
+            "icon_file": settings.image_file.MIC_ICON,
         },
         {
             "frame_attr_name": "transcription_receive_frame",
@@ -143,7 +143,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             "compact_mode_frame_attr_name": "compact_mode_transcription_receive_frame",
             "selected_mark_attr_name": "transcription_receive_selected_mark",
             "var_label_text": view_variable.VAR_LABEL_TRANSCRIPTION_RECEIVE,
-            "icon_file_name": settings.image_filename.HEADPHONES_ICON,
+            "icon_file": settings.image_file.HEADPHONES_ICON,
         },
         {
             "frame_attr_name": "foreground_frame",
@@ -155,7 +155,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             "compact_mode_frame_attr_name": "compact_mode_foreground_frame",
             "selected_mark_attr_name": "foreground_selected_mark",
             "var_label_text": view_variable.VAR_LABEL_FOREGROUND,
-            "icon_file_name": settings.image_filename.FOREGROUND_ICON,
+            "icon_file": settings.image_file.FOREGROUND_ICON,
         },
     ]
 
@@ -172,7 +172,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
         compact_mode_frame_attr_name = sfs["compact_mode_frame_attr_name"]
         selected_mark_attr_name = sfs["selected_mark_attr_name"]
         var_label_text = sfs["var_label_text"]
-        icon_file_name = sfs["icon_file_name"]
+        icon_file = sfs["icon_file"]
 
         frame_widget = CTkFrame(main_window.sidebar_features_container, corner_radius=0, fg_color=settings.ctm.SF__BG_COLOR, cursor="hand2", width=0, height=0)
         setattr(main_window, frame_attr_name, frame_widget)
@@ -234,7 +234,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             text=None,
             height=0,
             corner_radius=0,
-            image=CTkImage(getImageFileFromUiUtils(icon_file_name),size=(settings.COMPACT_MODE_ICON_SIZE,settings.COMPACT_MODE_ICON_SIZE)),
+            image=CTkImage((icon_file),size=(settings.COMPACT_MODE_ICON_SIZE,settings.COMPACT_MODE_ICON_SIZE)),
         )
         setattr(main_window, compact_mode_icon_attr_name, compact_mode_icon_widget)
 
