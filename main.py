@@ -238,7 +238,7 @@ def callbackSetUiLanguage(value):
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
     if len(value) > 0 and model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
-        config.CHOICE_TRANSLATOR = "DeepL(auth)"
+        config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
         view.printToTextbox_AuthenticationSuccess()
     else:
         view.printToTextbox_AuthenticationError()
