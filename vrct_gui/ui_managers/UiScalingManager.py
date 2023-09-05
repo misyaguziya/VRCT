@@ -180,5 +180,6 @@ class UiScalingManager():
         size += 1 if not is_allowed_odd and size % 2 != 0 else 0
         return size
 
-    def dupTuple(self, value):
+    @staticmethod
+    def dupTuple(value):
         return (value, value)
