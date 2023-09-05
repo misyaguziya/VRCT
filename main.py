@@ -252,9 +252,15 @@ def callbackSetMicHost(value):
     view.updateSelected_MicDevice(config.CHOICE_MIC_DEVICE)
     view.updateList_MicDevice(model.getListInputDevice())
 
+    model.stopCheckMicEnergy()
+    view.replaceConfigWindowMicThresholdCheckButtonToPassive()
+
 def callbackSetMicDevice(value):
     print("callbackSetMicDevice", value)
     config.CHOICE_MIC_DEVICE = value
+
+    model.stopCheckMicEnergy()
+    view.replaceConfigWindowMicThresholdCheckButtonToPassive()
 
 def callbackSetMicEnergyThreshold(value):
     print("callbackSetMicEnergyThreshold", int(value))
@@ -306,13 +312,16 @@ def callbackSetMicWordFilter(value):
         config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
     else:
         config.INPUT_MIC_WORD_FILTER = []
-    # model.resetKeywordProcessor()
-    # model.addKeywords()
+    model.resetKeywordProcessor()
+    model.addKeywords()
 
 # Transcription Tab (Speaker)
 def callbackSetSpeakerDevice(value):
     print("callbackSetSpeakerDevice", value)
     config.CHOICE_SPEAKER_DEVICE = value
+
+    model.stopCheckSpeakerEnergy()
+    view.replaceConfigWindowSpeakerThresholdCheckButtonToPassive()
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", int(value))
