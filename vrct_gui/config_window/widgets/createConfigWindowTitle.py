@@ -27,7 +27,7 @@ def createConfigWindowTitle(config_window, settings):
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE, weight="bold"),
         text_color=settings.ctm.LABELS_TEXT_COLOR,
     )
-    config_window.side_menu_config_window_title.place(relx=0.275, rely=0.5, anchor="w")
+    config_window.side_menu_config_window_title.place(relx=0.255, rely=0.5, anchor="w")
 
     config_window.side_menu_config_window_title_logo = CTkLabel(
         config_window.side_menu_config_window_title_logo_frame,
@@ -36,4 +36,4 @@ def createConfigWindowTitle(config_window, settings):
         anchor="w",
         image=CTkImage(settings.image_file.VRCT_LOGO_MARK, size=settings.uism.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE),
     )
-    config_window.side_menu_config_window_title_logo.place(relx=0.08, rely=0.59, anchor="w")
+    config_window.side_menu_config_window_title_logo.place(relx=0.08, rely=0.58, anchor="w")
