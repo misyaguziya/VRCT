@@ -55,8 +55,15 @@ class View():
             CALLBACK_TOGGLE_FOREGROUND=None,
 
             # Language Settings
+            VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value="Language Settings"), # JA: 言語設定
+
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
+            VAR_LABEL_YOUR_LANGUAGE=StringVar(value="Your Language"), # JA: あなたの言語
             VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
+
+            VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value="Translate Each Other"), # JA: 双方向に翻訳
+
+            VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
 
 
