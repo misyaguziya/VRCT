@@ -231,7 +231,10 @@ class Model:
         def sendMicTranscript():
             mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
             message = mic_transcriber.getTranscript()
-            fnc(message)
+            try:
+                fnc(message)
+            except:
+                pass
 
         self.mic_print_transcript = threadFnc(sendMicTranscript)
         self.mic_print_transcript.daemon = True
@@ -248,7 +251,10 @@ class Model:
         def sendMicEnergy():
             if mic_energy_queue.empty() is False:
                 energy = mic_energy_queue.get()
-                fnc(energy)
+                try:
+                    fnc(energy)
+                except:
+                    pass
             sleep(0.01)
 
         mic_energy_queue = Queue()
@@ -284,7 +290,10 @@ class Model:
         def sendSpkTranscript():
             spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = spk_transcriber.getTranscript()
-            fnc(message)
+            try:
+                fnc(message)
+            except:
+                pass
 
         self.spk_print_transcript = threadFnc(sendSpkTranscript)
         self.spk_print_transcript.daemon = True
@@ -301,7 +310,10 @@ class Model:
         def sendSpeakerEnergy():
             if speaker_energy_queue.empty() is False:
                 energy = speaker_energy_queue.get()
-                fnc(energy)
+                try:
+                    fnc(energy)
+                except:
+                    pass
             sleep(0.01)
 
         speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
