@@ -40,7 +40,7 @@ class UiScalingManager():
         # Sidebar Features
         self.main.SF__LOGO_MAX_SIZE = self._calculateUiSize(120)
         self.main.SF__LOGO_PADY = (self._calculateUiSize(12),self._calculateUiSize(8))
-        self.main.SF__LOGO_HEIGHT_FOR_ADJUSTMENT = (self._calculateUiSize(8))
+        self.main.SF__LOGO_HEIGHT_FOR_ADJUSTMENT = (self._calculateUiSize(6))
 
         self.main.SF__LABELS_IPADY = self._calculateUiSize(16)
         self.main.SF__COMPACT_MODE_ICON_PADY = self.main.SF__LABELS_IPADY
@@ -95,7 +95,7 @@ class UiScalingManager():
 
         # Top bar Side
         self.config_window.TOP_BAR_SIDE__WIDTH = self._calculateUiSize(220)
-        self.config_window.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE = self.dupTuple(self._calculateUiSize(30))
+        self.config_window.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE = self.dupTuple(self._calculateUiSize(28))
         self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE = self._calculateUiSize(22)
         self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_LEFT_PADX = int(self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE + self._calculateUiSize(16))
         self.config_window.TOP_BAR_SIDE__TITLE_PADX= self._calculateUiSize(30)
