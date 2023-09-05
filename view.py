@@ -56,15 +56,18 @@ class View():
 
             # Language Settings
             VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value="Language Settings"), # JA: 言語設定
+            LIST_SELECTABLE_LANGUAGES=[],
 
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
             VAR_LABEL_YOUR_LANGUAGE=StringVar(value="Your Language"), # JA: あなたの言語
             VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
+            CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value="Translate Each Other"), # JA: 双方向に翻訳
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
+            CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
 
 
@@ -228,13 +231,10 @@ class View():
         self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features["callback_toggle_transcription_receive"]
         self.view_variable.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
 
-
-        vrct_gui.sls__optionmenu_your_language.configure(values=language_presets["values"])
-        vrct_gui.sls__optionmenu_your_language.configure(command=language_presets["callback_your_language"])
-        vrct_gui.sls__optionmenu_your_language.configure(variable=StringVar(value=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]))
-        vrct_gui.sls__optionmenu_target_language.configure(values=language_presets["values"])
-        vrct_gui.sls__optionmenu_target_language.configure(command=language_presets["callback_target_language"])
-        vrct_gui.sls__optionmenu_target_language.configure(variable=StringVar(value=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]))
+        self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = language_presets["callback_your_language"]
+        self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = language_presets["callback_target_language"]
+        self.updateList_selectableLanguages(language_presets["values"])
+        self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
 
         self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
@@ -336,6 +336,12 @@ class View():
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
         self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
         self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
+
+
+    def updateList_selectableLanguages(self, new_selectable_language_list:list):
+        self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
+        vrct_gui.sls__optionmenu_your_language.configure(values=new_selectable_language_list)
+        vrct_gui.sls__optionmenu_target_language.configure(values=new_selectable_language_list)
 
 
     def printToTextbox_enableTranslation(self):
