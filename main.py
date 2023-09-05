@@ -312,8 +312,8 @@ def callbackSetMicWordFilter(value):
         config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
     else:
         config.INPUT_MIC_WORD_FILTER = []
-    # model.resetKeywordProcessor()
-    # model.addKeywords()
+    model.resetKeywordProcessor()
+    model.addKeywords()
 
 # Transcription Tab (Speaker)
 def callbackSetSpeakerDevice(value):
