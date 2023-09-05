@@ -410,6 +410,10 @@ class View():
 
 
     # Config Window
+    @staticmethod
+    def updateConfigWindowTransparency():
+        vrct_gui.wm_attributes("-alpha", config.TRANSPARENCY/100)
+
     def setConfigWindowCompactModeSwitchStatusToDisabled(self):
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
 
