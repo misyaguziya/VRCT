@@ -56,7 +56,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    def createOption_DropdownMenu_for_quickSettings(setattr_obj, parent_widget, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values=None, width:int = 200, font_size:int = 10, text_color="white", command=None, variable=""):
+    def createOption_DropdownMenu_for_languageSettings(setattr_obj, parent_widget, optionmenu_attr_name, dropdown_menu_values, width:int = 200, font_size:int = 10, text_color="white", command=None, variable=""):
         setattr(setattr_obj, optionmenu_attr_name, CTkOptionMenu(
             parent_widget,
             height=30,
@@ -75,7 +75,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    def createQuickLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values, variable):
+    def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_values, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
         sls__box.columnconfigure((0,2), weight=1)
@@ -96,11 +96,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-        createOption_DropdownMenu_for_quickSettings(
+        createOption_DropdownMenu_for_languageSettings(
             main_window,
             sls__box_wrapper,
             optionmenu_attr_name,
-            dropdown_menu_attr_name,
             dropdown_menu_values=dropdown_menu_values,
             # command=self.fakeCommand,
             width=settings.uism.SLS__BOX_DROPDOWN_MENU_WIDTH,
@@ -210,12 +209,11 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     main_window.sls__box_frame.grid_columnconfigure(0, weight=1)
 
     # Your language
-    main_window.sls__box_your_language = createQuickLanguageSettingBox(
+    main_window.sls__box_your_language = createLanguageSettingBox(
         parent_widget=main_window.sls__box_frame,
         var_title_text=view_variable.VAR_LABEL_YOUR_LANGUAGE,
         title_text_attr_name="sls__title_text_your_language",
         optionmenu_attr_name="sls__optionmenu_your_language",
-        dropdown_menu_attr_name="sls__dropdown_menu_your_language",
         dropdown_menu_values=["1""2","pppp\npppp"],
         variable=view_variable.VAR_YOUR_LANGUAGE
     )
@@ -258,12 +256,11 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     # Target language
-    main_window.sls__box_target_language = createQuickLanguageSettingBox(
+    main_window.sls__box_target_language = createLanguageSettingBox(
         parent_widget=main_window.sls__box_frame,
         var_title_text=view_variable.VAR_LABEL_TARGET_LANGUAGE,
         title_text_attr_name="sls__title_text_target_language",
         optionmenu_attr_name="sls__optionmenu_target_language",
-        dropdown_menu_attr_name="sls__dropdown_menu_target_language",
         dropdown_menu_values=["1""2","pppp\npppp2"],
         variable=view_variable.VAR_TARGET_LANGUAGE
     )
