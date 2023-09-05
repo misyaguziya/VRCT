@@ -250,6 +250,7 @@ class Model:
                 energy = mic_energy_queue.get()
                 fnc(energy)
             sleep(0.01)
+
         mic_energy_queue = Queue()
         mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
@@ -303,24 +304,17 @@ class Model:
                 fnc(energy)
             sleep(0.01)
 
-        def getSpeakerEnergy():
-            with self.speaker_energy_recorder.source as source:
-                energy = self.speaker_energy_recorder.recorder.listen_energy(source)
-                speaker_energy_queue.put(energy)
-
         speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
-        self.speaker_energy_get_progressbar = threadFnc(getSpeakerEnergy)
-        self.speaker_energy_get_progressbar.daemon = True
-        self.speaker_energy_get_progressbar.start()
+        self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy)
         self.speaker_energy_plot_progressbar.daemon = True
         self.speaker_energy_plot_progressbar.start()
 
     def stopCheckSpeakerEnergy(self):
-        if self.speaker_energy_get_progressbar != None:
-            self.speaker_energy_get_progressbar.stop()
+        if self.speaker_energy_recorder != None:
+            self.speaker_energy_recorder.stop()
         if self.speaker_energy_plot_progressbar != None:
             self.speaker_energy_plot_progressbar.stop()
 
