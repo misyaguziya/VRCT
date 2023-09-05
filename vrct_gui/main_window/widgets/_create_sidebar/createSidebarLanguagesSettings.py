@@ -56,7 +56,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    def createOption_DropdownMenu_for_languageSettings(setattr_obj, parent_widget, optionmenu_attr_name, dropdown_menu_values, width:int = 200, font_size:int = 10, text_color="white", command=None, variable=""):
+    def createOption_DropdownMenu_for_languageSettings(setattr_obj, parent_widget, optionmenu_attr_name, dropdown_menu_values, command, width:int = 200, font_size:int = 10, text_color="white", variable=""):
         setattr(setattr_obj, optionmenu_attr_name, CTkOptionMenu(
             parent_widget,
             height=30,
@@ -68,6 +68,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             font=CTkFont(family=settings.FONT_FAMILY, size=font_size, weight="normal"),
             variable=variable,
             anchor="center",
+            command=command,
         ))
         target_optionmenu_attr = getattr(setattr_obj, optionmenu_attr_name)
         target_optionmenu_attr.grid(row=0, column=0, sticky="e")
@@ -75,7 +76,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_values, variable):
+    def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_values, command, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
         sls__box.columnconfigure((0,2), weight=1)
@@ -101,7 +102,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             sls__box_wrapper,
             optionmenu_attr_name,
             dropdown_menu_values=dropdown_menu_values,
-            # command=self.fakeCommand,
+            command=command,
             width=settings.uism.SLS__BOX_DROPDOWN_MENU_WIDTH,
             font_size=settings.uism.SLS__BOX_DROPDOWN_MENU_FONT_SIZE,
             text_color=settings.ctm.LABELS_TEXT_COLOR,
@@ -203,7 +204,14 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         column+=1
 
 
-    # Quick Language settings BOX
+    def selectYourLanguageCommand(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE, value)
+
+
+    def selectTargetLanguageCommand(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE, value)
+
+    # Language Settings BOX
     main_window.sls__box_frame = CTkFrame(main_window.sls__container, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
     main_window.sls__box_frame.grid(row=2, column=0, sticky="ew")
     main_window.sls__box_frame.grid_columnconfigure(0, weight=1)
@@ -214,7 +222,8 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         var_title_text=view_variable.VAR_LABEL_YOUR_LANGUAGE,
         title_text_attr_name="sls__title_text_your_language",
         optionmenu_attr_name="sls__optionmenu_your_language",
-        dropdown_menu_values=["1""2","pppp\npppp"],
+        dropdown_menu_values=view_variable.LIST_SELECTABLE_LANGUAGES,
+        command=selectYourLanguageCommand,
         variable=view_variable.VAR_YOUR_LANGUAGE
     )
     main_window.sls__box_your_language.grid(row=2, column=0, padx=0, pady=(settings.uism.SLS__BOX_TOP_PADY,0),sticky="ew")
@@ -261,7 +270,8 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         var_title_text=view_variable.VAR_LABEL_TARGET_LANGUAGE,
         title_text_attr_name="sls__title_text_target_language",
         optionmenu_attr_name="sls__optionmenu_target_language",
-        dropdown_menu_values=["1""2","pppp\npppp2"],
+        dropdown_menu_values=view_variable.LIST_SELECTABLE_LANGUAGES,
+        command=selectTargetLanguageCommand,
         variable=view_variable.VAR_TARGET_LANGUAGE
     )
     main_window.sls__box_target_language.grid(row=4, column=0, padx=0, pady=(0,0),sticky="ew")
