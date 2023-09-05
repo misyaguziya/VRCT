@@ -304,10 +304,12 @@ class View():
 
 
 
-    def setMainWindowAllWidgetsStatusToNormal(self):
+    @staticmethod
+    def setMainWindowAllWidgetsStatusToNormal():
         vrct_gui.changeMainWindowWidgetsStatus("normal", "All")
 
-    def setMainWindowAllWidgetsStatusToDisabled(self):
+    @staticmethod
+    def setMainWindowAllWidgetsStatusToDisabled():
         vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
 
 
@@ -321,10 +323,12 @@ class View():
             self.foregroundOff()
 
 
-    def foregroundOn(self):
+    @staticmethod
+    def foregroundOn():
         vrct_gui.attributes("-topmost", True)
 
-    def foregroundOff(self):
+    @staticmethod
+    def foregroundOff():
         vrct_gui.attributes("-topmost", False)
 
 
@@ -377,7 +381,8 @@ class View():
         self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
 
 
-    def _printToTextbox_Info(self, info_message):
+    @staticmethod
+    def _printToTextbox_Info(info_message):
         vrct_gui.printToTextbox(vrct_gui.textbox_all, info_message, "", "INFO")
         vrct_gui.printToTextbox(vrct_gui.textbox_system, info_message, "", "INFO")
 
@@ -386,7 +391,8 @@ class View():
     def printToTextbox_SentMessage(self, original_message, translated_message):
         self._printToTextbox_Sent(original_message, translated_message)
 
-    def _printToTextbox_Sent(self, original_message, translated_message):
+    @staticmethod
+    def _printToTextbox_Sent(original_message, translated_message):
         vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "SEND")
         vrct_gui.printToTextbox(vrct_gui.textbox_sent, original_message, translated_message, "SEND")
 
@@ -394,39 +400,45 @@ class View():
     def printToTextbox_ReceivedMessage(self, original_message, translated_message):
         self._printToTextbox_Received(original_message, translated_message)
 
-    def _printToTextbox_Received(self, original_message, translated_message):
+    @staticmethod
+    def _printToTextbox_Received(original_message, translated_message):
         vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "RECEIVE")
         vrct_gui.printToTextbox(vrct_gui.textbox_received, original_message, translated_message, "RECEIVE")
 
 
-    def getTextFromMessageBox(self):
+    @staticmethod
+    def getTextFromMessageBox():
         return vrct_gui.entry_message_box.get()
 
-    def clearMessageBox(self):
+    @staticmethod
+    def clearMessageBox():
         vrct_gui.entry_message_box.delete(0, CTK_END)
 
+    @staticmethod
+    def setMainWindowTransparency(transparency:float):
+        vrct_gui.wm_attributes("-alpha", transparency)
 
 
 
     def createGUI(self):
         vrct_gui.createGUI(settings=self.settings, view_variable=self.view_variable)
 
-    def startMainLoop(self):
+    @staticmethod
+    def startMainLoop():
         vrct_gui.startMainLoop()
 
 
     # Config Window
     @staticmethod
-    def updateConfigWindowTransparency():
-        vrct_gui.wm_attributes("-alpha", config.TRANSPARENCY/100)
-
-    def setConfigWindowCompactModeSwitchStatusToDisabled(self):
+    def setConfigWindowCompactModeSwitchStatusToDisabled():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
 
-    def setConfigWindowCompactModeSwitchStatusToNormal(self):
+    @staticmethod
+    def setConfigWindowCompactModeSwitchStatusToNormal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
-    def setConfigWindowThresholdCheckWidgetsStatusToDisabled(self):
+    @staticmethod
+    def setConfigWindowThresholdCheckWidgetsStatusToDisabled():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="disabled",
             target_names=[
@@ -435,7 +447,8 @@ class View():
             ]
         )
 
-    def setConfigWindowThresholdCheckWidgetsStatusToNormal(self):
+    @staticmethod
+    def setConfigWindowThresholdCheckWidgetsStatusToNormal():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="normal",
             target_names=[
@@ -444,27 +457,32 @@ class View():
             ]
         )
 
-    def replaceConfigWindowMicThresholdCheckButtonToActive(self):
+    @staticmethod
+    def replaceConfigWindowMicThresholdCheckButtonToActive():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
 
-    def replaceConfigWindowMicThresholdCheckButtonToPassive(self):
+    @staticmethod
+    def replaceConfigWindowMicThresholdCheckButtonToPassive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
 
-    def replaceConfigWindowSpeakerThresholdCheckButtonToActive(self):
+    @staticmethod
+    def replaceConfigWindowSpeakerThresholdCheckButtonToActive():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
 
-    def replaceConfigWindowSpeakerThresholdCheckButtonToPassive(self):
+    @staticmethod
+    def replaceConfigWindowSpeakerThresholdCheckButtonToPassive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
 
 
-    def reloadConfigWindowSettingBoxContainer(self):
+    @staticmethod
+    def reloadConfigWindowSettingBoxContainer():
         vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
 
