@@ -37,6 +37,7 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Main Window
+            # Sidebar
             # Sidebar Compact Mode
             IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=False,
             CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=None,
@@ -54,7 +55,7 @@ class View():
             VAR_LABEL_FOREGROUND=StringVar(value="Foreground"),
             CALLBACK_TOGGLE_FOREGROUND=None,
 
-            # Language Settings
+            # Sidebar Language Settings
             VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value="Language Settings"), # JA: 言語設定
             LIST_SELECTABLE_LANGUAGES=[],
 
@@ -68,6 +69,14 @@ class View():
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
+
+
+            VAR_LABEL_TEXTBOX_ALL=StringVar(value="All"), # JA: 全て
+            VAR_LABEL_TEXTBOX_SENT=StringVar(value="Sent"), # JA: 送信
+            VAR_LABEL_TEXTBOX_RECEIVED=StringVar(value="Received"), # JA: 受信
+            VAR_LABEL_TEXTBOX_SYSTEM=StringVar(value="System"), # JA: システム
+
+
 
 
 
