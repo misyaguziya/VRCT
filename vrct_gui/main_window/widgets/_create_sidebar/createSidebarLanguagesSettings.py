@@ -75,7 +75,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    def createQuickLanguageSettingBox(parent_widget, title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values, variable):
+    def createQuickLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, optionmenu_attr_name, dropdown_menu_attr_name, dropdown_menu_values, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
         sls__box.columnconfigure((0,2), weight=1)
@@ -85,7 +85,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
         sls__label = CTkLabel(
             sls__box_wrapper,
-            text=title_text,
+            textvariable=var_title_text,
             height=0,
             font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_SECTION_TITLE_FONT_SIZE, weight="normal"),
             text_color=settings.ctm.SLS__BOX_SECTION_TITLE_TEXT_COLOR
@@ -126,8 +126,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     main_window.sls__container_title = CTkLabel(main_window.sls__container,
-        # text="言語設定",
-        text="Language Settings",
+        textvariable=view_variable.VAR_LABEL_LANGUAGE_SETTINGS,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__TITLE_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.SLS__TITLE_TEXT_COLOR
@@ -213,8 +212,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     # Your language
     main_window.sls__box_your_language = createQuickLanguageSettingBox(
         parent_widget=main_window.sls__box_frame,
-        # title_text="あなたの言語",
-        title_text="Your Language",
+        var_title_text=view_variable.VAR_LABEL_YOUR_LANGUAGE,
         title_text_attr_name="sls__title_text_your_language",
         optionmenu_attr_name="sls__optionmenu_your_language",
         dropdown_menu_attr_name="sls__dropdown_menu_your_language",
@@ -241,8 +239,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     main_window.sls__both_direction_desc = CTkLabel(
         main_window.sls__arrow_direction_box,
-        # text="双方向に翻訳",
-        text="Translate Each Other",
+        textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_ARROWS_DESC_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
@@ -263,8 +260,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     # Target language
     main_window.sls__box_target_language = createQuickLanguageSettingBox(
         parent_widget=main_window.sls__box_frame,
-        # title_text="相手の言語",
-        title_text="Target Language",
+        var_title_text=view_variable.VAR_LABEL_TARGET_LANGUAGE,
         title_text_attr_name="sls__title_text_target_language",
         optionmenu_attr_name="sls__optionmenu_target_language",
         dropdown_menu_attr_name="sls__dropdown_menu_target_language",
