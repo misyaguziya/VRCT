@@ -212,7 +212,7 @@ def callbackDisableConfigWindowCompactMode():
 def callbackSetTransparency(value):
     print("callbackSetTransparency", int(value))
     config.TRANSPARENCY = int(value)
-    # self.parent.wm_attributes("-alpha", int(value/100))
+    view.updateConfigWindowTransparency()
 
 def callbackSetAppearance(value):
     print("callbackSetAppearance", value)
