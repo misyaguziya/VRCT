@@ -55,7 +55,7 @@ class Model:
         self.logger = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
-        self.speaker_energy_get_progressbar = None
+        self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
