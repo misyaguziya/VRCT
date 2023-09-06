@@ -3,7 +3,7 @@ from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkTextbox
 from ...ui_utils import getLatestWidth, getLongestText, bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, _setDefaultActiveTab, switchActiveTabAndPassiveTab, switchTabsColor
 
 
-def createTextbox(settings, main_window):
+def createTextbox(settings, main_window, view_variable):
 
     def switchTextbox(target_textbox_attr_name):
         main_window.current_active_textbox.grid_remove()
@@ -78,70 +78,59 @@ def createTextbox(settings, main_window):
             "textbox_tab_attr_name": "textbox_tab_all",
             "command": switchToTextboxAll,
             "textbox_attr_name": "textbox_all",
-            "text": "All",
+            "textvariable": view_variable.VAR_LABEL_TEXTBOX_ALL
         },
         {
             "textbox_tab_attr_name": "textbox_tab_sent",
             "command": switchToTextboxSent,
             "textbox_attr_name": "textbox_sent",
-            "text": "Sent",
+            "textvariable": view_variable.VAR_LABEL_TEXTBOX_SENT
         },
-
         {
             "textbox_tab_attr_name": "textbox_tab_received",
             "command": switchToTextboxReceived,
             "textbox_attr_name": "textbox_received",
-            "text": "Received",
+            "textvariable": view_variable.VAR_LABEL_TEXTBOX_RECEIVED
         },
-
         {
             "textbox_tab_attr_name": "textbox_tab_system",
             "command": switchToTextboxSystem,
             "textbox_attr_name": "textbox_system",
-            "text": "System",
+            "textvariable": view_variable.VAR_LABEL_TEXTBOX_SYSTEM
         },
     ]
 
 
-    longest_text = getLongestText(textbox_settings)
-
-    setattr(main_window, "_mlw", CTkLabel(
-            main_window,
-            text=longest_text,
-            corner_radius=0,
-            font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TEXTBOX_TAB_FONT_SIZE, weight="normal"),
-            height=0,
-            anchor="center",
-        ))
-    label_widget = getattr(main_window, "_mlw")
-    label_widget.grid()
-    MAX_LABEL_WIDTH = getLatestWidth(label_widget)
-    label_widget.grid_remove()
-
-
     column=0
     for textbox_setting in textbox_settings:
-        setattr(main_window, textbox_setting["textbox_tab_attr_name"], CTkFrame(main_window.textbox_switch_tabs_container, corner_radius=settings.uism.TEXTBOX_TAB_CORNER_RADIUS, fg_color=settings.ctm.TEXTBOX_TAB_BG_PASSIVE_COLOR, cursor="hand2", width=0, height=0)
+        setattr(main_window, textbox_setting["textbox_tab_attr_name"],
+            CTkFrame(
+                main_window.textbox_switch_tabs_container,
+                corner_radius=settings.uism.TEXTBOX_TAB_CORNER_RADIUS,
+                fg_color=settings.ctm.TEXTBOX_TAB_BG_PASSIVE_COLOR,
+                cursor="hand2",
+                width=0,
+                height=0
+            )
         )
         target_widget = getattr(main_window, textbox_setting["textbox_tab_attr_name"])
         target_widget.grid(row=0, column=column, pady=0, padx=(0,2), sticky="ew")
 
 
 
+        target_widget.columnconfigure((0,2), weight=1)
         setattr(main_window, "label_widget", CTkLabel(
             target_widget,
-            text=textbox_setting["text"],
+            textvariable=textbox_setting["textvariable"],
             corner_radius=0,
             font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TEXTBOX_TAB_FONT_SIZE, weight="normal"),
             height=0,
-            width=MAX_LABEL_WIDTH,
+            width=0,
             anchor="center",
             text_color=settings.ctm.TEXTBOX_TAB_TEXT_PASSIVE_COLOR,
         ))
         label_widget = getattr(main_window, "label_widget")
-        label_widget.grid(row=0, column=column)
-
-        label_widget.grid(row=0, column=column, pady=settings.uism.TEXTBOX_TAB_PADY, padx=settings.uism.TEXTBOX_TAB_PADX)
+        label_widget.grid(row=0, column=1, pady=settings.uism.TEXTBOX_TAB_PADY, padx=settings.uism.TEXTBOX_TAB_PADX)
 
         bindEnterAndLeaveColor([target_widget, label_widget], settings.ctm.TEXTBOX_TAB_BG_HOVERED_COLOR, settings.ctm.TEXTBOX_TAB_BG_PASSIVE_COLOR)
         bindButtonPressColor([target_widget, label_widget], settings.ctm.TEXTBOX_TAB_BG_CLICKED_COLOR, settings.ctm.TEXTBOX_TAB_BG_PASSIVE_COLOR)

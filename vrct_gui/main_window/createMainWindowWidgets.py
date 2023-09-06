@@ -60,6 +60,6 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     createMinimizeSidebarButton(settings, vrct_gui, view_variable)
 
-    createTextbox(settings, vrct_gui)
+    createTextbox(settings, vrct_gui, view_variable)
 
     createEntryMessageBox(settings, vrct_gui)
