@@ -27,9 +27,6 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     def switchPresetTabFunction(target_active_widget):
         switchActiveAndPassivePresetsTabsColor(target_active_widget)
         switchActiveTabAndPassiveTab(target_active_widget, main_window.current_active_preset_tab, main_window.current_active_preset_tab.passive_function, settings.ctm.SLS__PRESETS_TAB_BG_HOVERED_COLOR, settings.ctm.SLS__PRESETS_TAB_BG_CLICKED_COLOR, settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR)
-
-        # main_window.sls__optionmenu_your_language.set(view_variable.VAR_YOUR_LANGUAGE.get())
-        # main_window.sls__optionmenu_target_language.set(view_variable.VAR_TARGET_LANGUAGE.get())
         main_window.current_active_preset_tab = target_active_widget
 
 

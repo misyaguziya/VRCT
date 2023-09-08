@@ -1,4 +1,3 @@
-# from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContainers, createSettingBoxTopBar
 from functools import partial
 
 from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor
@@ -36,7 +35,6 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.selectable_language_window_type = None
 
     def createContainer(self, selectable_language_window_type):
-        print(selectable_language_window_type)
         self.selectable_language_window_type = selectable_language_window_type
         if self.is_created is True:
             pass
@@ -61,9 +59,6 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def _createContainer(self):
-
-
-        print("create")
         self.x_pos = self.attach.winfo_rootx()
         self.y_pos = self.attach.winfo_rooty()
         self.width_new = self.attach.winfo_width()

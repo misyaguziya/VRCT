@@ -259,11 +259,6 @@ class View():
         self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
         self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
 
-
-
-        # vrct_gui.sls__title_text_your_language.bind("<ButtonPress>", self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW)
-        # vrct_gui.sls__title_text_target_language.bind("<ButtonPress>", self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW)
-
         entry_message_box = getattr(vrct_gui, "entry_message_box")
         entry_message_box.bind("<Return>", entry_message_box_commands["bind_Return"])
         entry_message_box.bind("<Any-KeyPress>", entry_message_box_commands["bind_Any_KeyPress"])
@@ -373,8 +368,6 @@ class View():
 
     def updateList_selectableLanguages(self, new_selectable_language_list:list):
         self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
-        # vrct_gui.sls__optionmenu_your_language.configure(values=new_selectable_language_list)
-        # vrct_gui.sls__optionmenu_target_language.configure(values=new_selectable_language_list)
 
 
     def printToTextbox_enableTranslation(self):
