@@ -25,7 +25,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
-        self.bind("<FocusOut>", lambda e: self.withdraw())
+        self.bind("<FocusOut>", lambda e: vrct_gui.closeSelectableLanguagesWindow())
 
 
 
@@ -36,6 +36,16 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
     def createContainer(self, selectable_language_window_type):
         self.selectable_language_window_type = selectable_language_window_type
+
+        self.x_pos = self.attach.winfo_rootx()
+        self.y_pos = self.attach.winfo_rooty()
+        self.width_new = self.attach.winfo_width()
+        self.height_new = self.attach.winfo_height()
+
+
+        self.geometry('+{}+{}'.format(self.x_pos, self.y_pos))
+
+
         if self.is_created is True:
             pass
         else:
@@ -52,20 +62,13 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
         callFunctionIfCallable(callback, value)
         target_variable.set(value)
-        self.withdraw()
+        self.vrct_gui.closeSelectableLanguagesWindow()
 
 
 
 
 
     def _createContainer(self):
-        self.x_pos = self.attach.winfo_rootx()
-        self.y_pos = self.attach.winfo_rooty()
-        self.width_new = self.attach.winfo_width()
-        self.height_new = self.attach.winfo_height()
-
-
-        self.geometry('+{}+{}'.format(self.x_pos, self.y_pos))
         # self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
         # self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
 
@@ -94,7 +97,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         )
         self.go_back_button_label.grid(row=1, column=0, padx=10, pady=10)
 
-        bindButtonReleaseFunction([self.go_back_button_label_wrapper, self.go_back_button_label], lambda _e: self.withdraw())
+        bindButtonReleaseFunction([self.go_back_button_label_wrapper, self.go_back_button_label], lambda _e: self.vrct_gui.closeSelectableLanguagesWindow())
 
 
 
