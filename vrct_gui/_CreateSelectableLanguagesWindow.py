@@ -39,8 +39,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
         self.x_pos = self.attach.winfo_rootx()
         self.y_pos = self.attach.winfo_rooty()
-        self.width_new = self.attach.winfo_width()
-        self.height_new = self.attach.winfo_height()
+        self.width_new = self.attach.winfo_width() - 16
+        self.height_new = self.attach.winfo_height() - 50
 
 
         self.geometry('+{}+{}'.format(self.x_pos, self.y_pos))
@@ -102,16 +102,18 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
 
-        # self.scroll_frame_container = CTkScrollableFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR)
-        # self.scroll_frame_container.grid(row=1, column=0, sticky="nsew")
+        self.scroll_frame_container = CTkScrollableFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=self.width_new, height=self.height_new)
+        self.scroll_frame_container.grid(row=1, column=0, sticky="nsew")
 
 
 
-        self.container = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=0, height=0)
-        self.container.grid(row=1, column=0, sticky="nsew")
+        self.container = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=0, height=0)
+        self.container.grid(row=0, column=0, sticky="nsew")
 
 
 
+        max_row = int(len(self._view_variable.LIST_SELECTABLE_LANGUAGES)/3) + 1
+        max_row+=1
         row=0
         column=0
         for selectable_language_name in self._view_variable.LIST_SELECTABLE_LANGUAGES:
@@ -147,7 +149,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
             callback = partial(self.callbackSelectableLanguages, selectable_language_name)
             bindButtonReleaseFunction([self.wrapper, label_widget], callback)
 
-            if row == 16:
+            if row == max_row:
                 row=0
                 column+=1
             else:
