@@ -35,6 +35,12 @@ class View():
             **common_args
         )
 
+        self.settings.selectable_language_window = SimpleNamespace(
+            ctm=all_ctm.selectable_language_window,
+            uism=all_uism.config_window,
+            **common_args
+        )
+
         self.view_variable = SimpleNamespace(
             # Main Window
             # Sidebar
@@ -58,16 +64,18 @@ class View():
             # Sidebar Language Settings
             VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value="Language Settings"), # JA: 言語設定
             LIST_SELECTABLE_LANGUAGES=[],
-
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
+
             VAR_LABEL_YOUR_LANGUAGE=StringVar(value="Your Language"), # JA: あなたの言語
             VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
+            CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=None,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value="Translate Each Other"), # JA: 双方向に翻訳
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
+            CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=None,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
 
@@ -248,6 +256,8 @@ class View():
         self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
+        self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
+        self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
 
         entry_message_box = getattr(vrct_gui, "entry_message_box")
         entry_message_box.bind("<Return>", entry_message_box_commands["bind_Return"])
@@ -345,6 +355,11 @@ class View():
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = is_turned_on
         vrct_gui.recreateMainWindowSidebar()
 
+    def openSelectableLanguagesWindow_YourLanguage(self, _e):
+        vrct_gui.openSelectableLanguagesWindow("your_language")
+    def openSelectableLanguagesWindow_TargetLanguage(self, _e):
+        vrct_gui.openSelectableLanguagesWindow("target_language")
+
 
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
         self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
@@ -353,8 +368,6 @@ class View():
 
     def updateList_selectableLanguages(self, new_selectable_language_list:list):
         self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
-        vrct_gui.sls__optionmenu_your_language.configure(values=new_selectable_language_list)
-        vrct_gui.sls__optionmenu_target_language.configure(values=new_selectable_language_list)
 
 
     def printToTextbox_enableTranslation(self):

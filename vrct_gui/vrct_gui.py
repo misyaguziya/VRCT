@@ -1,10 +1,11 @@
 from types import SimpleNamespace
 
-from customtkinter import CTk
+from customtkinter import CTk, CTkImage
 
 # from window_help_and_info import ToplevelWindowInformation
 
-# from .ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
+from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
+
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
@@ -24,9 +25,24 @@ class VRCT_GUI(CTk):
         self.settings = settings
         self._view_variable = view_variable
 
-        createMainWindowWidgets(vrct_gui=self, settings=self.settings.main, view_variable=self._view_variable)
-        self.config_window = ConfigWindow(vrct_gui=self, settings=self.settings.config_window, view_variable=self._view_variable)
+        createMainWindowWidgets(
+            vrct_gui=self,
+            settings=self.settings.main,
+            view_variable=self._view_variable
+        )
+
+        self.config_window = ConfigWindow(
+            vrct_gui=self,
+            settings=self.settings.config_window,
+            view_variable=self._view_variable
+        )
         # self.information_window = ToplevelWindowInformation(self)
+
+        self.selectable_languages_window = _CreateSelectableLanguagesWindow(
+            vrct_gui=self,
+            settings=self.settings.selectable_language_window,
+            view_variable=self._view_variable
+        )
 
     def startMainLoop(self):
         self.mainloop()
@@ -46,6 +62,26 @@ class VRCT_GUI(CTk):
     def closeConfigWindow(self):
         self.config_window.withdraw()
         self.config_window.grab_release()
+
+
+    def openSelectableLanguagesWindow(self, selectable_language_window_type):
+        if selectable_language_window_type == "your_language":
+            self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+        elif selectable_language_window_type == "target_language":
+            self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+
+        self.sls__arrow_img_target_language
+        self.selectable_languages_window.createContainer(selectable_language_window_type)
+        self.selectable_languages_window.deiconify()
+        self.selectable_languages_window.focus_set()
+        self.selectable_languages_window.attributes("-topmost", True)
+
+
+    def closeSelectableLanguagesWindow(self):
+        self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
+        self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
+        self.selectable_languages_window.withdraw()
+
 
 
 
