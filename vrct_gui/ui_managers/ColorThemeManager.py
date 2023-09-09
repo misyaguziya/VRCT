@@ -5,6 +5,7 @@ class ColorThemeManager():
         print(theme)
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
+        self.selectable_language_window = SimpleNamespace()
 
         self.PRIMARY_100_COLOR = "#c4eac1"
         self.PRIMARY_200_COLOR = "#9cdd98"
@@ -149,6 +150,21 @@ class ColorThemeManager():
         self.main.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR = self.DARK_850_COLOR
         self.main.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR = self.DARK_950_COLOR
         # self.main.HELP_AND_INFO_BUTTON_DISABLE_COLOR = self.DARK_900_COLOR
+
+
+
+        # Selectable Language Window
+        self.selectable_language_window.BASIC_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+
+        self.selectable_language_window.MAIN_BG_COLOR = self.DARK_875_COLOR
+
+        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
+        self.selectable_language_window.GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR
+
+
+        self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
+        self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
+
 
 
         # Common
