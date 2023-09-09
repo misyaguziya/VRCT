@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from customtkinter import CTk
+from customtkinter import CTk, CTkImage
 
 # from window_help_and_info import ToplevelWindowInformation
 
@@ -65,6 +65,12 @@ class VRCT_GUI(CTk):
 
 
     def openSelectableLanguagesWindow(self, selectable_language_window_type):
+        if selectable_language_window_type == "your_language":
+            self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+        elif selectable_language_window_type == "target_language":
+            self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+
+        self.sls__arrow_img_target_language
         self.selectable_languages_window.createContainer(selectable_language_window_type)
         self.selectable_languages_window.deiconify()
         self.selectable_languages_window.focus_set()
@@ -72,6 +78,8 @@ class VRCT_GUI(CTk):
 
 
     def closeSelectableLanguagesWindow(self):
+        self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
+        self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
         self.selectable_languages_window.withdraw()
 
 
