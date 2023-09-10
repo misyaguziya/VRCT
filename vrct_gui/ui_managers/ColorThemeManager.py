@@ -7,16 +7,31 @@ class ColorThemeManager():
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()
 
-        self.PRIMARY_100_COLOR = "#c4eac1"
-        self.PRIMARY_200_COLOR = "#9cdd98"
-        self.PRIMARY_300_COLOR = "#70d16c"
-        self.PRIMARY_400_COLOR = "#49c649"
-        self.PRIMARY_500_COLOR = "#0abb1d"
-        self.PRIMARY_600_COLOR = "#00ac11"
-        self.PRIMARY_650_COLOR = "#00A309"
-        self.PRIMARY_700_COLOR = "#009900"
-        self.PRIMARY_800_COLOR = "#008800"
-        self.PRIMARY_900_COLOR = "#006900"
+        # old one. But leave it here for now.
+        # self.PRIMARY_100_COLOR = "#c4eac1"
+        # self.PRIMARY_200_COLOR = "#9cdd98"
+        # self.PRIMARY_300_COLOR = "#70d16c"
+        # self.PRIMARY_400_COLOR = "#49c649"
+        # self.PRIMARY_500_COLOR = "#0abb1d"
+        # self.PRIMARY_600_COLOR = "#00ac11"
+        # self.PRIMARY_650_COLOR = "#00A309"
+        # self.PRIMARY_700_COLOR = "#009900"
+        # self.PRIMARY_800_COLOR = "#008800"
+        # self.PRIMARY_900_COLOR = "#006900"
+
+
+        # new one.
+        self.PRIMARY_100_COLOR = "#b7ded8"
+        self.PRIMARY_200_COLOR = "#8acac0"
+        self.PRIMARY_300_COLOR = "#61b4a7"
+        self.PRIMARY_400_COLOR = "#48a495"
+        self.PRIMARY_500_COLOR = "#3b9483"
+        self.PRIMARY_600_COLOR = "#368777"
+        self.PRIMARY_650_COLOR = "#347f6f"
+        self.PRIMARY_700_COLOR = "#317767"
+        self.PRIMARY_750_COLOR = "#2F6F60"
+        self.PRIMARY_800_COLOR = "#2c6759"
+        self.PRIMARY_900_COLOR = "#214b3f"
 
 
         self.DARK_100_COLOR = "#f5f7fb"
@@ -108,10 +123,10 @@ class ColorThemeManager():
         self.main.SF__SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR
         self.main.SF__SWITCH_BOX_HOVERED_BG_COLOR = self.DARK_725_COLOR
         self.main.SF__SWITCH_BOX_CLICKED_BG_COLOR = self.DARK_825_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_650_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_800_COLOR
-        self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_900_COLOR
+        self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR
+        self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_400_COLOR
+        self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
+        self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_800_COLOR
 
         self.main.SF__SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
         self.main.SF__SELECTED_MARK_ACTIVE_HOVERED_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR
@@ -201,8 +216,8 @@ class ColorThemeManager():
         self.config_window.SB__CHECKBOX_CHECKED_COLOR = self.PRIMARY_700_COLOR
         self.config_window.SB__CHECKBOX_CHECKMARK_COLOR = self.config_window.BASIC_TEXT_COLOR
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_COLOR = self.PRIMARY_700_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_HOVERED_COLOR = self.PRIMARY_500_COLOR
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_COLOR = self.PRIMARY_600_COLOR
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_HOVERED_COLOR = self.PRIMARY_400_COLOR
         self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
 
         self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
@@ -210,9 +225,9 @@ class ColorThemeManager():
         self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_CLICKED_COLOR = self.DARK_900_COLOR
         self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR = self.DARK_850_COLOR
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR = self.PRIMARY_700_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = self.PRIMARY_600_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = self.PRIMARY_900_COLOR
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR = self.PRIMARY_600_COLOR
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = self.PRIMARY_500_COLOR
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = self.PRIMARY_800_COLOR
         # self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_DISABLED_COLOR = self.PRIMARY_900_COLOR
 
 
@@ -222,8 +237,8 @@ class ColorThemeManager():
         self.config_window.SIDE_MENU_LABELS_BG_COLOR = self.config_window.SIDE_MENU_BG_COLOR
         self.config_window.SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR = self.config_window.SIDE_MENU_BG_COLOR
         self.config_window.SIDE_MENU_LABELS_HOVERED_BG_COLOR = self.DARK_850_COLOR
-        self.config_window.SIDE_MENU_LABELS_CLICKED_BG_COLOR = self.PRIMARY_900_COLOR
-        self.config_window.SIDE_MENU_LABELS_SELECTED_TEXT_COLOR = self.PRIMARY_300_COLOR
+        self.config_window.SIDE_MENU_LABELS_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR
+        self.config_window.SIDE_MENU_LABELS_SELECTED_TEXT_COLOR = self.PRIMARY_200_COLOR
 
         self.config_window.SIDE_MENU_SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
 
