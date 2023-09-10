@@ -26,7 +26,9 @@ class ColorThemeManager():
         self.DARK_500_COLOR = "#a9aaae"
         self.DARK_600_COLOR = "#7f8084"
         self.DARK_700_COLOR = "#6a6c6f"
+        self.DARK_725_COLOR = "#636467"
         self.DARK_750_COLOR = "#5b5c5f"
+        self.DARK_775_COLOR = "#535457"
         self.DARK_800_COLOR = "#4b4c4f"
         self.DARK_825_COLOR = "#434447"
         self.DARK_850_COLOR = "#3a3b3e"
@@ -74,14 +76,14 @@ class ColorThemeManager():
         self.main.LABELS_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
 
         # Main
-        self.main.MAIN_BG_COLOR = self.DARK_900_COLOR
+        self.main.MAIN_BG_COLOR = self.DARK_888_COLOR
 
-        self.main.TEXTBOX_BG_COLOR = self.DARK_950_COLOR
+        self.main.TEXTBOX_BG_COLOR = self.DARK_900_COLOR
         self.main.TEXTBOX_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
         self.main.TEXTBOX_TAB_BG_PASSIVE_COLOR = self.DARK_850_COLOR
         self.main.TEXTBOX_TAB_BG_ACTIVE_COLOR = self.main.TEXTBOX_BG_COLOR
         self.main.TEXTBOX_TAB_BG_HOVERED_COLOR = self.DARK_800_COLOR
-        self.main.TEXTBOX_TAB_BG_CLICKED_COLOR = self.DARK_850_COLOR
+        self.main.TEXTBOX_TAB_BG_CLICKED_COLOR = self.DARK_925_COLOR
         self.main.TEXTBOX_TAB_TEXT_ACTIVE_COLOR = self.main.BASIC_TEXT_COLOR
         self.main.TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.DARK_500_COLOR
 
@@ -95,20 +97,20 @@ class ColorThemeManager():
 
 
         # Sidebar
-        self.main.SIDEBAR_BG_COLOR = self.DARK_875_COLOR
+        self.main.SIDEBAR_BG_COLOR = self.DARK_850_COLOR
 
         # Sidebar Features
-        self.main.SF__BG_COLOR = self.DARK_850_COLOR
+        self.main.SF__BG_COLOR = self.DARK_825_COLOR
         self.main.SF__HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.main.SF__CLICKED_BG_COLOR = self.DARK_900_COLOR
+        self.main.SF__CLICKED_BG_COLOR = self.DARK_875_COLOR
         self.main.SF__TEXT_DISABLED_COLOR = self.DARK_500_COLOR
 
-        self.main.SF__SWITCH_BOX_BG_COLOR = self.DARK_800_COLOR
-        self.main.SF__SWITCH_BOX_HOVERED_BG_COLOR = self.DARK_750_COLOR
-        self.main.SF__SWITCH_BOX_CLICKED_BG_COLOR = self.DARK_850_COLOR
+        self.main.SF__SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR
+        self.main.SF__SWITCH_BOX_HOVERED_BG_COLOR = self.DARK_725_COLOR
+        self.main.SF__SWITCH_BOX_CLICKED_BG_COLOR = self.DARK_825_COLOR
         self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_650_COLOR
         self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
+        self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_800_COLOR
         self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_900_COLOR
 
         self.main.SF__SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
@@ -120,25 +122,25 @@ class ColorThemeManager():
         # Sidebar Languages Settings
         self.main.SLS__TITLE_TEXT_COLOR = self.DARK_400_COLOR
 
-        self.main.SLS__BG_COLOR = self.DARK_825_COLOR
+        self.main.SLS__BG_COLOR = self.DARK_800_COLOR
 
-        self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_850_COLOR
-        self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_888_COLOR
+        self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_825_COLOR
+        self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_875_COLOR
         self.main.SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
         self.main.SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SLS__BG_COLOR
         self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.DARK_600_COLOR
         self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
 
-        self.main.SLS__BOX_BG_COLOR = self.DARK_850_COLOR
+        self.main.SLS__BOX_BG_COLOR = self.DARK_825_COLOR
         self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR
         self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
 
-        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.DARK_900_COLOR
+        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.DARK_888_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
         self.main.CONFIG_BUTTON_HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.main.CONFIG_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR
+        self.main.CONFIG_BUTTON_CLICKED_BG_COLOR = self.DARK_875_COLOR
         # self.main.CONFIG_BUTTON_DISABLE_COLOR = self.DARK_900_COLOR
 
         self.main.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
