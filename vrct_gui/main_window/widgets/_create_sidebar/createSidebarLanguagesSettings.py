@@ -20,7 +20,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             tab_buttons=quick_setting_tabs,
             active_bg_color=settings.ctm.SLS__PRESETS_TAB_BG_ACTIVE_COLOR,
             active_text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR,
-            passive_bg_color=settings.ctm.SIDEBAR_BG_COLOR,
+            passive_bg_color=settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR,
             passive_text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE
         )
 
