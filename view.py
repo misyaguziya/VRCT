@@ -219,6 +219,12 @@ class View():
             CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
             VAR_ENABLE_NOTICE_XSOVERLAY=BooleanVar(value=config.ENABLE_NOTICE_XSOVERLAY),
 
+            VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value="Auto Export Message Logs"),
+            VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value="Automatically export the conversation messages as a text file."),
+            CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=None,
+            VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=BooleanVar(value=config.ENABLE_LOGGER),
+
+
             VAR_LABEL_MESSAGE_FORMAT=StringVar(value="Message Format"),
             VAR_DESC_MESSAGE_FORMAT=StringVar(value="You can change the decoration of the message you want to send. (Default: \"[message]([translation])\" )"),
             CALLBACK_SET_MESSAGE_FORMAT=None,
@@ -314,6 +320,7 @@ class View():
         # Others Tab
         self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window["callback_set_enable_auto_clear_chatbox"]
         self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
+        self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window.get("callback_set_enable_auto_export_message_logs", None)
         self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
 
         # Advanced Settings Tab
