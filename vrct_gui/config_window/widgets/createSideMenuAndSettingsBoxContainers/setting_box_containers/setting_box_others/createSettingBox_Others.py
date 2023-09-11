@@ -15,6 +15,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkbox_notice_xsoverlay_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, checkbox_box_widget.get())
 
+    def checkbox_auto_export_message_logs_callback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS, checkbox_box_widget.get())
+
     def entry_message_format_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, value)
 
@@ -41,6 +44,18 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         variable=view_variable.VAR_ENABLE_NOTICE_XSOVERLAY,
     )
     config_window.sb__notice_xsoverlay.grid(row=row)
+    row+=1
+
+
+    config_window.sb__auto_export_message_logs = createSettingBoxCheckbox(
+        parent_widget=setting_box_wrapper,
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
+        checkbox_attr_name="sb__checkbox_auto_export_message_logs",
+        command=lambda: checkbox_auto_export_message_logs_callback(config_window.sb__checkbox_auto_export_message_logs),
+        variable=view_variable.VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
+    )
+    config_window.sb__auto_export_message_logs.grid(row=row)
     row+=1
 
 
