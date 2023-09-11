@@ -30,8 +30,28 @@ def sendTestAction(ip_address="127.0.0.1", port=9000):
     sleep(0.01)
     client.send_message("/input/Vertical", False)
 
+# send Input Voice
+def sendInputVoice(flag=False, ip_address="127.0.0.1", port=9000):
+    input_voice = osc_message_builder.OscMessageBuilder(address="/input/Voice")
+    input_voice.add_arg(flag)
+    b_input_voice = input_voice.build()
+    client = udp_client.SimpleUDPClient(ip_address, port)
+    client.send(b_input_voice)
+
+def sendChangeVoice(ip_address="127.0.0.1", port=9000):
+    sendInputVoice(flag=0, ip_address=ip_address, port=port)
+    sleep(0.05)
+    sendInputVoice(flag=1, ip_address=ip_address, port=port)
+    sleep(0.05)
+    sendInputVoice(flag=0, ip_address=ip_address, port=port)
+    sleep(0.05)
+
 def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
     _dispatcher = dispatcher.Dispatcher()
     _dispatcher.map(filter, target)
     server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
     server.serve_forever()
+
+if __name__ == "__main__":
+    sendChangeVoice()
+    sendChangeVoice()
