@@ -416,7 +416,7 @@ class View():
         self._printToTextbox_Info("Auth key update completed")
 
     def printToTextbox_AuthenticationError(self):
-        self._printToTextbox_Info("Auth Key or language setting is incorrect")
+        self._printToTextbox_Info("Auth Key is incorrect or Usage limit reached")
 
     def printToTextbox_OSCError(self):
         self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin")
