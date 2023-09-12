@@ -1,4 +1,6 @@
+import sys
 from os import makedirs
+from os import path as os_path
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
@@ -82,15 +84,16 @@ class Model:
         return result
 
     def startLogger(self):
-        makedirs("./logs", exist_ok=True)
+        makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
         logger = getLogger()
         logger.setLevel(INFO)
-        file_name = f"./logs/{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log"
+        file_name = os_path.join(os_path.dirname(sys.argv[0]), "logs", f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
         file_handler = FileHandler(file_name, encoding="utf-8", delay=True)
         formatter = Formatter("[%(asctime)s] %(message)s")
         file_handler.setFormatter(formatter)
         logger.addHandler(file_handler)
         self.logger = logger
+        self.logger.disabled = False
 
     def stopLogger(self):
         self.logger.disabled = True
