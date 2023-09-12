@@ -28,7 +28,8 @@ def sendMicMessage(message):
                     osc_message = message
                 model.oscSendMessage(osc_message)
             else:
-                view.printToTextbox_OSCError()
+                if config.ENABLE_OSC_ERROR_LOG is True:
+                    view.printToTextbox_OSCError()
 
             view.printToTextbox_SentMessage(message, translation)
             if config.ENABLE_LOGGER is True:
@@ -90,7 +91,8 @@ def sendChatMessage(message):
                 osc_message = message
             model.oscSendMessage(osc_message)
         else:
-            view.printToTextbox_OSCError()
+            if config.ENABLE_OSC_ERROR_LOG is True:
+                view.printToTextbox_OSCError()
 
         # update textbox message log
         view.printToTextbox_SentMessage(message, translation)
