@@ -215,17 +215,23 @@ class Model:
 
     def startMicTranscript(self, fnc):
         mic_audio_queue = Queue()
+        device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
+        phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
+        if record_timeout > phase_timeout:
+            record_timeout = phase_timeout
+
         self.mic_audio_recorder = SelectedMicRecorder(
-            [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0],
-            config.INPUT_MIC_ENERGY_THRESHOLD,
-            config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
-            config.INPUT_MIC_RECORD_TIMEOUT,
+            device=device,
+            energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
+            dynamic_energy_threshold=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
+            record_timeout=record_timeout,
         )
         self.mic_audio_recorder.recordIntoQueue(mic_audio_queue)
         mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
-            phrase_timeout=config.INPUT_MIC_PHRASE_TIMEOUT,
+            phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
         )
         def sendMicTranscript():
@@ -274,17 +280,23 @@ class Model:
     def startSpeakerTranscript(self, fnc):
         spk_audio_queue = Queue()
         spk_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+
+        record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
+        phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
+        if record_timeout > phase_timeout:
+            record_timeout = phase_timeout
+
         self.spk_audio_recorder = SelectedSpeakerRecorder(
-            spk_device,
-            config.INPUT_SPEAKER_ENERGY_THRESHOLD,
-            config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
-            config.INPUT_SPEAKER_RECORD_TIMEOUT,
+            device=spk_device,
+            energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
+            dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+            record_timeout=record_timeout,
         )
         self.spk_audio_recorder.recordIntoQueue(spk_audio_queue)
         spk_transcriber = AudioTranscriber(
             speaker=True,
             source=self.spk_audio_recorder.source,
-            phrase_timeout=config.INPUT_SPEAKER_PHRASE_TIMEOUT,
+            phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
         def sendSpkTranscript():
