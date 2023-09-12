@@ -74,12 +74,14 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
         for_var_label_text=view_variable.VAR_LABEL_MIC_ENERGY_THRESHOLD,
         for_var_desc_text=view_variable.VAR_DESC_MIC_ENERGY_THRESHOLD,
         command=slider_input_mic_energy_threshold_callback,
-        variable=view_variable.VAR_MIC_ENERGY_THRESHOLD,
+
         entry_attr_name="sb__progressbar_x_slider__entry_mic_energy_threshold",
+        entry_variable=view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY,
 
 
         slider_attr_name="progressbar_x_slider__slider_mic_energy_threshold",
         slider_range=view_variable.SLIDER_RANGE_MIC_ENERGY_THRESHOLD,
+        slider_variable=view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER,
 
         progressbar_attr_name="sb__progressbar_x_slider__progressbar_mic_energy_threshold",
 

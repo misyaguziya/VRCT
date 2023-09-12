@@ -1,3 +1,4 @@
+from typing import Union
 from types import SimpleNamespace
 from tkinter import font as tk_font
 from languages import selectable_languages
@@ -146,7 +147,8 @@ class View():
             VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the microphone button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 2000 (Default: 300)"),
             SLIDER_RANGE_MIC_ENERGY_THRESHOLD=(0, config.MAX_MIC_ENERGY_THRESHOLD),
             CALLBACK_CHECK_MIC_THRESHOLD=None,
-            VAR_MIC_ENERGY_THRESHOLD=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
+            VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
+            VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
 
             VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Mic Dynamic Energy Threshold"),
             VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold."),
@@ -156,17 +158,17 @@ class View():
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value="Mic Record Timeout"),
             VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
-            VAR_MIC_RECORD_TIMEOUT=IntVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
+            VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value="Mic Phrase Timeout"),
             VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value="(Default: 3)"),
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
-            VAR_MIC_PHRASE_TIMEOUT=IntVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
+            VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value="Mic Max Phrases"),
             VAR_DESC_MIC_MAX_PHRASES=StringVar(value="It will stop recording and send the recordings when the set count of phrase(s) is reached. (Default: 10)"),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
-            VAR_MIC_MAX_PHRASES=IntVar(value=config.INPUT_MIC_MAX_PHRASES),
+            VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
 
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value="Mic Word Filter"),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"),
@@ -185,7 +187,8 @@ class View():
             VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume. 0 to 4000 (Default: 300)"),
             SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
-            VAR_SPEAKER_ENERGY_THRESHOLD=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
+            VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
+            VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
 
             VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Speaker Dynamic Energy Threshold"),
             VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold."),
@@ -195,17 +198,17 @@ class View():
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value="Speaker Record Timeout"),
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
-            VAR_SPEAKER_RECORD_TIMEOUT=IntVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
+            VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value="Speaker Phrase Timeout"),
             VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value="It will stop recording and receive the recordings when the set second(s) is reached. (Default: 3)"),
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
-            VAR_SPEAKER_PHRASE_TIMEOUT=IntVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
+            VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value="Speaker Max Phrases"),
             VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value="It will stop recording and receive the recordings when the set count of phrase(s) is reached. (Default: 10)"),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
-            VAR_SPEAKER_MAX_PHRASES=IntVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
+            VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
 
 
             # Others Tab
@@ -240,7 +243,7 @@ class View():
             VAR_LABEL_OSC_PORT=StringVar(value="OSC Port"),
             VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
             CALLBACK_SET_OSC_PORT=None,
-            VAR_OSC_PORT=IntVar(value=config.OSC_PORT),
+            VAR_OSC_PORT=StringVar(value=config.OSC_PORT),
         )
 
 
@@ -554,5 +557,57 @@ class View():
 
     def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+
+
+
+    def setGuiVariable_MicEnergyThreshold(self, slider_value:int, entry_value:Union[None, str]=None):
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(slider_value)
+        if entry_value is None:
+            self._clearEntryBox(vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold)
+        else:
+            self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(entry_value)
+
+    def setGuiVariable_SpeakerEnergyThreshold(self, slider_value:int, entry_value:Union[None, str]=None):
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(slider_value)
+        if entry_value is None:
+            self._clearEntryBox(vrct_gui.config_window.sb__progressbar_x_slider__entry_speaker_energy_threshold)
+        else:
+            self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(entry_value)
+
+
+
+    def setGuiVariable_MicRecordTimeout(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_record_timeout)
+        self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(value)
+
+    def setGuiVariable_MicPhraseTimeout(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_phrase_timeout)
+        self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(value)
+
+    def setGuiVariable_MicMaxPhrases(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_max_phrases)
+        self.view_variable.VAR_MIC_MAX_PHRASES.set(value)
+
+
+
+    def setGuiVariable_SpeakerRecordTimeout(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_record_timeout)
+        self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(value)
+
+    def setGuiVariable_SpeakerPhraseTimeout(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_phrase_timeout)
+        self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(value)
+
+    def setGuiVariable_SpeakerMaxPhrases(self, value:str="", delete=False):
+        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_max_phrases)
+        self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(value)
+
+
+    @staticmethod
+    def _clearEntryBox(entry_widget):
+        entry_widget.delete(0, CTK_END)
+
+
+
 
 view = View()
