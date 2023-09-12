@@ -245,29 +245,36 @@ class View():
 
 
 
-    def register(self, sidebar_features, language_presets, entry_message_box_commands, config_window):
+    def register(self, sidebar_features=None, language_presets=None, entry_message_box_commands=None, config_window=None):
 
         self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
 
-        self.view_variable.CALLBACK_TOGGLE_TRANSLATION = sidebar_features["callback_toggle_translation"]
-        self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features["callback_toggle_transcription_send"]
-        self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features["callback_toggle_transcription_receive"]
-        self.view_variable.CALLBACK_TOGGLE_FOREGROUND = sidebar_features["callback_toggle_foreground"]
+        if sidebar_features is not None:
+            self.view_variable.CALLBACK_TOGGLE_TRANSLATION = sidebar_features.get("callback_toggle_translation", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features.get("callback_toggle_transcription_send", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features.get("callback_toggle_transcription_receive", None)
+            self.view_variable.CALLBACK_TOGGLE_FOREGROUND = sidebar_features.get("callback_toggle_foreground", None)
 
-        self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = language_presets["callback_your_language"]
-        self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = language_presets["callback_target_language"]
-        self.updateList_selectableLanguages(language_presets["values"])
+        if language_presets is not None:
+            self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = language_presets.get("callback_your_language", None)
+            self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = language_presets.get("callback_target_language", None)
+            language_presets.get("values", None) and self.updateList_selectableLanguages(language_presets["values"])
+
+            self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets.get("callback_selected_language_preset_tab", None)
+
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-
-        self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets["callback_selected_language_preset_tab"]
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
+
+
 
         self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
         self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
 
         entry_message_box = getattr(vrct_gui, "entry_message_box")
-        entry_message_box.bind("<Return>", entry_message_box_commands["bind_Return"])
-        entry_message_box.bind("<Any-KeyPress>", entry_message_box_commands["bind_Any_KeyPress"])
+        if entry_message_box_commands is not None:
+            entry_message_box.bind("<Return>", entry_message_box_commands.get("bind_Return"))
+            entry_message_box.bind("<Any-KeyPress>", entry_message_box_commands.get("bind_Any_KeyPress"))
+
 
         entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
         entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
@@ -275,57 +282,59 @@ class View():
 
         # Config Window
         # Compact Mode Switch
-        self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_disable_config_window_compact_mode"]
-        self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window["callback_enable_config_window_compact_mode"]
+        if config_window is not None:
+
+            self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window.get("callback_disable_config_window_compact_mode", None)
+            self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window.get("callback_enable_config_window_compact_mode", None)
 
 
-        # Appearance Tab
-        self.view_variable.CALLBACK_SET_TRANSPARENCY = config_window["callback_set_transparency"]
+            # Appearance Tab
+            self.view_variable.CALLBACK_SET_TRANSPARENCY = config_window.get("callback_set_transparency", None)
 
-        self.view_variable.CALLBACK_SET_APPEARANCE = config_window["callback_set_appearance"]
-        self.view_variable.CALLBACK_SET_UI_SCALING = config_window["callback_set_ui_scaling"]
-        self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window["callback_set_font_family"]
-        self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window["callback_set_ui_language"]
+            self.view_variable.CALLBACK_SET_APPEARANCE = config_window.get("callback_set_appearance", None)
+            self.view_variable.CALLBACK_SET_UI_SCALING = config_window.get("callback_set_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window.get("callback_set_font_family", None)
+            self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window.get("callback_set_ui_language", None)
 
 
-        # Translation Tab
-        self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window["callback_set_deepl_authkey"]
+            # Translation Tab
+            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window.get("callback_set_deepl_authkey", None)
 
-        # Transcription Tab (Mic)
-        self.view_variable.CALLBACK_SET_MIC_HOST = config_window["callback_set_mic_host"]
-        self.updateList_MicHost(config_window["list_mic_host"])
+            # Transcription Tab (Mic)
+            self.view_variable.CALLBACK_SET_MIC_HOST = config_window.get("callback_set_mic_host", None)
+            config_window.get("list_mic_host", None) and self.updateList_MicHost(config_window["list_mic_host"])
 
-        self.view_variable.CALLBACK_SET_MIC_DEVICE = config_window["callback_set_mic_device"]
-        self.updateList_MicDevice(config_window["list_mic_device"])
+            self.view_variable.CALLBACK_SET_MIC_DEVICE = config_window.get("callback_set_mic_device", None)
+            config_window.get("list_mic_device", None) and self.updateList_MicDevice(config_window["list_mic_device"])
 
-        self.view_variable.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window["callback_set_mic_energy_threshold"]
-        self.view_variable.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_mic_dynamic_energy_threshold"]
-        self.view_variable.CALLBACK_CHECK_MIC_THRESHOLD = config_window["callback_check_mic_threshold"]
-        self.view_variable.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window["callback_set_mic_record_timeout"]
-        self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window["callback_set_mic_phrase_timeout"]
-        self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window["callback_set_mic_max_phrases"]
-        self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window["callback_set_mic_word_filter"]
+            self.view_variable.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window.get("callback_set_mic_energy_threshold", None)
+            self.view_variable.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window.get("callback_set_mic_dynamic_energy_threshold", None)
+            self.view_variable.CALLBACK_CHECK_MIC_THRESHOLD = config_window.get("callback_check_mic_threshold", None)
+            self.view_variable.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window.get("callback_set_mic_record_timeout", None)
+            self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window.get("callback_set_mic_phrase_timeout", None)
+            self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window.get("callback_set_mic_max_phrases", None)
+            self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window.get("callback_set_mic_word_filter", None)
 
-        # Transcription Tab (Speaker)
-        self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window["callback_set_speaker_device"]
-        self.updateList_SpeakerDevice(config_window["list_speaker_device"])
+            # Transcription Tab (Speaker)
+            self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window.get("callback_set_speaker_device", None)
+            config_window.get("list_speaker_device", None) and self.updateList_SpeakerDevice(config_window["list_speaker_device"])
 
-        self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window["callback_set_speaker_energy_threshold"]
-        self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window["callback_set_speaker_dynamic_energy_threshold"]
-        self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window["callback_check_speaker_threshold"]
-        self.view_variable.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window["callback_set_speaker_record_timeout"]
-        self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window["callback_set_speaker_phrase_timeout"]
-        self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window["callback_set_speaker_max_phrases"]
+            self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window.get("callback_set_speaker_energy_threshold", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window.get("callback_set_speaker_dynamic_energy_threshold", None)
+            self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window.get("callback_check_speaker_threshold", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window.get("callback_set_speaker_record_timeout", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window.get("callback_set_speaker_phrase_timeout", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window.get("callback_set_speaker_max_phrases", None)
 
-        # Others Tab
-        self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window["callback_set_enable_auto_clear_chatbox"]
-        self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window["callback_set_enable_notice_xsoverlay"]
-        self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window.get("callback_set_enable_auto_export_message_logs", None)
-        self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window["callback_set_message_format"]
+            # Others Tab
+            self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window.get("callback_set_enable_auto_clear_chatbox", None)
+            self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window.get("callback_set_enable_notice_xsoverlay", None)
+            self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window.get("callback_set_enable_auto_export_message_logs", None)
+            self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window.get("callback_set_message_format", None)
 
-        # Advanced Settings Tab
-        self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window["callback_set_osc_ip_address"]
-        self.view_variable.CALLBACK_SET_OSC_PORT = config_window["callback_set_osc_port"]
+            # Advanced Settings Tab
+            self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window.get("callback_set_osc_ip_address", None)
+            self.view_variable.CALLBACK_SET_OSC_PORT = config_window.get("callback_set_osc_port", None)
 
 
 
