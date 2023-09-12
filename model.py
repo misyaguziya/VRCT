@@ -135,21 +135,27 @@ class Model:
         return list(self.translator.translator_status.keys())
 
     def getInputTranslate(self, message):
-        translation = self.translator.translate(
-                        translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.SOURCE_LANGUAGE,
-                        target_language=config.TARGET_LANGUAGE,
-                        message=message
-                )
+        try:
+            translation = self.translator.translate(
+                            translator_name=config.CHOICE_TRANSLATOR,
+                            source_language=config.SOURCE_LANGUAGE,
+                            target_language=config.TARGET_LANGUAGE,
+                            message=message
+                    )
+        except:
+            translation = None
         return translation
 
     def getOutputTranslate(self, message):
-        translation = self.translator.translate(
-                        translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.TARGET_LANGUAGE,
-                        target_language=config.SOURCE_LANGUAGE,
-                        message=message
-                )
+        try:
+            translation = self.translator.translate(
+                            translator_name=config.CHOICE_TRANSLATOR,
+                            source_language=config.TARGET_LANGUAGE,
+                            target_language=config.SOURCE_LANGUAGE,
+                            message=message
+                    )
+        except:
+            translation = None
         return translation
 
     def addKeywords(self):
