@@ -426,14 +426,14 @@ if config.ENABLE_LOGGER is True:
 
 # set UI and callback
 view.register(
-    sidebar_features={
+    sidebar_features_registers={
         "callback_toggle_translation": callbackToggleTranslation,
         "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
         "callback_toggle_transcription_receive": callbackToggleTranscriptionReceive,
         "callback_toggle_foreground": callbackToggleForeground,
     },
 
-    language_presets={
+    language_presets_registers={
         "callback_your_language": setYourLanguageAndCountry,
         "callback_target_language": setTargetLanguageAndCountry,
         "values": model.getListLanguageAndCountry(),
@@ -441,12 +441,12 @@ view.register(
         "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
     },
 
-    entry_message_box_commands={
+    entry_message_box_registers={
         "bind_Return": messageBoxPressKeyEnter,
         "bind_Any_KeyPress": messageBoxPressKeyAny,
     },
 
-    config_window={
+    config_window_registers={
         # Compact Mode Switch
         "callback_disable_config_window_compact_mode": callbackEnableConfigWindowCompactMode,
         "callback_enable_config_window_compact_mode": callbackDisableConfigWindowCompactMode,
