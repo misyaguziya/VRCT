@@ -33,7 +33,9 @@ def sendMicMessage(message):
 
             view.printToTextbox_SentMessage(message, translation)
             if config.ENABLE_LOGGER is True:
-                model.logger.info(f"[SEND] {message} ({translation})")
+                if len(translation) > 0:
+                    translation = f" ({translation})"
+                model.logger.info(f"[SEND] {message}{translation}")
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage)
@@ -61,7 +63,9 @@ def receiveSpeakerMessage(message):
                 model.notificationXSOverlay(xsoverlay_message)
             view.printToTextbox_ReceivedMessage(message, translation)
             if config.ENABLE_LOGGER is True:
-                model.logger.info(f"[RECEIVE] {message} ({translation})")
+                if len(translation) > 0:
+                    translation = f" ({translation})"
+                model.logger.info(f"[RECEIVE] {message}{translation}")
 
 def startTranscriptionReceiveMessage():
     model.startSpeakerTranscript(receiveSpeakerMessage)
@@ -97,7 +101,9 @@ def sendChatMessage(message):
         # update textbox message log
         view.printToTextbox_SentMessage(message, translation)
         if config.ENABLE_LOGGER is True:
-            model.logger.info(f"[SEND] {message} ({translation})")
+            if len(translation) > 0:
+                translation = f" ({translation})"
+            model.logger.info(f"[SEND] {message}{translation}")
 
         # delete message in entry message box
         if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
@@ -386,6 +392,15 @@ def callbackSetEnableNoticeXsoverlay(value):
     print("callbackSetEnableNoticeXsoverlay", value)
     config.ENABLE_NOTICE_XSOVERLAY = value
 
+def callbackSetEnableAutoExportMessageLogs(value):
+    print("callbackSetEnableAutoExportMessageLogs", value)
+    config.ENABLE_LOGGER = value
+
+    if config.ENABLE_LOGGER is True:
+        model.startLogger()
+    else:
+        model.stopLogger()
+
 def callbackSetMessageFormat(value):
     print("callbackSetMessageFormat", value)
     if len(value) > 0:
@@ -487,6 +502,7 @@ view.register(
         # Others Tab
         "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
         "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
+        "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
         "callback_set_message_format": callbackSetMessageFormat,
 
         # Advanced Settings Tab
