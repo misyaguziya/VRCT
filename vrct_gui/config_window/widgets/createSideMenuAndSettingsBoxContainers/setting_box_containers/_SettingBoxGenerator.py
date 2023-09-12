@@ -186,7 +186,8 @@ class _SettingBoxGenerator():
         passive_button_attr_name, passive_button_command,
         active_button_attr_name, active_button_command,
         button_image_file,
-        variable,
+        entry_variable,
+        slider_variable,
 
         slider_number_of_steps: Union[int, None] = None,
         ):
@@ -205,28 +206,15 @@ class _SettingBoxGenerator():
         BUTTON_PADDING = int(BAR_WIDTH + BAR_PADDING + self.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_RIGHT_PADX)
 
         def adjusted_command__for_entry_bind__Any_KeyRelease(e):
-            # try:
-            #     int(e.widget.get())
-            # except:
-            #     e.widget.delete(0, CTK_END)
-            #     return
-            # print(int(e.widget.get()))
-
-
-            i = int(e.widget.get())
-            if i < 0 or i > slider_range[1]:
-                e.widget.delete(0, CTK_END)
-                i = max(0, min(int(e.widget.get()), slider_range[1]))
-                # e.widget.insert(0, i)
-            command(i)
+            command(e.widget.get())
         def adjusted_command__for_slider(value):
-            command(int(value))
+            command(value)
 
         entry_widget = CTkEntry(
             setting_box_progressbar_x_slider_frame,
             width=ENTRY_WIDTH,
             height=self.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
-            textvariable=variable,
+            textvariable=entry_variable,
             font=CTkFont(family=self.FONT_FAMILY, size=self.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
         )
 
@@ -244,7 +232,7 @@ class _SettingBoxGenerator():
             to=slider_range[1],
             number_of_steps=slider_number_of_steps,
             command=adjusted_command__for_slider,
-            variable=variable,
+            variable=slider_variable,
             height=self.uism.SB__PROGRESSBAR_X_SLIDER__SLIDER_HEIGHT,
             width=BAR_WIDTH,
             border_width=0,

@@ -55,12 +55,14 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         for_var_label_text=view_variable.VAR_LABEL_SPEAKER_ENERGY_THRESHOLD,
         for_var_desc_text=view_variable.VAR_DESC_SPEAKER_ENERGY_THRESHOLD,
         command=slider_input_speaker_energy_threshold_callback,
-        variable=view_variable.VAR_SPEAKER_ENERGY_THRESHOLD,
+
+        entry_variable=view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY,
         entry_attr_name="sb__progressbar_x_slider__entry_speaker_energy_threshold",
 
 
         slider_attr_name="progressbar_x_slider__slider_speaker_energy_threshold",
         slider_range=view_variable.SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD,
+        slider_variable=view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER,
 
         progressbar_attr_name="sb__progressbar_x_slider__progressbar_speaker_energy_threshold",
 
