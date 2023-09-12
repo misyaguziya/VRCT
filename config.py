@@ -389,6 +389,15 @@ class Config:
             self._ENABLE_OSC = value
 
     @property
+    def ENABLE_OSC_ERROR_LOG(self):
+        return self._ENABLE_OSC_ERROR_LOG
+
+    @ENABLE_OSC_ERROR_LOG.setter
+    def ENABLE_OSC_ERROR_LOG(self, value):
+        if type(value) is bool:
+            self._ENABLE_OSC_ERROR_LOG = value
+
+    @property
     def UPDATE_FLAG(self):
         return self._UPDATE_FLAG
 
@@ -507,6 +516,7 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_OSC = False
+        self._ENABLE_OSC_ERROR_LOG = True
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         # self._BREAK_KEYSYM_LIST = [
