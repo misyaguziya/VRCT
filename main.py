@@ -19,6 +19,10 @@ def sendMicMessage(message):
         else:
             translation = model.getInputTranslate(message)
 
+        if translation == None:
+            view.printToTextbox_AuthenticationError()
+            translation = ""
+
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_OSC is True:
                 if len(translation) > 0:
@@ -56,6 +60,10 @@ def receiveSpeakerMessage(message):
         else:
             translation = model.getOutputTranslate(message)
 
+        if translation == None:
+            view.printToTextbox_AuthenticationError()
+            translation = ""
+
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
                 xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
@@ -85,6 +93,10 @@ def sendChatMessage(message):
             view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
+
+        if translation == None:
+            view.printToTextbox_AuthenticationError()
+            translation = ""
 
         # send OSC message
         if config.ENABLE_OSC is True:
