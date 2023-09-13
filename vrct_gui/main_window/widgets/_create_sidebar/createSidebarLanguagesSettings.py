@@ -51,29 +51,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-
-
-    def createOption_DropdownMenu_for_languageSettings(setattr_obj, parent_widget, optionmenu_attr_name, dropdown_menu_values, command, width:int = 200, font_size:int = 10, text_color="white", variable=""):
-        setattr(setattr_obj, optionmenu_attr_name, CTkOptionMenu(
-            parent_widget,
-            height=30,
-            width=width,
-            values=dropdown_menu_values,
-            button_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR,
-            fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR,
-            text_color=text_color,
-            font=CTkFont(family=settings.FONT_FAMILY, size=font_size, weight="normal"),
-            variable=variable,
-            anchor="center",
-            command=command,
-        ))
-        target_optionmenu_attr = getattr(setattr_obj, optionmenu_attr_name)
-        target_optionmenu_attr.grid(row=0, column=0, sticky="e")
-
-
-
-
-    def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, arrow_img_attr_name, dropdown_menu_values, open_selectable_language_window_command, variable):
+    def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, arrow_img_attr_name, open_selectable_language_window_command, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
         sls__box.columnconfigure((0,2), weight=1)
@@ -102,11 +80,11 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
         sls__selected_language_box.columnconfigure(0, minsize=200)
         sls__selected_language_box.rowconfigure(0, minsize=30)
-        sls__selected_language_label = CTkFrame(sls__selected_language_box, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
-        sls__selected_language_label.grid(row=0, column=0)
+        sls__selected_language_label_frame = CTkFrame(sls__selected_language_box, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
+        sls__selected_language_label_frame.grid(row=0, column=0)
 
         sls__selected_language_label = CTkLabel(
-            sls__selected_language_label,
+            sls__selected_language_label_frame,
             textvariable=variable,
             height=0,
             # anchor="center",
@@ -133,12 +111,12 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-        # bindEnterAndLeaveColor([self.wrapper, label_widget], self.settings.ctm.LANGUAGE_BUTTON_BG_HOVERED_COLOR, self.settings.ctm.LANGUAGE_BUTTON_BG_COLOR)
-        # bindButtonPressColor([self.wrapper, label_widget], self.settings.ctm.LANGUAGE_BUTTON_BG_CLICKED_COLOR, self.settings.ctm.LANGUAGE_BUTTON_BG_COLOR)
+        bindEnterAndLeaveColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label], settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
+        bindButtonPressColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label], settings.ctm.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR)
 
 
 
-        bindButtonReleaseFunction([sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], open_selectable_language_window_command)
+        bindButtonReleaseFunction([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], open_selectable_language_window_command)
 
         return sls__box
 
@@ -251,7 +229,6 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         var_title_text=view_variable.VAR_LABEL_YOUR_LANGUAGE,
         title_text_attr_name="sls__title_text_your_language",
         arrow_img_attr_name="sls__arrow_img_your_language",
-        dropdown_menu_values=view_variable.LIST_SELECTABLE_LANGUAGES,
         open_selectable_language_window_command=callbackOpenSelectableYourLanguageWindow,
         variable=view_variable.VAR_YOUR_LANGUAGE
     )
@@ -299,7 +276,6 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         var_title_text=view_variable.VAR_LABEL_TARGET_LANGUAGE,
         title_text_attr_name="sls__title_text_target_language",
         arrow_img_attr_name="sls__arrow_img_target_language",
-        dropdown_menu_values=view_variable.LIST_SELECTABLE_LANGUAGES,
         open_selectable_language_window_command=callbackOpenSelectableTargetLanguageWindow,
         variable=view_variable.VAR_TARGET_LANGUAGE
     )

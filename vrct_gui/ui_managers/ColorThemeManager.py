@@ -151,6 +151,8 @@ class ColorThemeManager():
         self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
 
         self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.DARK_888_COLOR
+        self.main.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
+        self.main.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
@@ -179,6 +181,8 @@ class ColorThemeManager():
         self.selectable_language_window.GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR
 
 
+        self.selectable_language_window.TOP_BG_COLOR = self.main.SIDEBAR_BG_COLOR
+        self.selectable_language_window.TITLE_TEXT_COLOR = self.DARK_400_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
 

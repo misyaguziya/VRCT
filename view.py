@@ -70,6 +70,7 @@ class View():
             VAR_LABEL_YOUR_LANGUAGE=StringVar(value="Your Language"), # JA: あなたの言語
             VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
             CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=None,
+            IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value="Translate Each Other"), # JA: 双方向に翻訳
@@ -77,6 +78,7 @@ class View():
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
             CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=None,
+            IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
 
@@ -86,6 +88,9 @@ class View():
             VAR_LABEL_TEXTBOX_SYSTEM=StringVar(value="System"), # JA: システム
 
 
+            # Selectable Language Window
+            VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
+            VAR_GO_BACK_LABEL_SELECTABLE_LANGUAGE=StringVar(value="Go Back"),
 
 
 
@@ -381,8 +386,10 @@ class View():
         vrct_gui.recreateMainWindowSidebar()
 
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set("Your Language")
         vrct_gui.openSelectableLanguagesWindow("your_language")
     def openSelectableLanguagesWindow_TargetLanguage(self, _e):
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set("Target Language")
         vrct_gui.openSelectableLanguagesWindow("target_language")
 
 
@@ -430,8 +437,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Info(info_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, info_message, "", "INFO")
-        vrct_gui.printToTextbox(vrct_gui.textbox_system, info_message, "", "INFO")
+        vrct_gui.printToTextbox(
+            target_type="INFO",
+            original_message=info_message,
+            translated_message="",
+        )
 
 
 
@@ -440,8 +450,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Sent(original_message, translated_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "SEND")
-        vrct_gui.printToTextbox(vrct_gui.textbox_sent, original_message, translated_message, "SEND")
+        vrct_gui.printToTextbox(
+            target_type="SEND",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
 
 
     def printToTextbox_ReceivedMessage(self, original_message, translated_message):
@@ -449,8 +462,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Received(original_message, translated_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "RECEIVE")
-        vrct_gui.printToTextbox(vrct_gui.textbox_received, original_message, translated_message, "RECEIVE")
+        vrct_gui.printToTextbox(
+            target_type="RECEIVE",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
 
 
     @staticmethod
