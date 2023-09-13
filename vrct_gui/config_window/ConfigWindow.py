@@ -3,6 +3,8 @@ from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContai
 
 from customtkinter import CTkToplevel
 
+from ..ui_utils import getImagePath
+
 class ConfigWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
         super().__init__()
@@ -10,6 +12,7 @@ class ConfigWindow(CTkToplevel):
 
 
         # configure window
+        self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
         self.title("test config_window.py")
         self.geometry(f"{1080}x{680}")
 
