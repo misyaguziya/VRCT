@@ -13,7 +13,7 @@ class ConfigWindow(CTkToplevel):
 
         # configure window
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
-        self.title("test config_window.py")
+        self.title("Settings")
         self.geometry(f"{1080}x{680}")
 
 
