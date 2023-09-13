@@ -1,7 +1,20 @@
 from datetime import datetime
 from customtkinter import CTkFont
 
-def _printToTextbox(settings, target_textbox, original_message=None, translated_message=None, tags=None):
+def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, tags=None):
+    match (target_type):
+        case "ALL":
+            target_textbox = vrct_gui.textbox_all
+        case "INFO":
+            target_textbox = vrct_gui.textbox_system
+        case "SEND":
+            target_textbox = vrct_gui.textbox_sent
+        case "RECEIVE":
+            target_textbox = vrct_gui.textbox_received
+        case (_):
+            raise  ValueError(f"No matching case for target_type: {target_type}")
+
+
     now_raw_data = datetime.now()
     now = now_raw_data.strftime('%H:%M:%S')
     now_hm = now_raw_data.strftime('%H:%M')
