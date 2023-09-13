@@ -9,7 +9,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
 
 
-    vrct_gui.iconbitmap(getImagePath("app.ico"))
+    vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
     vrct_gui.title("VRCT")
     vrct_gui.geometry(f"{880}x{640}")
     vrct_gui.minsize(400, 175)
