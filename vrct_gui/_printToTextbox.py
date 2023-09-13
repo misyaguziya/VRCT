@@ -1,7 +1,7 @@
 from datetime import datetime
 from customtkinter import CTkFont
 
-def _printToTextbox(settings, target_textbox, original_message, translated_message, tags=None):
+def _printToTextbox(settings, target_textbox, original_message=None, translated_message=None, tags=None):
     now_raw_data = datetime.now()
     now = now_raw_data.strftime('%H:%M:%S')
     now_hm = now_raw_data.strftime('%H:%M')
