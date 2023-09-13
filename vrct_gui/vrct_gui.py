@@ -64,13 +64,28 @@ class VRCT_GUI(CTk):
         self.config_window.grab_release()
 
 
+
+
     def openSelectableLanguagesWindow(self, selectable_language_window_type):
         if selectable_language_window_type == "your_language":
-            self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
-        elif selectable_language_window_type == "target_language":
-            self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+            if self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is False:
+                self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+                self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = True
+                self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
+            else:
+                self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
+                return
 
-        self.sls__arrow_img_target_language
+        elif selectable_language_window_type == "target_language":
+            if self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW is False:
+                self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+                self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = True
+                self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
+            else:
+                self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
+                return
+
+
         self.selectable_languages_window.createContainer(selectable_language_window_type)
         self.selectable_languages_window.deiconify()
         self.selectable_languages_window.focus_set()
@@ -81,6 +96,8 @@ class VRCT_GUI(CTk):
         self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
         self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
         self.selectable_languages_window.withdraw()
+        self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
+        self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
 
 
 
