@@ -37,13 +37,15 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
     def createContainer(self, selectable_language_window_type):
         self.selectable_language_window_type = selectable_language_window_type
 
+        self.attach.update_idletasks()
         self.x_pos = self.attach.winfo_rootx()
         self.y_pos = self.attach.winfo_rooty()
-        self.width_new = self.attach.winfo_width() - 16
-        self.height_new = self.attach.winfo_height() - 50
+        self.width_new = self.attach.winfo_width()
+        self.height_new = self.attach.winfo_height()
 
 
-        self.geometry('+{}+{}'.format(self.x_pos, self.y_pos))
+        self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
+
 
 
         if self.is_created is True:
@@ -69,16 +71,15 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def _createContainer(self):
-        # self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
-        # self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
-
-
         self.rowconfigure(0, minsize=50)
-        self.top_container = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=0, height=0)
+        self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight=1)
+        self.top_container = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.TOP_BG_COLOR, width=0, height=0)
         self.top_container.grid(row=0, column=0, sticky="nsew")
 
 
         self.top_container.rowconfigure((0,2), weight=1)
+        self.top_container.columnconfigure(1, weight=1)
         self.go_back_button_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.GO_BACK_BUTTON_BG_COLOR, width=0, height=0)
         self.go_back_button_container.grid(row=1, column=0)
 
@@ -88,16 +89,34 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
         self.go_back_button_label = CTkLabel(
             self.go_back_button_label_wrapper,
-            text="Go back",
+            textvariable=self._view_variable.VAR_GO_BACK_LABEL_SELECTABLE_LANGUAGE,
             height=0,
             corner_radius=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=14, weight="normal"),
             anchor="w",
             text_color=self.settings.ctm.BASIC_TEXT_COLOR,
         )
-        self.go_back_button_label.grid(row=1, column=0, padx=10, pady=10)
+        self.go_back_button_label.grid(row=0, column=0, padx=10, pady=8)
 
         bindButtonReleaseFunction([self.go_back_button_label_wrapper, self.go_back_button_label], lambda _e: self.vrct_gui.closeSelectableLanguagesWindow())
+
+
+
+        self.title_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.TOP_BG_COLOR, width=0, height=0)
+        self.title_container.grid(row=1, column=1, sticky="nsew")
+
+        self.title_container.columnconfigure((0,2), weight=1)
+        self.title_container.rowconfigure((0,2), weight=1)
+        self.title_label = CTkLabel(
+            self.title_container,
+            textvariable=self._view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE,
+            height=0,
+            corner_radius=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=18, weight="normal"),
+            anchor="w",
+            text_color=self.settings.ctm.TITLE_TEXT_COLOR,
+        )
+        self.title_label.grid(row=1, column=1)
 
 
 
