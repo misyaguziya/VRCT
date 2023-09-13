@@ -125,13 +125,30 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def printToTextbox(self, target_textbox, original_message, translated_message, tags=None):
+    def printToTextbox(self, target_type, original_message=None, translated_message=None):
+        match (target_type):
+            case "INFO":
+                target_textbox = self.textbox_system
+            case "SEND":
+                target_textbox = self.textbox_sent
+            case "RECEIVE":
+                target_textbox = self.textbox_received
+            case (_):
+                raise  ValueError(f"No matching case for target_type: {target_type}")
         _printToTextbox(
             settings=self.settings.main,
             target_textbox=target_textbox,
             original_message=original_message,
             translated_message=translated_message,
-            tags=tags,
+            tags=target_type,
+        )
+        # To automatically print the same log to the textbox_all widget as well.
+        _printToTextbox(
+            settings=self.settings.main,
+            target_textbox=self.textbox_all,
+            original_message=original_message,
+            translated_message=translated_message,
+            tags=target_type,
         )
 
     def setDefaultActiveLanguagePresetTab(self, tab_no:str):

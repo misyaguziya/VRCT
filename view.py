@@ -437,8 +437,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Info(info_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, info_message, "", "INFO")
-        vrct_gui.printToTextbox(vrct_gui.textbox_system, info_message, "", "INFO")
+        vrct_gui.printToTextbox(
+            target_type="INFO",
+            original_message=info_message,
+            translated_message="",
+        )
 
 
 
@@ -447,8 +450,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Sent(original_message, translated_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "SEND")
-        vrct_gui.printToTextbox(vrct_gui.textbox_sent, original_message, translated_message, "SEND")
+        vrct_gui.printToTextbox(
+            target_type="SEND",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
 
 
     def printToTextbox_ReceivedMessage(self, original_message, translated_message):
@@ -456,8 +462,11 @@ class View():
 
     @staticmethod
     def _printToTextbox_Received(original_message, translated_message):
-        vrct_gui.printToTextbox(vrct_gui.textbox_all, original_message, translated_message, "RECEIVE")
-        vrct_gui.printToTextbox(vrct_gui.textbox_received, original_message, translated_message, "RECEIVE")
+        vrct_gui.printToTextbox(
+            target_type="RECEIVE",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
 
 
     @staticmethod
