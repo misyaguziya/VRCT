@@ -49,6 +49,18 @@ def stopTranscriptionSendMessage():
     model.stopMicTranscript()
     view.setMainWindowAllWidgetsStatusToNormal()
 
+def startThreadingTranscriptionSendMessage():
+    view.printToTextbox_enableTranscriptionSend()
+    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage)
+    th_startTranscriptionSendMessage.daemon = True
+    th_startTranscriptionSendMessage.start()
+
+def stopThreadingTranscriptionSendMessage():
+    view.printToTextbox_disableTranscriptionSend()
+    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage)
+    th_stopTranscriptionSendMessage.daemon = True
+    th_stopTranscriptionSendMessage.start()
+
 # func transcription receive message
 def receiveSpeakerMessage(message):
     if len(message) > 0:
@@ -82,6 +94,18 @@ def startTranscriptionReceiveMessage():
 def stopTranscriptionReceiveMessage():
     model.stopSpeakerTranscript()
     view.setMainWindowAllWidgetsStatusToNormal()
+
+def startThreadingTranscriptionReceiveMessage():
+    view.printToTextbox_enableTranscriptionReceive()
+    th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessage)
+    th_startTranscriptionReceiveMessage.daemon = True
+    th_startTranscriptionReceiveMessage.start()
+
+def stopThreadingTranscriptionReceiveMessage():
+    view.printToTextbox_disableTranscriptionReceive()
+    th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
+    th_stopTranscriptionReceiveMessage.daemon = True
+    th_stopTranscriptionReceiveMessage.start()
 
 # func message box
 def sendChatMessage(message):
@@ -184,29 +208,17 @@ def callbackToggleTranscriptionSend(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
     config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
     if config.ENABLE_TRANSCRIPTION_SEND is True:
-        view.printToTextbox_enableTranscriptionSend()
-        th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage)
-        th_startTranscriptionSendMessage.daemon = True
-        th_startTranscriptionSendMessage.start()
+        startThreadingTranscriptionSendMessage()
     else:
-        view.printToTextbox_disableTranscriptionSend()
-        th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage)
-        th_stopTranscriptionSendMessage.daemon = True
-        th_stopTranscriptionSendMessage.start()
+        stopThreadingTranscriptionSendMessage()
 
 def callbackToggleTranscriptionReceive(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
     config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        view.printToTextbox_enableTranscriptionReceive()
-        th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessage)
-        th_startTranscriptionReceiveMessage.daemon = True
-        th_startTranscriptionReceiveMessage.start()
+        startThreadingTranscriptionReceiveMessage()
     else:
-        view.printToTextbox_disableTranscriptionReceive()
-        th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
-        th_stopTranscriptionReceiveMessage.daemon = True
-        th_stopTranscriptionReceiveMessage.start()
+        stopThreadingTranscriptionReceiveMessage()
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
@@ -217,8 +229,19 @@ def callbackToggleForeground(is_turned_on):
         view.printToTextbox_disableForeground()
         view.foregroundOff()
 
-
 # Config Window
+def callbackOpenConfigWindow():
+    if config.ENABLE_TRANSCRIPTION_SEND is True:
+        stopThreadingTranscriptionSendMessage()
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        stopThreadingTranscriptionReceiveMessage()
+
+def callbackCloseConfigWindow():
+    if config.ENABLE_TRANSCRIPTION_SEND is True:
+        startThreadingTranscriptionSendMessage()
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        startThreadingTranscriptionReceiveMessage()
+
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
