@@ -67,7 +67,7 @@ class Model:
         self.translator = Translator()
 
     def resetKeywordProcessor(self):
-        del self.translator
+        del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
 
     def authenticationTranslator(self, fnc, choice_translator=None, auth_key=None):
