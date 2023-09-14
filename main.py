@@ -241,6 +241,8 @@ def callbackCloseConfigWindow():
         startThreadingTranscriptionSendMessage()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessage()
+    model.stopCheckMicEnergy()
+    model.stopCheckSpeakerEnergy()
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
