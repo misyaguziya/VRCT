@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from customtkinter import CTk, CTkImage
 
 # from window_help_and_info import ToplevelWindowInformation
@@ -14,8 +12,9 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab
 
-from .main_window.widgets import createSidebar, createMinimizeSidebarButton
+from .main_window.widgets import createMinimizeSidebarButton
 
+from utils import callFunctionIfCallable
 
 class VRCT_GUI(CTk):
     def __init__(self):
@@ -54,12 +53,14 @@ class VRCT_GUI(CTk):
 
 
     def openConfigWindow(self, e):
+        callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
         self.config_window.deiconify()
         self.config_window.focus_set()
         self.config_window.focus()
         self.config_window.grab_set()
 
     def closeConfigWindow(self):
+        callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
         self.config_window.withdraw()
         self.config_window.grab_release()
 
@@ -67,6 +68,9 @@ class VRCT_GUI(CTk):
 
 
     def openSelectableLanguagesWindow(self, selectable_language_window_type):
+        # print("___________________________________open____________________________________________________")
+        # print("your", self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW)
+        # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
         if selectable_language_window_type == "your_language":
             if self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is False:
                 self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
@@ -96,8 +100,16 @@ class VRCT_GUI(CTk):
         self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
         self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
         self.selectable_languages_window.withdraw()
-        self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
-        self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
+
+
+        # print("______________________________________close_________________________________________________")
+        # print("your", self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW)
+        # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
+        if self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW is not False or self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is not False:
+            def callback():
+                self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
+                self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
+            self.after(500,callback)
 
 
 
@@ -125,14 +137,13 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def printToTextbox(self, target_type, original_message=None, translated_message=None, actual_sent_message=None):
+    def printToTextbox(self, target_type, original_message=None, translated_message=None):
         _printToTextbox(
             vrct_gui=self,
             settings=self.settings.main,
             target_type=target_type,
             original_message=original_message,
             translated_message=translated_message,
-            actual_sent_message=actual_sent_message,
             tags=target_type,
         )
 
