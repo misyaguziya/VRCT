@@ -125,22 +125,14 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def printToTextbox(self, target_type, original_message=None, translated_message=None):
+    def printToTextbox(self, target_type, original_message=None, translated_message=None, actual_sent_message=None):
         _printToTextbox(
             vrct_gui=self,
             settings=self.settings.main,
             target_type=target_type,
             original_message=original_message,
             translated_message=translated_message,
-            tags=target_type,
-        )
-        # To automatically print the same log to the textbox_all widget as well.
-        _printToTextbox(
-            vrct_gui=self,
-            settings=self.settings.main,
-            target_type="ALL",
-            original_message=original_message,
-            translated_message=translated_message,
+            actual_sent_message=actual_sent_message,
             tags=target_type,
         )
 

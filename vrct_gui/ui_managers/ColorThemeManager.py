@@ -38,6 +38,7 @@ class ColorThemeManager():
         self.DARK_200_COLOR = "#f1f2f6"
         self.DARK_300_COLOR = "#e9eaee"
         self.DARK_400_COLOR = "#c7c8cc"
+        self.DARK_450_COLOR = "#b8b9bd"
         self.DARK_500_COLOR = "#a9aaae"
         self.DARK_600_COLOR = "#7f8084"
         self.DARK_700_COLOR = "#6a6c6f"
@@ -95,6 +96,13 @@ class ColorThemeManager():
 
         self.main.TEXTBOX_BG_COLOR = self.DARK_900_COLOR
         self.main.TEXTBOX_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+        self.main.TEXTBOX_TEXT_SUB_COLOR = self.DARK_450_COLOR
+        self.main.TEXTBOX_SYSTEM_TAG_TEXT_COLOR = self.PRIMARY_300_COLOR
+        self.main.TEXTBOX_SENT_TAG_TEXT_COLOR = "#6197b4"
+        self.main.TEXTBOX_RECEIVED_TAG_TEXT_COLOR = "#a861b4"
+        self.main.TEXTBOX_ERROR_TAG_TEXT_COLOR = "#c27583"
+        self.main.TEXTBOX_TIMESTAMP_TEXT_COLOR = self.DARK_600_COLOR
+
         self.main.TEXTBOX_TAB_BG_PASSIVE_COLOR = self.DARK_850_COLOR
         self.main.TEXTBOX_TAB_BG_ACTIVE_COLOR = self.main.TEXTBOX_BG_COLOR
         self.main.TEXTBOX_TAB_BG_HOVERED_COLOR = self.DARK_800_COLOR
