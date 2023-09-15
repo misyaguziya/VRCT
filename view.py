@@ -509,15 +509,15 @@ class View():
 
     # Config Window
     @staticmethod
-    def setConfigWindowCompactModeSwitchStatusToDisabled():
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
 
     @staticmethod
-    def setConfigWindowCompactModeSwitchStatusToNormal():
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
     @staticmethod
-    def setConfigWindowThresholdCheckWidgetsStatusToDisabled():
+    def setWidgetsStatus_ThresholdCheckButton_Disabled():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="disabled",
             target_names=[
@@ -527,7 +527,7 @@ class View():
         )
 
     @staticmethod
-    def setConfigWindowThresholdCheckWidgetsStatusToNormal():
+    def setWidgetsStatus_ThresholdCheckButton_Normal():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="normal",
             target_names=[
@@ -537,24 +537,24 @@ class View():
         )
 
     @staticmethod
-    def replaceConfigWindowMicThresholdCheckButtonToActive():
+    def replaceMicThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
 
     @staticmethod
-    def replaceConfigWindowMicThresholdCheckButtonToPassive():
+    def replaceMicThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
 
     @staticmethod
-    def replaceConfigWindowSpeakerThresholdCheckButtonToActive():
+    def replaceSpeakerThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
 
     @staticmethod
-    def replaceConfigWindowSpeakerThresholdCheckButtonToPassive():
+    def replaceSpeakerThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
