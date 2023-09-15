@@ -145,12 +145,12 @@ def createTextbox(settings, main_window, view_variable):
             corner_radius=settings.uism.TEXTBOX_CORNER_RADIUS,
             fg_color=settings.ctm.TEXTBOX_BG_COLOR,
             text_color="lime", # Textbox's text_color is set when printing. so this is for prevent from non-setting text_color like the gloves used in food factories are blue.
+            wrap="word",
         ))
         textbox_widget = getattr(main_window, textbox_setting["textbox_attr_name"])
         textbox_widget.grid(row=0, column=0, padx=settings.uism.TEXTBOX_PADX, pady=0, sticky="nsew")
         textbox_widget.grid_remove()
         textbox_widget.configure(state="disabled")
-        # print_textbox(main_window, textbox_widget, "send", textbox_setting["textbox_attr_name"], "SEND")
 
         column+=1
 
