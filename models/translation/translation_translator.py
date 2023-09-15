@@ -13,23 +13,23 @@ class Translator():
 
     def authentication(self, translator_name, authkey=None):
         result = False
-        try:
-            if translator_name == "DeepL(web)":
-                self.translator_status["DeepL(web)"] = True
-                result = True
-            elif translator_name == "DeepL(auth)":
+        if translator_name == "DeepL(web)":
+            self.translator_status[translator_name] = True
+            result = True
+        elif translator_name == "DeepL(auth)":
+            try:
                 self.deepl_client = deepl_Translator(authkey)
                 self.deepl_client.translate_text(" ", target_lang="EN-US")
-                self.translator_status["DeepL(auth)"] = True
+                self.translator_status[translator_name] = True
                 result = True
-            elif translator_name == "Google(web)":
-                self.translator_status["Google(web)"] = True
-                result = True
-            elif translator_name == "Bing(web)":
-                self.translator_status["Bing(web)"] = True
-                result = True
-        except:
-            pass
+            except:
+                self.translator_status[translator_name] = False
+        elif translator_name == "Google(web)":
+            self.translator_status[translator_name] = True
+            result = True
+        elif translator_name == "Bing(web)":
+            self.translator_status[translator_name] = True
+            result = True
         return result
 
     def translate(self, translator_name, source_language, target_language, message):
