@@ -14,7 +14,7 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab
 
-from .main_window.widgets import createSidebar, createMinimizeSidebarButton
+from .main_window.widgets import createMinimizeSidebarButton
 
 
 class VRCT_GUI(CTk):
@@ -125,14 +125,13 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def printToTextbox(self, target_type, original_message=None, translated_message=None, actual_sent_message=None):
+    def printToTextbox(self, target_type, original_message=None, translated_message=None):
         _printToTextbox(
             vrct_gui=self,
             settings=self.settings.main,
             target_type=target_type,
             original_message=original_message,
             translated_message=translated_message,
-            actual_sent_message=actual_sent_message,
             tags=target_type,
         )
 

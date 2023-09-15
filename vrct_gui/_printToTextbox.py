@@ -1,7 +1,7 @@
 from datetime import datetime
 from customtkinter import CTkFont
 
-def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, actual_sent_message=None, tags=None, disable_print_to_textbox_all:bool=False):
+def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, tags=None, disable_print_to_textbox_all:bool=False):
     now_raw_data = datetime.now()
     # now = now_raw_data.strftime("%H:%M:%S")
     now_hm = now_raw_data.strftime("%H:%M")
@@ -72,8 +72,6 @@ def _printToTextbox(vrct_gui, settings, target_type, original_message=None, tran
                     target_textbox.insert("end", original_message, ("SENT_SUB_TEXT", "SENT_SECONDARY_TEXT_FONT", "JUSTIFY_RIGHT"))
                     target_textbox.insert("end", "\n")
                     target_textbox.insert("end", translated_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
-                    # _actual_sent_message = "" if actual_sent_message is None else actual_sent_message
-                    # target_textbox.insert("end", _actual_sent_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
                 else:
                     target_textbox.insert("end", original_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
 
@@ -96,25 +94,3 @@ def _printToTextbox(vrct_gui, settings, target_type, original_message=None, tran
 
     # To automatically print the same log to the textbox_all widget as well.
     if disable_print_to_textbox_all is not True: printEachTextbox(vrct_gui.textbox_all)
-
-
-
-    # target_textbox.tag_config("ERROR", foreground="#FF0000")
-
-    # target_textbox.tag_config("SYSTEM", justify="center")
-    # target_textbox.tag_config("SYSTEM_TAG", foreground="#1BFF00")
-
-    # target_textbox.tag_config("SENT", justify="left")
-    # target_textbox.tag_config("SENT_COLOR", foreground="#0378e2")
-
-    # target_textbox.tag_config("RECEIVED", justify="left")
-    # target_textbox.tag_config("RECEIVED_COLOR", foreground="#ffa500")
-
-
-    # target_textbox.configure(state="normal")
-    # target_textbox.insert("end", f"[{tags}]  ", ("START", "LABEL", tags, f"{tags}_COLOR"))
-    # target_textbox.insert("end", f"{now_hm}  ", ("TIMESTAMP", tags))
-    # target_textbox.insert("end", f"{original_message}\n", ("SECONDARY_TEXT_FONT", "MAIN_TEXT_COLOR", tags))
-    # target_textbox.insert("end", f"{translated_message}\n", ("MAIN_TEXT_FONT", "MAIN_TEXT_COLOR", tags))
-    # target_textbox.configure(state="disabled")
-    # target_textbox.see("end")
