@@ -1,48 +1,120 @@
 from datetime import datetime
 from customtkinter import CTkFont
 
-def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, tags=None):
+def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, actual_sent_message=None, tags=None, disable_print_to_textbox_all:bool=False):
+    now_raw_data = datetime.now()
+    # now = now_raw_data.strftime("%H:%M:%S")
+    now_hm = now_raw_data.strftime("%H:%M")
+    # set target textbox widget
+
+    is_only_one_message = True if original_message is None or translated_message is None or translated_message == "" else False
+
     match (target_type):
-        case "ALL":
-            target_textbox = vrct_gui.textbox_all
-        case "INFO":
+        case "SYSTEM":
             target_textbox = vrct_gui.textbox_system
-        case "SEND":
+        case "SENT":
             target_textbox = vrct_gui.textbox_sent
-        case "RECEIVE":
+        case "RECEIVED":
             target_textbox = vrct_gui.textbox_received
         case (_):
             raise  ValueError(f"No matching case for target_type: {target_type}")
 
 
-    now_raw_data = datetime.now()
-    now = now_raw_data.strftime('%H:%M:%S')
-    now_hm = now_raw_data.strftime('%H:%M')
+    def printEachTextbox(target_textbox):
+        target_textbox.tag_config("JUSTIFY_CENTER", justify="center")
+        target_textbox.tag_config("JUSTIFY_RIGHT", justify="right")
+        target_textbox.tag_config("JUSTIFY_LEFT", justify="left")
 
-    target_textbox.tag_config("NORMAL_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_COLOR)
+        # common tag settings
+        # target_textbox._textbox.tag_configure("START", spacing1=16)
+        target_textbox._textbox.tag_configure("LABEL", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
+        target_textbox._textbox.tag_configure("TIMESTAMP", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"), foreground=settings.ctm.TEXTBOX_TIMESTAMP_TEXT_COLOR)
+        target_textbox._textbox.tag_configure("SECONDARY_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
+        target_textbox._textbox.tag_configure("MAIN_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=16, weight="normal"))
 
-    target_textbox.tag_config("ERROR", foreground="#FF0000")
+        # System Tag Settings
+        target_textbox.tag_config("SYSTEM_FOR_FIRST_INSERT", spacing1=16)
+        target_textbox.tag_config("SYSTEM_TAG", foreground=settings.ctm.TEXTBOX_SYSTEM_TAG_TEXT_COLOR)
+        target_textbox.tag_config("SYSTEM_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_SUB_COLOR)
+        target_textbox._textbox.tag_configure("SYSTEM_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
 
-    target_textbox.tag_config("INFO", justify="center")
-    target_textbox.tag_config("INFO_COLOR", foreground="#1BFF00")
+        # Sent Tag Settings
+        target_textbox.tag_config("SENT_FOR_FIRST_INSERT", spacing1=16)
+        target_textbox.tag_config("SENT_TAG", foreground=settings.ctm.TEXTBOX_SENT_TAG_TEXT_COLOR)
+        target_textbox.tag_config("SENT_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_COLOR)
+        target_textbox.tag_config("SENT_SUB_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_SUB_COLOR)
+        target_textbox._textbox.tag_configure("SENT_MAIN_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=16, weight="normal"))
+        target_textbox._textbox.tag_configure("SENT_SECONDARY_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
 
-    target_textbox.tag_config("SEND", justify="left")
-    target_textbox.tag_config("SEND_COLOR", foreground="#0378e2")
+        # Received Tag Settings
+        target_textbox.tag_config("RECEIVED_FOR_FIRST_INSERT", spacing1=16)
+        target_textbox.tag_config("RECEIVED_TAG", foreground=settings.ctm.TEXTBOX_RECEIVED_TAG_TEXT_COLOR)
+        target_textbox.tag_config("RECEIVED_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_COLOR)
+        target_textbox.tag_config("RECEIVED_SUB_TEXT", foreground=settings.ctm.TEXTBOX_TEXT_SUB_COLOR)
+        target_textbox._textbox.tag_configure("RECEIVED_MAIN_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=16, weight="normal"))
+        target_textbox._textbox.tag_configure("RECEIVED_SECONDARY_TEXT_FONT", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
 
-    target_textbox.tag_config("RECEIVE", justify="left")
-    target_textbox.tag_config("RECEIVE_COLOR", foreground="#ffa500")
+        FAKE_MARGIN = "  "
+        # insert
+        target_textbox.configure(state="normal")
+        target_textbox.insert("end", "\n")
+        match (target_type):
+            case "SYSTEM":
+                target_textbox.insert("end", "System", ("SYSTEM_TAG", "SYSTEM_FOR_FIRST_INSERT", "JUSTIFY_CENTER"))
+                target_textbox.insert("end", FAKE_MARGIN+original_message+FAKE_MARGIN, ("SYSTEM_TEXT", "SYSTEM_TEXT_FONT", "JUSTIFY_CENTER"))
+                target_textbox.insert("end", now_hm, ("TIMESTAMP", "JUSTIFY_CENTER"))
 
-    target_textbox._textbox.tag_configure("START", spacing1=10)
+            case "SENT":
+                target_textbox.insert("end", now_hm, ("TIMESTAMP", "SENT_FOR_FIRST_INSERT", "JUSTIFY_RIGHT"))
+                target_textbox.insert("end", FAKE_MARGIN+"Sent", ("SENT_TAG"))
+                target_textbox.insert("end", "\n")
+                if is_only_one_message is False:
+                    target_textbox.insert("end", original_message, ("SENT_SUB_TEXT", "SENT_SECONDARY_TEXT_FONT", "JUSTIFY_RIGHT"))
+                    target_textbox.insert("end", "\n")
+                    target_textbox.insert("end", translated_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
+                    # _actual_sent_message = "" if actual_sent_message is None else actual_sent_message
+                    # target_textbox.insert("end", _actual_sent_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
+                else:
+                    target_textbox.insert("end", original_message, ("SENT_TEXT", "SENT_MAIN_TEXT_FONT", "JUSTIFY_RIGHT"))
 
-    target_textbox._textbox.tag_configure("LABEL", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("TIMESTAMP", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("ORIGINAL_MESSAGE", font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"))
-    target_textbox._textbox.tag_configure("TRANSLATED_MESSAGE", font=CTkFont(family=settings.FONT_FAMILY, size=16, weight="normal"))
+            case "RECEIVED":
+                target_textbox.insert("end", "Received", ("RECEIVED_TAG", "RECEIVED_FOR_FIRST_INSERT", "JUSTIFY_LEFT"))
+                target_textbox.insert("end", FAKE_MARGIN+now_hm, ("TIMESTAMP"))
+                if is_only_one_message is False:
+                    target_textbox.insert("end", "\n")
+                    target_textbox.insert("end", original_message, ("RECEIVED_SUB_TEXT", "RECEIVED_SECONDARY_TEXT_FONT"))
+                    target_textbox.insert("end", "\n")
+                    target_textbox.insert("end", translated_message, ("RECEIVED_TEXT", "RECEIVED_MAIN_TEXT_FONT", "JUSTIFY_LEFT"))
+                else:
+                    target_textbox.insert("end", "\n")
+                    target_textbox.insert("end", original_message, ("RECEIVED_TEXT", "RECEIVED_MAIN_TEXT_FONT", "JUSTIFY_LEFT"))
 
-    target_textbox.configure(state='normal')
-    target_textbox.insert("end", f"[{tags}]  ", ("START", "LABEL", tags, f"{tags}_COLOR"))
-    target_textbox.insert("end", f"{now_hm}  ", ("TIMESTAMP", tags))
-    target_textbox.insert("end", f"{original_message}\n", ("ORIGINAL_MESSAGE", "NORMAL_TEXT", tags))
-    target_textbox.insert("end", f"{translated_message}\n", ("TRANSLATED_MESSAGE", "NORMAL_TEXT", tags))
-    target_textbox.configure(state='disabled')
-    target_textbox.see("end")
+        target_textbox.configure(state="disabled")
+        target_textbox.see("end")
+
+    printEachTextbox(target_textbox)
+
+    # To automatically print the same log to the textbox_all widget as well.
+    if disable_print_to_textbox_all is not True: printEachTextbox(vrct_gui.textbox_all)
+
+
+
+    # target_textbox.tag_config("ERROR", foreground="#FF0000")
+
+    # target_textbox.tag_config("SYSTEM", justify="center")
+    # target_textbox.tag_config("SYSTEM_TAG", foreground="#1BFF00")
+
+    # target_textbox.tag_config("SENT", justify="left")
+    # target_textbox.tag_config("SENT_COLOR", foreground="#0378e2")
+
+    # target_textbox.tag_config("RECEIVED", justify="left")
+    # target_textbox.tag_config("RECEIVED_COLOR", foreground="#ffa500")
+
+
+    # target_textbox.configure(state="normal")
+    # target_textbox.insert("end", f"[{tags}]  ", ("START", "LABEL", tags, f"{tags}_COLOR"))
+    # target_textbox.insert("end", f"{now_hm}  ", ("TIMESTAMP", tags))
+    # target_textbox.insert("end", f"{original_message}\n", ("SECONDARY_TEXT_FONT", "MAIN_TEXT_COLOR", tags))
+    # target_textbox.insert("end", f"{translated_message}\n", ("MAIN_TEXT_FONT", "MAIN_TEXT_COLOR", tags))
+    # target_textbox.configure(state="disabled")
+    # target_textbox.see("end")
