@@ -43,6 +43,11 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
+            # Open Config Window
+            CALLBACK_OPEN_CONFIG_WINDOW=None,
+            CALLBACK_CLOSE_CONFIG_WINDOW=None,
+
+
             # Main Window
             # Sidebar
             # Sidebar Compact Mode
@@ -255,11 +260,20 @@ class View():
 
     def register(
             self,
+            window_action_registers=None,
             sidebar_features_registers=None,
             language_presets_registers=None,
             entry_message_box_registers=None,
             config_window_registers=None
         ):
+
+
+        # Open Config Window
+        if window_action_registers is not None:
+            self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW=window_action_registers.get("callback_open_config_window", None)
+            self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW=window_action_registers.get("callback_close_config_window", None)
+
+
 
         self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
 
