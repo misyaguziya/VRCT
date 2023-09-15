@@ -1,5 +1,3 @@
-from types import SimpleNamespace
-
 from customtkinter import CTk, CTkImage
 
 # from window_help_and_info import ToplevelWindowInformation
@@ -16,6 +14,7 @@ from .ui_utils import _setDefaultActiveTab
 
 from .main_window.widgets import createMinimizeSidebarButton
 
+from utils import callFunctionIfCallable
 
 class VRCT_GUI(CTk):
     def __init__(self):
@@ -54,12 +53,14 @@ class VRCT_GUI(CTk):
 
 
     def openConfigWindow(self, e):
+        callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
         self.config_window.deiconify()
         self.config_window.focus_set()
         self.config_window.focus()
         self.config_window.grab_set()
 
     def closeConfigWindow(self):
+        callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
         self.config_window.withdraw()
         self.config_window.grab_release()
 

@@ -540,6 +540,11 @@ if config.ENABLE_LOGGER is True:
 
 # set UI and callback
 view.register(
+    window_action_registers={
+        "callback_open_config_window": callbackOpenConfigWindow,
+        "callback_close_config_window": callbackCloseConfigWindow,
+    },
+
     sidebar_features_registers={
         "callback_toggle_translation": callbackToggleTranslation,
         "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
