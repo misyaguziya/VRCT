@@ -580,15 +580,27 @@ class View():
     def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
 
-    def updateSetProgressBar_MicEnergy(self, new_mic_energy):
+
+    @staticmethod
+    def updateSetProgressBar_MicEnergy(new_mic_energy):
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_MicEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
+
 
     def updateList_SpeakerDevice(self, new_speaker_device_list):
         self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
         vrct_gui.config_window.sb__optionmenu_speaker_device.configure(values=new_speaker_device_list)
 
-    def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
+    @staticmethod
+    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_SpeakerEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
 
 
 

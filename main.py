@@ -243,8 +243,11 @@ def callbackCloseConfigWindow():
         startThreadingTranscriptionReceiveMessage()
     model.stopCheckMicEnergy()
     view.replaceMicThresholdCheckButton_Passive()
+    # view.initProgressBar_MicEnergy() # ProgressBarに0をセットしたい
+
     model.stopCheckSpeakerEnergy()
     view.replaceSpeakerThresholdCheckButton_Passive()
+    # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
