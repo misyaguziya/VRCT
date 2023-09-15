@@ -43,6 +43,11 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
+            # Open Config Window
+            CALLBACK_OPEN_CONFIG_WINDOW=None,
+            CALLBACK_CLOSE_CONFIG_WINDOW=None,
+
+
             # Main Window
             # Sidebar
             # Sidebar Compact Mode
@@ -255,11 +260,20 @@ class View():
 
     def register(
             self,
+            window_action_registers=None,
             sidebar_features_registers=None,
             language_presets_registers=None,
             entry_message_box_registers=None,
             config_window_registers=None
         ):
+
+
+        # Open Config Window
+        if window_action_registers is not None:
+            self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW=window_action_registers.get("callback_open_config_window", None)
+            self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW=window_action_registers.get("callback_close_config_window", None)
+
+
 
         self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
 
@@ -350,6 +364,7 @@ class View():
             self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
             self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
 
+        # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
 
@@ -446,16 +461,15 @@ class View():
 
 
 
-    def printToTextbox_SentMessage(self, original_message, translated_message, actual_sent_message=None):
-        self._printToTextbox_Sent(original_message, translated_message, actual_sent_message)
+    def printToTextbox_SentMessage(self, original_message, translated_message):
+        self._printToTextbox_Sent(original_message, translated_message)
 
     @staticmethod
-    def _printToTextbox_Sent(original_message, translated_message, actual_sent_message=None):
+    def _printToTextbox_Sent(original_message, translated_message):
         vrct_gui.printToTextbox(
             target_type="SENT",
             original_message=original_message,
             translated_message=translated_message,
-            actual_sent_message=actual_sent_message,
         )
 
 
@@ -495,15 +509,15 @@ class View():
 
     # Config Window
     @staticmethod
-    def setConfigWindowCompactModeSwitchStatusToDisabled():
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
 
     @staticmethod
-    def setConfigWindowCompactModeSwitchStatusToNormal():
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
     @staticmethod
-    def setConfigWindowThresholdCheckWidgetsStatusToDisabled():
+    def setWidgetsStatus_ThresholdCheckButton_Disabled():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="disabled",
             target_names=[
@@ -513,7 +527,7 @@ class View():
         )
 
     @staticmethod
-    def setConfigWindowThresholdCheckWidgetsStatusToNormal():
+    def setWidgetsStatus_ThresholdCheckButton_Normal():
         vrct_gui.changeConfigWindowWidgetsStatus(
             status="normal",
             target_names=[
@@ -523,24 +537,24 @@ class View():
         )
 
     @staticmethod
-    def replaceConfigWindowMicThresholdCheckButtonToActive():
+    def replaceMicThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
 
     @staticmethod
-    def replaceConfigWindowMicThresholdCheckButtonToPassive():
+    def replaceMicThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
 
     @staticmethod
-    def replaceConfigWindowSpeakerThresholdCheckButtonToActive():
+    def replaceSpeakerThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
 
     @staticmethod
-    def replaceConfigWindowSpeakerThresholdCheckButtonToPassive():
+    def replaceSpeakerThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
@@ -566,15 +580,27 @@ class View():
     def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
 
-    def updateSetProgressBar_MicEnergy(self, new_mic_energy):
+
+    @staticmethod
+    def updateSetProgressBar_MicEnergy(new_mic_energy):
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_MicEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
+
 
     def updateList_SpeakerDevice(self, new_speaker_device_list):
         self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
         vrct_gui.config_window.sb__optionmenu_speaker_device.configure(values=new_speaker_device_list)
 
-    def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
+    @staticmethod
+    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_SpeakerEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
 
 
 
@@ -628,7 +654,7 @@ class View():
 
 
 
-    # These conversation is generated by ChatGPT
+    # These conversations are generated by ChatGPT
     def _insertSampleConversationToTextbox(self):
 
         self.printToTextbox_enableTranscriptionSend()
@@ -738,10 +764,7 @@ class View():
         ]
         for data in conversation_data:
             if data.get("me", None) is not None:
-                # actual_sent_message = config.MESSAGE_FORMAT.replace("[message]", data.get("me", None))
-                # actual_sent_message = actual_sent_message.replace("[translation]", data.get("me_t", None))
                 self.printToTextbox_SentMessage(data.get("me", None), data.get("me_t", None))
-                # self.printToTextbox_SentMessage(data.get("me", None), data.get("me_t", None), actual_sent_message)
             if data.get("target", None) is not None:
                 self.printToTextbox_ReceivedMessage(data.get("target", None), data.get("target_t", None))
 
