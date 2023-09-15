@@ -162,6 +162,7 @@ def setYourLanguageAndCountry(select):
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    model.authenticationTranslator(callbackSetAuthKeys)
 
 def setTargetLanguageAndCountry(select):
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
@@ -171,6 +172,7 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    model.authenticationTranslator(callbackSetAuthKeys)
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
@@ -186,6 +188,7 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    model.authenticationTranslator(callbackSetAuthKeys)
 
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
@@ -299,7 +302,13 @@ def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
     if len(value) > 0 and model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+        model.authenticationTranslator(callbackSetAuthKeys)
         view.printToTextbox_AuthenticationSuccess()
+    elif len(value) == 0:
+        auth_keys = config.AUTH_KEYS
+        auth_keys["DeepL(auth)"] = None
+        config.AUTH_KEYS = auth_keys
+        model.authenticationTranslator(callbackSetAuthKeys)
     else:
         view.printToTextbox_AuthenticationError()
 
@@ -521,6 +530,8 @@ view.createGUI()
 if model.authenticationTranslator(callbackSetAuthKeys) is False:
     # error update Auth key
     view.printToTextbox_AuthenticationError()
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    model.authenticationTranslator(callbackSetAuthKeys)
 
 # set word filter
 model.addKeywords()
