@@ -12,11 +12,11 @@ from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 
 def saveJson(path, key, value):
-    with open(path, "r") as fp:
+    with open(path, "r", encoding="utf-8") as fp:
         json_data = load(fp)
     json_data[key] = value
-    with open(path, "w") as fp:
-        dump(json_data, fp, indent=4)
+    with open(path, "w", encoding="utf-8") as fp:
+        json_dump(json_data, fp, indent=4, ensure_ascii=False)
 
 class Config:
     _instance = None
@@ -543,13 +543,13 @@ class Config:
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
-            with open(self.PATH_CONFIG, 'r') as fp:
+            with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 config = json_load(fp)
 
             for key in config.keys():
                 setattr(self, key, config[key])
 
-        with open(self.PATH_CONFIG, 'w') as fp:
+        with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             setter_methods = [
                 name for name, obj in vars(type(self)).items()
                 if isinstance(obj, property) and obj.fset is not None
@@ -557,6 +557,6 @@ class Config:
             config = {}
             for method in setter_methods:
                 config[method] = getattr(self, method)
-            json_dump(config, fp, indent=4)
+            json_dump(config, fp, indent=4, ensure_ascii=False)
 
 config = Config()
