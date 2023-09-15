@@ -74,7 +74,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-        sls__selected_language_box = CTkFrame(sls__box_wrapper, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
+        sls__selected_language_box = CTkFrame(sls__box_wrapper, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR, cursor="hand2")
         sls__selected_language_box.grid(row=1, column=0)
 
 
@@ -111,8 +111,8 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-        bindEnterAndLeaveColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label], settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
-        bindButtonPressColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label], settings.ctm.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR)
+        bindEnterAndLeaveColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
+        bindButtonPressColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], settings.ctm.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR)
 
 
 
