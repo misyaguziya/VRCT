@@ -246,6 +246,19 @@ class View():
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
 
 
+            VAR_LABEL_ENABLE_OSC=StringVar(value="Send Message To VRChat"),
+            VAR_DESC_ENABLE_OSC=StringVar(value="There is a way to use it without sending messages to VRChat."),
+            CALLBACK_SET_ENABLE_OSC=None,
+            VAR_ENABLE_OSC=BooleanVar(value=config.ENABLE_OSC),
+
+            VAR_LABEL_ENABLE_OSC_ERROR_LOG=StringVar(value="Ignore The OSC Error Message"),
+            VAR_DESC_ENABLE_OSC_ERROR_LOG=StringVar(value="Remember to turn on OSC yourself when you want to use it and send messages to VRChat."),
+            CALLBACK_SET_ENABLE_OSC_ERROR_LOG=None,
+            VAR_ENABLE_OSC_ERROR_LOG=BooleanVar(value=config.ENABLE_OSC_ERROR_LOG),
+
+
+
+
             # Advanced Settings Tab
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
             VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
