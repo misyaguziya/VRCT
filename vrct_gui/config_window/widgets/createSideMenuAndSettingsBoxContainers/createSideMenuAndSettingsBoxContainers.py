@@ -59,7 +59,6 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                     { "section_title": None, "setting_box": createSettingBox_Appearance },
                 ]
             },
-            "activate_by_default": True,
         },
         {
             "side_menu_tab_attr_name": "side_menu_tab_translation",
@@ -119,6 +118,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
         _addConfigSideMenuItem(
             config_window=config_window,
             settings=settings,
+            view_variable=view_variable,
             # view_variable=view_variable,
             side_menu_settings=sm_and_sbc_setting,
             side_menu_row=side_menu_row,
@@ -136,7 +136,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
         )
 
 
-        if sm_and_sbc_setting.get("activate_by_default", None) is not None:
+        if sm_and_sbc_setting["side_menu_tab_attr_name"] == view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME:
             # Set default active side menu tab
             config_window.main_current_active_config_title.configure(text=sm_and_sbc_setting["text"])
             config_window.current_active_side_menu_tab = getattr(config_window, sm_and_sbc_setting["side_menu_tab_attr_name"])

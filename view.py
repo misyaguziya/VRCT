@@ -100,6 +100,8 @@ class View():
 
 
             # Config Window
+            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
+            CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
             VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
@@ -309,6 +311,8 @@ class View():
 
 
         # Config Window
+        self.view_variable.CALLBACK_SELECTED_SETTING_BOX_TAB=self._updateActiveSettingBoxTabNo
+
         # Compact Mode Switch
         if config_window_registers is not None:
 
@@ -508,6 +512,9 @@ class View():
 
 
     # Config Window
+    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
+        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
+
     @staticmethod
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
