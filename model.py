@@ -281,10 +281,11 @@ class Model:
         self.mic_energy_plot_progressbar.start()
 
     def stopCheckMicEnergy(self):
+        if isinstance(self.mic_energy_plot_progressbar, threadFnc):
+            self.mic_energy_plot_progressbar.stop()
         if self.mic_energy_recorder != None:
             self.mic_energy_recorder.stop()
-        if self.mic_energy_plot_progressbar != None:
-            self.mic_energy_plot_progressbar.stop()
+            self.mic_energy_recorder.stop = None
 
     def startSpeakerTranscript(self, fnc):
         spk_audio_queue = Queue()
@@ -346,10 +347,11 @@ class Model:
         self.speaker_energy_plot_progressbar.start()
 
     def stopCheckSpeakerEnergy(self):
+        if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
+            self.speaker_energy_plot_progressbar.stop()
         if self.speaker_energy_recorder != None:
             self.speaker_energy_recorder.stop()
-        if self.speaker_energy_plot_progressbar != None:
-            self.speaker_energy_plot_progressbar.stop()
+            self.speaker_energy_recorder.stop != None
 
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
