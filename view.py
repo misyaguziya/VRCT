@@ -251,10 +251,10 @@ class View():
             CALLBACK_SET_ENABLE_OSC=None,
             VAR_ENABLE_OSC=BooleanVar(value=config.ENABLE_OSC),
 
-            VAR_LABEL_ENABLE_OSC_ERROR_LOG=StringVar(value="Ignore The OSC Error Message"),
-            VAR_DESC_ENABLE_OSC_ERROR_LOG=StringVar(value="Remember to turn on OSC yourself when you want to use it and send messages to VRChat."),
-            CALLBACK_SET_ENABLE_OSC_ERROR_LOG=None,
-            VAR_ENABLE_OSC_ERROR_LOG=BooleanVar(value=config.ENABLE_OSC_ERROR_LOG),
+            VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Check If OSC Is Enabled At Startup"),
+            VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Every time VRCT is started up, your character in VRChat moves forward ever so slightly. If your character is seated, they might even stand up. Unfortunately, this is the only method we've found to check if OSC is enabled at startup... Sorry about that. (Remember to turn on OSC yourself when you want to send messages to VRChat.)"),
+            CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK=None,
+            VAR_STARTUP_OSC_ENABLED_CHECK=BooleanVar(value=config.STARTUP_OSC_ENABLED_CHECK),
 
 
 
@@ -377,6 +377,8 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
             self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window_registers.get("callback_set_message_format", None)
 
+            self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None)
+
             # Advanced Settings Tab
             self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
             self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
@@ -462,7 +464,7 @@ class View():
         self._printToTextbox_Info("Auth Key is incorrect or Usage limit reached")
 
     def printToTextbox_OSCError(self):
-        self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin")
+        self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
 
     def printToTextbox_DetectedByWordFilter(self, detected_message):
         self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
