@@ -100,6 +100,8 @@ class View():
 
 
             # Config Window
+            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
+            CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
             VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
@@ -244,6 +246,19 @@ class View():
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
 
 
+            VAR_LABEL_ENABLE_OSC=StringVar(value="Send Message To VRChat"),
+            VAR_DESC_ENABLE_OSC=StringVar(value="There is a way to use it without sending messages to VRChat."),
+            CALLBACK_SET_ENABLE_OSC=None,
+            VAR_ENABLE_OSC=BooleanVar(value=config.ENABLE_OSC),
+
+            VAR_LABEL_ENABLE_OSC_ERROR_LOG=StringVar(value="Ignore The OSC Error Message"),
+            VAR_DESC_ENABLE_OSC_ERROR_LOG=StringVar(value="Remember to turn on OSC yourself when you want to use it and send messages to VRChat."),
+            CALLBACK_SET_ENABLE_OSC_ERROR_LOG=None,
+            VAR_ENABLE_OSC_ERROR_LOG=BooleanVar(value=config.ENABLE_OSC_ERROR_LOG),
+
+
+
+
             # Advanced Settings Tab
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
             VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
@@ -309,6 +324,8 @@ class View():
 
 
         # Config Window
+        self.view_variable.CALLBACK_SELECTED_SETTING_BOX_TAB=self._updateActiveSettingBoxTabNo
+
         # Compact Mode Switch
         if config_window_registers is not None:
 
@@ -508,6 +525,9 @@ class View():
 
 
     # Config Window
+    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
+        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
+
     @staticmethod
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
