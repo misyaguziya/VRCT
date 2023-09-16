@@ -1,3 +1,4 @@
+from time import sleep
 from threading import Thread
 from config import config
 from model import model
@@ -242,18 +243,19 @@ def callbackOpenConfigWindow():
         view.foregroundOff()
 
 def callbackCloseConfigWindow():
-    if config.ENABLE_TRANSCRIPTION_SEND is True:
-        startThreadingTranscriptionSendMessage()
-    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        startThreadingTranscriptionReceiveMessage()
     model.stopCheckMicEnergy()
+    model.stopCheckSpeakerEnergy()
     view.replaceMicThresholdCheckButton_Passive()
     # view.initProgressBar_MicEnergy() # ProgressBarに0をセットしたい
-
-    model.stopCheckSpeakerEnergy()
     view.replaceSpeakerThresholdCheckButton_Passive()
     # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
+    if config.ENABLE_TRANSCRIPTION_SEND is True:
+        startThreadingTranscriptionSendMessage()
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            sleep(2)
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        startThreadingTranscriptionReceiveMessage()
     if config.ENABLE_FOREGROUND is True:
         view.foregroundOn()
 
