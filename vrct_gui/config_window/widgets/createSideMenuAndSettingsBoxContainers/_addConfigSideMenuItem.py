@@ -2,9 +2,10 @@ from customtkinter import CTkFont, CTkFrame, CTkLabel
 
 from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor
 
+from utils import callFunctionIfCallable
 
 
-def _addConfigSideMenuItem(config_window, settings, side_menu_settings, side_menu_row, all_side_menu_tab_attr_name):
+def _addConfigSideMenuItem(config_window, settings, view_variable, side_menu_settings, side_menu_row, all_side_menu_tab_attr_name):
 
 
     def switchActiveAndPassiveSettingBoxContainerTabsColor(target_active_widget):
@@ -51,11 +52,12 @@ def _addConfigSideMenuItem(config_window, settings, side_menu_settings, side_men
 
 
     def switchToTargetSettingBoxContainer(e, text, target_active_tab_widget_attr_name, target_setting_box_container_attr_name):
-        print("switchToTargetSettingBoxContainer", target_setting_box_container_attr_name)
         config_window.main_current_active_config_title.configure(text=text)
         target_active_tab_widget = getattr(config_window, target_active_tab_widget_attr_name)
         switchSettingBoxContainerTabFunction(target_active_tab_widget)
         switchSettingBoxContainer(target_setting_box_container_attr_name)
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_SETTING_BOX_TAB, target_active_tab_widget_attr_name)
+
 
 
 
