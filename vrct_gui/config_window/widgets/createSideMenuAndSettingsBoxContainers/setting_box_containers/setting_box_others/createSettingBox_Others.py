@@ -18,6 +18,12 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkbox_auto_export_message_logs_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS, checkbox_box_widget.get())
 
+    def checkbox_enable_osc_callback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_OSC, checkbox_box_widget.get())
+
+    def checkbox_enable_osc_error_log_callback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_OSC_ERROR_LOG, checkbox_box_widget.get())
+
     def entry_message_format_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, value)
 
@@ -69,4 +75,27 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
     )
     config_window.sb__message_format.grid(row=row)
+    row+=1
+
+
+    config_window.sb__enable_osc = createSettingBoxCheckbox(
+        parent_widget=setting_box_wrapper,
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_OSC,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_OSC,
+        checkbox_attr_name="sb__checkbox_enable_osc",
+        command=lambda: checkbox_enable_osc_callback(config_window.sb__checkbox_enable_osc),
+        variable=view_variable.VAR_ENABLE_OSC,
+    )
+    config_window.sb__enable_osc.grid(row=row)
+    row+=1
+
+    config_window.sb__enable_osc_error_log = createSettingBoxCheckbox(
+        parent_widget=setting_box_wrapper,
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_OSC_ERROR_LOG,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_OSC_ERROR_LOG,
+        checkbox_attr_name="sb__checkbox_enable_osc_error_log",
+        command=lambda: checkbox_enable_osc_error_log_callback(config_window.sb__checkbox_enable_osc_error_log),
+        variable=view_variable.VAR_ENABLE_OSC_ERROR_LOG,
+    )
+    config_window.sb__enable_osc_error_log.grid(row=row)
     row+=1
