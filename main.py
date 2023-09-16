@@ -238,6 +238,8 @@ def callbackOpenConfigWindow():
         stopThreadingTranscriptionSendMessage()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         stopThreadingTranscriptionReceiveMessage()
+    if config.ENABLE_FOREGROUND is True:
+        view.foregroundOff()
 
 def callbackCloseConfigWindow():
     if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -251,6 +253,9 @@ def callbackCloseConfigWindow():
     model.stopCheckSpeakerEnergy()
     view.replaceSpeakerThresholdCheckButton_Passive()
     # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
+
+    if config.ENABLE_FOREGROUND is True:
+        view.foregroundOn()
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
