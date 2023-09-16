@@ -32,7 +32,7 @@ def sendMicMessage(message):
                     osc_message = message
                 model.oscSendMessage(osc_message)
             else:
-                if config.ENABLE_OSC_ERROR_LOG is True:
+                if config.STARTUP_OSC_ENABLED_CHECK is True:
                     view.printToTextbox_OSCError()
 
             view.printToTextbox_SentMessage(message, translation)
@@ -131,7 +131,7 @@ def sendChatMessage(message):
                 osc_message = message
             model.oscSendMessage(osc_message)
         else:
-            if config.ENABLE_OSC_ERROR_LOG is True:
+            if config.STARTUP_OSC_ENABLED_CHECK is True:
                 view.printToTextbox_OSCError()
 
         # update textbox message log
@@ -516,6 +516,9 @@ def callbackSetMessageFormat(value):
     if len(value) > 0:
         config.MESSAGE_FORMAT = value
 
+def callbackSetStartupOscEnabledCheck(value):
+    print("callbackSetStartupOscEnabledCheck", value)
+    config.STARTUP_OSC_ENABLED_CHECK = value
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
@@ -621,6 +624,8 @@ view.register(
         "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
         "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
         "callback_set_message_format": callbackSetMessageFormat,
+
+        "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck,
 
         # Advanced Settings Tab
         "callback_set_osc_ip_address": callbackSetOscIpAddress,

@@ -389,13 +389,14 @@ class Config:
             self._ENABLE_OSC = value
 
     @property
-    def ENABLE_OSC_ERROR_LOG(self):
-        return self._ENABLE_OSC_ERROR_LOG
+    def STARTUP_OSC_ENABLED_CHECK(self):
+        return self._STARTUP_OSC_ENABLED_CHECK
 
-    @ENABLE_OSC_ERROR_LOG.setter
-    def ENABLE_OSC_ERROR_LOG(self, value):
+    @STARTUP_OSC_ENABLED_CHECK.setter
+    def STARTUP_OSC_ENABLED_CHECK(self, value):
         if type(value) is bool:
-            self._ENABLE_OSC_ERROR_LOG = value
+            self._STARTUP_OSC_ENABLED_CHECK = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     def UPDATE_FLAG(self):
@@ -516,7 +517,7 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_OSC = False
-        self._ENABLE_OSC_ERROR_LOG = True
+        self._STARTUP_OSC_ENABLED_CHECK = True
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         # self._BREAK_KEYSYM_LIST = [
