@@ -471,6 +471,26 @@ class View():
         self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
 
 
+
+    def printToTextbox_selectedYourLanguages(self, selected_your_language):
+        your_language = selected_your_language.replace("\n", " ")
+        self._printToTextbox_Info(f"Your Language has changed : {your_language}")
+
+    def printToTextbox_selectedTargetLanguages(self, selected_target_language):
+        target_language = selected_target_language.replace("\n", " ")
+        self._printToTextbox_Info(f"Target Language has changed : {target_language}")
+
+    def printToTextbox_latestSelectedLanguages(self):
+        your_language = self.view_variable.VAR_YOUR_LANGUAGE.get().replace("\n", " ")
+        target_language = self.view_variable.VAR_TARGET_LANGUAGE.get().replace("\n", " ")
+        self._printToTextbox_Info(f"Your Language : {your_language} -- Target Language : {target_language}")
+
+    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
+        your_language = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no].replace("\n", " ")
+        target_language = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no].replace("\n", " ")
+        self._printToTextbox_Info(f"Switched Language Preset. No.{tab_no}\nYour Language : {your_language} -- Target Language : {target_language}")
+
+
     @staticmethod
     def _printToTextbox_Info(info_message):
         vrct_gui.printToTextbox(
