@@ -164,6 +164,7 @@ def setYourLanguageAndCountry(select):
     config.SOURCE_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     model.authenticationTranslator(callbackSetAuthKeys)
+    view.printToTextbox_selectedYourLanguages(select)
 
 def setTargetLanguageAndCountry(select):
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
@@ -174,6 +175,7 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     model.authenticationTranslator(callbackSetAuthKeys)
+    view.printToTextbox_selectedTargetLanguages(select)
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
@@ -190,6 +192,7 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     model.authenticationTranslator(callbackSetAuthKeys)
+    view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
 
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
