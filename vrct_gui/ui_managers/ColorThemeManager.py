@@ -2,7 +2,6 @@ from types import SimpleNamespace
 
 class ColorThemeManager():
     def __init__(self, theme):
-        print(theme)
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()

@@ -62,8 +62,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
             callback = self._view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE
             target_variable = self._view_variable.VAR_TARGET_LANGUAGE
 
-        callFunctionIfCallable(callback, value)
         target_variable.set(value)
+        callFunctionIfCallable(callback, value)
         self.vrct_gui.closeSelectableLanguagesWindow()
 
 
