@@ -50,7 +50,7 @@ def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001)
     _dispatcher = dispatcher.Dispatcher()
     _dispatcher.map(filter, target)
     server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
-    server.serve_forever()
+    return server
 
 if __name__ == "__main__":
     sendChangeVoice()
