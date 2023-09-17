@@ -15,36 +15,61 @@ def createMinimizeSidebarButton(settings, main_window, view_variable):
 
 
 
-    main_window.minimize_sidebar_button_container = CTkFrame(main_window.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR, cursor="hand2", width=0, height=0)
+    main_window.minimize_sidebar_button_container__for_closing = CTkFrame(main_window.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR, cursor="hand2", width=0, height=0)
+    main_window.minimize_sidebar_button_container__for_opening = CTkFrame(main_window.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR, cursor="hand2", width=0, height=0)
 
 
 
-    main_window.minimize_sidebar_button = CTkLabel(
-        main_window.minimize_sidebar_button_container,
+
+    # For Closing [<]
+    main_window.minimize_sidebar_button__for_closing = CTkLabel(
+        main_window.minimize_sidebar_button_container__for_closing,
         text=None,
         corner_radius=0,
         height=0,
         image=CTkImage((settings.image_file.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
     )
 
+    main_window.minimize_sidebar_button_container__for_closing.grid_rowconfigure((0,2), weight=1)
+    main_window.minimize_sidebar_button__for_closing.grid(row=1, column=0, padx=0, pady=0)
 
+
+    bindEnterAndLeaveColor([main_window.minimize_sidebar_button__for_closing, main_window.minimize_sidebar_button_container__for_closing], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
+    bindButtonPressColor([main_window.minimize_sidebar_button__for_closing, main_window.minimize_sidebar_button_container__for_closing], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
+    bindButtonReleaseFunction([main_window.minimize_sidebar_button_container__for_closing, main_window.minimize_sidebar_button__for_closing], enableCompactMode)
+
+
+
+
+# For Opening [>]
+    main_window.minimize_sidebar_button__for_opening = CTkLabel(
+        main_window.minimize_sidebar_button_container__for_opening,
+        text=None,
+        corner_radius=0,
+        height=0,
+        image=CTkImage((settings.image_file.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
+    )
+
+
+
+
+    main_window.minimize_sidebar_button_container__for_opening.grid_rowconfigure((0,2), weight=1)
+    main_window.minimize_sidebar_button__for_opening.grid(row=1, column=0, padx=0, pady=0)
+
+
+    bindEnterAndLeaveColor([main_window.minimize_sidebar_button__for_opening, main_window.minimize_sidebar_button_container__for_opening], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
+    bindButtonPressColor([main_window.minimize_sidebar_button__for_opening, main_window.minimize_sidebar_button_container__for_opening], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
+    bindButtonReleaseFunction([main_window.minimize_sidebar_button_container__for_opening, main_window.minimize_sidebar_button__for_opening], disableCompactMode)
+
+
+
+
+
+    main_window.minimize_sidebar_button_container__for_opening.grid(row=0, column=0, sticky="nsw")
+    main_window.minimize_sidebar_button_container__for_closing.grid(row=0, column=0, sticky="nsw")
+    main_window.minimize_sidebar_button_container__for_opening.grid_remove()
+    main_window.minimize_sidebar_button_container__for_closing.grid_remove()
     if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-        image_file = CTkImage((settings.image_file.ARROW_LEFT).rotate(180),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
-        bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], disableCompactMode)
-
+        main_window.minimize_sidebar_button_container__for_opening.grid()
     else:
-        image_file = CTkImage((settings.image_file.ARROW_LEFT),size=(settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X,settings.uism.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y))
-        bindButtonReleaseFunction([main_window.minimize_sidebar_button_container, main_window.minimize_sidebar_button], enableCompactMode)
-
-    main_window.minimize_sidebar_button_container.grid_rowconfigure((0,2), weight=1)
-    main_window.minimize_sidebar_button.configure(image=image_file)
-    main_window.minimize_sidebar_button_container.grid(row=0, column=0, sticky="nsw")
-    main_window.minimize_sidebar_button.grid(row=1, column=0, padx=0, pady=0)
-
-
-    bindEnterAndLeaveColor([main_window.minimize_sidebar_button, main_window.minimize_sidebar_button_container], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
-    bindButtonPressColor([main_window.minimize_sidebar_button, main_window.minimize_sidebar_button_container], settings.ctm.MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR, settings.ctm.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR)
-
-
-
-
+        main_window.minimize_sidebar_button_container__for_closing.grid()
