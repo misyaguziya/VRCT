@@ -32,19 +32,16 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     def switchToPreset1(e):
-        print("1")
         callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "1")
         target_active_widget = getattr(main_window, "sls__presets_button_1")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset2(e):
-        print("2")
         callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "2")
         target_active_widget = getattr(main_window, "sls__presets_button_2")
         switchPresetTabFunction(target_active_widget)
 
     def switchToPreset3(e):
-        print("3")
         callFunctionIfCallable(view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB, "3")
         target_active_widget = getattr(main_window, "sls__presets_button_3")
         switchPresetTabFunction(target_active_widget)

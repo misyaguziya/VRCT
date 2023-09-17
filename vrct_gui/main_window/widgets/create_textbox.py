@@ -11,25 +11,21 @@ def createTextbox(settings, main_window, view_variable):
         main_window.current_active_textbox.grid()
 
     def switchToTextboxAll(e):
-        print("switchToTextboxAll")
         target_active_widget = getattr(main_window, "textbox_tab_all")
         switchTextboxTabFunction(target_active_widget)
         switchTextbox("textbox_all")
 
     def switchToTextboxSent(e):
-        print("switchToTextboxSent")
         target_active_widget = getattr(main_window, "textbox_tab_sent")
         switchTextboxTabFunction(target_active_widget)
         switchTextbox("textbox_sent")
 
     def switchToTextboxReceived(e):
-        print("switchToTextboxReceived")
         target_active_widget = getattr(main_window, "textbox_tab_received")
         switchTextboxTabFunction(target_active_widget)
         switchTextbox("textbox_received")
 
     def switchToTextboxSystem(e):
-        print("switchToTextboxSystem")
         target_active_widget = getattr(main_window, "textbox_tab_system")
         switchTextboxTabFunction(target_active_widget)
         switchTextbox("textbox_system")
