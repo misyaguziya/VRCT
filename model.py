@@ -180,7 +180,7 @@ class Model:
     @staticmethod
     def checkOSCStarted(fnc):
         def checkOscReceive(address, osc_arguments):
-            if config.ENABLE_OSC is False:
+            if config.IS_VALID_OSC is False:
                 fnc(True)
 
         # start receive osc
