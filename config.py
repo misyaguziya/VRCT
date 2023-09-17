@@ -514,7 +514,7 @@ class Config:
             "Google(web)": None,
         }
         self._MESSAGE_FORMAT = "[message]([translation])"
-        self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
+        self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_OSC = False
         self._STARTUP_OSC_ENABLED_CHECK = True
