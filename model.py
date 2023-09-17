@@ -80,7 +80,10 @@ class Model:
         if result:
             auth_keys = config.AUTH_KEYS
             auth_keys[choice_translator] = auth_key
-            fnc(auth_keys)
+            try:
+                fnc(auth_keys)
+            except:
+                pass
         return result
 
     def startLogger(self):
@@ -180,8 +183,15 @@ class Model:
     @staticmethod
     def checkOSCStarted(fnc):
         def checkOscReceive(address, osc_arguments):
-            if config.IS_VALID_OSC is False:
-                fnc(True)
+            if config.IS_VALID_OSC is False and config.STARTUP_OSC_ENABLED_CHECK is True:
+                try:
+                    fnc(True)
+                except:
+                    pass
+
+        def sendTestActionLoop():
+            while config.IS_VALID_OSC is False and config.STARTUP_OSC_ENABLED_CHECK is True:
+                sendTestAction()
 
         # start receive osc
         th_receive_osc_parameters = Thread(target=receiveOscParameters, args=(checkOscReceive,))
@@ -189,7 +199,9 @@ class Model:
         th_receive_osc_parameters.start()
 
         # check osc started
-        sendTestAction()
+        th_send_osc_test_action = Thread(target=sendTestActionLoop)
+        th_send_osc_test_action.daemon = True
+        th_send_osc_test_action.start()
 
     @staticmethod
     def checkSoftwareUpdated(fnc):
@@ -197,7 +209,10 @@ class Model:
         response = requests_get(config.GITHUB_URL)
         tag_name = response.json()["tag_name"]
         if tag_name != config.VERSION:
-            fnc(True)
+            try:
+                fnc(True)
+            except:
+                pass
 
     @staticmethod
     def getListInputHost():
@@ -270,7 +285,7 @@ class Model:
                     fnc(energy)
                 except:
                     pass
-            sleep(0.01)
+            # sleep(0.01)
 
         mic_energy_queue = Queue()
         mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
@@ -336,7 +351,7 @@ class Model:
                     fnc(energy)
                 except:
                     pass
-            sleep(0.01)
+            # sleep(0.01)
 
         speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
