@@ -25,16 +25,13 @@ def sendMicMessage(message):
             translation = ""
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            if config.ENABLE_OSC is True:
+            if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
                 if len(translation) > 0:
                     osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
                     osc_message = osc_message.replace("[translation]", translation)
                 else:
                     osc_message = message
                 model.oscSendMessage(osc_message)
-            else:
-                if config.STARTUP_OSC_ENABLED_CHECK is True:
-                    view.printToTextbox_OSCError()
 
             view.printToTextbox_SentMessage(message, translation)
             if config.ENABLE_LOGGER is True:
@@ -124,16 +121,13 @@ def sendChatMessage(message):
             translation = ""
 
         # send OSC message
-        if config.ENABLE_OSC is True:
+        if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
             if len(translation) > 0:
                 osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
                 osc_message = osc_message.replace("[translation]", translation)
             else:
                 osc_message = message
             model.oscSendMessage(osc_message)
-        else:
-            if config.STARTUP_OSC_ENABLED_CHECK is True:
-                view.printToTextbox_OSCError()
 
         # update textbox message log
         view.printToTextbox_SentMessage(message, translation)
@@ -197,8 +191,8 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
 
-def callbackChangeStatusOSC(value):
-    config.ENABLE_OSC = value
+def callbackChangeStatusIsValidOSC(value):
+    config.IS_VALID_OSC = value
 
 def callbackChangeStatusSoftwareUpdated(value):
     config.UPDATE_FLAG = value
@@ -554,7 +548,11 @@ if model.authenticationTranslator(callbackSetAuthKeys) is False:
 model.addKeywords()
 
 # check OSC started
-model.checkOSCStarted(callbackChangeStatusOSC)
+if config.STARTUP_OSC_ENABLED_CHECK is True:
+    model.checkOSCStarted(callbackChangeStatusIsValidOSC)
+    sleep(2)
+    if config.IS_VALID_OSC is False:
+        view.printToTextbox_OSCError()
 
 # check Software Updated
 model.checkSoftwareUpdated(callbackChangeStatusSoftwareUpdated)

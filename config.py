@@ -380,15 +380,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def ENABLE_OSC(self):
-        return self._ENABLE_OSC
-
-    @ENABLE_OSC.setter
-    def ENABLE_OSC(self, value):
-        if type(value) is bool:
-            self._ENABLE_OSC = value
-
-    @property
     def ENABLE_SEND_MESSAGE_TO_VRC(self):
         return self._ENABLE_SEND_MESSAGE_TO_VRC
 
@@ -407,6 +398,15 @@ class Config:
         if type(value) is bool:
             self._STARTUP_OSC_ENABLED_CHECK = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    def IS_VALID_OSC(self):
+        return self._IS_VALID_OSC
+
+    @IS_VALID_OSC.setter
+    def IS_VALID_OSC(self, value):
+        if type(value) is bool:
+            self._IS_VALID_OSC = value
 
     @property
     def UPDATE_FLAG(self):
@@ -526,9 +526,9 @@ class Config:
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
-        self._ENABLE_OSC = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._STARTUP_OSC_ENABLED_CHECK = True
+        self._IS_VALID_OSC = False
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         # self._BREAK_KEYSYM_LIST = [
