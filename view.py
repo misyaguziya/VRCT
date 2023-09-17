@@ -246,10 +246,10 @@ class View():
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
 
 
-            VAR_LABEL_ENABLE_OSC=StringVar(value="Send Message To VRChat"),
-            VAR_DESC_ENABLE_OSC=StringVar(value="There is a way to use it without sending messages to VRChat."),
-            CALLBACK_SET_ENABLE_OSC=None,
-            VAR_ENABLE_OSC=BooleanVar(value=config.ENABLE_OSC),
+            VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value="Send Message To VRChat"),
+            VAR_DESC_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value="There is a way to use it without sending messages to VRChat.\nThat is not covered by support, though."),
+            CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=None,
+            VAR_ENABLE_SEND_MESSAGE_TO_VRC=BooleanVar(value=config.ENABLE_SEND_MESSAGE_TO_VRC),
 
             VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Check If OSC Is Enabled At Startup"),
             VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Every time VRCT is started up, your character in VRChat moves forward ever so slightly. If your character is seated, they might even stand up. Unfortunately, this is the only method we've found to check if OSC is enabled at startup... Sorry about that. (Remember to turn on OSC yourself when you want to send messages to VRChat.)"),
@@ -377,6 +377,7 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
             self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window_registers.get("callback_set_message_format", None)
 
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
             self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None)
 
             # Advanced Settings Tab
