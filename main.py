@@ -191,9 +191,6 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
 
-def callbackChangeStatusIsValidOSC(value):
-    config.IS_VALID_OSC = value
-
 def callbackChangeStatusSoftwareUpdated(value):
     config.UPDATE_FLAG = value
 
@@ -548,11 +545,8 @@ if model.authenticationTranslator(callbackSetAuthKeys) is False:
 model.addKeywords()
 
 # check OSC started
-if config.STARTUP_OSC_ENABLED_CHECK is True:
-    model.checkOSCStarted(callbackChangeStatusIsValidOSC)
-    sleep(2)
-    if config.IS_VALID_OSC is False:
-        view.printToTextbox_OSCError()
+if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+    model.checkOSCStarted(view.printToTextbox_OSCError)
 
 # check Software Updated
 model.checkSoftwareUpdated(callbackChangeStatusSoftwareUpdated)
