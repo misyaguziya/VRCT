@@ -3,7 +3,6 @@ from types import SimpleNamespace
 class UiScalingManager():
     def __init__(self, scaling_percentage):
         scaling_float = int(scaling_percentage.replace("%", "")) / 100
-        print(scaling_float)
         self.SCALING_FLOAT = max(scaling_float, 0.4)
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
