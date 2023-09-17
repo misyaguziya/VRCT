@@ -389,6 +389,16 @@ class Config:
             self._ENABLE_OSC = value
 
     @property
+    def ENABLE_SEND_MESSAGE_TO_VRC(self):
+        return self._ENABLE_SEND_MESSAGE_TO_VRC
+
+    @ENABLE_SEND_MESSAGE_TO_VRC.setter
+    def ENABLE_SEND_MESSAGE_TO_VRC(self, value):
+        if type(value) is bool:
+            self._ENABLE_SEND_MESSAGE_TO_VRC = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     def STARTUP_OSC_ENABLED_CHECK(self):
         return self._STARTUP_OSC_ENABLED_CHECK
 
@@ -517,6 +527,7 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_OSC = False
+        self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._STARTUP_OSC_ENABLED_CHECK = True
         self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
