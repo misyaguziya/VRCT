@@ -40,7 +40,7 @@ def sendMicMessage(message):
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
                     translation = f" ({translation})"
-                model.logger.info(f"[SEND] {message}{translation}")
+                model.logger.info(f"[SENT] {message}{translation}")
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage)
@@ -86,7 +86,7 @@ def receiveSpeakerMessage(message):
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
                     translation = f" ({translation})"
-                model.logger.info(f"[RECEIVE] {message}{translation}")
+                model.logger.info(f"[RECEIVED] {message}{translation}")
 
 def startTranscriptionReceiveMessage():
     model.startSpeakerTranscript(receiveSpeakerMessage)
@@ -140,7 +140,7 @@ def sendChatMessage(message):
         if config.ENABLE_LOGGER is True:
             if len(translation) > 0:
                 translation = f" ({translation})"
-            model.logger.info(f"[SEND] {message}{translation}")
+            model.logger.info(f"[SENT] {message}{translation}")
 
         # delete message in entry message box
         if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
