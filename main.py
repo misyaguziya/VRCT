@@ -59,6 +59,22 @@ def stopThreadingTranscriptionSendMessage():
     th_stopTranscriptionSendMessage.daemon = True
     th_stopTranscriptionSendMessage.start()
 
+def startTranscriptionSendMessageOnCloseConfigWindow():
+    model.startMicTranscript(sendMicMessage)
+
+def stopTranscriptionSendMessageOnOpenConfigWindow():
+    model.stopMicTranscript()
+
+def startThreadingTranscriptionSendMessageOnCloseConfigWindow():
+    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessageOnCloseConfigWindow)
+    th_startTranscriptionSendMessage.daemon = True
+    th_startTranscriptionSendMessage.start()
+
+def stopThreadingTranscriptionSendMessageOnOpenConfigWindow():
+    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessageOnOpenConfigWindow)
+    th_stopTranscriptionSendMessage.daemon = True
+    th_stopTranscriptionSendMessage.start()
+
 # func transcription receive message
 def receiveSpeakerMessage(message):
     if len(message) > 0:
@@ -102,6 +118,22 @@ def startThreadingTranscriptionReceiveMessage():
 def stopThreadingTranscriptionReceiveMessage():
     view.printToTextbox_disableTranscriptionReceive()
     th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
+    th_stopTranscriptionReceiveMessage.daemon = True
+    th_stopTranscriptionReceiveMessage.start()
+
+def startTranscriptionReceiveMessageOnCloseConfigWindow():
+    model.startSpeakerTranscript(receiveSpeakerMessage)
+
+def stopTranscriptionReceiveMessageOnOpenConfigWindow():
+    model.stopSpeakerTranscript()
+
+def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow():
+    th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessageOnCloseConfigWindow)
+    th_startTranscriptionReceiveMessage.daemon = True
+    th_startTranscriptionReceiveMessage.start()
+
+def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow():
+    th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessageOnOpenConfigWindow)
     th_stopTranscriptionReceiveMessage.daemon = True
     th_stopTranscriptionReceiveMessage.start()
 
@@ -229,10 +261,11 @@ def callbackToggleForeground(is_turned_on):
 
 # Config Window
 def callbackOpenConfigWindow():
+    view.setMainWindowAllWidgetsStatusToDisabled()
     if config.ENABLE_TRANSCRIPTION_SEND is True:
-        stopThreadingTranscriptionSendMessage()
+        stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        stopThreadingTranscriptionReceiveMessage()
+        stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
     if config.ENABLE_FOREGROUND is True:
         view.foregroundOff()
 
@@ -245,13 +278,14 @@ def callbackCloseConfigWindow():
     # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
-        startThreadingTranscriptionSendMessage()
+        startThreadingTranscriptionSendMessageOnCloseConfigWindow()
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             sleep(2)
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        startThreadingTranscriptionReceiveMessage()
+        startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
     if config.ENABLE_FOREGROUND is True:
         view.foregroundOn()
+    view.setMainWindowAllWidgetsStatusToNormal()
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
