@@ -1,9 +1,8 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkSwitch, CTkImage
 
-from ....ui_utils import getImageFileFromUiUtils, openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction
+from ....ui_utils import openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction
 
 from utils import callFunctionIfCallable
-
 
 def createSidebarFeatures(settings, main_window, view_variable):
 

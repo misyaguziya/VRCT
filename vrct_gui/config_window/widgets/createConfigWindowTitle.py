@@ -1,8 +1,5 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ...ui_utils import getImageFileFromUiUtils
-
-
 def createConfigWindowTitle(config_window, settings):
 
     config_window.grid_columnconfigure(0, weight=0, minsize=settings.uism.TOP_BAR_SIDE__WIDTH)

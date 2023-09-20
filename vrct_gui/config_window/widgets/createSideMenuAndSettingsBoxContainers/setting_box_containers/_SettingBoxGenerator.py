@@ -65,7 +65,7 @@ class _SettingBoxGenerator():
             self.setting_box_desc.grid(row=1, column=0, padx=0, pady=(self.settings.uism.SB__DESC_TOP_PADY,0), sticky="ew")
 
 
-    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_attr_name=None, dropdown_menu_values=None):
+    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
         (setting_box_frame, setting_box_frame_wrapper) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         setting_box_dropdown_menu_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)

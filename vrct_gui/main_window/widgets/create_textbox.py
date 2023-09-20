@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkTextbox
 
-from ...ui_utils import getLatestWidth, getLongestText, bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, _setDefaultActiveTab, switchActiveTabAndPassiveTab, switchTabsColor
+from ...ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, _setDefaultActiveTab, switchActiveTabAndPassiveTab, switchTabsColor
 
 
 def createTextbox(settings, main_window, view_variable):

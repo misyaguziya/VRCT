@@ -1,8 +1,5 @@
 from customtkinter import CTkImage
 
-from .ui_utils import getImageFileFromUiUtils
-
-
 def _changeConfigWindowWidgetsStatus(config_window, settings, view_variable, status, target_names):
     if target_names == "All":
         target_names = ["mic_energy_threshold_check_button", "speaker_energy_threshold_check_button"]
