@@ -32,7 +32,6 @@ class View():
         self.settings.config_window = SimpleNamespace(
             ctm=all_ctm.config_window,
             uism=all_uism.config_window,
-            IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
             **common_args
         )
 
@@ -102,6 +101,8 @@ class View():
             # Config Window
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
+            IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
+
             # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
             VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
@@ -603,9 +604,8 @@ class View():
 
 
 
-    @staticmethod
-    def reloadConfigWindowSettingBoxContainer():
-        vrct_gui.config_window.settings.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
+    def reloadConfigWindowSettingBoxContainer(self):
+        self.view_variable.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
         vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
 
 

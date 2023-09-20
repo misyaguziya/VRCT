@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSlider = sbg.createSettingBoxSlider
 
