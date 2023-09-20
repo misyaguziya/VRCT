@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Translation(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings)
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
@@ -13,7 +13,6 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
 
     row=0
     config_window.sb__deepl_authkey = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_DEEPL_AUTH_KEY,
         for_var_desc_text=view_variable.VAR_DESC_DEEPL_AUTH_KEY,
         entry_attr_name="sb__deepl_authkey",

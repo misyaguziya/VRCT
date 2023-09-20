@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings)
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
@@ -30,7 +30,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
     row=0
     config_window.sb__auto_clear_message_box = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX,
         for_var_desc_text=view_variable.VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX,
         checkbox_attr_name="sb__checkbox_auto_clear_message_box",
@@ -42,7 +41,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
 
     config_window.sb__notice_xsoverlay = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_ENABLE_NOTICE_XSOVERLAY,
         for_var_desc_text=view_variable.VAR_DESC_ENABLE_NOTICE_XSOVERLAY,
         checkbox_attr_name="sb__checkbox_notice_xsoverlay",
@@ -54,7 +52,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
 
     config_window.sb__auto_export_message_logs = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
         for_var_desc_text=view_variable.VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
         checkbox_attr_name="sb__checkbox_auto_export_message_logs",
@@ -66,7 +63,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
 
     config_window.sb__message_format = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MESSAGE_FORMAT,
         for_var_desc_text=view_variable.VAR_DESC_MESSAGE_FORMAT,
         entry_attr_name="sb__entry_message_format",
@@ -79,7 +75,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
 
     config_window.sb__enable_send_message_to_vrc = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC,
         for_var_desc_text=view_variable.VAR_DESC_ENABLE_SEND_MESSAGE_TO_VRC,
         checkbox_attr_name="sb__checkbox_enable_send_message_to_vrc",
@@ -90,7 +85,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     row+=1
 
     config_window.sb__startup_osc_enabled_check = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_STARTUP_OSC_ENABLED_CHECK,
         for_var_desc_text=view_variable.VAR_DESC_STARTUP_OSC_ENABLED_CHECK,
         checkbox_attr_name="sb__checkbox_startup_osc_enabled_check",

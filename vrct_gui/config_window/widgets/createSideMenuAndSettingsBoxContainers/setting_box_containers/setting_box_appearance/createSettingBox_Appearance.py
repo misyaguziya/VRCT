@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSlider = sbg.createSettingBoxSlider
 
@@ -27,7 +27,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
 
     row=0
     config_window.sb__transparency = createSettingBoxSlider(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_TRANSPARENCY,
         for_var_desc_text=view_variable.VAR_DESC_TRANSPARENCY,
         slider_attr_name="sb__transparency_slider",
@@ -40,7 +39,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
 
 
     config_window.sb__appearance_theme = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_APPEARANCE_THEME,
         for_var_desc_text=view_variable.VAR_DESC_APPEARANCE_THEME,
         optionmenu_attr_name="sb__optionmenu_appearance_theme",
@@ -55,7 +53,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
 
 
     config_window.sb__ui_scaling = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_UI_SCALING,
         for_var_desc_text=view_variable.VAR_DESC_UI_SCALING,
         optionmenu_attr_name="sb__optionmenu_ui_scaling",
@@ -69,7 +66,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
 
 
     config_window.sb__font_family = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_FONT_FAMILY,
         for_var_desc_text=view_variable.VAR_DESC_FONT_FAMILY,
         optionmenu_attr_name="sb__optionmenu_font_family",
@@ -82,7 +78,6 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
 
 
     config_window.sb__ui_language = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_UI_LANGUAGE,
         for_var_desc_text=view_variable.VAR_DESC_UI_LANGUAGE,
         optionmenu_attr_name="sb__optionmenu_ui_language",

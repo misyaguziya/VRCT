@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
@@ -43,7 +43,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     row=0
     # Mic Host と Mic Device は一つの項目として引っ付ける予定
     config_window.sb__mic_host = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_HOST,
         for_var_desc_text=view_variable.VAR_DESC_MIC_HOST,
         optionmenu_attr_name="sb__optionmenu_mic_host",
@@ -56,7 +55,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     row+=1
 
     config_window.sb__mic_device = createSettingBoxDropdownMenu(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_DEVICE,
         for_var_desc_text=view_variable.VAR_DESC_MIC_DEVICE,
         optionmenu_attr_name="sb__optionmenu_mic_device",
@@ -70,7 +68,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
 
 
     config_window.sb__mic_energy_threshold = createSettingBoxProgressbarXSlider(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_ENERGY_THRESHOLD,
         for_var_desc_text=view_variable.VAR_DESC_MIC_ENERGY_THRESHOLD,
         command=slider_input_mic_energy_threshold_callback,
@@ -96,7 +93,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
 
     # Mic Dynamic Energy Thresholdも上に引っ付ける予定
     config_window.sb__mic_dynamic_energy_threshold = createSettingBoxCheckbox(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD,
         for_var_desc_text=view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD,
         checkbox_attr_name="sb__checkbox_mic_dynamic_energy_threshold",
@@ -109,7 +105,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
 
     # 以下３つも一つの項目にまとめるかもしれない
     config_window.sb__mic_record_timeout = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_RECORD_TIMEOUT,
         for_var_desc_text=view_variable.VAR_DESC_MIC_RECORD_TIMEOUT,
         entry_attr_name="sb__entry_mic_record_timeout",
@@ -121,7 +116,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     row+=1
 
     config_window.sb__mic_phrase_timeout = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_PHRASE_TIMEOUT,
         for_var_desc_text=view_variable.VAR_DESC_MIC_PHRASE_TIMEOUT,
         entry_attr_name="sb__entry_mic_phrase_timeout",
@@ -133,7 +127,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     row+=1
 
     config_window.sb__mic_max_phrases = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_MAX_PHRASES,
         for_var_desc_text=view_variable.VAR_DESC_MIC_MAX_PHRASES,
         entry_attr_name="sb__entry_mic_max_phrases",
@@ -147,7 +140,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
 
 
     config_window.sb__mic_word_filter = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_MIC_WORD_FILTER,
         for_var_desc_text=view_variable.VAR_DESC_MIC_WORD_FILTER,
         entry_attr_name="sb__entry_mic_word_filter",
