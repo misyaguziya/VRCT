@@ -1,7 +1,7 @@
 
 from customtkinter import CTkFrame, CTkLabel, CTkImage
 
-from ...ui_utils import getImageFileFromUiUtils, bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction
+from ...ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction
 
 from utils import callFunctionIfCallable
 

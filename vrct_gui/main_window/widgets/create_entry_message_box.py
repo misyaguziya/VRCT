@@ -1,4 +1,3 @@
-
 from customtkinter import CTkFont, CTkFrame, CTkEntry
 
 def createEntryMessageBox(settings, main_window):
