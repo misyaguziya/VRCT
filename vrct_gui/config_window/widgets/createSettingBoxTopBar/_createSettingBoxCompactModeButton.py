@@ -60,7 +60,7 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
         progress_color=settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR, # SB__SWITCH_BOX_ACTIVE_BG_COLOR is for SB. change it later.
     )
 
-    config_window.setting_box_compact_mode_switch_box.select() if settings.IS_CONFIG_WINDOW_COMPACT_MODE else config_window.setting_box_compact_mode_switch_box.deselect()
+    config_window.setting_box_compact_mode_switch_box.select() if view_variable.IS_CONFIG_WINDOW_COMPACT_MODE else config_window.setting_box_compact_mode_switch_box.deselect()
 
     config_window.setting_box_compact_mode_switch_box.grid(row=0, column=0)
 

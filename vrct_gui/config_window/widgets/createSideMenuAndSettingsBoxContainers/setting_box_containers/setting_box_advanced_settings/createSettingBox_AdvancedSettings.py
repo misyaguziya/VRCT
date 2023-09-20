@@ -3,7 +3,7 @@ from utils import callFunctionIfCallable
 from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settings, view_variable):
-    sbg = _SettingBoxGenerator(config_window, settings)
+    sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
 
@@ -15,7 +15,6 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
 
     row=0
     config_window.sb__ip_address = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_OSC_IP_ADDRESS,
         for_var_desc_text=view_variable.VAR_DESC_OSC_IP_ADDRESS,
         entry_attr_name="sb__entry_ip_address",
@@ -28,7 +27,6 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
 
 
     config_window.sb__port = createSettingBoxEntry(
-        parent_widget=setting_box_wrapper,
         for_var_label_text=view_variable.VAR_LABEL_OSC_PORT,
         for_var_desc_text=view_variable.VAR_DESC_OSC_PORT,
         entry_attr_name="sb__entry_port",
