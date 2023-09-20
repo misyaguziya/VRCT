@@ -5,9 +5,8 @@ from vrct_gui.ui_utils import createButtonWithImage
 from typing import Union
 
 class _SettingBoxGenerator():
-    def __init__(self, parent_widget, config_window, settings):
-
-        self.IS_CONFIG_WINDOW_COMPACT_MODE = settings.IS_CONFIG_WINDOW_COMPACT_MODE
+    def __init__(self, parent_widget, config_window, settings, view_variable):
+        self.view_variable = view_variable
         self.config_window = config_window
         self.parent_widget = parent_widget
         self.settings = settings
@@ -50,7 +49,7 @@ class _SettingBoxGenerator():
         )
         setting_box_label.grid(row=0, column=0, padx=0, pady=0, sticky="ew")
 
-        if for_var_desc_text == None or self.IS_CONFIG_WINDOW_COMPACT_MODE is True:
+        if for_var_desc_text == None or self.view_variable.IS_CONFIG_WINDOW_COMPACT_MODE is True:
             pass
         else:
             self.setting_box_desc = CTkLabel(
