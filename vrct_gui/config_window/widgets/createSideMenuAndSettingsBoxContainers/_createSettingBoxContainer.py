@@ -49,6 +49,7 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
         # if the last one of setting boxes, remove bottom pady
         if i+1 == setting_boxes_length: SB__BOTTOM_PADY = 0
 
+        # setting_box_wrapper = CTkFrame(setting_box_and_section_title_wrapper, fg_color="red", corner_radius=0, width=0, height=0)
         setting_box_wrapper = CTkFrame(setting_box_and_section_title_wrapper, fg_color=settings.ctm.SB__WRAPPER_BG_COLOR, corner_radius=0, width=0, height=0)
         setting_box_wrapper.grid(row=1, column=0)
         setting_box_row+=1

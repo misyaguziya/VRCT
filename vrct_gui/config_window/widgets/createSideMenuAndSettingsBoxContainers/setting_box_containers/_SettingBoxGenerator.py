@@ -14,25 +14,32 @@ class _SettingBoxGenerator():
         self.config_window = config_window
 
 
+    def _createSettingBoxFrame(self, parent_widget, for_var_label_text, for_var_desc_text):
+        setting_box_frame = CTkFrame(parent_widget, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
+        # setting_box_frame = CTkFrame(parent_widget, corner_radius=0, fg_color="gray", width=0, height=0)
 
-    def _createSettingBoxFrameWrapper(self, setting_box_frame):
+        # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
+        # setting_box_frame.grid(column=0, padx=0, pady=0, sticky="ew")
+        setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
+
+
+        # setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color="gray", width=0, height=0)
         setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=self.uism.SB__MAIN_WIDTH, height=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.uism.SB__IPADX, pady=self.uism.SB__IPADY, sticky="ew")
         setting_box_frame_wrapper.grid_columnconfigure((0,1), weight=1, minsize=int(self.uism.SB__MAIN_WIDTH / 2))
-        return setting_box_frame_wrapper
 
-    def _createSettingBoxFrame(self, parent_widget, for_var_label_text, for_var_desc_text):
-        setting_box_frame = CTkFrame(parent_widget, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
-        setting_box_frame_wrapper = self._createSettingBoxFrameWrapper(setting_box_frame)
+
+        # setting_box_frame_wrapper.grid(column=0, padx=0, pady=0)
+        setting_box_frame_wrapper.grid(row=0, column=0, padx=self.uism.SB__IPADX, pady=self.uism.SB__IPADY, sticky="ew")
+
         self._setSettingBoxLabels(setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
 
-        # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
-        setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
         return (setting_box_frame, setting_box_frame_wrapper)
 
-    def _setSettingBoxLabels(self, setting_box_frame, for_var_label_text, for_var_desc_text=None):
+    def _setSettingBoxLabels(self, setting_box_frame_wrapper, for_var_label_text, for_var_desc_text=None):
 
-        setting_box_labels_frame = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
+        setting_box_labels_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, fg_color=self.ctm.SB__BG_COLOR, width=0, height=0)
+        setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=0, sticky="w")
 
         setting_box_label = CTkLabel(
             setting_box_labels_frame,
@@ -58,9 +65,6 @@ class _SettingBoxGenerator():
                 text_color=self.ctm.LABELS_DESC_TEXT_COLOR
             )
             self.setting_box_desc.grid(row=1, column=0, padx=0, pady=(self.uism.SB__DESC_TOP_PADY,0), sticky="ew")
-
-        setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=0, sticky="w")
-
 
 
     def createSettingBoxDropdownMenu(self, parent_widget, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_attr_name=None, dropdown_menu_values=None):
