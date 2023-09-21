@@ -55,8 +55,12 @@ class Model:
 
     def init(self):
         self.logger = None
+        self.mic_print_transcript = None
+        self.mic_audio_recorder = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
+        self.spk_print_transcript = None
+        self.spk_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
@@ -284,9 +288,10 @@ class Model:
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
-        if self.mic_audio_recorder.stop != None:
+            self.mic_print_transcript = None
+        if isinstance(self.mic_audio_recorder, SelectedMicRecorder):
             self.mic_audio_recorder.stop()
-            self.mic_audio_recorder.stop = None
+            self.mic_audio_recorder = None
 
     def startCheckMicEnergy(self, fnc):
         def sendMicEnergy():
@@ -309,9 +314,10 @@ class Model:
     def stopCheckMicEnergy(self):
         if isinstance(self.mic_energy_plot_progressbar, threadFnc):
             self.mic_energy_plot_progressbar.stop()
-        if self.mic_energy_recorder != None:
+            self.mic_energy_plot_progressbar = None
+        if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
             self.mic_energy_recorder.stop()
-            self.mic_energy_recorder.stop = None
+            self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
         spk_audio_queue = Queue()
@@ -350,9 +356,10 @@ class Model:
     def stopSpeakerTranscript(self):
         if isinstance(self.spk_print_transcript, threadFnc):
             self.spk_print_transcript.stop()
-        if self.spk_audio_recorder.stop != None:
+            self.spk_print_transcript = None
+        if isinstance(self.spk_audio_recorder, SelectedSpeakerRecorder):
             self.spk_audio_recorder.stop()
-            self.spk_audio_recorder.stop = None
+            self.spk_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc):
         def sendSpeakerEnergy():
@@ -375,9 +382,10 @@ class Model:
     def stopCheckSpeakerEnergy(self):
         if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
             self.speaker_energy_plot_progressbar.stop()
-        if self.speaker_energy_recorder != None:
+            self.speaker_energy_plot_progressbar = None
+        if isinstance(self.speaker_energy_recorder, SelectedSpeakeEnergyRecorder):
             self.speaker_energy_recorder.stop()
-            self.speaker_energy_recorder.stop != None
+            self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
