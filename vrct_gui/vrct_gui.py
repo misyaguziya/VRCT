@@ -12,8 +12,6 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab
 
-from .main_window.widgets import createMinimizeSidebarButton
-
 from utils import callFunctionIfCallable
 
 class VRCT_GUI(CTk):

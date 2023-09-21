@@ -15,7 +15,7 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
     config_window.sb__deepl_authkey = createSettingBoxEntry(
         for_var_label_text=view_variable.VAR_LABEL_DEEPL_AUTH_KEY,
         for_var_desc_text=view_variable.VAR_DESC_DEEPL_AUTH_KEY,
-        entry_attr_name="sb__deepl_authkey",
+        entry_attr_name="sb__entry_deepl_authkey",
         entry_width=settings.uism.SB__ENTRY_WIDTH_300,
         entry_bind__Any_KeyRelease=lambda value: deepl_authkey_callback(value),
         entry_textvariable=view_variable.VAR_DEEPL_AUTH_KEY,
