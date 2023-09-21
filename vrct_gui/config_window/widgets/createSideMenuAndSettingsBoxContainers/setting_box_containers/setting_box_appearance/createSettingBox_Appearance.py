@@ -29,7 +29,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     config_window.sb__transparency = createSettingBoxSlider(
         for_var_label_text=view_variable.VAR_LABEL_TRANSPARENCY,
         for_var_desc_text=view_variable.VAR_DESC_TRANSPARENCY,
-        slider_attr_name="sb__transparency_slider",
+        slider_attr_name="sb__slider_transparency",
         slider_range=view_variable.SLIDER_RANGE_TRANSPARENCY,
         command=lambda value: slider_transparency_callback(value),
         variable=view_variable.VAR_TRANSPARENCY,
