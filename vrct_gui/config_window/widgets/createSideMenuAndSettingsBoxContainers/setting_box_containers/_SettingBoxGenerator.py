@@ -14,7 +14,7 @@ class _SettingBoxGenerator():
 
     def _createSettingBoxFrame(self, for_var_label_text, for_var_desc_text):
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        # setting_box_frame = CTkFrame(parent_widget, corner_radius=0, fg_color="gray", width=0, height=0)
+        # setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color="gray", width=0, height=0)
 
         # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
         # setting_box_frame.grid(column=0, padx=0, pady=0, sticky="ew")
@@ -29,6 +29,10 @@ class _SettingBoxGenerator():
 
         # setting_box_frame_wrapper.grid(column=0, padx=0, pady=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="ew")
+
+        setting_box_frame_wrapper_border = CTkFrame(setting_box_frame, corner_radius=0, fg_color="red", width=0, height=0)
+        setting_box_frame_wrapper_border.grid(row=1, column=0, sticky="ew")
+
 
         self._setSettingBoxLabels(setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
 
