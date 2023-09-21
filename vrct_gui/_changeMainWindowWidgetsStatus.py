@@ -1,8 +1,5 @@
 from customtkinter import CTkImage
 
-from .ui_utils import getImageFileFromUiUtils
-
-
 def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names):
     COMPACT_MODE_ICON_SIZE_TUPLES = (settings.COMPACT_MODE_ICON_SIZE, settings.COMPACT_MODE_ICON_SIZE)
 

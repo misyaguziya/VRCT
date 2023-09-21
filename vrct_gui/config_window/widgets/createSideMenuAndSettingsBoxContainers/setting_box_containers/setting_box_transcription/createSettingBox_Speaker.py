@@ -40,7 +40,6 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         for_var_label_text=view_variable.VAR_LABEL_SPEAKER_DEVICE,
         for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DEVICE,
         optionmenu_attr_name="sb__optionmenu_speaker_device",
-        dropdown_menu_attr_name="sb__dropdown_speaker_device",
         dropdown_menu_values=view_variable.LIST_SPEAKER_DEVICE,
         command=lambda value: optionmenu_input_speaker_device_callback(value),
         variable=view_variable.VAR_SPEAKER_DEVICE,
