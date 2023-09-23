@@ -223,9 +223,6 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
 
-def callbackChangeStatusSoftwareUpdated(value):
-    config.UPDATE_FLAG = value
-
 # command func
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
@@ -668,9 +665,6 @@ view.register(
         "callback_set_osc_port": callbackSetOscPort,
     },
 )
-
-if config.UPDATE_FLAG is True:
-    view.showUpdateAvailableButton()
 
 if __name__ == "__main__":
     view.startMainLoop()
