@@ -219,15 +219,15 @@ class Model:
             fnc()
 
     @staticmethod
-    def checkSoftwareUpdated(fnc):
+    def checkSoftwareUpdated():
         # check update
+        update_flag = False
         response = requests_get(config.GITHUB_URL)
-        tag_name = response.json()["tag_name"]
-        if tag_name != config.VERSION:
-            try:
-                fnc(True)
-            except:
-                pass
+        new_version = response.json()["name"]
+        if new_version != config.VERSION:
+            update_flag = True
+        print("software version", "now:", config.VERSION, "new:", new_version)
+        return update_flag
 
     @staticmethod
     def getListInputHost():
