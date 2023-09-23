@@ -50,6 +50,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         cursor="hand2",
     )
     vrct_gui.update_available_container.grid(row=0, column=3, padx=settings.uism.UPDATE_AVAILABLE_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="nse")
+    vrct_gui.update_available_container.grid_remove()
 
 
     vrct_gui.update_available_container.rowconfigure((0,2), weight=1)

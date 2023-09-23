@@ -392,6 +392,9 @@ class View():
         # self._insertSampleConversationToTextbox()
 
 
+    @staticmethod
+    def showUpdateAvailableButton():
+        vrct_gui.update_available_container.grid()
 
     @staticmethod
     def setMainWindowAllWidgetsStatusToNormal():
