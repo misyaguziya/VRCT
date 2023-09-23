@@ -583,7 +583,8 @@ if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VR
     model.checkOSCStarted(view.printToTextbox_OSCError)
 
 # check Software Updated
-model.checkSoftwareUpdated(callbackChangeStatusSoftwareUpdated)
+if model.checkSoftwareUpdated() is True:
+    view.showUpdateAvailableButton()
 
 # init logger
 if config.ENABLE_LOGGER is True:
