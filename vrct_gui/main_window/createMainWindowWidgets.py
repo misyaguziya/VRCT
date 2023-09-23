@@ -41,26 +41,26 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
 
 
+    # Update Available Button
     vrct_gui.update_available_container = CTkFrame(
         vrct_gui.main_topbar_container,
-        corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
+        corner_radius=settings.uism.UPDATE_AVAILABLE_BUTTON_CORNER_RADIUS,
         fg_color=settings.ctm.MAIN_BG_COLOR,
         cursor="hand2",
     )
-    vrct_gui.update_available_container.grid(row=0, column=3, padx=(0,4), pady=settings.uism.HELP_AND_INFO_BUTTON_PADY, sticky="nse")
+    vrct_gui.update_available_container.grid(row=0, column=3, padx=settings.uism.UPDATE_AVAILABLE_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="nse")
 
 
     vrct_gui.update_available_container.rowconfigure((0,2), weight=1)
-
 
     vrct_gui.update_available_icon = CTkLabel(
         vrct_gui.update_available_container,
         text=None,
         corner_radius=0,
         height=0,
-        image=CTkImage(settings.image_file.REFRESH_ICON.rotate(25), size=(settings.uism.HELP_AND_INFO_BUTTON_SIZE-6,settings.uism.HELP_AND_INFO_BUTTON_SIZE-6)),
+        image=CTkImage(settings.image_file.REFRESH_ICON.rotate(25), size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
     )
-    vrct_gui.update_available_icon.grid(row=1, column=0, padx=(6,4), pady=0)
+    vrct_gui.update_available_icon.grid(row=1, column=0, padx=(settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX, settings.uism.UPDATE_AVAILABLE_PADX_BETWEEN_LABEL_AND_ICON), pady=0)
 
 
     vrct_gui.update_available_label = CTkLabel(
@@ -68,15 +68,12 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         textvariable=view_variable.VAR_UPDATE_AVAILABLE,
         height=0,
         corner_radius=0,
-        font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"),
+        font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.UPDATE_AVAILABLE_BUTTON_FONT_SIZE, weight="normal"),
         anchor="e",
-        text_color="#61b4a7",
+        text_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_TEXT_COLOR,
     )
     # This "right padx +1" is for fixing a bug that sticks out from the frame. I don't know why that happens...
-    vrct_gui.update_available_label.grid(row=1, column=1, padx=(0,6+1), pady=0)
-
-
-
+    vrct_gui.update_available_label.grid(row=1, column=1, padx=(0,settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX+1), pady=0)
 
 
     bindButtonFunctionAndColor(
@@ -85,11 +82,13 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
             vrct_gui.update_available_label,
             vrct_gui.update_available_icon,
         ],
-        enter_color=settings.ctm.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR,
-        leave_color=settings.ctm.HELP_AND_INFO_BUTTON_BG_COLOR,
-        clicked_color=settings.ctm.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR,
+        enter_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR,
+        leave_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_BG_COLOR,
+        clicked_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR,
         buttonReleasedFunction=vrct_gui.openHelpAndInfoWindow,
     )
+
+
 
 
 
@@ -105,7 +104,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         button_command=vrct_gui.openHelpAndInfoWindow,
         corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
     )
-    vrct_gui.help_and_info_button_container.grid(row=0, column=4, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.HELP_AND_INFO_BUTTON_PADY, sticky="e")
+    vrct_gui.help_and_info_button_container.grid(row=0, column=4, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
 
     createSidebar(settings, vrct_gui, view_variable)
 
