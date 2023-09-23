@@ -668,5 +668,8 @@ view.register(
     },
 )
 
+if config.UPDATE_FLAG is True:
+    view.showUpdateAvailableButton()
+
 if __name__ == "__main__":
     view.startMainLoop()
