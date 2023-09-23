@@ -91,6 +91,9 @@ class View():
             VAR_LABEL_TEXTBOX_RECEIVED=StringVar(value="Received"), # JA: 受信
             VAR_LABEL_TEXTBOX_SYSTEM=StringVar(value="System"), # JA: システム
 
+            VAR_UPDATE_AVAILABLE=StringVar(value="New version is here!"), # JA: 新しいバージョンが出ました！
+            # VAR_UPDATE_AVAILABLE=StringVar(value="新しいバージョンが出ました！"),
+
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
