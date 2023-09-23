@@ -75,11 +75,21 @@ class UiScalingManager():
         self.main.SIDEBAR_CONFIG_BUTTON_PADY = self._calculateUiSize(10)
         self.main.SIDEBAR_CONFIG_BUTTON_IPADY = self._calculateUiSize(8)
 
+        self.main.TOP_BAR_BUTTON_PADY = (self._calculateUiSize(6),0)
+
+        self.main.UPDATE_AVAILABLE_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
+        self.main.UPDATE_AVAILABLE_BUTTON_SIZE = (self._calculateUiSize(18), self._calculateUiSize(18))
+        self.main.UPDATE_AVAILABLE_BUTTON_FONT_SIZE = self._calculateUiSize(12)
+        self.main.UPDATE_AVAILABLE_BUTTON_PADX = (0, self._calculateUiSize(4))
+        self.main.UPDATE_AVAILABLE_BUTTON_IPADX = self._calculateUiSize(6)
+        self.main.UPDATE_AVAILABLE_ICON_PADX = (self._calculateUiSize(6), self._calculateUiSize(4))
+        self.main.UPDATE_AVAILABLE_PADX_BETWEEN_LABEL_AND_ICON = self._calculateUiSize(4)
+
+
 
         self.main.HELP_AND_INFO_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.HELP_AND_INFO_BUTTON_SIZE = self._calculateUiSize(24)
         self.main.HELP_AND_INFO_BUTTON_PADX = (0, self._calculateUiSize(6))
-        self.main.HELP_AND_INFO_BUTTON_PADY = (self._calculateUiSize(6),0)
         self.main.HELP_AND_INFO_BUTTON_IPADXY = self._calculateUiSize(6)
 
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X = int(self.main.TEXTBOX_PADX/2+self.main.TEXTBOX_CORNER_RADIUS*2)
