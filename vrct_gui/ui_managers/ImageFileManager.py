@@ -30,6 +30,7 @@ class ImageFileManager():
         self.ARROW_LEFT = getImageFileFromUiUtils("arrow_left_white.png")
         self.ARROW_LEFT_DISABLED = getImageFileFromUiUtils("arrow_left_disabled.png")
 
+        self.REFRESH_ICON = getImageFileFromUiUtils("refresh_icon.png")
         self.HELP_ICON = getImageFileFromUiUtils("help_icon_white.png")
 
     def _createLightModeImages(self):
