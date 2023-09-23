@@ -4,6 +4,7 @@ from customtkinter import CTkFrame, CTkLabel, CTkFont, CTkImage
 
 from ..ui_utils import createButtonWithImage, getImagePath, bindButtonFunctionAndColor
 
+import webbrowser
 
 def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
@@ -85,7 +86,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         enter_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR,
         leave_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_BG_COLOR,
         clicked_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR,
-        buttonReleasedFunction=vrct_gui.openHelpAndInfoWindow,
+        buttonReleasedFunction=lambda e: webbrowser.open_new_tab("https://booth.pm/ja/items/4814313"),
     )
 
 
