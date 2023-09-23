@@ -400,15 +400,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    def UPDATE_FLAG(self):
-        return self._UPDATE_FLAG
-
-    @UPDATE_FLAG.setter
-    def UPDATE_FLAG(self, value):
-        if type(value) is bool:
-            self._UPDATE_FLAG = value
-
-    @property
     def GITHUB_URL(self):
         return self._GITHUB_URL
 
@@ -519,7 +510,6 @@ class Config:
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._STARTUP_OSC_ENABLED_CHECK = True
-        self._UPDATE_FLAG = False
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         # self._BREAK_KEYSYM_LIST = [
         #     "Delete", "Select", "Up", "Down", "Next", "End", "Print",

@@ -223,9 +223,6 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
 def callbackSetAuthKeys(keys):
     config.AUTH_KEYS = keys
 
-def callbackChangeStatusSoftwareUpdated(value):
-    config.UPDATE_FLAG = value
-
 # command func
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
@@ -583,7 +580,8 @@ if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VR
     model.checkOSCStarted(view.printToTextbox_OSCError)
 
 # check Software Updated
-model.checkSoftwareUpdated(callbackChangeStatusSoftwareUpdated)
+if model.checkSoftwareUpdated() is True:
+    view.showUpdateAvailableButton()
 
 # init logger
 if config.ENABLE_LOGGER is True:
@@ -667,9 +665,6 @@ view.register(
         "callback_set_osc_port": callbackSetOscPort,
     },
 )
-
-if config.UPDATE_FLAG is True:
-    view.showUpdateAvailableButton()
 
 if __name__ == "__main__":
     view.startMainLoop()
