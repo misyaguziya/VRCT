@@ -523,14 +523,13 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-
-        # Save Json Data
         self._CHOICE_TRANSLATOR = translatorEngine[0]
         self._SOURCE_LANGUAGE = "Japanese"
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
 
+        # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
         self._SELECTED_TAB_YOUR_LANGUAGES = {
