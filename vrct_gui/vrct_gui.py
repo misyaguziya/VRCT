@@ -111,12 +111,6 @@ class VRCT_GUI(CTk):
 
 
 
-
-    def openHelpAndInfoWindow(self, e):
-        self.information_window.deiconify()
-        self.information_window.focus_set()
-        self.information_window.focus()
-
     def changeMainWindowWidgetsStatus(self, status, target_names):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,

@@ -2,9 +2,8 @@ from .widgets import createSidebar, createMinimizeSidebarButton, createTextbox, 
 
 from customtkinter import CTkFrame, CTkLabel, CTkFont, CTkImage
 
+from utils import callFunctionIfCallable
 from ..ui_utils import createButtonWithImage, getImagePath, bindButtonFunctionAndColor
-
-import webbrowser
 
 def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui.quitVRCT)
@@ -87,7 +86,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         enter_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR,
         leave_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_BG_COLOR,
         clicked_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR,
-        buttonReleasedFunction=lambda e: webbrowser.open_new_tab("https://booth.pm/ja/items/4814313"),
+        buttonReleasedFunction=lambda e: callFunctionIfCallable(view_variable.CALLBACK_CLICKED_HELP_AND_INFO),
     )
 
 
@@ -103,7 +102,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         button_image_file=settings.image_file.HELP_ICON,
         button_image_size=settings.uism.HELP_AND_INFO_BUTTON_SIZE,
         button_ipadxy=settings.uism.HELP_AND_INFO_BUTTON_IPADXY,
-        button_command=vrct_gui.openHelpAndInfoWindow,
+        button_command=lambda e: callFunctionIfCallable(view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE),
         corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
     )
     vrct_gui.help_and_info_button_container.grid(row=0, column=4, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
