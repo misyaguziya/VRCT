@@ -181,6 +181,20 @@ def messageBoxPressKeyAny(e):
     model.oscStartSendTyping()
 
 # func select languages
+def initSetLanguageAndCountry():
+    select = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.SOURCE_LANGUAGE = language
+    config.SOURCE_COUNTRY = country
+
+    select = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    language, country = model.getLanguageAndCountry(select)
+    config.TARGET_LANGUAGE = language
+    config.TARGET_COUNTRY = country
+
+    config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    model.authenticationTranslator(callbackSetAuthKeys)
+
 def setYourLanguageAndCountry(select):
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
@@ -566,6 +580,8 @@ def callbackSetOscPort(value):
 view.createGUI()
 
 # init config
+initSetLanguageAndCountry()
+
 if model.authenticationTranslator(callbackSetAuthKeys) is False:
     # error update Auth key
     view.printToTextbox_AuthenticationError()
