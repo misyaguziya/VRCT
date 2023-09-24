@@ -1,6 +1,8 @@
 from typing import Union
 from types import SimpleNamespace
 from tkinter import font as tk_font
+import webbrowser
+
 from languages import selectable_languages
 
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
@@ -45,6 +47,12 @@ class View():
             # Open Config Window
             CALLBACK_OPEN_CONFIG_WINDOW=None,
             CALLBACK_CLOSE_CONFIG_WINDOW=None,
+
+            # Open Help and Information Page
+            CALLBACK_CLICKED_HELP_AND_INFO=self.openWebPage_Booth,
+
+            # Open Update Page
+            CALLBACK_CLICKED_UPDATE_AVAILABLE=self.openWebPage_VrctDocuments,
 
 
             # Main Window
@@ -391,6 +399,18 @@ class View():
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
+
+    @staticmethod
+    def openWebPage(url:str):
+        webbrowser.open_new_tab(url)
+
+    def openWebPage_Booth(self):
+        self.openWebPage("https://booth.pm/ja/items/4814313")
+        self._printToTextbox_Info("Opened Booth page in your web browser.")
+
+    def openWebPage_VrctDocuments(self):
+        self.openWebPage("https://booth.pm/ja/items/4814313") # temporally, this url is Booth link.
+        self._printToTextbox_Info("Opened the VRCT Documents page in your web browser.")
 
     @staticmethod
     def showUpdateAvailableButton():
