@@ -1,0 +1,39 @@
+main_window:
+  translation: 翻訳
+  transcription_send: マイク->チャットボックス
+  transcription_receive: スピーカー->ログ
+  foreground: 最前面表示
+
+  language_settings: 言語設定
+  your_language: あなたの言語
+  both_direction_desc: 双方向に翻訳
+  target_language: 相手の言語
+
+  textbox_tab_all: 全て
+  textbox_tab_sent: 送信
+  textbox_tab_received: 受信
+  textbox_tab_system: システム
+
+  update_available: 新しいバージョンが出ました！
+
+selectable_language_window:
+  your_language: あなたの言語
+  target_language: 相手の言語
+  go_back_button: 戻る
+
+config_window:
+  transparency:
+    label: 透明度
+    desc: メイン画面の透明度を変更できます。
+  appearance_theme:
+    label: 外観テーマ
+    desc: カラーテーマを変更できます。「System」を選択した場合、Windowsのテーマに基づいて自動的に「Dark」か「Light」テーマを判断し、適用します。
+  ui_size:
+    label: UIのサイズ
+  font_family:
+    label: 使用フォント
+  ui_language:
+    label: UIの言語
+
+  deepl_auth_key:
+    label: DeepL 認証キー
