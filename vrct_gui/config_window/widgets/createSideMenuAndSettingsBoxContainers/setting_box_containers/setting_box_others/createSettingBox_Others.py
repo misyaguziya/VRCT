@@ -25,7 +25,7 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         callFunctionIfCallable(view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK, checkbox_box_widget.get())
 
     def entry_message_format_callback(value):
-        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, value)
+        callFunctionIfCallable(view_variable.CALLBACK_SET_MESSAGE_FORMAT, value)
 
 
     row=0
