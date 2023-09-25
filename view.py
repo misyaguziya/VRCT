@@ -135,7 +135,7 @@ class View():
 
             VAR_LABEL_FONT_FAMILY=StringVar(value="Font Family"),
             VAR_DESC_FONT_FAMILY=StringVar(value="(Default: Yu Gothic UI)"),
-            LIST_FONT_FAMILY=list(tk_font.families()),
+            LIST_FONT_FAMILY=self.getAvailableFonts(),
             CALLBACK_SET_FONT_FAMILY=None,
             VAR_FONT_FAMILY=StringVar(value=config.FONT_FAMILY),
 
@@ -401,15 +401,22 @@ class View():
 
 
     @staticmethod
+    def getAvailableFonts():
+        available_fonts = list(tk_font.families())
+        available_fonts.sort()
+        filtered_available_fonts = list(filter(lambda x: x.startswith("@") is False, available_fonts))
+        return filtered_available_fonts
+
+    @staticmethod
     def openWebPage(url:str):
         webbrowser.open_new_tab(url)
 
     def openWebPage_Booth(self):
-        self.openWebPage("https://booth.pm/ja/items/4814313")
+        self.openWebPage(config.BOOTH_URL)
         self._printToTextbox_Info("Opened Booth page in your web browser.")
 
     def openWebPage_VrctDocuments(self):
-        self.openWebPage("https://booth.pm/ja/items/4814313") # temporally, this url is Booth link.
+        self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info("Opened the VRCT Documents page in your web browser.")
 
     @staticmethod
