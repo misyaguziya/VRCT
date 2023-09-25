@@ -405,11 +405,11 @@ class View():
         webbrowser.open_new_tab(url)
 
     def openWebPage_Booth(self):
-        self.openWebPage("https://booth.pm/ja/items/4814313")
+        self.openWebPage(config.BOOTH_URL)
         self._printToTextbox_Info("Opened Booth page in your web browser.")
 
     def openWebPage_VrctDocuments(self):
-        self.openWebPage("https://booth.pm/ja/items/4814313") # temporally, this url is Booth link.
+        self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info("Opened the VRCT Documents page in your web browser.")
 
     @staticmethod
