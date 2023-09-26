@@ -8,10 +8,10 @@ from utils import callFunctionIfCallable
 def createMinimizeSidebarButton(settings, main_window, view_variable):
 
     def enableCompactMode(e):
-        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, True)
+        callFunctionIfCallable(view_variable.CALLBACK_ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE)
 
     def disableCompactMode(e):
-        callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE, False)
+        callFunctionIfCallable(view_variable.CALLBACK_DISABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE)
 
 
 
