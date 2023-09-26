@@ -181,6 +181,17 @@ class Config:
             self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    @property
+    @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
+    def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
+        return self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE
+
+    @IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
+    def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
+        if type(value) is bool:
+            self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     ## Config Window
     @property
     @json_serializable('TRANSPARENCY')
@@ -542,6 +553,7 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
+        self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
         self._TRANSPARENCY = 100
