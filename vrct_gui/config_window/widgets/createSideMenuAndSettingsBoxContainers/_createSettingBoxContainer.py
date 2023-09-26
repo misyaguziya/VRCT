@@ -4,12 +4,12 @@ from customtkinter import CTkFont, CTkFrame, CTkLabel
 def _createSettingBoxContainer(config_window, settings, view_variable, setting_box_container_settings):
 
 
-    def createSectionTitle(container_widget, section_title):
+    def createSectionTitle(container_widget, var_section_title):
         setting_box_wrapper_section_title_frame = CTkFrame(container_widget, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
 
         setting_box_wrapper_section_title = CTkLabel(
             setting_box_wrapper_section_title_frame,
-            text=section_title,
+            textvariable=var_section_title,
             anchor="w",
             height=0,
             font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SB__SECTION_TITLE_FONT_SIZE, weight="normal"),
@@ -35,10 +35,10 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
 
         setting_box_and_section_title_wrapper = CTkFrame(setting_box_container_widget, fg_color=settings.ctm.SB__WRAPPER_BG_COLOR, corner_radius=0, width=0, height=0)
 
-        if setting_box_setting["section_title"] is not None:
+        if setting_box_setting["var_section_title"] is not None:
             setting_box_wrapper_section_title_frame= createSectionTitle(
                 container_widget=setting_box_and_section_title_wrapper,
-                section_title=setting_box_setting["section_title"],
+                var_section_title=setting_box_setting["var_section_title"],
             )
             setting_box_wrapper_section_title_frame.grid(row=0, column=0, sticky="ew", padx=0, pady=0)
             if i == 0: SB__TOP_PADY = settings.uism.SB__TOP_PADY_IF_WITH_SECTION_TITLE

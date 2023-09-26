@@ -1,0 +1,109 @@
+main_window:
+  translation: Translation
+  transcription_send: Voice2Chatbox
+  transcription_receive: Speaker2Log
+  foreground: Foreground
+
+  language_settings: Language Settings
+  your_language: Your Language
+  both_direction_desc: Translate Each Other
+  target_language: Target Language
+
+  textbox_tab_all: All
+  textbox_tab_sent: Sent
+  textbox_tab_received: Received
+  textbox_tab_system: System
+
+  update_available: New version is here!
+
+selectable_language_window:
+  title_your_language: Select Your Language
+  title_target_language: Select Target Language
+  go_back_button: Go Back
+
+config_window:
+  config_title: Settings
+  side_menu_labels:
+    appearance: Appearance
+    translation: Translation
+    transcription: Transcription
+    transcription_mic: Mic
+    transcription_speaker: Speaker
+    others: Others
+    advanced_settings: Advanced Settings
+
+  transparency:
+    label: Transparency
+    desc: Change the main window's transparency.
+  appearance_theme:
+    label: Theme
+    desc: Change the color theme. If you selected "System", it will adjust based on your Windows theme.
+  ui_size:
+    label: UI Size
+  font_family:
+    label: Font Family
+  ui_language:
+    label: UI Language
+
+  deepl_auth_key:
+    label: DeepL Auth Key
+
+  mic_host:
+    label: Mic Host/Driver
+  mic_device:
+    label: Mic Device
+  mic_energy_threshold:
+    label: Mic Energy Threshold
+    desc: Slider to modify the threshold for activating voice input. Press the microphone button to initiate input and speak, allowing you to adjust it while monitoring the actual volume.
+  mic_dynamic_energy_threshold:
+    label: Mic Dynamic Energy Threshold
+    desc: When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold.
+  mic_record_timeout:
+    label: Mic Record Timeout
+  mic_phrase_timeout:
+    label: Mic Phrase Timeout
+  mic_max_phrase:
+    label: Mic Max Phrases
+    desc: It will stop recording and send the recordings when the set count of phrase(s) is reached.
+  mic_word_filter:
+    label: Mic Word Filter
+    desc: "It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"
+
+  speaker_device:
+    label: Speaker Device
+  speaker_energy_threshold:
+    label: Speaker Energy Threshold
+    desc: Slider to modify the threshold for activating voice input. Press the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume.
+  speaker_dynamic_energy_threshold:
+    label: Speaker Dynamic Energy Threshold
+    desc: When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold.
+  speaker_record_timeout:
+    label: Speaker Record Timeout
+  speaker_phrase_timeout:
+    label: Speaker Phrase Timeout
+  speaker_max_phrase:
+    label: Speaker Max Phrases
+    desc: It will stop recording and receive the recordings when the set count of phrase(s) is reached.
+
+  auto_clear_the_message_box:
+    label: Auto Clear The Message Box
+  notice_xsoverlay:
+    label: Notification XSOverlay (VR Only)
+    desc: Notify received messages by using XSOverlay's notification feature.
+  auto_export_message_logs:
+    label: Auto Export Message Logs
+    desc: Automatically export the conversation messages as a text file.
+  message_format:
+    label: Message Format
+    desc: You can change the decoration of the message you want to send.
+  send_message_to_vrc:
+    label: Send Message To VRChat
+    desc: There is a way to use it without sending messages to VRChat. That is not covered by support, though.
+  startup_osc_enabled_check:
+    label: Check If OSC Is Enabled At Startup
+    desc: Every time VRCT is started up, your character in VRChat moves forward ever so slightly. If your character is seated, they might even stand up. Unfortunately, this is the only method we've found to check if OSC is enabled at startup... Sorry about that. (Remember to turn on OSC yourself when you want to send messages to VRChat.)
+
+  osc_ip_address:
+    label: OSC IP Address
+  osc_port:
+    label: OSC Port
