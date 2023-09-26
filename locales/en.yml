@@ -49,7 +49,7 @@ config_window:
     label: DeepL Auth Key
 
   mic_host:
-    label: Mic Host
+    label: Mic Host/Driver
   mic_device:
     label: Mic Device
   mic_energy_threshold:
@@ -87,7 +87,6 @@ config_window:
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
-    desc: Clear the message box after sending your message.
   notice_xsoverlay:
     label: Notification XSOverlay (VR Only)
     desc: Notify received messages by using XSOverlay's notification feature.
