@@ -17,11 +17,21 @@ main_window:
   update_available: 新しいバージョンが出ました！
 
 selectable_language_window:
-  your_language: あなたの言語
-  target_language: 相手の言語
+  title_your_language: あなたの言語
+  title_target_language: 相手の言語
   go_back_button: 戻る
 
 config_window:
+  config_title: 設定
+  side_menu_labels:
+    appearance: デザイン
+    translation: 翻訳
+    transcription: 音声認識
+    transcription_mic: マイク
+    transcription_speaker: スピーカー
+    others: その他
+    advanced_settings: 高度な設定
+
   transparency:
     label: 透明度
     desc: メイン画面の透明度を変更できます。
@@ -35,5 +45,6 @@ config_window:
   ui_language:
     label: UIの言語
 
+  tab_translation: 翻訳
   deepl_auth_key:
     label: DeepL 認証キー

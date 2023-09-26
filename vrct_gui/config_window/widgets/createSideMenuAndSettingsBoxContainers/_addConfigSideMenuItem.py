@@ -51,8 +51,8 @@ def _addConfigSideMenuItem(config_window, settings, view_variable, side_menu_set
         config_window.main_setting_box_scrollable_container._parent_canvas.yview_moveto("0")
 
 
-    def switchToTargetSettingBoxContainer(e, text, target_active_tab_widget_attr_name, target_setting_box_container_attr_name):
-        config_window.main_current_active_config_title.configure(text=text)
+    def switchToTargetSettingBoxContainer(textvariable, target_active_tab_widget_attr_name, target_setting_box_container_attr_name):
+        view_variable.VAR_CURRENT_ACTIVE_CONFIG_TITLE.set(textvariable.get())
         target_active_tab_widget = getattr(config_window, target_active_tab_widget_attr_name)
         switchSettingBoxContainerTabFunction(target_active_tab_widget)
         switchSettingBoxContainer(target_setting_box_container_attr_name)
@@ -65,11 +65,10 @@ def _addConfigSideMenuItem(config_window, settings, view_variable, side_menu_set
     side_menu_tab_attr_name = side_menu_settings["side_menu_tab_attr_name"]
     label_attr_name = side_menu_settings["label_attr_name"]
     selected_mark_attr_name = side_menu_settings["selected_mark_attr_name"]
-    text = side_menu_settings["text"]
+    textvariable = side_menu_settings["textvariable"]
     setting_box_container_attr_name = side_menu_settings["setting_box_container_settings"]["setting_box_container_attr_name"]
-    command = lambda e: switchToTargetSettingBoxContainer(
-        e=e,
-        text=text,
+    command = lambda _e: switchToTargetSettingBoxContainer(
+        textvariable=textvariable,
         target_active_tab_widget_attr_name=side_menu_tab_attr_name,
         target_setting_box_container_attr_name=setting_box_container_attr_name,
     )
@@ -84,7 +83,7 @@ def _addConfigSideMenuItem(config_window, settings, view_variable, side_menu_set
 
     label_widget = CTkLabel(
         frame_widget,
-        text=text,
+        textvariable=textvariable,
         height=0,
         corner_radius=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SIDE_MENU_LABELS_FONT_SIZE, weight="normal"),

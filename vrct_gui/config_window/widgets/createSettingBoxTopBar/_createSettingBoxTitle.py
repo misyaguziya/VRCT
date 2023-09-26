@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
-def _createSettingBoxTitle(parent_widget, config_window, settings):
+def _createSettingBoxTitle(parent_widget, config_window, settings, view_variable):
 
     parent_widget.grid_columnconfigure(0, weight=1)
     config_window.main_current_active_config_title_container = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.TOP_BAR_BG_COLOR, width=0, height=0)
@@ -11,7 +11,7 @@ def _createSettingBoxTitle(parent_widget, config_window, settings):
     config_window.main_current_active_config_title = CTkLabel(
         config_window.main_current_active_config_title_container,
         height=0,
-        text=None,
+        textvariable=view_variable.VAR_CURRENT_ACTIVE_CONFIG_TITLE,
         anchor="w",
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TOP_BAR_MAIN__TITLE_FONT_SIZE, weight="bold"),
         text_color=settings.ctm.LABELS_TEXT_COLOR
