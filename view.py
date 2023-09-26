@@ -123,7 +123,17 @@ class View():
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
 
-            # Appearance Tab
+            # Side Menu Labels
+            VAR_SIDE_MENU_LABEL_APPEARANCE=StringVar(value=i18n.t("config_window.side_menu_labels.appearance")),
+            VAR_SIDE_MENU_LABEL_TRANSLATION=StringVar(value=i18n.t("config_window.side_menu_labels.translation")),
+            VAR_SIDE_MENU_LABEL_TRANSCRIPTION=StringVar(value=i18n.t("config_window.side_menu_labels.transcription")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
+            VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
+            VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
+
+            VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
+
             VAR_LABEL_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.label")),
             VAR_DESC_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.desc")),
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
@@ -155,7 +165,7 @@ class View():
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
 
-            # Translation Tab
+
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=None,
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
@@ -163,6 +173,7 @@ class View():
 
 
             # Transcription Tab (Mic)
+            VAR_TAB_SECOND_LABEL_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.tab_transcription.label")),
             VAR_LABEL_MIC_HOST=StringVar(value=i18n.t("config_window.mic_host.label")),
             VAR_DESC_MIC_HOST=None,
             LIST_MIC_HOST=[],
@@ -464,10 +475,10 @@ class View():
         vrct_gui.recreateMainWindowSidebar()
 
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.your_language"))
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
         vrct_gui.openSelectableLanguagesWindow("your_language")
     def openSelectableLanguagesWindow_TargetLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.target_language"))
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
         vrct_gui.openSelectableLanguagesWindow("target_language")
 
 

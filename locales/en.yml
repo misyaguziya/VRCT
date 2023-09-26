@@ -17,11 +17,21 @@ main_window:
   update_available: New version is here!
 
 selectable_language_window:
-  your_language: Your Language
-  target_language: Target Language
+  title_your_language: Select Your Language
+  title_target_language: Select Target Language
   go_back_button: Go Back
 
 config_window:
+  config_title: Settings
+  side_menu_labels:
+    appearance: Appearance
+    translation: Translation
+    transcription: Transcription
+    transcription_mic: Mic
+    transcription_speaker: Speaker
+    others: Others
+    advanced_settings: Advanced Settings
+
   transparency:
     label: Transparency
     desc: Change the main window's transparency.
