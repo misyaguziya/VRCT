@@ -10,6 +10,6 @@ def createSettingBoxTopBar(config_window, settings, view_variable):
     config_window.setting_box_top_bar.grid(row=0, column=1, sticky="nsew")
 
 
-    _createSettingBoxTitle(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings)
+    _createSettingBoxTitle(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable)
 
     _createSettingBoxCompactModeButton(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable)

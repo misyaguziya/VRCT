@@ -1,7 +1,9 @@
+from os import path as os_path
 from typing import Union
 from types import SimpleNamespace
 from tkinter import font as tk_font
 import webbrowser
+import i18n
 
 from languages import selectable_languages
 
@@ -18,6 +20,14 @@ class View():
         all_ctm = ColorThemeManager(theme)
         all_uism = UiScalingManager(config.UI_SCALING)
         image_file = ImageFileManager(theme)
+
+        i18n.load_path.append(os_path.join(os_path.dirname(__file__), "locales"))
+        i18n.set("fallback", "en") # The fallback language is English.
+        i18n.set("skip_locale_root_data", True)
+        i18n.set("filename_format", "{locale}.{format}")
+        i18n.set("enable_memoization", True)
+
+        i18n.set("locale", config.UI_LANGUAGE)
 
         common_args = {
             "image_file": image_file,
@@ -62,50 +72,49 @@ class View():
             CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=None,
 
             # Sidebar Features
-            VAR_LABEL_TRANSLATION=StringVar(value="Translation"),
+            VAR_LABEL_TRANSLATION=StringVar(value=i18n.t("main_window.translation")),
             CALLBACK_TOGGLE_TRANSLATION=None,
 
-            VAR_LABEL_TRANSCRIPTION_SEND=StringVar(value="Voice2Chatbox"),
+            VAR_LABEL_TRANSCRIPTION_SEND=StringVar(value=i18n.t("main_window.transcription_send")),
             CALLBACK_TOGGLE_TRANSCRIPTION_SEND=None,
 
-            VAR_LABEL_TRANSCRIPTION_RECEIVE=StringVar(value="Speaker2Log"),
+            VAR_LABEL_TRANSCRIPTION_RECEIVE=StringVar(value=i18n.t("main_window.transcription_receive")),
             CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=None,
 
-            VAR_LABEL_FOREGROUND=StringVar(value="Foreground"),
+            VAR_LABEL_FOREGROUND=StringVar(value=i18n.t("main_window.foreground")),
             CALLBACK_TOGGLE_FOREGROUND=None,
 
             # Sidebar Language Settings
-            VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value="Language Settings"), # JA: 言語設定
+            VAR_LABEL_LANGUAGE_SETTINGS=StringVar(value=i18n.t("main_window.language_settings")),
             LIST_SELECTABLE_LANGUAGES=[],
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
 
-            VAR_LABEL_YOUR_LANGUAGE=StringVar(value="Your Language"), # JA: あなたの言語
+            VAR_LABEL_YOUR_LANGUAGE=StringVar(value=i18n.t("main_window.your_language")),
             VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
             CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
-            VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value="Translate Each Other"), # JA: 双方向に翻訳
+            VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
 
-            VAR_LABEL_TARGET_LANGUAGE=StringVar(value="Target Language"), # JA: 相手の言語
+            VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
             CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
 
-            VAR_LABEL_TEXTBOX_ALL=StringVar(value="All"), # JA: 全て
-            VAR_LABEL_TEXTBOX_SENT=StringVar(value="Sent"), # JA: 送信
-            VAR_LABEL_TEXTBOX_RECEIVED=StringVar(value="Received"), # JA: 受信
-            VAR_LABEL_TEXTBOX_SYSTEM=StringVar(value="System"), # JA: システム
+            VAR_LABEL_TEXTBOX_ALL=StringVar(value=i18n.t("main_window.textbox_tab_all")),
+            VAR_LABEL_TEXTBOX_SENT=StringVar(value=i18n.t("main_window.textbox_tab_sent")),
+            VAR_LABEL_TEXTBOX_RECEIVED=StringVar(value=i18n.t("main_window.textbox_tab_received")),
+            VAR_LABEL_TEXTBOX_SYSTEM=StringVar(value=i18n.t("main_window.textbox_tab_system")),
 
-            VAR_UPDATE_AVAILABLE=StringVar(value="New version is here!"), # JA: 新しいバージョンが出ました！
-            # VAR_UPDATE_AVAILABLE=StringVar(value="新しいバージョンが出ました！"),
+            VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
-            VAR_GO_BACK_LABEL_SELECTABLE_LANGUAGE=StringVar(value="Go Back"),
+            VAR_GO_BACK_LABEL_SELECTABLE_LANGUAGE=StringVar(value=i18n.t("selectable_language_window.go_back_button")),
 
 
 
@@ -114,157 +123,167 @@ class View():
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
 
-            # Appearance Tab
-            VAR_LABEL_TRANSPARENCY=StringVar(value="Transparency"),
-            VAR_DESC_TRANSPARENCY=StringVar(value="Change the window's transparency. 50% to 100%. (Default: 100%)"),
+            # Side Menu Labels
+            VAR_SIDE_MENU_LABEL_APPEARANCE=StringVar(value=i18n.t("config_window.side_menu_labels.appearance")),
+            VAR_SIDE_MENU_LABEL_TRANSLATION=StringVar(value=i18n.t("config_window.side_menu_labels.translation")),
+            VAR_SIDE_MENU_LABEL_TRANSCRIPTION=StringVar(value=i18n.t("config_window.side_menu_labels.transcription")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
+            VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
+            VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
+
+            VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
+
+            VAR_LABEL_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.label")),
+            VAR_DESC_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.desc")),
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
             CALLBACK_SET_TRANSPARENCY=None,
             VAR_TRANSPARENCY=IntVar(value=config.TRANSPARENCY),
 
-            VAR_LABEL_APPEARANCE_THEME=StringVar(value="Theme"),
-            VAR_DESC_APPEARANCE_THEME=StringVar(value="Change the color theme from \"Light\" and \"Dark\". If you select \"System\", It will adjust based on your Windows theme. (Default: System)"),
+            VAR_LABEL_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.label")),
+            VAR_DESC_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.desc")),
             LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
             CALLBACK_SET_APPEARANCE_THEME=None,
             VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
 
-            VAR_LABEL_UI_SCALING=StringVar(value="UI Size"),
-            VAR_DESC_UI_SCALING=StringVar(value="(Default: 100%)"),
+            VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
+            VAR_DESC_UI_SCALING=None,
             LIST_UI_SCALING=["80%", "90%", "100%", "110%", "120%"],
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
-            VAR_LABEL_FONT_FAMILY=StringVar(value="Font Family"),
-            VAR_DESC_FONT_FAMILY=StringVar(value="(Default: Yu Gothic UI)"),
+            VAR_LABEL_FONT_FAMILY=StringVar(value=i18n.t("config_window.font_family.label")),
+            VAR_DESC_FONT_FAMILY=None,
             LIST_FONT_FAMILY=self.getAvailableFonts(),
             CALLBACK_SET_FONT_FAMILY=None,
             VAR_FONT_FAMILY=StringVar(value=config.FONT_FAMILY),
 
-            VAR_LABEL_UI_LANGUAGE=StringVar(value="UI Language"),
-            VAR_DESC_UI_LANGUAGE=StringVar(value="(Default: English)"),
+            VAR_LABEL_UI_LANGUAGE=StringVar(value=i18n.t("config_window.ui_language.label")),
+            VAR_DESC_UI_LANGUAGE=None,
             LIST_UI_LANGUAGE=list(selectable_languages.values()),
             CALLBACK_SET_UI_LANGUAGE=None,
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
 
-            # Translation Tab
-            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value="DeepL Auth Key"),
+
+            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=None,
-            # VAR_DESC_DEEPL_AUTH_KEY=StringVar(value=""),
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL(auth)"]),
 
 
             # Transcription Tab (Mic)
-            VAR_LABEL_MIC_HOST=StringVar(value="Mic Host"),
-            VAR_DESC_MIC_HOST=StringVar(value="Select the mic host. (Default: ?)"),
+            VAR_TAB_SECOND_LABEL_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.tab_transcription.label")),
+            VAR_LABEL_MIC_HOST=StringVar(value=i18n.t("config_window.mic_host.label")),
+            VAR_DESC_MIC_HOST=None,
             LIST_MIC_HOST=[],
             CALLBACK_SET_MIC_HOST=None,
             VAR_MIC_HOST=StringVar(value=config.CHOICE_MIC_HOST),
 
-            VAR_LABEL_MIC_DEVICE=StringVar(value="Mic Device"),
-            VAR_DESC_MIC_DEVICE=StringVar(value="Select the mic devise. (Default: ?)"),
+            VAR_LABEL_MIC_DEVICE=StringVar(value=i18n.t("config_window.mic_device.label")),
+            VAR_DESC_MIC_DEVICE=None,
             LIST_MIC_DEVICE=[],
             CALLBACK_SET_MIC_DEVICE=None,
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
-            VAR_LABEL_MIC_ENERGY_THRESHOLD=StringVar(value="Mic Energy Threshold"),
-            VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the microphone button to initiate input and speak, allowing you to adjust it while monitoring the actual volume. Range: 0 to 2000 (Default: 300)"),
+            VAR_LABEL_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.label")),
+            VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.desc")),
             SLIDER_RANGE_MIC_ENERGY_THRESHOLD=(0, config.MAX_MIC_ENERGY_THRESHOLD),
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
 
-            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Mic Dynamic Energy Threshold"),
-            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold."),
+            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
+            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
             CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
             VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
 
-            VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value="Mic Record Timeout"),
-            VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
+            VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
+            VAR_DESC_MIC_RECORD_TIMEOUT=None,
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
 
-            VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value="Mic Phrase Timeout"),
-            VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value="(Default: 3)"),
+            VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
+            VAR_DESC_MIC_PHRASE_TIMEOUT=None,
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
 
-            VAR_LABEL_MIC_MAX_PHRASES=StringVar(value="Mic Max Phrases"),
-            VAR_DESC_MIC_MAX_PHRASES=StringVar(value="It will stop recording and send the recordings when the set count of phrase(s) is reached. (Default: 10)"),
+            VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
+            VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
 
-            VAR_LABEL_MIC_WORD_FILTER=StringVar(value="Mic Word Filter"),
-            VAR_DESC_MIC_WORD_FILTER=StringVar(value="It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"),
+            VAR_LABEL_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.label")),
+            VAR_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.desc")),
             CALLBACK_SET_MIC_WORD_FILTER=None,
             VAR_MIC_WORD_FILTER=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER) if len(config.INPUT_MIC_WORD_FILTER) > 0 else ""),
 
 
             # Transcription Tab (Speaker)
-            VAR_LABEL_SPEAKER_DEVICE=StringVar(value="Speaker Device"),
-            VAR_DESC_SPEAKER_DEVICE=StringVar(value="Select the speaker devise. (Default: ?)"),
+            VAR_LABEL_SPEAKER_DEVICE=StringVar(value=i18n.t("config_window.speaker_device.label")),
+            VAR_DESC_SPEAKER_DEVICE=None,
             LIST_SPEAKER_DEVICE=[],
             CALLBACK_SET_SPEAKER_DEVICE=None,
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
-            VAR_LABEL_SPEAKER_ENERGY_THRESHOLD=StringVar(value="Speaker Energy Threshold"),
-            VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value="Slider to modify the threshold for activating voice input.\nPress the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume. Range: 0 to 4000 (Default: 300)"),
+            VAR_LABEL_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.label")),
+            VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.desc")),
             SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
 
-            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="Speaker Dynamic Energy Threshold"),
-            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value="When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold."),
+            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
+            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
             CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
             VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
 
-            VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value="Speaker Record Timeout"),
-            VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value="(Default: 3)"),
+            VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
+            VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
 
-            VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value="Speaker Phrase Timeout"),
-            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value="It will stop recording and receive the recordings when the set second(s) is reached. (Default: 3)"),
+            VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
+            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=None,
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
 
-            VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value="Speaker Max Phrases"),
-            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value="It will stop recording and receive the recordings when the set count of phrase(s) is reached. (Default: 10)"),
+            VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
+            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
 
 
             # Others Tab
-            VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Auto Clear The Message Box"),
-            VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value="Clear the message box after sending your message."),
+            VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value=i18n.t("config_window.auto_clear_the_message_box.label")),
+            VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
             CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
             VAR_ENABLE_AUTO_CLEAR_MESSAGE_BOX=BooleanVar(value=config.ENABLE_AUTO_CLEAR_MESSAGE_BOX),
 
-            VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value="Notification XSOverlay (VR Only)"),
-            VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value="Notify received messages by using XSOverlay's notification feature."),
+            VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.label")),
+            VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.desc")),
             CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
             VAR_ENABLE_NOTICE_XSOVERLAY=BooleanVar(value=config.ENABLE_NOTICE_XSOVERLAY),
 
-            VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value="Auto Export Message Logs"),
-            VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value="Automatically export the conversation messages as a text file."),
+            VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value=i18n.t("config_window.auto_export_message_logs.label")),
+            VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value=i18n.t("config_window.auto_export_message_logs.desc")),
             CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=None,
             VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=BooleanVar(value=config.ENABLE_LOGGER),
 
 
-            VAR_LABEL_MESSAGE_FORMAT=StringVar(value="Message Format"),
-            VAR_DESC_MESSAGE_FORMAT=StringVar(value="You can change the decoration of the message you want to send. (Default: \"[message]([translation])\" )"),
+            VAR_LABEL_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.label")),
+            VAR_DESC_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.desc")),
             CALLBACK_SET_MESSAGE_FORMAT=None,
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
 
 
-            VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value="Send Message To VRChat"),
-            VAR_DESC_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value="There is a way to use it without sending messages to VRChat.\nThat is not covered by support, though."),
+            VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
+            VAR_DESC_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.desc")),
             CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=None,
             VAR_ENABLE_SEND_MESSAGE_TO_VRC=BooleanVar(value=config.ENABLE_SEND_MESSAGE_TO_VRC),
 
-            VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Check If OSC Is Enabled At Startup"),
-            VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value="Every time VRCT is started up, your character in VRChat moves forward ever so slightly. If your character is seated, they might even stand up. Unfortunately, this is the only method we've found to check if OSC is enabled at startup... Sorry about that. (Remember to turn on OSC yourself when you want to send messages to VRChat.)"),
+            VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.label")),
+            VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.desc")),
             CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK=None,
             VAR_STARTUP_OSC_ENABLED_CHECK=BooleanVar(value=config.STARTUP_OSC_ENABLED_CHECK),
 
@@ -272,13 +291,13 @@ class View():
 
 
             # Advanced Settings Tab
-            VAR_LABEL_OSC_IP_ADDRESS=StringVar(value="OSC IP Address"),
-            VAR_DESC_OSC_IP_ADDRESS=StringVar(value="(Default: 127.0.0.1)"),
+            VAR_LABEL_OSC_IP_ADDRESS=StringVar(value=i18n.t("config_window.osc_ip_address.label")),
+            VAR_DESC_OSC_IP_ADDRESS=None,
             CALLBACK_SET_OSC_IP_ADDRESS=None,
             VAR_OSC_IP_ADDRESS=StringVar(value=config.OSC_IP_ADDRESS),
 
-            VAR_LABEL_OSC_PORT=StringVar(value="OSC Port"),
-            VAR_DESC_OSC_PORT=StringVar(value="(Default: 9000)"),
+            VAR_LABEL_OSC_PORT=StringVar(value=i18n.t("config_window.osc_port.label")),
+            VAR_DESC_OSC_PORT=None,
             CALLBACK_SET_OSC_PORT=None,
             VAR_OSC_PORT=StringVar(value=config.OSC_PORT),
         )
@@ -456,10 +475,10 @@ class View():
         vrct_gui.recreateMainWindowSidebar()
 
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set("Your Language")
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
         vrct_gui.openSelectableLanguagesWindow("your_language")
     def openSelectableLanguagesWindow_TargetLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set("Target Language")
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
         vrct_gui.openSelectableLanguagesWindow("target_language")
 
 

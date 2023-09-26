@@ -52,11 +52,11 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             "side_menu_tab_attr_name": "side_menu_tab_appearance",
             "label_attr_name": "label_appearance",
             "selected_mark_attr_name": "selected_mark_appearance",
-            "text": "Appearance",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_APPEARANCE,
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_appearance",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": createSettingBox_Appearance },
+                    { "var_section_title": None, "setting_box": createSettingBox_Appearance },
                 ]
             },
         },
@@ -64,11 +64,11 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             "side_menu_tab_attr_name": "side_menu_tab_translation",
             "label_attr_name": "label_translation",
             "selected_mark_attr_name": "selected_mark_translation",
-            "text": "Translation",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_TRANSLATION,
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_translation",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": createSettingBox_Translation },
+                    { "var_section_title": None, "setting_box": createSettingBox_Translation },
                 ]
             },
         },
@@ -76,12 +76,18 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             "side_menu_tab_attr_name": "side_menu_tab_transcription",
             "label_attr_name": "label_transcription",
             "selected_mark_attr_name": "selected_mark_transcription",
-            "text": "Transcription",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_TRANSCRIPTION,
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_transcription",
                 "setting_boxes": [
-                    { "section_title": "Mic", "setting_box": createSettingBox_Mic },
-                    { "section_title": "Speaker", "setting_box": createSettingBox_Speaker },
+                    {
+                        "var_section_title": view_variable.VAR_SECOND_TITLE_TRANSCRIPTION_MIC,
+                        "setting_box": createSettingBox_Mic
+                    },
+                    {
+                        "var_section_title": view_variable.VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER,
+                        "setting_box": createSettingBox_Speaker
+                    },
                 ]
             },
         },
@@ -89,11 +95,11 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
             "selected_mark_attr_name": "selected_mark_others",
-            "text": "Others",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_OTHERS,
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_others",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": createSettingBox_Others },
+                    { "var_section_title": None, "setting_box": createSettingBox_Others },
                 ]
             },
         },
@@ -101,11 +107,11 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             "side_menu_tab_attr_name": "side_menu_tab_advanced",
             "label_attr_name": "label_advanced",
             "selected_mark_attr_name": "selected_mark_advanced",
-            "text": "Advanced Settings",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS,
             "setting_box_container_settings": {
                 "setting_box_container_attr_name": "setting_box_container_advanced",
                 "setting_boxes": [
-                    { "section_title": None, "setting_box": createSettingBox_AdvancedSettings },
+                    { "var_section_title": None, "setting_box": createSettingBox_AdvancedSettings },
                 ]
             },
         },
@@ -138,7 +144,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
 
         if sm_and_sbc_setting["side_menu_tab_attr_name"] == view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME:
             # Set default active side menu tab
-            config_window.main_current_active_config_title.configure(text=sm_and_sbc_setting["text"])
+            view_variable.VAR_CURRENT_ACTIVE_CONFIG_TITLE.set(sm_and_sbc_setting["textvariable"].get())
             config_window.current_active_side_menu_tab = getattr(config_window, sm_and_sbc_setting["side_menu_tab_attr_name"])
             _setDefaultActiveTab(
                 active_tab_widget=config_window.current_active_side_menu_tab,

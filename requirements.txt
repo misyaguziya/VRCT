@@ -5,3 +5,4 @@ customtkinter
 deepl
 flashtext
 pyyaml
+python-i18n
