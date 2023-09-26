@@ -270,6 +270,14 @@ def callbackToggleForeground(is_turned_on):
         view.printToTextbox_disableForeground()
         view.foregroundOff()
 
+def callbackEnableMainWindowSidebarCompactMode():
+    config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+    view.enableMainWindowSidebarCompactMode()
+
+def callbackDisableMainWindowSidebarCompactMode():
+    config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+    view.disableMainWindowSidebarCompactMode()
+
 # Config Window
 def callbackOpenConfigWindow():
     view.setMainWindowAllWidgetsStatusToDisabled()
@@ -610,22 +618,20 @@ view.register(
         "callback_close_config_window": callbackCloseConfigWindow,
     },
 
-    sidebar_features_registers={
+    main_window_registers={
+        "callback_enable_main_window_sidebar_compact_mode": callbackEnableMainWindowSidebarCompactMode,
+        "callback_disable_main_window_sidebar_compact_mode": callbackDisableMainWindowSidebarCompactMode,
+
         "callback_toggle_translation": callbackToggleTranslation,
         "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
         "callback_toggle_transcription_receive": callbackToggleTranscriptionReceive,
         "callback_toggle_foreground": callbackToggleForeground,
-    },
 
-    language_presets_registers={
         "callback_your_language": setYourLanguageAndCountry,
         "callback_target_language": setTargetLanguageAndCountry,
         "values": model.getListLanguageAndCountry(),
 
         "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
-    },
-
-    entry_message_box_registers={
         "bind_Return": messageBoxPressKeyEnter,
         "bind_Any_KeyPress": messageBoxPressKeyAny,
     },
