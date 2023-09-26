@@ -68,7 +68,7 @@ class View():
             # Main Window
             # Sidebar
             # Sidebar Compact Mode
-            IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=False,
+            IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE,
             CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=None,
 
             # Sidebar Features
@@ -307,9 +307,7 @@ class View():
     def register(
             self,
             window_action_registers=None,
-            sidebar_features_registers=None,
-            language_presets_registers=None,
-            entry_message_box_registers=None,
+            main_window_registers=None,
             config_window_registers=None
         ):
 
@@ -321,38 +319,34 @@ class View():
 
 
 
-        self.view_variable.CALLBACK_TOGGLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = self._toggleMainWindowSidebarCompactMode
 
-        if sidebar_features_registers is not None:
-            self.view_variable.CALLBACK_TOGGLE_TRANSLATION = sidebar_features_registers.get("callback_toggle_translation", None)
-            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = sidebar_features_registers.get("callback_toggle_transcription_send", None)
-            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = sidebar_features_registers.get("callback_toggle_transcription_receive", None)
-            self.view_variable.CALLBACK_TOGGLE_FOREGROUND = sidebar_features_registers.get("callback_toggle_foreground", None)
+        if main_window_registers is not None:
+            self.view_variable.CALLBACK_ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = main_window_registers.get("callback_enable_main_window_sidebar_compact_mode", None)
+            self.view_variable.CALLBACK_DISABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = main_window_registers.get("callback_disable_main_window_sidebar_compact_mode", None)
 
-        if language_presets_registers is not None:
-            self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = language_presets_registers.get("callback_your_language", None)
-            self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = language_presets_registers.get("callback_target_language", None)
-            language_presets_registers.get("values", None) and self.updateList_selectableLanguages(language_presets_registers["values"])
 
-            self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = language_presets_registers.get("callback_selected_language_preset_tab", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSLATION = main_window_registers.get("callback_toggle_translation", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = main_window_registers.get("callback_toggle_transcription_send", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = main_window_registers.get("callback_toggle_transcription_receive", None)
+            self.view_variable.CALLBACK_TOGGLE_FOREGROUND = main_window_registers.get("callback_toggle_foreground", None)
+
+            self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = main_window_registers.get("callback_your_language", None)
+            self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = main_window_registers.get("callback_target_language", None)
+            main_window_registers.get("values", None) and self.updateList_selectableLanguages(main_window_registers["values"])
+
+            self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
+
+
+            entry_message_box = getattr(vrct_gui, "entry_message_box")
+            entry_message_box.bind("<Return>", main_window_registers.get("bind_Return"))
+            entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("bind_Any_KeyPress"))
+
+
+            entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
+            entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
 
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
-
-
-
-        self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
-        self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
-
-        entry_message_box = getattr(vrct_gui, "entry_message_box")
-        if entry_message_box_registers is not None:
-            entry_message_box.bind("<Return>", entry_message_box_registers.get("bind_Return"))
-            entry_message_box.bind("<Any-KeyPress>", entry_message_box_registers.get("bind_Any_KeyPress"))
-
-
-        entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
-        entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
-
 
         # Config Window
         self.view_variable.CALLBACK_SELECTED_SETTING_BOX_TAB=self._updateActiveSettingBoxTabNo
@@ -470,13 +464,18 @@ class View():
         vrct_gui.attributes("-topmost", False)
 
 
-    def _toggleMainWindowSidebarCompactMode(self, is_turned_on):
-        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = is_turned_on
-        vrct_gui.recreateMainWindowSidebar()
+    def enableMainWindowSidebarCompactMode(self):
+        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+        vrct_gui.enableMainWindowSidebarCompactMode()
+
+    def disableMainWindowSidebarCompactMode(self):
+        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        vrct_gui.disableMainWindowSidebarCompactMode()
 
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
         self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
         vrct_gui.openSelectableLanguagesWindow("your_language")
+
     def openSelectableLanguagesWindow_TargetLanguage(self, _e):
         self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
         vrct_gui.openSelectableLanguagesWindow("target_language")
