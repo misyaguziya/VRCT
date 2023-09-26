@@ -48,3 +48,63 @@ config_window:
   tab_translation: 翻訳
   deepl_auth_key:
     label: DeepL 認証キー
+
+  mic_host:
+    label: マイク（ホスト/ドライバー）
+  mic_device:
+    label: マイク （デバイス）
+  mic_energy_threshold:
+    label: 音声取得のしきい値
+    desc: スライダーを調整してしきい値を決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。
+  mic_dynamic_energy_threshold:
+    label: 音声取得のしきい値の自動調整
+    desc: 有効にすると、設定されたしきい値に応じて、ある程度自動的に調節されます。
+  mic_record_timeout:
+    label: マイク音声の区切りの無音時間
+  mic_phrase_timeout:
+    label: 文字起こしする音声時間の上限
+  mic_max_phrase:
+    label: 保留する単語の上限(マイク)
+    desc: It will stop recording and send the recordings when the set count of phrase(s) is reached.
+  mic_word_filter:
+    label: ワードフィルタ
+    desc: "設定された単語を検出すると、その文章は送信されません。\n設定の例: AAA,BBB,CCC"
+
+  speaker_device:
+    label: スピーカー(デバイス)
+  speaker_energy_threshold:
+    label: 音声取得のしきい値
+    desc: スライダーを調整してしきい値を決められます。スピーカーのアイコンを押すと、設定されたデバイスから音を聞き取り、音量を確認しながら調節できます。
+  speaker_dynamic_energy_threshold:
+    label: 音声取得のしきい値の自動調整
+    desc: 有効にすると、設定されたしきい値に応じて、ある程度自動的に調節されます。
+  speaker_record_timeout:
+    label: スピーカー音声の区切りの無音時間
+  speaker_phrase_timeout:
+    label: 文字起こしする音声時間の上限
+  speaker_max_phrase:
+    label: 保留する単語の上限
+    desc: It will stop recording and receive the recordings when the set count of phrase(s) is reached.
+
+  auto_clear_the_message_box:
+    label: 送信後はチャットボックスを空にする
+  notice_xsoverlay:
+    label: XSOverlayの通知機能を有効 (VR限定)
+    desc: 文字起こし（受信）されたメッセージをXSOverlayの機能を使って通知として受け取れます。
+  auto_export_message_logs:
+    label: 会話ログを自動的に保存する
+    desc: テキストファイルとしてログが保存されます。保存先は/logs/...(調整中)
+  message_format:
+    label: 送信するメッセージのフォーマット
+    desc: VRChatで相手に実際に見えるフォーマットを変更できます。
+  send_message_to_vrc:
+    label: VRChatにメッセージを送信する
+    desc: VRChatにメッセージを送信せずに使う方法があります。サポート対象外ですが。
+  startup_osc_enabled_check:
+    label: 起動時にOSCが有効になっているか確認する
+    desc: 起動時に毎回、キャラクターがほんの少し前進します。もしsit判定などある場所に座っている場合、立ってしまうかもしれません。残念ながら今のところ私達はOSCがVRChat側で有効になっているか確認する方法がこれしか見つけられていません。ごめんね。(このチェック機能をオフにする場合、自分でOSCをオンにすることを忘れないでね。)
+
+  osc_ip_address:
+    label: OSC IP Address
+  osc_port:
+    label: OSC Port

@@ -256,7 +256,7 @@ class View():
 
             # Others Tab
             VAR_LABEL_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value=i18n.t("config_window.auto_clear_the_message_box.label")),
-            VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=StringVar(value=i18n.t("config_window.auto_clear_the_message_box.desc")),
+            VAR_DESC_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
             CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
             VAR_ENABLE_AUTO_CLEAR_MESSAGE_BOX=BooleanVar(value=config.ENABLE_AUTO_CLEAR_MESSAGE_BOX),
 
