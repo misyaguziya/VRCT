@@ -121,7 +121,6 @@ class View():
             # Config Window
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
-            IS_CONFIG_WINDOW_COMPACT_MODE=config.IS_CONFIG_WINDOW_COMPACT_MODE,
 
             # Side Menu Labels
             VAR_SIDE_MENU_LABEL_APPEARANCE=StringVar(value=i18n.t("config_window.side_menu_labels.appearance")),
@@ -412,6 +411,11 @@ class View():
             self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
             self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
 
+        # The initial processing after registration.
+        if config.IS_CONFIG_WINDOW_COMPACT_MODE is True:
+            self.enableConfigWindowCompactMode()
+            vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
@@ -593,6 +597,15 @@ class View():
         vrct_gui.wm_attributes("-alpha", transparency)
 
 
+    def enableConfigWindowCompactMode(self):
+        for additional_widget in vrct_gui.config_window.additional_widgets:
+            additional_widget.grid_remove()
+
+    def disableConfigWindowCompactMode(self):
+        for additional_widget in vrct_gui.config_window.additional_widgets:
+            additional_widget.grid()
+
+
 
     def createGUI(self):
         vrct_gui.createGUI(settings=self.settings, view_variable=self.view_variable)
@@ -656,11 +669,6 @@ class View():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
-
-
-    def reloadConfigWindowSettingBoxContainer(self):
-        self.view_variable.IS_CONFIG_WINDOW_COMPACT_MODE = config.IS_CONFIG_WINDOW_COMPACT_MODE
-        vrct_gui.config_window.reloadConfigWindowSettingBoxContainer()
 
 
     def updateList_MicHost(self, new_mic_host_list:list):
