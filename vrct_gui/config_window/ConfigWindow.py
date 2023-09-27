@@ -23,16 +23,12 @@ class ConfigWindow(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
+        # When the configuration window's compact mode is turned on, it will call `grid_remove()` on each widget appended to this array. In the opposite case, `grid()` will be called.
+        self.additional_widgets = []
+
         createConfigWindowTitle(config_window=self, settings=self.settings)
 
         createSettingBoxTopBar(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
 
-        createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
-
-
-
-
-    def reloadConfigWindowSettingBoxContainer(self):
-        self.main_bg_container.destroy()
         createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)

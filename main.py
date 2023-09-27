@@ -314,7 +314,7 @@ def callbackEnableConfigWindowCompactMode():
     model.stopCheckSpeakerEnergy()
     view.replaceSpeakerThresholdCheckButton_Passive()
 
-    view.reloadConfigWindowSettingBoxContainer()
+    view.enableConfigWindowCompactMode()
 
 def callbackDisableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
@@ -323,7 +323,7 @@ def callbackDisableConfigWindowCompactMode():
     model.stopCheckSpeakerEnergy()
     view.replaceSpeakerThresholdCheckButton_Passive()
 
-    view.reloadConfigWindowSettingBoxContainer()
+    view.disableConfigWindowCompactMode()
 
 # Appearance Tab
 def callbackSetTransparency(value):

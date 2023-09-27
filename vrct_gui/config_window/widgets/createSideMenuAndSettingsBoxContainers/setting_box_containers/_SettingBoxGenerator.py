@@ -53,10 +53,8 @@ class _SettingBoxGenerator():
         )
         setting_box_label.grid(row=0, column=0, padx=0, pady=0, sticky="ew")
 
-        if for_var_desc_text == None or self.view_variable.IS_CONFIG_WINDOW_COMPACT_MODE is True:
-            pass
-        else:
-            self.setting_box_desc = CTkLabel(
+        if for_var_desc_text is not None:
+            setting_box_desc = CTkLabel(
                 setting_box_labels_frame,
                 textvariable=for_var_desc_text,
                 anchor="w",
@@ -66,7 +64,8 @@ class _SettingBoxGenerator():
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__DESC_FONT_SIZE, weight="normal"),
                 text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR
             )
-            self.setting_box_desc.grid(row=1, column=0, padx=0, pady=(self.settings.uism.SB__DESC_TOP_PADY,0), sticky="ew")
+            setting_box_desc.grid(row=1, column=0, padx=0, pady=(self.settings.uism.SB__DESC_TOP_PADY,0), sticky="ew")
+            self.config_window.additional_widgets.append(setting_box_desc)
 
 
     def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
