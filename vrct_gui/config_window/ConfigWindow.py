@@ -8,7 +8,7 @@ from ..ui_utils import getImagePath
 class ConfigWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
         super().__init__()
-        # self.withdraw()
+        self.withdraw()
 
 
         # configure window
