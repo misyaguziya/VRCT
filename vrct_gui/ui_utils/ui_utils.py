@@ -120,7 +120,7 @@ def switchTabsColor(target_widget, tab_buttons, active_bg_color, active_text_col
 
 
 
-def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, button_clicked_color, button_image_file, button_image_size, button_ipadxy, button_command, corner_radius: int = 0 ,shape: str = "normal"):
+def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, button_clicked_color, button_image_file, button_image_size, button_ipadxy, button_command, corner_radius: int = 0):
         button_wrapper = CTkFrame(parent_widget, corner_radius=corner_radius, fg_color=button_fg_color, height=0, width=0, cursor="hand2")
 
         button_widget = CTkLabel(
@@ -138,12 +138,5 @@ def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, bu
             clicked_color=button_clicked_color,
             buttonReleasedFunction=button_command,
         )
-
-        if shape == "circle":
-            # To round the corners of the button into a circle
-            button_wrapper.grid()
-            button_wrapper.configure(corner_radius=int(getLatestWidth(button_wrapper)/2))
-            button_wrapper.grid_remove()
-
 
         return button_wrapper
