@@ -15,7 +15,6 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
             text_color=settings.ctm.LABELS_TEXT_COLOR
         )
         setting_box_wrapper_section_title.place(relx=0, rely=0)
-        # setting_box_wrapper_section_title.grid(row=0, column=0, padx=0, pady=settings.uism.SB__SECTION_TITLE_BOTTOM_PADY)
 
         return container_widget
 
@@ -28,7 +27,6 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
 
 
 
-    # setting_boxes_length = len(setting_box_container_settings["setting_boxes"])
     setting_box_row=0
     for i, setting_box_setting in enumerate(setting_box_container_settings["setting_boxes"]):
         # Top-Padding that can be container the section title

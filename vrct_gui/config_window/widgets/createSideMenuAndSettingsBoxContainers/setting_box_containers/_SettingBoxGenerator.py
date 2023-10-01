@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Union
 
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END
+from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth
 
@@ -19,12 +19,10 @@ class _SettingBoxGenerator():
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
 
         # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
-        # setting_box_frame.grid(column=0, padx=0, pady=0, sticky="ew")
         setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
         setting_box_frame.grid_columnconfigure(0, weight=1)
 
 
-        # setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color="gray", width=0, height=0)
         setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="ew")
         setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
@@ -152,8 +150,6 @@ class _SettingBoxGenerator():
             # progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
-
-        # checkbox_widget.select() if is_checked else checkbox_widget.deselect()
 
         checkbox_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
