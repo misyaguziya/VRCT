@@ -1,8 +1,11 @@
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, END as CTK_END
+from functools import partial
+from typing import Union
+
+from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth
 
-from typing import Union
+SETTING_BOX_COLUMN = 1
 
 class _SettingBoxGenerator():
     def __init__(self, parent_widget, config_window, settings, view_variable):
@@ -12,31 +15,29 @@ class _SettingBoxGenerator():
         self.settings = settings
 
 
-    def _createSettingBoxFrame(self, setting_box_item_frame, for_var_label_text, for_var_desc_text):
+    def _createSettingBoxFrame(self, for_var_label_text, for_var_desc_text):
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        # setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color="gray", width=0, height=0)
 
         # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
-        # setting_box_frame.grid(column=0, padx=0, pady=0, sticky="ew")
         setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
+        setting_box_frame.grid_columnconfigure(0, weight=1)
 
 
-        # setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color="gray", width=0, height=0)
-        setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=self.settings.uism.SB__MAIN_WIDTH, height=0)
+        setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="ew")
-        setting_box_frame_wrapper.grid_columnconfigure((0,1), weight=1, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2), uniform="setting_box")
+        setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
+        setting_box_frame_wrapper.grid_columnconfigure(2, weight=1, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
 
-        # setting_box_frame_wrapper.grid(column=0, padx=0, pady=0)
-        setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="nsew")
+        setting_box_frame_wrapper_fix_border = CTkFrame(setting_box_frame, corner_radius=0, width=0, height=0)
+        setting_box_frame_wrapper_fix_border.grid(row=1, column=0, sticky="ew")
 
-        setting_box_frame_wrapper_border = CTkFrame(setting_box_frame, corner_radius=0, fg_color="red", width=0, height=0)
-        setting_box_frame_wrapper_border.grid(row=1, column=0, sticky="ew")
+        setting_box_frame_wrapper_fix_border2 = CTkFrame(setting_box_frame, corner_radius=0, width=0, height=0)
+        setting_box_frame_wrapper_fix_border2.grid(row=0, column=1, sticky="ns")
 
         self._setSettingBoxLabels(setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
 
-        # setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color="black")
         setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)
-        setting_box_item_frame.grid(row=0, column=1, padx=0, sticky="nsew")
+        setting_box_item_frame.grid(row=0, column=2, padx=0, sticky="nsew")
         setting_box_item_frame.rowconfigure((0,2), weight=1)
         setting_box_item_frame.grid_columnconfigure(0, weight=1)
 
@@ -44,7 +45,6 @@ class _SettingBoxGenerator():
 
     def _setSettingBoxLabels(self, setting_box_frame_wrapper, for_var_label_text, for_var_desc_text=None):
 
-        # setting_box_labels_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, fg_color="black", width=0, height=0)
         setting_box_labels_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
 
@@ -74,7 +74,7 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         option_menu_widget = CTkOptionMenu(
             setting_box_item_frame,
@@ -89,7 +89,7 @@ class _SettingBoxGenerator():
             command=command,
             anchor="w",
         )
-        option_menu_widget.grid(row=1, column=1, sticky="e")
+        option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
 
         return setting_box_frame
@@ -98,7 +98,7 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxSwitch(self, for_var_label_text, for_var_desc_text, switch_attr_name, is_checked, command):
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         switch_widget = CTkSwitch(
             setting_box_item_frame,
@@ -120,14 +120,14 @@ class _SettingBoxGenerator():
 
         switch_widget.select() if is_checked else switch_widget.deselect()
 
-        switch_widget.grid(row=1, column=1)
+        switch_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
 
 
 
     def createSettingBoxCheckbox(self, for_var_label_text, for_var_desc_text, checkbox_attr_name, variable, command):
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         checkbox_widget = CTkCheckBox(
             setting_box_item_frame,
@@ -151,9 +151,7 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
 
-        # checkbox_widget.select() if is_checked else checkbox_widget.deselect()
-
-        checkbox_widget.grid(row=1, column=1)
+        checkbox_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
 
@@ -163,7 +161,7 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxSlider(self, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         slider_widget = CTkSlider(
             setting_box_item_frame,
@@ -177,7 +175,7 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, slider_attr_name, slider_widget)
 
-        slider_widget.grid(row=1, column=1)
+        slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
 
@@ -200,7 +198,7 @@ class _SettingBoxGenerator():
         ):
 
 
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         ENTRY_WIDTH = self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH
         BAR_WIDTH = self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_WIDTH
@@ -222,7 +220,7 @@ class _SettingBoxGenerator():
         )
 
         entry_widget.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
-        entry_widget.grid(row=1, column=1, padx=0, pady=0, sticky="e")
+        entry_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=0, pady=0, sticky="e")
         setattr(self.config_window, entry_attr_name, entry_widget)
 
 
@@ -248,7 +246,7 @@ class _SettingBoxGenerator():
             progress_color=self.settings.ctm.SB__BG_COLOR,
             border_color=self.settings.ctm.SB__BG_COLOR,
         )
-        slider_widget.grid(row=1, column=1, padx=(0, BAR_PADDING), sticky="e")
+        slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0, BAR_PADDING), sticky="e")
         setattr(self.config_window, slider_attr_name, slider_widget)
 
 
@@ -261,7 +259,7 @@ class _SettingBoxGenerator():
             corner_radius=0,
         )
         setattr(self.config_window, progressbar_attr_name, progressbar_widget)
-        progressbar_widget.grid(row=1, column=1, padx=(0, BAR_PADDING), sticky="e")
+        progressbar_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0, BAR_PADDING), sticky="e")
         progressbar_widget.set(0)
 
 
@@ -273,10 +271,10 @@ class _SettingBoxGenerator():
         active_button_wrapper = self._createActiveButtonForProgressbarXSlider(setting_box_item_frame, active_button_command, button_image_file)
         setattr(self.config_window, active_button_attr_name, active_button_wrapper)
 
-        passive_button_wrapper.grid(row=1, column=1, padx=(0,BUTTON_PADDING), sticky="e")
+        passive_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
         passive_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
-        active_button_wrapper.grid(row=1, column=1, padx=(0,BUTTON_PADDING), sticky="e")
+        active_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
         active_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
         passive_button_wrapper.grid_remove()
@@ -289,7 +287,7 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxEntry(self, for_var_label_text, for_var_desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable):
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(self, for_var_label_text, for_var_desc_text)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         def adjusted_command__for_entry_bind__Any_KeyRelease(e):
             entry_bind__Any_KeyRelease(e.widget.get())
@@ -305,7 +303,7 @@ class _SettingBoxGenerator():
         setattr(self.config_window, entry_attr_name, entry_widget)
 
 
-        entry_widget.grid(row=1, column=1)
+        entry_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
 
