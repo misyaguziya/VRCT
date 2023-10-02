@@ -53,6 +53,12 @@ class View():
             **common_args
         )
 
+        self.settings.modal_window = SimpleNamespace(
+            ctm=all_ctm.modal_window,
+            uism=all_uism.modal_window,
+            **common_args
+        )
+
         self.view_variable = SimpleNamespace(
             # Open Config Window
             CALLBACK_OPEN_CONFIG_WINDOW=None,
@@ -111,6 +117,9 @@ class View():
 
             VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
+
+            # Modal Window For Main Window
+            VAR_LABEL_MODAL_MESSAGE_FOR__MAIN_WINDOW=StringVar(value=i18n.t("main_window.modal_message.opened_config_window")),
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),

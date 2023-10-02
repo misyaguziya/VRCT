@@ -5,6 +5,7 @@ class ColorThemeManager():
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()
+        self.modal_window = SimpleNamespace()
 
         # old one. But leave it here for now.
         # self.PRIMARY_100_COLOR = "#c4eac1"
@@ -206,6 +207,9 @@ class ColorThemeManager():
         self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
 
+
+        # Modal Window (Main Window)
+        self.modal_window.TEXT_COLOR = self.LIGHT_100_COLOR
 
 
         # Common
