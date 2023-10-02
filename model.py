@@ -1,6 +1,9 @@
 import sys
+from zipfile import ZipFile
+from subprocess import Popen
 from os import makedirs
-from os import path as os_path
+from os import path as os_path, rename as os_rename, mkdir as os_mkdir
+from shutil import rmtree
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
@@ -228,6 +231,30 @@ class Model:
             update_flag = True
         print("software version", "now:", config.VERSION, "new:", new_version)
         return update_flag
+
+    @staticmethod
+    def updateSoftware():
+        filename = 'download.zip'
+        program_name = 'VRCT.exe'
+        temporary_name = '_VRCT.exe'
+        tmp_directory_name = 'tmp'
+        batch_name = 'update.bat'
+        current_directory = os_path.dirname(sys.argv[0])
+        program_directory = os_path.dirname(__file__)
+
+        os_mkdir(os_path.join(current_directory, tmp_directory_name))
+        res = requests_get(config.GITHUB_URL)
+        url = res.json()['assets'][0]['browser_download_url']
+        res = requests_get(url, stream=True)
+        with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
+            for chunk in res.iter_content(chunk_size=1024):
+                file.write(chunk)
+        with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
+            zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
+        os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
+        rmtree(os_path.join(current_directory, tmp_directory_name))
+        command = [os_path.join(program_directory, batch_name), program_name, temporary_name]
+        Popen(command)
 
     @staticmethod
     def getListInputHost():
