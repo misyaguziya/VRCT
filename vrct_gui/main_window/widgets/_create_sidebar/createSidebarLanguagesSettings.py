@@ -141,8 +141,11 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     # Presets buttons
     main_window.sidebar_bg_container.grid_rowconfigure(2, weight=1)
-    main_window.sls__presets_buttons_box = CTkFrame(main_window.sls__container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=0)
-    main_window.sls__presets_buttons_box.grid(row=1, column=0, sticky="ew")
+    main_window.sls__presets_buttons_container = CTkFrame(main_window.sls__container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=30)
+    main_window.sls__presets_buttons_container.grid(row=1, column=0, sticky="nsew")
+
+    main_window.sls__presets_buttons_box = CTkFrame(main_window.sls__presets_buttons_container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=0)
+    main_window.sls__presets_buttons_box.place(relwidth=1, relx=0, rely=1.15, anchor="sw")
 
     main_window.sls__presets_buttons_box.grid_columnconfigure((0,1,2), weight=1)
 
@@ -176,10 +179,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             preset_tab_attr_name,
             CTkFrame(
                 main_window.sls__presets_buttons_box,
-                corner_radius=4,
+                corner_radius=6,
                 fg_color=settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR,
                 width=0,
-                height=30,
+                height=36,
                 cursor="hand2",
             )
         )
@@ -195,7 +198,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             anchor="center",
             text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE
         )
-        label_widget.place(relx=0.5, rely=0.5, anchor="center")
+        label_widget.place(relx=0.5, rely=0.44, anchor="center")
 
 
 
