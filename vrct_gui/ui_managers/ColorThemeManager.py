@@ -158,9 +158,9 @@ class ColorThemeManager():
         self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR
         self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
 
-        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.DARK_888_COLOR
-        self.main.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
-        self.main.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
+        self.main.SLS__OPTIONMENU_BG_COLOR = self.DARK_888_COLOR
+        self.main.SLS__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
+        self.main.SLS__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
@@ -343,7 +343,7 @@ class ColorThemeManager():
         self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
         self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.LIGHT_700_COLOR
 
-        self.main.SLS__DROPDOWN_MENU_BG_COLOR = self.LIGHT_500_COLOR
+        self.main.SLS__OPTIONMENU_BG_COLOR = self.LIGHT_500_COLOR
 
 
         self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR

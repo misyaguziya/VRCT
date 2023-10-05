@@ -728,8 +728,8 @@ class View():
 
 
 
-    def setGuiVariable_MicEnergyThreshold(self, value:int):
-        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(value)
+    def setGuiVariable_MicEnergyThreshold(self, value):
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
 
     def setLatestConfigVariable_MicEnergyThreshold(self, _e=None):
@@ -737,8 +737,8 @@ class View():
         self.clearErrorMessage()
 
 
-    def setGuiVariable_SpeakerEnergyThreshold(self, value:int):
-        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(value)
+    def setGuiVariable_SpeakerEnergyThreshold(self, value):
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(str(value))
 
     def setLatestConfigVariable_SpeakerEnergyThreshold(self, _e=None):
@@ -747,27 +747,27 @@ class View():
 
 
 
-    def setGuiVariable_MicRecordTimeout(self, value:str="", delete=False):
+    def setGuiVariable_MicRecordTimeout(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_record_timeout)
-        self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(value)
+        self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(str(value))
 
     def setLatestConfigVariable_MicRecordTimeout(self, _e=None):
         self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
         self.clearErrorMessage()
 
 
-    def setGuiVariable_MicPhraseTimeout(self, value:str="", delete=False):
+    def setGuiVariable_MicPhraseTimeout(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_phrase_timeout)
-        self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(value)
+        self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(str(value))
 
     def setLatestConfigVariable_MicPhraseTimeout(self, _e=None):
         self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
         self.clearErrorMessage()
 
 
-    def setGuiVariable_MicMaxPhrases(self, value:str="", delete=False):
+    def setGuiVariable_MicMaxPhrases(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_max_phrases)
-        self.view_variable.VAR_MIC_MAX_PHRASES.set(value)
+        self.view_variable.VAR_MIC_MAX_PHRASES.set(str(value))
 
     def setLatestConfigVariable_MicMaxPhrases(self, _e=None):
         self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
@@ -775,27 +775,27 @@ class View():
 
 
 
-    def setGuiVariable_SpeakerRecordTimeout(self, value:str="", delete=False):
+    def setGuiVariable_SpeakerRecordTimeout(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_record_timeout)
-        self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(value)
+        self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(str(value))
 
     def setLatestConfigVariable_SpeakerRecordTimeout(self, _e=None):
         self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
         self.clearErrorMessage()
 
 
-    def setGuiVariable_SpeakerPhraseTimeout(self, value:str="", delete=False):
+    def setGuiVariable_SpeakerPhraseTimeout(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_phrase_timeout)
-        self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(value)
+        self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(str(value))
 
     def setLatestConfigVariable_SpeakerPhraseTimeout(self, _e=None):
         self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
         self.clearErrorMessage()
 
 
-    def setGuiVariable_SpeakerMaxPhrases(self, value:str="", delete=False):
+    def setGuiVariable_SpeakerMaxPhrases(self, value, delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_max_phrases)
-        self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(value)
+        self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(str(value))
 
     def setLatestConfigVariable_SpeakerMaxPhrases(self, _e=None):
         self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)

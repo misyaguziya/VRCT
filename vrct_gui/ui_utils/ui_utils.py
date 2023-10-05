@@ -1,7 +1,7 @@
 from os import path as os_path
 from PIL.Image import open as Image_open, LANCZOS
 
-from customtkinter import CTkFrame, CTkLabel, CTkImage
+from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
 def getImagePath(file_name):
     # root\img\file_name
@@ -140,3 +140,51 @@ def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, bu
         )
 
         return button_wrapper
+
+
+def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_bg_color, optionmenu_clicked_bg_color, optionmenu_ipadx, optionmenu_ipady, variable, font_family, font_size, text_color, image_file, image_size, command, optionmenu_position=None, setattr_widget=None, image_widget_attr_name=None):
+
+    option_menu_box = CTkFrame(parent_widget, corner_radius=4, fg_color=optionmenu_bg_color, cursor="hand2")
+
+    option_menu_box.grid_columnconfigure(0, weight=1)
+    option_menu_box.grid_rowconfigure(0, weight=1)
+    optionmenu_label_wrapper = CTkFrame(option_menu_box, corner_radius=0, fg_color=optionmenu_bg_color)
+    optionmenu_label_wrapper.grid(row=0, column=0, sticky="ew")
+
+    LABEL_COLUMN=0
+    if optionmenu_position == "center":
+        optionmenu_label_wrapper.grid_columnconfigure((0,2), weight=1)
+        LABEL_COLUMN=1
+
+    optionmenu_label_widget = CTkLabel(
+        optionmenu_label_wrapper,
+        textvariable=variable,
+        height=0,
+        font=CTkFont(family=font_family, size=font_size, weight="normal"),
+        text_color=text_color
+    )
+    optionmenu_label_widget.grid(row=0, column=LABEL_COLUMN, padx=optionmenu_ipadx, pady=optionmenu_ipady)
+
+
+    optionmenu_img_widget = CTkLabel(
+        option_menu_box,
+        text=None,
+        corner_radius=0,
+        height=0,
+        image=CTkImage(image_file, size=image_size)
+    )
+
+    if image_widget_attr_name is not None:
+        setattr(setattr_widget, image_widget_attr_name, optionmenu_img_widget)
+
+    optionmenu_img_widget.grid(row=0, column=1, padx=0, pady=0)
+
+
+    bindEnterAndLeaveColor([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_hovered_bg_color, optionmenu_bg_color)
+    bindButtonPressColor([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_bg_color, optionmenu_hovered_bg_color)
+
+
+
+    bindButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], command)
+
+    return option_menu_box

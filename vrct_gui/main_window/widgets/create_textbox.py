@@ -61,8 +61,8 @@ def createTextbox(settings, main_window, view_variable):
     main_window.main_textbox_container = CTkFrame(main_window.main_bg_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     main_window.main_textbox_container.grid(row=1, column=0, sticky="nsew")
 
-    main_window.main_textbox_container.columnconfigure(0,weight=1)
-    main_window.main_textbox_container.rowconfigure(0,weight=1)
+    main_window.main_textbox_container.grid_columnconfigure(0,weight=1)
+    main_window.main_textbox_container.grid_rowconfigure(0,weight=1)
 
     main_window.textbox_switch_tabs_container = CTkFrame(main_window.main_topbar_center_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     main_window.textbox_switch_tabs_container.place(relx=0.07, rely=1.15, anchor="sw")
