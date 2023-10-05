@@ -5,6 +5,7 @@ from customtkinter import CTk, CTkImage
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
 from ._CreateModalWindow import _CreateModalWindow
+from ._CreateErrorWindow import _CreateErrorWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
@@ -19,6 +20,7 @@ class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
         self.adjusted_event=None
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
 
 
     def createGUI(self, settings, view_variable):
@@ -50,6 +52,12 @@ class VRCT_GUI(CTk):
             view_variable=self._view_variable
         )
 
+        self.error_message_window = _CreateErrorWindow(
+            settings=self.settings.modal_window,
+            view_variable=self._view_variable,
+            wrapper_widget=self.config_window.main_bg_container,
+        )
+
 
 
     def startMainLoop(self):
@@ -61,12 +69,12 @@ class VRCT_GUI(CTk):
         self.destroy()
 
 
-    def openConfigWindow(self, e):
+    def openConfigWindow(self, _e):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
         self.adjustToMainWindowGeometry()
         self.modal_window.deiconify()
-        self.bind("<Configure>", self.adjustToMainWindowGeometry)
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self.adjustToMainWindowGeometry)
 
         self.config_window.deiconify()
         self.config_window.focus_set()
@@ -74,11 +82,12 @@ class VRCT_GUI(CTk):
 
     def closeConfigWindow(self):
         callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+
         self.config_window.withdraw()
         self.config_window.grab_release()
 
         self.modal_window.withdraw()
-        self.unbind("<Configure>")
+        self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
         self.adjusted_event=None
 
 
@@ -194,5 +203,16 @@ class VRCT_GUI(CTk):
 
         if e is not None:
             self.adjusted_event=str(e)
+
+
+    def showErrorMessage(self, target_widget):
+        self.error_message_window.show(target_widget=target_widget)
+
+    def _clearErrorMessage(self):
+        try:
+            self.error_message_window._withdraw()
+        except:
+            pass
+
 
 vrct_gui = VRCT_GUI()
