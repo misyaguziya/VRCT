@@ -71,7 +71,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-        sls__selected_language_box = CTkFrame(sls__box_wrapper, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR, cursor="hand2")
+        sls__selected_language_box = CTkFrame(sls__box_wrapper, corner_radius=4, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR, cursor="hand2")
         sls__selected_language_box.grid(row=1, column=0)
 
 
@@ -176,7 +176,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             preset_tab_attr_name,
             CTkFrame(
                 main_window.sls__presets_buttons_box,
-                corner_radius=0,
+                corner_radius=4,
                 fg_color=settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR,
                 width=0,
                 height=30,
