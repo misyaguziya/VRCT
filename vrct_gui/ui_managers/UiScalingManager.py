@@ -6,6 +6,7 @@ class UiScalingManager():
         self.SCALING_FLOAT = max(scaling_float, 0.4)
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
+        self.modal_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -96,7 +97,7 @@ class UiScalingManager():
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y = self._calculateUiSize(26)
 
 
-
+        self.modal_window.TEXT_FONT_SIZE = self._calculateUiSize(20)
 
         # Top bar common
         self.config_window.TOP_BAR__HEIGHT = self._calculateUiSize(40)

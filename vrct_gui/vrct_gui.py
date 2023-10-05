@@ -4,6 +4,8 @@ from customtkinter import CTk, CTkImage
 
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
+from ._CreateModalWindow import _CreateModalWindow
+from ._CreateErrorWindow import _CreateErrorWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
@@ -17,6 +19,9 @@ from utils import callFunctionIfCallable
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
+        self.adjusted_event=None
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
+
 
     def createGUI(self, settings, view_variable):
         self.settings = settings
@@ -41,6 +46,20 @@ class VRCT_GUI(CTk):
             view_variable=self._view_variable
         )
 
+        self.modal_window = _CreateModalWindow(
+            attach_window=self,
+            settings=self.settings.modal_window,
+            view_variable=self._view_variable
+        )
+
+        self.error_message_window = _CreateErrorWindow(
+            settings=self.settings.modal_window,
+            view_variable=self._view_variable,
+            wrapper_widget=self.config_window.main_bg_container,
+        )
+
+
+
     def startMainLoop(self):
         self.mainloop()
 
@@ -50,18 +69,26 @@ class VRCT_GUI(CTk):
         self.destroy()
 
 
-    def openConfigWindow(self, e):
+    def openConfigWindow(self, _e):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
+
+        self.adjustToMainWindowGeometry()
+        self.modal_window.deiconify()
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self.adjustToMainWindowGeometry)
+
         self.config_window.deiconify()
         self.config_window.focus_set()
-        self.config_window.focus()
         self.config_window.grab_set()
 
     def closeConfigWindow(self):
         callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+
         self.config_window.withdraw()
         self.config_window.grab_release()
 
+        self.modal_window.withdraw()
+        self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
+        self.adjusted_event=None
 
 
 
@@ -158,6 +185,34 @@ class VRCT_GUI(CTk):
         self.sidebar_bg_container.grid()
         self.minimize_sidebar_button_container__for_opening.grid_remove()
         self.minimize_sidebar_button_container__for_closing.grid()
+
+
+    def adjustToMainWindowGeometry(self, e=None):
+        self.update_idletasks()
+        x_pos = self.winfo_rootx()
+        y_pos = self.winfo_rooty()
+        width_new = self.winfo_width()
+        height_new = self.winfo_height()
+        self.modal_window.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
+
+        self.modal_window.lift()
+        if self.adjusted_event == str(e):
+            self.after(150, lambda: self.config_window.lift())
+        elif self.adjusted_event is None:
+            self.after(150, lambda: self.config_window.lift())
+
+        if e is not None:
+            self.adjusted_event=str(e)
+
+
+    def showErrorMessage(self, target_widget):
+        self.error_message_window.show(target_widget=target_widget)
+
+    def _clearErrorMessage(self):
+        try:
+            self.error_message_window._withdraw()
+        except:
+            pass
 
 
 vrct_gui = VRCT_GUI()

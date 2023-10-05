@@ -388,19 +388,15 @@ def callbackSetMicDevice(value):
 def callbackSetMicEnergyThreshold(value):
     print("callbackSetMicEnergyThreshold", value)
     try:
-        if 0 > int(value) or int(value) > config.MAX_MIC_ENERGY_THRESHOLD: raise ValueError()
+        value = int(value)
+        if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
+            view.clearErrorMessage()
+            config.INPUT_MIC_ENERGY_THRESHOLD = value
+            view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_MicEnergyThreshold(
-            slider_value=config.INPUT_MIC_ENERGY_THRESHOLD,
-            entry_value=None,
-        )
-        return
-    config.INPUT_MIC_ENERGY_THRESHOLD = int(value)
-    view.setGuiVariable_MicEnergyThreshold(
-        slider_value=config.INPUT_MIC_ENERGY_THRESHOLD,
-        entry_value=str(config.INPUT_MIC_ENERGY_THRESHOLD),
-    )
-
+        view.showErrorMessage_MicEnergyThreshold()
 
 def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
@@ -425,32 +421,41 @@ def callbackCheckMicThreshold(is_turned_on):
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
     try:
-        if int(value) < 0 or int(value) > config.INPUT_MIC_PHRASE_TIMEOUT: raise ValueError()
+        value = int(value)
+        if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
+            view.clearErrorMessage()
+            config.INPUT_MIC_RECORD_TIMEOUT = value
+            view.setGuiVariable_MicRecordTimeout(str(config.INPUT_MIC_RECORD_TIMEOUT))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_MicRecordTimeout(delete=True)
-        return
-    config.INPUT_MIC_RECORD_TIMEOUT = int(value)
-    view.setGuiVariable_MicRecordTimeout(str(config.INPUT_MIC_RECORD_TIMEOUT))
+        view.showErrorMessage_MicRecordTimeout()
 
 def callbackSetMicPhraseTimeout(value):
     print("callbackSetMicPhraseTimeout", value)
     try:
-        if int(value) < 0 or int(value) < config.INPUT_MIC_RECORD_TIMEOUT: raise ValueError()
+        value = int(value)
+        if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
+            view.clearErrorMessage()
+            config.INPUT_MIC_PHRASE_TIMEOUT = value
+            view.setGuiVariable_MicPhraseTimeout(str(config.INPUT_MIC_PHRASE_TIMEOUT))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_MicPhraseTimeout(delete=True)
-        return
-    config.INPUT_MIC_PHRASE_TIMEOUT = int(value)
-    view.setGuiVariable_MicPhraseTimeout(str(config.INPUT_MIC_PHRASE_TIMEOUT))
+        view.showErrorMessage_MicPhraseTimeout()
 
 def callbackSetMicMaxPhrases(value):
     print("callbackSetMicMaxPhrases", value)
     try:
-        if int(value) < 0: raise ValueError()
+        value = int(value)
+        if 0 <= value:
+            view.clearErrorMessage()
+            config.INPUT_MIC_MAX_PHRASES = value
+            view.setGuiVariable_MicMaxPhrases(str(config.INPUT_MIC_MAX_PHRASES))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_MicMaxPhrases(delete=True)
-        return
-    config.INPUT_MIC_MAX_PHRASES = int(value)
-    view.setGuiVariable_MicMaxPhrases(str(config.INPUT_MIC_MAX_PHRASES))
+        view.showErrorMessage_MicMaxPhrases()
 
 def callbackSetMicWordFilter(value):
     print("callbackSetMicWordFilter", value)
@@ -476,19 +481,15 @@ def callbackSetSpeakerDevice(value):
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
     try:
-        if 0 > int(value) or int(value) > config.MAX_SPEAKER_ENERGY_THRESHOLD: raise ValueError()
+        value = int(value)
+        if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
+            view.clearErrorMessage()
+            config.INPUT_SPEAKER_ENERGY_THRESHOLD = value
+            view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_SpeakerEnergyThreshold(
-            slider_value=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
-            entry_value=None,
-        )
-        return
-    config.INPUT_SPEAKER_ENERGY_THRESHOLD = int(value)
-    view.setGuiVariable_SpeakerEnergyThreshold(
-        slider_value=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
-        entry_value=str(config.INPUT_SPEAKER_ENERGY_THRESHOLD),
-    )
-
+        view.showErrorMessage_SpeakerEnergyThreshold()
 
 def callbackSetSpeakerDynamicEnergyThreshold(value):
     print("callbackSetSpeakerDynamicEnergyThreshold", value)
@@ -514,32 +515,41 @@ def callbackCheckSpeakerThreshold(is_turned_on):
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", value)
     try:
-        if int(value) < 0 or int(value) > config.INPUT_SPEAKER_PHRASE_TIMEOUT: raise ValueError()
+        value = int(value)
+        if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
+            view.clearErrorMessage()
+            config.INPUT_SPEAKER_RECORD_TIMEOUT = value
+            view.setGuiVariable_SpeakerRecordTimeout(str(config.INPUT_SPEAKER_RECORD_TIMEOUT))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_SpeakerRecordTimeout(delete=True)
-        return
-    config.INPUT_SPEAKER_RECORD_TIMEOUT = int(value)
-    view.setGuiVariable_SpeakerRecordTimeout(str(config.INPUT_SPEAKER_RECORD_TIMEOUT))
+        view.showErrorMessage_SpeakerRecordTimeout()
 
 def callbackSetSpeakerPhraseTimeout(value):
     print("callbackSetSpeakerPhraseTimeout", value)
     try:
-        if int(value) < 0 or int(value) < config.INPUT_SPEAKER_RECORD_TIMEOUT: raise ValueError()
+        value = int(value)
+        if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
+            view.clearErrorMessage()
+            config.INPUT_SPEAKER_PHRASE_TIMEOUT = value
+            view.setGuiVariable_SpeakerPhraseTimeout(str(config.INPUT_SPEAKER_PHRASE_TIMEOUT))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_SpeakerPhraseTimeout(delete=True)
-        return
-    config.INPUT_SPEAKER_PHRASE_TIMEOUT = int(value)
-    view.setGuiVariable_SpeakerPhraseTimeout(str(config.INPUT_SPEAKER_PHRASE_TIMEOUT))
+        view.showErrorMessage_SpeakerPhraseTimeout()
 
 def callbackSetSpeakerMaxPhrases(value):
     print("callbackSetSpeakerMaxPhrases", value)
     try:
-        if int(value) < 0: raise ValueError()
+        value = int(value)
+        if 0 <= value:
+            view.clearErrorMessage()
+            config.INPUT_SPEAKER_MAX_PHRASES = value
+            view.setGuiVariable_SpeakerMaxPhrases(str(config.INPUT_SPEAKER_MAX_PHRASES))
+        else:
+            raise ValueError()
     except:
-        view.setGuiVariable_SpeakerMaxPhrases(delete=True)
-        return
-    config.INPUT_SPEAKER_MAX_PHRASES = int(value)
-    view.setGuiVariable_SpeakerMaxPhrases(str(config.INPUT_SPEAKER_MAX_PHRASES))
+        view.showErrorMessage_SpeakerMaxPhrases()
 
 
 # Others Tab

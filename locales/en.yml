@@ -16,6 +16,9 @@ main_window:
 
   update_available: New version is here!
 
+  modal_message:
+    opened_config_window: The functionality is temporarily disabled until the settings window is closed.
+
 selectable_language_window:
   title_your_language: Select Your Language
   title_target_language: Select Target Language
