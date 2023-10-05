@@ -16,6 +16,10 @@ main_window:
 
   update_available: 新しいバージョンが出ました！
 
+  modal_message:
+    opened_config_window: 設定画面が閉じられるまで、一時的に機能を停止しています。
+
+
 selectable_language_window:
   title_your_language: あなたの言語
   title_target_language: 相手の言語

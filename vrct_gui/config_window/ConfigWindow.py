@@ -32,3 +32,6 @@ class ConfigWindow(CTkToplevel):
 
 
         createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
+
+
+        self.bind_all("<Button-1>", lambda event: event.widget.focus_set(), "+")

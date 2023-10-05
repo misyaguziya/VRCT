@@ -185,12 +185,13 @@ class _SettingBoxGenerator():
     def createSettingBoxProgressbarXSlider(
             self,
             for_var_label_text, for_var_desc_text, command,
-            entry_attr_name,
+            entry_attr_name, entry_bind__FocusOut,
             slider_attr_name, slider_range,
             progressbar_attr_name,
             passive_button_attr_name, passive_button_command,
             active_button_attr_name, active_button_command,
             button_image_file,
+
             entry_variable,
             slider_variable,
 
@@ -220,8 +221,12 @@ class _SettingBoxGenerator():
         )
 
         entry_widget.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+        if entry_bind__FocusOut is not None:
+            entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
+
         entry_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=0, pady=0, sticky="e")
         setattr(self.config_window, entry_attr_name, entry_widget)
+
 
 
         # at least 2px is needed otherwise the slider button is gonna broken.
@@ -286,7 +291,7 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxEntry(self, for_var_label_text, for_var_desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable):
+    def createSettingBoxEntry(self, for_var_label_text, for_var_desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable, entry_bind__FocusOut=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         def adjusted_command__for_entry_bind__Any_KeyRelease(e):
@@ -304,6 +309,9 @@ class _SettingBoxGenerator():
 
 
         entry_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
+
+        if entry_bind__FocusOut is not None:
+            entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
 
         return setting_box_frame
 
