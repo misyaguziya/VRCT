@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor
+from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox
 
 from utils import callFunctionIfCallable
 
@@ -51,69 +51,55 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, arrow_img_attr_name, open_selectable_language_window_command, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
-        sls__box.columnconfigure((0,2), weight=1)
+        sls__box.columnconfigure(1, weight=1)
 
         sls__box_wrapper = CTkFrame(sls__box, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
-        sls__box_wrapper.grid(row=2, column=1, padx=10, pady=settings.uism.SLS__BOX_IPADY)
+        sls__box_wrapper.grid(row=2, column=1, padx=10, pady=settings.uism.SLS__BOX_IPADY, sticky="ew")
+
+        sls__box_wrapper.grid_columnconfigure(0, weight=1)
 
 
+        sls__box_label_wrapper = CTkFrame(sls__box_wrapper, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
+        sls__box_label_wrapper.grid(row=0, column=0)
+
+        sls__box_label_wrapper.grid_columnconfigure((0,2), weight=1)
         sls__label = CTkLabel(
-            sls__box_wrapper,
+            sls__box_label_wrapper,
             textvariable=var_title_text,
             height=0,
             font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_SECTION_TITLE_FONT_SIZE, weight="normal"),
             text_color=settings.ctm.SLS__BOX_SECTION_TITLE_TEXT_COLOR
         )
-        sls__label.grid(row=0, column=0, pady=(0,settings.uism.SLS__BOX_SECTION_TITLE_BOTTOM_PADY))
+        sls__label.grid(row=0, column=1, pady=(0,settings.uism.SLS__BOX_SECTION_TITLE_BOTTOM_PADY))
         setattr(main_window, title_text_attr_name, sls__label)
 
 
 
 
+        sls__box_optionmenu_wrapper = CTkFrame(sls__box_wrapper, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
+        sls__box_optionmenu_wrapper.grid(row=1, column=0, sticky="ew")
 
-        sls__selected_language_box = CTkFrame(sls__box_wrapper, corner_radius=4, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR, cursor="hand2")
-        sls__selected_language_box.grid(row=1, column=0)
+        sls__box_optionmenu_wrapper.grid_columnconfigure(0, weight=1)
+        sls__selected_language_box = createOptionMenuBox(
+            parent_widget=sls__box_optionmenu_wrapper,
+            optionmenu_bg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR,
+            optionmenu_hovered_bg_color=settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR,
+            optionmenu_clicked_bg_color=settings.ctm.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR,
+            optionmenu_ipadx=(0,0),
+            optionmenu_ipady=2,
+            variable=variable,
+            font_family=settings.FONT_FAMILY,
+            font_size=settings.uism.SLS__BOX_DROPDOWN_MENU_FONT_SIZE,
+            text_color=settings.ctm.LABELS_TEXT_COLOR,
+            image_file=settings.image_file.ARROW_LEFT.rotate(180),
+            image_size=(20,20),
+            command=open_selectable_language_window_command,
 
-
-        sls__selected_language_box.columnconfigure(0, minsize=200)
-        sls__selected_language_box.rowconfigure(0, minsize=30)
-        sls__selected_language_label_frame = CTkFrame(sls__selected_language_box, corner_radius=0, fg_color=settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
-        sls__selected_language_label_frame.grid(row=0, column=0)
-
-        sls__selected_language_label = CTkLabel(
-            sls__selected_language_label_frame,
-            textvariable=variable,
-            height=0,
-            # anchor="center",
-            font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_DROPDOWN_MENU_FONT_SIZE, weight="normal"),
-            text_color=settings.ctm.LABELS_TEXT_COLOR
+            optionmenu_position="center",
+            setattr_widget=main_window,
+            image_widget_attr_name=arrow_img_attr_name,
         )
-        sls__selected_language_label.grid(row=0, column=0, pady=2)
-        setattr(main_window, title_text_attr_name, sls__selected_language_label)
-
-
-        sls__selected_language_arrow_img = CTkLabel(
-            sls__selected_language_box,
-            text=None,
-            corner_radius=0,
-            height=0,
-            image=CTkImage((settings.image_file.ARROW_LEFT).rotate(180),size=(20,20))
-        )
-        setattr(main_window, arrow_img_attr_name, sls__selected_language_arrow_img)
-
-
-
-        sls__selected_language_arrow_img.grid(row=0, column=1, padx=0, pady=0)
-
-
-
-
-        bindEnterAndLeaveColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_BG_COLOR)
-        bindButtonPressColor([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], settings.ctm.SLS__DROPDOWN_MENU_CLICKED_BG_COLOR, settings.ctm.SLS__DROPDOWN_MENU_HOVERED_BG_COLOR)
-
-
-
-        bindButtonReleaseFunction([sls__selected_language_label_frame, sls__selected_language_box, sls__selected_language_label, sls__selected_language_arrow_img], open_selectable_language_window_command)
+        sls__selected_language_box.grid(row=0, column=0, sticky="ew")
 
         return sls__box
 
