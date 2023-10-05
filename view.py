@@ -130,6 +130,8 @@ class View():
             # Config Window
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
+            VAR_ERROR_MESSAGE=StringVar(value=""),
+
 
             # Side Menu Labels
             VAR_SIDE_MENU_LABEL_APPEARANCE=StringVar(value=i18n.t("config_window.side_menu_labels.appearance")),
@@ -200,6 +202,7 @@ class View():
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
+            CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.setLatestConfigVariable_MicEnergyThreshold,
 
             VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
             VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
@@ -210,16 +213,19 @@ class View():
             VAR_DESC_MIC_RECORD_TIMEOUT=None,
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
+            CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.setLatestConfigVariable_MicRecordTimeout,
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
             VAR_DESC_MIC_PHRASE_TIMEOUT=None,
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
+            CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
             VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
+            CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
 
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.label")),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.desc")),
@@ -240,6 +246,7 @@ class View():
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
+            CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.setLatestConfigVariable_SpeakerEnergyThreshold,
 
             VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
             VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
@@ -250,16 +257,19 @@ class View():
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
+            CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.setLatestConfigVariable_SpeakerRecordTimeout,
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
             VAR_DESC_SPEAKER_PHRASE_TIMEOUT=None,
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
+            CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
             VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
+            CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,
 
 
             # Others Tab
@@ -718,19 +728,22 @@ class View():
 
 
 
-    def setGuiVariable_MicEnergyThreshold(self, slider_value:int, entry_value:Union[None, str]=None):
-        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(slider_value)
-        if entry_value is None:
-            self._clearEntryBox(vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold)
-        else:
-            self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(entry_value)
+    def setGuiVariable_MicEnergyThreshold(self, value:int):
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(value)
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
 
-    def setGuiVariable_SpeakerEnergyThreshold(self, slider_value:int, entry_value:Union[None, str]=None):
-        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(slider_value)
-        if entry_value is None:
-            self._clearEntryBox(vrct_gui.config_window.sb__progressbar_x_slider__entry_speaker_energy_threshold)
-        else:
-            self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(entry_value)
+    def setLatestConfigVariable_MicEnergyThreshold(self, _e=None):
+        self.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+        self.clearErrorMessage()
+
+
+    def setGuiVariable_SpeakerEnergyThreshold(self, value:int):
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(value)
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(str(value))
+
+    def setLatestConfigVariable_SpeakerEnergyThreshold(self, _e=None):
+        self.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+        self.clearErrorMessage()
 
 
 
@@ -738,13 +751,27 @@ class View():
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_record_timeout)
         self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(value)
 
+    def setLatestConfigVariable_MicRecordTimeout(self, _e=None):
+        self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
+        self.clearErrorMessage()
+
+
     def setGuiVariable_MicPhraseTimeout(self, value:str="", delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_phrase_timeout)
         self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(value)
 
+    def setLatestConfigVariable_MicPhraseTimeout(self, _e=None):
+        self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
+        self.clearErrorMessage()
+
+
     def setGuiVariable_MicMaxPhrases(self, value:str="", delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_max_phrases)
         self.view_variable.VAR_MIC_MAX_PHRASES.set(value)
+
+    def setLatestConfigVariable_MicMaxPhrases(self, _e=None):
+        self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
+        self.clearErrorMessage()
 
 
 
@@ -752,13 +779,27 @@ class View():
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_record_timeout)
         self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(value)
 
+    def setLatestConfigVariable_SpeakerRecordTimeout(self, _e=None):
+        self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
+        self.clearErrorMessage()
+
+
     def setGuiVariable_SpeakerPhraseTimeout(self, value:str="", delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_phrase_timeout)
         self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(value)
 
+    def setLatestConfigVariable_SpeakerPhraseTimeout(self, _e=None):
+        self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
+        self.clearErrorMessage()
+
+
     def setGuiVariable_SpeakerMaxPhrases(self, value:str="", delete=False):
         if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_max_phrases)
         self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(value)
+
+    def setLatestConfigVariable_SpeakerMaxPhrases(self, _e=None):
+        self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
+        self.clearErrorMessage()
 
 
     @staticmethod
@@ -766,7 +807,37 @@ class View():
         entry_widget.delete(0, CTK_END)
 
 
+    def showErrorMessage_MicEnergyThreshold(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold, "Mic Energy Threshold Error Message")
 
+    def showErrorMessage_MicRecordTimeout(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_record_timeout, "Mic Record Timeout Error Message")
+
+    def showErrorMessage_MicPhraseTimeout(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_phrase_timeout, "Mic Phrase Timeout Error Message")
+
+    def showErrorMessage_MicMaxPhrases(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_max_phrases, "Mic Max Phrases Error Message")
+
+
+    def showErrorMessage_SpeakerEnergyThreshold(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__entry_speaker_energy_threshold, "Speaker Energy Threshold Error Message")
+
+    def showErrorMessage_SpeakerRecordTimeout(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_record_timeout, "Speaker Record Timeout Error Message")
+
+    def showErrorMessage_SpeakerPhraseTimeout(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_phrase_timeout, "Speaker Phrase Timeout Error Message")
+
+    def showErrorMessage_SpeakerMaxPhrases(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_max_phrases, "Speaker Max Phrases Error Message")
+
+    def _showErrorMessage(self, target_widget, message):
+        self.view_variable.VAR_ERROR_MESSAGE.set(message)
+        vrct_gui.showErrorMessage(target_widget=target_widget)
+
+    def clearErrorMessage(self):
+        vrct_gui._clearErrorMessage()
 
     # These conversations are generated by ChatGPT
     def _insertSampleConversationToTextbox(self):

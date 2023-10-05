@@ -55,6 +55,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
 
         entry_variable=view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY,
         entry_attr_name="sb__progressbar_x_slider__entry_speaker_energy_threshold",
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD,
 
 
         slider_attr_name="progressbar_x_slider__slider_speaker_energy_threshold",
@@ -92,6 +93,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_record_timeout_callback(value),
         entry_textvariable=view_variable.VAR_SPEAKER_RECORD_TIMEOUT,
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT,
     )
     config_window.sb__speaker_record_timeout.grid(row=row)
     row+=1
@@ -103,6 +105,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_phrase_timeout_callback(value),
         entry_textvariable=view_variable.VAR_SPEAKER_PHRASE_TIMEOUT,
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT,
     )
     config_window.sb__speaker_phrase_timeout.grid(row=row)
     row+=1
@@ -114,6 +117,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         entry_width=settings.uism.SB__ENTRY_WIDTH_100,
         entry_bind__Any_KeyRelease=lambda value: entry_input_speaker_max_phrases_callback(value),
         entry_textvariable=view_variable.VAR_SPEAKER_MAX_PHRASES,
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES,
     )
     config_window.sb__speaker_max_phrases.grid(row=row)
     row+=1
