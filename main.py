@@ -425,7 +425,7 @@ def callbackSetMicRecordTimeout(value):
         if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
             view.clearErrorMessage()
             config.INPUT_MIC_RECORD_TIMEOUT = value
-            view.setGuiVariable_MicRecordTimeout(str(config.INPUT_MIC_RECORD_TIMEOUT))
+            view.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
         else:
             raise ValueError()
     except:
@@ -438,7 +438,7 @@ def callbackSetMicPhraseTimeout(value):
         if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
             view.clearErrorMessage()
             config.INPUT_MIC_PHRASE_TIMEOUT = value
-            view.setGuiVariable_MicPhraseTimeout(str(config.INPUT_MIC_PHRASE_TIMEOUT))
+            view.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
         else:
             raise ValueError()
     except:
@@ -451,7 +451,7 @@ def callbackSetMicMaxPhrases(value):
         if 0 <= value:
             view.clearErrorMessage()
             config.INPUT_MIC_MAX_PHRASES = value
-            view.setGuiVariable_MicMaxPhrases(str(config.INPUT_MIC_MAX_PHRASES))
+            view.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
         else:
             raise ValueError()
     except:
@@ -505,7 +505,6 @@ def callbackCheckSpeakerThreshold(is_turned_on):
         model.startCheckSpeakerEnergy(setProgressBarSpeakerEnergy)
         view.replaceSpeakerThresholdCheckButton_Active()
         view.setWidgetsStatus_ThresholdCheckButton_Normal()
-
     else:
         view.setWidgetsStatus_ThresholdCheckButton_Disabled()
         model.stopCheckSpeakerEnergy()
@@ -519,7 +518,7 @@ def callbackSetSpeakerRecordTimeout(value):
         if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
             view.clearErrorMessage()
             config.INPUT_SPEAKER_RECORD_TIMEOUT = value
-            view.setGuiVariable_SpeakerRecordTimeout(str(config.INPUT_SPEAKER_RECORD_TIMEOUT))
+            view.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
         else:
             raise ValueError()
     except:
@@ -532,7 +531,7 @@ def callbackSetSpeakerPhraseTimeout(value):
         if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
             view.clearErrorMessage()
             config.INPUT_SPEAKER_PHRASE_TIMEOUT = value
-            view.setGuiVariable_SpeakerPhraseTimeout(str(config.INPUT_SPEAKER_PHRASE_TIMEOUT))
+            view.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
         else:
             raise ValueError()
     except:
@@ -545,7 +544,7 @@ def callbackSetSpeakerMaxPhrases(value):
         if 0 <= value:
             view.clearErrorMessage()
             config.INPUT_SPEAKER_MAX_PHRASES = value
-            view.setGuiVariable_SpeakerMaxPhrases(str(config.INPUT_SPEAKER_MAX_PHRASES))
+            view.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
         else:
             raise ValueError()
     except:
