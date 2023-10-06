@@ -146,9 +146,9 @@ class UiScalingManager():
 
 
         self.config_window.SB__OPTION_MENU_FONT_SIZE = self.config_window.SB__SELECTOR_FONT_SIZE
-        self.config_window.SB__OPTIONMENU_HEIGHT = self._calculateUiSize(30)
-        self.config_window.SB__OPTIONMENU_WIDTH = self._calculateUiSize(200)
-        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_WIDTH
+        self.config_window.SB__OPTIONMENU_MIN_HEIGHT = self._calculateUiSize(30)
+        self.config_window.SB__OPTIONMENU_MIN_WIDTH = self._calculateUiSize(200)
+        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
         self.config_window.SB__DROPDOWN_MENU_MAX_BUTTON_HEIGHT = int(self.config_window.SB__OPTION_MENU_FONT_SIZE + self._calculateUiSize(6))
         self.config_window.SB__DROPDOWN_MENU_FRAME_CORNER_RADIUS = self._calculateUiSize(10)
         self.config_window.SB__DROPDOWN_MENU_FRAME_MAX_HEIGHT = self._calculateUiSize(200)
