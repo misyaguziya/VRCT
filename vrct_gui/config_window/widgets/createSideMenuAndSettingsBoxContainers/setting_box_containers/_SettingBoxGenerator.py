@@ -3,7 +3,7 @@ from typing import Union
 
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
 
 SETTING_BOX_COLUMN = 1
 
@@ -76,19 +76,30 @@ class _SettingBoxGenerator():
     def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
-        option_menu_widget = CTkOptionMenu(
-            setting_box_item_frame,
-            height=self.settings.uism.SB__OPTIONMENU_HEIGHT,
-            width=self.settings.uism.SB__OPTIONMENU_WIDTH,
-            values=dropdown_menu_values,
-            button_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
-            button_hover_color=self.settings.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
-            fg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
-            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
+        option_menu_widget = createOptionMenuBox(
+            parent_widget=setting_box_item_frame,
+            optionmenu_bg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
+            optionmenu_hovered_bg_color=self.settings.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
+            optionmenu_clicked_bg_color=self.settings.ctm.SB__OPTIONMENU_CLICKED_BG_COLOR,
+            optionmenu_ipadx=(8,8),
+            optionmenu_ipady=2,
+            optionmenu_ipady_between_img=8,
+            optionmenu_min_height=self.settings.uism.SB__OPTIONMENU_MIN_HEIGHT,
+            optionmenu_min_width=self.settings.uism.SB__OPTIONMENU_MIN_WIDTH,
             variable=variable,
-            command=command,
-            anchor="w",
+            font_family=self.settings.FONT_FAMILY,
+            font_size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE,
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+            image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
+            image_size=(14,14),
+            command=lambda _e: print(_e),
+            # command=open_selectable_language_window_command,
+
+            # optionmenu_position="center",
+            # setattr_widget=main_window,
+            # image_widget_attr_name=arrow_img_attr_name,
         )
+
         option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
 
