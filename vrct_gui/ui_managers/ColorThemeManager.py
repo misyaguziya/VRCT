@@ -199,12 +199,14 @@ class ColorThemeManager():
 
         self.selectable_language_window.MAIN_BG_COLOR = self.DARK_875_COLOR
 
-        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
         self.selectable_language_window.GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR
+        self.selectable_language_window.GO_BACK_BUTTON_BG_HOVERED_COLOR = self.DARK_750_COLOR
+        self.selectable_language_window.GO_BACK_BUTTON_BG_CLICKED_COLOR = self.DARK_875_COLOR
 
 
         self.selectable_language_window.TOP_BG_COLOR = self.main.SIDEBAR_BG_COLOR
         self.selectable_language_window.TITLE_TEXT_COLOR = self.DARK_400_COLOR
+        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
 
