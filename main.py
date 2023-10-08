@@ -6,6 +6,14 @@ from view import view
 from utils import get_key_by_value
 from languages import selectable_languages
 
+# Common
+def callbackUpdateSoftware():
+    model.updateSoftware()
+
+def callbackRestartSoftware():
+    print("callbackRestartSoftware")
+    # model.updateSoftware(restart=True)
+
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
@@ -622,6 +630,11 @@ if config.ENABLE_LOGGER is True:
 
 # set UI and callback
 view.register(
+    common_registers={
+        "callback_update_software": callbackUpdateSoftware,
+        "callback_restart_software": callbackRestartSoftware,
+    },
+
     window_action_registers={
         "callback_open_config_window": callbackOpenConfigWindow,
         "callback_close_config_window": callbackCloseConfigWindow,
