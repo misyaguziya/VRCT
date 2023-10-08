@@ -60,6 +60,10 @@ class View():
         )
 
         self.view_variable = SimpleNamespace(
+            # Common
+            CALLBACK_RESTART_SOFTWARE=None,
+
+
             # Open Config Window
             CALLBACK_OPEN_CONFIG_WINDOW=None,
             CALLBACK_CLOSE_CONFIG_WINDOW=None,
@@ -131,6 +135,7 @@ class View():
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
+            VAR_VERSION=StringVar(value=config.VERSION),
 
 
             # Side Menu Labels
@@ -333,6 +338,7 @@ class View():
 
         if common_registers is not None:
             self.view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE=common_registers.get("callback_update_software", None)
+            self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
 
 
         if window_action_registers is not None:

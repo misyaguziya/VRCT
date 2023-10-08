@@ -41,6 +41,41 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
 
 
+    # Main Top Bar Container - Right Side
+    # start from 3
+    main_topbar_column=3
+
+    # VRCT Now Version Label(Tmp)
+    vrct_gui.version_label = CTkLabel(
+        vrct_gui.main_topbar_container,
+        textvariable=view_variable.VAR_VERSION,
+        height=0,
+        corner_radius=0,
+        font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.UPDATE_AVAILABLE_BUTTON_FONT_SIZE, weight="normal"),
+        anchor="e",
+        text_color="white",
+    )
+    vrct_gui.version_label.grid(row=0, column=main_topbar_column, padx=(0,8))
+    main_topbar_column+=1
+
+
+
+    # Restart Button(Tmp)
+    vrct_gui.restart_button_container = createButtonWithImage(
+        parent_widget=vrct_gui.main_topbar_container,
+        button_fg_color=settings.ctm.HELP_AND_INFO_BUTTON_BG_COLOR,
+        button_enter_color=settings.ctm.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR,
+        button_clicked_color=settings.ctm.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR,
+        button_image_file=settings.image_file.VRCT_LOGO_MARK,
+        button_image_size=settings.uism.HELP_AND_INFO_BUTTON_SIZE,
+        button_ipadxy=settings.uism.HELP_AND_INFO_BUTTON_IPADXY,
+        button_command=lambda e: callFunctionIfCallable(view_variable.CALLBACK_RESTART_SOFTWARE),
+        corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
+    )
+    vrct_gui.restart_button_container.grid(row=0, column=main_topbar_column, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
+    main_topbar_column+=1
+
+
     # Update Available Button
     vrct_gui.update_available_container = CTkFrame(
         vrct_gui.main_topbar_container,
@@ -48,8 +83,9 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         fg_color=settings.ctm.MAIN_BG_COLOR,
         cursor="hand2",
     )
-    vrct_gui.update_available_container.grid(row=0, column=3, padx=settings.uism.UPDATE_AVAILABLE_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="nse")
+    vrct_gui.update_available_container.grid(row=0, column=main_topbar_column, padx=settings.uism.UPDATE_AVAILABLE_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="nse")
     vrct_gui.update_available_container.grid_remove()
+    main_topbar_column+=1
 
 
     vrct_gui.update_available_container.rowconfigure((0,2), weight=1)
@@ -105,8 +141,8 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         button_command=lambda e: callFunctionIfCallable(view_variable.CALLBACK_CLICKED_HELP_AND_INFO),
         corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
     )
-    vrct_gui.help_and_info_button_container.grid(row=0, column=4, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
-
+    vrct_gui.help_and_info_button_container.grid(row=0, column=main_topbar_column, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
+    main_topbar_column+=1
     createSidebar(settings, vrct_gui, view_variable)
 
     createMinimizeSidebarButton(settings, vrct_gui, view_variable)
