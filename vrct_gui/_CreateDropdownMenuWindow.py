@@ -18,6 +18,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.wm_attributes("-alpha", 0)
         self.wm_attributes("-toolwindow", True)
 
+        self.configure(fg_color="#ff7f50")
         self.resizable(width=False, height=False)
 
 
@@ -73,7 +74,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         self.wrapper_widget = wrapper_widget
 
-        self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color="#bb4448", width=0, height=0)
+        self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color="#ff7f50", width=0, height=0)
         self.dropdown_menu_container.grid(row=0, column=0, sticky="nsew")
         self.dropdown_menu_container.grid_remove()
 
@@ -101,7 +102,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             border_width=1,
         )
         self.scroll_frame_container.grid(row=0, column=0, sticky="nsew")
-        self.scroll_frame_container._scrollbar.grid_configure(padx=3)
+        self.scroll_frame_container._scrollbar.grid_configure(padx=(1, 2))
         self.scroll_frame_container.grid_columnconfigure(0, weight=1)
 
         self.dropdown_menu_values_box = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR, width=0, height=0)
@@ -112,7 +113,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
     def _createDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values, command):
 
-        # self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color="red", width=0, height=0)
         self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR)
         self.dropdown_menu_values_wrapper.grid(row=0, column=0, sticky="nsew")
         self.dropdown_menu_values_wrapper.grid_columnconfigure(0, weight=1)
