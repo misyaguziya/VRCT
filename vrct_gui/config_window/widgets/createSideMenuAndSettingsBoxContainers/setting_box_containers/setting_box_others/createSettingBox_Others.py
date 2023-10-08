@@ -66,7 +66,7 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         for_var_label_text=view_variable.VAR_LABEL_MESSAGE_FORMAT,
         for_var_desc_text=view_variable.VAR_DESC_MESSAGE_FORMAT,
         entry_attr_name="sb__entry_message_format",
-        entry_width=settings.uism.SB__ENTRY_WIDTH_250,
+        entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_250,
         entry_bind__Any_KeyRelease=lambda value: entry_message_format_callback(value),
         entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
     )
