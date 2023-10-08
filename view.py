@@ -692,14 +692,20 @@ class View():
 
     def updateList_MicHost(self, new_mic_host_list:list):
         self.view_variable.LIST_MIC_HOST = new_mic_host_list
-        vrct_gui.config_window.sb__optionmenu_mic_host.configure(values=new_mic_host_list)
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_mic_host",
+            dropdown_menu_values=new_mic_host_list,
+        )
 
     def updateSelected_MicHost(self, selected_mic_host_name:str):
         self.view_variable.VAR_MIC_HOST.set(selected_mic_host_name)
 
-    def updateList_MicDevice(self, new_mic_device_list):
+    def updateList_MicDevice(self, new_mic_device_list:list):
         self.view_variable.LIST_MIC_DEVICE = new_mic_device_list
-        vrct_gui.config_window.sb__optionmenu_mic_device.configure(values=new_mic_device_list)
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_mic_device",
+            dropdown_menu_values=new_mic_device_list,
+        )
 
     def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
@@ -714,9 +720,12 @@ class View():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
 
-    def updateList_SpeakerDevice(self, new_speaker_device_list):
+    def updateList_SpeakerDevice(self, new_speaker_device_list:list):
         self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
-        vrct_gui.config_window.sb__optionmenu_speaker_device.configure(values=new_speaker_device_list)
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_speaker_device",
+            dropdown_menu_values=new_speaker_device_list,
+        )
 
     @staticmethod
     def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):

@@ -1,11 +1,10 @@
 from customtkinter import CTk, CTkImage
 
-# from window_help_and_info import ToplevelWindowInformation
-
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
 from ._CreateModalWindow import _CreateModalWindow
 from ._CreateErrorWindow import _CreateErrorWindow
+from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._printToTextbox import _printToTextbox
@@ -21,6 +20,7 @@ class VRCT_GUI(CTk):
         super().__init__()
         self.adjusted_event=None
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
+        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
 
 
     def createGUI(self, settings, view_variable):
@@ -33,12 +33,16 @@ class VRCT_GUI(CTk):
             view_variable=self._view_variable
         )
 
+        self.dropdown_menu_window = _CreateDropdownMenuWindow(
+            settings=self.settings.config_window,
+            view_variable=self._view_variable,
+        )
+
         self.config_window = ConfigWindow(
             vrct_gui=self,
             settings=self.settings.config_window,
             view_variable=self._view_variable
         )
-        # self.information_window = ToplevelWindowInformation(self)
 
         self.selectable_languages_window = _CreateSelectableLanguagesWindow(
             vrct_gui=self,
@@ -74,20 +78,20 @@ class VRCT_GUI(CTk):
 
         self.adjustToMainWindowGeometry()
         self.modal_window.deiconify()
-        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self.adjustToMainWindowGeometry)
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self.adjustToMainWindowGeometry, "+")
+        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.modal_window.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
         self.config_window.deiconify()
         self.config_window.focus_set()
-        self.config_window.grab_set()
 
     def closeConfigWindow(self):
         callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
 
         self.config_window.withdraw()
-        self.config_window.grab_release()
 
         self.modal_window.withdraw()
         self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
+        self.modal_window.unbind("<FocusIn>", self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID)
         self.adjusted_event=None
 
 
@@ -200,6 +204,10 @@ class VRCT_GUI(CTk):
             self.after(150, lambda: self.config_window.lift())
         elif self.adjusted_event is None:
             self.after(150, lambda: self.config_window.lift())
+        else:
+            pass
+
+        self.config_window.focus_set()
 
         if e is not None:
             self.adjusted_event=str(e)

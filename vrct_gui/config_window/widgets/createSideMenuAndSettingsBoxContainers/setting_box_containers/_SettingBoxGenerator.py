@@ -3,7 +3,8 @@ from typing import Union
 
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
+from vrct_gui import vrct_gui
 
 SETTING_BOX_COLUMN = 1
 
@@ -14,6 +15,7 @@ class _SettingBoxGenerator():
         self.parent_widget = parent_widget
         self.settings = settings
 
+        self.dropdown_menu_window = vrct_gui.vrct_gui.dropdown_menu_window
 
     def _createSettingBoxFrame(self, for_var_label_text, for_var_desc_text):
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
@@ -73,22 +75,43 @@ class _SettingBoxGenerator():
             self.config_window.additional_widgets.append(setting_box_desc)
 
 
-    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
+    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, dropdown_menu_width=None, variable=None, dropdown_menu_values=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
-        option_menu_widget = CTkOptionMenu(
-            setting_box_item_frame,
-            height=self.settings.uism.SB__OPTIONMENU_HEIGHT,
-            width=self.settings.uism.SB__OPTIONMENU_WIDTH,
-            values=dropdown_menu_values,
-            button_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
-            button_hover_color=self.settings.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
-            fg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
-            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-            variable=variable,
-            command=command,
-            anchor="w",
+        def adjustedCommand(value):
+            variable.set(value)
+            command(value)
+
+        self.dropdown_menu_window.createDropdownMenuBox(
+            dropdown_menu_widget_id=optionmenu_attr_name,
+            dropdown_menu_values=dropdown_menu_values,
+            command=adjustedCommand,
+            wrapper_widget=self.config_window.main_bg_container,
+            dropdown_menu_width=dropdown_menu_width,
         )
+
+        option_menu_widget = createOptionMenuBox(
+            parent_widget=setting_box_item_frame,
+            optionmenu_bg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
+            optionmenu_hovered_bg_color=self.settings.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
+            optionmenu_clicked_bg_color=self.settings.ctm.SB__OPTIONMENU_CLICKED_BG_COLOR,
+            optionmenu_ipadx=(8,8),
+            optionmenu_ipady=2,
+            optionmenu_ipady_between_img=8,
+            optionmenu_min_height=self.settings.uism.SB__OPTIONMENU_MIN_HEIGHT,
+            optionmenu_min_width=self.settings.uism.SB__OPTIONMENU_MIN_WIDTH,
+            variable=variable,
+            font_family=self.settings.FONT_FAMILY,
+            font_size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE,
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+            image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
+            image_size=(14,14),
+            optionmenu_clicked_command=lambda _e: self.dropdown_menu_window.show(
+                dropdown_menu_widget_id=optionmenu_attr_name,
+                target_widget=option_menu_widget,
+            ),
+        )
+
         option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
 

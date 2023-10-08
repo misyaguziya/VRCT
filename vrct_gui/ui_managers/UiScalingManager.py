@@ -15,6 +15,11 @@ class UiScalingManager():
 
     def _calculatedUiSizes(self):
         # Common
+        # RESPONSIVE_UI_SIZE_INT_10 ... RESPONSIVE_UI_SIZE_INT_300
+        for i in range(10, 301, 10):
+            setattr(self.main, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
+            setattr(self.config_window, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
+
 
         # Main
         self.main.TEXTBOX_PADX = self._calculateUiSize(16)
@@ -146,9 +151,9 @@ class UiScalingManager():
 
 
         self.config_window.SB__OPTION_MENU_FONT_SIZE = self.config_window.SB__SELECTOR_FONT_SIZE
-        self.config_window.SB__OPTIONMENU_HEIGHT = self._calculateUiSize(30)
-        self.config_window.SB__OPTIONMENU_WIDTH = self._calculateUiSize(200)
-        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_WIDTH
+        self.config_window.SB__OPTIONMENU_MIN_HEIGHT = self._calculateUiSize(30)
+        self.config_window.SB__OPTIONMENU_MIN_WIDTH = self._calculateUiSize(200)
+        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
         self.config_window.SB__DROPDOWN_MENU_MAX_BUTTON_HEIGHT = int(self.config_window.SB__OPTION_MENU_FONT_SIZE + self._calculateUiSize(6))
         self.config_window.SB__DROPDOWN_MENU_FRAME_CORNER_RADIUS = self._calculateUiSize(10)
         self.config_window.SB__DROPDOWN_MENU_FRAME_MAX_HEIGHT = self._calculateUiSize(200)
@@ -166,12 +171,8 @@ class UiScalingManager():
         self.config_window.SB__ENTRY_FONT_SIZE = self.config_window.SB__SELECTOR_FONT_SIZE
         self.config_window.SB__ENTRY_HEIGHT = self._calculateUiSize(30)
 
-        # SB__ENTRY_WIDTH_10 ... SB__ENTRY_WIDTH_200
-        for i in range(10, 301, 10):
-            setattr(self.config_window, f'SB__ENTRY_WIDTH_{i}', self._calculateUiSize(i))
 
-
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.SB__ENTRY_WIDTH_50
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.RESPONSIVE_UI_SIZE_INT_50
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
         self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_HEIGHT = self._calculateUiSize(40)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_LENGTH = self._calculateUiSize(2)

@@ -18,8 +18,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.attach = vrct_gui.main_bg_container
         self.vrct_gui = vrct_gui
 
-
-        self.configure(fg_color="black")
+        self.configure(fg_color="#ff7f50")
         self.protocol("WM_DELETE_WINDOW", vrct_gui.closeSelectableLanguagesWindow)
 
         self.settings = settings
@@ -80,15 +79,11 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
         self.top_container.rowconfigure((0,2), weight=1)
         self.top_container.columnconfigure(1, weight=1)
-        self.go_back_button_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.GO_BACK_BUTTON_BG_COLOR, width=0, height=0)
+        self.go_back_button_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.GO_BACK_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
         self.go_back_button_container.grid(row=1, column=0)
 
-        self.go_back_button_label_wrapper = CTkFrame(self.go_back_button_container, corner_radius=0, fg_color=self.settings.ctm.GO_BACK_BUTTON_BG_COLOR, width=0, height=0)
-        self.go_back_button_label_wrapper.grid(row=0, column=0)
-
-
         self.go_back_button_label = CTkLabel(
-            self.go_back_button_label_wrapper,
+            self.go_back_button_container,
             textvariable=self._view_variable.VAR_GO_BACK_LABEL_SELECTABLE_LANGUAGE,
             height=0,
             corner_radius=0,
@@ -98,7 +93,12 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         )
         self.go_back_button_label.grid(row=0, column=0, padx=10, pady=8)
 
-        bindButtonReleaseFunction([self.go_back_button_label_wrapper, self.go_back_button_label], lambda _e: self.vrct_gui.closeSelectableLanguagesWindow())
+
+        bindEnterAndLeaveColor([self.go_back_button_container, self.go_back_button_label], self.settings.ctm.GO_BACK_BUTTON_BG_HOVERED_COLOR, self.settings.ctm.GO_BACK_BUTTON_BG_COLOR)
+        bindButtonPressColor([self.go_back_button_container, self.go_back_button_label], self.settings.ctm.GO_BACK_BUTTON_BG_CLICKED_COLOR, self.settings.ctm.GO_BACK_BUTTON_BG_COLOR)
+
+
+        bindButtonReleaseFunction([self.go_back_button_container, self.go_back_button_label], lambda _e: self.vrct_gui.closeSelectableLanguagesWindow())
 
 
 
@@ -137,7 +137,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         column=0
         for selectable_language_name in self._view_variable.LIST_SELECTABLE_LANGUAGES:
 
-            self.wrapper = CTkFrame(self.container, corner_radius=0, fg_color=self.settings.ctm.LANGUAGE_BUTTON_BG_COLOR, width=0, height=0)
+            self.wrapper = CTkFrame(self.container, corner_radius=0, fg_color=self.settings.ctm.LANGUAGE_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
             self.wrapper.grid(row=row, column=column, ipadx=6, ipady=6, sticky="nsew")
             setattr(self, f"{row}_{column}", self.wrapper)
 

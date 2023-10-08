@@ -41,6 +41,7 @@ class ColorThemeManager():
         self.DARK_450_COLOR = "#b8b9bd"
         self.DARK_500_COLOR = "#a9aaae"
         self.DARK_600_COLOR = "#7f8084"
+        # self.DARK_650_COLOR = "#75767a"
         self.DARK_700_COLOR = "#6a6c6f"
         self.DARK_725_COLOR = "#636467"
         self.DARK_750_COLOR = "#5b5c5f"
@@ -198,12 +199,14 @@ class ColorThemeManager():
 
         self.selectable_language_window.MAIN_BG_COLOR = self.DARK_875_COLOR
 
-        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
         self.selectable_language_window.GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR
+        self.selectable_language_window.GO_BACK_BUTTON_BG_HOVERED_COLOR = self.DARK_750_COLOR
+        self.selectable_language_window.GO_BACK_BUTTON_BG_CLICKED_COLOR = self.DARK_875_COLOR
 
 
         self.selectable_language_window.TOP_BG_COLOR = self.main.SIDEBAR_BG_COLOR
         self.selectable_language_window.TITLE_TEXT_COLOR = self.DARK_400_COLOR
+        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
         self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
 
@@ -232,6 +235,13 @@ class ColorThemeManager():
 
         self.config_window.SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR
         self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_850_COLOR
+        self.config_window.SB__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_950_COLOR
+        self.config_window.SB__DROPDOWN_MENU_WINDOW_BG_COLOR = self.config_window.MAIN_BG_COLOR
+        self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR = self.DARK_600_COLOR
+        # self.config_window.SB__DROPDOWN_MENU_WINDOW_BG_COLOR = self.DARK_700_COLOR
+        self.config_window.SB__DROPDOWN_MENU_BG_COLOR = self.DARK_875_COLOR
+        self.config_window.SB__DROPDOWN_MENU_HOVERED_BG_COLOR = self.DARK_800_COLOR
+        self.config_window.SB__DROPDOWN_MENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
 
         self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
         self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
@@ -381,7 +391,7 @@ class ColorThemeManager():
         self.config_window.SB__BG_COLOR = self.DARK_888_COLOR
 
         self.config_window.SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR
-        self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_850_COLOR
+        self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
 
         self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
         self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
