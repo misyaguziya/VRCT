@@ -156,7 +156,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         row=0
         for dropdown_menu_value in dropdown_menu_values:
 
-            dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR, width=0, height=0)
+            dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR, width=0, height=0, cursor="hand2")
             dropdown_menu_value_wrapper.grid(row=row, column=0, ipadx=6, ipady=6, sticky="nsew")
             setattr(self, f"{dropdown_menu_widget_id}__{row}", dropdown_menu_value_wrapper)
 
