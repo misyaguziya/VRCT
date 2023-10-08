@@ -280,7 +280,7 @@ class Model:
         return False
 
     def startMicTranscript(self, fnc):
-        if config.CHOICE_MIC_HOST == "None" or config.CHOICE_MIC_DEVICE == "None":
+        if config.CHOICE_MIC_HOST == "NoDevice" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
 
         mic_audio_queue = Queue()
@@ -324,7 +324,7 @@ class Model:
             self.mic_audio_recorder = None
 
     def startCheckMicEnergy(self, fnc):
-        if config.CHOICE_MIC_HOST == "None" or config.CHOICE_MIC_DEVICE == "None":
+        if config.CHOICE_MIC_HOST == "NoDevice" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
 
         def sendMicEnergy():
@@ -353,7 +353,7 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
-        if config.CHOICE_SPEAKER_DEVICE == "None":
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
         spk_audio_queue = Queue()
         spk_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
@@ -397,7 +397,7 @@ class Model:
             self.spk_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc):
-        if config.CHOICE_SPEAKER_DEVICE == "None":
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
 
         def sendSpeakerEnergy():
