@@ -68,6 +68,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         for_var_desc_text=view_variable.VAR_DESC_FONT_FAMILY,
         optionmenu_attr_name="sb__optionmenu_font_family",
         dropdown_menu_values=view_variable.LIST_FONT_FAMILY,
+        dropdown_menu_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
         command=lambda value: optionmenu_font_family_callback(value),
         variable=view_variable.VAR_FONT_FAMILY,
     )
@@ -83,5 +84,5 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         command=lambda value: optionmenu_ui_language_callback(value),
         variable=view_variable.VAR_UI_LANGUAGE,
     )
-    config_window.sb__ui_language.grid(row=row)
+    config_window.sb__ui_language.grid(row=row, pady=0)
     row+=1

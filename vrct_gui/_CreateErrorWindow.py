@@ -13,6 +13,8 @@ class _CreateErrorWindow(CTkToplevel):
         self.wm_attributes("-alpha", 0)
         self.wm_attributes("-toolwindow", True)
 
+        self.configure(fg_color="#fff")
+
         self.settings = settings
         self.attach_widget = None
         self._view_variable = view_variable
