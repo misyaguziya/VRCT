@@ -43,8 +43,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         # self.rowconfigure(0,weight=1)
         # self.columnconfigure(0,weight=1)
 
-        # The color code [#bb4448] is a mixture of [#a9555c] and [#cc3333] (for a redder shade).
-
     def updateDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values):
         self.dropdown_menu_widgets[dropdown_menu_widget_id].widget.destroy()
         self.createDropdownMenuBox(
@@ -121,15 +119,16 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         # ______________________________________
 
         dropdown_menu_values_length = len(dropdown_menu_values)
-        if dropdown_menu_values_length <= 3:
-            self.scroll_frame_container.configure(width=200, height=int(dropdown_menu_values_length * label_height))
-            # self.geometry("{}x{}".format(300, int(dropdown_menu_values_length * label_height)))
-            # self.geometry("{}x{}".format(300, int(dropdown_menu_values_length * label_height)))
-            # self.scroll_frame_container._parent_canvas.configure(height=20)
+        new_height = 200
+        new_width = 200
+        max_display_length = 8
+        if dropdown_menu_values_length < max_display_length:
+            new_height = int(dropdown_menu_values_length * label_height)
+            # new_width = 200
         else:
-            self.scroll_frame_container.configure(width=200, height=200)
-            # self.geometry("{}x{}".format(200, 200))
-            # self.scroll_frame_container._parent_canvas.configure(height=20)
+            new_height = int(max_display_length * label_height)
+
+        self.scroll_frame_container.configure(width=new_width, height=new_height)
 
         # This is for CustomTkinter's spec change or bug fix.
         self.scroll_frame_container._scrollbar.configure(height=0)
