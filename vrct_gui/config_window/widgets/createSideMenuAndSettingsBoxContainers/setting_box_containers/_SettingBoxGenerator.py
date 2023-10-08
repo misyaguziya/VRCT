@@ -4,6 +4,7 @@ from typing import Union
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
+from vrct_gui import vrct_gui
 
 SETTING_BOX_COLUMN = 1
 
@@ -13,6 +14,14 @@ class _SettingBoxGenerator():
         self.config_window = config_window
         self.parent_widget = parent_widget
         self.settings = settings
+
+        self.dropdown_menu_window = vrct_gui.vrct_gui.dropdown_menu_window
+
+        # self.dropdown_menu_window = _CreateDropdownMenuWindow(
+        #     settings=self.settings,
+        #     view_variable=self.view_variable,
+        #     wrapper_widget=self.config_window.main_bg_container,
+        # )
 
 
     def _createSettingBoxFrame(self, for_var_label_text, for_var_desc_text):
@@ -76,6 +85,17 @@ class _SettingBoxGenerator():
     def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
+        def adjustedCommand(value):
+            variable.set(value)
+            command(value)
+
+        self.dropdown_menu_window.createDropdownMenuBox(
+            dropdown_menu_widget_id=optionmenu_attr_name,
+            dropdown_menu_values=dropdown_menu_values,
+            command=adjustedCommand,
+            wrapper_widget=self.config_window.main_bg_container,
+        )
+
         option_menu_widget = createOptionMenuBox(
             parent_widget=setting_box_item_frame,
             optionmenu_bg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
@@ -92,12 +112,10 @@ class _SettingBoxGenerator():
             text_color=self.settings.ctm.LABELS_TEXT_COLOR,
             image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
             image_size=(14,14),
-            command=lambda _e: print(_e),
-            # command=open_selectable_language_window_command,
-
-            # optionmenu_position="center",
-            # setattr_widget=main_window,
-            # image_widget_attr_name=arrow_img_attr_name,
+            optionmenu_clicked_command=lambda _e: self.dropdown_menu_window.show(
+                dropdown_menu_widget_id=optionmenu_attr_name,
+                target_widget=option_menu_widget,
+            ),
         )
 
         option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
