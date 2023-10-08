@@ -233,7 +233,7 @@ class Model:
         return update_flag
 
     @staticmethod
-    def updateSoftware():
+    def updateSoftware(restart:bool=True):
         filename = 'download.zip'
         program_name = 'VRCT.exe'
         temporary_name = '_VRCT.exe'
@@ -253,7 +253,7 @@ class Model:
             zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
         os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
         rmtree(os_path.join(current_directory, tmp_directory_name))
-        command = [os_path.join(program_directory, batch_name), program_name, temporary_name]
+        command = [os_path.join(program_directory, batch_name), program_name, temporary_name, str(restart)]
         Popen(command)
 
     @staticmethod
