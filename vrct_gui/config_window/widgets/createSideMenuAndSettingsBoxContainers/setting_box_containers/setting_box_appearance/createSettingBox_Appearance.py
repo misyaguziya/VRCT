@@ -84,5 +84,5 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         command=lambda value: optionmenu_ui_language_callback(value),
         variable=view_variable.VAR_UI_LANGUAGE,
     )
-    config_window.sb__ui_language.grid(row=row)
+    config_window.sb__ui_language.grid(row=row, pady=0)
     row+=1

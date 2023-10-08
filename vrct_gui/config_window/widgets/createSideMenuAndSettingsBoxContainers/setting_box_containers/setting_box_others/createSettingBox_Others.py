@@ -91,6 +91,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         command=lambda: checkbox_startup_osc_enabled_check_callback(config_window.sb__checkbox_startup_osc_enabled_check),
         variable=view_variable.VAR_STARTUP_OSC_ENABLED_CHECK,
     )
-    config_window.sb__startup_osc_enabled_check.grid(row=row)
+    config_window.sb__startup_osc_enabled_check.grid(row=row, pady=0)
     row+=1
 

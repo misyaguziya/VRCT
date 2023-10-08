@@ -150,5 +150,5 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
         entry_bind__Any_KeyRelease=lambda value: entry_input_mic_word_filters_callback(value),
         entry_textvariable=view_variable.VAR_MIC_WORD_FILTER,
     )
-    config_window.sb__mic_word_filter.grid(row=row)
+    config_window.sb__mic_word_filter.grid(row=row, pady=0)
     row+=1

@@ -20,5 +20,5 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
         entry_bind__Any_KeyRelease=lambda value: deepl_authkey_callback(value),
         entry_textvariable=view_variable.VAR_DEEPL_AUTH_KEY,
     )
-    config_window.sb__deepl_authkey.grid(row=row)
+    config_window.sb__deepl_authkey.grid(row=row, pady=0)
     row+=1

@@ -120,6 +120,6 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         entry_textvariable=view_variable.VAR_SPEAKER_MAX_PHRASES,
         entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES,
     )
-    config_window.sb__speaker_max_phrases.grid(row=row)
+    config_window.sb__speaker_max_phrases.grid(row=row, pady=0)
     row+=1
     # ＿＿＿＿＿＿＿＿＿＿

@@ -34,5 +34,5 @@ def createSettingBox_AdvancedSettings(setting_box_wrapper, config_window, settin
         entry_bind__Any_KeyRelease=lambda value: entry_port_callback(value),
         entry_textvariable=view_variable.VAR_OSC_PORT,
     )
-    config_window.sb__port.grid(row=row)
+    config_window.sb__port.grid(row=row, pady=0)
     row+=1
