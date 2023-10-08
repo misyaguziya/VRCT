@@ -15,7 +15,7 @@ class _CreateModalWindow(CTkToplevel):
         self.attach_window = attach_window
 
 
-        self.configure(fg_color="black")
+        self.configure(fg_color="#ff7f50")
         self.protocol("WM_DELETE_WINDOW", lambda e: self.withdraw())
 
         self.settings = settings

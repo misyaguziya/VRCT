@@ -18,8 +18,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.attach = vrct_gui.main_bg_container
         self.vrct_gui = vrct_gui
 
-
-        self.configure(fg_color="black")
+        self.configure(fg_color="#ff7f50")
         self.protocol("WM_DELETE_WINDOW", vrct_gui.closeSelectableLanguagesWindow)
 
         self.settings = settings
