@@ -17,13 +17,6 @@ class _SettingBoxGenerator():
 
         self.dropdown_menu_window = vrct_gui.vrct_gui.dropdown_menu_window
 
-        # self.dropdown_menu_window = _CreateDropdownMenuWindow(
-        #     settings=self.settings,
-        #     view_variable=self.view_variable,
-        #     wrapper_widget=self.config_window.main_bg_container,
-        # )
-
-
     def _createSettingBoxFrame(self, for_var_label_text, for_var_desc_text):
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
 

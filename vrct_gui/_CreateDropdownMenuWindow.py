@@ -48,10 +48,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.max_display_length = self.init_max_display_length
 
 
-
-        # self.rowconfigure(0,weight=1)
-        # self.columnconfigure(0,weight=1)
-
     def updateDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values):
         self.dropdown_menu_widgets[dropdown_menu_widget_id].widget.destroy()
         self.createDropdownMenuBox(
