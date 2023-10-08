@@ -82,7 +82,7 @@ class _SettingBoxGenerator():
             self.config_window.additional_widgets.append(setting_box_desc)
 
 
-    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, variable=None, dropdown_menu_values=None):
+    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, dropdown_menu_width=None, variable=None, dropdown_menu_values=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
         def adjustedCommand(value):
@@ -94,6 +94,7 @@ class _SettingBoxGenerator():
             dropdown_menu_values=dropdown_menu_values,
             command=adjustedCommand,
             wrapper_widget=self.config_window.main_bg_container,
+            dropdown_menu_width=dropdown_menu_width,
         )
 
         option_menu_widget = createOptionMenuBox(
