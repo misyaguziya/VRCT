@@ -65,10 +65,10 @@ class View():
             CALLBACK_CLOSE_CONFIG_WINDOW=None,
 
             # Open Help and Information Page
-            CALLBACK_CLICKED_HELP_AND_INFO=self.openWebPage_Booth,
+            CALLBACK_CLICKED_HELP_AND_INFO=self.openWebPage_VrctDocuments,
 
             # Open Update Page
-            CALLBACK_CLICKED_UPDATE_AVAILABLE=self.openWebPage_VrctDocuments,
+            CALLBACK_CLICKED_UPDATE_AVAILABLE=None,
 
 
             # Main Window
@@ -324,18 +324,20 @@ class View():
 
     def register(
             self,
+            common_registers=None,
             window_action_registers=None,
             main_window_registers=None,
             config_window_registers=None
         ):
 
 
-        # Open Config Window
+        if common_registers is not None:
+            self.view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE=common_registers.get("callback_update_software", None)
+
+
         if window_action_registers is not None:
             self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW=window_action_registers.get("callback_open_config_window", None)
             self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW=window_action_registers.get("callback_close_config_window", None)
-
-
 
 
         if main_window_registers is not None:
@@ -363,18 +365,20 @@ class View():
             entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
             entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
 
+
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
         vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
         self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
         self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
 
+
         # Config Window
         self.view_variable.CALLBACK_SELECTED_SETTING_BOX_TAB=self._updateActiveSettingBoxTabNo
 
-        # Compact Mode Switch
-        if config_window_registers is not None:
 
+        if config_window_registers is not None:
+            # Compact Mode Switch
             self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window_registers.get("callback_disable_config_window_compact_mode", None)
             self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window_registers.get("callback_enable_config_window_compact_mode", None)
 
