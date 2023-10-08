@@ -389,7 +389,7 @@ class ColorThemeManager():
         self.config_window.SB__BG_COLOR = self.DARK_888_COLOR
 
         self.config_window.SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR
-        self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_850_COLOR
+        self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
 
         self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
         self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
