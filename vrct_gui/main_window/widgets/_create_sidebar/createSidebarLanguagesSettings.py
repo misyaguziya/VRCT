@@ -93,7 +93,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             text_color=settings.ctm.LABELS_TEXT_COLOR,
             image_file=settings.image_file.ARROW_LEFT.rotate(180),
             image_size=(20,20),
-            command=open_selectable_language_window_command,
+            optionmenu_clicked_command=open_selectable_language_window_command,
 
             optionmenu_position="center",
             setattr_widget=main_window,
