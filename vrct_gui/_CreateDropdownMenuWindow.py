@@ -38,6 +38,14 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.x_pos = None
         self.y_pos = None
 
+        self.init_height = 200
+        self.new_height = self.init_height
+        self.init_width = 200
+        self.new_width = self.init_width
+
+        self.init_max_display_length = 8
+        self.max_display_length = self.init_max_display_length
+
 
 
         # self.rowconfigure(0,weight=1)
@@ -50,10 +58,19 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             dropdown_menu_values=dropdown_menu_values,
             command=self.dropdown_menu_widgets[dropdown_menu_widget_id].command,
             wrapper_widget=self.dropdown_menu_widgets[dropdown_menu_widget_id].wrapper_widget,
+
+            dropdown_menu_width=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.dropdown_menu_width,
+            dropdown_menu_height=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.dropdown_menu_height,
+            max_display_length=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.max_display_length,
         )
 
 
-    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values, command, wrapper_widget):
+    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values, command, wrapper_widget, dropdown_menu_width=None, dropdown_menu_height=None, max_display_length=None):
+        self.new_width = dropdown_menu_width if dropdown_menu_width is not None else self.init_width
+        self.new_height = dropdown_menu_height if dropdown_menu_height is not None else self.init_height
+        self.max_display_length = max_display_length if max_display_length is not None else self.init_max_display_length
+
+
         self.wrapper_widget = wrapper_widget
 
         self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color="#bb4448", width=0, height=0)
@@ -66,6 +83,11 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             widget=self.dropdown_menu_container,
             command=command,
             wrapper_widget=wrapper_widget,
+            dropdown_menu_settings=SimpleNamespace(
+                dropdown_menu_width=dropdown_menu_width,
+                dropdown_menu_height=dropdown_menu_height,
+                max_display_length=max_display_length,
+            )
         )
 
 
@@ -119,16 +141,12 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         # ______________________________________
 
         dropdown_menu_values_length = len(dropdown_menu_values)
-        new_height = 200
-        new_width = 200
-        max_display_length = 8
-        if dropdown_menu_values_length < max_display_length:
+        if dropdown_menu_values_length < self.max_display_length:
             new_height = int(dropdown_menu_values_length * label_height)
-            # new_width = 200
         else:
-            new_height = int(max_display_length * label_height)
+            new_height = int(self.max_display_length * label_height)
 
-        self.scroll_frame_container.configure(width=new_width, height=new_height)
+        self.scroll_frame_container.configure(width=self.new_width, height=new_height)
 
         # This is for CustomTkinter's spec change or bug fix.
         self.scroll_frame_container._scrollbar.configure(height=0)
