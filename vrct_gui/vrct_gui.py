@@ -1,7 +1,5 @@
 from customtkinter import CTk, CTkImage
 
-# from window_help_and_info import ToplevelWindowInformation
-
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
 from ._CreateModalWindow import _CreateModalWindow
@@ -45,7 +43,6 @@ class VRCT_GUI(CTk):
             settings=self.settings.config_window,
             view_variable=self._view_variable
         )
-        # self.information_window = ToplevelWindowInformation(self)
 
         self.selectable_languages_window = _CreateSelectableLanguagesWindow(
             vrct_gui=self,
