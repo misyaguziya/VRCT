@@ -222,7 +222,7 @@ class Config:
 
     @UI_SCALING.setter
     def UI_SCALING(self, value):
-        if value in ["80%", "90%", "100%", "110%", "120%"]:
+        if value in ["40%", "60%", "80%", "90%", "100%", "110%", "120%", "150%", "200%"]:
             self._UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
