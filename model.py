@@ -257,6 +257,14 @@ class Model:
         Popen(command)
 
     @staticmethod
+    def reStartSoftware():
+        program_name = 'VRCT.exe'
+        batch_name = 'restart.bat'
+        program_directory = os_path.dirname(__file__)
+        command = [os_path.join(program_directory, batch_name), program_name]
+        Popen(command)
+
+    @staticmethod
     def getListInputHost():
         return [host for host in getInputDevices().keys()]
 

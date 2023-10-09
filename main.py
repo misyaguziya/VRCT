@@ -13,6 +13,7 @@ def callbackUpdateSoftware():
 def callbackRestartSoftware():
     print("callbackRestartSoftware")
     # model.updateSoftware(restart=True)
+    model.reStartSoftware()
 
 # func transcription send message
 def sendMicMessage(message):
