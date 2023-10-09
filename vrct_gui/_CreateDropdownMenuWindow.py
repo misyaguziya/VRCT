@@ -7,7 +7,16 @@ from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindBut
 from functools import partial
 
 class _CreateDropdownMenuWindow(CTkToplevel):
-    def __init__(self, settings, view_variable):
+    def __init__(self,
+    settings,
+    view_variable,
+    window_bg_color,
+    window_border_color,
+    values_bg_color,
+    values_hovered_bg_color,
+    values_clicked_bg_color,
+    values_text_color,
+    ):
         super().__init__()
         self.withdraw()
         self.hide = True
@@ -20,6 +29,14 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         self.configure(fg_color="#ff7f50")
         self.resizable(width=False, height=False)
+
+
+        self.window_bg_color=window_bg_color
+        self.window_border_color=window_border_color
+        self.values_bg_color=values_bg_color
+        self.values_hovered_bg_color=values_hovered_bg_color
+        self.values_clicked_bg_color=values_clicked_bg_color
+        self.values_text_color=values_text_color
 
 
         self.settings = settings
@@ -70,10 +87,36 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         self.wrapper_widget = wrapper_widget
 
-        self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color="#ff7f50", width=0, height=0)
+        self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color=self.window_border_color, width=0, height=0)
+        # self.dropdown_menu_container = CTkFrame(self, corner_radius=0, fg_color="#ff7f50", width=0, height=0)
         self.dropdown_menu_container.grid(row=0, column=0, sticky="nsew")
-        self.dropdown_menu_container.grid_remove()
 
+
+        BORDER_WIDTH=1
+        self.scroll_frame_container = CTkScrollableFrame(
+            self.dropdown_menu_container,
+            corner_radius=0,
+            fg_color=self.window_bg_color,
+            width=0,
+            height=0,
+            border_width=0,
+        )
+        self.scroll_frame_container.grid(row=0, column=0, padx=BORDER_WIDTH, pady=BORDER_WIDTH, sticky="nsew")
+        self.scroll_frame_container._scrollbar.grid_configure(padx=(2, 2))
+        self.scroll_frame_container.grid_columnconfigure(0, weight=1)
+
+
+
+
+        self.dropdown_menu_values_box = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.window_bg_color, width=0, height=0)
+        self.dropdown_menu_values_box.grid(row=0, column=0, sticky="nsew")
+        self.dropdown_menu_values_box.grid_columnconfigure(0, weight=1)
+
+
+        self._createDropdownMenuValues(dropdown_menu_widget_id, dropdown_menu_values, command)
+
+        geometry_width = int(self.new_width + self.scroll_frame_container._scrollbar.winfo_width() + (BORDER_WIDTH*2) + 4)
+        geometry_height = int(self.new_height + (BORDER_WIDTH*2))
         self.dropdown_menu_widgets[dropdown_menu_widget_id] = SimpleNamespace()
 
         self.dropdown_menu_widgets[dropdown_menu_widget_id] = SimpleNamespace(
@@ -84,37 +127,24 @@ class _CreateDropdownMenuWindow(CTkToplevel):
                 dropdown_menu_width=dropdown_menu_width,
                 dropdown_menu_height=dropdown_menu_height,
                 max_display_length=max_display_length,
-            )
+            ),
+            _settings=SimpleNamespace(
+                geometry_width=geometry_width,
+                geometry_height=geometry_height,
+            ),
         )
 
+        self.dropdown_menu_container.grid_remove()
 
-        self.scroll_frame_container = CTkScrollableFrame(
-            self.dropdown_menu_container,
-            corner_radius=0,
-            fg_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
-            width=0,
-            height=0,
-            border_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,
-            border_width=1,
-        )
-        self.scroll_frame_container.grid(row=0, column=0, sticky="nsew")
-        self.scroll_frame_container._scrollbar.grid_configure(padx=(1, 2))
-        self.scroll_frame_container.grid_columnconfigure(0, weight=1)
-
-        self.dropdown_menu_values_box = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR, width=0, height=0)
-        self.dropdown_menu_values_box.grid(row=0, column=0, sticky="nsew")
-        self.dropdown_menu_values_box.grid_columnconfigure(0, weight=1)
-
-        self._createDropdownMenuValues(dropdown_menu_widget_id, dropdown_menu_values, command)
 
     def _createDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values, command):
 
-        self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR)
+        self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.window_bg_color)
         self.dropdown_menu_values_wrapper.grid(row=0, column=0, sticky="nsew")
         self.dropdown_menu_values_wrapper.grid_columnconfigure(0, weight=1)
 
         # for get to the height__________________
-        __dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR, width=0, height=0)
+        __dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.values_bg_color, width=0, height=0)
         __dropdown_menu_value_wrapper.grid(row=0, column=0, ipadx=6, ipady=6, sticky="nsew")
         setattr(self, f"{dropdown_menu_widget_id}__{0}", __dropdown_menu_value_wrapper)
 
@@ -128,7 +158,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             corner_radius=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=14, weight="normal"),
             anchor="w",
-            text_color=self.settings.ctm.BASIC_TEXT_COLOR,
+            text_color=self.values_text_color,
         )
         # setattr(self, f"l", __label_widget)
 
@@ -138,11 +168,18 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         dropdown_menu_values_length = len(dropdown_menu_values)
         if dropdown_menu_values_length < self.max_display_length:
-            new_height = int(dropdown_menu_values_length * label_height)
+            self.new_height = int(dropdown_menu_values_length * label_height)
         else:
-            new_height = int(self.max_display_length * label_height)
+            self.new_height = int(self.max_display_length * label_height)
 
-        self.scroll_frame_container.configure(width=self.new_width, height=new_height)
+
+        def makeEven(input_value):
+            return input_value + 1 if input_value % 2 == 1 else input_value
+
+
+        self.new_height = makeEven(self.new_height)
+        self.new_width = makeEven(self.new_width)
+        self.scroll_frame_container.configure(width=self.new_width, height=self.new_height)
 
         # This is for CustomTkinter's spec change or bug fix.
         self.scroll_frame_container._scrollbar.configure(height=0)
@@ -152,7 +189,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         row=0
         for dropdown_menu_value in dropdown_menu_values:
 
-            dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR, width=0, height=0, cursor="hand2")
+            dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.values_bg_color, width=0, height=0, cursor="hand2")
             dropdown_menu_value_wrapper.grid(row=row, column=0, ipadx=6, ipady=6, sticky="nsew")
             setattr(self, f"{dropdown_menu_widget_id}__{row}", dropdown_menu_value_wrapper)
 
@@ -167,7 +204,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
                 corner_radius=0,
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=14, weight="normal"),
                 anchor="w",
-                text_color=self.settings.ctm.BASIC_TEXT_COLOR,
+                text_color=self.values_text_color,
             )
             # setattr(self, f"l", label_widget)
 
@@ -175,8 +212,8 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
 
-            bindEnterAndLeaveColor([dropdown_menu_value_wrapper, label_widget], self.settings.ctm.SB__DROPDOWN_MENU_HOVERED_BG_COLOR, self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR)
-            bindButtonPressColor([dropdown_menu_value_wrapper, label_widget], self.settings.ctm.SB__DROPDOWN_MENU_CLICKED_BG_COLOR, self.settings.ctm.SB__DROPDOWN_MENU_BG_COLOR)
+            bindEnterAndLeaveColor([dropdown_menu_value_wrapper, label_widget], self.values_hovered_bg_color, self.values_bg_color)
+            bindButtonPressColor([dropdown_menu_value_wrapper, label_widget], self.values_clicked_bg_color, self.values_bg_color)
 
 
 
@@ -201,9 +238,12 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         if self.active_dropdown_menu_widget is not None:
             self.active_dropdown_menu_widget.grid_remove()
 
-        target_Widget = self.dropdown_menu_widgets[dropdown_menu_widget_id].widget
-        target_Widget.grid()
-        self.active_dropdown_menu_widget = target_Widget
+        target_data = self.dropdown_menu_widgets[dropdown_menu_widget_id]
+        target_data.widget.grid()
+        self.active_dropdown_menu_widget = target_data.widget
+
+        self.geometry("{}x{}".format(target_data._settings.geometry_width, target_data._settings.geometry_height))
+
 
         self.deiconify()
         self._adjustToTargetWidgetGeometry()
