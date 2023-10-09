@@ -253,7 +253,7 @@ class Model:
             zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
         os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
         rmtree(os_path.join(current_directory, tmp_directory_name))
-        command = [os_path.join(program_directory, batch_name), program_name, temporary_name, str(restart)]
+        command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
         Popen(command)
 
     @staticmethod
@@ -261,7 +261,7 @@ class Model:
         program_name = 'VRCT.exe'
         batch_name = 'restart.bat'
         program_directory = os_path.dirname(__file__)
-        command = [os_path.join(program_directory, batch_name), program_name]
+        command = [os_path.join(program_directory, "batch", batch_name), program_name]
         Popen(command)
 
     @staticmethod
