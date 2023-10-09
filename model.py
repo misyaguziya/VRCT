@@ -280,7 +280,7 @@ class Model:
         return False
 
     def startMicTranscript(self, fnc):
-        if config.CHOICE_MIC_HOST == "NoDevice" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
 
         mic_audio_queue = Queue()
@@ -324,7 +324,7 @@ class Model:
             self.mic_audio_recorder = None
 
     def startCheckMicEnergy(self, fnc):
-        if config.CHOICE_MIC_HOST == "NoDevice" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
 
         def sendMicEnergy():
