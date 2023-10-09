@@ -163,7 +163,7 @@ class View():
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
-            LIST_UI_SCALING=["80%", "90%", "100%", "110%", "120%"],
+            LIST_UI_SCALING=["40%", "60%", "80%", "90%", "100%", "110%", "120%", "150%", "200%"],
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
