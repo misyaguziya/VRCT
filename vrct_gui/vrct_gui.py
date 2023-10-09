@@ -36,6 +36,13 @@ class VRCT_GUI(CTk):
         self.dropdown_menu_window = _CreateDropdownMenuWindow(
             settings=self.settings.config_window,
             view_variable=self._view_variable,
+
+            window_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
+            window_border_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,
+            values_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_BG_COLOR,
+            values_hovered_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_HOVERED_BG_COLOR,
+            values_clicked_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_CLICKED_BG_COLOR,
+            values_text_color=self.settings.config_window.ctm.BASIC_TEXT_COLOR,
         )
 
         self.config_window = ConfigWindow(
