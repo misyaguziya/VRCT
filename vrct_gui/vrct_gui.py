@@ -36,6 +36,12 @@ class VRCT_GUI(CTk):
         self.dropdown_menu_window = _CreateDropdownMenuWindow(
             settings=self.settings.config_window,
             view_variable=self._view_variable,
+            window_additional_y_pos=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,
+            window_border_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH,
+            scrollbar_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_IPADX,
+            value_padx=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADX,
+            value_pady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADY,
+            value_font_size=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_FONT_SIZE,
 
             window_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
             window_border_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,

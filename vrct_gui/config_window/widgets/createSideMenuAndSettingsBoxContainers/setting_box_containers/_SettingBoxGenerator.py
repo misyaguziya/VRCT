@@ -82,13 +82,6 @@ class _SettingBoxGenerator():
             variable.set(value)
             command(value)
 
-        self.dropdown_menu_window.createDropdownMenuBox(
-            dropdown_menu_widget_id=optionmenu_attr_name,
-            dropdown_menu_values=dropdown_menu_values,
-            command=adjustedCommand,
-            wrapper_widget=self.config_window.main_bg_container,
-            dropdown_menu_width=dropdown_menu_width,
-        )
 
         option_menu_widget = createOptionMenuBox(
             parent_widget=setting_box_item_frame,
@@ -108,12 +101,20 @@ class _SettingBoxGenerator():
             image_size=(14,14),
             optionmenu_clicked_command=lambda _e: self.dropdown_menu_window.show(
                 dropdown_menu_widget_id=optionmenu_attr_name,
-                target_widget=option_menu_widget,
             ),
         )
 
         option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
+
+        self.dropdown_menu_window.createDropdownMenuBox(
+            dropdown_menu_widget_id=optionmenu_attr_name,
+            dropdown_menu_values=dropdown_menu_values,
+            command=adjustedCommand,
+            wrapper_widget=self.config_window.main_bg_container,
+            attach_widget=option_menu_widget,
+            dropdown_menu_width=dropdown_menu_width,
+        )
 
         return setting_box_frame
 

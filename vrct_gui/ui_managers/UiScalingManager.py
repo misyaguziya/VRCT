@@ -153,10 +153,14 @@ class UiScalingManager():
         self.config_window.SB__OPTION_MENU_FONT_SIZE = self.config_window.SB__SELECTOR_FONT_SIZE
         self.config_window.SB__OPTIONMENU_MIN_HEIGHT = self._calculateUiSize(30)
         self.config_window.SB__OPTIONMENU_MIN_WIDTH = self._calculateUiSize(200)
+
+        self.config_window.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
         self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
-        self.config_window.SB__DROPDOWN_MENU_MAX_BUTTON_HEIGHT = int(self.config_window.SB__OPTION_MENU_FONT_SIZE + self._calculateUiSize(6))
-        self.config_window.SB__DROPDOWN_MENU_FRAME_CORNER_RADIUS = self._calculateUiSize(10)
-        self.config_window.SB__DROPDOWN_MENU_FRAME_MAX_HEIGHT = self._calculateUiSize(200)
+        self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(1, is_allowed_odd=True)
+        self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_IPADX = (self._calculateUiSize(2), self._calculateUiSize(2))
+        self.config_window.SB__DROPDOWN_MENU_VALUE_PADX = (self._calculateUiSize(8), 0)
+        self.config_window.SB__DROPDOWN_MENU_VALUE_PADY = self._calculateUiSize(6)
+        self.config_window.SB__DROPDOWN_MENU_VALUE_FONT_SIZE = self._calculateUiSize(14)
 
 
         self.config_window.SB__SWITCH_WIDTH = self._calculateUiSize(50)
@@ -186,9 +190,12 @@ class UiScalingManager():
 
 
 
-    def _calculateUiSize(self, default_size, is_allowed_odd: bool = False):
+    def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
         size = int(default_size * self.SCALING_FLOAT)
         size += 1 if not is_allowed_odd and size % 2 != 0 else 0
+        if size <= 0:
+            size = 0 if is_zero_allowed else 1
+
         return size
 
     @staticmethod
