@@ -49,7 +49,7 @@ class View():
 
         self.settings.selectable_language_window = SimpleNamespace(
             ctm=all_ctm.selectable_language_window,
-            uism=all_uism.config_window,
+            uism=all_uism.selectable_language_window,
             **common_args
         )
 

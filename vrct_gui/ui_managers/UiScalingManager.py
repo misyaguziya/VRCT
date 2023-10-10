@@ -6,6 +6,7 @@ class UiScalingManager():
         self.SCALING_FLOAT = max(scaling_float, 0.4)
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
+        self.selectable_language_window = SimpleNamespace()
         self.modal_window = SimpleNamespace()
 
         self._calculatedUiSizes()
@@ -100,6 +101,22 @@ class UiScalingManager():
 
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X = int(self.main.TEXTBOX_PADX/2+self.main.TEXTBOX_CORNER_RADIUS*2)
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y = self._calculateUiSize(26)
+
+
+
+        # Selectable Language Window
+        self.selectable_language_window.TOP_BAR_MIN_HEIGHT = self._calculateUiSize(50)
+        self.selectable_language_window.SCROLLBAR_IPADX = (self._calculateUiSize(2), self._calculateUiSize(2))
+        self.selectable_language_window.SCROLLBAR_WIDTH = self._calculateUiSize(16)
+
+        self.selectable_language_window.GO_BACK_BUTTON_LABEL_FONT_SIZE = self._calculateUiSize(14)
+        self.selectable_language_window.GO_BACK_BUTTON_IPADX = self._calculateUiSize(10)
+        self.selectable_language_window.GO_BACK_BUTTON_IPADY = self._calculateUiSize(8)
+        self.selectable_language_window.TITLE_FONT_SIZE = self._calculateUiSize(18)
+
+        self.selectable_language_window.VALUES_TEXT_FONT_SIZE = self._calculateUiSize(14)
+        self.selectable_language_window.VALUES_TEXT_IPADX = (self._calculateUiSize(8), 0)
+        self.selectable_language_window.VALUES_TEXT_IPADY = self._calculateUiSize(8)
 
 
         self.modal_window.TEXT_FONT_SIZE = self._calculateUiSize(20)
