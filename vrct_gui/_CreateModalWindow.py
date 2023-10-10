@@ -29,7 +29,7 @@ class _CreateModalWindow(CTkToplevel):
         self.height_new = self.attach_window.winfo_height()
 
 
-        self.geometry('{}x{}+{}+{}'.format(self.width_new, self.height_new, self.x_pos, self.y_pos))
+        self.geometry("{}x{}+{}+{}".format(self.width_new, self.height_new, self.x_pos, self.y_pos))
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
