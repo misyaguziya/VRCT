@@ -39,7 +39,9 @@ class VRCT_GUI(CTk):
             window_additional_y_pos=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,
             window_border_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH,
             scrollbar_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_IPADX,
-            value_padx=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADX,
+            scrollbar_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH,
+            value_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADX,
+            value_ipady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADY,
             value_pady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADY,
             value_font_size=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_FONT_SIZE,
 

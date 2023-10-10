@@ -6,6 +6,8 @@ from time import sleep
 from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestWidth, getLatestHeight
 from functools import partial
 
+from utils import isEven, makeEven
+
 class _CreateDropdownMenuWindow(CTkToplevel):
     def __init__(self,
     settings,
@@ -14,7 +16,9 @@ class _CreateDropdownMenuWindow(CTkToplevel):
     window_additional_y_pos,
     window_border_width,
     scrollbar_ipadx,
-    value_padx,
+    scrollbar_width,
+    value_ipadx,
+    value_ipady,
     value_pady,
     value_font_size,
 
@@ -42,7 +46,9 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.window_additional_y_pos=window_additional_y_pos
         self.window_border_width=window_border_width
         self.scrollbar_ipadx=scrollbar_ipadx
-        self.value_padx=value_padx
+        self.scrollbar_width=scrollbar_width
+        self.value_ipadx=value_ipadx
+        self.value_ipady=value_ipady
         self.value_pady=value_pady
         self.value_font_size=value_font_size
 
@@ -165,7 +171,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         # for get to the height__________________
         __dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.values_bg_color, width=0, height=0)
-        __dropdown_menu_value_wrapper.grid(row=0, column=0, sticky="nsew")
+        __dropdown_menu_value_wrapper.grid(row=0, column=0, pady=self.value_pady, sticky="nsew")
         setattr(self, f"{dropdown_menu_widget_id}__{0}", __dropdown_menu_value_wrapper)
 
 
@@ -182,8 +188,14 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         )
         # setattr(self, f"l", __label_widget)
 
-        __label_widget.grid(row=1, column=0, padx=self.value_padx, pady=self.value_pady, sticky="w")
+        __label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
         label_height = getLatestHeight(__dropdown_menu_value_wrapper)
+
+        # for fixing 1px bug
+        if isEven(label_height) is False:
+            self.value_ipady = (self.value_ipady[0], self.value_ipady[1] - 1)
+
+        __dropdown_menu_value_wrapper.destroy()
         # ______________________________________
 
         dropdown_menu_values_length = len(dropdown_menu_values)
@@ -193,16 +205,14 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             self.new_height = int(self.max_display_length * label_height)
 
 
-        def makeEven(input_value):
-            return input_value + 1 if input_value % 2 == 1 else input_value
-
-
+        # for fixing 1px bug
         self.new_height = makeEven(self.new_height)
         self.new_width = makeEven(self.new_width)
         self.scroll_frame_container.configure(width=self.new_width, height=self.new_height)
 
         # This is for CustomTkinter's spec change or bug fix.
         self.scroll_frame_container._scrollbar.configure(height=0)
+        self.scroll_frame_container._scrollbar.configure(width=self.scrollbar_width)
 
 
 
@@ -210,7 +220,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         for dropdown_menu_value in dropdown_menu_values:
 
             dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.values_bg_color, width=0, height=0, cursor="hand2")
-            dropdown_menu_value_wrapper.grid(row=row, column=0, sticky="nsew")
+            dropdown_menu_value_wrapper.grid(row=row, column=0, pady=self.value_pady, sticky="nsew")
             setattr(self, f"{dropdown_menu_widget_id}__{row}", dropdown_menu_value_wrapper)
 
 
@@ -228,7 +238,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             )
             # setattr(self, f"l", label_widget)
 
-            label_widget.grid(row=1, column=0, padx=self.value_padx, pady=self.value_pady, sticky="w")
+            label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
 
 
             bindEnterAndLeaveColor([dropdown_menu_value_wrapper, label_widget], self.values_hovered_bg_color, self.values_bg_color)
