@@ -6,8 +6,6 @@
 翻訳や文字起こしでVRChatの会話をサポートするソフトウェア
 </h3>
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/mI4DQaeaAPI?si=4cYT7qfDJNhXLIra" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-
 <div align="left">
 
 # Download & Install
