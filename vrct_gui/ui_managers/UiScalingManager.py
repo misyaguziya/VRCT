@@ -23,6 +23,8 @@ class UiScalingManager():
 
 
         # Main
+        self.main.MAIN_AREA_MIN_WIDTH = self._calculateUiSize(640)
+
         self.main.TEXTBOX_PADX = self._calculateUiSize(16)
         self.main.TEXTBOX_CORNER_RADIUS = self._calculateUiSize(6)
 
@@ -133,6 +135,10 @@ class UiScalingManager():
 
 
         self.modal_window.TEXT_FONT_SIZE = self._calculateUiSize(20)
+
+        # Config Window
+        self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
+        self.config_window.DEFAULT_HEIGHT = self._calculateUiSize(680)
 
         # Top bar common
         self.config_window.TOP_BAR__HEIGHT = self._calculateUiSize(40)
