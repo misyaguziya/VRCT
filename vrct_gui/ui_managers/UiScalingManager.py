@@ -158,8 +158,10 @@ class UiScalingManager():
         self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
         self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(1, is_allowed_odd=True)
         self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_IPADX = (self._calculateUiSize(2), self._calculateUiSize(2))
-        self.config_window.SB__DROPDOWN_MENU_VALUE_PADX = (self._calculateUiSize(8), 0)
-        self.config_window.SB__DROPDOWN_MENU_VALUE_PADY = self._calculateUiSize(6)
+        self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH = self._calculateUiSize(16)
+        self.config_window.SB__DROPDOWN_MENU_VALUE_IPADX = (self._calculateUiSize(8), 0)
+        self.config_window.SB__DROPDOWN_MENU_VALUE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
+        self.config_window.SB__DROPDOWN_MENU_VALUE_PADY = (0, self._calculateUiSize(1, is_allowed_odd=True))
         self.config_window.SB__DROPDOWN_MENU_VALUE_FONT_SIZE = self._calculateUiSize(14)
 
 
