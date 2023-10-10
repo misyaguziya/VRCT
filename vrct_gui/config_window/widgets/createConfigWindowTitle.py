@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-def createConfigWindowTitle(config_window, settings):
+def createConfigWindowTitle(config_window, settings, view_variable):
 
     config_window.grid_columnconfigure(0, weight=0, minsize=settings.uism.TOP_BAR_SIDE_AREA_MIN_WIDTH)
     config_window.grid_rowconfigure(0, weight=0, minsize=settings.uism.TOP_BAR__MIN_HEIGHT)
@@ -18,7 +18,8 @@ def createConfigWindowTitle(config_window, settings):
     config_window.side_menu_config_window_title_logo_wrapper.grid_rowconfigure(0,weight=1)
     config_window.side_menu_config_window_title = CTkLabel(
         config_window.side_menu_config_window_title_logo_frame,
-        text="Settings",
+        # text="Settings",
+        textvariable=view_variable.VAR_CONFIG_WINDOW_TITLE,
         height=0,
         anchor="w",
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE, weight="bold"),

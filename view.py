@@ -136,6 +136,7 @@ class View():
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
             VAR_VERSION=StringVar(value=config.VERSION),
+            VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
 
 
             # Side Menu Labels
