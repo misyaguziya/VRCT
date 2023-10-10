@@ -11,7 +11,7 @@ from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
-from .ui_utils import _setDefaultActiveTab
+from .ui_utils import _setDefaultActiveTab, getLatestHeight
 
 from utils import callFunctionIfCallable
 
@@ -86,6 +86,8 @@ class VRCT_GUI(CTk):
 
         )
 
+        self.update()
+        self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
 
 
     def startMainLoop(self):
