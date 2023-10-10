@@ -27,8 +27,8 @@ class _SettingBoxGenerator():
 
         setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="ew")
-        setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
-        setting_box_frame_wrapper.grid_columnconfigure(2, weight=1, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
+        setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2))
+        setting_box_frame_wrapper.grid_columnconfigure(2, weight=1, minsize=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2))
 
         setting_box_frame_wrapper_fix_border = CTkFrame(setting_box_frame, corner_radius=0, width=0, height=0)
         setting_box_frame_wrapper_fix_border.grid(row=1, column=0, sticky="ew")
@@ -40,7 +40,7 @@ class _SettingBoxGenerator():
 
         setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)
         setting_box_item_frame.grid(row=0, column=2, padx=0, sticky="nsew")
-        setting_box_item_frame.rowconfigure((0,2), weight=1)
+        setting_box_item_frame.grid_rowconfigure((0,2), weight=1)
         setting_box_item_frame.grid_columnconfigure(0, weight=1)
 
         return (setting_box_frame, setting_box_item_frame)
@@ -67,7 +67,7 @@ class _SettingBoxGenerator():
                 anchor="w",
                 justify="left",
                 # height=0,
-                wraplength=int(self.settings.uism.SB__MAIN_WIDTH / 2),
+                wraplength=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2),
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__DESC_FONT_SIZE, weight="normal"),
                 text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR
             )
@@ -82,13 +82,6 @@ class _SettingBoxGenerator():
             variable.set(value)
             command(value)
 
-        self.dropdown_menu_window.createDropdownMenuBox(
-            dropdown_menu_widget_id=optionmenu_attr_name,
-            dropdown_menu_values=dropdown_menu_values,
-            command=adjustedCommand,
-            wrapper_widget=self.config_window.main_bg_container,
-            dropdown_menu_width=dropdown_menu_width,
-        )
 
         option_menu_widget = createOptionMenuBox(
             parent_widget=setting_box_item_frame,
@@ -108,12 +101,20 @@ class _SettingBoxGenerator():
             image_size=(14,14),
             optionmenu_clicked_command=lambda _e: self.dropdown_menu_window.show(
                 dropdown_menu_widget_id=optionmenu_attr_name,
-                target_widget=option_menu_widget,
             ),
         )
 
         option_menu_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
         setattr(self.config_window, optionmenu_attr_name, option_menu_widget)
+
+        self.dropdown_menu_window.createDropdownMenuBox(
+            dropdown_menu_widget_id=optionmenu_attr_name,
+            dropdown_menu_values=dropdown_menu_values,
+            command=adjustedCommand,
+            wrapper_widget=self.config_window.main_bg_container,
+            attach_widget=option_menu_widget,
+            dropdown_menu_width=dropdown_menu_width,
+        )
 
         return setting_box_frame
 

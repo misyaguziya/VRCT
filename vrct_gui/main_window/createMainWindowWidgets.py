@@ -11,12 +11,11 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
     vrct_gui.title("VRCT")
-    vrct_gui.geometry(f"{880}x{640}")
-    vrct_gui.minsize(400, 175)
+    vrct_gui.minsize(200, 200)
 
 
     # Main Container
-    vrct_gui.grid_columnconfigure(1, weight=1)
+    vrct_gui.grid_columnconfigure(1, weight=1, minsize=settings.uism.MAIN_AREA_MIN_WIDTH)
 
     vrct_gui.configure(fg_color="#ff7f50")
 
@@ -35,7 +34,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
 
 
-    vrct_gui.main_topbar_container.columnconfigure(1,weight=1)
+    vrct_gui.main_topbar_container.grid_columnconfigure(1,weight=1)
     vrct_gui.main_topbar_center_container = CTkFrame(vrct_gui.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     vrct_gui.main_topbar_center_container.grid(row=0, column=1, sticky="nsew")
 
@@ -88,7 +87,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     main_topbar_column+=1
 
 
-    vrct_gui.update_available_container.rowconfigure((0,2), weight=1)
+    vrct_gui.update_available_container.grid_rowconfigure((0,2), weight=1)
 
     vrct_gui.update_available_icon = CTkLabel(
         vrct_gui.update_available_container,

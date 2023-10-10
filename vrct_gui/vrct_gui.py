@@ -36,6 +36,22 @@ class VRCT_GUI(CTk):
         self.dropdown_menu_window = _CreateDropdownMenuWindow(
             settings=self.settings.config_window,
             view_variable=self._view_variable,
+
+            window_additional_y_pos=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,
+            window_border_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH,
+            scrollbar_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_IPADX,
+            scrollbar_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH,
+            value_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADX,
+            value_ipady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADY,
+            value_pady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADY,
+            value_font_size=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_FONT_SIZE,
+
+            window_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
+            window_border_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,
+            values_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_BG_COLOR,
+            values_hovered_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_HOVERED_BG_COLOR,
+            values_clicked_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_CLICKED_BG_COLOR,
+            values_text_color=self.settings.config_window.ctm.BASIC_TEXT_COLOR,
         )
 
         self.config_window = ConfigWindow(
@@ -60,6 +76,14 @@ class VRCT_GUI(CTk):
             settings=self.settings.modal_window,
             view_variable=self._view_variable,
             wrapper_widget=self.config_window.main_bg_container,
+
+            message_ipadx=self.settings.config_window.uism.SB__ERROR_MESSAGE_IPADX,
+            message_ipady=self.settings.config_window.uism.SB__ERROR_MESSAGE_IPADY,
+            message_font_size=self.settings.config_window.uism.SB__ERROR_MESSAGE_FONT_SIZE,
+
+            message_bg_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_BG_COLOR,
+            message_text_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_TEXT_COLOR,
+
         )
 
 
@@ -102,7 +126,7 @@ class VRCT_GUI(CTk):
         # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
         if selectable_language_window_type == "your_language":
             if self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is False:
-                self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+                self.sls__arrow_img_your_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT, size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
                 self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = True
                 self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
             else:
@@ -111,7 +135,7 @@ class VRCT_GUI(CTk):
 
         elif selectable_language_window_type == "target_language":
             if self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW is False:
-                self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT),size=(20,20)))
+                self.sls__arrow_img_target_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT, size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
                 self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = True
                 self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW = False
             else:
@@ -126,8 +150,8 @@ class VRCT_GUI(CTk):
 
 
     def closeSelectableLanguagesWindow(self):
-        self.sls__arrow_img_your_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
-        self.sls__arrow_img_target_language.configure(image=CTkImage((self.settings.main.image_file.ARROW_LEFT).rotate(180),size=(20,20)))
+        self.sls__arrow_img_your_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT.rotate(180), size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
+        self.sls__arrow_img_target_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT.rotate(180), size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
         self.selectable_languages_window.withdraw()
 
 

@@ -49,7 +49,7 @@ class View():
 
         self.settings.selectable_language_window = SimpleNamespace(
             ctm=all_ctm.selectable_language_window,
-            uism=all_uism.config_window,
+            uism=all_uism.selectable_language_window,
             **common_args
         )
 
@@ -136,6 +136,7 @@ class View():
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
             VAR_VERSION=StringVar(value=config.VERSION),
+            VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
 
 
             # Side Menu Labels
@@ -163,7 +164,7 @@ class View():
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
-            LIST_UI_SCALING=["80%", "90%", "100%", "110%", "120%"],
+            LIST_UI_SCALING=["40%", "60%", "80%", "90%", "100%", "110%", "120%", "150%", "200%"],
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
