@@ -114,7 +114,7 @@ def createTextbox(settings, main_window, view_variable):
 
 
 
-        target_widget.columnconfigure((0,2), weight=1)
+        target_widget.grid_columnconfigure((0,2), weight=1)
         setattr(main_window, "label_widget", CTkLabel(
             target_widget,
             textvariable=textbox_setting["textvariable"],

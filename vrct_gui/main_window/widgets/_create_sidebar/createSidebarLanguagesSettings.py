@@ -51,7 +51,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
     def createLanguageSettingBox(parent_widget, var_title_text, title_text_attr_name, arrow_img_attr_name, open_selectable_language_window_command, variable):
         sls__box = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
 
-        sls__box.columnconfigure(1, weight=1)
+        sls__box.grid_columnconfigure(1, weight=1)
 
         sls__box_wrapper = CTkFrame(sls__box, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
         sls__box_wrapper.grid(row=2, column=1, padx=10, pady=settings.uism.SLS__BOX_IPADY, sticky="ew")

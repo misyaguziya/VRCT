@@ -55,8 +55,8 @@ class _CreateErrorWindow(CTkToplevel):
 
 
 
-        self.rowconfigure(0,weight=1)
-        self.columnconfigure(0,weight=1)
+        self.grid_rowconfigure(0,weight=1)
+        self.grid_columnconfigure(0,weight=1)
 
         self.modal_container = CTkFrame(self, corner_radius=0, fg_color=self.message_bg_color, width=0, height=0)
         self.modal_container.grid(row=0, column=0, sticky="nsew")
