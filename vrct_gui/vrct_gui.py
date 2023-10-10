@@ -36,6 +36,7 @@ class VRCT_GUI(CTk):
         self.dropdown_menu_window = _CreateDropdownMenuWindow(
             settings=self.settings.config_window,
             view_variable=self._view_variable,
+
             window_additional_y_pos=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,
             window_border_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH,
             scrollbar_ipadx=self.settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_IPADX,
@@ -75,6 +76,14 @@ class VRCT_GUI(CTk):
             settings=self.settings.modal_window,
             view_variable=self._view_variable,
             wrapper_widget=self.config_window.main_bg_container,
+
+            message_ipadx=self.settings.config_window.uism.SB__ERROR_MESSAGE_IPADX,
+            message_ipady=self.settings.config_window.uism.SB__ERROR_MESSAGE_IPADY,
+            message_font_size=self.settings.config_window.uism.SB__ERROR_MESSAGE_FONT_SIZE,
+
+            message_bg_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_BG_COLOR,
+            message_text_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_TEXT_COLOR,
+
         )
 
 

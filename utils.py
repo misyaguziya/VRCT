@@ -17,5 +17,7 @@ def callFunctionIfCallable(function, *args):
 def isEven(number):
     return number % 2 == 0
 
-def makeEven(number):
+def makeEven(number, minus:bool=False):
+    if minus is True:
+        return number if isEven(number) else number - 1
     return number if isEven(number) else number + 1
