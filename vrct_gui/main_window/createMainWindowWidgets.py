@@ -35,7 +35,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
 
 
-    vrct_gui.main_topbar_container.columnconfigure(1,weight=1)
+    vrct_gui.main_topbar_container.grid_columnconfigure(1,weight=1)
     vrct_gui.main_topbar_center_container = CTkFrame(vrct_gui.main_topbar_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     vrct_gui.main_topbar_center_container.grid(row=0, column=1, sticky="nsew")
 
@@ -88,7 +88,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     main_topbar_column+=1
 
 
-    vrct_gui.update_available_container.rowconfigure((0,2), weight=1)
+    vrct_gui.update_available_container.grid_rowconfigure((0,2), weight=1)
 
     vrct_gui.update_available_icon = CTkLabel(
         vrct_gui.update_available_container,

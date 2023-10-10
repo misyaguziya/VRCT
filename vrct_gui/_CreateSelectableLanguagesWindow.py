@@ -70,15 +70,15 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def _createContainer(self):
-        self.rowconfigure(0, minsize=50)
-        self.rowconfigure(1, weight=1)
-        self.columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, minsize=50)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
         self.top_container = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.TOP_BG_COLOR, width=0, height=0)
         self.top_container.grid(row=0, column=0, sticky="nsew")
 
 
-        self.top_container.rowconfigure((0,2), weight=1)
-        self.top_container.columnconfigure(1, weight=1)
+        self.top_container.grid_rowconfigure((0,2), weight=1)
+        self.top_container.grid_columnconfigure(1, weight=1)
         self.go_back_button_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.GO_BACK_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
         self.go_back_button_container.grid(row=1, column=0)
 
@@ -105,8 +105,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.title_container = CTkFrame(self.top_container, corner_radius=0, fg_color=self.settings.ctm.TOP_BG_COLOR, width=0, height=0)
         self.title_container.grid(row=1, column=1, sticky="nsew")
 
-        self.title_container.columnconfigure((0,2), weight=1)
-        self.title_container.rowconfigure((0,2), weight=1)
+        self.title_container.grid_columnconfigure((0,2), weight=1)
+        self.title_container.grid_rowconfigure((0,2), weight=1)
         self.title_label = CTkLabel(
             self.title_container,
             textvariable=self._view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE,
@@ -143,7 +143,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
 
-            self.wrapper.rowconfigure((0,2), weight=1)
+            self.wrapper.grid_rowconfigure((0,2), weight=1)
             selectable_language_name_for_text = selectable_language_name.replace("\n", " ")
             label_widget = CTkLabel(
                 self.wrapper,

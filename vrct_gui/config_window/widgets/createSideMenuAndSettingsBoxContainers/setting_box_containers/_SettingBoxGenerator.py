@@ -40,7 +40,7 @@ class _SettingBoxGenerator():
 
         setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)
         setting_box_item_frame.grid(row=0, column=2, padx=0, sticky="nsew")
-        setting_box_item_frame.rowconfigure((0,2), weight=1)
+        setting_box_item_frame.grid_rowconfigure((0,2), weight=1)
         setting_box_item_frame.grid_columnconfigure(0, weight=1)
 
         return (setting_box_frame, setting_box_item_frame)
