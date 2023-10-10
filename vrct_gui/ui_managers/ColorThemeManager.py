@@ -281,6 +281,12 @@ class ColorThemeManager():
         self.config_window.SIDE_MENU_SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
 
 
+        # Error Message Window for Config Window
+        # The color code [#bb4448] is a mixture of [#a9555c] and [#cc3333] (for a redder shade).
+        self.config_window.SB__ERROR_MESSAGE_BG_COLOR = "#bb4448"
+        self.config_window.SB__ERROR_MESSAGE_TEXT_COLOR = "#fff"
+
+
 
 
 
