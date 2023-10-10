@@ -117,21 +117,17 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                     vrct_gui.minimize_sidebar_button_container__for_opening.configure(cursor="")
                     vrct_gui.minimize_sidebar_button_container__for_closing.configure(cursor="")
 
-                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-                        image_file = CTkImage((settings.image_file.ARROW_LEFT_DISABLED).rotate(180), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
-                    else:
-                        image_file = CTkImage((settings.image_file.ARROW_LEFT_DISABLED), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
+                    image_file__for_opening = CTkImage((settings.image_file.ARROW_LEFT_DISABLED).rotate(180), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
+                    image_file__for_closing = CTkImage((settings.image_file.ARROW_LEFT_DISABLED), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
 
                 elif status == "normal":
                     vrct_gui.minimize_sidebar_button_container__for_opening.configure(cursor="hand2")
                     vrct_gui.minimize_sidebar_button_container__for_closing.configure(cursor="hand2")
 
-                    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-                        image_file = CTkImage((settings.image_file.ARROW_LEFT).rotate(180), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
-                    else:
-                        image_file = CTkImage((settings.image_file.ARROW_LEFT), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
-                vrct_gui.minimize_sidebar_button__for_opening.configure(image=image_file)
-                vrct_gui.minimize_sidebar_button__for_closing.configure(image=image_file)
+                    image_file__for_opening = CTkImage((settings.image_file.ARROW_LEFT).rotate(180), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
+                    image_file__for_closing = CTkImage((settings.image_file.ARROW_LEFT), size=MINIMIZE_SIDEBAR_IMAGE_SIZE)
+                vrct_gui.minimize_sidebar_button__for_opening.configure(image=image_file__for_opening)
+                vrct_gui.minimize_sidebar_button__for_closing.configure(image=image_file__for_closing)
 
 
             case "entry_message_box":
