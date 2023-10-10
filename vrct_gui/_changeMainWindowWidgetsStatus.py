@@ -102,12 +102,12 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                 if status == "disabled":
                     vrct_gui.sidebar_config_button_wrapper.configure(cursor="")
                     vrct_gui.sidebar_config_button.configure(
-                        image=CTkImage((settings.image_file.CONFIGURATION_ICON_DISABLED)),
+                        image=CTkImage(settings.image_file.CONFIGURATION_ICON_DISABLED, size=COMPACT_MODE_ICON_SIZE_TUPLES),
                     )
                 elif status == "normal":
                     vrct_gui.sidebar_config_button_wrapper.configure(cursor="hand2")
                     vrct_gui.sidebar_config_button.configure(
-                        image=CTkImage((settings.image_file.CONFIGURATION_ICON)),
+                        image=CTkImage(settings.image_file.CONFIGURATION_ICON, size=COMPACT_MODE_ICON_SIZE_TUPLES),
                     )
 
 

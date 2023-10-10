@@ -5,7 +5,7 @@ def createEntryMessageBox(settings, main_window):
     main_window.main_entry_message_container.grid(row=2, column=0, sticky="ew")
 
 
-    main_window.main_entry_message_container.columnconfigure(0, weight=1)
+    main_window.main_entry_message_container.grid_columnconfigure(0, weight=1)
     main_window.entry_message_box = CTkEntry(
         main_window.main_entry_message_container,
         border_color=settings.ctm.TEXTBOX_ENTRY_BORDER_COLOR,

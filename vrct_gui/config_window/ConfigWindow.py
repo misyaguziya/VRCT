@@ -13,8 +13,7 @@ class ConfigWindow(CTkToplevel):
 
         # configure window
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
-        self.title("Settings")
-        self.geometry(f"{1080}x{680}")
+        self.geometry(f"{settings.uism.DEFAULT_WIDTH}x{settings.uism.DEFAULT_HEIGHT}")
 
 
         self.configure(fg_color="#ff7f50")
@@ -23,10 +22,11 @@ class ConfigWindow(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
+        self.title(self._view_variable.VAR_CONFIG_WINDOW_TITLE.get())
         # When the configuration window's compact mode is turned on, it will call `grid_remove()` on each widget appended to this array. In the opposite case, `grid()` will be called.
         self.additional_widgets = []
 
-        createConfigWindowTitle(config_window=self, settings=self.settings)
+        createConfigWindowTitle(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
         createSettingBoxTopBar(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
