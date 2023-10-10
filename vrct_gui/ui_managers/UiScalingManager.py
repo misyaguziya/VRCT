@@ -49,8 +49,8 @@ class UiScalingManager():
 
 
         # Sidebar
-        self.main.SIDEBAR_WIDTH = self._calculateUiSize(230)
-        self.main.COMPACT_MODE_SIDEBAR_WIDTH = self._calculateUiSize(60)
+        self.main.SIDEBAR_MIN_WIDTH = self._calculateUiSize(230)
+        self.main.COMPACT_MODE_SIDEBAR_MIN_WIDTH = self._calculateUiSize(60)
 
         # Sidebar Features
         self.main.SF__LOGO_MAX_SIZE = self._calculateUiSize(120)
@@ -141,11 +141,11 @@ class UiScalingManager():
         self.config_window.DEFAULT_HEIGHT = self._calculateUiSize(680)
 
         # Top bar common
-        self.config_window.TOP_BAR__HEIGHT = self._calculateUiSize(40)
+        self.config_window.TOP_BAR__MIN_HEIGHT = self._calculateUiSize(40)
         self.config_window.TOP_BAR__IPADY = self._calculateUiSize(12)
 
         # Top bar Side
-        self.config_window.TOP_BAR_SIDE__WIDTH = self._calculateUiSize(220)
+        self.config_window.TOP_BAR_SIDE_AREA_MIN_WIDTH = self._calculateUiSize(220)
         self.config_window.TOP_BAR_SIDE__CONFIG_LOGO_MARK_SIZE = self.dupTuple(self._calculateUiSize(28))
         self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE = self._calculateUiSize(22)
         self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_LEFT_PADX = int(self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE + self._calculateUiSize(16))
@@ -163,7 +163,7 @@ class UiScalingManager():
 
 
         # Setting Box
-        self.config_window.SB__MAIN_WIDTH = self._calculateUiSize(720)
+        self.config_window.MAIN_AREA_MIN_WIDTH = self._calculateUiSize(720)
         self.config_window.SB__TOP_PADY_IF_WITH_SECTION_TITLE = (self._calculateUiSize(24))
         self.config_window.SB__TOP_PADY_IF_WITHOUT_SECTION_TITLE = (self._calculateUiSize(64))
         self.config_window.SB__BOTTOM_PADY = (self._calculateUiSize(40))

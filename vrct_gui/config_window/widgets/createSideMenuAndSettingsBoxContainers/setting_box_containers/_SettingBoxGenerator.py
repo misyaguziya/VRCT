@@ -27,8 +27,8 @@ class _SettingBoxGenerator():
 
         setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="ew")
-        setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
-        setting_box_frame_wrapper.grid_columnconfigure(2, weight=1, minsize=int(self.settings.uism.SB__MAIN_WIDTH / 2))
+        setting_box_frame_wrapper.grid_columnconfigure(0, weight=0, minsize=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2))
+        setting_box_frame_wrapper.grid_columnconfigure(2, weight=1, minsize=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2))
 
         setting_box_frame_wrapper_fix_border = CTkFrame(setting_box_frame, corner_radius=0, width=0, height=0)
         setting_box_frame_wrapper_fix_border.grid(row=1, column=0, sticky="ew")
@@ -67,7 +67,7 @@ class _SettingBoxGenerator():
                 anchor="w",
                 justify="left",
                 # height=0,
-                wraplength=int(self.settings.uism.SB__MAIN_WIDTH / 2),
+                wraplength=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2),
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__DESC_FONT_SIZE, weight="normal"),
                 text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR
             )
