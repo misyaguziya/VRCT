@@ -54,7 +54,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         sls__box.grid_columnconfigure(1, weight=1)
 
         sls__box_wrapper = CTkFrame(sls__box, corner_radius=0, fg_color=settings.ctm.SLS__BOX_BG_COLOR, width=0, height=0)
-        sls__box_wrapper.grid(row=2, column=1, padx=10, pady=settings.uism.SLS__BOX_IPADY, sticky="ew")
+        sls__box_wrapper.grid(row=2, column=1, padx=settings.uism.SLS__BOX_IPADX, pady=settings.uism.SLS__BOX_IPADY, sticky="ew")
 
         sls__box_wrapper.grid_columnconfigure(0, weight=1)
 
@@ -86,13 +86,13 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             optionmenu_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
             optionmenu_clicked_bg_color=settings.ctm.SLS__OPTIONMENU_CLICKED_BG_COLOR,
             optionmenu_ipadx=(0,0),
-            optionmenu_ipady=2,
+            optionmenu_ipady=settings.uism.SLS__BOX_OPTION_MENU_IPADY,
             variable=variable,
             font_family=settings.FONT_FAMILY,
-            font_size=settings.uism.SLS__BOX_DROPDOWN_MENU_FONT_SIZE,
+            font_size=settings.uism.SLS__BOX_OPTION_MENU_FONT_SIZE,
             text_color=settings.ctm.LABELS_TEXT_COLOR,
             image_file=settings.image_file.ARROW_LEFT.rotate(180),
-            image_size=(20,20),
+            image_size=settings.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE,
             optionmenu_clicked_command=open_selectable_language_window_command,
 
             optionmenu_position="center",
@@ -127,7 +127,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     # Presets buttons
     main_window.sidebar_bg_container.grid_rowconfigure(2, weight=1)
-    main_window.sls__presets_buttons_container = CTkFrame(main_window.sls__container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=30)
+    main_window.sls__presets_buttons_container = CTkFrame(main_window.sls__container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=settings.uism.SLS__PRESET_TAB_NUMBER_HEIGHT)
     main_window.sls__presets_buttons_container.grid(row=1, column=0, sticky="nsew")
 
     main_window.sls__presets_buttons_box = CTkFrame(main_window.sls__presets_buttons_container, corner_radius=0, fg_color=settings.ctm.SIDEBAR_BG_COLOR, width=0, height=0)
@@ -165,10 +165,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             preset_tab_attr_name,
             CTkFrame(
                 main_window.sls__presets_buttons_box,
-                corner_radius=6,
+                corner_radius=settings.uism.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS,
                 fg_color=settings.ctm.SLS__PRESETS_TAB_BG_PASSIVE_COLOR,
                 width=0,
-                height=36,
+                height=settings.uism.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT,
                 cursor="hand2",
             )
         )

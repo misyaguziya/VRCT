@@ -31,6 +31,13 @@ class UiScalingManager():
         self.main.TEXTBOX_TAB_PADX = self._calculateUiSize(10)
         self.main.TEXTBOX_TAB_PADY = (self._calculateUiSize(4), self._calculateUiSize(10))
 
+        self.main.TEXTBOX_FIRST_INSERT_SPACING = self._calculateUiSize(16)
+        self.main.TEXTBOX_FONT_SIZE__LABEL = self._calculateUiSize(12)
+        self.main.TEXTBOX_FONT_SIZE__TIMESTAMP = self._calculateUiSize(12)
+        self.main.TEXTBOX_FONT_SIZE__SYSTEM_TEXT_FONT = self._calculateUiSize(12)
+        self.main.TEXTBOX_FONT_SIZE__SECONDARY_TEXT_FONT = self._calculateUiSize(12)
+        self.main.TEXTBOX_FONT_SIZE__MAIN_TEXT_FONT = self._calculateUiSize(16)
+
         self.main.TEXTBOX_ENTRY_FONT_SIZE = self._calculateUiSize(16)
         self.main.TEXTBOX_ENTRY_HEIGHT = self._calculateUiSize(40)
         self.main.TEXTBOX_ENTRY_PADX = self.main.TEXTBOX_PADX
@@ -65,12 +72,18 @@ class UiScalingManager():
         self.main.SLS__TITLE_PADY = (self._calculateUiSize(12), self._calculateUiSize(6))
 
         self.main.SLS__PRESET_TAB_NUMBER_FONT_SIZE = self._calculateUiSize(16)
+        self.main.SLS__PRESET_TAB_NUMBER_HEIGHT = self._calculateUiSize(30)
+        self.main.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS = self._calculateUiSize(6)
+        self.main.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT = self._calculateUiSize(36)
 
         self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
+        self.main.SLS__BOX_IPADX = self._calculateUiSize(10)
         self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(18))
-        self.main.SLS__BOX_DROPDOWN_MENU_FONT_SIZE = self._calculateUiSize(14)
-        self.main.SLS__BOX_DROPDOWN_MENU_WIDTH = self._calculateUiSize(200)
+        self.main.SLS__BOX_OPTION_MENU_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__BOX_OPTION_MENU_IPADY = self._calculateUiSize(2)
+        self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = (self._calculateUiSize(20), self._calculateUiSize(20))
+        # self.main.SLS__BOX_OPTION_MENU_WIDTH = self._calculateUiSize(200)
         self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(10)
         self.main.SLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
         self.main.SLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
