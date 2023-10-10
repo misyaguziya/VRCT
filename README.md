@@ -2,115 +2,62 @@
 
 ![](docs/vrct_logo.png)
 
-# VRCT (VRChat Chatbox Translator & Transcription)
+<h3>
+翻訳や文字起こしでVRChatの会話をサポートするソフトウェア
+</h3>
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/mI4DQaeaAPI?si=4cYT7qfDJNhXLIra" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 <div align="left">
 
-## Overview
-VRChatのChatBoxにOSC経由でメッセージを送信するツール  
-翻訳エンジンを使用してメッセージとその翻訳部分を同時に送信することができる  
+# Download & Install
+好きな場所からダウンロードしてください
+- [releases page](https://github.com/misyaguziya/VRCT/releases/)
+- [BOOTH.pm](https://misyaguziya.booth.pm/)
 
-## Requirement
-- python 3.9.13
-- pillow
-- PyAudioWPatch
-- python-osc
-- customtkinter
-- deepl
-- deepl-translate(https://github.com/misyaguziya/deepl-translate)
-- translators(https://github.com/misyaguziya/translators)
-- custom_speech_recognition(https://github.com/misyaguziya/custom_speech_recognition)
+ダウンロードしてexeを起動するだけです。
 
-**deepl-translate/translators/custom_speech_recognitionについては追加実装をしています**  
-**`pip install`でinstallした場合、動かないので注意**
+# What is VRCT?
+VRCTは非母国語同士が会話を行うためにチャットもしくはボイスの翻訳を行う会話サポートソフトウェアです。  
+これらの機能はVRChat内で使用するために設計されていますがその他の用途（映画鑑賞等）でも使用されています。
 
-## install
-```bash
-./install.bat
-```
+VRCTはあなたの会話を以下でサポートをします。
+- 💬チャット機能
+- 🌐翻訳機能
+- 🎙マイクの文字起こし機能
+- 🔈スピーカーの文字起こし機能
 
-## Usage
-```bash
-python VRCT.py
-```
+![](docs/main_window.png)
 
-## Features
+その他の機能ついて詳しくは[Documents](#Documents)まで
 
-### init
-0. VRChatのOSCを有効にする（重要）
+# Documents
+初期設定や基本機能、その他の機能について記載してあります。
+- [Documents](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
 
-(任意)
-1. DeepLのAPIを使用するためにアカウント登録し、認証キーを取得する
-2. ギアアイコンのボタンでconfigウィンドウを開く
-3. ParameterタブのDeepL Auth Keyに認証キーを記載
-4. configウィンドウを閉じる
 
-### Normal use
-1. メッセージボックスにメッセージを記入
-2. Enterキーを押し、メッセージを送信する
+# If you want to run it in python
+1. 以下のバージョンのpythonをインストールしてください。
+    ```
+    python 3.11.5
+    ```
 
-### About Checkboxes
-- translation: 翻訳の有効無効
-- voice2chatbox: マイクの音声を文字起こししてチャットボックスに送信する
-- speaker2log: スピーカーの音声から文字起こししてログに表示する
-- foreground: 最前面表示の有効無効
+2. install packages
+    ```bash
+    ./install.bat
+    ```
 
-### About Textbox
-- log tab: すべてのログを表示
-- send tab: 送信したメッセージを表示
-- receive tab: 受信したメッセージを表示
-- system tab: 機能についてのメッセージを表示
-
-### About Config Window
-- UI tab
-    - Transparency: ウィンドウの透過度の調整
-    - Appearance Theme: ウィンドウテーマを選択
-    - UI Scaling: UIサイズを調整
-    - Font Family: 表示フォントを選択
-    - UI Language: UIの表示言語を選択
-- Translation tab
-    - Select Translator: 翻訳エンジンの変更
-    - Send Language: 送信するメッセージに対して翻訳する言語[source, target]を選択
-    - Receive Language: 受信したメッセージに対して翻訳する言語[source, target]を選択
-- Transcription tab
-    - Input Mic Host: マイクのホストAPIを選択
-    - Input Mic Device: マイクを選択
-    - Input Mic Voice Language: 入力する音声の言語
-    - Input Mic Energy Threshold: 音声取得のしきい値
-    - Check threshold point: Input Mic Energy Thresholdのしきい値を視覚化
-    - Input Mic Dynamic Energy Threshold: 音声取得のしきい値の自動調整
-    - Input Mic Phase Timeout: 文字起こしする音声時間の上限
-    - Input Mic Record Timeout: 音声の区切りの無音時間
-    - Input Mic Max Phrases: 保留する単語の上限
-    - Input Mic Word Filter: MICの文字起こし時にWord Filterで設定した文字が入っていた場合にChatboxに表示しない (ex AAA,BBB,CCC)
-    - Input Speaker Device: スピーカーを選択
-    - Input Speaker Voice Language: 受信する音声の言語
-    - Input Speaker Energy Threshold: 音声取得のしきい値
-    - Check threshold point: Input Speaker Energy Thresholdのしきい値を視覚化
-    - Input Speaker Dynamic Energy Threshold: 音声取得のしきい値の自動調整
-    - Input Speaker Record Timeout: 音声の区切りの無音時間
-    - Input Speaker Phase Timeout: 文字起こしする音声時間の上限
-    - Input Speaker Max Phrases: 保留する単語の上限
-- Parameter tab
-    - OSC IP address: 変更不要
-    - OSC port: 変更不要
-    - DeepL Auth key: DeepLの認証キーの設定
-    - Message Format: 送信するメッセージのデコレーションの設定
-        - [message]がメッセージボックスに記入したメッセージに置換される
-        - [translation]が翻訳されたメッセージに置換される
-        - 初期フォーマット:`[message]([translation])`
-- Others tab
-    - Auto clear chat box: メッセージ送信後に書き込んだメッセージを空にする
-    - **(New!) Notification XSOverlay: XSOverlayの通知機能を有効(VR only)**
+3. Usage
+    ```bash
+    python main.py
+    ```
 
 ## Author
-みしゃ(misyaguzi)
-- Main開発
-- twitter: https://twitter.com/misya_ai
-- booth: https://misyaguziya.booth.pm/items/4814313
+- [みしゃ(misyaguzi)](https://github.com/misyaguziya) (メイン開発)
+- [しいな(Shiina_12siy)](https://github.com/ShiinaSakamoto) (メイン開発, UIデザイン, 翻訳:英語/日本語)
+- [レラ](https://github.com/soumt-r) (翻訳:韓国語)
+- [done_san]() (ロゴデザイン)
 
-しいな(Shiina_12siy)
-- Main開発, 翻訳(英語)
+---
 
-レラ
-- 翻訳(韓国語)
+※「VRChat」は、米国VRChat, Inc.の登録商標です。
