@@ -14,7 +14,7 @@ class ConfigWindow(CTkToplevel):
         # configure window
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
         self.title("Settings")
-        self.geometry(f"{1080}x{680}")
+        self.geometry(f"{settings.uism.DEFAULT_WIDTH}x{settings.uism.DEFAULT_HEIGHT}")
 
 
         self.configure(fg_color="#ff7f50")
