@@ -18,7 +18,7 @@
 ダウンロードしてexeを起動するだけです。
 
 # What is VRCT?
-VRCTは非母国語同士が会話を行うためにチャットもしくはボイスの翻訳を行う会話サポートソフトウェアです。  
+VRCTは話す言語の異なる人同士が会話を行うためにチャットもしくは音声の翻訳を行うことで会話をサポートするソフトウェアです。  
 これらの機能はVRChat内で使用するために設計されていますがその他の用途（映画鑑賞等）でも使用されています。
 
 VRCTはあなたの会話を以下でサポートをします。
@@ -27,14 +27,14 @@ VRCTはあなたの会話を以下でサポートをします。
 - 🎙マイクの文字起こし機能
 - 🔈スピーカーの文字起こし機能
 
-
-
 その他の機能ついて詳しくは[Documents](#Documents)まで
 
 # Documents
-初期設定や基本機能、その他の機能について記載してあります。
+初期設定や基本機能、その他の機能についても記載してあります。
 - [Documents](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
 
+# How to Use (YouTube)
+[![](https://img.youtube.com/vi/mI4DQaeaAPI/0.jpg)](https://www.youtube.com/watch?v=mI4DQaeaAPI)
 
 # If you want to run it in python
 1. 以下のバージョンのpythonをインストールしてください。
