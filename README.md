@@ -6,6 +6,8 @@
 翻訳や文字起こしでVRChatの会話をサポートするソフトウェア
 </h3>
 
+![](docs/main_window.png)
+
 <div align="left">
 
 # Download & Install
@@ -25,7 +27,7 @@ VRCTはあなたの会話を以下でサポートをします。
 - 🎙マイクの文字起こし機能
 - 🔈スピーカーの文字起こし機能
 
-![](docs/main_window.png)
+
 
 その他の機能ついて詳しくは[Documents](#Documents)まで
 
