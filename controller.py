@@ -600,7 +600,7 @@ def callbackSetOscPort(value):
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
-def showMainWindow():
+def createMainWindow():
     # create GUI
     view.createGUI()
 
@@ -710,4 +710,5 @@ def showMainWindow():
         },
     )
 
+def showMainWindow():
     view.startMainLoop()
