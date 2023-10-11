@@ -137,6 +137,7 @@ class View():
             VAR_ERROR_MESSAGE=StringVar(value=""),
             VAR_VERSION=StringVar(value=config.VERSION),
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
+            VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
 
 
             # Side Menu Labels
