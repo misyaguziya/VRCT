@@ -208,7 +208,7 @@ class UiScalingManager():
         self.config_window.SB__OPTIONMENU_MIN_WIDTH = self._calculateUiSize(200)
         self.config_window.SB__OPTIONMENU_IPADX = (self._calculateUiSize(8), self._calculateUiSize(8))
         self.config_window.SB__OPTIONMENU_IPADY = self._calculateUiSize(2)
-        self.config_window.SB__OPTIONMENU_IPADX_BETWEEN_IMG = self._calculateUiSize(80)
+        self.config_window.SB__OPTIONMENU_IPADX_BETWEEN_IMG = self._calculateUiSize(8)
         self.config_window.SB__OPTIONMENU_IMG_SIZE = (self._calculateUiSize(14), self._calculateUiSize(14))
 
         self.config_window.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
