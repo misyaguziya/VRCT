@@ -13,7 +13,7 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
 
 
     config_window.setting_box_compact_mode_button_container = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.TOP_BAR_BG_COLOR, width=0, height=0)
-    config_window.setting_box_compact_mode_button_container.grid(row=0, column=1, padx=(0, 20), sticky="nsw")
+    config_window.setting_box_compact_mode_button_container.grid(row=0, column=1, padx=settings.uism.COMPACT_MODE_PADX, sticky="nsw")
 
 
 
@@ -26,12 +26,13 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
     config_window.setting_box_compact_mode_label = CTkLabel(
         config_window.setting_box_compact_mode_button_container,
         height=0,
-        text="Compact Mode",
+        # text="Compact Mode",
+        textvariable=view_variable.VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL,
         anchor="w",
-        font=CTkFont(family=settings.FONT_FAMILY, size=12, weight="normal"),
+        font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.COMPACT_MODE_LABEL_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.LABELS_TEXT_COLOR
     )
-    config_window.setting_box_compact_mode_label.grid(row=0, column=0, padx=(0,10))
+    config_window.setting_box_compact_mode_label.grid(row=0, column=0, padx=settings.uism.COMPACT_MODE_LABEL_PADX)
 
 
 
@@ -50,14 +51,14 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
         width=0,
         # corner_radius=0,
         border_width=0,
-        switch_width=40,
-        switch_height=16,
+        switch_width=settings.uism.COMPACT_MODE_SWITCH_WIDTH,
+        switch_height=settings.uism.COMPACT_MODE_SWITCH_HEIGHT,
         onvalue=True,
         offvalue=False,
         command=switchConfigWindowCompactMode,
         # fg_color="",
         # bg_color="red",
-        progress_color=settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR, # SB__SWITCH_BOX_ACTIVE_BG_COLOR is for SB. change it later.
+        progress_color=settings.ctm.COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR,
     )
 
     config_window.setting_box_compact_mode_switch_box.grid(row=0, column=0)

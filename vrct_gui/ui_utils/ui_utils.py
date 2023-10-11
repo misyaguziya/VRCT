@@ -1,5 +1,6 @@
 from os import path as os_path
 from PIL.Image import open as Image_open, LANCZOS
+from time import sleep
 
 from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
@@ -142,7 +143,7 @@ def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, bu
         return button_wrapper
 
 
-def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_bg_color, optionmenu_clicked_bg_color, optionmenu_ipadx, optionmenu_ipady, variable, font_family, font_size, text_color, image_file, image_size, optionmenu_clicked_command, optionmenu_position=None, optionmenu_ipady_between_img=0, optionmenu_min_height=None, optionmenu_min_width=None, setattr_widget=None, image_widget_attr_name=None):
+def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_bg_color, optionmenu_clicked_bg_color, optionmenu_ipadx, optionmenu_ipady, variable, font_family, font_size, text_color, image_file, image_size, optionmenu_clicked_command, optionmenu_position=None, optionmenu_padx_between_img=0, optionmenu_min_height=None, optionmenu_min_width=None, setattr_widget=None, image_widget_attr_name=None):
 
     option_menu_box = CTkFrame(parent_widget, corner_radius=6, fg_color=optionmenu_bg_color, cursor="hand2")
 
@@ -167,7 +168,7 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
         font=CTkFont(family=font_family, size=font_size, weight="normal"),
         text_color=text_color
     )
-    optionmenu_label_widget.grid(row=0, column=LABEL_COLUMN, padx=(0, optionmenu_ipady_between_img))
+    optionmenu_label_widget.grid(row=0, column=LABEL_COLUMN, padx=(0, optionmenu_padx_between_img))
 
 
     optionmenu_img_widget = CTkLabel(
@@ -192,3 +193,37 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
     bindButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_command)
 
     return option_menu_box
+
+
+def applyUiScalingAndFixTheBugScrollBar(scrollbar_widget, padx, width):
+    scrollbar_widget._scrollbar.grid_configure(padx=padx)
+
+    # This is for CustomTkinter's spec change or bug fix.
+    scrollbar_widget._scrollbar.configure(height=0)
+    scrollbar_widget._scrollbar.configure(width=width)
+
+
+def setGeometryToCenterOfScreen(root_widget):
+    root_widget.update()
+    sw=root_widget.winfo_screenwidth()
+    sh=root_widget.winfo_screenheight()
+    geometry_width = root_widget.winfo_width()
+    geometry_height = root_widget.winfo_height()
+
+    root_widget.geometry(str(geometry_width)+"x"+str(geometry_height)+"+"+str((sw-geometry_width)//2)+"+"+str((sh-geometry_height)//2))
+
+
+def fadeInAnimation(root_widget, steps:int=10, interval:float=0.1, max_alpha:float=1):
+    alpha_steps = 100
+    alpha_steps*=max_alpha
+    step_size = alpha_steps/steps
+    root_widget.attributes("-alpha", 0)
+    num = 0
+    while num < alpha_steps:
+        if not root_widget.winfo_exists():
+            break
+        root_widget.attributes("-alpha", num / 100)
+        root_widget.update()
+        sleep(interval)
+        num += step_size
+    root_widget.attributes("-alpha", max_alpha)

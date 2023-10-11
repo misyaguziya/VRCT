@@ -21,7 +21,7 @@ class _SettingBoxGenerator():
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
 
         # "pady=(0,1)" is for bottom padding. It can be removed(override) when you do like "self.attr_name.grid(row=row, pady=0)"
-        setting_box_frame.grid(column=0, padx=0, pady=(0,1), sticky="ew")
+        setting_box_frame.grid(column=0, padx=0, pady=self.settings.uism.SB__FAKE_BOTTOM_BORDER_SIZE, sticky="ew")
         setting_box_frame.grid_columnconfigure(0, weight=1)
 
 
@@ -54,7 +54,7 @@ class _SettingBoxGenerator():
             setting_box_labels_frame,
             textvariable=for_var_label_text,
             anchor="w",
-            # height=0,
+            height=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__LABEL_FONT_SIZE, weight="normal"),
             text_color=self.settings.ctm.LABELS_TEXT_COLOR
         )
@@ -66,7 +66,7 @@ class _SettingBoxGenerator():
                 textvariable=for_var_desc_text,
                 anchor="w",
                 justify="left",
-                # height=0,
+                height=0,
                 wraplength=int(self.settings.uism.MAIN_AREA_MIN_WIDTH / 2),
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__DESC_FONT_SIZE, weight="normal"),
                 text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR
@@ -88,9 +88,9 @@ class _SettingBoxGenerator():
             optionmenu_bg_color=self.settings.ctm.SB__OPTIONMENU_BG_COLOR,
             optionmenu_hovered_bg_color=self.settings.ctm.SB__OPTIONMENU_HOVERED_BG_COLOR,
             optionmenu_clicked_bg_color=self.settings.ctm.SB__OPTIONMENU_CLICKED_BG_COLOR,
-            optionmenu_ipadx=(8,8),
-            optionmenu_ipady=2,
-            optionmenu_ipady_between_img=8,
+            optionmenu_ipadx=self.settings.uism.SB__OPTIONMENU_IPADX,
+            optionmenu_ipady=self.settings.uism.SB__OPTIONMENU_IPADY,
+            optionmenu_padx_between_img=self.settings.uism.SB__OPTIONMENU_IPADX_BETWEEN_IMG,
             optionmenu_min_height=self.settings.uism.SB__OPTIONMENU_MIN_HEIGHT,
             optionmenu_min_width=self.settings.uism.SB__OPTIONMENU_MIN_WIDTH,
             variable=variable,
@@ -98,7 +98,7 @@ class _SettingBoxGenerator():
             font_size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE,
             text_color=self.settings.ctm.LABELS_TEXT_COLOR,
             image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
-            image_size=(14,14),
+            image_size=self.settings.uism.SB__OPTIONMENU_IMG_SIZE,
             optionmenu_clicked_command=lambda _e: self.dropdown_menu_window.show(
                 dropdown_menu_widget_id=optionmenu_attr_name,
             ),
@@ -187,8 +187,12 @@ class _SettingBoxGenerator():
     def createSettingBoxSlider(self, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(for_var_label_text, for_var_desc_text)
 
+        # print(self.settings.uism.SB__SLIDER_WIDTH)
+        # print(self.settings.uism.SB__SLIDER_HEIGHT)
         slider_widget = CTkSlider(
             setting_box_item_frame,
+            width=self.settings.uism.SB__SLIDER_WIDTH,
+            height=self.settings.uism.SB__SLIDER_HEIGHT,
             from_=slider_range[0],
             to=slider_range[1],
             number_of_steps=slider_number_of_steps,

@@ -1,6 +1,6 @@
 from functools import partial
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, applyUiScalingAndFixTheBugScrollBar
 from utils import callFunctionIfCallable
 
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
@@ -124,11 +124,11 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.scroll_frame_container = CTkScrollableFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=self.width_new, height=self.height_new)
         self.scroll_frame_container.grid(row=1, column=0, sticky="nsew")
 
-        self.scroll_frame_container._scrollbar.grid_configure(padx=self.settings.uism.SCROLLBAR_IPADX)
-
-        # This is for CustomTkinter's spec change or bug fix.
-        self.scroll_frame_container._scrollbar.configure(height=0)
-        self.scroll_frame_container._scrollbar.configure(width=self.settings.uism.SCROLLBAR_WIDTH)
+        applyUiScalingAndFixTheBugScrollBar(
+            scrollbar_widget=self.scroll_frame_container,
+            padx=self.settings.uism.SCROLLBAR_IPADX,
+            width=self.settings.uism.SCROLLBAR_WIDTH,
+        )
 
 
         self.container = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=0, height=0)
