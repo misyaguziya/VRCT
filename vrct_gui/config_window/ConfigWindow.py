@@ -17,7 +17,7 @@ class ConfigWindow(CTkToplevel):
 
 
         self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", vrct_gui.closeConfigWindow)
+        self.protocol("WM_DELETE_WINDOW", vrct_gui._closeConfigWindow)
 
         self.settings = settings
         self._view_variable = view_variable

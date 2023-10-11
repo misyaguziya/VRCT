@@ -19,12 +19,12 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.vrct_gui = vrct_gui
 
         self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", vrct_gui.closeSelectableLanguagesWindow)
+        self.protocol("WM_DELETE_WINDOW", vrct_gui._closeSelectableLanguagesWindow)
 
         self.settings = settings
         self._view_variable = view_variable
 
-        self.bind("<FocusOut>", lambda e: vrct_gui.closeSelectableLanguagesWindow())
+        self.bind("<FocusOut>", lambda e: vrct_gui._closeSelectableLanguagesWindow())
 
 
 
@@ -63,7 +63,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
         target_variable.set(value)
         callFunctionIfCallable(callback, value)
-        self.vrct_gui.closeSelectableLanguagesWindow()
+        self.vrct_gui._closeSelectableLanguagesWindow()
 
 
 
@@ -98,7 +98,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         bindButtonPressColor([self.go_back_button_container, self.go_back_button_label], self.settings.ctm.GO_BACK_BUTTON_BG_CLICKED_COLOR, self.settings.ctm.GO_BACK_BUTTON_BG_COLOR)
 
 
-        bindButtonReleaseFunction([self.go_back_button_container, self.go_back_button_label], lambda _e: self.vrct_gui.closeSelectableLanguagesWindow())
+        bindButtonReleaseFunction([self.go_back_button_container, self.go_back_button_label], lambda _e: self.vrct_gui._closeSelectableLanguagesWindow())
 
 
 
