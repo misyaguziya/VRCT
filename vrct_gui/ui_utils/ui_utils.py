@@ -1,5 +1,6 @@
 from os import path as os_path
 from PIL.Image import open as Image_open, LANCZOS
+from time import sleep
 
 from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
@@ -200,3 +201,29 @@ def applyUiScalingAndFixTheBugScrollBar(scrollbar_widget, padx, width):
     # This is for CustomTkinter's spec change or bug fix.
     scrollbar_widget._scrollbar.configure(height=0)
     scrollbar_widget._scrollbar.configure(width=width)
+
+
+def setGeometryToCenterOfScreen(root_widget):
+    root_widget.update()
+    sw=root_widget.winfo_screenwidth()
+    sh=root_widget.winfo_screenheight()
+    geometry_width = root_widget.winfo_width()
+    geometry_height = root_widget.winfo_height()
+
+    root_widget.geometry(str(geometry_width)+"x"+str(geometry_height)+"+"+str((sw-geometry_width)//2)+"+"+str((sh-geometry_height)//2))
+
+
+def fadeInAnimation(root_widget, steps:int=10, interval:float=0.1, max_alpha:float=1):
+    alpha_steps = 100
+    alpha_steps*=max_alpha
+    step_size = alpha_steps/steps
+    root_widget.attributes("-alpha", 0)
+    num = 0
+    while num < alpha_steps:
+        if not root_widget.winfo_exists():
+            break
+        root_widget.attributes("-alpha", num / 100)
+        root_widget.update()
+        sleep(interval)
+        num += step_size
+    root_widget.attributes("-alpha", max_alpha)

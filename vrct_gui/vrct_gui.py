@@ -11,7 +11,7 @@ from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
-from .ui_utils import _setDefaultActiveTab, getLatestHeight
+from .ui_utils import _setDefaultActiveTab, getLatestHeight, setGeometryToCenterOfScreen, fadeInAnimation
 
 from utils import callFunctionIfCallable
 
@@ -20,14 +20,16 @@ class VRCT_GUI(CTk):
         super().__init__()
         self.withdraw()
         self.adjusted_event=None
+        self.is_config_window_already_opened_once=False
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
 
 
     def _showGUI(self):
+        self.attributes("-alpha", 0)
         self.deiconify()
-        self.update()
-        self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
+        setGeometryToCenterOfScreen(root_widget=self)
+        fadeInAnimation(self, steps=5, interval=0.008)
 
     def _createGUI(self, settings, view_variable):
         self.settings = settings
@@ -109,11 +111,20 @@ class VRCT_GUI(CTk):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
         self._adjustToMainWindowGeometry()
+        self.modal_window.attributes("-alpha", 0)
         self.modal_window.deiconify()
+        fadeInAnimation(self.modal_window, steps=5, interval=0.005, max_alpha=0.5)
+
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.modal_window.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
+        self.config_window.attributes("-alpha", 0)
         self.config_window.deiconify()
+        if self.is_config_window_already_opened_once is False:
+            setGeometryToCenterOfScreen(self.config_window)
+            self.is_config_window_already_opened_once = True
+            fadeInAnimation(self.config_window, steps=5, interval=0.005)
+        self.config_window.attributes("-alpha", 1)
         self.config_window.focus_set()
 
     def _closeConfigWindow(self):

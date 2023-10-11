@@ -9,7 +9,7 @@ class _CreateModalWindow(CTkToplevel):
         self.title("")
         self.overrideredirect(True)
 
-        self.wm_attributes("-alpha", 0.5)
+        # self.wm_attributes("-alpha", 0.5)
         self.wm_attributes("-toolwindow", True)
 
         self.attach_window = attach_window
