@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestWidth, getLatestHeight
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestWidth, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
 from functools import partial
 
 from utils import isEven, makeEven
@@ -126,7 +126,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             border_width=0,
         )
         self.scroll_frame_container.grid(row=0, column=0, padx=BORDER_WIDTH, pady=BORDER_WIDTH, sticky="nsew")
-        self.scroll_frame_container._scrollbar.grid_configure(padx=self.scrollbar_ipadx)
         self.scroll_frame_container.grid_columnconfigure(0, weight=1)
 
 
@@ -138,6 +137,12 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
         self._createDropdownMenuValues(dropdown_menu_widget_id, dropdown_menu_values, command)
+
+        applyUiScalingAndFixTheBugScrollBar(
+            scrollbar_widget=self.scroll_frame_container,
+            padx=self.scrollbar_ipadx,
+            width=self.scrollbar_width,
+        )
 
         geometry_width = int(self.new_width + self.scroll_frame_container._scrollbar.winfo_width() + (BORDER_WIDTH*2) + (self.scrollbar_ipadx[0] + self.scrollbar_ipadx[1]))
         geometry_height = int(self.new_height + (BORDER_WIDTH*2))
@@ -209,10 +214,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.new_height = makeEven(self.new_height)
         self.new_width = makeEven(self.new_width)
         self.scroll_frame_container.configure(width=self.new_width, height=self.new_height)
-
-        # This is for CustomTkinter's spec change or bug fix.
-        self.scroll_frame_container._scrollbar.configure(height=0)
-        self.scroll_frame_container._scrollbar.configure(width=self.scrollbar_width)
 
 
 

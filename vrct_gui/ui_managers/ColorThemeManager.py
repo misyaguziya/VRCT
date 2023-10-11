@@ -223,6 +223,8 @@ class ColorThemeManager():
 
         # Top bar
         self.config_window.TOP_BAR_BG_COLOR = self.DARK_850_COLOR
+        # Compact Mode
+        self.config_window.COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
 
 
         # Main
