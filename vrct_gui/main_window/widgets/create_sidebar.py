@@ -75,5 +75,5 @@ def createSidebar(settings, main_window, view_variable):
         enter_color=settings.ctm.CONFIG_BUTTON_HOVERED_BG_COLOR,
         leave_color=settings.ctm.CONFIG_BUTTON_BG_COLOR,
         clicked_color=settings.ctm.CONFIG_BUTTON_CLICKED_BG_COLOR,
-        buttonReleasedFunction=main_window.openConfigWindow,
+        buttonReleasedFunction=main_window._openConfigWindow,
     )

@@ -374,7 +374,7 @@ class View():
 
 
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-        vrct_gui.setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
+        vrct_gui._setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
         self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
         self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
@@ -475,11 +475,11 @@ class View():
 
     @staticmethod
     def setMainWindowAllWidgetsStatusToNormal():
-        vrct_gui.changeMainWindowWidgetsStatus("normal", "All")
+        vrct_gui._changeMainWindowWidgetsStatus("normal", "All")
 
     @staticmethod
     def setMainWindowAllWidgetsStatusToDisabled():
-        vrct_gui.changeMainWindowWidgetsStatus("disabled", "All")
+        vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
 
 
@@ -503,19 +503,19 @@ class View():
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-        vrct_gui.enableMainWindowSidebarCompactMode()
+        vrct_gui._enableMainWindowSidebarCompactMode()
 
     def disableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-        vrct_gui.disableMainWindowSidebarCompactMode()
+        vrct_gui._disableMainWindowSidebarCompactMode()
 
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
         self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
-        vrct_gui.openSelectableLanguagesWindow("your_language")
+        vrct_gui._openSelectableLanguagesWindow("your_language")
 
     def openSelectableLanguagesWindow_TargetLanguage(self, _e):
         self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
-        vrct_gui.openSelectableLanguagesWindow("target_language")
+        vrct_gui._openSelectableLanguagesWindow("target_language")
 
 
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
@@ -582,7 +582,7 @@ class View():
 
     @staticmethod
     def _printToTextbox_Info(info_message):
-        vrct_gui.printToTextbox(
+        vrct_gui._printToTextbox(
             target_type="SYSTEM",
             original_message=info_message,
             # translated_message="",
@@ -595,7 +595,7 @@ class View():
 
     @staticmethod
     def _printToTextbox_Sent(original_message, translated_message):
-        vrct_gui.printToTextbox(
+        vrct_gui._printToTextbox(
             target_type="SENT",
             original_message=original_message,
             translated_message=translated_message,
@@ -607,7 +607,7 @@ class View():
 
     @staticmethod
     def _printToTextbox_Received(original_message, translated_message):
-        vrct_gui.printToTextbox(
+        vrct_gui._printToTextbox(
             target_type="RECEIVED",
             original_message=original_message,
             translated_message=translated_message,
@@ -638,11 +638,16 @@ class View():
 
 
     def createGUI(self):
-        vrct_gui.createGUI(settings=self.settings, view_variable=self.view_variable)
+        vrct_gui._createGUI(settings=self.settings, view_variable=self.view_variable)
+
+    @staticmethod
+    def showGUI():
+        vrct_gui._showGUI()
 
     @staticmethod
     def startMainLoop():
-        vrct_gui.startMainLoop()
+        vrct_gui._showGUI()
+        vrct_gui._startMainLoop()
 
 
     # Config Window
@@ -659,7 +664,7 @@ class View():
 
     @staticmethod
     def setWidgetsStatus_ThresholdCheckButton_Disabled():
-        vrct_gui.changeConfigWindowWidgetsStatus(
+        vrct_gui._changeConfigWindowWidgetsStatus(
             status="disabled",
             target_names=[
                 "mic_energy_threshold_check_button",
@@ -669,7 +674,7 @@ class View():
 
     @staticmethod
     def setWidgetsStatus_ThresholdCheckButton_Normal():
-        vrct_gui.changeConfigWindowWidgetsStatus(
+        vrct_gui._changeConfigWindowWidgetsStatus(
             status="normal",
             target_names=[
                 "mic_energy_threshold_check_button",
@@ -854,7 +859,7 @@ class View():
 
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)
-        vrct_gui.showErrorMessage(target_widget=target_widget)
+        vrct_gui._showErrorMessage(target_widget=target_widget)
 
     def clearErrorMessage(self):
         vrct_gui._clearErrorMessage()
