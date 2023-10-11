@@ -18,12 +18,18 @@ from utils import callFunctionIfCallable
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
+        self.withdraw()
         self.adjusted_event=None
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
 
 
-    def createGUI(self, settings, view_variable):
+    def _showGUI(self):
+        self.deiconify()
+        self.update()
+        self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
+
+    def _createGUI(self, settings, view_variable):
         self.settings = settings
         self._view_variable = view_variable
 
@@ -86,31 +92,31 @@ class VRCT_GUI(CTk):
 
         )
 
-        self.update()
-        self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
+        # self.update()
+        # self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
 
 
-    def startMainLoop(self):
+    def _startMainLoop(self):
         self.mainloop()
 
 
-    def quitVRCT(self):
+    def _quitVRCT(self):
         self.quit()
         self.destroy()
 
 
-    def openConfigWindow(self, _e):
+    def _openConfigWindow(self, _e):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
-        self.adjustToMainWindowGeometry()
+        self._adjustToMainWindowGeometry()
         self.modal_window.deiconify()
-        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self.adjustToMainWindowGeometry, "+")
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.modal_window.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
         self.config_window.deiconify()
         self.config_window.focus_set()
 
-    def closeConfigWindow(self):
+    def _closeConfigWindow(self):
         callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
 
         self.config_window.withdraw()
@@ -122,7 +128,7 @@ class VRCT_GUI(CTk):
 
 
 
-    def openSelectableLanguagesWindow(self, selectable_language_window_type):
+    def _openSelectableLanguagesWindow(self, selectable_language_window_type):
         # print("___________________________________open____________________________________________________")
         # print("your", self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW)
         # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
@@ -151,7 +157,7 @@ class VRCT_GUI(CTk):
         self.selectable_languages_window.attributes("-topmost", True)
 
 
-    def closeSelectableLanguagesWindow(self):
+    def _closeSelectableLanguagesWindow(self):
         self.sls__arrow_img_your_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT.rotate(180), size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
         self.sls__arrow_img_target_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT.rotate(180), size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
         self.selectable_languages_window.withdraw()
@@ -168,7 +174,7 @@ class VRCT_GUI(CTk):
 
 
 
-    def changeMainWindowWidgetsStatus(self, status, target_names):
+    def _changeMainWindowWidgetsStatus(self, status, target_names):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,
             settings=self.settings.main,
@@ -177,7 +183,7 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def changeConfigWindowWidgetsStatus(self, status, target_names):
+    def _changeConfigWindowWidgetsStatus(self, status, target_names):
         _changeConfigWindowWidgetsStatus(
             config_window=self.config_window,
             settings=self.settings.config_window,
@@ -186,7 +192,7 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def printToTextbox(self, target_type, original_message=None, translated_message=None):
+    def _printToTextbox(self, target_type, original_message=None, translated_message=None):
         _printToTextbox(
             vrct_gui=self,
             settings=self.settings.main,
@@ -196,7 +202,7 @@ class VRCT_GUI(CTk):
             tags=target_type,
         )
 
-    def setDefaultActiveLanguagePresetTab(self, tab_no:str):
+    def _setDefaultActiveLanguagePresetTab(self, tab_no:str):
         self.current_active_preset_tab = getattr(self, f"sls__presets_button_{tab_no}")
         _setDefaultActiveTab(
             active_tab_widget=self.current_active_preset_tab,
@@ -204,20 +210,20 @@ class VRCT_GUI(CTk):
             active_text_color=self.settings.main.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
         )
 
-    def enableMainWindowSidebarCompactMode(self):
+    def _enableMainWindowSidebarCompactMode(self):
         self.sidebar_bg_container.grid_remove()
         self.sidebar_compact_mode_bg_container.grid()
         self.minimize_sidebar_button_container__for_closing.grid_remove()
         self.minimize_sidebar_button_container__for_opening.grid()
 
-    def disableMainWindowSidebarCompactMode(self):
+    def _disableMainWindowSidebarCompactMode(self):
         self.sidebar_compact_mode_bg_container.grid_remove()
         self.sidebar_bg_container.grid()
         self.minimize_sidebar_button_container__for_opening.grid_remove()
         self.minimize_sidebar_button_container__for_closing.grid()
 
 
-    def adjustToMainWindowGeometry(self, e=None):
+    def _adjustToMainWindowGeometry(self, e=None):
         self.update_idletasks()
         x_pos = self.winfo_rootx()
         y_pos = self.winfo_rooty()
@@ -239,7 +245,7 @@ class VRCT_GUI(CTk):
             self.adjusted_event=str(e)
 
 
-    def showErrorMessage(self, target_widget):
+    def _showErrorMessage(self, target_widget):
         self.error_message_window.show(target_widget=target_widget)
 
     def _clearErrorMessage(self):
