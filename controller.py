@@ -410,6 +410,10 @@ def callbackSetMicEnergyThreshold(value):
 def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+    if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+        view.closeMicEnergyThresholdWidget()
+    else:
+        view.openMicEnergyThresholdWidget()
 
 def setProgressBarMicEnergy(energy):
     view.updateSetProgressBar_MicEnergy(energy)
@@ -503,6 +507,11 @@ def callbackSetSpeakerEnergyThreshold(value):
 def callbackSetSpeakerDynamicEnergyThreshold(value):
     print("callbackSetSpeakerDynamicEnergyThreshold", value)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+    if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+        view.closeSpeakerEnergyThresholdWidget()
+    else:
+        view.openSpeakerEnergyThresholdWidget()
+
 
 def setProgressBarSpeakerEnergy(energy):
     view.updateSetProgressBar_SpeakerEnergy(energy)

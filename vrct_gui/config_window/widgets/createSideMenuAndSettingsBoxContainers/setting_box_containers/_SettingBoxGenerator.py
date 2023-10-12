@@ -137,7 +137,7 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSwitch(self, for_var_label_text, for_var_desc_text, switch_attr_name, is_checked, command):
+    def createSettingBoxSwitch(self, for_var_label_text, for_var_desc_text, switch_attr_name, variable, command):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(switch_attr_name, for_var_label_text, for_var_desc_text)
 
         switch_widget = CTkSwitch(
@@ -151,14 +151,13 @@ class _SettingBoxGenerator():
             switch_width=self.settings.uism.SB__SWITCH_BOX_WIDTH,
             onvalue=True,
             offvalue=False,
+            variable=variable,
             command=command,
             fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
             # bg_color="red",
             progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
         )
         setattr(self.config_window, switch_attr_name, switch_widget)
-
-        switch_widget.select() if is_checked else switch_widget.deselect()
 
         switch_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
