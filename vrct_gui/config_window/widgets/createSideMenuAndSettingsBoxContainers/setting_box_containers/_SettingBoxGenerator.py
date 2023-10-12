@@ -233,6 +233,7 @@ class _SettingBoxGenerator():
             progressbar_attr_name,
             passive_button_attr_name, passive_button_command,
             active_button_attr_name, active_button_command,
+            disabled_button_attr_name, disabled_button_image_file,
             button_image_file,
 
             entry_variable,
@@ -316,16 +317,23 @@ class _SettingBoxGenerator():
         passive_button_wrapper = self._createPassiveButtonForProgressbarXSlider(setting_box_item_frame, passive_button_command, button_image_file)
         setattr(self.config_window, passive_button_attr_name, passive_button_wrapper)
 
+        disabled_button_wrapper = self._createDisabledButtonForProgressbarXSlider(setting_box_item_frame, disabled_button_image_file)
+        setattr(self.config_window, disabled_button_attr_name, disabled_button_wrapper)
+
         active_button_wrapper = self._createActiveButtonForProgressbarXSlider(setting_box_item_frame, active_button_command, button_image_file)
         setattr(self.config_window, active_button_attr_name, active_button_wrapper)
 
         passive_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
         passive_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
+        disabled_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
+        disabled_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
+
         active_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
         active_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
         passive_button_wrapper.grid_remove()
+        disabled_button_wrapper.grid_remove()
         active_button_wrapper.grid_remove()
 
         passive_button_wrapper.grid()
@@ -483,5 +491,18 @@ class _SettingBoxGenerator():
             button_image_size=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE,
             button_ipadxy=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY,
             button_command=button_command,
+        )
+        return button_wrapper
+
+
+
+    def _createDisabledButtonForProgressbarXSlider(self, setting_box_progressbar_x_slider_frame, button_image_file):
+        button_wrapper = createButtonWithImage(
+            parent_widget=setting_box_progressbar_x_slider_frame,
+            button_fg_color=self.settings.ctm.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR,
+            button_image_file=button_image_file,
+            button_image_size=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY,
+            no_bind=True,
         )
         return button_wrapper

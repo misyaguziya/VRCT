@@ -96,7 +96,9 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
         passive_button_command=lambda _e: checkbox_input_mic_threshold_check_callback(True),
         active_button_attr_name="sb__progressbar_x_slider__active_button_mic_energy_threshold",
         active_button_command=lambda _e: checkbox_input_mic_threshold_check_callback(False),
-        button_image_file=settings.image_file.MIC_ICON
+        button_image_file=settings.image_file.MIC_ICON,
+        disabled_button_attr_name="sb__progressbar_x_slider__disabled_button_mic_energy_threshold",
+        disabled_button_image_file=settings.image_file.MIC_ICON_DISABLED,
     )
     config_window.sb__mic_energy_threshold.grid(row=row)
     row+=1

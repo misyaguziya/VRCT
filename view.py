@@ -463,17 +463,18 @@ class View():
                     "sb__optionmenu_mic_device",
                 ]
             )
+            self.replaceMicThresholdCheckButton_Disabled()
 
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
-
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             vrct_gui._changeConfigWindowWidgetsStatus(
                 status="disabled",
                 target_names=[
                     "sb__optionmenu_speaker_device",
                 ]
             )
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+
 
 
         if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
@@ -740,11 +741,19 @@ class View():
     @staticmethod
     def replaceMicThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
+
+    @staticmethod
+    def replaceMicThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid()
 
     @staticmethod
     def replaceMicThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
@@ -752,11 +761,19 @@ class View():
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
+
+    @staticmethod
+    def replaceSpeakerThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
 

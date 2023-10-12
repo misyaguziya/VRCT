@@ -126,17 +126,19 @@ def switchTabsColor(target_widget, tab_buttons, active_bg_color, active_text_col
 
 
 
-def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, button_clicked_color, button_image_file, button_image_size, button_ipadxy, button_command, corner_radius: int = 0):
-        button_wrapper = CTkFrame(parent_widget, corner_radius=corner_radius, fg_color=button_fg_color, height=0, width=0, cursor="hand2")
+def createButtonWithImage(parent_widget, button_image_size, button_ipadxy, button_fg_color, button_enter_color=None, button_clicked_color=None, button_image_file=None, button_command=None, corner_radius:int=0, no_bind:bool=False):
+    button_wrapper = CTkFrame(parent_widget, corner_radius=corner_radius, fg_color=button_fg_color, height=0, width=0)
 
-        button_widget = CTkLabel(
-            button_wrapper,
-            text=None,
-            height=0,
-            image=CTkImage((button_image_file),size=(button_image_size,button_image_size)),
-        )
-        button_widget.grid(row=0, column=0, padx=button_ipadxy, pady=button_ipadxy)
+    button_widget = CTkLabel(
+        button_wrapper,
+        text=None,
+        height=0,
+        image=CTkImage((button_image_file),size=(button_image_size,button_image_size)),
+    )
+    button_widget.grid(row=0, column=0, padx=button_ipadxy, pady=button_ipadxy)
 
+    if no_bind is False:
+        button_wrapper.configure(cursor="hand2")
         bindButtonFunctionAndColor(
             target_widgets=[button_wrapper, button_widget],
             enter_color=button_enter_color,
@@ -145,7 +147,7 @@ def createButtonWithImage(parent_widget, button_fg_color, button_enter_color, bu
             buttonReleasedFunction=button_command,
         )
 
-        return button_wrapper
+    return button_wrapper
 
 
 def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_bg_color, optionmenu_clicked_bg_color, optionmenu_ipadx, optionmenu_ipady, variable, font_family, font_size, text_color, image_file, image_size, optionmenu_clicked_command, optionmenu_position=None, optionmenu_padx_between_img=0, optionmenu_min_height=None, optionmenu_min_width=None, setattr_widget=None, image_widget_attr_name=None):
