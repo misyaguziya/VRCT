@@ -738,6 +738,13 @@ class View():
             ]
         )
 
+
+    def initMicThresholdCheckButton(self):
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            self.replaceMicThresholdCheckButton_Disabled()
+        else:
+            self.replaceMicThresholdCheckButton_Passive()
+
     @staticmethod
     def replaceMicThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
@@ -757,6 +764,12 @@ class View():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
+
+    def initSpeakerThresholdCheckButton(self):
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+        else:
+            self.replaceSpeakerThresholdCheckButton_Passive()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
