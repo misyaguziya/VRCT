@@ -57,11 +57,8 @@ config_window:
   mic_device:
     label: Mic Device
   mic_dynamic_energy_threshold:
-    label: Mic Energy Threshold (Auto)
-    desc: Automatically determine mic input sensitivity.
-  mic_energy_threshold:
-    label: Mic Energy Threshold (Manual)
-    desc: Slider to modify the threshold for activating voice input. Press the microphone button to initiate input and speak, allowing you to adjust it while monitoring the actual volume.
+    label: Mic Energy Threshold (Automatic)
+    desc: Enabling this option will automatically adjust the microphone's input sensitivity. If you disable it, you can manually set the input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the actual volume.
   mic_record_timeout:
     label: Mic Record Timeout
   mic_phrase_timeout:
@@ -76,11 +73,8 @@ config_window:
   speaker_device:
     label: Speaker Device
   speaker_dynamic_energy_threshold:
-    label: Speaker Energy Threshold (Auto)
-    desc: Automatically determine speaker input sensitivity.
-  speaker_energy_threshold:
-    label: Speaker Energy Threshold (Manual)
-    desc: Slider to modify the threshold for activating voice input. Press the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume.
+    label: Speaker Energy Threshold (Automatic)
+    desc: Enabling this option will automatically adjust the speaker's input sensitivity. If you disable it, you can manually set the input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume.
   speaker_record_timeout:
     label: Speaker Record Timeout
   speaker_phrase_timeout:

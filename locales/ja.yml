@@ -60,10 +60,7 @@ config_window:
     label: マイク （デバイス）
   mic_dynamic_energy_threshold:
     label: マイク入力感度の調整（自動）
-    desc: マイクの入力感度が自動的に調節されます。
-  mic_energy_threshold:
-    label: マイク入力感度の調整（手動）
-    desc: スライダーを調整してしきい値を決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。
+    desc: 有効にするとマイクの入力感度が自動的に調節されます。無効の場合は、スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。
   mic_record_timeout:
     label: マイク音声の区切りの無音時間
   mic_phrase_timeout:
@@ -79,10 +76,7 @@ config_window:
     label: スピーカー(デバイス)
   speaker_dynamic_energy_threshold:
     label: スピーカー入力感度の調整（自動）
-    desc: スピーカーの入力感度が自動的に調節されます。
-  speaker_energy_threshold:
-    label: スピーカー入力感度の調整（手動）
-    desc: スライダーを調整してしきい値を決められます。スピーカーのアイコンを押すと、設定されたデバイスから音を聞き取り、音量を確認しながら調節できます。
+    desc: 有効にするとスピーカーの入力感度が自動的に調節されます。無効の場合は、スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。
   speaker_record_timeout:
     label: スピーカー音声の区切りの無音時間
   speaker_phrase_timeout:
