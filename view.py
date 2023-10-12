@@ -449,6 +449,12 @@ class View():
 
 
 
+        if config.CHOICE_MIC_HOST == "NoHost":
+            self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
+
+        if config.CHOICE_MIC_DEVICE == "NoDevice":
+            self.view_variable.VAR_MIC_DEVICE.set("No Mic Device Detected")
+
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             vrct_gui._changeConfigWindowWidgetsStatus(
                 status="disabled",
@@ -457,6 +463,9 @@ class View():
                     "sb__optionmenu_mic_device",
                 ]
             )
+
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
 
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             vrct_gui._changeConfigWindowWidgetsStatus(
