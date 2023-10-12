@@ -24,9 +24,10 @@ from models.transcription.transcription_languages import transcription_lang
 from config import config
 
 class threadFnc(Thread):
-    def __init__(self, fnc, daemon=True, *args, **kwargs):
+    def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
         super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
         self.fnc = fnc
+        self.end_fnc = end_fnc
         self._stop = Event()
     def stop(self):
         self._stop.set()
@@ -35,6 +36,8 @@ class threadFnc(Thread):
     def run(self):
         while True:
             if self.stopped():
+                if callable(self.end_fnc):
+                    self.end_fnc()
                 return
             self.fnc(*self._args, **self._kwargs)
 
@@ -331,7 +334,7 @@ class Model:
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
 
-    def startCheckMicEnergy(self, fnc):
+    def startCheckMicEnergy(self, fnc, end_fnc):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
 
@@ -348,7 +351,7 @@ class Model:
         mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
-        self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy)
+        self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy, end_fnc=end_fnc)
         self.mic_energy_plot_progressbar.daemon = True
         self.mic_energy_plot_progressbar.start()
 
@@ -404,7 +407,7 @@ class Model:
             self.spk_audio_recorder.stop()
             self.spk_audio_recorder = None
 
-    def startCheckSpeakerEnergy(self, fnc):
+    def startCheckSpeakerEnergy(self, fnc, end_fnc):
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
 
@@ -421,7 +424,7 @@ class Model:
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
-        self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy)
+        self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
         self.speaker_energy_plot_progressbar.daemon = True
         self.speaker_energy_plot_progressbar.start()
 
