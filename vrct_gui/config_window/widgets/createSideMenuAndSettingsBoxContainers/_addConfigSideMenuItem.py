@@ -96,9 +96,6 @@ def _addConfigSideMenuItem(config_window, settings, view_variable, side_menu_set
     setattr(config_window, selected_mark_attr_name, selected_mark_widget)
 
 
-
-
-
     # Arrange
     selected_mark_widget.place(relx=-1, rely=0.5, relheight=1, anchor="w")
     label_widget.grid(row=0, column=0, padx=settings.uism.SIDE_MENU_LABELS_IPADX, pady=settings.uism.SIDE_MENU_LABELS_IPADY, sticky="ew")

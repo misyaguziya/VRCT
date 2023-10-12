@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox
+from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, getLatestWidth
 
 from utils import callFunctionIfCallable
 
@@ -100,6 +100,9 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
             image_widget_attr_name=arrow_img_attr_name,
         )
         sls__selected_language_box.grid(row=0, column=0, sticky="ew")
+
+        sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(optionmenu_label_widget, corner_radius=0, width=0, height=0)
+        sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=0, column=1, sticky="ns")
 
         return sls__box
 

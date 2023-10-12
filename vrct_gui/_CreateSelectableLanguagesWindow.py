@@ -1,7 +1,7 @@
 from functools import partial
 
 from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, applyUiScalingAndFixTheBugScrollBar
-from utils import callFunctionIfCallable
+from utils import callFunctionIfCallable, makeEven
 
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
 
@@ -39,8 +39,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.attach.update_idletasks()
         self.x_pos = self.attach.winfo_rootx()
         self.y_pos = self.attach.winfo_rooty()
-        self.width_new = self.attach.winfo_width()
-        self.height_new = self.attach.winfo_height()
+        self.width_new = makeEven(self.attach.winfo_width())
+        self.height_new = makeEven(self.attach.winfo_height())
 
 
         self.geometry("{}x{}+{}+{}".format(self.width_new, self.height_new, self.x_pos, self.y_pos))
