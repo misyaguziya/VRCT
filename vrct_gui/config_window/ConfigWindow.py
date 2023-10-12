@@ -1,9 +1,9 @@
 from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContainers, createSettingBoxTopBar
 
 
-from customtkinter import CTkToplevel
+from customtkinter import CTkToplevel, CTkFrame
 
-from ..ui_utils import getImagePath
+from ..ui_utils import getImagePath, getLatestWidth, getLatestHeight
 
 class ConfigWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
@@ -32,8 +32,11 @@ class ConfigWindow(CTkToplevel):
 
         createSettingBoxTopBar(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
-
         createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
+
+        # for fixing 1px bug
+        sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(self.side_menu_bg_container, corner_radius=0, width=0, height=0)
+        sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=1, column=0, sticky="ew")
 
 
         self.bind_all("<Button-1>", lambda event: event.widget.focus_set(), "+")

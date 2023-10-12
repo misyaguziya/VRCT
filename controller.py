@@ -424,12 +424,10 @@ def callbackCheckMicThreshold(is_turned_on):
         view.replaceMicThresholdCheckButton_Disabled()
         model.startCheckMicEnergy(setProgressBarMicEnergy, view.initProgressBar_MicEnergy)
         view.replaceMicThresholdCheckButton_Active()
-        view.setWidgetsStatus_ThresholdCheckButton_Normal()
     else:
         view.replaceMicThresholdCheckButton_Disabled()
         model.stopCheckMicEnergy()
         view.replaceMicThresholdCheckButton_Passive()
-        view.setWidgetsStatus_ThresholdCheckButton_Normal()
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
@@ -522,12 +520,10 @@ def callbackCheckSpeakerThreshold(is_turned_on):
         view.replaceSpeakerThresholdCheckButton_Disabled()
         model.startCheckSpeakerEnergy(setProgressBarSpeakerEnergy, view.initProgressBar_SpeakerEnergy)
         view.replaceSpeakerThresholdCheckButton_Active()
-        view.setWidgetsStatus_ThresholdCheckButton_Normal()
     else:
         view.replaceSpeakerThresholdCheckButton_Disabled()
         model.stopCheckSpeakerEnergy()
         view.replaceSpeakerThresholdCheckButton_Passive()
-        view.setWidgetsStatus_ThresholdCheckButton_Normal()
 
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", value)
