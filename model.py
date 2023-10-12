@@ -1,8 +1,8 @@
 import sys
 from zipfile import ZipFile
 from subprocess import Popen
-from os import makedirs
-from os import path as os_path, rename as os_rename, mkdir as os_mkdir
+from os import makedirs as os_makedirs
+from os import path as os_path, rename as os_rename
 from shutil import rmtree
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
@@ -10,6 +10,7 @@ from time import sleep
 from queue import Queue
 from threading import Thread, Event
 from requests import get as requests_get
+import webbrowser
 
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
@@ -97,7 +98,7 @@ class Model:
         return result
 
     def startLogger(self):
-        makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
+        os_makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
         logger = getLogger()
         logger.setLevel(INFO)
         file_name = os_path.join(os_path.dirname(sys.argv[0]), "logs", f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
@@ -245,19 +246,22 @@ class Model:
         current_directory = os_path.dirname(sys.argv[0])
         program_directory = os_path.dirname(__file__)
 
-        os_mkdir(os_path.join(current_directory, tmp_directory_name))
-        res = requests_get(config.GITHUB_URL)
-        url = res.json()['assets'][0]['browser_download_url']
-        res = requests_get(url, stream=True)
-        with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
-            for chunk in res.iter_content(chunk_size=1024):
-                file.write(chunk)
-        with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
-            zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
-        os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
-        rmtree(os_path.join(current_directory, tmp_directory_name))
-        command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
-        Popen(command)
+        try:
+            res = requests_get(config.GITHUB_URL)
+            url = res.json()['assets'][0]['browser_download_url']
+            res = requests_get(url, stream=True)
+            os_makedirs(os_path.join(current_directory, tmp_directory_name), exist_ok=True)
+            with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
+                for chunk in res.iter_content(chunk_size=1024):
+                    file.write(chunk)
+            with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
+                zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
+            os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
+            rmtree(os_path.join(current_directory, tmp_directory_name))
+            command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
+            Popen(command)
+        except:
+            webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
 
     @staticmethod
     def reStartSoftware():
