@@ -80,7 +80,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         sls__box_optionmenu_wrapper.grid(row=1, column=0, sticky="ew")
 
         sls__box_optionmenu_wrapper.grid_columnconfigure(0, weight=1)
-        sls__selected_language_box = createOptionMenuBox(
+        (sls__selected_language_box, optionmenu_label_widget, optionmenu_img_widget) = createOptionMenuBox(
             parent_widget=sls__box_optionmenu_wrapper,
             optionmenu_bg_color=settings.ctm.SLS__OPTIONMENU_BG_COLOR,
             optionmenu_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
