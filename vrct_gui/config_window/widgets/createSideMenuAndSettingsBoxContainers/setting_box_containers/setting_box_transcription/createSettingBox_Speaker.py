@@ -79,7 +79,9 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         passive_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(True),
         active_button_attr_name="sb__progressbar_x_slider__active_button_speaker_energy_threshold",
         active_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(False),
-        button_image_file=settings.image_file.HEADPHONES_ICON
+        button_image_file=settings.image_file.HEADPHONES_ICON,
+        disabled_button_attr_name="sb__progressbar_x_slider__disabled_button_speaker_energy_threshold",
+        disabled_button_image_file=settings.image_file.HEADPHONES_ICON_DISABLED,
     )
     config_window.sb__speaker_energy_threshold.grid(row=row)
     row+=1
