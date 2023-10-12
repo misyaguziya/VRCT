@@ -220,6 +220,8 @@ class ColorThemeManager():
         self.config_window.LABELS_TEXT_COLOR = self.config_window.BASIC_TEXT_COLOR
         self.config_window.LABELS_DESC_TEXT_COLOR = self.DARK_500_COLOR
 
+        self.config_window.LABELS_TEXT_DISABLED_COLOR = self.DARK_600_COLOR
+
 
         # Top bar
         self.config_window.TOP_BAR_BG_COLOR = self.DARK_850_COLOR

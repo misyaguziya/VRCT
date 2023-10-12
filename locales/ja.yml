@@ -41,7 +41,7 @@ config_window:
     label: 透明度
     desc: メイン画面の透明度を変更できます。
   appearance_theme:
-    label: 外観テーマ
+    label: 外観テーマ [開発中]
     desc: カラーテーマを変更できます。「System」を選択した場合、Windowsのテーマに基づいて自動的に「Dark」か「Light」テーマを判断し、適用します。
   ui_size:
     label: UIのサイズ

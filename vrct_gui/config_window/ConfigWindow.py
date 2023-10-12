@@ -26,6 +26,8 @@ class ConfigWindow(CTkToplevel):
         # When the configuration window's compact mode is turned on, it will call `grid_remove()` on each widget appended to this array. In the opposite case, `grid()` will be called.
         self.additional_widgets = []
 
+        self.sb__widgets = {}
+
         createConfigWindowTitle(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
         createSettingBoxTopBar(config_window=self, settings=self.settings, view_variable=self._view_variable)
