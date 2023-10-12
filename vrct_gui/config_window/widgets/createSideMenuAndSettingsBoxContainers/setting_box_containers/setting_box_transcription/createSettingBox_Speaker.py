@@ -59,8 +59,6 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
     row+=1
 
     config_window.sb__speaker_energy_threshold = createSettingBoxProgressbarXSlider(
-        for_var_label_text=view_variable.VAR_LABEL_SPEAKER_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_SPEAKER_ENERGY_THRESHOLD,
         command=slider_input_speaker_energy_threshold_callback,
         progressbar_x_slider_attr_name="sb__speaker_energy_threshold",
 

@@ -203,18 +203,18 @@ class View():
             CALLBACK_SET_MIC_DEVICE=None,
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
-            VAR_LABEL_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.label")),
-            VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.desc")),
+
+            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
+            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
+            CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
+
             SLIDER_RANGE_MIC_ENERGY_THRESHOLD=(0, config.MAX_MIC_ENERGY_THRESHOLD),
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.setLatestConfigVariable_MicEnergyThreshold,
 
-            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
-            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
-            CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
-            VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
             VAR_DESC_MIC_RECORD_TIMEOUT=None,
@@ -247,18 +247,18 @@ class View():
             CALLBACK_SET_SPEAKER_DEVICE=None,
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
-            VAR_LABEL_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.label")),
-            VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.desc")),
+
+            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
+            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
+            CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
+
             SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.setLatestConfigVariable_SpeakerEnergyThreshold,
 
-            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
-            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
-            CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
-            VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,

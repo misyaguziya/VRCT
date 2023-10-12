@@ -18,7 +18,7 @@ class _SettingBoxGenerator():
 
         self.dropdown_menu_window = vrct_gui.vrct_gui.dropdown_menu_window
 
-    def _createSettingBoxFrame(self, sb__attr_name, for_var_label_text, for_var_desc_text):
+    def _createSettingBoxFrame(self, sb__attr_name, for_var_label_text=None, for_var_desc_text=None):
         self.config_window.sb__widgets[sb__attr_name] = SimpleNamespace()
 
         setting_box_frame = CTkFrame(self.parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
@@ -39,10 +39,15 @@ class _SettingBoxGenerator():
         setting_box_frame_wrapper_fix_border2 = CTkFrame(setting_box_frame, corner_radius=0, width=0, height=0)
         setting_box_frame_wrapper_fix_border2.grid(row=0, column=1, sticky="ns")
 
-        self._setSettingBoxLabels(sb__attr_name, setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
+        if for_var_label_text is not None:
+            self._setSettingBoxLabels(sb__attr_name, setting_box_frame_wrapper, for_var_label_text, for_var_desc_text)
 
+        # setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color="red")
         setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)
-        setting_box_item_frame.grid(row=0, column=2, padx=0, sticky="nsew")
+        if for_var_label_text is not None:
+            setting_box_item_frame.grid(row=0, column=2, padx=0, sticky="nsew")
+        else:
+            setting_box_item_frame.grid(row=0, columnspan=3, padx=0, sticky="nsew")
         setting_box_item_frame.grid_rowconfigure((0,2), weight=1)
         setting_box_item_frame.grid_columnconfigure(0, weight=1)
 
@@ -227,7 +232,7 @@ class _SettingBoxGenerator():
 
     def createSettingBoxProgressbarXSlider(
             self,
-            for_var_label_text, for_var_desc_text, command, progressbar_x_slider_attr_name,
+            command, progressbar_x_slider_attr_name,
             entry_attr_name, entry_bind__FocusOut,
             slider_attr_name, slider_range,
             progressbar_attr_name,
@@ -243,22 +248,18 @@ class _SettingBoxGenerator():
         ):
 
 
-        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(progressbar_x_slider_attr_name, for_var_label_text, for_var_desc_text)
-
-        ENTRY_WIDTH = self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH
-        BAR_WIDTH = self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_WIDTH
-
-        BAR_PADDING = int(ENTRY_WIDTH + self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_RIGHT_PADX)
-        BUTTON_PADDING = int(BAR_WIDTH + BAR_PADDING + self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BUTTON_RIGHT_PADX)
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(progressbar_x_slider_attr_name)
 
         def adjusted_command__for_entry_bind__Any_KeyRelease(e):
             command(e.widget.get())
         def adjusted_command__for_slider(value):
             command(value)
 
+        setting_box_item_frame.grid_columnconfigure((0,2), weight=0)
+        setting_box_item_frame.grid_columnconfigure(1, weight=1)
         entry_widget = CTkEntry(
             setting_box_item_frame,
-            width=ENTRY_WIDTH,
+            width=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
             textvariable=entry_variable,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
@@ -268,7 +269,7 @@ class _SettingBoxGenerator():
         if entry_bind__FocusOut is not None:
             entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
 
-        entry_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=0, pady=0, sticky="e")
+        entry_widget.grid(row=1, column=2, padx=0, pady=0, sticky="e")
         setattr(self.config_window, entry_attr_name, entry_widget)
 
 
@@ -284,7 +285,6 @@ class _SettingBoxGenerator():
             command=adjusted_command__for_slider,
             variable=slider_variable,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__SLIDER_HEIGHT,
-            width=BAR_WIDTH,
             border_width=0,
             button_length=SLIDER_BORDER_WIDTH,
             button_corner_radius=SLIDER_BUTTON_LENGTH,
@@ -295,7 +295,7 @@ class _SettingBoxGenerator():
             progress_color=self.settings.ctm.SB__BG_COLOR,
             border_color=self.settings.ctm.SB__BG_COLOR,
         )
-        slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0, BAR_PADDING), sticky="e")
+        slider_widget.grid(row=1, column=1, padx=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_PADX, sticky="ew")
         setattr(self.config_window, slider_attr_name, slider_widget)
 
 
@@ -303,12 +303,11 @@ class _SettingBoxGenerator():
 
         progressbar_widget = CTkProgressBar(
             setting_box_item_frame,
-            width=BAR_WIDTH,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_HEIGHT,
             corner_radius=0,
         )
         setattr(self.config_window, progressbar_attr_name, progressbar_widget)
-        progressbar_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0, BAR_PADDING), sticky="e")
+        progressbar_widget.grid(row=1, column=1, padx=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_PADX, sticky="ew")
         progressbar_widget.set(0)
 
 
@@ -323,13 +322,13 @@ class _SettingBoxGenerator():
         active_button_wrapper = self._createActiveButtonForProgressbarXSlider(setting_box_item_frame, active_button_command, button_image_file)
         setattr(self.config_window, active_button_attr_name, active_button_wrapper)
 
-        passive_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
+        passive_button_wrapper.grid(row=1, column=0, padx=0, sticky="w")
         passive_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
-        disabled_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
+        disabled_button_wrapper.grid(row=1, column=0, padx=0, sticky="w")
         disabled_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
-        active_button_wrapper.grid(row=1, column=SETTING_BOX_COLUMN, padx=(0,BUTTON_PADDING), sticky="e")
+        active_button_wrapper.grid(row=1, column=0, padx=0, sticky="w")
         active_button_wrapper.configure(corner_radius=int(getLatestWidth(passive_button_wrapper)/2))
 
         passive_button_wrapper.grid_remove()

@@ -76,8 +76,6 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     row+=1
 
     config_window.sb__mic_energy_threshold = createSettingBoxProgressbarXSlider(
-        for_var_label_text=view_variable.VAR_LABEL_MIC_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_MIC_ENERGY_THRESHOLD,
         command=slider_input_mic_energy_threshold_callback,
         progressbar_x_slider_attr_name="sb__mic_energy_threshold",
 

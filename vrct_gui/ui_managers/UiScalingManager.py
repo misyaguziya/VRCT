@@ -240,12 +240,10 @@ class UiScalingManager():
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.RESPONSIVE_UI_SIZE_INT_50
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
         self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_HEIGHT = self._calculateUiSize(40)
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_LENGTH = self._calculateUiSize(2)
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__BAR_WIDTH = self._calculateUiSize(200)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_HEIGHT = self._calculateUiSize(8)
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__BAR_RIGHT_PADX = self._calculateUiSize(20)
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_LENGTH = self._calculateUiSize(2)
+        self.config_window.SB__PROGRESSBAR_X_SLIDER__BAR_PADX = (self._calculateUiSize(30), self._calculateUiSize(30))
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_RIGHT_PADX = self._calculateUiSize(20)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY = self._calculateUiSize(10)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
