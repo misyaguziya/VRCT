@@ -447,6 +447,26 @@ class View():
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
 
+
+
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_mic_host",
+                    "sb__optionmenu_mic_device",
+                ]
+            )
+
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_speaker_device",
+                ]
+            )
+
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 

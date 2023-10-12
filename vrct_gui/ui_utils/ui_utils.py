@@ -78,6 +78,11 @@ def bindButtonFunctionAndColor(target_widgets, enter_color, leave_color, clicked
     bindButtonPressColor(target_widgets, clicked_color, enter_color)
     bindButtonReleaseFunction(target_widgets, buttonReleasedFunction)
 
+def unbindEnterLEaveButtonPressButtonReleaseFunction(target_widgets):
+    for target_widget in target_widgets:
+        for event_name in ["<Enter>", "<Leave>", "<ButtonPress>", "<ButtonRelease>"]:
+            target_widget.unbind(event_name)
+
 def unbindEventFromActiveTabWidget(active_tab_widget):
     for event_name in ["<Enter>", "<Leave>", "<ButtonPress>", "<ButtonRelease>"]:
         active_tab_widget.unbind(event_name)
@@ -192,7 +197,13 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
 
     bindButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_command)
 
-    return option_menu_box
+    def unbindEventFromWidgets():
+        unbindEnterLEaveButtonPressButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget])
+
+    option_menu_box.unbindFunction = unbindEventFromWidgets
+
+
+    return (option_menu_box, optionmenu_label_widget, optionmenu_img_widget)
 
 
 def applyUiScalingAndFixTheBugScrollBar(scrollbar_widget, padx, width):
