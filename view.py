@@ -476,6 +476,13 @@ class View():
             )
 
 
+        if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.closeMicEnergyThresholdWidget()
+
+        if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.closeSpeakerEnergyThresholdWidget()
+
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
@@ -691,6 +698,24 @@ class View():
     @staticmethod
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
+
+    @staticmethod
+    def openMicEnergyThresholdWidget():
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__mic_energy_threshold.grid()
+    @staticmethod
+    def closeMicEnergyThresholdWidget():
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__mic_energy_threshold.grid_remove()
+
+    @staticmethod
+    def openSpeakerEnergyThresholdWidget():
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid()
+    @staticmethod
+    def closeSpeakerEnergyThresholdWidget():
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
 
     @staticmethod
     def setWidgetsStatus_ThresholdCheckButton_Disabled():
