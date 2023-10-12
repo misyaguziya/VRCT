@@ -1,6 +1,11 @@
 <div align="center">
 
 ![](docs/vrct_logo.png)
+[![GitHub release](https://img.shields.io/github/v/release/misyaguziya/VRCT.svg)](https://github.com/misyaguziya/VRCT/releases)
+[![Downloads](https://img.shields.io/github/downloads/misyaguziya/VRCT/total)](https://github.com/misyaguziya/VRCT/releases)
+[![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
+[![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
+
 | **English** | [日本語](./README.jp.md) |
 
 <h3>
@@ -14,7 +19,7 @@ VRCT is software that supports VRChat conversations with translation and transcr
 # Download & Install
 Download from anywhere you like.
 - [Github.com](https://github.com/misyaguziya/VRCT/releases/)
-- [BOOTH.pm](https://misyaguziya.booth.pm/)
+- [BOOTH.pm](https://misyaguziya.booth.pm/items/5155325)
 
 Just download and run the exe.
 
@@ -24,10 +29,10 @@ These features are designed for use within VRChat.
 *Although not supported, it is also used for other purposes such as watching movies.
 
 VRCT supports your conversations with
-- 💬Send chat to VRChat
-- 🌐translation
-- 🎙Transcription of audio from microphone
-- 🔈Transcription of audio from Speaker
+- 💬 **Send chat to VRChat**
+- 🌐 **Translation**
+- 🎙 **Transcription of audio from microphone**
+- 🔈 **Transcription of audio from Speaker**
 
 # Documents
 Initial setup, basic functions, and other features are also described.  
@@ -52,7 +57,7 @@ Initial setup, basic functions, and other features are also described.
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (Main Development)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
-- [レラ](https://github.com/soumt-r) (translation:Korean)
+- [レラ](https://github.com/soumt-r) (Translation:Korean)
 - [どね]() (Logo Design)
 
 ---
