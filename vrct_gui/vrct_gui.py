@@ -13,7 +13,7 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import _setDefaultActiveTab, getLatestHeight, setGeometryToCenterOfScreen, fadeInAnimation
 
-from utils import callFunctionIfCallable
+from utils import callFunctionIfCallable, makeEven
 
 class VRCT_GUI(CTk):
     def __init__(self):
@@ -238,8 +238,8 @@ class VRCT_GUI(CTk):
         self.update_idletasks()
         x_pos = self.winfo_rootx()
         y_pos = self.winfo_rooty()
-        width_new = self.winfo_width()
-        height_new = self.winfo_height()
+        width_new = makeEven(self.winfo_width())
+        height_new = makeEven(self.winfo_height())
         self.modal_window.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
 
         self.modal_window.lift()
