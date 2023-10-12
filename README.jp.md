@@ -1,6 +1,10 @@
 <div align="center">
 
 ![](docs/vrct_logo.png)
+[![GitHub release](https://img.shields.io/github/v/release/misyaguziya/VRCT.svg)](https://github.com/misyaguziya/VRCT/releases)
+[![Downloads](https://img.shields.io/github/downloads/misyaguziya/VRCT/total)](https://github.com/misyaguziya/VRCT/releases)
+[![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
+[![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
 | [English](./README.md) | **日本語** |
 
@@ -10,13 +14,12 @@ VRCTは翻訳や文字起こしでVRChatの会話をサポートするソフト�
 
 ![](docs/main_window.png)
 
-
 <div align="left">
 
 # ダウンロード＆インストール
 好きな場所からダウンロードしてください。
 - [Github.com](https://github.com/misyaguziya/VRCT/releases/)
-- [BOOTH.pm](https://misyaguziya.booth.pm/)
+- [BOOTH.pm](https://misyaguziya.booth.pm/items/5155325)
 
 ダウンロードしてexeを起動するだけです。
 
@@ -26,10 +29,10 @@ VRCTは話す言語の異なる人同士が会話を行うためにチャット�
 ※サポート対象外ですがその他の用途として映画鑑賞等でも使用されています。
 
 VRCTはあなたの会話を以下でサポートをします。
-- 💬VRChatへのチャット送信機能
-- 🌐翻訳機能
-- 🎙マイクの文字起こし機能
-- 🔈スピーカーの文字起こし機能
+- 💬 **VRChatへのチャット送信機能**
+- 🌐 **翻訳機能**
+- 🎙 **マイクの文字起こし機能**
+- 🔈 **スピーカーの文字起こし機能**
 
 # ドキュメント
 初期設定や基本機能、その他の機能についても記載してあります。  
