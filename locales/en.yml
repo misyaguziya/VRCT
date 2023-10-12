@@ -56,12 +56,12 @@ config_window:
     label: Mic Host/Driver
   mic_device:
     label: Mic Device
-  mic_energy_threshold:
-    label: Mic Energy Threshold
-    desc: Slider to modify the threshold for activating voice input. Press the microphone button to initiate input and speak, allowing you to adjust it while monitoring the actual volume.
   mic_dynamic_energy_threshold:
-    label: Mic Dynamic Energy Threshold
-    desc: When this feature is selected, it will automatically adjust in a way that works well, based on the set Mic Energy Threshold.
+    label: Mic Energy Threshold (Auto)
+    desc: Automatically determine mic input sensitivity.
+  mic_energy_threshold:
+    label: Mic Energy Threshold (Manual)
+    desc: Slider to modify the threshold for activating voice input. Press the microphone button to initiate input and speak, allowing you to adjust it while monitoring the actual volume.
   mic_record_timeout:
     label: Mic Record Timeout
   mic_phrase_timeout:
@@ -75,12 +75,12 @@ config_window:
 
   speaker_device:
     label: Speaker Device
-  speaker_energy_threshold:
-    label: Speaker Energy Threshold
-    desc: Slider to modify the threshold for activating voice input. Press the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume.
   speaker_dynamic_energy_threshold:
-    label: Speaker Dynamic Energy Threshold
-    desc: When this feature is selected, it will automatically adjust in a way that works well, based on the set Speaker Energy Threshold.
+    label: Speaker Energy Threshold (Auto)
+    desc: Automatically determine speaker input sensitivity.
+  speaker_energy_threshold:
+    label: Speaker Energy Threshold (Manual)
+    desc: Slider to modify the threshold for activating voice input. Press the headphones mark button to start input and speak something, so you can adjust it while monitoring the actual volume.
   speaker_record_timeout:
     label: Speaker Record Timeout
   speaker_phrase_timeout:
