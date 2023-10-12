@@ -2,7 +2,7 @@
 
 ![](docs/vrct_logo.png)
 
-|[English](./README.md)|**日本語**|
+| [English](./README.md) | **日本語** |
 
 <h3>
 VRCTは翻訳や文字起こしでVRChatの会話をサポートするソフトウェアです。
@@ -36,7 +36,11 @@ VRCTはあなたの会話を以下でサポートをします。
 - [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
 
 # 使い方(Youtube)
+<div align="center">
+
 [![](https://img.youtube.com/vi/mI4DQaeaAPI/0.jpg)](https://www.youtube.com/watch?v=mI4DQaeaAPI)
+
+<div align="left">
 
 # pythonで実行したい場合
 1. 以下のバージョンのpythonをインストールしてください。  
@@ -49,7 +53,7 @@ VRCTはあなたの会話を以下でサポートをします。
 
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (メイン開発)
-- [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) ((UI/UX, UI多言語対応))
+- [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI多言語対応)
 - [レラ](https://github.com/soumt-r) (翻訳:韓国語)
 - [どね]() (ロゴデザイン)
 
