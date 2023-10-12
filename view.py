@@ -718,25 +718,6 @@ class View():
         vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
         vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
 
-    @staticmethod
-    def setWidgetsStatus_ThresholdCheckButton_Disabled():
-        vrct_gui._changeConfigWindowWidgetsStatus(
-            status="disabled",
-            target_names=[
-                "mic_energy_threshold_check_button",
-                "speaker_energy_threshold_check_button",
-            ]
-        )
-
-    @staticmethod
-    def setWidgetsStatus_ThresholdCheckButton_Normal():
-        vrct_gui._changeConfigWindowWidgetsStatus(
-            status="normal",
-            target_names=[
-                "mic_energy_threshold_check_button",
-                "speaker_energy_threshold_check_button",
-            ]
-        )
 
 
     def initMicThresholdCheckButton(self):

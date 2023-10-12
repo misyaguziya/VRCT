@@ -1,10 +1,10 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
-def _createSettingBoxTitle(parent_widget, config_window, settings, view_variable):
+def _createSettingBoxTitle(parent_widget, config_window, settings, view_variable, column_num):
 
     parent_widget.grid_columnconfigure(0, weight=1)
     config_window.main_current_active_config_title_container = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.TOP_BAR_BG_COLOR, width=0, height=0)
-    config_window.main_current_active_config_title_container.grid(row=0, column=0, sticky="nsew")
+    config_window.main_current_active_config_title_container.grid(row=0, column=column_num, sticky="nsew")
 
 
     config_window.main_current_active_config_title_container.grid_rowconfigure(0, weight=1)
@@ -18,3 +18,7 @@ def _createSettingBoxTitle(parent_widget, config_window, settings, view_variable
     )
     config_window.main_current_active_config_title.grid(row=0, column=0, padx=0, pady=settings.uism.TOP_BAR__IPADY)
 
+
+    # for fixing 1px bug
+    sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(config_window.main_current_active_config_title, corner_radius=0, width=0, height=0)
+    sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=0, column=column_num, sticky="ns")
