@@ -300,9 +300,9 @@ def callbackOpenConfigWindow():
 def callbackCloseConfigWindow():
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    view.replaceMicThresholdCheckButton_Passive()
+    view.initMicThresholdCheckButton()
     # view.initProgressBar_MicEnergy() # ProgressBarに0をセットしたい
-    view.replaceSpeakerThresholdCheckButton_Passive()
+    view.initSpeakerThresholdCheckButton()
     # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -319,18 +319,18 @@ def callbackCloseConfigWindow():
 def callbackEnableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
-    view.replaceMicThresholdCheckButton_Passive()
+    view.initMicThresholdCheckButton()
     model.stopCheckSpeakerEnergy()
-    view.replaceSpeakerThresholdCheckButton_Passive()
+    view.initSpeakerThresholdCheckButton()
 
     view.enableConfigWindowCompactMode()
 
 def callbackDisableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
-    view.replaceMicThresholdCheckButton_Passive()
+    view.initMicThresholdCheckButton()
     model.stopCheckSpeakerEnergy()
-    view.replaceSpeakerThresholdCheckButton_Passive()
+    view.initSpeakerThresholdCheckButton()
 
     view.disableConfigWindowCompactMode()
 
@@ -410,6 +410,10 @@ def callbackSetMicEnergyThreshold(value):
 def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+    if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+        view.closeMicEnergyThresholdWidget()
+    else:
+        view.openMicEnergyThresholdWidget()
 
 def setProgressBarMicEnergy(energy):
     view.updateSetProgressBar_MicEnergy(energy)
@@ -417,12 +421,12 @@ def setProgressBarMicEnergy(energy):
 def callbackCheckMicThreshold(is_turned_on):
     print("callbackCheckMicThreshold", is_turned_on)
     if is_turned_on is True:
-        view.setWidgetsStatus_ThresholdCheckButton_Disabled()
+        view.replaceMicThresholdCheckButton_Disabled()
         model.startCheckMicEnergy(setProgressBarMicEnergy, view.initProgressBar_MicEnergy)
         view.replaceMicThresholdCheckButton_Active()
         view.setWidgetsStatus_ThresholdCheckButton_Normal()
     else:
-        view.setWidgetsStatus_ThresholdCheckButton_Disabled()
+        view.replaceMicThresholdCheckButton_Disabled()
         model.stopCheckMicEnergy()
         view.replaceMicThresholdCheckButton_Passive()
         view.setWidgetsStatus_ThresholdCheckButton_Normal()
@@ -503,6 +507,11 @@ def callbackSetSpeakerEnergyThreshold(value):
 def callbackSetSpeakerDynamicEnergyThreshold(value):
     print("callbackSetSpeakerDynamicEnergyThreshold", value)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+    if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+        view.closeSpeakerEnergyThresholdWidget()
+    else:
+        view.openSpeakerEnergyThresholdWidget()
+
 
 def setProgressBarSpeakerEnergy(energy):
     view.updateSetProgressBar_SpeakerEnergy(energy)
@@ -510,12 +519,12 @@ def setProgressBarSpeakerEnergy(energy):
 def callbackCheckSpeakerThreshold(is_turned_on):
     print("callbackCheckSpeakerThreshold", is_turned_on)
     if is_turned_on is True:
-        view.setWidgetsStatus_ThresholdCheckButton_Disabled()
+        view.replaceSpeakerThresholdCheckButton_Disabled()
         model.startCheckSpeakerEnergy(setProgressBarSpeakerEnergy, view.initProgressBar_SpeakerEnergy)
         view.replaceSpeakerThresholdCheckButton_Active()
         view.setWidgetsStatus_ThresholdCheckButton_Normal()
     else:
-        view.setWidgetsStatus_ThresholdCheckButton_Disabled()
+        view.replaceSpeakerThresholdCheckButton_Disabled()
         model.stopCheckSpeakerEnergy()
         view.replaceSpeakerThresholdCheckButton_Passive()
         view.setWidgetsStatus_ThresholdCheckButton_Normal()

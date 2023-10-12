@@ -5,7 +5,7 @@ from .._SettingBoxGenerator import _SettingBoxGenerator
 def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_variable):
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
-    createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
+    createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
@@ -48,11 +48,19 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
     config_window.sb__speaker_device.grid(row=row)
     row+=1
 
+    config_window.sb__speaker_dynamic_energy_threshold = createSettingBoxSwitch(
+        for_var_label_text=view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+        for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+        switch_attr_name="sb__checkbox_speaker_dynamic_energy_threshold",
+        command=lambda: checkbox_input_speaker_dynamic_energy_threshold_callback(config_window.sb__checkbox_speaker_dynamic_energy_threshold),
+        variable=view_variable.VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+    )
+    config_window.sb__speaker_dynamic_energy_threshold.grid(row=row, pady=0)
+    row+=1
 
     config_window.sb__speaker_energy_threshold = createSettingBoxProgressbarXSlider(
-        for_var_label_text=view_variable.VAR_LABEL_SPEAKER_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_SPEAKER_ENERGY_THRESHOLD,
         command=slider_input_speaker_energy_threshold_callback,
+        progressbar_x_slider_attr_name="sb__speaker_energy_threshold",
 
         entry_variable=view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY,
         entry_attr_name="sb__progressbar_x_slider__entry_speaker_energy_threshold",
@@ -69,20 +77,11 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         passive_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(True),
         active_button_attr_name="sb__progressbar_x_slider__active_button_speaker_energy_threshold",
         active_button_command=lambda _e: checkbox_input_speaker_threshold_check_callback(False),
-        button_image_file=settings.image_file.HEADPHONES_ICON
+        button_image_file=settings.image_file.HEADPHONES_ICON,
+        disabled_button_attr_name="sb__progressbar_x_slider__disabled_button_speaker_energy_threshold",
+        disabled_button_image_file=settings.image_file.HEADPHONES_ICON_DISABLED,
     )
     config_window.sb__speaker_energy_threshold.grid(row=row)
-    row+=1
-
-    # Speaker Dynamic Energy Thresholdも上に引っ付ける予定
-    config_window.sb__speaker_dynamic_energy_threshold = createSettingBoxCheckbox(
-        for_var_label_text=view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
-        checkbox_attr_name="sb__checkbox_speaker_dynamic_energy_threshold",
-        command=lambda: checkbox_input_speaker_dynamic_energy_threshold_callback(config_window.sb__checkbox_speaker_dynamic_energy_threshold),
-        variable=view_variable.VAR_MIC_DYNAMIC_ENERGY_THRESHOLD,
-    )
-    config_window.sb__speaker_dynamic_energy_threshold.grid(row=row)
     row+=1
 
 

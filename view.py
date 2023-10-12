@@ -203,18 +203,18 @@ class View():
             CALLBACK_SET_MIC_DEVICE=None,
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
-            VAR_LABEL_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.label")),
-            VAR_DESC_MIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_energy_threshold.desc")),
+
+            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
+            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
+            CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
+
             SLIDER_RANGE_MIC_ENERGY_THRESHOLD=(0, config.MAX_MIC_ENERGY_THRESHOLD),
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.setLatestConfigVariable_MicEnergyThreshold,
 
-            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
-            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
-            CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
-            VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
             VAR_DESC_MIC_RECORD_TIMEOUT=None,
@@ -247,18 +247,18 @@ class View():
             CALLBACK_SET_SPEAKER_DEVICE=None,
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
-            VAR_LABEL_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.label")),
-            VAR_DESC_SPEAKER_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_energy_threshold.desc")),
+
+            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
+            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
+            CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
+            VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
+
             SLIDER_RANGE_SPEAKER_ENERGY_THRESHOLD=(0, config.MAX_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.setLatestConfigVariable_SpeakerEnergyThreshold,
 
-            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
-            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
-            CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
-            VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,
@@ -446,6 +446,43 @@ class View():
         if config.IS_CONFIG_WINDOW_COMPACT_MODE is True:
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
+
+
+
+        if config.CHOICE_MIC_HOST == "NoHost":
+            self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
+
+        if config.CHOICE_MIC_DEVICE == "NoDevice":
+            self.view_variable.VAR_MIC_DEVICE.set("No Mic Device Detected")
+
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_mic_host",
+                    "sb__optionmenu_mic_device",
+                ]
+            )
+            self.replaceMicThresholdCheckButton_Disabled()
+
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_speaker_device",
+                ]
+            )
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+
+
+
+        if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.closeMicEnergyThresholdWidget()
+
+        if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+            self.closeSpeakerEnergyThresholdWidget()
+
 
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
@@ -664,6 +701,24 @@ class View():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
     @staticmethod
+    def openMicEnergyThresholdWidget():
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__mic_energy_threshold.grid()
+    @staticmethod
+    def closeMicEnergyThresholdWidget():
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__mic_energy_threshold.grid_remove()
+
+    @staticmethod
+    def openSpeakerEnergyThresholdWidget():
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid()
+    @staticmethod
+    def closeSpeakerEnergyThresholdWidget():
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
+
+    @staticmethod
     def setWidgetsStatus_ThresholdCheckButton_Disabled():
         vrct_gui._changeConfigWindowWidgetsStatus(
             status="disabled",
@@ -683,26 +738,55 @@ class View():
             ]
         )
 
+
+    def initMicThresholdCheckButton(self):
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            self.replaceMicThresholdCheckButton_Disabled()
+        else:
+            self.replaceMicThresholdCheckButton_Passive()
+
     @staticmethod
     def replaceMicThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
+
+    @staticmethod
+    def replaceMicThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid()
 
     @staticmethod
     def replaceMicThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
 
 
 
+    def initSpeakerThresholdCheckButton(self):
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+        else:
+            self.replaceSpeakerThresholdCheckButton_Passive()
+
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
+
+    @staticmethod
+    def replaceSpeakerThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Passive():
         vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
         vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
 
 

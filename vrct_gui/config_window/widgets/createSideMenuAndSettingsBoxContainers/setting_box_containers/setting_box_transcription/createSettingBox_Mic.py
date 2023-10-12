@@ -5,7 +5,7 @@ from .._SettingBoxGenerator import _SettingBoxGenerator
 def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_variable):
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
-    createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
+    createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
     createSettingBoxEntry = sbg.createSettingBoxEntry
 
@@ -65,11 +65,19 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     config_window.sb__mic_device.grid(row=row)
     row+=1
 
+    config_window.sb__mic_dynamic_energy_threshold = createSettingBoxSwitch(
+        for_var_label_text=view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD,
+        for_var_desc_text=view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD,
+        switch_attr_name="sb__checkbox_mic_dynamic_energy_threshold",
+        command=lambda: checkbox_input_mic_dynamic_energy_threshold_callback(config_window.sb__checkbox_mic_dynamic_energy_threshold),
+        variable=view_variable.VAR_MIC_DYNAMIC_ENERGY_THRESHOLD
+    )
+    config_window.sb__mic_dynamic_energy_threshold.grid(row=row, pady=0)
+    row+=1
 
     config_window.sb__mic_energy_threshold = createSettingBoxProgressbarXSlider(
-        for_var_label_text=view_variable.VAR_LABEL_MIC_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_MIC_ENERGY_THRESHOLD,
         command=slider_input_mic_energy_threshold_callback,
+        progressbar_x_slider_attr_name="sb__mic_energy_threshold",
 
         entry_attr_name="sb__progressbar_x_slider__entry_mic_energy_threshold",
         entry_variable=view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY,
@@ -86,20 +94,11 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
         passive_button_command=lambda _e: checkbox_input_mic_threshold_check_callback(True),
         active_button_attr_name="sb__progressbar_x_slider__active_button_mic_energy_threshold",
         active_button_command=lambda _e: checkbox_input_mic_threshold_check_callback(False),
-        button_image_file=settings.image_file.MIC_ICON
+        button_image_file=settings.image_file.MIC_ICON,
+        disabled_button_attr_name="sb__progressbar_x_slider__disabled_button_mic_energy_threshold",
+        disabled_button_image_file=settings.image_file.MIC_ICON_DISABLED,
     )
     config_window.sb__mic_energy_threshold.grid(row=row)
-    row+=1
-
-    # Mic Dynamic Energy Thresholdも上に引っ付ける予定
-    config_window.sb__mic_dynamic_energy_threshold = createSettingBoxCheckbox(
-        for_var_label_text=view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD,
-        for_var_desc_text=view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD,
-        checkbox_attr_name="sb__checkbox_mic_dynamic_energy_threshold",
-        command=lambda: checkbox_input_mic_dynamic_energy_threshold_callback(config_window.sb__checkbox_mic_dynamic_energy_threshold),
-        variable=view_variable.VAR_MIC_DYNAMIC_ENERGY_THRESHOLD
-    )
-    config_window.sb__mic_dynamic_energy_threshold.grid(row=row)
     row+=1
 
 
