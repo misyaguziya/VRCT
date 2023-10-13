@@ -1,5 +1,7 @@
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
+from .ui_utils import fadeInAnimation
+
 class _CreateModalWindow(CTkToplevel):
     def __init__(self, attach_window, settings, view_variable):
         super().__init__()
@@ -47,3 +49,9 @@ class _CreateModalWindow(CTkToplevel):
             text_color=self.settings.ctm.TEXT_COLOR,
         )
         self.modal_container_label_wrapper.place(relx=0.5, rely=0.5, anchor="center")
+
+
+    def show(self):
+        self.attributes("-alpha", 0)
+        self.deiconify()
+        fadeInAnimation(self, steps=5, interval=0.005, max_alpha=0.5)
