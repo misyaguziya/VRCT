@@ -21,8 +21,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkbox_enable_send_message_to_vrc_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC, checkbox_box_widget.get())
 
-    def checkbox_startup_osc_enabled_check_callback(checkbox_box_widget):
-        callFunctionIfCallable(view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK, checkbox_box_widget.get())
+    # [deprecated]
+    # def checkbox_startup_osc_enabled_check_callback(checkbox_box_widget):
+    #     callFunctionIfCallable(view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK, checkbox_box_widget.get())
 
     def entry_message_format_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_MESSAGE_FORMAT, value)
@@ -81,16 +82,17 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         command=lambda: checkbox_enable_send_message_to_vrc_callback(config_window.sb__checkbox_enable_send_message_to_vrc),
         variable=view_variable.VAR_ENABLE_SEND_MESSAGE_TO_VRC,
     )
-    config_window.sb__enable_send_message_to_vrc.grid(row=row)
+    config_window.sb__enable_send_message_to_vrc.grid(row=row, pady=0)
     row+=1
 
-    config_window.sb__startup_osc_enabled_check = createSettingBoxCheckbox(
-        for_var_label_text=view_variable.VAR_LABEL_STARTUP_OSC_ENABLED_CHECK,
-        for_var_desc_text=view_variable.VAR_DESC_STARTUP_OSC_ENABLED_CHECK,
-        checkbox_attr_name="sb__checkbox_startup_osc_enabled_check",
-        command=lambda: checkbox_startup_osc_enabled_check_callback(config_window.sb__checkbox_startup_osc_enabled_check),
-        variable=view_variable.VAR_STARTUP_OSC_ENABLED_CHECK,
-    )
-    config_window.sb__startup_osc_enabled_check.grid(row=row, pady=0)
-    row+=1
+    # [deprecated]
+    # config_window.sb__startup_osc_enabled_check = createSettingBoxCheckbox(
+    #     for_var_label_text=view_variable.VAR_LABEL_STARTUP_OSC_ENABLED_CHECK,
+    #     for_var_desc_text=view_variable.VAR_DESC_STARTUP_OSC_ENABLED_CHECK,
+    #     checkbox_attr_name="sb__checkbox_startup_osc_enabled_check",
+    #     command=lambda: checkbox_startup_osc_enabled_check_callback(config_window.sb__checkbox_startup_osc_enabled_check),
+    #     variable=view_variable.VAR_STARTUP_OSC_ENABLED_CHECK,
+    # )
+    # config_window.sb__startup_osc_enabled_check.grid(row=row, pady=0)
+    # row+=1
 
