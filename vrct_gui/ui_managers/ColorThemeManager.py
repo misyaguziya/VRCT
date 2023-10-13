@@ -225,6 +225,13 @@ class ColorThemeManager():
 
         # Top bar
         self.config_window.TOP_BAR_BG_COLOR = self.DARK_850_COLOR
+
+        # Restart Button
+        self.config_window.RESTART_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR
+        self.config_window.RESTART_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR
+        self.config_window.RESTART_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
+
+
         # Compact Mode
         self.config_window.COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
 

@@ -139,6 +139,7 @@ class View():
             VAR_VERSION=StringVar(value=i18n.t("config_window.version", version=config.VERSION)),
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
+            VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
 
 
             # Side Menu Labels
@@ -710,6 +711,11 @@ class View():
 
 
     # Config Window
+    def showRestartButton(self):
+        vrct_gui.config_window.restart_button_container.grid()
+    def hideRestartButton(self):
+        vrct_gui.config_window.restart_button_container.grid_remove()
+
     def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
         self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
 
