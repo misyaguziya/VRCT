@@ -592,9 +592,10 @@ def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
     config.ENABLE_SEND_MESSAGE_TO_VRC = value
 
-def callbackSetStartupOscEnabledCheck(value):
-    print("callbackSetStartupOscEnabledCheck", value)
-    config.STARTUP_OSC_ENABLED_CHECK = value
+# [deprecated]
+# def callbackSetStartupOscEnabledCheck(value):
+#     print("callbackSetStartupOscEnabledCheck", value)
+#     config.STARTUP_OSC_ENABLED_CHECK = value
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
@@ -621,9 +622,9 @@ def createMainWindow():
     # set word filter
     model.addKeywords()
 
-    # check OSC started
-    if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-        model.checkOSCStarted(view.printToTextbox_OSCError)
+    # check OSC started [deprecated]
+    # if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+    #     model.checkOSCStarted(view.printToTextbox_OSCError)
 
     # check Software Updated
     if model.checkSoftwareUpdated() is True:
@@ -707,7 +708,7 @@ def createMainWindow():
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_message_format": callbackSetMessageFormat,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
-            "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck,
+            # "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck, # [deprecated]
 
             # Advanced Settings Tab
             "callback_set_osc_ip_address": callbackSetOscIpAddress,
