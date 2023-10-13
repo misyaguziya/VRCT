@@ -522,7 +522,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.0.0"
+        self._VERSION = "2.0.0 alpha 3"
         self._PATH_CONFIG = os_path.join(os_path.dirname(sys.argv[0]), "config.json")
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
