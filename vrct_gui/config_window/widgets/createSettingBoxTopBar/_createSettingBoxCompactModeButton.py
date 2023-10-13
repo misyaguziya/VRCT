@@ -13,7 +13,7 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
 
 
     config_window.setting_box_compact_mode_button_container = CTkFrame(parent_widget, corner_radius=0, fg_color=settings.ctm.TOP_BAR_BG_COLOR, width=0, height=0)
-    config_window.setting_box_compact_mode_button_container.grid(row=0, column=column_num, padx=settings.uism.COMPACT_MODE_PADX, sticky="nsw")
+    config_window.setting_box_compact_mode_button_container.grid(row=0, column=column_num, padx=settings.uism.COMPACT_MODE_PADX, sticky="nse")
 
 
 

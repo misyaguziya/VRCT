@@ -13,8 +13,13 @@ def createSettingBoxTopBar(config_window, settings, view_variable):
     config_window.setting_box_top_bar.grid(row=0, column=1, sticky="nsew")
 
 
+    config_window.setting_box_top_bar.grid_rowconfigure(0, weight=1)
+
     column_num=0
     _createSettingBoxTitle(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable, column_num=column_num)
+    column_num+=1
+
+    config_window.setting_box_top_bar.grid_columnconfigure(column_num, weight=1)
     column_num+=1
 
     _createSettingBoxCompactModeButton(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable, column_num=column_num)
@@ -27,4 +32,4 @@ def createSettingBoxTopBar(config_window, settings, view_variable):
 
     # for fixing 1px bug
     setting_box_top_bar_fix_1px_bug = CTkFrame(config_window.setting_box_top_bar, corner_radius=0, width=0, height=0)
-    setting_box_top_bar_fix_1px_bug.grid(row=0, column=column_num, sticky="ns")
+    setting_box_top_bar_fix_1px_bug.grid(row=0, column=column_num, sticky="nse")
