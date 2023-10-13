@@ -46,6 +46,8 @@ class VRCT_GUI(CTk):
         self.attributes("-alpha", 0)
         self.deiconify()
         setGeometryToCenterOfScreen(root_widget=self)
+        if self._view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+            self._enableMainWindowSidebarCompactMode()
         fadeInAnimation(self, steps=5, interval=0.008)
 
     def _createGUI(self, settings, view_variable):

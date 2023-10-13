@@ -26,12 +26,7 @@ def createSidebar(settings, main_window, view_variable):
 
     main_window.sidebar_bg_container.grid(row=0, column=0, sticky="nsew")
     main_window.sidebar_compact_mode_bg_container.grid(row=0, column=0, sticky="nsew")
-    main_window.sidebar_bg_container.grid_remove()
     main_window.sidebar_compact_mode_bg_container.grid_remove()
-    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE:
-        main_window.sidebar_compact_mode_bg_container.grid()
-    else:
-        main_window.sidebar_bg_container.grid()
 
 
     # Config Button
