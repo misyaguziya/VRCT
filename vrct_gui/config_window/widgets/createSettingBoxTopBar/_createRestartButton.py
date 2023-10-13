@@ -5,7 +5,7 @@ from ....ui_utils import bindButtonFunctionAndColor
 def _createRestartButton(parent_widget, config_window, settings, view_variable, column_num):
 
     parent_widget.grid_columnconfigure(0, weight=1)
-    config_window.restart_button_container = CTkFrame(parent_widget, corner_radius=20, fg_color=settings.ctm.RESTART_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
+    config_window.restart_button_container = CTkFrame(parent_widget, corner_radius=settings.uism.RESTART_BUTTON_CORNER_RADIUS, fg_color=settings.ctm.RESTART_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
     config_window.restart_button_container.grid(row=0, column=column_num, padx=settings.uism.RESTART_BUTTON_PADX, sticky="ew")
 
 
@@ -18,7 +18,7 @@ def _createRestartButton(parent_widget, config_window, settings, view_variable, 
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.RESTART_BUTTON_LABEL_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.LABELS_TEXT_COLOR
     )
-    config_window.restart_button_label.grid(row=0, column=0, padx=20, pady=10)
+    config_window.restart_button_label.grid(row=0, column=0, padx=settings.uism.RESTART_BUTTON_IPADX, pady=settings.uism.RESTART_BUTTON_IPADY)
 
 
 
