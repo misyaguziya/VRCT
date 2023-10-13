@@ -28,6 +28,7 @@ config_window:
   config_title: Settings
   compact_mode: Compact Mode
   version: version %{version}
+  restart_message: Apply changes with a restart.
   side_menu_labels:
     appearance: Appearance
     translation: Translation

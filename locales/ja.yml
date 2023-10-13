@@ -29,6 +29,7 @@ config_window:
   config_title: 設定
   compact_mode: コンパクトモード
   version: バージョン %{version}
+  restart_message: 再起動して変更を適用する。
   side_menu_labels:
     appearance: デザイン
     translation: 翻訳

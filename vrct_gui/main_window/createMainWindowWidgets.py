@@ -43,22 +43,6 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     # Main Top Bar Container - Right Side
     # start from 3
     main_topbar_column=3
-    # Restart Button(Tmp)
-    vrct_gui.restart_button_container = createButtonWithImage(
-        parent_widget=vrct_gui.main_topbar_container,
-        button_fg_color=settings.ctm.HELP_AND_INFO_BUTTON_BG_COLOR,
-        button_enter_color=settings.ctm.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR,
-        button_clicked_color=settings.ctm.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR,
-        button_image_file=settings.image_file.VRCT_LOGO_MARK,
-        button_image_size=settings.uism.HELP_AND_INFO_BUTTON_SIZE,
-        button_ipadxy=settings.uism.HELP_AND_INFO_BUTTON_IPADXY,
-        button_command=lambda e: callFunctionIfCallable(view_variable.CALLBACK_RESTART_SOFTWARE),
-        corner_radius=settings.uism.HELP_AND_INFO_BUTTON_CORNER_RADIUS,
-    )
-    vrct_gui.restart_button_container.grid(row=0, column=main_topbar_column, padx=settings.uism.HELP_AND_INFO_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="e")
-    main_topbar_column+=1
-
-
     # Update Available Button
     vrct_gui.update_available_container = CTkFrame(
         vrct_gui.main_topbar_container,
