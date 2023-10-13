@@ -7,17 +7,17 @@ from utils import isEven
 
 class _CreateErrorWindow(CTkToplevel):
     def __init__(
-        self,
-        settings,
-        view_variable,
-        wrapper_widget,
+            self,
+            settings,
+            view_variable,
+            wrapper_widget,
 
-        message_ipadx,
-        message_ipady,
-        message_font_size,
+            message_ipadx,
+            message_ipady,
+            message_font_size,
 
-        message_bg_color,
-        message_text_color,
+            message_bg_color,
+            message_text_color,
         ):
 
         super().__init__()

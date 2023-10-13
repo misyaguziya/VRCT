@@ -9,7 +9,16 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
 
 
 
-    def update_switch_status(widget_frame, widget_label, widget_switch_box, widget_selected_mark, widget_compact_mode_icon, icon_name, disabled_icon_name):
+    def update_switch_status(
+            widget_frame,
+            widget_label,
+            widget_switch_box,
+            widget_selected_mark,
+            widget_compact_mode_icon,
+            icon_name,
+            disabled_icon_name,
+        ):
+
         if status == "disabled":
             widget_frame.configure(cursor="")
             widget_label.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)

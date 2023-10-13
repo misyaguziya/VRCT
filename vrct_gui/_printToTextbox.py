@@ -1,7 +1,15 @@
 from datetime import datetime
 from customtkinter import CTkFont
 
-def _printToTextbox(vrct_gui, settings, target_type, original_message=None, translated_message=None, tags=None, disable_print_to_textbox_all:bool=False):
+def _printToTextbox(vrct_gui,
+        settings,
+        target_type,
+        original_message=None,
+        translated_message=None,
+        tags=None,
+        disable_print_to_textbox_all:bool=False,
+    ):
+
     now_raw_data = datetime.now()
     # now = now_raw_data.strftime("%H:%M:%S")
     now_hm = now_raw_data.strftime("%H:%M")

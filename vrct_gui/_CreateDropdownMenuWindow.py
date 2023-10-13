@@ -9,26 +9,28 @@ from functools import partial
 from utils import isEven, makeEven
 
 class _CreateDropdownMenuWindow(CTkToplevel):
-    def __init__(self,
-    settings,
-    view_variable,
+    def __init__(
+            self,
+            settings,
+            view_variable,
 
-    window_additional_y_pos,
-    window_border_width,
-    scrollbar_ipadx,
-    scrollbar_width,
-    value_ipadx,
-    value_ipady,
-    value_pady,
-    value_font_size,
+            window_additional_y_pos,
+            window_border_width,
+            scrollbar_ipadx,
+            scrollbar_width,
+            value_ipadx,
+            value_ipady,
+            value_pady,
+            value_font_size,
 
-    window_bg_color,
-    window_border_color,
-    values_bg_color,
-    values_hovered_bg_color,
-    values_clicked_bg_color,
-    values_text_color,
-    ):
+            window_bg_color,
+            window_border_color,
+            values_bg_color,
+            values_hovered_bg_color,
+            values_clicked_bg_color,
+            values_text_color,
+        ):
+
         super().__init__()
         self.withdraw()
         self.hide = True
