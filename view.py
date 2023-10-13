@@ -54,9 +54,15 @@ class View():
             **common_args
         )
 
-        self.settings.modal_window = SimpleNamespace(
-            ctm=all_ctm.modal_window,
-            uism=all_uism.modal_window,
+        self.settings.main_window_cover = SimpleNamespace(
+            ctm=all_ctm.main_window_cover,
+            uism=all_uism.main_window_cover,
+            **common_args
+        )
+
+        self.settings.error_message_window = SimpleNamespace(
+            ctm=all_ctm.error_message_window,
+            uism=all_uism.error_message_window,
             **common_args
         )
 
@@ -123,8 +129,8 @@ class View():
             VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
 
-            # Modal Window For Main Window
-            VAR_LABEL_MODAL_MESSAGE_FOR__MAIN_WINDOW=StringVar(value=i18n.t("main_window.modal_message.opened_config_window")),
+            # Main Window Cover
+            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=i18n.t("main_window.cover_message")),
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
@@ -558,12 +564,12 @@ class View():
 
     @staticmethod
     def _openTheCoverOfMainWindow():
-        vrct_gui.modal_window.show()
+        vrct_gui.main_window_cover.show()
         vrct_gui.config_window.lift()
 
     @staticmethod
     def _closeTheCoverOfMainWindow():
-        vrct_gui.modal_window.withdraw()
+        vrct_gui.main_window_cover.withdraw()
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True

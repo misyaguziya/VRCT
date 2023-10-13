@@ -8,7 +8,8 @@ class UiScalingManager():
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()
-        self.modal_window = SimpleNamespace()
+        self.main_window_cover = SimpleNamespace()
+        self.error_message_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -138,7 +139,7 @@ class UiScalingManager():
         self.selectable_language_window.VALUES_TEXT_IPADY = self._calculateUiSize(8)
 
 
-        self.modal_window.TEXT_FONT_SIZE = self._calculateUiSize(20)
+        self.main_window_cover.TEXT_FONT_SIZE = self._calculateUiSize(20)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
