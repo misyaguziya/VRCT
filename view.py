@@ -16,7 +16,8 @@ from config import config
 class View():
     def __init__(self):
         self.settings = SimpleNamespace()
-        theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
+        # theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
+        theme = "Dark"
         all_ctm = ColorThemeManager(theme)
         all_uism = UiScalingManager(config.UI_SCALING)
         image_file = ImageFileManager(theme)
@@ -135,7 +136,7 @@ class View():
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
-            VAR_VERSION=StringVar(value=config.VERSION),
+            VAR_VERSION=StringVar(value=i18n.t("config_window.version", version=config.VERSION)),
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
 
@@ -161,9 +162,11 @@ class View():
 
             VAR_LABEL_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.label")),
             VAR_DESC_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.desc")),
-            LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
+            LIST_APPEARANCE_THEME=["Dark"],
+            # LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
             CALLBACK_SET_APPEARANCE_THEME=None,
-            VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
+            VAR_APPEARANCE_THEME=StringVar(value="Dark"),
+            # VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
@@ -450,6 +453,12 @@ class View():
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
 
+        vrct_gui._changeConfigWindowWidgetsStatus(
+            status="disabled",
+            target_names=[
+                "sb__optionmenu_appearance_theme",
+            ]
+        )
 
 
         if config.CHOICE_MIC_HOST == "NoHost":
