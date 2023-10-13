@@ -1,5 +1,4 @@
 from os import path as os_path
-from typing import Union
 from types import SimpleNamespace
 from tkinter import font as tk_font
 import webbrowser

@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestWidth, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
 from functools import partial
 
 from utils import isEven, makeEven
@@ -239,7 +239,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
                 anchor="w",
                 text_color=self.values_text_color,
             )
-            # setattr(self, f"l", label_widget)
 
             label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
 

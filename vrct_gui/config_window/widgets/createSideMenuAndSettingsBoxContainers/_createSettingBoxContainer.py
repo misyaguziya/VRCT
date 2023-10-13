@@ -28,7 +28,7 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
 
 
     setting_box_row=0
-    for i, setting_box_setting in enumerate(setting_box_container_settings["setting_boxes"]):
+    for setting_box_setting in setting_box_container_settings["setting_boxes"]:
         # Top-Padding that can be container the section title
         setting_box_top_padding = CTkFrame(setting_box_container_widget, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=settings.uism.SB__TOP_PADY)
         setting_box_top_padding.grid(row=setting_box_row, column=0, sticky="ew", padx=0, pady=0)
