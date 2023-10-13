@@ -4,6 +4,7 @@ from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContai
 from customtkinter import CTkToplevel, CTkFrame
 
 from ..ui_utils import getImagePath, getLatestWidth, getLatestHeight
+from utils import isEven
 
 class ConfigWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
@@ -35,8 +36,17 @@ class ConfigWindow(CTkToplevel):
         createSideMenuAndSettingsBoxContainers(config_window=self, settings=self.settings, view_variable=self._view_variable)
 
         # for fixing 1px bug
+        l_width = getLatestWidth(self.side_menu_bg_container)
+        if isEven(l_width) is False:
+            self.side_menu_bg_container.grid_columnconfigure(0, weight=0, minsize=l_width+1)
+
+        # for fixing 1px bug
+        self.side_menu_bg_container.grid_rowconfigure(2, weight=1)
         sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(self.side_menu_bg_container, corner_radius=0, width=0, height=0)
-        sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=1, column=0, sticky="ew")
+        sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=3, column=0, sticky="sew")
+
+        # for fixing 1px bug
+        l_width = getLatestWidth(self.side_menu_bg_container)
 
 
         self.bind_all("<Button-1>", lambda event: event.widget.focus_set(), "+")

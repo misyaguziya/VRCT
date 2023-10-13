@@ -29,8 +29,8 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
     config_window.grid_rowconfigure(1, weight=1)
     config_window.side_menu_bg_container = CTkFrame(config_window, corner_radius=0, fg_color=settings.ctm.SIDE_MENU_BG_COLOR, width=0, height=0)
     config_window.side_menu_bg_container.grid(row=1, column=0, sticky="nsew")
+    config_window.side_menu_bg_container.grid_columnconfigure(0, weight=1)
 
-    config_window.side_menu_bg_container.grid_rowconfigure(0, weight=1)
     config_window.side_menu_container = CTkFrame(config_window.side_menu_bg_container, corner_radius=0, fg_color=settings.ctm.SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR, width=0, height=0)
     config_window.side_menu_container.grid(row=0, column=0, padx=settings.uism.TOP_BAR_SIDE__TITLE_PADX, pady=(settings.uism.SIDE_MENU_TOP_PADY, 0), sticky="nsew")
 
