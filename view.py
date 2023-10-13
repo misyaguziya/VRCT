@@ -139,6 +139,7 @@ class View():
             VAR_VERSION=StringVar(value=i18n.t("config_window.version", version=config.VERSION)),
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
+            VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
 
 
             # Side Menu Labels
@@ -209,8 +210,8 @@ class View():
             VAR_MIC_DEVICE=StringVar(value=config.CHOICE_MIC_DEVICE),
 
 
-            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.label")),
-            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.mic_dynamic_energy_threshold.desc")),
+            VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
+            VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=None,
             VAR_MIC_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD),
 
@@ -234,7 +235,7 @@ class View():
             CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
-            VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
+            VAR_DESC_MIC_MAX_PHRASES=None,
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
@@ -253,8 +254,8 @@ class View():
             VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
 
 
-            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.label")),
-            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=i18n.t("config_window.speaker_dynamic_energy_threshold.desc")),
+            VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
+            VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
             VAR_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=BooleanVar(value=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD),
 
@@ -278,7 +279,7 @@ class View():
             CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
-            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
+            VAR_DESC_SPEAKER_MAX_PHRASES=None,
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,
@@ -491,9 +492,13 @@ class View():
 
         if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
             self.closeMicEnergyThresholdWidget()
+        else:
+            self.openMicEnergyThresholdWidget()
 
         if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
             self.closeSpeakerEnergyThresholdWidget()
+        else:
+            self.openSpeakerEnergyThresholdWidget()
 
 
         # Insert sample conversation for testing.
@@ -710,6 +715,11 @@ class View():
 
 
     # Config Window
+    def showRestartButton(self):
+        vrct_gui.config_window.restart_button_container.grid()
+    def hideRestartButton(self):
+        vrct_gui.config_window.restart_button_container.grid_remove()
+
     def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
         self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
 
@@ -721,21 +731,27 @@ class View():
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
-    @staticmethod
-    def openMicEnergyThresholdWidget():
+    def openMicEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_manual"))
+        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_manual"))
         vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=0)
         vrct_gui.config_window.sb__mic_energy_threshold.grid()
-    @staticmethod
-    def closeMicEnergyThresholdWidget():
+
+    def closeMicEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_automatic"))
+        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_automatic"))
         vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=(0,1))
         vrct_gui.config_window.sb__mic_energy_threshold.grid_remove()
 
-    @staticmethod
-    def openSpeakerEnergyThresholdWidget():
+    def openSpeakerEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_manual"))
+        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_manual"))
         vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=0)
         vrct_gui.config_window.sb__speaker_energy_threshold.grid()
-    @staticmethod
-    def closeSpeakerEnergyThresholdWidget():
+
+    def closeSpeakerEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_automatic"))
+        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_automatic"))
         vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
         vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
 
