@@ -396,6 +396,7 @@ def callbackSetMicDevice(value):
 
 def callbackSetMicEnergyThreshold(value):
     print("callbackSetMicEnergyThreshold", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
@@ -431,6 +432,7 @@ def callbackCheckMicThreshold(is_turned_on):
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
@@ -444,6 +446,7 @@ def callbackSetMicRecordTimeout(value):
 
 def callbackSetMicPhraseTimeout(value):
     print("callbackSetMicPhraseTimeout", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
@@ -457,6 +460,7 @@ def callbackSetMicPhraseTimeout(value):
 
 def callbackSetMicMaxPhrases(value):
     print("callbackSetMicMaxPhrases", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value:
@@ -491,6 +495,7 @@ def callbackSetSpeakerDevice(value):
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
@@ -527,6 +532,7 @@ def callbackCheckSpeakerThreshold(is_turned_on):
 
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
@@ -540,6 +546,7 @@ def callbackSetSpeakerRecordTimeout(value):
 
 def callbackSetSpeakerPhraseTimeout(value):
     print("callbackSetSpeakerPhraseTimeout", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
@@ -553,6 +560,7 @@ def callbackSetSpeakerPhraseTimeout(value):
 
 def callbackSetSpeakerMaxPhrases(value):
     print("callbackSetSpeakerMaxPhrases", value)
+    if value == "": return
     try:
         value = int(value)
         if 0 <= value:
@@ -599,10 +607,12 @@ def callbackSetEnableSendMessageToVrc(value):
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
+    if value == "": return
     print("callbackSetOscIpAddress", str(value))
     config.OSC_IP_ADDRESS = str(value)
 
 def callbackSetOscPort(value):
+    if value == "": return
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
