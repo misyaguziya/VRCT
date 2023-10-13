@@ -27,6 +27,7 @@ selectable_language_window:
 config_window:
   config_title: Settings
   compact_mode: Compact Mode
+  version: version %{version}
   side_menu_labels:
     appearance: Appearance
     translation: Translation

@@ -43,22 +43,6 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     # Main Top Bar Container - Right Side
     # start from 3
     main_topbar_column=3
-
-    # VRCT Now Version Label(Tmp)
-    vrct_gui.version_label = CTkLabel(
-        vrct_gui.main_topbar_container,
-        textvariable=view_variable.VAR_VERSION,
-        height=0,
-        corner_radius=0,
-        font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.UPDATE_AVAILABLE_BUTTON_FONT_SIZE, weight="normal"),
-        anchor="e",
-        text_color="white",
-    )
-    vrct_gui.version_label.grid(row=0, column=main_topbar_column, padx=(0,8))
-    main_topbar_column+=1
-
-
-
     # Restart Button(Tmp)
     vrct_gui.restart_button_container = createButtonWithImage(
         parent_widget=vrct_gui.main_topbar_container,
