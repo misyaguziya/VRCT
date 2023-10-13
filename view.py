@@ -309,10 +309,11 @@ class View():
             CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=None,
             VAR_ENABLE_SEND_MESSAGE_TO_VRC=BooleanVar(value=config.ENABLE_SEND_MESSAGE_TO_VRC),
 
-            VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.label")),
-            VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.desc")),
-            CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK=None,
-            VAR_STARTUP_OSC_ENABLED_CHECK=BooleanVar(value=config.STARTUP_OSC_ENABLED_CHECK),
+            # [deprecated]
+            # VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.label")),
+            # VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.desc")),
+            # CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK=None,
+            # VAR_STARTUP_OSC_ENABLED_CHECK=BooleanVar(value=config.STARTUP_OSC_ENABLED_CHECK),
 
 
 
@@ -438,7 +439,7 @@ class View():
             self.view_variable.CALLBACK_SET_MESSAGE_FORMAT = config_window_registers.get("callback_set_message_format", None)
 
             self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
-            self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None)
+            # self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None) #[deprecated]
 
             # Advanced Settings Tab
             self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
