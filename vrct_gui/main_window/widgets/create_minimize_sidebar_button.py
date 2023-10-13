@@ -68,8 +68,3 @@ def createMinimizeSidebarButton(settings, main_window, view_variable):
     main_window.minimize_sidebar_button_container__for_opening.grid(row=0, column=0, sticky="nsw")
     main_window.minimize_sidebar_button_container__for_closing.grid(row=0, column=0, sticky="nsw")
     main_window.minimize_sidebar_button_container__for_opening.grid_remove()
-    main_window.minimize_sidebar_button_container__for_closing.grid_remove()
-    if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-        main_window.minimize_sidebar_button_container__for_opening.grid()
-    else:
-        main_window.minimize_sidebar_button_container__for_closing.grid()
