@@ -33,6 +33,8 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         slider_range=view_variable.SLIDER_RANGE_TRANSPARENCY,
         command=lambda value: slider_transparency_callback(value),
         variable=view_variable.VAR_TRANSPARENCY,
+        slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_TRANSPARENCY,
+        slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_TRANSPARENCY,
     )
     config_window.sb__transparency.grid(row=row)
     row+=1
