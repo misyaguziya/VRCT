@@ -446,11 +446,6 @@ class View():
             self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
 
         # The initial processing after registration.
-
-        if config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
-            vrct_gui._enableMainWindowSidebarCompactMode()
-
-
         if config.IS_CONFIG_WINDOW_COMPACT_MODE is True:
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
