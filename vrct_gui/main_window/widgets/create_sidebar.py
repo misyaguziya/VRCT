@@ -55,16 +55,6 @@ def createSidebar(settings, main_window, view_variable):
     main_window.sidebar_config_button.grid(row=0, column=0, padx=0, pady=settings.uism.SIDEBAR_CONFIG_BUTTON_IPADY)
 
 
-    # main_window.sidebar_config_button_update_badge = CTkFrame(
-    #     main_window.sidebar_config_button,
-    #     corner_radius=3,
-    #     fg_color="#ca5361",
-    #     width=6,
-    #     height=6,
-    # )
-    # main_window.sidebar_config_button_update_badge.place(relx=0.9, rely=0.1, anchor="center")
-
-
     bindButtonFunctionAndColor(
         target_widgets=[main_window.sidebar_config_button_wrapper, main_window.sidebar_config_button],
         enter_color=settings.ctm.CONFIG_BUTTON_HOVERED_BG_COLOR,

@@ -159,7 +159,6 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
                 anchor="w",
                 text_color=self.settings.ctm.BASIC_TEXT_COLOR,
             )
-            # setattr(self, f"l", label_widget)
 
             label_widget.grid(row=1, column=0, padx=self.settings.uism.VALUES_TEXT_IPADX, pady=self.settings.uism.VALUES_TEXT_IPADY)
 

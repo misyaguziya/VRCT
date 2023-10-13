@@ -214,10 +214,6 @@ def createSidebarFeatures(settings, main_window, view_variable):
             bg_color=settings.ctm.SF__BG_COLOR,
             progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR,
         )
-        # # if sfs["is_checked"] is True:
-        # #     target_attr.select()
-        # # else:
-        # #     target_attr.deselect()
         setattr(main_window, switch_box_attr_name, switch_box_widget)
 
 

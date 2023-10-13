@@ -18,7 +18,6 @@ def createConfigWindowTitle(config_window, settings, view_variable):
     config_window.side_menu_config_window_title_logo_wrapper.grid_rowconfigure(0,weight=1)
     config_window.side_menu_config_window_title = CTkLabel(
         config_window.side_menu_config_window_title_logo_frame,
-        # text="Settings",
         textvariable=view_variable.VAR_CONFIG_WINDOW_TITLE,
         height=0,
         anchor="w",

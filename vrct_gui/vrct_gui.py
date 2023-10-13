@@ -11,7 +11,7 @@ from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
-from .ui_utils import _setDefaultActiveTab, getLatestHeight, setGeometryToCenterOfScreen, fadeInAnimation
+from .ui_utils import setDefaultActiveTab, setGeometryToCenterOfScreen, fadeInAnimation
 
 from utils import callFunctionIfCallable, makeEven
 
@@ -238,7 +238,7 @@ class VRCT_GUI(CTk):
 
     def _setDefaultActiveLanguagePresetTab(self, tab_no:str):
         self.current_active_preset_tab = getattr(self, f"sls__presets_button_{tab_no}")
-        _setDefaultActiveTab(
+        setDefaultActiveTab(
             active_tab_widget=self.current_active_preset_tab,
             active_bg_color=self.settings.main.ctm.SLS__PRESETS_TAB_BG_ACTIVE_COLOR,
             active_text_color=self.settings.main.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
