@@ -58,6 +58,7 @@ class _SettingBoxGenerator():
         setting_box_labels_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
         setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
 
+        setting_box_labels_frame.grid_rowconfigure((0,3), weight=1)
         setting_box_label = CTkLabel(
             setting_box_labels_frame,
             textvariable=for_var_label_text,
@@ -66,7 +67,7 @@ class _SettingBoxGenerator():
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__LABEL_FONT_SIZE, weight="normal"),
             text_color=self.settings.ctm.LABELS_TEXT_COLOR
         )
-        setting_box_label.grid(row=0, column=0, padx=0, pady=0, sticky="ew")
+        setting_box_label.grid(row=1, column=0, padx=0, pady=0, sticky="ew")
         self.config_window.sb__widgets[sb__attr_name].label_widget = setting_box_label
 
 
@@ -81,7 +82,7 @@ class _SettingBoxGenerator():
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__DESC_FONT_SIZE, weight="normal"),
                 text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR
             )
-            setting_box_desc.grid(row=1, column=0, padx=0, pady=(self.settings.uism.SB__DESC_TOP_PADY,0), sticky="ew")
+            setting_box_desc.grid(row=2, column=0, padx=0, pady=(self.settings.uism.SB__DESC_TOP_PADY,0), sticky="ew")
             self.config_window.additional_widgets.append(setting_box_desc)
             self.config_window.sb__widgets[sb__attr_name].desc_widget=setting_box_desc
         else:

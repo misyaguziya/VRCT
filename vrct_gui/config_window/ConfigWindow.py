@@ -1,7 +1,7 @@
 from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContainers, createSettingBoxTopBar
 
 
-from customtkinter import CTkToplevel, CTkFrame
+from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
 from ..ui_utils import getImagePath, getLatestWidth, getLatestHeight
 from utils import isEven
@@ -47,6 +47,20 @@ class ConfigWindow(CTkToplevel):
 
         # for fixing 1px bug
         l_width = getLatestWidth(self.side_menu_bg_container)
+
+
+
+        # VRCT Now Version Label(Tmp)
+        version_label = CTkLabel(
+            self.side_menu_bg_container,
+            textvariable=self._view_variable.VAR_VERSION,
+            height=0,
+            corner_radius=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.NOW_VERSION_FONT_SIZE, weight="normal"),
+            anchor="w",
+            text_color=self.settings.ctm.NOW_VERSION_TEXT_COLOR,
+        )
+        version_label.place(relx=0.05, rely=0.99, anchor="sw")
 
 
         self.bind_all("<Button-1>", lambda event: event.widget.focus_set(), "+")

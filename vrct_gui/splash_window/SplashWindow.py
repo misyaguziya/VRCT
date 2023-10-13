@@ -8,6 +8,7 @@ class SplashWindow(CTkToplevel):
         self.overrideredirect(True)
         self.configure(fg_color="#292a2d")
         self.title("SplashWindow")
+        self.wm_attributes("-toolwindow", True)
 
 
         sw=self.winfo_screenwidth()

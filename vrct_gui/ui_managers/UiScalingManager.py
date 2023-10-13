@@ -169,6 +169,7 @@ class UiScalingManager():
         self.config_window.SIDE_MENU_LABELS_IPADY = self._calculateUiSize(8)
         self.config_window.SIDE_MENU_LABELS_FONT_SIZE = self._calculateUiSize(18)
 
+        self.config_window.NOW_VERSION_FONT_SIZE = self._calculateUiSize(12)
 
         # Top bar Main
         self.config_window.TOP_BAR_MAIN__TITLE_FONT_SIZE = self._calculateUiSize(22)

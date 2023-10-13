@@ -28,6 +28,7 @@ selectable_language_window:
 config_window:
   config_title: 設定
   compact_mode: コンパクトモード
+  version: バージョン %{version}
   side_menu_labels:
     appearance: デザイン
     translation: 翻訳
