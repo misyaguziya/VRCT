@@ -97,9 +97,6 @@ config_window:
   send_message_to_vrc:
     label: Send Message To VRChat
     desc: There is a way to use it without sending messages to VRChat. That is not covered by support, though.
-  startup_osc_enabled_check:
-    label: Check If OSC Is Enabled At Startup
-    desc: Every time VRCT is started up, your character in VRChat moves forward ever so slightly. If your character is seated, they might even stand up. Unfortunately, this is the only method we've found to check if OSC is enabled at startup... Sorry about that. (Remember to turn on OSC yourself when you want to send messages to VRChat.)
 
   osc_ip_address:
     label: OSC IP Address
