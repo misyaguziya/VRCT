@@ -155,6 +155,13 @@ class UiScalingManager():
         self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_LEFT_PADX = int(self.config_window.TOP_BAR_SIDE__CONFIG_TITLE_FONT_SIZE + self._calculateUiSize(16))
         self.config_window.TOP_BAR_SIDE__TITLE_PADX= self._calculateUiSize(30)
 
+        # Restart Button
+        self.config_window.RESTART_BUTTON_LABEL_FONT_SIZE = self._calculateUiSize(12)
+        self.config_window.RESTART_BUTTON_PADX = (0, self._calculateUiSize(20))
+        self.config_window.RESTART_BUTTON_CORNER_RADIUS = self._calculateUiSize(20)
+        self.config_window.RESTART_BUTTON_IPADX = self._calculateUiSize(20)
+        self.config_window.RESTART_BUTTON_IPADY = self._calculateUiSize(10)
+
         # Compact Mode
         self.config_window.COMPACT_MODE_PADX = (0, self._calculateUiSize(20))
         self.config_window.COMPACT_MODE_LABEL_FONT_SIZE = self._calculateUiSize(12)

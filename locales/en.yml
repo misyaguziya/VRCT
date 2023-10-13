@@ -28,6 +28,7 @@ config_window:
   config_title: Settings
   compact_mode: Compact Mode
   version: version %{version}
+  restart_message: Apply changes with a restart.
   side_menu_labels:
     appearance: Appearance
     translation: Translation
@@ -42,7 +43,7 @@ config_window:
     desc: Change the main window's transparency.
   appearance_theme:
     label: Theme [Under development]
-    desc: Change the color theme. If you selected "System", it will adjust based on your Windows theme.
+    desc: Change the color theme. Currently, only the Dark theme is supported. The Light theme is under development.
   ui_size:
     label: UI Size
   font_family:
@@ -58,15 +59,16 @@ config_window:
   mic_device:
     label: Mic Device
   mic_dynamic_energy_threshold:
-    label: Mic Energy Threshold (Automatic)
-    desc: Enabling this option will automatically adjust the microphone's input sensitivity. If you disable it, you can manually set the input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the actual volume.
+    label_for_automatic: "Mic Energy Threshold (Current Setting: Automatic)"
+    desc_for_automatic: "Automatically determine microphone input sensitivity."
+    label_for_manual: "Mic Energy Threshold (Current Setting: Manual)"
+    desc_for_manual: "Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume."
   mic_record_timeout:
     label: Mic Record Timeout
   mic_phrase_timeout:
     label: Mic Phrase Timeout
   mic_max_phrase:
     label: Mic Max Phrases
-    desc: It will stop recording and send the recordings when the set count of phrase(s) is reached.
   mic_word_filter:
     label: Mic Word Filter
     desc: "It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"
@@ -74,15 +76,16 @@ config_window:
   speaker_device:
     label: Speaker Device
   speaker_dynamic_energy_threshold:
-    label: Speaker Energy Threshold (Automatic)
-    desc: Enabling this option will automatically adjust the speaker's input sensitivity. If you disable it, you can manually set the input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume.
+    label_for_automatic: "Speaker Energy Threshold (Current Setting: Automatic)"
+    desc_for_automatic: "Automatically determine speaker input sensitivity."
+    label_for_manual: "Speaker Energy Threshold (Current Setting: Manual)"
+    desc_for_manual: "Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume."
   speaker_record_timeout:
     label: Speaker Record Timeout
   speaker_phrase_timeout:
     label: Speaker Phrase Timeout
   speaker_max_phrase:
     label: Speaker Max Phrases
-    desc: It will stop recording and receive the recordings when the set count of phrase(s) is reached.
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
@@ -94,10 +97,10 @@ config_window:
     desc: Automatically export the conversation messages as a text file.
   message_format:
     label: Message Format
-    desc: You can change the decoration of the message you want to send.
+    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message."
   send_message_to_vrc:
     label: Send Message To VRChat
-    desc: There is a way to use it without sending messages to VRChat. That is not covered by support, though.
+    desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
 
   osc_ip_address:
     label: OSC IP Address

@@ -1,6 +1,7 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
 from ._createSettingBoxTitle import _createSettingBoxTitle
+from ._createRestartButton import _createRestartButton
 from ._createSettingBoxCompactModeButton import _createSettingBoxCompactModeButton
 
 from ....ui_utils import getLatestHeight, getLatestWidth
@@ -20,6 +21,10 @@ def createSettingBoxTopBar(config_window, settings, view_variable):
     column_num+=1
 
     config_window.setting_box_top_bar.grid_columnconfigure(column_num, weight=1)
+    column_num+=1
+
+    # Restart Button(Tmp)
+    _createRestartButton(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable, column_num=column_num)
     column_num+=1
 
     _createSettingBoxCompactModeButton(parent_widget=config_window.setting_box_top_bar, config_window=config_window, settings=settings, view_variable=view_variable, column_num=column_num)
