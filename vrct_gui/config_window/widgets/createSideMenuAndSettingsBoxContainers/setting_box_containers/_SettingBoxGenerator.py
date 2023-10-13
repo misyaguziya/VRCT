@@ -204,11 +204,10 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSlider(self, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None):
+    def createSettingBoxSlider(self, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None, slider_bind__ButtonPress=None, slider_bind__ButtonRelease=None):
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(slider_attr_name, for_var_label_text, for_var_desc_text)
 
-        # print(self.settings.uism.SB__SLIDER_WIDTH)
-        # print(self.settings.uism.SB__SLIDER_HEIGHT)
+
         slider_widget = CTkSlider(
             setting_box_item_frame,
             width=self.settings.uism.SB__SLIDER_WIDTH,
@@ -224,6 +223,17 @@ class _SettingBoxGenerator():
         setattr(self.config_window, slider_attr_name, slider_widget)
 
         slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
+
+        if slider_bind__ButtonPress is not None:
+            def adjusted_slider_bind__ButtonPress(_e):
+                command(_e)
+                slider_bind__ButtonPress()
+            slider_widget.configure(command=adjusted_slider_bind__ButtonPress)
+
+        if slider_bind__ButtonRelease is not None:
+            def adjusted_slider_bind__ButtonRelease(_e):
+                slider_bind__ButtonRelease()
+            slider_widget.bind("<ButtonRelease>", adjusted_slider_bind__ButtonRelease, "+")
 
         return setting_box_frame
 

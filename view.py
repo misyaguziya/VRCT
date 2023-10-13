@@ -156,6 +156,8 @@ class View():
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
             CALLBACK_SET_TRANSPARENCY=None,
             VAR_TRANSPARENCY=IntVar(value=config.TRANSPARENCY),
+            CALLBACK_BUTTON_PRESS_TRANSPARENCY=self._closeTheCoverOfMainWindow,
+            CALLBACK_BUTTON_RELEASE_TRANSPARENCY=self._openTheCoverOfMainWindow,
 
             VAR_LABEL_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.label")),
             VAR_DESC_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.desc")),
@@ -538,6 +540,15 @@ class View():
     def foregroundOff():
         vrct_gui.attributes("-topmost", False)
 
+
+    @staticmethod
+    def _openTheCoverOfMainWindow():
+        vrct_gui.modal_window.show()
+        vrct_gui.config_window.lift()
+
+    @staticmethod
+    def _closeTheCoverOfMainWindow():
+        vrct_gui.modal_window.withdraw()
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True

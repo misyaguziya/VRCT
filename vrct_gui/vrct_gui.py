@@ -23,6 +23,23 @@ class VRCT_GUI(CTk):
         self.is_config_window_already_opened_once=False
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
+        self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = None
+        self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = None
+
+        self.window_state = None
+
+    def detectMainWindowState(self, _e=None):
+        self.new_window_state = self.wm_state()
+        if self.window_state == self.new_window_state:
+            return
+        else:
+            self.window_state = self.new_window_state
+
+        if self.window_state == "iconic":
+            self.modal_window.withdraw()
+        elif self.window_state == "normal":
+            self.modal_window.show()
+
 
 
     def _showGUI(self):
@@ -111,11 +128,13 @@ class VRCT_GUI(CTk):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
         self._adjustToMainWindowGeometry()
-        self.modal_window.attributes("-alpha", 0)
-        self.modal_window.deiconify()
-        fadeInAnimation(self.modal_window, steps=5, interval=0.005, max_alpha=0.5)
+        self.modal_window.show()
 
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
+
+        self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Unmap>", self.detectMainWindowState, "+")
+        self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Map>", self.detectMainWindowState, "+")
+
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.modal_window.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
         self.config_window.attributes("-alpha", 0)
@@ -134,6 +153,8 @@ class VRCT_GUI(CTk):
 
         self.modal_window.withdraw()
         self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
+        self.unbind("<Unmap>", self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
+        self.unbind("<Map>", self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
         self.modal_window.unbind("<FocusIn>", self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID)
         self.adjusted_event=None
 
