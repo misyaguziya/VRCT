@@ -2,7 +2,7 @@ from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
 from .ui_utils import fadeInAnimation
 
-class _CreateModalWindow(CTkToplevel):
+class _CreateWindowCover(CTkToplevel):
     def __init__(self, attach_window, settings, view_variable):
         super().__init__()
         self.withdraw()
@@ -35,20 +35,20 @@ class _CreateModalWindow(CTkToplevel):
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
-        self.modal_container = CTkFrame(self, corner_radius=0, fg_color="black", width=0, height=0)
-        self.modal_container.grid(row=0, column=0, sticky="nsew")
+        self.cover_container = CTkFrame(self, corner_radius=0, fg_color="black", width=0, height=0)
+        self.cover_container.grid(row=0, column=0, sticky="nsew")
 
 
-        self.modal_container_label_wrapper = CTkLabel(
-            self.modal_container,
-            textvariable=self._view_variable.VAR_LABEL_MODAL_MESSAGE_FOR__MAIN_WINDOW,
+        self.cover_container_label_wrapper = CTkLabel(
+            self.cover_container,
+            textvariable=self._view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE,
             height=0,
             corner_radius=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.TEXT_FONT_SIZE, weight="normal"),
             anchor="w",
             text_color=self.settings.ctm.TEXT_COLOR,
         )
-        self.modal_container_label_wrapper.place(relx=0.5, rely=0.5, anchor="center")
+        self.cover_container_label_wrapper.place(relx=0.5, rely=0.5, anchor="center")
 
 
     def show(self):
