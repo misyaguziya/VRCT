@@ -486,16 +486,17 @@ class Config:
             self._ENABLE_SEND_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('STARTUP_OSC_ENABLED_CHECK')
-    def STARTUP_OSC_ENABLED_CHECK(self):
-        return self._STARTUP_OSC_ENABLED_CHECK
+    # [deprecated]
+    # @property
+    # @json_serializable('STARTUP_OSC_ENABLED_CHECK')
+    # def STARTUP_OSC_ENABLED_CHECK(self):
+    #     return self._STARTUP_OSC_ENABLED_CHECK
 
-    @STARTUP_OSC_ENABLED_CHECK.setter
-    def STARTUP_OSC_ENABLED_CHECK(self, value):
-        if type(value) is bool:
-            self._STARTUP_OSC_ENABLED_CHECK = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+    # @STARTUP_OSC_ENABLED_CHECK.setter
+    # def STARTUP_OSC_ENABLED_CHECK(self, value):
+    #     if type(value) is bool:
+    #         self._STARTUP_OSC_ENABLED_CHECK = value
+    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('ENABLE_LOGGER')
@@ -587,7 +588,7 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
-        self._STARTUP_OSC_ENABLED_CHECK = True
+        # self._STARTUP_OSC_ENABLED_CHECK = True # [deprecated]
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
