@@ -66,8 +66,8 @@ class Model:
         self.mic_audio_recorder = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
-        self.spk_print_transcript = None
-        self.spk_audio_recorder = None
+        self.speaker_print_transcript = None
+        self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
@@ -394,46 +394,46 @@ class Model:
     def startSpeakerTranscript(self, fnc):
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
-        spk_audio_queue = Queue()
-        spk_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        speaker_audio_queue = Queue()
+        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
 
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.spk_audio_recorder = SelectedSpeakerRecorder(
-            device=spk_device,
+        self.speaker_audio_recorder = SelectedSpeakerRecorder(
+            device=speaker_device,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.spk_audio_recorder.recordIntoQueue(spk_audio_queue)
-        spk_transcriber = AudioTranscriber(
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue)
+        speaker_transcriber = AudioTranscriber(
             speaker=True,
-            source=self.spk_audio_recorder.source,
+            source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
-        def sendSpkTranscript():
-            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-            message = spk_transcriber.getTranscript()
+        def sendSpeakerTranscript():
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
             except:
                 pass
 
-        self.spk_print_transcript = threadFnc(sendSpkTranscript)
-        self.spk_print_transcript.daemon = True
-        self.spk_print_transcript.start()
+        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
+        self.speaker_print_transcript.daemon = True
+        self.speaker_print_transcript.start()
 
     def stopSpeakerTranscript(self):
-        if isinstance(self.spk_print_transcript, threadFnc):
-            self.spk_print_transcript.stop()
-            self.spk_print_transcript = None
-        if isinstance(self.spk_audio_recorder, SelectedSpeakerRecorder):
-            self.spk_audio_recorder.stop()
-            self.spk_audio_recorder = None
+        if isinstance(self.speaker_print_transcript, threadFnc):
+            self.speaker_print_transcript.stop()
+            self.speaker_print_transcript = None
+        if isinstance(self.speaker_audio_recorder, SelectedSpeakerRecorder):
+            self.speaker_audio_recorder.stop()
+            self.speaker_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc):
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
