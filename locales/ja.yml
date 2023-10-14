@@ -100,7 +100,7 @@ config_window:
     label_for_automatic: "スピーカー入力感度の調整 (現在の設定: 自動)"
     desc_for_automatic: スピーカーの入力感度を自動的に調節する。
     label_for_manual: "スピーカー入力感度の調整 (現在の設定: 手動)"
-    desc_for_manual: スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実実際に音声を聞き取り、音量を確認しながら調節できます。
+    desc_for_manual: スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。
   speaker_record_timeout:
     label: 入力が終了したとみなす無音時間
   speaker_phrase_timeout:
