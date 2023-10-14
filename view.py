@@ -597,56 +597,54 @@ class View():
 
 
     def printToTextbox_enableTranslation(self):
-        self._printToTextbox_Info("翻訳機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
     def printToTextbox_disableTranslation(self):
-        self._printToTextbox_Info("翻訳機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_translation"))
 
     def printToTextbox_enableTranscriptionSend(self):
-        self._printToTextbox_Info("Voice2chatbox機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_voice2chatbox"))
     def printToTextbox_disableTranscriptionSend(self):
-        self._printToTextbox_Info("Voice2chatbox機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_voice2chatbox"))
 
     def printToTextbox_enableTranscriptionReceive(self):
-        self._printToTextbox_Info("Speaker2chatbox機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_speaker2log"))
     def printToTextbox_disableTranscriptionReceive(self):
-        self._printToTextbox_Info("Speaker2chatbox機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_speaker2log"))
 
     def printToTextbox_enableForeground(self):
-        self._printToTextbox_Info("Start foreground")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_foreground"))
     def printToTextbox_disableForeground(self):
-        self._printToTextbox_Info("Stop foreground")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_foreground"))
 
     def printToTextbox_AuthenticationSuccess(self):
-        self._printToTextbox_Info("Auth key update completed")
-
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_success"))
     def printToTextbox_AuthenticationError(self):
-        self._printToTextbox_Info("Auth Key is incorrect or Usage limit reached")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_error"))
 
-    def printToTextbox_OSCError(self):
-        self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
+    # def printToTextbox_OSCError(self): [Deprecated]
+    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
 
     def printToTextbox_DetectedByWordFilter(self, detected_message):
-        self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter"), detected_message=detected_message)
 
 
 
     def printToTextbox_selectedYourLanguages(self, selected_your_language):
         your_language = selected_your_language.replace("\n", " ")
-        self._printToTextbox_Info(f"Your Language has changed : {your_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
 
     def printToTextbox_selectedTargetLanguages(self, selected_target_language):
         target_language = selected_target_language.replace("\n", " ")
-        self._printToTextbox_Info(f"Target Language has changed : {target_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
+
+    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.switched_language_preset_tab", tab_no=tab_no))
+        self.printToTextbox_latestSelectedLanguages()
 
     def printToTextbox_latestSelectedLanguages(self):
         your_language = self.view_variable.VAR_YOUR_LANGUAGE.get().replace("\n", " ")
         target_language = self.view_variable.VAR_TARGET_LANGUAGE.get().replace("\n", " ")
-        self._printToTextbox_Info(f"Your Language : {your_language} -- Target Language : {target_language}")
-
-    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
-        your_language = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no].replace("\n", " ")
-        target_language = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no].replace("\n", " ")
-        self._printToTextbox_Info(f"Switched Language Preset. No.{tab_no}\nYour Language : {your_language} -- Target Language : {target_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.latest_language_setting", your_language=your_language, target_language=target_language))
 
 
     @staticmethod

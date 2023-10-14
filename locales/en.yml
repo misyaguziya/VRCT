@@ -14,14 +14,36 @@ main_window:
   textbox_tab_received: Received
   textbox_tab_system: System
 
+  textbox_system_message:
+    enabled_translation: Translation feature is turned on.
+    disabled_translation: Translation feature is turned off.
+    enabled_voice2chatbox: Transcription from the microphone has started.
+    disabled_voice2chatbox: Transcription from the microphone has been stopped.
+    enabled_speaker2log: Transcription from the speaker has started.
+    disabled_speaker2log: Transcription from the speaker has been stopped.
+    enabled_foreground: The screen is fixed in the foreground.
+    disabled_foreground: The foreground fixation has been released.
+
+    auth_key_success: Auth key update completed.
+    auth_key_error: Auth Key is incorrect or Usage limit reached.
+
+    detected_by_word_filter: The word %{detected_message} has not been sent due to detection by the word filter.
+
+    selected_your_language: "\"Your Language\" has set to %{your_language}."
+    selected_target_language: "\"Target Language\" has set to %{target_language}."
+    switched_language_preset_tab: Switched to Language Preset Tab No.%{tab_no}."
+    latest_language_setting: "Currently, \"Your Language\" is set to %{your_language}, and \"Target Language\" is set to %{target_language}."
+
   update_available: New version is here!
 
   cover_message: The functionality is temporarily disabled until the settings window is closed.
+
 
 selectable_language_window:
   title_your_language: Select Your Language
   title_target_language: Select Target Language
   go_back_button: Go Back
+
 
 config_window:
   config_title: Settings
