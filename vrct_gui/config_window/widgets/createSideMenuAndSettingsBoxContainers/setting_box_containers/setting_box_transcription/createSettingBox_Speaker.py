@@ -41,7 +41,7 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
         for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DEVICE,
         optionmenu_attr_name="sb__optionmenu_speaker_device",
         dropdown_menu_values=view_variable.LIST_SPEAKER_DEVICE,
-        dropdown_menu_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
+        dropdown_menu_width=settings.uism.RESPONSIVE_UI_SIZE_INT_500,
         command=lambda value: optionmenu_input_speaker_device_callback(value),
         variable=view_variable.VAR_SPEAKER_DEVICE,
     )

@@ -22,7 +22,7 @@ class UiScalingManager():
         self.common.SCROLLBAR_IPADX = (self._calculateUiSize(2), self._calculateUiSize(2))
         self.common.SCROLLBAR_WIDTH = self._calculateUiSize(16)
 
-        for i in range(10, 301, 10):
+        for i in range(10, 501, 10):
             setattr(self.main, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
             setattr(self.config_window, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
 
