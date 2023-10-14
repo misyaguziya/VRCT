@@ -1,3 +1,4 @@
+from typing import Union
 from os import path as os_path
 from types import SimpleNamespace
 from tkinter import font as tk_font
@@ -718,7 +719,8 @@ class View():
 
 
     # Config Window
-    def showRestartButton(self):
+    def showRestartButton(self, locale:Union[None,str]=None):
+        self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
         vrct_gui.config_window.restart_button_container.grid()
     def hideRestartButton(self):
         vrct_gui.config_window.restart_button_container.grid_remove()
