@@ -34,6 +34,9 @@ main_window:
     switched_language_preset_tab: Switched to Language Preset Tab No.%{tab_no}."
     latest_language_setting: "Currently, \"Your Language\" is set to %{your_language}, and \"Target Language\" is set to %{target_language}."
 
+    opened_web_page_booth: Opened Booth page in your web browser.
+    opened_web_page_vrct_documents: "Opened VRCT Documents page in your web browser.\nFor any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the \"Contact Form,\" or via X (formerly Twitter)!"
+
   update_available: New version is here!
 
   cover_message: The functionality is temporarily disabled until the settings window is closed.

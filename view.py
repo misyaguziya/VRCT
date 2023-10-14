@@ -523,11 +523,11 @@ class View():
 
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
-        self._printToTextbox_Info("Opened Booth page in your web browser.")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_booth"))
 
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
-        self._printToTextbox_Info("Opened the VRCT Documents page in your web browser.")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
 
     @staticmethod
     def showUpdateAvailableButton():

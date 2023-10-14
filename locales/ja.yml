@@ -34,6 +34,9 @@ main_window:
     switched_language_preset_tab: 言語プリセット番号 %{tab_no} に切り替わりました。
     latest_language_setting: 現在「あなたの言語」は %{your_language}、「相手の言語」は %{target_language} に設定されています。
 
+    opened_web_page_booth: お使いのブラウザで、Boothのページを開きました。
+    opened_web_page_vrct_documents: "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX(元Twitter)にて気軽にご連絡ください！"
+
   update_available: 新しいバージョンが出ました！
 
   cover_message: 設定画面が閉じられるまで、一時的に機能を停止しています。
