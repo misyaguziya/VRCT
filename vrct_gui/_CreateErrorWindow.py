@@ -7,17 +7,17 @@ from utils import isEven
 
 class _CreateErrorWindow(CTkToplevel):
     def __init__(
-        self,
-        settings,
-        view_variable,
-        wrapper_widget,
+            self,
+            settings,
+            view_variable,
+            wrapper_widget,
 
-        message_ipadx,
-        message_ipady,
-        message_font_size,
+            message_ipadx,
+            message_ipady,
+            message_font_size,
 
-        message_bg_color,
-        message_text_color,
+            message_bg_color,
+            message_text_color,
         ):
 
         super().__init__()
@@ -58,12 +58,12 @@ class _CreateErrorWindow(CTkToplevel):
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
 
-        self.modal_container = CTkFrame(self, corner_radius=0, fg_color=self.message_bg_color, width=0, height=0)
-        self.modal_container.grid(row=0, column=0, sticky="nsew")
+        self.error_message_container = CTkFrame(self, corner_radius=0, fg_color=self.message_bg_color, width=0, height=0)
+        self.error_message_container.grid(row=0, column=0, sticky="nsew")
 
 
-        self.modal_container_label_wrapper = CTkLabel(
-            self.modal_container,
+        self.error_message_container_label_wrapper = CTkLabel(
+            self.error_message_container,
             # text=message,
             textvariable=self._view_variable.VAR_ERROR_MESSAGE,
             height=0,
@@ -73,7 +73,7 @@ class _CreateErrorWindow(CTkToplevel):
             justify="left",
             text_color=self.message_text_color,
         )
-        self.modal_container_label_wrapper.grid(row=0, column=0, padx=self.message_ipadx, pady=self.message_ipady, sticky="nsew")
+        self.error_message_container_label_wrapper.grid(row=0, column=0, padx=self.message_ipadx, pady=self.message_ipady, sticky="nsew")
 
 
 
@@ -90,20 +90,20 @@ class _CreateErrorWindow(CTkToplevel):
 
         self.hide = False
 
-        label_width = getLatestWidth(self.modal_container_label_wrapper)
-        label_height = getLatestHeight(self.modal_container_label_wrapper)
+        label_width = getLatestWidth(self.error_message_container_label_wrapper)
+        label_height = getLatestHeight(self.error_message_container_label_wrapper)
 
         # for fixing 1px bug
         if isEven(label_width) is False:
-            self.modal_container_label_wrapper.grid(padx=(self.message_ipadx[0], self.message_ipadx[1]-1))
+            self.error_message_container_label_wrapper.grid(padx=(self.message_ipadx[0], self.message_ipadx[1]-1))
         else:
-            self.modal_container_label_wrapper.grid(padx=self.message_ipadx)
+            self.error_message_container_label_wrapper.grid(padx=self.message_ipadx)
 
         # for fixing 1px bug
         if isEven(label_height) is False:
-            self.modal_container_label_wrapper.grid(pady=(self.message_ipady[0], self.message_ipady[1]-1))
+            self.error_message_container_label_wrapper.grid(pady=(self.message_ipady[0], self.message_ipady[1]-1))
         else:
-            self.modal_container_label_wrapper.grid(pady=self.message_ipady)
+            self.error_message_container_label_wrapper.grid(pady=self.message_ipady)
 
 
         for i in range(0,101,20):

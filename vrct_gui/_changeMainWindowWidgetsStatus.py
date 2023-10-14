@@ -9,7 +9,16 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
 
 
 
-    def update_switch_status(widget_frame, widget_label, widget_switch_box, widget_selected_mark, widget_compact_mode_icon, icon_name, disabled_icon_name):
+    def update_switch_status(
+            widget_frame,
+            widget_label,
+            widget_switch_box,
+            widget_selected_mark,
+            widget_compact_mode_icon,
+            icon_name,
+            disabled_icon_name,
+        ):
+
         if status == "disabled":
             widget_frame.configure(cursor="")
             widget_label.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
@@ -84,8 +93,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                     vrct_gui.sls__title_text_target_language.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
                     if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE)
-                    # vrct_gui.sls__optionmenu_your_language.configure(state="disabled")
-                    # vrct_gui.sls__optionmenu_target_language.configure(state="disabled")
+
 
                 elif status == "normal":
                     vrct_gui.sls__container_title.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
@@ -94,8 +102,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                     if view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
                         vrct_gui.current_active_preset_tab.children["!ctklabel"].configure(text_color=settings.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR)
-                    # vrct_gui.sls__optionmenu_your_language.configure(state="normal")
-                    # vrct_gui.sls__optionmenu_target_language.configure(state="normal")
+
 
 
             case "config_button":

@@ -91,7 +91,16 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxDropdownMenu(self, for_var_label_text, for_var_desc_text, optionmenu_attr_name, command, dropdown_menu_width=None, variable=None, dropdown_menu_values=None):
+    def createSettingBoxDropdownMenu(
+            self,
+            for_var_label_text, for_var_desc_text,
+            optionmenu_attr_name,
+            command,
+            dropdown_menu_width=None,
+            dropdown_menu_values=None,
+            variable=None,
+        ):
+
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(optionmenu_attr_name, for_var_label_text, for_var_desc_text)
 
         def adjustedCommand(value):
@@ -143,7 +152,13 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSwitch(self, for_var_label_text, for_var_desc_text, switch_attr_name, variable, command):
+    def createSettingBoxSwitch(self,
+            for_var_label_text, for_var_desc_text,
+            switch_attr_name,
+            variable,
+            command,
+        ):
+
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(switch_attr_name, for_var_label_text, for_var_desc_text)
 
         switch_widget = CTkSwitch(
@@ -171,7 +186,13 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxCheckbox(self, for_var_label_text, for_var_desc_text, checkbox_attr_name, variable, command):
+    def createSettingBoxCheckbox(self,
+            for_var_label_text, for_var_desc_text,
+            checkbox_attr_name,
+            command,
+            variable,
+        ):
+
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(checkbox_attr_name, for_var_label_text, for_var_desc_text)
 
         checkbox_widget = CTkCheckBox(
@@ -205,7 +226,19 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxSlider(self, for_var_label_text, for_var_desc_text, slider_attr_name, slider_range, command, variable, slider_number_of_steps: Union[int, None] = None, slider_bind__ButtonPress=None, slider_bind__ButtonRelease=None):
+    def createSettingBoxSlider(
+            self,
+            for_var_label_text, for_var_desc_text,
+            slider_attr_name,
+            slider_range,
+            command,
+            variable,
+            slider_number_of_steps: Union[int,
+            None] = None,
+            slider_bind__ButtonPress=None,
+            slider_bind__ButtonRelease=None
+        ):
+
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(slider_attr_name, for_var_label_text, for_var_desc_text)
 
 
@@ -257,7 +290,6 @@ class _SettingBoxGenerator():
 
             slider_number_of_steps: Union[int, None] = None,
         ):
-
 
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(progressbar_x_slider_attr_name)
 
@@ -352,7 +384,15 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxEntry(self, for_var_label_text, for_var_desc_text, entry_attr_name, entry_width, entry_bind__Any_KeyRelease, entry_textvariable, entry_bind__FocusOut=None):
+    def createSettingBoxEntry(self,
+            for_var_label_text, for_var_desc_text,
+            entry_attr_name,
+            entry_width,
+            entry_textvariable,
+            entry_bind__Any_KeyRelease,
+            entry_bind__FocusOut=None,
+        ):
+
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(entry_attr_name, for_var_label_text, for_var_desc_text)
 
         def adjusted_command__for_entry_bind__Any_KeyRelease(e):

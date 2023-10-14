@@ -3,7 +3,7 @@ from .widgets import createConfigWindowTitle, createSideMenuAndSettingsBoxContai
 
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
-from ..ui_utils import getImagePath, getLatestWidth, getLatestHeight
+from ..ui_utils import getImagePath, getLatestWidth
 from utils import isEven
 
 class ConfigWindow(CTkToplevel):

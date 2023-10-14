@@ -1,6 +1,6 @@
 from customtkinter import CTkFrame, CTkScrollableFrame
 
-from ....ui_utils import _setDefaultActiveTab, applyUiScalingAndFixTheBugScrollBar
+from ....ui_utils import setDefaultActiveTab, applyUiScalingAndFixTheBugScrollBar
 
 from ._addConfigSideMenuItem import _addConfigSideMenuItem
 from ._createSettingBoxContainer import _createSettingBoxContainer
@@ -152,7 +152,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             # Set default active side menu tab
             view_variable.VAR_CURRENT_ACTIVE_CONFIG_TITLE.set(sm_and_sbc_setting["textvariable"].get())
             config_window.current_active_side_menu_tab = getattr(config_window, sm_and_sbc_setting["side_menu_tab_attr_name"])
-            _setDefaultActiveTab(
+            setDefaultActiveTab(
                 active_tab_widget=config_window.current_active_side_menu_tab,
                 active_bg_color=settings.ctm.SIDE_MENU_LABELS_BG_COLOR,
                 active_text_color=settings.ctm.SIDE_MENU_LABELS_SELECTED_TEXT_COLOR

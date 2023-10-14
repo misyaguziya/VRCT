@@ -1,5 +1,5 @@
-from os import path as os_path
 from typing import Union
+from os import path as os_path
 from types import SimpleNamespace
 from tkinter import font as tk_font
 import webbrowser
@@ -54,9 +54,15 @@ class View():
             **common_args
         )
 
-        self.settings.modal_window = SimpleNamespace(
-            ctm=all_ctm.modal_window,
-            uism=all_uism.modal_window,
+        self.settings.main_window_cover = SimpleNamespace(
+            ctm=all_ctm.main_window_cover,
+            uism=all_uism.main_window_cover,
+            **common_args
+        )
+
+        self.settings.error_message_window = SimpleNamespace(
+            ctm=all_ctm.error_message_window,
+            uism=all_uism.error_message_window,
             **common_args
         )
 
@@ -123,8 +129,8 @@ class View():
             VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
 
-            # Modal Window For Main Window
-            VAR_LABEL_MODAL_MESSAGE_FOR__MAIN_WINDOW=StringVar(value=i18n.t("main_window.modal_message.opened_config_window")),
+            # Main Window Cover
+            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=i18n.t("main_window.cover_message")),
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
@@ -223,13 +229,13 @@ class View():
 
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
-            VAR_DESC_MIC_RECORD_TIMEOUT=None,
+            VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.desc")),
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
             CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.setLatestConfigVariable_MicRecordTimeout,
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
-            VAR_DESC_MIC_PHRASE_TIMEOUT=None,
+            VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.desc")),
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
             CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
@@ -267,13 +273,13 @@ class View():
 
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
-            VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,
+            VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.desc")),
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
             CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.setLatestConfigVariable_SpeakerRecordTimeout,
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
-            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=None,
+            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.desc")),
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
             CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
@@ -518,11 +524,11 @@ class View():
 
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
-        self._printToTextbox_Info("Opened Booth page in your web browser.")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_booth"))
 
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
-        self._printToTextbox_Info("Opened the VRCT Documents page in your web browser.")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
 
     @staticmethod
     def showUpdateAvailableButton():
@@ -558,12 +564,12 @@ class View():
 
     @staticmethod
     def _openTheCoverOfMainWindow():
-        vrct_gui.modal_window.show()
+        vrct_gui.main_window_cover.show()
         vrct_gui.config_window.lift()
 
     @staticmethod
     def _closeTheCoverOfMainWindow():
-        vrct_gui.modal_window.withdraw()
+        vrct_gui.main_window_cover.withdraw()
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
@@ -592,56 +598,54 @@ class View():
 
 
     def printToTextbox_enableTranslation(self):
-        self._printToTextbox_Info("翻訳機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
     def printToTextbox_disableTranslation(self):
-        self._printToTextbox_Info("翻訳機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_translation"))
 
     def printToTextbox_enableTranscriptionSend(self):
-        self._printToTextbox_Info("Voice2chatbox機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_voice2chatbox"))
     def printToTextbox_disableTranscriptionSend(self):
-        self._printToTextbox_Info("Voice2chatbox機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_voice2chatbox"))
 
     def printToTextbox_enableTranscriptionReceive(self):
-        self._printToTextbox_Info("Speaker2chatbox機能をONにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_speaker2log"))
     def printToTextbox_disableTranscriptionReceive(self):
-        self._printToTextbox_Info("Speaker2chatbox機能をOFFにしました")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_speaker2log"))
 
     def printToTextbox_enableForeground(self):
-        self._printToTextbox_Info("Start foreground")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_foreground"))
     def printToTextbox_disableForeground(self):
-        self._printToTextbox_Info("Stop foreground")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_foreground"))
 
     def printToTextbox_AuthenticationSuccess(self):
-        self._printToTextbox_Info("Auth key update completed")
-
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_success"))
     def printToTextbox_AuthenticationError(self):
-        self._printToTextbox_Info("Auth Key is incorrect or Usage limit reached")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_error"))
 
-    def printToTextbox_OSCError(self):
-        self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
+    # def printToTextbox_OSCError(self): [Deprecated]
+    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
 
     def printToTextbox_DetectedByWordFilter(self, detected_message):
-        self._printToTextbox_Info(f"Detect WordFilter :{detected_message}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter"), detected_message=detected_message)
 
 
 
     def printToTextbox_selectedYourLanguages(self, selected_your_language):
         your_language = selected_your_language.replace("\n", " ")
-        self._printToTextbox_Info(f"Your Language has changed : {your_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
 
     def printToTextbox_selectedTargetLanguages(self, selected_target_language):
         target_language = selected_target_language.replace("\n", " ")
-        self._printToTextbox_Info(f"Target Language has changed : {target_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
+
+    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.switched_language_preset_tab", tab_no=tab_no))
+        self.printToTextbox_latestSelectedLanguages()
 
     def printToTextbox_latestSelectedLanguages(self):
         your_language = self.view_variable.VAR_YOUR_LANGUAGE.get().replace("\n", " ")
         target_language = self.view_variable.VAR_TARGET_LANGUAGE.get().replace("\n", " ")
-        self._printToTextbox_Info(f"Your Language : {your_language} -- Target Language : {target_language}")
-
-    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
-        your_language = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no].replace("\n", " ")
-        target_language = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no].replace("\n", " ")
-        self._printToTextbox_Info(f"Switched Language Preset. No.{tab_no}\nYour Language : {your_language} -- Target Language : {target_language}")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.latest_language_setting", your_language=your_language, target_language=target_language))
 
 
     @staticmethod
@@ -715,7 +719,8 @@ class View():
 
 
     # Config Window
-    def showRestartButton(self):
+    def showRestartButton(self, locale:Union[None,str]=None):
+        self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
         vrct_gui.config_window.restart_button_container.grid()
     def hideRestartButton(self):
         vrct_gui.config_window.restart_button_container.grid_remove()
