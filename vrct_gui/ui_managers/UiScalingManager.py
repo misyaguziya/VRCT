@@ -8,7 +8,8 @@ class UiScalingManager():
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()
-        self.modal_window = SimpleNamespace()
+        self.main_window_cover = SimpleNamespace()
+        self.error_message_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -21,7 +22,7 @@ class UiScalingManager():
         self.common.SCROLLBAR_IPADX = (self._calculateUiSize(2), self._calculateUiSize(2))
         self.common.SCROLLBAR_WIDTH = self._calculateUiSize(16)
 
-        for i in range(10, 301, 10):
+        for i in range(10, 501, 10):
             setattr(self.main, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
             setattr(self.config_window, f"RESPONSIVE_UI_SIZE_INT_{i}", self._calculateUiSize(i))
 
@@ -138,7 +139,7 @@ class UiScalingManager():
         self.selectable_language_window.VALUES_TEXT_IPADY = self._calculateUiSize(8)
 
 
-        self.modal_window.TEXT_FONT_SIZE = self._calculateUiSize(20)
+        self.main_window_cover.TEXT_FONT_SIZE = self._calculateUiSize(20)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)

@@ -3,32 +3,34 @@ from types import SimpleNamespace
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestWidth, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
 from functools import partial
 
 from utils import isEven, makeEven
 
 class _CreateDropdownMenuWindow(CTkToplevel):
-    def __init__(self,
-    settings,
-    view_variable,
+    def __init__(
+            self,
+            settings,
+            view_variable,
 
-    window_additional_y_pos,
-    window_border_width,
-    scrollbar_ipadx,
-    scrollbar_width,
-    value_ipadx,
-    value_ipady,
-    value_pady,
-    value_font_size,
+            window_additional_y_pos,
+            window_border_width,
+            scrollbar_ipadx,
+            scrollbar_width,
+            value_ipadx,
+            value_ipady,
+            value_pady,
+            value_font_size,
 
-    window_bg_color,
-    window_border_color,
-    values_bg_color,
-    values_hovered_bg_color,
-    values_clicked_bg_color,
-    values_text_color,
-    ):
+            window_bg_color,
+            window_border_color,
+            values_bg_color,
+            values_hovered_bg_color,
+            values_clicked_bg_color,
+            values_text_color,
+        ):
+
         super().__init__()
         self.withdraw()
         self.hide = True
@@ -237,7 +239,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
                 anchor="w",
                 text_color=self.values_text_color,
             )
-            # setattr(self, f"l", label_widget)
 
             label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
 

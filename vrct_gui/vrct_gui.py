@@ -2,7 +2,7 @@ from customtkinter import CTk, CTkImage
 
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
-from ._CreateModalWindow import _CreateModalWindow
+from ._CreateWindowCover import _CreateWindowCover
 from ._CreateErrorWindow import _CreateErrorWindow
 from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
@@ -11,7 +11,7 @@ from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
-from .ui_utils import _setDefaultActiveTab, getLatestHeight, setGeometryToCenterOfScreen, fadeInAnimation
+from .ui_utils import setDefaultActiveTab, setGeometryToCenterOfScreen, fadeInAnimation
 
 from utils import callFunctionIfCallable, makeEven
 
@@ -36,9 +36,9 @@ class VRCT_GUI(CTk):
             self.window_state = self.new_window_state
 
         if self.window_state == "iconic":
-            self.modal_window.withdraw()
+            self.main_window_cover.withdraw()
         elif self.window_state == "normal":
-            self.modal_window.show()
+            self.main_window_cover.show()
 
 
 
@@ -93,14 +93,14 @@ class VRCT_GUI(CTk):
             view_variable=self._view_variable
         )
 
-        self.modal_window = _CreateModalWindow(
+        self.main_window_cover = _CreateWindowCover(
             attach_window=self,
-            settings=self.settings.modal_window,
+            settings=self.settings.main_window_cover,
             view_variable=self._view_variable
         )
 
         self.error_message_window = _CreateErrorWindow(
-            settings=self.settings.modal_window,
+            settings=self.settings.error_message_window,
             view_variable=self._view_variable,
             wrapper_widget=self.config_window.main_bg_container,
 
@@ -130,14 +130,14 @@ class VRCT_GUI(CTk):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
         self._adjustToMainWindowGeometry()
-        self.modal_window.show()
+        self.main_window_cover.show()
 
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
 
         self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Unmap>", self.detectMainWindowState, "+")
         self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Map>", self.detectMainWindowState, "+")
 
-        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.modal_window.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
+        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.main_window_cover.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
         self.config_window.attributes("-alpha", 0)
         self.config_window.deiconify()
@@ -153,11 +153,11 @@ class VRCT_GUI(CTk):
 
         self.config_window.withdraw()
 
-        self.modal_window.withdraw()
+        self.main_window_cover.withdraw()
         self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
         self.unbind("<Unmap>", self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
         self.unbind("<Map>", self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
-        self.modal_window.unbind("<FocusIn>", self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID)
+        self.main_window_cover.unbind("<FocusIn>", self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID)
         self.adjusted_event=None
 
 
@@ -238,7 +238,7 @@ class VRCT_GUI(CTk):
 
     def _setDefaultActiveLanguagePresetTab(self, tab_no:str):
         self.current_active_preset_tab = getattr(self, f"sls__presets_button_{tab_no}")
-        _setDefaultActiveTab(
+        setDefaultActiveTab(
             active_tab_widget=self.current_active_preset_tab,
             active_bg_color=self.settings.main.ctm.SLS__PRESETS_TAB_BG_ACTIVE_COLOR,
             active_text_color=self.settings.main.ctm.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR
@@ -263,9 +263,9 @@ class VRCT_GUI(CTk):
         y_pos = self.winfo_rooty()
         width_new = makeEven(self.winfo_width())
         height_new = makeEven(self.winfo_height())
-        self.modal_window.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
+        self.main_window_cover.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
 
-        self.modal_window.lift()
+        self.main_window_cover.lift()
         if self.adjusted_event == str(e):
             self.after(150, lambda: self.config_window.lift())
         elif self.adjusted_event is None:

@@ -1,10 +1,10 @@
-from customtkinter import CTkFont, CTkFrame, CTkLabel
+from customtkinter import CTkFrame
 
 from ._createSettingBoxTitle import _createSettingBoxTitle
 from ._createRestartButton import _createRestartButton
 from ._createSettingBoxCompactModeButton import _createSettingBoxCompactModeButton
 
-from ....ui_utils import getLatestHeight, getLatestWidth
+from ....ui_utils import getLatestHeight
 from utils import isEven
 
 def createSettingBoxTopBar(config_window, settings, view_variable):

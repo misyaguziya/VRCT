@@ -360,7 +360,7 @@ def callbackSetUiLanguage(value):
     value = get_key_by_value(selectable_languages, value)
     print("callbackSetUiLanguage__after_get_key_by_value", value)
     config.UI_LANGUAGE = value
-    view.showRestartButton()
+    view.showRestartButton(locale=config.UI_LANGUAGE)
 
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
