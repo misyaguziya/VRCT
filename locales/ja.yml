@@ -14,6 +14,26 @@ main_window:
   textbox_tab_received: 受信
   textbox_tab_system: システム
 
+  textbox_system_message:
+    enabled_translation: 翻訳機能をONにしました。
+    disabled_translation: 翻訳機能をOFFしました。
+    enabled_voice2chatbox: マイクからの音声入力、文字起こしを開始します。
+    disabled_voice2chatbox: マイクからの音声入力、文字起こしを終了しました。
+    enabled_speaker2log: スピーカーからの音声聞き取り、文字起こしを開始します。
+    disabled_speaker2log: スピーカーからの音声聞き取り、文字起こしを終了しました。
+    enabled_foreground: 画面を常に最前面へ固定します。
+    disabled_foreground: 最前面への固定を解除しました。
+
+    auth_key_success: 認証キーの更新が完了しました。
+    auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています.
+
+    detected_by_word_filter: ワードフィルターに登録されている単語 %{detected_message} が検出されたため送信しませんでした。
+
+    selected_your_language: 「あなたの言語」 を %{your_language} に設定しました。
+    selected_target_language: 「相手の言語」 を %{target_language} に設定しました。
+    switched_language_preset_tab: 言語プリセット番号 %{tab_no} に切り替わりました。
+    latest_language_setting: 現在「あなたの言語」は %{your_language}、「相手の言語」は %{target_language} に設定されています。
+
   update_available: 新しいバージョンが出ました！
 
   cover_message: 設定画面が閉じられるまで、一時的に機能を停止しています。
@@ -23,6 +43,7 @@ selectable_language_window:
   title_your_language: あなたの言語
   title_target_language: 相手の言語
   go_back_button: 戻る
+
 
 config_window:
   config_title: 設定
