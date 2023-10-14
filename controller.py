@@ -185,7 +185,10 @@ def messageBoxPressKeyEnter(e):
     sendChatMessage(message)
 
 def messageBoxPressKeyAny(e):
-    model.oscStartSendTyping()
+    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+        model.oscStartSendTyping()
+    else:
+        model.oscStopSendTyping()
 
 # func select languages
 def initSetLanguageAndCountry():
