@@ -150,6 +150,18 @@ class Model:
 
     def getInputTranslate(self, message):
         try:
+            if config.CHOICE_TRANSLATOR == "DeepL(auth)":
+                if config.TARGET_LANGUAGE == "English":
+                    if config.TARGET_COUNTRY in ["United States", "Canada", "Philippines"]:
+                        config.TARGET_LANGUAGE = "English American"
+                    else:
+                        config.TARGET_LANGUAGE = "English British"
+                elif config.TARGET_LANGUAGE in ["Portuguese"]:
+                    if config.TARGET_COUNTRY == "Portugal":
+                        config.TARGET_LANGUAGE = "Portuguese European"
+                    else:
+                        config.TARGET_LANGUAGE = "Portuguese Brazilian"
+
             translation = self.translator.translate(
                             translator_name=config.CHOICE_TRANSLATOR,
                             source_language=config.SOURCE_LANGUAGE,
@@ -162,6 +174,18 @@ class Model:
 
     def getOutputTranslate(self, message):
         try:
+            if config.CHOICE_TRANSLATOR == "DeepL(auth)":
+                if config.SOURCE_LANGUAGE == "English":
+                    if config.SOURCE_COUNTRY in ["United States", "Canada", "Philippines"]:
+                        config.SOURCE_LANGUAGE = "English American"
+                    else:
+                        config.SOURCE_LANGUAGE = "English British"
+                elif config.SOURCE_LANGUAGE in ["Portuguese"]:
+                    if config.SOURCE_COUNTRY == "Portugal":
+                        config.SOURCE_LANGUAGE = "Portuguese European"
+                    else:
+                        config.SOURCE_LANGUAGE = "Portuguese Brazilian"
+
             translation = self.translator.translate(
                             translator_name=config.CHOICE_TRANSLATOR,
                             source_language=config.TARGET_LANGUAGE,
