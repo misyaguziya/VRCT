@@ -229,13 +229,13 @@ class View():
 
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
-            VAR_DESC_MIC_RECORD_TIMEOUT=None,
+            VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.desc")),
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
             CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.setLatestConfigVariable_MicRecordTimeout,
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
-            VAR_DESC_MIC_PHRASE_TIMEOUT=None,
+            VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.desc")),
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
             CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
@@ -273,13 +273,13 @@ class View():
 
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
-            VAR_DESC_SPEAKER_RECORD_TIMEOUT=None,
+            VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.desc")),
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
             CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.setLatestConfigVariable_SpeakerRecordTimeout,
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
-            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=None,
+            VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.desc")),
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
             CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
