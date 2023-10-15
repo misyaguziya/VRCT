@@ -38,7 +38,6 @@ class View():
         self.settings.main = SimpleNamespace(
             ctm=all_ctm.main,
             uism=all_uism.main,
-            COMPACT_MODE_ICON_SIZE=0,
             **common_args
         )
 
