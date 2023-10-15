@@ -99,9 +99,14 @@ def receiveSpeakerMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
-                xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
+                if len(translation) > 0:
+                    xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
+                    xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
+                else:
+                    xsoverlay_message = message
                 model.notificationXSOverlay(xsoverlay_message)
+
+            # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
@@ -168,7 +173,7 @@ def sendChatMessage(message):
                 osc_message = message
             model.oscSendMessage(osc_message)
 
-        # update textbox message log
+        # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)
         if config.ENABLE_LOGGER is True:
             if len(translation) > 0:
