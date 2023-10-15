@@ -13,6 +13,7 @@ from requests import get as requests_get
 import webbrowser
 
 from flashtext import KeywordProcessor
+import pyaudiowpatch
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
@@ -311,13 +312,6 @@ class Model:
     def getListOutputDevice():
         return [device["name"] for device in getOutputDevices()]
 
-    @staticmethod
-    def checkSpeakerStatus(choice=config.CHOICE_SPEAKER_DEVICE):
-        speaker_device = [device for device in getOutputDevices() if device["name"] == choice][0]
-        if getDefaultOutputDevice()["index"] == speaker_device["index"]:
-            return True
-        return False
-
     def startMicTranscript(self, fnc):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
@@ -392,10 +386,11 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
+        speaker_device = getDefaultOutputDevice()
+        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
         speaker_audio_queue = Queue()
-        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
 
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
@@ -436,6 +431,8 @@ class Model:
             self.speaker_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc):
+        speaker_device = getDefaultOutputDevice()
+        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
 
@@ -448,7 +445,6 @@ class Model:
                     pass
             # sleep(0.01)
 
-        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
