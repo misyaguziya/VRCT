@@ -13,7 +13,6 @@ from requests import get as requests_get
 import webbrowser
 
 from flashtext import KeywordProcessor
-import pyaudiowpatch
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
