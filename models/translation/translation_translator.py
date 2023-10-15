@@ -1,4 +1,3 @@
-from deepl import Translator as deepl_Translator
 from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translatorEngine, translation_lang
