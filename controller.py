@@ -491,12 +491,12 @@ def callbackSetMicWordFilter(value):
     model.addKeywords()
 
 # Transcription Tab (Speaker)
-def callbackSetSpeakerDevice(value):
-    print("callbackSetSpeakerDevice", value)
-    config.CHOICE_SPEAKER_DEVICE = value
+# def callbackSetSpeakerDevice(value):
+#     print("callbackSetSpeakerDevice", value)
+#     config.CHOICE_SPEAKER_DEVICE = value
 
-    model.stopCheckSpeakerEnergy()
-    view.replaceSpeakerThresholdCheckButton_Passive()
+#     model.stopCheckSpeakerEnergy()
+#     view.replaceSpeakerThresholdCheckButton_Passive()
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
@@ -708,7 +708,7 @@ def createMainWindow():
             "callback_set_mic_word_filter": callbackSetMicWordFilter,
 
             # Transcription Tab (Speaker)
-            "callback_set_speaker_device": callbackSetSpeakerDevice,
+            # "callback_set_speaker_device": callbackSetSpeakerDevice,
             "list_speaker_device": model.getListOutputDevice(),
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
             "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
