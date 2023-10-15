@@ -217,11 +217,6 @@ def createSidebarFeatures(settings, main_window, view_variable):
         setattr(main_window, switch_box_attr_name, switch_box_widget)
 
 
-        if settings.COMPACT_MODE_ICON_SIZE == 0:
-            label_widget.grid(row=row, column=0, pady=settings.uism.SF__LABELS_IPADY, padx=(settings.uism.SF__LABEL_LEFT_PAD,0), sticky="ew")
-            settings.COMPACT_MODE_ICON_SIZE = int(getLatestHeight(frame_widget)  - settings.uism.SF__COMPACT_MODE_ICON_PADY*2)
-            label_widget.grid_remove()
-
 
         # for compact mode
         compact_mode_icon_widget = CTkLabel(
@@ -229,7 +224,7 @@ def createSidebarFeatures(settings, main_window, view_variable):
             text=None,
             height=0,
             corner_radius=0,
-            image=CTkImage((icon_file),size=(settings.COMPACT_MODE_ICON_SIZE,settings.COMPACT_MODE_ICON_SIZE)),
+            image=CTkImage(icon_file, size=settings.uism.SF__COMPACT_MODE_IMAGE_SIZE),
         )
         setattr(main_window, compact_mode_icon_attr_name, compact_mode_icon_widget)
 
@@ -244,11 +239,11 @@ def createSidebarFeatures(settings, main_window, view_variable):
 
 
         # Arrange
-        compact_mode_icon_widget.grid(row=row, column=0, pady=settings.uism.SF__COMPACT_MODE_ICON_PADY)
+        compact_mode_icon_widget.grid(row=row, column=0, padx=settings.uism.SF__COMPACT_MODE_ICON_PADX, pady=settings.uism.SF__COMPACT_MODE_ICON_PADY)
         selected_mark_widget.place(relx=-1, rely=0.5, relheight=0.75, anchor="center")
 
         label_widget.grid(row=row, column=0, pady=settings.uism.SF__LABELS_IPADY, padx=(settings.uism.SF__LABEL_LEFT_PAD,0), sticky="ew")
-        switch_box_widget.grid(row=row, column=0, padx=(0,settings.uism.SF__SWITCH_BOX_RIGHT_PAD), sticky="e")
+        switch_box_widget.grid(row=row, column=1, padx=settings.uism.SF__SWITCH_BOX_PADX, sticky="e")
 
 
         # Unbind the event "<Button-1>" originally set up by the widget to manually control it.

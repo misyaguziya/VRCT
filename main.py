@@ -1,3 +1,6 @@
+import ctypes
+ctypes.windll.shcore.SetProcessDpiAwareness(1)
+
 from vrct_gui.splash_window import SplashWindow
 splash = SplashWindow()
 splash.showSplash()
