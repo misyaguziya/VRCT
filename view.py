@@ -158,6 +158,7 @@ class View():
 
             VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
 
+            # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.label")),
             VAR_DESC_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.desc")),
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
@@ -193,11 +194,11 @@ class View():
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
 
-
-            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
-            VAR_DESC_DEEPL_AUTH_KEY=None,
-            CALLBACK_SET_DEEPL_AUTH_KEY=None,
-            VAR_DEEPL_AUTH_KEY=StringVar(value=""),
+            # Translation Tab
+            # VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
+            # VAR_DESC_DEEPL_AUTH_KEY=None,
+            # CALLBACK_SET_DEEPL_AUTH_KEY=None,
+            # VAR_DEEPL_AUTH_KEY=StringVar(value=""),
 
 
             # Transcription Tab (Mic)
@@ -252,13 +253,6 @@ class View():
 
 
             # Transcription Tab (Speaker)
-            VAR_LABEL_SPEAKER_DEVICE=StringVar(value=i18n.t("config_window.speaker_device.label")),
-            VAR_DESC_SPEAKER_DEVICE=None,
-            LIST_SPEAKER_DEVICE=[],
-            CALLBACK_SET_SPEAKER_DEVICE=None,
-            VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
-
-
             VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
@@ -378,12 +372,12 @@ class View():
 
 
             entry_message_box = getattr(vrct_gui, "entry_message_box")
-            entry_message_box.bind("<Return>", main_window_registers.get("bind_Return"))
-            entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("bind_Any_KeyPress"))
+            entry_message_box.bind("<Return>", main_window_registers.get("message_box_bind_Return"))
+            entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
 
 
-            entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
-            entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
+            entry_message_box.bind("<FocusIn>", main_window_registers.get("message_box_bind_FocusIn"))
+            entry_message_box.bind("<FocusOut>", main_window_registers.get("message_box_bind_FocusOut"))
 
 
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
@@ -413,7 +407,7 @@ class View():
 
 
             # Translation Tab
-            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
+            # self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
 
             # Transcription Tab (Mic)
             self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)
@@ -431,9 +425,6 @@ class View():
             self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window_registers.get("callback_set_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
-            self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window_registers.get("callback_set_speaker_device", None)
-            config_window_registers.get("list_speaker_device", None) and self.updateList_SpeakerDevice(config_window_registers["list_speaker_device"])
-
             self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_energy_threshold", None)
             self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_dynamic_energy_threshold", None)
             self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window_registers.get("callback_check_speaker_threshold", None)
@@ -482,17 +473,6 @@ class View():
                 ]
             )
             self.replaceMicThresholdCheckButton_Disabled()
-
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
-            self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
-            vrct_gui._changeConfigWindowWidgetsStatus(
-                status="disabled",
-                target_names=[
-                    "sb__optionmenu_speaker_device",
-                ]
-            )
-            self.replaceSpeakerThresholdCheckButton_Disabled()
-
 
 
         if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
@@ -543,11 +523,11 @@ class View():
 
 
 
-    def _foregroundOnForcefully(self, _e):
+    def foregroundOnIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOn()
 
-    def _foregroundOffForcefully(self, _e):
+    def foregroundOffIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOff()
 
@@ -788,10 +768,7 @@ class View():
 
 
     def initSpeakerThresholdCheckButton(self):
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
-            self.replaceSpeakerThresholdCheckButton_Disabled()
-        else:
-            self.replaceSpeakerThresholdCheckButton_Passive()
+        self.replaceSpeakerThresholdCheckButton_Passive()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
@@ -842,13 +819,6 @@ class View():
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
-
-    def updateList_SpeakerDevice(self, new_speaker_device_list:list):
-        self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
-        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
-            dropdown_menu_widget_id="sb__optionmenu_speaker_device",
-            dropdown_menu_values=new_speaker_device_list,
-        )
 
     @staticmethod
     def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):

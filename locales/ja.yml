@@ -55,7 +55,7 @@ config_window:
   restart_message: 再起動して変更を適用する。
   side_menu_labels:
     appearance: デザイン
-    translation: 翻訳
+    # translation: 翻訳
     transcription: 音声認識
     transcription_mic: マイク
     transcription_speaker: スピーカー
@@ -75,8 +75,8 @@ config_window:
   ui_language:
     label: UIの言語 / UI Language
 
-  deepl_auth_key:
-    label: DeepL 認証キー
+  # deepl_auth_key:
+  #   label: DeepL 認証キー
 
   mic_host:
     label: マイク（ホスト/ドライバー）
@@ -102,8 +102,7 @@ config_window:
     label: ワードフィルター
     desc: "設定された単語を検出すると、その文章は送信されません。\n設定の例: AAA,BBB,CCC"
 
-  speaker_device:
-    label: スピーカー(デバイス)
+
   speaker_dynamic_energy_threshold:
     label_for_automatic: "スピーカー入力感度の調整 (現在の設定: 自動)"
     desc_for_automatic: スピーカーの入力感度を自動的に調節する。
