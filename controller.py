@@ -108,7 +108,8 @@ def receiveSpeakerMessage(message):
                 model.logger.info(f"[RECEIVED] {message}{translation}")
 
 def startTranscriptionReceiveMessage():
-    model.startSpeakerTranscript(receiveSpeakerMessage)
+    config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
+    model.startSpeakerTranscript(receiveSpeakerMessage, lambda:print("[ERROR] Speaker NoDevice"))
     view.setMainWindowAllWidgetsStatusToNormal()
 
 def stopTranscriptionReceiveMessage():
@@ -128,7 +129,9 @@ def stopThreadingTranscriptionReceiveMessage():
     th_stopTranscriptionReceiveMessage.start()
 
 def startTranscriptionReceiveMessageOnCloseConfigWindow():
+    config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
     model.startSpeakerTranscript(receiveSpeakerMessage)
+
 
 def stopTranscriptionReceiveMessageOnOpenConfigWindow():
     model.stopSpeakerTranscript()
@@ -509,7 +512,13 @@ def callbackCheckSpeakerThreshold(is_turned_on):
     print("callbackCheckSpeakerThreshold", is_turned_on)
     if is_turned_on is True:
         view.replaceSpeakerThresholdCheckButton_Disabled()
-        model.startCheckSpeakerEnergy(setProgressBarSpeakerEnergy, view.initProgressBar_SpeakerEnergy)
+        config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
+        model.startCheckSpeakerEnergy(
+            setProgressBarSpeakerEnergy,
+            view.initProgressBar_SpeakerEnergy,
+            lambda:print("[ERROR] Speaker NoDevice")
+        )
+
         view.replaceSpeakerThresholdCheckButton_Active()
     else:
         view.replaceSpeakerThresholdCheckButton_Disabled()
