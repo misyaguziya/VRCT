@@ -16,17 +16,6 @@ def getInputDevices():
         devices = {"NoHost": [{"name": "NoDevice"}]}
     return devices
 
-def getOutputDevices():
-    devices =[]
-    with PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(paWASAPI)
-        for device in p.get_loopback_device_info_generator():
-            if device["hostApi"] == wasapi_info["index"] and device["isLoopbackDevice"] is True:
-                devices.append(device)
-    if len(devices) == 0:
-        devices = [{'name':"NoDevice"}]
-    return devices
-
 def getDefaultInputDevice():
     with PyAudio() as p:
         api_info = p.get_default_host_api_info()
