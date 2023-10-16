@@ -32,15 +32,14 @@ def getLatestHeight(target_widget):
     target_widget.update_idletasks()
     return target_widget.winfo_height()
 
-def getLongestText(settings):
-    max_length = max(len(item["text"]) for item in settings)
+def getLongestText(text_list:list):
     max_length = 0
     longest_text = ""
 
-    for item in settings:
-        if len(item["text"]) > max_length:
-            max_length = len(item["text"])
-            longest_text = item["text"]
+    for text in text_list:
+        if len(text) > max_length:
+            max_length = len(text)
+            longest_text = text
     return longest_text
 
 def bindEnterAndLeaveColor(target_widgets, enter_color, leave_color):
