@@ -132,12 +132,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
 
-
-        self.dropdown_menu_values_box = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.window_bg_color, width=0, height=0)
-        self.dropdown_menu_values_box.grid(row=0, column=0, sticky="nsew")
-        self.dropdown_menu_values_box.grid_columnconfigure(0, weight=1)
-
-
         self._createDropdownMenuValues(dropdown_menu_widget_id, dropdown_menu_values, command)
 
         applyUiScalingAndFixTheBugScrollBar(
