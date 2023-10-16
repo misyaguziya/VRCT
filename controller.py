@@ -672,8 +672,6 @@ def createMainWindow():
             "callback_set_mic_word_filter": callbackSetMicWordFilter,
 
             # Transcription Tab (Speaker)
-            # "callback_set_speaker_device": callbackSetSpeakerDevice,
-            "list_speaker_device": model.getListOutputDevice(),
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
             "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
             "callback_check_speaker_threshold": callbackCheckSpeakerThreshold,

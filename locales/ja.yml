@@ -102,8 +102,7 @@ config_window:
     label: ワードフィルター
     desc: "設定された単語を検出すると、その文章は送信されません。\n設定の例: AAA,BBB,CCC"
 
-  speaker_device:
-    label: スピーカー(デバイス)
+
   speaker_dynamic_energy_threshold:
     label_for_automatic: "スピーカー入力感度の調整 (現在の設定: 自動)"
     desc_for_automatic: スピーカーの入力感度を自動的に調節する。
