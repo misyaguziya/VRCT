@@ -19,7 +19,6 @@ class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
         self.withdraw()
-        self.adjusted_event=None
         self.is_config_window_already_opened_once=False
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
         self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
@@ -45,6 +44,10 @@ class VRCT_GUI(CTk):
     def _showGUI(self):
         self.attributes("-alpha", 0)
         self.deiconify()
+        self.geometry("{}x{}".format(
+            self.settings.main.uism.MAIN_AREA_MIN_WIDTH + self.settings.main.uism.SIDEBAR_MIN_WIDTH,
+            self.winfo_height()
+        ))
         setGeometryToCenterOfScreen(root_widget=self)
         if self._view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
             self._enableMainWindowSidebarCompactMode()
@@ -94,7 +97,7 @@ class VRCT_GUI(CTk):
         )
 
         self.main_window_cover = _CreateWindowCover(
-            attach_window=self,
+            attach_window=self.toplevel_wrapper,
             settings=self.settings.main_window_cover,
             view_variable=self._view_variable
         )
@@ -266,18 +269,6 @@ class VRCT_GUI(CTk):
         self.main_window_cover.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
 
         self.main_window_cover.lift()
-        if self.adjusted_event == str(e):
-            self.after(150, lambda: self.config_window.lift())
-        elif self.adjusted_event is None:
-            self.after(150, lambda: self.config_window.lift())
-        else:
-            pass
-
-        self.config_window.focus_set()
-
-        if e is not None:
-            self.adjusted_event=str(e)
-
 
     def _showErrorMessage(self, target_widget):
         self.error_message_window.show(target_widget=target_widget)
