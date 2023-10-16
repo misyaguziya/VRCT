@@ -14,7 +14,7 @@ import webbrowser
 
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
+from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
@@ -259,11 +259,15 @@ class Model:
         return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]][0]
 
     @staticmethod
-    def getListOutputDevice():
-        return [device["name"] for device in getOutputDevices()]
+    def getOutputDefaultDevice():
+        return getDefaultOutputDevice()["name"]
 
-    def startMicTranscript(self, fnc):
+    def startMicTranscript(self, fnc, error_fnc=None):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            try:
+                error_fnc()
+            except:
+                pass
             return
 
         mic_audio_queue = Queue()
@@ -306,8 +310,12 @@ class Model:
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
 
-    def startCheckMicEnergy(self, fnc, end_fnc):
+    def startCheckMicEnergy(self, fnc, end_fnc, error_fnc=None):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            try:
+                error_fnc()
+            except:
+                pass
             return
 
         def sendMicEnergy():
@@ -335,20 +343,22 @@ class Model:
             self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
-    def startSpeakerTranscript(self, fnc):
-        speaker_device = getDefaultOutputDevice()
-        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
+    def startSpeakerTranscript(self, fnc, error_fnc=None):
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            try:
+                error_fnc()
+            except:
+                pass
             return
-        speaker_audio_queue = Queue()
 
+        speaker_audio_queue = Queue()
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
         self.speaker_audio_recorder = SelectedSpeakerRecorder(
-            device=speaker_device,
+            device=config.CHOICE_SPEAKER_DEVICE ,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
@@ -380,10 +390,12 @@ class Model:
             self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
 
-    def startCheckSpeakerEnergy(self, fnc, end_fnc):
-        speaker_device = getDefaultOutputDevice()
-        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
+    def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            try:
+                error_fnc()
+            except:
+                pass
             return
 
         def sendSpeakerEnergy():
@@ -396,7 +408,7 @@ class Model:
             # sleep(0.01)
 
         speaker_energy_queue = Queue()
-        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
+        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(config.CHOICE_SPEAKER_DEVICE)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
         self.speaker_energy_plot_progressbar.daemon = True

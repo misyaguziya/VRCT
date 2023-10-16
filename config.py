@@ -1,5 +1,4 @@
 import sys
-from json import load, dump
 import inspect
 from os import path as os_path
 from json import load as json_load
@@ -7,9 +6,8 @@ from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
 from languages import selectable_languages
-from models.translation.translation_languages import translatorEngine, translation_lang
-from models.transcription.transcription_languages import transcription_lang
-from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
+from models.translation.translation_languages import translatorEngine
+from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice, getDefaultOutputDevice
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -20,7 +18,7 @@ def json_serializable(var_name):
 
 def saveJson(path, key, value):
     with open(path, "r", encoding="utf-8") as fp:
-        json_data = load(fp)
+        json_data = json_load(fp)
     json_data[key] = value
     with open(path, "w", encoding="utf-8") as fp:
         json_dump(json_data, fp, indent=4, ensure_ascii=False)
@@ -346,11 +344,9 @@ class Config:
 
     @CHOICE_SPEAKER_DEVICE.setter
     def CHOICE_SPEAKER_DEVICE(self, value):
-        if value in [device["name"] for device in getOutputDevices()]:
-            speaker_device = [device for device in getOutputDevices() if device["name"] == value][0]
-            if getDefaultOutputDevice()["index"] == speaker_device["index"]:
-                self._CHOICE_SPEAKER_DEVICE = value
-                saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        if getDefaultOutputDevice()["name"] == value:
+            self._CHOICE_SPEAKER_DEVICE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('INPUT_SPEAKER_ENERGY_THRESHOLD')
