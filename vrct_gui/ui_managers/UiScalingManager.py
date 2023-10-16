@@ -29,6 +29,7 @@ class UiScalingManager():
 
         # Main
         self.main.MAIN_AREA_MIN_WIDTH = self._calculateUiSize(640)
+        self.main.SIDEBAR_MIN_WIDTH = self._calculateUiSize(230)
 
         self.main.TEXTBOX_PADX = self._calculateUiSize(16)
         self.main.TEXTBOX_CORNER_RADIUS = self._calculateUiSize(6)
