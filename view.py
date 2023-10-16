@@ -158,6 +158,7 @@ class View():
 
             VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
 
+            # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.label")),
             VAR_DESC_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.desc")),
             SLIDER_RANGE_TRANSPARENCY=(50, 100),
@@ -193,11 +194,11 @@ class View():
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
 
-
-            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
-            VAR_DESC_DEEPL_AUTH_KEY=None,
-            CALLBACK_SET_DEEPL_AUTH_KEY=None,
-            VAR_DEEPL_AUTH_KEY=StringVar(value=""),
+            # Translation Tab
+            # VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
+            # VAR_DESC_DEEPL_AUTH_KEY=None,
+            # CALLBACK_SET_DEEPL_AUTH_KEY=None,
+            # VAR_DEEPL_AUTH_KEY=StringVar(value=""),
 
 
             # Transcription Tab (Mic)
@@ -413,7 +414,7 @@ class View():
 
 
             # Translation Tab
-            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
+            # self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
 
             # Transcription Tab (Mic)
             self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)

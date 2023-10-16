@@ -10,7 +10,7 @@ from .setting_box_containers.setting_box_appearance import createSettingBox_Appe
 from .setting_box_containers.setting_box_transcription import createSettingBox_Mic, createSettingBox_Speaker
 from .setting_box_containers.setting_box_others import createSettingBox_Others
 from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
-from .setting_box_containers.setting_box_translation import createSettingBox_Translation
+# from .setting_box_containers.setting_box_translation import createSettingBox_Translation
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variable):
@@ -66,18 +66,18 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 ]
             },
         },
-        {
-            "side_menu_tab_attr_name": "side_menu_tab_translation",
-            "label_attr_name": "label_translation",
-            "selected_mark_attr_name": "selected_mark_translation",
-            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_TRANSLATION,
-            "setting_box_container_settings": {
-                "setting_box_container_attr_name": "setting_box_container_translation",
-                "setting_boxes": [
-                    { "var_section_title": None, "setting_box": createSettingBox_Translation },
-                ]
-            },
-        },
+        # {
+        #     "side_menu_tab_attr_name": "side_menu_tab_translation",
+        #     "label_attr_name": "label_translation",
+        #     "selected_mark_attr_name": "selected_mark_translation",
+        #     "textvariable": view_variable.VAR_SIDE_MENU_LABEL_TRANSLATION,
+        #     "setting_box_container_settings": {
+        #         "setting_box_container_attr_name": "setting_box_container_translation",
+        #         "setting_boxes": [
+        #             { "var_section_title": None, "setting_box": createSettingBox_Translation },
+        #         ]
+        #     },
+        # },
         {
             "side_menu_tab_attr_name": "side_menu_tab_transcription",
             "label_attr_name": "label_transcription",
