@@ -372,12 +372,12 @@ class View():
 
 
             entry_message_box = getattr(vrct_gui, "entry_message_box")
-            entry_message_box.bind("<Return>", main_window_registers.get("bind_Return"))
-            entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("bind_Any_KeyPress"))
+            entry_message_box.bind("<Return>", main_window_registers.get("message_box_bind_Return"))
+            entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
 
 
-            entry_message_box.bind("<FocusIn>", self._foregroundOffForcefully)
-            entry_message_box.bind("<FocusOut>", self._foregroundOnForcefully)
+            entry_message_box.bind("<FocusIn>", main_window_registers.get("message_box_bind_FocusIn"))
+            entry_message_box.bind("<FocusOut>", main_window_registers.get("message_box_bind_FocusOut"))
 
 
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
@@ -523,11 +523,11 @@ class View():
 
 
 
-    def _foregroundOnForcefully(self, _e):
+    def foregroundOnIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOn()
 
-    def _foregroundOffForcefully(self, _e):
+    def foregroundOffIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOff()
 
