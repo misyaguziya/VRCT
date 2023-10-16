@@ -186,6 +186,14 @@ def messageBoxPressKeyAny(e):
     else:
         model.oscStopSendTyping()
 
+def messageBoxFocusIn(e):
+    view.foregroundOffIfForegroundEnabled()
+
+def messageBoxFocusOut(e):
+    view.foregroundOnIfForegroundEnabled()
+    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+        model.oscStopSendTyping()
+
 # func select languages
 def initSetLanguageAndCountry():
     select = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
@@ -642,8 +650,10 @@ def createMainWindow():
             "values": model.getListLanguageAndCountry(),
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
-            "bind_Return": messageBoxPressKeyEnter,
-            "bind_Any_KeyPress": messageBoxPressKeyAny,
+            "message_box_bind_Return": messageBoxPressKeyEnter,
+            "message_box_bind_Any_KeyPress": messageBoxPressKeyAny,
+            "message_box_bind_FocusIn": messageBoxFocusIn,
+            "message_box_bind_FocusOut": messageBoxFocusOut,
         },
 
         config_window_registers={
