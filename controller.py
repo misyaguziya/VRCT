@@ -44,7 +44,7 @@ def sendMicMessage(message):
                 model.logger.info(f"[SENT] {message}{translation}")
 
 def startTranscriptionSendMessage():
-    model.startMicTranscript(sendMicMessage)
+    model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
     view.setMainWindowAllWidgetsStatusToNormal()
 
 def stopTranscriptionSendMessage():
@@ -64,7 +64,7 @@ def stopThreadingTranscriptionSendMessage():
     th_stopTranscriptionSendMessage.start()
 
 def startTranscriptionSendMessageOnCloseConfigWindow():
-    model.startMicTranscript(sendMicMessage)
+    model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
 
 def stopTranscriptionSendMessageOnOpenConfigWindow():
     model.stopMicTranscript()
@@ -109,7 +109,7 @@ def receiveSpeakerMessage(message):
 
 def startTranscriptionReceiveMessage():
     config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
-    model.startSpeakerTranscript(receiveSpeakerMessage, lambda:print("[ERROR] Speaker NoDevice"))
+    model.startSpeakerTranscript(receiveSpeakerMessage, view.printToTextbox_TranscriptionReceiveNoDeviceError)
     view.setMainWindowAllWidgetsStatusToNormal()
 
 def stopTranscriptionReceiveMessage():
@@ -130,7 +130,7 @@ def stopThreadingTranscriptionReceiveMessage():
 
 def startTranscriptionReceiveMessageOnCloseConfigWindow():
     config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
-    model.startSpeakerTranscript(receiveSpeakerMessage)
+    model.startSpeakerTranscript(receiveSpeakerMessage, view.printToTextbox_TranscriptionReceiveNoDeviceError)
 
 
 def stopTranscriptionReceiveMessageOnOpenConfigWindow():
@@ -516,7 +516,7 @@ def callbackCheckSpeakerThreshold(is_turned_on):
         model.startCheckSpeakerEnergy(
             setProgressBarSpeakerEnergy,
             view.initProgressBar_SpeakerEnergy,
-            lambda:print("[ERROR] Speaker NoDevice")
+            view.showErrorMessage_CheckSpeakerThreshold_NoDevice
         )
 
         view.replaceSpeakerThresholdCheckButton_Active()
