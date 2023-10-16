@@ -30,6 +30,14 @@ class View():
 
         i18n.set("locale", config.UI_LANGUAGE)
 
+        self.restart_required_configs_pre_data = SimpleNamespace(
+            appearance_theme=config.APPEARANCE_THEME,
+            ui_scaling=config.UI_SCALING,
+            font_family=config.FONT_FAMILY,
+            ui_language=config.UI_LANGUAGE,
+        )
+
+
         common_args = {
             "image_file": image_file,
             "FONT_FAMILY": config.FONT_FAMILY,
@@ -698,10 +706,27 @@ class View():
 
 
     # Config Window
-    def showRestartButton(self, locale:Union[None,str]=None):
+    def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
+        is_restart_required = not (
+            self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
+            self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
+            self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
+            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE
+        )
+
+        if locale is None:
+            locale = config.UI_LANGUAGE
+
+        if is_restart_required is True:
+            self._showRestartButton(locale)
+        else:
+            self._hideRestartButton()
+
+
+    def _showRestartButton(self, locale:Union[None,str]=None):
         self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
         vrct_gui.config_window.restart_button_container.grid()
-    def hideRestartButton(self):
+    def _hideRestartButton(self):
         vrct_gui.config_window.restart_button_container.grid_remove()
 
     def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
