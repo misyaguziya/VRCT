@@ -55,7 +55,7 @@ config_window:
   restart_message: Apply changes with a restart.
   side_menu_labels:
     appearance: Appearance
-    translation: Translation
+    # translation: Translation
     transcription: Transcription
     transcription_mic: Mic
     transcription_speaker: Speaker
@@ -75,8 +75,8 @@ config_window:
   ui_language:
     label: UI Language
 
-  deepl_auth_key:
-    label: DeepL Auth Key
+  # deepl_auth_key:
+  #   label: DeepL Auth Key
 
   mic_host:
     label: Mic Host/Driver
@@ -102,8 +102,7 @@ config_window:
     label: Mic Word Filter
     desc: "It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"
 
-  speaker_device:
-    label: Speaker Device
+
   speaker_dynamic_energy_threshold:
     label_for_automatic: "Speaker Energy Threshold (Current Setting: Automatic)"
     desc_for_automatic: "Automatically determine speaker input sensitivity."
