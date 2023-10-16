@@ -1,8 +1,6 @@
 from customtkinter import CTkImage
 
 def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names):
-    COMPACT_MODE_ICON_SIZE_TUPLES = (settings.COMPACT_MODE_ICON_SIZE, settings.COMPACT_MODE_ICON_SIZE)
-
     if target_names == "All":
         target_names = ["translation_switch", "transcription_send_switch", "transcription_receive_switch", "foreground_switch", "quick_language_settings", "config_button", "minimize_sidebar_button", "entry_message_box"]
 
@@ -32,7 +30,7 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
             widget_selected_mark.configure(fg_color=settings.ctm.SF__SELECTED_MARK_ACTIVE_BG_COLOR)
             icon_file = icon_name
 
-        image = CTkImage(icon_file, size=COMPACT_MODE_ICON_SIZE_TUPLES)
+        image = CTkImage(icon_file, size=settings.uism.SF__COMPACT_MODE_IMAGE_SIZE)
         widget_compact_mode_icon.configure(image=image)
 
 
@@ -109,12 +107,12 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                 if status == "disabled":
                     vrct_gui.sidebar_config_button_wrapper.configure(cursor="")
                     vrct_gui.sidebar_config_button.configure(
-                        image=CTkImage(settings.image_file.CONFIGURATION_ICON_DISABLED, size=COMPACT_MODE_ICON_SIZE_TUPLES),
+                        image=CTkImage(settings.image_file.CONFIGURATION_ICON_DISABLED, size=settings.uism.SF__COMPACT_MODE_IMAGE_SIZE),
                     )
                 elif status == "normal":
                     vrct_gui.sidebar_config_button_wrapper.configure(cursor="hand2")
                     vrct_gui.sidebar_config_button.configure(
-                        image=CTkImage(settings.image_file.CONFIGURATION_ICON, size=COMPACT_MODE_ICON_SIZE_TUPLES),
+                        image=CTkImage(settings.image_file.CONFIGURATION_ICON, size=settings.uism.SF__COMPACT_MODE_IMAGE_SIZE),
                     )
 
 

@@ -29,6 +29,7 @@ class UiScalingManager():
 
         # Main
         self.main.MAIN_AREA_MIN_WIDTH = self._calculateUiSize(640)
+        self.main.SIDEBAR_MIN_WIDTH = self._calculateUiSize(230)
 
         self.main.TEXTBOX_PADX = self._calculateUiSize(16)
         self.main.TEXTBOX_CORNER_RADIUS = self._calculateUiSize(6)
@@ -54,9 +55,6 @@ class UiScalingManager():
 
 
         # Sidebar
-        self.main.SIDEBAR_MIN_WIDTH = self._calculateUiSize(230)
-        self.main.COMPACT_MODE_SIDEBAR_MIN_WIDTH = self._calculateUiSize(60)
-
         # Sidebar Features
         self.main.SF__LOGO_MAX_SIZE = self._calculateUiSize(120)
         self.main.SF__LOGO_PADY = (self._calculateUiSize(12),self._calculateUiSize(8))
@@ -64,10 +62,12 @@ class UiScalingManager():
 
         self.main.SF__LABELS_IPADY = self._calculateUiSize(16)
         self.main.SF__COMPACT_MODE_ICON_PADY = self.main.SF__LABELS_IPADY
+        self.main.SF__COMPACT_MODE_ICON_PADX = self.main.SF__COMPACT_MODE_ICON_PADY
         self.main.SF__LABEL_LEFT_PAD = self._calculateUiSize(20)
         self.main.SF__LABEL_FONT_SIZE = self._calculateUiSize(16)
+        self.main.SF__COMPACT_MODE_IMAGE_SIZE = (self._calculateUiSize(20), self._calculateUiSize(20))
 
-        self.main.SF__SWITCH_BOX_RIGHT_PAD = self._calculateUiSize(10)
+        self.main.SF__SWITCH_BOX_PADX = (self.main.SF__LABEL_LEFT_PAD, self._calculateUiSize(10))
         self.main.SF__SWITCH_BOX_WIDTH = self._calculateUiSize(40)
         self.main.SF__SWITCH_BOX_HEIGHT = self._calculateUiSize(16)
 
@@ -98,6 +98,7 @@ class UiScalingManager():
         self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(16)
 
         self.main.SIDEBAR_CONFIG_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
+        self.main.SIDEBAR_CONFIG_BUTTON_IMAGE_SIZE = self.main.SF__COMPACT_MODE_IMAGE_SIZE
         self.main.SIDEBAR_CONFIG_BUTTON_PADX = self._calculateUiSize(10)
         self.main.SIDEBAR_CONFIG_BUTTON_PADY = self._calculateUiSize(10)
         self.main.SIDEBAR_CONFIG_BUTTON_IPADY = self._calculateUiSize(8)
