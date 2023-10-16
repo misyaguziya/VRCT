@@ -197,7 +197,7 @@ class View():
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=None,
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
-            VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL(auth)"]),
+            VAR_DEEPL_AUTH_KEY=StringVar(value=""),
 
 
             # Transcription Tab (Mic)

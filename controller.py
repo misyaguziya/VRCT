@@ -22,13 +22,10 @@ def sendMicMessage(message):
             return
         elif config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
 
         if translation == None:
-            view.printToTextbox_AuthenticationError()
             translation = ""
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -88,13 +85,10 @@ def receiveSpeakerMessage(message):
         translation = ""
         if config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getOutputTranslate(message)
 
         if translation == None:
-            view.printToTextbox_AuthenticationError()
             translation = ""
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -155,13 +149,10 @@ def sendChatMessage(message):
         translation = ""
         if config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
 
         if translation == None:
-            view.printToTextbox_AuthenticationError()
             translation = ""
 
         # send OSC message
@@ -190,7 +181,10 @@ def messageBoxPressKeyEnter(e):
     sendChatMessage(message)
 
 def messageBoxPressKeyAny(e):
-    model.oscStartSendTyping()
+    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+        model.oscStartSendTyping()
+    else:
+        model.oscStopSendTyping()
 
 # func select languages
 def initSetLanguageAndCountry():
@@ -198,14 +192,11 @@ def initSetLanguageAndCountry():
     language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
-
     select = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
-
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator(callbackSetAuthKeys)
 
 def setYourLanguageAndCountry(select):
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
@@ -215,7 +206,6 @@ def setYourLanguageAndCountry(select):
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator(callbackSetAuthKeys)
     view.printToTextbox_selectedYourLanguages(select)
 
 def setTargetLanguageAndCountry(select):
@@ -226,7 +216,6 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator(callbackSetAuthKeys)
     view.printToTextbox_selectedTargetLanguages(select)
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
@@ -243,11 +232,8 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator(callbackSetAuthKeys)
     view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
 
-def callbackSetAuthKeys(keys):
-    config.AUTH_KEYS = keys
 
 # command func
 def callbackToggleTranslation(is_turned_on):
@@ -367,21 +353,6 @@ def callbackSetUiLanguage(value):
     config.UI_LANGUAGE = value
     view.showRestartButton(locale=config.UI_LANGUAGE)
 
-# Translation Tab
-def callbackSetDeeplAuthkey(value):
-    print("callbackSetDeeplAuthkey", str(value))
-    if len(value) > 0 and model.authenticationTranslator(callbackSetAuthKeys, choice_translator="DeepL(auth)", auth_key=value) is True:
-        config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-        model.authenticationTranslator(callbackSetAuthKeys)
-        view.printToTextbox_AuthenticationSuccess()
-    elif len(value) == 0:
-        auth_keys = config.AUTH_KEYS
-        auth_keys["DeepL(auth)"] = None
-        config.AUTH_KEYS = auth_keys
-        model.authenticationTranslator(callbackSetAuthKeys)
-    else:
-        view.printToTextbox_AuthenticationError()
-
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
     print("callbackSetMicHost", value)
@@ -493,12 +464,12 @@ def callbackSetMicWordFilter(value):
     model.addKeywords()
 
 # Transcription Tab (Speaker)
-def callbackSetSpeakerDevice(value):
-    print("callbackSetSpeakerDevice", value)
-    config.CHOICE_SPEAKER_DEVICE = value
+# def callbackSetSpeakerDevice(value):
+#     print("callbackSetSpeakerDevice", value)
+#     config.CHOICE_SPEAKER_DEVICE = value
 
-    model.stopCheckSpeakerEnergy()
-    view.replaceSpeakerThresholdCheckButton_Passive()
+#     model.stopCheckSpeakerEnergy()
+#     view.replaceSpeakerThresholdCheckButton_Passive()
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
@@ -630,12 +601,6 @@ def createMainWindow():
     # init config
     initSetLanguageAndCountry()
 
-    if model.authenticationTranslator(callbackSetAuthKeys) is False:
-        # error update Auth key
-        view.printToTextbox_AuthenticationError()
-        config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-        model.authenticationTranslator(callbackSetAuthKeys)
-
     # set word filter
     model.addKeywords()
 
@@ -693,9 +658,6 @@ def createMainWindow():
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
 
-            # Translation Tab
-            "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
-
             # Transcription Tab (Mic)
             "callback_set_mic_host": callbackSetMicHost,
             "list_mic_host": model.getListInputHost(),
@@ -710,7 +672,7 @@ def createMainWindow():
             "callback_set_mic_word_filter": callbackSetMicWordFilter,
 
             # Transcription Tab (Speaker)
-            "callback_set_speaker_device": callbackSetSpeakerDevice,
+            # "callback_set_speaker_device": callbackSetSpeakerDevice,
             "list_speaker_device": model.getListOutputDevice(),
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
             "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,

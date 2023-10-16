@@ -66,8 +66,8 @@ class Model:
         self.mic_audio_recorder = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
-        self.spk_print_transcript = None
-        self.spk_audio_recorder = None
+        self.speaker_print_transcript = None
+        self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
@@ -80,22 +80,6 @@ class Model:
     def resetKeywordProcessor(self):
         del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
-
-    def authenticationTranslator(self, fnc, choice_translator=None, auth_key=None):
-        if choice_translator == None:
-            choice_translator = config.CHOICE_TRANSLATOR
-        if auth_key == None:
-            auth_key = config.AUTH_KEYS[choice_translator]
-
-        result = self.translator.authentication(choice_translator, auth_key)
-        if result:
-            auth_keys = config.AUTH_KEYS
-            auth_keys[choice_translator] = auth_key
-            try:
-                fnc(auth_keys)
-            except:
-                pass
-        return result
 
     def startLogger(self):
         os_makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
@@ -137,16 +121,7 @@ class Model:
             if source_lang in source_languages and target_lang in target_languages:
                 compatible_engines.append(engine)
         engine_name = compatible_engines[0]
-
-        if engine_name == "DeepL(web)" and config.AUTH_KEYS["DeepL(auth)"] != None:
-            engine_name = "DeepL(auth)"
         return engine_name
-
-    def getTranslatorStatus(self):
-        return self.translator.translator_status[config.CHOICE_TRANSLATOR]
-
-    def getListTranslatorName(self):
-        return list(self.translator.translator_status.keys())
 
     def getInputTranslate(self, message):
         try:
@@ -287,13 +262,6 @@ class Model:
     def getListOutputDevice():
         return [device["name"] for device in getOutputDevices()]
 
-    @staticmethod
-    def checkSpeakerStatus(choice=config.CHOICE_SPEAKER_DEVICE):
-        speaker_device = [device for device in getOutputDevices() if device["name"] == choice][0]
-        if getDefaultOutputDevice()["index"] == speaker_device["index"]:
-            return True
-        return False
-
     def startMicTranscript(self, fnc):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             return
@@ -368,50 +336,53 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
+        speaker_device = getDefaultOutputDevice()
+        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
-        spk_audio_queue = Queue()
-        spk_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        speaker_audio_queue = Queue()
 
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.spk_audio_recorder = SelectedSpeakerRecorder(
-            device=spk_device,
+        self.speaker_audio_recorder = SelectedSpeakerRecorder(
+            device=speaker_device,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.spk_audio_recorder.recordIntoQueue(spk_audio_queue)
-        spk_transcriber = AudioTranscriber(
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue)
+        speaker_transcriber = AudioTranscriber(
             speaker=True,
-            source=self.spk_audio_recorder.source,
+            source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
         )
-        def sendSpkTranscript():
-            spk_transcriber.transcribeAudioQueue(spk_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-            message = spk_transcriber.getTranscript()
+        def sendSpeakerTranscript():
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
             except:
                 pass
 
-        self.spk_print_transcript = threadFnc(sendSpkTranscript)
-        self.spk_print_transcript.daemon = True
-        self.spk_print_transcript.start()
+        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
+        self.speaker_print_transcript.daemon = True
+        self.speaker_print_transcript.start()
 
     def stopSpeakerTranscript(self):
-        if isinstance(self.spk_print_transcript, threadFnc):
-            self.spk_print_transcript.stop()
-            self.spk_print_transcript = None
-        if isinstance(self.spk_audio_recorder, SelectedSpeakerRecorder):
-            self.spk_audio_recorder.stop()
-            self.spk_audio_recorder = None
+        if isinstance(self.speaker_print_transcript, threadFnc):
+            self.speaker_print_transcript.stop()
+            self.speaker_print_transcript = None
+        if isinstance(self.speaker_audio_recorder, SelectedSpeakerRecorder):
+            self.speaker_audio_recorder.stop()
+            self.speaker_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc):
+        speaker_device = getDefaultOutputDevice()
+        config.CHOICE_SPEAKER_DEVICE = speaker_device["name"]
         if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
             return
 
@@ -424,7 +395,6 @@ class Model:
                     pass
             # sleep(0.01)
 
-        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
