@@ -609,6 +609,14 @@ class View():
     def printToTextbox_AuthenticationError(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_error"))
 
+
+    def printToTextbox_TranscriptionSendNoDeviceError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_mic_device_detected_error"))
+
+    def printToTextbox_TranscriptionReceiveNoDeviceError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_speaker_device_detected_error"))
+
+
     # def printToTextbox_OSCError(self): [Deprecated]
     #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
 
@@ -958,6 +966,10 @@ class View():
 
     def showErrorMessage_SpeakerMaxPhrases(self):
         self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_max_phrases, "Speaker Max Phrases Error Message")
+
+
+    def showErrorMessage_CheckSpeakerThreshold_NoDevice(self):
+        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold, "No speaker device detected")
 
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)
