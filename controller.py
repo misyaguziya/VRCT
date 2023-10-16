@@ -340,26 +340,26 @@ def callbackSetTransparency(value):
 def callbackSetAppearance(value):
     print("callbackSetAppearance", value)
     config.APPEARANCE_THEME = value
-    view.showRestartButton()
+    view.showRestartButtonIfRequired()
 
 def callbackSetUiScaling(value):
     print("callbackSetUiScaling", value)
     config.UI_SCALING = value
     new_scaling_float = int(value.replace("%", "")) / 100
     print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
-    view.showRestartButton()
+    view.showRestartButtonIfRequired()
 
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
-    view.showRestartButton()
+    view.showRestartButtonIfRequired()
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
     value = get_key_by_value(selectable_languages, value)
     print("callbackSetUiLanguage__after_get_key_by_value", value)
     config.UI_LANGUAGE = value
-    view.showRestartButton(locale=config.UI_LANGUAGE)
+    view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
 
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
