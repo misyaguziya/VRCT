@@ -27,6 +27,9 @@ main_window:
     auth_key_success: 認証キーの更新が完了しました。
     auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています.
 
+    no_mic_device_detected_error: マイクデバイスが検出されませんでした。
+    no_speaker_device_detected_error: スピーカーデバイスが検出されませんでした。
+
     detected_by_word_filter: ワードフィルターに登録されている単語 %{detected_message} が検出されたため送信しませんでした。
 
     selected_your_language: 「あなたの言語」 を %{your_language} に設定しました。
