@@ -27,6 +27,9 @@ main_window:
     auth_key_success: Auth key update completed.
     auth_key_error: Auth Key is incorrect or Usage limit reached.
 
+    no_mic_device_detected_error: No mic device detected.
+    no_speaker_device_detected_error: No speaker device detected.
+
     detected_by_word_filter: The word %{detected_message} has not been sent due to detection by the word filter.
 
     selected_your_language: "\"Your Language\" has set to %{your_language}."
