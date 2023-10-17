@@ -249,7 +249,7 @@ class View():
             CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
-            VAR_DESC_MIC_MAX_PHRASES=None,
+            VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
@@ -286,7 +286,7 @@ class View():
             CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
-            VAR_DESC_SPEAKER_MAX_PHRASES=None,
+            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,

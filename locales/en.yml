@@ -92,15 +92,13 @@ config_window:
     desc_for_manual: "Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume."
   mic_record_timeout:
     label: Mic Record Timeout
-    desc: (Second(s))
-    # desc: Duration in seconds for detecting silence and determining the end of audio input.
+    desc: Detects silence and, when the specified number of seconds has passed, considers the mic input to have ended. (Second(s))
   mic_phrase_timeout:
     label: Mic Phrase Timeout
-    desc: (Second(s))
-    # desc: Duration in seconds for determining the end of audio input and transcribing it in one go.
+    desc: Transcription processing is performed at intervals of the specified number of seconds.
   mic_max_phrase:
     label: Mic Max Phrases
-    # desc: Once the minimum word count for transcription is reached, it will be send.
+    desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat.
   mic_word_filter:
     label: Mic Word Filter
     desc: "It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"
@@ -113,12 +111,13 @@ config_window:
     desc_for_manual: "Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume."
   speaker_record_timeout:
     label: Speaker Record Timeout
-    desc: (Second(s))
+    desc: Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))
   speaker_phrase_timeout:
     label: Speaker Phrase Timeout
-    desc: (Second(s))
+    desc: Transcription processing is performed at intervals of the specified number of seconds.
   speaker_max_phrase:
     label: Speaker Max Phrases
+    desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
