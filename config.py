@@ -7,7 +7,7 @@ import tkinter as tk
 from tkinter import font
 from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
-from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice, getDefaultOutputDevice
+from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -338,17 +338,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('CHOICE_SPEAKER_DEVICE')
-    def CHOICE_SPEAKER_DEVICE(self):
-        return self._CHOICE_SPEAKER_DEVICE
-
-    @CHOICE_SPEAKER_DEVICE.setter
-    def CHOICE_SPEAKER_DEVICE(self, value):
-        if getDefaultOutputDevice()["name"] == value:
-            self._CHOICE_SPEAKER_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('INPUT_SPEAKER_ENERGY_THRESHOLD')
     def INPUT_SPEAKER_ENERGY_THRESHOLD(self):
         return self._INPUT_SPEAKER_ENERGY_THRESHOLD
@@ -553,7 +542,6 @@ class Config:
         self._INPUT_MIC_PHRASE_TIMEOUT = 3
         self._INPUT_MIC_MAX_PHRASES = 10
         self._INPUT_MIC_WORD_FILTER = []
-        self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
         self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
