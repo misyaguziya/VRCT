@@ -344,7 +344,8 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+        speaker_device = getDefaultOutputDevice()
+        if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
             except:
@@ -358,7 +359,7 @@ class Model:
             record_timeout = phase_timeout
 
         self.speaker_audio_recorder = SelectedSpeakerRecorder(
-            device=config.CHOICE_SPEAKER_DEVICE ,
+            device=speaker_device,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
@@ -391,7 +392,8 @@ class Model:
             self.speaker_audio_recorder = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+        speaker_device = getDefaultOutputDevice()
+        if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
             except:
@@ -408,7 +410,7 @@ class Model:
             # sleep(0.01)
 
         speaker_energy_queue = Queue()
-        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(config.CHOICE_SPEAKER_DEVICE)
+        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
         self.speaker_energy_plot_progressbar.daemon = True
