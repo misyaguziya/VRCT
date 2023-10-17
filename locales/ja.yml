@@ -123,14 +123,14 @@ config_window:
   auto_clear_the_message_box:
     label: 送信後はチャットボックスを空にする
   notice_xsoverlay:
-    label: XSOverlayの通知機能を有効 (VR限定)
+    label: XSOverlayでの通知受け取り機能を有効 (VR限定)
     desc: 文字起こし（受信）されたメッセージをXSOverlayの機能を使って通知として受け取れます。
   auto_export_message_logs:
     label: 会話ログを自動的に保存する
     desc: テキストファイルとしてログがlogsフォルダ内に保存されます。
   message_format:
     label: 送信するメッセージのフォーマット
-    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、\n[translation]が翻訳されたメッセージに置換されます。"
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、\n[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
   send_message_to_vrc:
     label: VRChatにメッセージを送信する
     desc: "サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。"
