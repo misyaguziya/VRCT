@@ -132,7 +132,6 @@ class VRCT_GUI(CTk):
     def _openConfigWindow(self, _e):
         callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
 
-        self._adjustToMainWindowGeometry()
         self.main_window_cover.show()
 
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")

@@ -22,16 +22,6 @@ class _CreateWindowCover(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
-
-        self.attach_window.update_idletasks()
-        self.x_pos = self.attach_window.winfo_rootx()
-        self.y_pos = self.attach_window.winfo_rooty()
-        self.width_new = self.attach_window.winfo_width()
-        self.height_new = self.attach_window.winfo_height()
-
-
-        self.geometry("{}x{}+{}+{}".format(self.width_new, self.height_new, self.x_pos, self.y_pos))
-
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
         self.cover_container = CTkFrame(self, corner_radius=0, fg_color="black", width=0, height=0)
@@ -53,4 +43,10 @@ class _CreateWindowCover(CTkToplevel):
     def show(self):
         self.attributes("-alpha", 0)
         self.deiconify()
+        self.attach_window.update_idletasks()
+        self.x_pos = self.attach_window.winfo_rootx()
+        self.y_pos = self.attach_window.winfo_rooty()
+        self.width_new = self.attach_window.winfo_width()
+        self.height_new = self.attach_window.winfo_height()
+        self.geometry("{}x{}+{}+{}".format(self.width_new, self.height_new, self.x_pos, self.y_pos))
         fadeInAnimation(self, steps=5, interval=0.005, max_alpha=0.5)
