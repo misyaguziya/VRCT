@@ -108,7 +108,6 @@ def receiveSpeakerMessage(message):
                 model.logger.info(f"[RECEIVED] {message}{translation}")
 
 def startTranscriptionReceiveMessage():
-    config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
     model.startSpeakerTranscript(receiveSpeakerMessage, view.printToTextbox_TranscriptionReceiveNoDeviceError)
     view.setMainWindowAllWidgetsStatusToNormal()
 
@@ -129,7 +128,6 @@ def stopThreadingTranscriptionReceiveMessage():
     th_stopTranscriptionReceiveMessage.start()
 
 def startTranscriptionReceiveMessageOnCloseConfigWindow():
-    config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
     model.startSpeakerTranscript(receiveSpeakerMessage, view.printToTextbox_TranscriptionReceiveNoDeviceError)
 
 
@@ -474,14 +472,6 @@ def callbackSetMicWordFilter(value):
     model.resetKeywordProcessor()
     model.addKeywords()
 
-# Transcription Tab (Speaker)
-# def callbackSetSpeakerDevice(value):
-#     print("callbackSetSpeakerDevice", value)
-#     config.CHOICE_SPEAKER_DEVICE = value
-
-#     model.stopCheckSpeakerEnergy()
-#     view.replaceSpeakerThresholdCheckButton_Passive()
-
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
     if value == "": return
@@ -512,7 +502,6 @@ def callbackCheckSpeakerThreshold(is_turned_on):
     print("callbackCheckSpeakerThreshold", is_turned_on)
     if is_turned_on is True:
         view.replaceSpeakerThresholdCheckButton_Disabled()
-        config.CHOICE_SPEAKER_DEVICE = model.getOutputDefaultDevice()
         model.startCheckSpeakerEnergy(
             setProgressBarSpeakerEnergy,
             view.initProgressBar_SpeakerEnergy,
