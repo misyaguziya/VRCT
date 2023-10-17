@@ -130,7 +130,7 @@ config_window:
     desc: Automatically export the conversation messages as a text file.
   message_format:
     label: Message Format
-    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message."
+    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\nIt will be used in Notification XSOverlay too."
   send_message_to_vrc:
     label: Send Message To VRChat
     desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
