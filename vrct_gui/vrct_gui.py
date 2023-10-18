@@ -291,7 +291,6 @@ class VRCT_GUI(CTk):
         self.update()
         screen_height = self.winfo_screenheight()
         window_height = self.winfo_height()
-        print(screen_height, window_height)
         if screen_height < window_height:
             return True
         else:
