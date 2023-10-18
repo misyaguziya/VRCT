@@ -12,8 +12,10 @@ class _CreateConfirmationModal(CTkToplevel):
 
         self.title("")
         self.overrideredirect(True)
-
         self.wm_attributes("-toolwindow", True)
+
+        self.BIND_FOCUS_OUT_FUNC_ID=None
+
 
         self.attach_window = attach_window
         self.settings = settings
@@ -22,13 +24,8 @@ class _CreateConfirmationModal(CTkToplevel):
 
         # self.configure(fg_color="#ff7f50")
         self.configure(fg_color=self.settings.ctm.FAKE_BORDER_COLOR)
-        self.protocol("WM_DELETE_WINDOW", lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_UPDATE_CONFIRMATION_MODAL))
+        self.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL))
 
-        def fucusOutFunction(e):
-            if str(e.widget) != ".!_createconfirmationmodal": return
-            callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_UPDATE_CONFIRMATION_MODAL)
-
-        self.bind("<FocusOut>", fucusOutFunction, "+")
 
 
         self.grid_rowconfigure(0,weight=1)
@@ -114,7 +111,7 @@ class _CreateConfirmationModal(CTkToplevel):
             enter_color=settings.ctm.DENY_BUTTON_HOVERED_BG_COLOR,
             leave_color=settings.ctm.DENY_BUTTON_BG_COLOR,
             clicked_color=settings.ctm.DENY_BUTTON_CLICKED_BG_COLOR,
-            buttonReleasedFunction=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_DENY_UPDATE),
+            buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL),
         )
 
 
@@ -150,7 +147,7 @@ class _CreateConfirmationModal(CTkToplevel):
             enter_color=settings.ctm.ACCEPT_BUTTON_HOVERED_BG_COLOR,
             leave_color=settings.ctm.ACCEPT_BUTTON_BG_COLOR,
             clicked_color=settings.ctm.ACCEPT_BUTTON_CLICKED_BG_COLOR,
-            buttonReleasedFunction=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ACCEPT_UPDATE),
+            buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL),
         )
 
 
@@ -158,16 +155,39 @@ class _CreateConfirmationModal(CTkToplevel):
         self.modal_buttons_wrapper.grid_remove()
 
 
-    def show(self):
+    def show(self, hide_title_bar:bool=True, close_when_focusout:bool=True):
+        if hide_title_bar is False:
+            self.overrideredirect(False)
+        else:
+            self.overrideredirect(True)
+
+        self.close_when_focusout = close_when_focusout
+        if self.close_when_focusout is True:
+            self.BIND_FOCUS_OUT_FUNC_ID = self.bind("<FocusOut>", self.focusOutFunction, "+")
+        else:
+            self._grab_set()
+
+
         self.attributes("-alpha", 0)
         self.deiconify()
-        self.focus_set()
         setGeometryToCenterOfTheWidget(
             attach_widget=self.attach_window,
             target_widget=self
         )
         fadeInAnimation(self, steps=5, interval=0.005, max_alpha=1)
+        self.focus_set()
 
 
     def hide(self):
+        if self.BIND_FOCUS_OUT_FUNC_ID is not None:
+            self.unbind("<FocusOut>", self.BIND_FOCUS_OUT_FUNC_ID)
+
         self.withdraw()
+        self.grab_release()
+
+    def focusOutFunction(self, e):
+        if str(e.widget) != ".!_createconfirmationmodal": return
+        callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL)
+
+    def _grab_set(self):
+        self.grab_set()

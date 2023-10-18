@@ -17,7 +17,7 @@ class _CreateWindowCover(CTkToplevel):
 
 
         self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", lambda e: self.withdraw())
+        self.protocol("WM_DELETE_WINDOW", lambda: self.withdraw())
 
         self.settings = settings
         self._view_variable = view_variable
