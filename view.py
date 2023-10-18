@@ -1040,37 +1040,88 @@ class View():
 
 
     def showErrorMessage_MicEnergyThreshold(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold, "Mic Energy Threshold Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.mic_dynamic_energy_threshold.error_message", max=config.MAX_MIC_ENERGY_THRESHOLD))
+        )
 
     def showErrorMessage_MicRecordTimeout(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_record_timeout, "Mic Record Timeout Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_mic_record_timeout,
+            self._makeInvalidValueErrorMessage(
+                i18n.t(
+                    "config_window.mic_record_timeout.error_message",
+                    mic_phrase_timeout_label=i18n.t("config_window.mic_phrase_timeout.label")
+                )
+            )
+        )
 
     def showErrorMessage_MicPhraseTimeout(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_phrase_timeout, "Mic Phrase Timeout Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_mic_phrase_timeout,
+            self._makeInvalidValueErrorMessage(
+                i18n.t(
+                    "config_window.mic_phrase_timeout.error_message",
+                    mic_record_timeout_label=i18n.t("config_window.mic_record_timeout.label")
+                )
+            )
+        )
 
     def showErrorMessage_MicMaxPhrases(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_mic_max_phrases, "Mic Max Phrases Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_mic_max_phrases,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.mic_max_phrase.error_message"))
+        )
 
 
     def showErrorMessage_SpeakerEnergyThreshold(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__entry_speaker_energy_threshold, "Speaker Energy Threshold Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__progressbar_x_slider__entry_speaker_energy_threshold,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.error_message", max=config.MAX_SPEAKER_ENERGY_THRESHOLD))
+        )
 
     def showErrorMessage_SpeakerRecordTimeout(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_record_timeout, "Speaker Record Timeout Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_speaker_record_timeout,
+            self._makeInvalidValueErrorMessage(
+                i18n.t(
+                    "config_window.speaker_record_timeout.error_message",
+                    speaker_phrase_timeout_label=i18n.t("config_window.speaker_phrase_timeout.label")
+                )
+            )
+        )
 
     def showErrorMessage_SpeakerPhraseTimeout(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_phrase_timeout, "Speaker Phrase Timeout Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_speaker_phrase_timeout,
+            self._makeInvalidValueErrorMessage(
+                i18n.t(
+                    "config_window.speaker_phrase_timeout.error_message",
+                    speaker_record_timeout_label=i18n.t("config_window.speaker_record_timeout.label")
+                )
+            )
+        )
 
     def showErrorMessage_SpeakerMaxPhrases(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__entry_speaker_max_phrases, "Speaker Max Phrases Error Message")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_speaker_max_phrases,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_max_phrase.error_message"))
+        )
 
 
     def showErrorMessage_CheckSpeakerThreshold_NoDevice(self):
-        self._showErrorMessage(vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold, "No speaker device detected")
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.no_device_error_message"))
+        )
 
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)
         vrct_gui._showErrorMessage(target_widget=target_widget)
+
+    @staticmethod
+    def _makeInvalidValueErrorMessage(error_message):
+        return i18n.t("config_window.common_error_message.invalid_value") + "\n" + error_message
 
     def clearErrorMessage(self):
         vrct_gui._clearErrorMessage()

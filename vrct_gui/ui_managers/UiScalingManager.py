@@ -217,7 +217,7 @@ class UiScalingManager():
 
         self.config_window.SB__ERROR_MESSAGE_IPADX = (self._calculateUiSize(10), self._calculateUiSize(10))
         self.config_window.SB__ERROR_MESSAGE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
-        self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(12)
+        self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(14)
 
 
         self.config_window.SB__SELECTOR_FONT_SIZE = self._calculateUiSize(14)
