@@ -11,17 +11,17 @@ class ConfigWindow(CTkToplevel):
         super().__init__()
         self.withdraw()
 
+        self.settings = settings
+        self._view_variable = view_variable
 
         # configure window
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
-        self.geometry(f"{settings.uism.DEFAULT_WIDTH}x{settings.uism.DEFAULT_HEIGHT}")
+        self.geometry(f"{self.settings.uism.DEFAULT_WIDTH}x{self.settings.uism.DEFAULT_HEIGHT}")
 
 
         self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", vrct_gui._closeConfigWindow)
+        self.protocol("WM_DELETE_WINDOW", self._view_variable.CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON)
 
-        self.settings = settings
-        self._view_variable = view_variable
 
         self.title(self._view_variable.VAR_CONFIG_WINDOW_TITLE.get())
         # When the configuration window's compact mode is turned on, it will call `grid_remove()` on each widget appended to this array. In the opposite case, `grid()` will be called.

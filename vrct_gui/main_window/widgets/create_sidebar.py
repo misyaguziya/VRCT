@@ -1,6 +1,7 @@
 from customtkinter import CTkFrame, CTkLabel, CTkImage
 
 from ...ui_utils import bindButtonFunctionAndColor
+from utils import callFunctionIfCallable
 
 from ._create_sidebar import createSidebarFeatures, createSidebarLanguagesSettings
 
@@ -59,5 +60,5 @@ def createSidebar(settings, main_window, view_variable):
         enter_color=settings.ctm.CONFIG_BUTTON_HOVERED_BG_COLOR,
         leave_color=settings.ctm.CONFIG_BUTTON_BG_COLOR,
         clicked_color=settings.ctm.CONFIG_BUTTON_CLICKED_BG_COLOR,
-        buttonReleasedFunction=main_window._openConfigWindow,
+        buttonReleasedFunction=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_CLICKED_OPEN_CONFIG_WINDOW_BUTTON),
     )

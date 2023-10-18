@@ -10,6 +10,7 @@ from languages import selectable_languages
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from vrct_gui import vrct_gui
+from utils import callFunctionIfCallable, generatePercentageStringsList
 
 from config import config
 
@@ -73,20 +74,39 @@ class View():
             **common_args
         )
 
+        self.settings.update_confirmation_modal = SimpleNamespace(
+            ctm=all_ctm.update_confirmation_modal,
+            uism=all_uism.update_confirmation_modal,
+            **common_args
+        )
+
         self.view_variable = SimpleNamespace(
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
+            CALLBACK_UPDATE_SOFTWARE=None,
 
+            CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE=self._showDisplayOverUiSizeConfirmationModal,
+
+            # Confirmation Modal
+            CALLBACK_HIDE_CONFIRMATION_MODAL=None,
+            CALLBACK_ACCEPTED_CONFIRMATION_MODAL=None,
+            CALLBACK_DENIED_CONFIRMATION_MODAL=None,
+            VAR_MESSAGE_CONFIRMATION_MODAL=StringVar(value=""),
+            VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON=StringVar(value=""),
+            VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON=StringVar(value=""),
 
             # Open Config Window
+            CALLBACK_CLICKED_OPEN_CONFIG_WINDOW_BUTTON=self._openConfigWindow,
+            CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON=self._closeConfigWindow,
             CALLBACK_OPEN_CONFIG_WINDOW=None,
             CALLBACK_CLOSE_CONFIG_WINDOW=None,
 
             # Open Help and Information Page
             CALLBACK_CLICKED_HELP_AND_INFO=self.openWebPage_VrctDocuments,
 
-            # Open Update Page
-            CALLBACK_CLICKED_UPDATE_AVAILABLE=None,
+            # Open Update Confirmation Modal
+            CALLBACK_CLICKED_UPDATE_AVAILABLE=self._showUpdateSoftwareConfirmationModal,
+
 
 
             # Main Window
@@ -137,7 +157,7 @@ class View():
 
 
             # Main Window Cover
-            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=i18n.t("main_window.cover_message")),
+            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=""),
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
@@ -185,7 +205,7 @@ class View():
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
-            LIST_UI_SCALING=["40%", "60%", "80%", "90%", "100%", "110%", "120%", "150%", "200%"],
+            LIST_UI_SCALING=generatePercentageStringsList(start=40,end=200, step=10),
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
@@ -249,7 +269,7 @@ class View():
             CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
-            VAR_DESC_MIC_MAX_PHRASES=None,
+            VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
@@ -286,7 +306,7 @@ class View():
             CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
-            VAR_DESC_SPEAKER_MAX_PHRASES=None,
+            VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,
@@ -353,7 +373,7 @@ class View():
 
 
         if common_registers is not None:
-            self.view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE=common_registers.get("callback_update_software", None)
+            self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
 
 
@@ -549,8 +569,85 @@ class View():
         vrct_gui.attributes("-topmost", False)
 
 
-    @staticmethod
-    def _openTheCoverOfMainWindow():
+    def _showDisplayOverUiSizeConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._adjustUiSizeAndRestart
+        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.detected_over_ui_size", current_ui_size=config.UI_SCALING))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_adjust_ui_size"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_adjust_ui_size"))
+
+        vrct_gui.update_confirmation_modal.show(hide_title_bar=False, close_when_focusout=False)
+
+
+    def _adjustUiSizeAndRestart(self):
+        current_percentage = int(config.UI_SCALING.replace("%",""))
+        target_percentage = current_percentage - 20
+        if target_percentage >= 40 and str(target_percentage) + "%" in self.view_variable.LIST_UI_SCALING:
+            index = self.view_variable.LIST_UI_SCALING.index(str(target_percentage) + "%")
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_UI_SCALING, self.view_variable.LIST_UI_SCALING[index])
+            callFunctionIfCallable(self.view_variable.CALLBACK_RESTART_SOFTWARE)
+
+        # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
+
+
+
+
+
+
+
+
+
+    def _showUpdateSoftwareConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._startUpdateSoftware
+        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
+        vrct_gui.update_confirmation_modal.show()
+
+    def _hideConfirmationModal(self):
+        vrct_gui.update_confirmation_modal.hide()
+        vrct_gui.main_window_cover.hide()
+        self.foregroundOnIfForegroundEnabled()
+
+    # def _deniedUpdateSoftware(self):
+    #     self._hideConfirmationModal()
+
+    def _startUpdateSoftware(self):
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
+        vrct_gui.update_confirmation_modal.hide_buttons()
+        vrct_gui.update()
+        vrct_gui.update_confirmation_modal.update()
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+
+
+
+    def _openConfigWindow(self):
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set(i18n.t("main_window.cover_message"))
+        callFunctionIfCallable(self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
+        vrct_gui._openConfigWindow()
+
+    def _closeConfigWindow(self):
+        callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+        vrct_gui._closeConfigWindow()
+
+
+
+    def _openTheCoverOfMainWindow(self):
         vrct_gui.main_window_cover.show()
         vrct_gui.config_window.lift()
 
