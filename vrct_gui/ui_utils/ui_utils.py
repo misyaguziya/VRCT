@@ -225,6 +225,22 @@ def setGeometryToCenterOfScreen(root_widget):
     root_widget.geometry(str(geometry_width)+"x"+str(geometry_height)+"+"+str((sw-geometry_width)//2)+"+"+str((sh-geometry_height)//2))
 
 
+def setGeometryToCenterOfTheWidget(attach_widget, target_widget):
+    attach_widget.update()
+    target_widget.update()
+    current_window_x = attach_widget.winfo_rootx()
+    current_window_y = attach_widget.winfo_rooty()
+    current_window_width = attach_widget.winfo_width()
+    current_window_height = attach_widget.winfo_height()
+    desired_window_width = target_widget.winfo_width()
+    desired_window_height = target_widget.winfo_height()
+
+    desired_window_x = int((current_window_x + current_window_width / 2) - (desired_window_width / 2))
+    desired_window_y = int((current_window_y + current_window_height / 2) - (desired_window_height / 2))
+
+    target_widget.geometry(str(desired_window_width) + "x" + str(desired_window_height) + "+" + str(desired_window_x) + "+" + str(desired_window_y))
+
+
 def fadeInAnimation(root_widget, steps:int=10, interval:float=0.1, max_alpha:float=1):
     alpha_steps = 100
     alpha_steps*=max_alpha

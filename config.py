@@ -8,6 +8,7 @@ from tkinter import font
 from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from utils import generatePercentageStringsList
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -220,7 +221,7 @@ class Config:
 
     @UI_SCALING.setter
     def UI_SCALING(self, value):
-        if value in ["40%", "60%", "80%", "90%", "100%", "110%", "120%", "150%", "200%"]:
+        if value in generatePercentageStringsList(start=40,end=200, step=10):
             self._UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

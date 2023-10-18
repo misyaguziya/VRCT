@@ -7,6 +7,7 @@ from ._CreateErrorWindow import _CreateErrorWindow
 from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
+from ._CreateConfirmationModal import _CreateConfirmationModal
 from ._printToTextbox import _printToTextbox
 
 from .main_window import createMainWindowWidgets
@@ -52,6 +53,11 @@ class VRCT_GUI(CTk):
         if self._view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
             self._enableMainWindowSidebarCompactMode()
         fadeInAnimation(self, steps=5, interval=0.008)
+
+
+        if self._isOverWindowSizeCheck() is True:
+            callFunctionIfCallable(self._view_variable.CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE)
+
 
     def _createGUI(self, settings, view_variable):
         self.settings = settings
@@ -113,8 +119,14 @@ class VRCT_GUI(CTk):
 
             message_bg_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_BG_COLOR,
             message_text_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_TEXT_COLOR,
-
         )
+
+        self.update_confirmation_modal = _CreateConfirmationModal(
+            attach_window=self.toplevel_wrapper,
+            settings=self.settings.update_confirmation_modal,
+            view_variable=self._view_variable
+        )
+
 
         # self.update()
         # self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
@@ -129,10 +141,7 @@ class VRCT_GUI(CTk):
         self.destroy()
 
 
-    def _openConfigWindow(self, _e):
-        callFunctionIfCallable(self._view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
-
-        self._adjustToMainWindowGeometry()
+    def _openConfigWindow(self):
         self.main_window_cover.show()
 
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
@@ -152,11 +161,9 @@ class VRCT_GUI(CTk):
         self.config_window.focus_set()
 
     def _closeConfigWindow(self):
-        callFunctionIfCallable(self._view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
-
         self.config_window.withdraw()
 
-        self.main_window_cover.withdraw()
+        self.main_window_cover.hide()
         self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
         self.unbind("<Unmap>", self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
         self.unbind("<Map>", self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
@@ -279,5 +286,15 @@ class VRCT_GUI(CTk):
         except:
             pass
 
+
+    def _isOverWindowSizeCheck(self):
+        self.update()
+        screen_height = self.winfo_screenheight()
+        window_height = self.winfo_height()
+        print(screen_height, window_height)
+        if screen_height < window_height:
+            return True
+        else:
+            return False
 
 vrct_gui = VRCT_GUI()
