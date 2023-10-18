@@ -44,6 +44,13 @@ main_window:
 
   cover_message: The functionality is temporarily disabled until the settings window is closed.
 
+  confirmation_message:
+    update_software: "Download new version and restart automatically.\nIt'll take a while. Do it now?"
+    deny_update_software: Do it later
+    accept_update_software: Update and Restart
+    updating: Now updating...
+
+
 
 selectable_language_window:
   title_your_language: Select Your Language

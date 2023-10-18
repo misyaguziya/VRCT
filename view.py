@@ -10,6 +10,7 @@ from languages import selectable_languages
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from vrct_gui import vrct_gui
+from utils import callFunctionIfCallable
 
 from config import config
 
@@ -73,20 +74,37 @@ class View():
             **common_args
         )
 
+        self.settings.update_confirmation_modal = SimpleNamespace(
+            ctm=all_ctm.update_confirmation_modal,
+            uism=all_uism.update_confirmation_modal,
+            **common_args
+        )
+
         self.view_variable = SimpleNamespace(
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
 
 
             # Open Config Window
+            CALLBACK_CLICKED_OPEN_CONFIG_WINDOW_BUTTON=self._openConfigWindow,
+            CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON=self._closeConfigWindow,
             CALLBACK_OPEN_CONFIG_WINDOW=None,
             CALLBACK_CLOSE_CONFIG_WINDOW=None,
 
             # Open Help and Information Page
             CALLBACK_CLICKED_HELP_AND_INFO=self.openWebPage_VrctDocuments,
 
-            # Open Update Page
-            CALLBACK_CLICKED_UPDATE_AVAILABLE=None,
+            # For Update Software
+            # Open Update Confirmation Modal
+            CALLBACK_CLICKED_UPDATE_AVAILABLE=self._showUpdateSoftwareConfirmationModal,
+
+            CALLBACK_UPDATE_SOFTWARE=None,
+            CALLBACK_ACCEPT_UPDATE=self._startUpdateSoftware,
+            CALLBACK_DENY_UPDATE=self._deniedUpdateSoftware,
+            CALLBACK_HIDE_UPDATE_CONFIRMATION_MODAL=self._hideUpdateSoftwareConfirmationModal,
+            VAR_MESSAGE_CONFIRMATION_MODAL=StringVar(value=""),
+            VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON=StringVar(value=""),
+            VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON=StringVar(value=""),
 
 
             # Main Window
@@ -137,7 +155,7 @@ class View():
 
 
             # Main Window Cover
-            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=i18n.t("main_window.cover_message")),
+            VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=""),
 
             # Selectable Language Window
             VAR_TITLE_LABEL_SELECTABLE_LANGUAGE=StringVar(value=""),
@@ -353,7 +371,7 @@ class View():
 
 
         if common_registers is not None:
-            self.view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE=common_registers.get("callback_update_software", None)
+            self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
 
 
@@ -548,9 +566,49 @@ class View():
     def foregroundOff():
         vrct_gui.attributes("-topmost", False)
 
+    def _showUpdateSoftwareConfirmationModal(self):
 
-    @staticmethod
-    def _openTheCoverOfMainWindow():
+        self.foregroundOffIfForegroundEnabled()
+
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
+        vrct_gui.update_confirmation_modal.show()
+        vrct_gui.update_confirmation_modal.focus_set()
+
+    def _hideUpdateSoftwareConfirmationModal(self):
+        self._deniedUpdateSoftware()
+        self.foregroundOnIfForegroundEnabled()
+
+
+    def _startUpdateSoftware(self):
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
+        vrct_gui.update_confirmation_modal.hide_buttons()
+        vrct_gui.update()
+        vrct_gui.update_confirmation_modal.update()
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+
+    def _deniedUpdateSoftware(self):
+        vrct_gui.update_confirmation_modal.hide()
+        vrct_gui.main_window_cover.hide()
+
+
+    def _openConfigWindow(self):
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set(i18n.t("main_window.cover_message"))
+        callFunctionIfCallable(self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
+        vrct_gui._openConfigWindow()
+
+    def _closeConfigWindow(self):
+        callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+        vrct_gui._closeConfigWindow()
+
+
+
+    def _openTheCoverOfMainWindow(self):
         vrct_gui.main_window_cover.show()
         vrct_gui.config_window.lift()
 

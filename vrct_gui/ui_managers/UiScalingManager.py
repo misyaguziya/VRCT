@@ -10,6 +10,7 @@ class UiScalingManager():
         self.selectable_language_window = SimpleNamespace()
         self.main_window_cover = SimpleNamespace()
         self.error_message_window = SimpleNamespace()
+        self.update_confirmation_modal = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -141,6 +142,18 @@ class UiScalingManager():
 
 
         self.main_window_cover.TEXT_FONT_SIZE = self._calculateUiSize(20)
+
+
+        self.update_confirmation_modal.FAKE_BORDER_SIZE = self._calculateUiSize(1, is_allowed_odd=True)
+        self.update_confirmation_modal.CONTENTS_WRAPPER = self._calculateUiSize(20)
+        self.update_confirmation_modal.MARGIN_BETWEEN_MESSAGE_AND_BUTTONS = self._calculateUiSize(40)
+        self.update_confirmation_modal.MESSAGE_FONT_SIZE = self._calculateUiSize(20)
+        self.update_confirmation_modal.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE = self._calculateUiSize(18)
+        self.update_confirmation_modal.BUTTONS_BETWEEN_PADDING = self._calculateUiSize(100)
+        self.update_confirmation_modal.BUTTONS_CORNER_RADIUS = self._calculateUiSize(6)
+        self.update_confirmation_modal.BUTTONS_IPADX = self._calculateUiSize(10)
+        self.update_confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
+
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
