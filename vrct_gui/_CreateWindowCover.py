@@ -50,3 +50,7 @@ class _CreateWindowCover(CTkToplevel):
         self.height_new = self.attach_window.winfo_height()
         self.geometry("{}x{}+{}+{}".format(self.width_new, self.height_new, self.x_pos, self.y_pos))
         fadeInAnimation(self, steps=5, interval=0.005, max_alpha=0.5)
+
+
+    def hide(self):
+        self.withdraw()

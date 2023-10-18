@@ -7,6 +7,7 @@ class ColorThemeManager():
         self.selectable_language_window = SimpleNamespace()
         self.main_window_cover = SimpleNamespace()
         self.error_message_window = SimpleNamespace()
+        self.update_confirmation_modal = SimpleNamespace()
 
         # old one. But leave it here for now.
         # self.PRIMARY_100_COLOR = "#c4eac1"
@@ -26,6 +27,7 @@ class ColorThemeManager():
         self.PRIMARY_200_COLOR = "#8acac0"
         self.PRIMARY_300_COLOR = "#61b4a7"
         self.PRIMARY_400_COLOR = "#48a495"
+        self.PRIMARY_450_COLOR = "#429c8c"
         self.PRIMARY_500_COLOR = "#3b9483"
         self.PRIMARY_600_COLOR = "#368777"
         self.PRIMARY_650_COLOR = "#347f6f"
@@ -42,7 +44,7 @@ class ColorThemeManager():
         self.DARK_450_COLOR = "#b8b9bd"
         self.DARK_500_COLOR = "#a9aaae"
         self.DARK_600_COLOR = "#7f8084"
-        # self.DARK_650_COLOR = "#75767a"
+        self.DARK_650_COLOR = "#75767a"
         self.DARK_700_COLOR = "#6a6c6f"
         self.DARK_725_COLOR = "#636467"
         self.DARK_750_COLOR = "#5b5c5f"
@@ -214,6 +216,19 @@ class ColorThemeManager():
 
         # Modal Window (Main Window)
         self.main_window_cover.TEXT_COLOR = self.LIGHT_100_COLOR
+
+
+        self.update_confirmation_modal.MESSAGE_TEXT_COLOR = self.LIGHT_100_COLOR
+        self.update_confirmation_modal.FAKE_BORDER_COLOR = self.DARK_600_COLOR
+        self.update_confirmation_modal.BG_COLOR = self.DARK_800_COLOR
+        self.update_confirmation_modal.CONFIRMATION_BUTTONS_TEXT_COLOR = self.LIGHT_100_COLOR
+
+        self.update_confirmation_modal.ACCEPT_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR
+        self.update_confirmation_modal.ACCEPT_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_450_COLOR
+        self.update_confirmation_modal.ACCEPT_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR
+        self.update_confirmation_modal.DENY_BUTTON_BG_COLOR = self.DARK_750_COLOR
+        self.update_confirmation_modal.DENY_BUTTON_HOVERED_BG_COLOR = self.DARK_700_COLOR
+        self.update_confirmation_modal.DENY_BUTTON_CLICKED_BG_COLOR = self.DARK_825_COLOR
 
 
         # Common
