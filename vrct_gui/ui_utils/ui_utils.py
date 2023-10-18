@@ -226,7 +226,7 @@ def setGeometryToCenterOfScreen(root_widget):
 
 
 def setGeometryToCenterOfTheWidget(attach_widget, target_widget):
-    target_widget.update()
+    attach_widget.update()
     target_widget.update()
     current_window_x = attach_widget.winfo_rootx()
     current_window_y = attach_widget.winfo_rooty()

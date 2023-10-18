@@ -54,6 +54,11 @@ class VRCT_GUI(CTk):
             self._enableMainWindowSidebarCompactMode()
         fadeInAnimation(self, steps=5, interval=0.008)
 
+
+        if self._isOverWindowSizeCheck() is True:
+            callFunctionIfCallable(self._view_variable.CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE)
+
+
     def _createGUI(self, settings, view_variable):
         self.settings = settings
         self._view_variable = view_variable
@@ -281,5 +286,15 @@ class VRCT_GUI(CTk):
         except:
             pass
 
+
+    def _isOverWindowSizeCheck(self):
+        self.update()
+        screen_height = self.winfo_screenheight()
+        window_height = self.winfo_height()
+        print(screen_height, window_height)
+        if screen_height < window_height:
+            return True
+        else:
+            return False
 
 vrct_gui = VRCT_GUI()

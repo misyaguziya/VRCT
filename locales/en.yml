@@ -50,6 +50,9 @@ main_window:
     accept_update_software: Update and Restart
     updating: Now updating...
 
+    detected_over_ui_size: "Current UI Size: %{current_ui_size}\nVRCT's window size may be larger than your display size.\n* Depending on your display size, you may need to adjust it multiple times."
+    deny_adjust_ui_size: "Keep it at this size"
+    accept_adjust_ui_size: "Set it smaller and restart"
 
 
 selectable_language_window:

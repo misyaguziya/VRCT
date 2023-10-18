@@ -50,6 +50,10 @@ main_window:
     accept_update_software: アップデートして再起動
     updating: アップデート中...
 
+    detected_over_ui_size: "現在のUI サイズ: %{current_ui_size}\nVRCTのウィンドウサイズが、お使いのディスプレイサイズより大きい可能性があります。\n※ディスプレイサイズによっては、何度か再設定が必要な場合があります。"
+    deny_adjust_ui_size: このサイズのままで良い
+    accept_adjust_ui_size: 小さく設定して再起動
+
 
 
 selectable_language_window:
