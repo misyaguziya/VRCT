@@ -14,15 +14,13 @@ from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
 from .ui_utils import setDefaultActiveTab, setGeometryToCenterOfScreen, fadeInAnimation
 
-from utils import callFunctionIfCallable, makeEven
+from utils import callFunctionIfCallable
 
 class VRCT_GUI(CTk):
     def __init__(self):
         super().__init__()
         self.withdraw()
         self.is_config_window_already_opened_once=False
-        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
-        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID=None
         self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = None
         self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = None
 
@@ -104,7 +102,7 @@ class VRCT_GUI(CTk):
         )
 
         self.main_window_cover = _CreateWindowCover(
-            attach_window=self.toplevel_wrapper,
+            attach_window=self,
             settings=self.settings.main_window_cover,
             view_variable=self._view_variable
         )
@@ -150,14 +148,11 @@ class VRCT_GUI(CTk):
 
 
     def _openConfigWindow(self):
-        self.main_window_cover.show()
-
-        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
+        self.main_window_cover.show(bind_focusin=self.config_window.lift)
 
         self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Unmap>", self.detectMainWindowState, "+")
         self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID = self.bind("<Map>", self.detectMainWindowState, "+")
 
-        self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID = self.main_window_cover.bind("<FocusIn>", lambda _e: self.config_window.lift(), "+")
 
         self.config_window.attributes("-alpha", 0)
         self.config_window.deiconify()
@@ -172,10 +167,8 @@ class VRCT_GUI(CTk):
         self.config_window.withdraw()
 
         self.main_window_cover.hide()
-        self.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
         self.unbind("<Unmap>", self.BIND_UNMAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
         self.unbind("<Map>", self.BIND_MAP_DETECT_MAIN_WINDOW_STATE_FUNC_ID)
-        self.main_window_cover.unbind("<FocusIn>", self.BIND_FOCUS_IN_MODAL_WINDOW_LIFT_CONFIG_WINDOW_FUNC_ID)
         self.adjusted_event=None
 
 
@@ -275,16 +268,6 @@ class VRCT_GUI(CTk):
         self.minimize_sidebar_button_container__for_opening.grid_remove()
         self.minimize_sidebar_button_container__for_closing.grid()
 
-
-    def _adjustToMainWindowGeometry(self, e=None):
-        self.update_idletasks()
-        x_pos = self.winfo_rootx()
-        y_pos = self.winfo_rooty()
-        width_new = makeEven(self.winfo_width())
-        height_new = makeEven(self.winfo_height())
-        self.main_window_cover.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
-
-        self.main_window_cover.lift()
 
     def _showErrorMessage(self, target_widget):
         self.error_message_window.show(target_widget=target_widget)
