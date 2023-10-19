@@ -74,9 +74,9 @@ class View():
             **common_args
         )
 
-        self.settings.update_confirmation_modal = SimpleNamespace(
-            ctm=all_ctm.update_confirmation_modal,
-            uism=all_uism.update_confirmation_modal,
+        self.settings.confirmation_modal = SimpleNamespace(
+            ctm=all_ctm.confirmation_modal,
+            uism=all_uism.confirmation_modal,
             **common_args
         )
 
@@ -569,23 +569,6 @@ class View():
         vrct_gui.attributes("-topmost", False)
 
 
-    def _showDisplayOverUiSizeConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
-
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
-
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._adjustUiSizeAndRestart
-        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.detected_over_ui_size", current_ui_size=config.UI_SCALING))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_adjust_ui_size"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_adjust_ui_size"))
-
-        vrct_gui.update_confirmation_modal.show(hide_title_bar=False, close_when_focusout=False)
-
-
     def _adjustUiSizeAndRestart(self):
         current_percentage = int(config.UI_SCALING.replace("%",""))
         target_percentage = current_percentage - 20
@@ -601,7 +584,21 @@ class View():
 
 
 
+    def _showDisplayOverUiSizeConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
 
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._adjustUiSizeAndRestart
+        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.detected_over_ui_size", current_ui_size=config.UI_SCALING))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_adjust_ui_size"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_adjust_ui_size"))
+
+        vrct_gui.confirmation_modal.show(hide_title_bar=False, close_when_focusout=False)
 
 
 
@@ -618,10 +615,55 @@ class View():
         self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.update_software"))
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
-        vrct_gui.update_confirmation_modal.show()
+        vrct_gui.confirmation_modal.show()
+
+
+
+
+
+    def showTheLimitOfTranslationEngineConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        # self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
+        # self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
+        # self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
+        vrct_gui.information_modal.show(close_when_focusout=False)
+
+
+
+    def translationEngineLimitErrorProcess(self):
+        # turn off translation switch.
+        vrct_gui.translation_switch_box.deselect()
+        vrct_gui.translation_frame.markToggleManually(False)
+
+        # disable translation feature.
+        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
+
+        # print system message that mention to stopped translation feature.
+        view.printToTextbox_TranslationEngineLimitError()
+        view.showTheLimitOfTranslationEngineConfirmationModal()
+
+
+
+
+
+
+
+    def _hideInformationModal(self):
+        vrct_gui.information_modal.hide()
+        vrct_gui.main_window_cover.hide()
+        self.foregroundOnIfForegroundEnabled()
+
 
     def _hideConfirmationModal(self):
-        vrct_gui.update_confirmation_modal.hide()
+        vrct_gui.confirmation_modal.hide()
         vrct_gui.main_window_cover.hide()
         self.foregroundOnIfForegroundEnabled()
 
@@ -630,9 +672,9 @@ class View():
 
     def _startUpdateSoftware(self):
         self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
-        vrct_gui.update_confirmation_modal.hide_buttons()
+        vrct_gui.confirmation_modal.hide_buttons()
         vrct_gui.update()
-        vrct_gui.update_confirmation_modal.update()
+        vrct_gui.confirmation_modal.update()
         callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
 
 
@@ -713,6 +755,10 @@ class View():
 
     def printToTextbox_TranscriptionReceiveNoDeviceError(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_speaker_device_detected_error"))
+
+
+    def printToTextbox_TranslationEngineLimitError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.translation_engine_limit_error"))
 
 
     # def printToTextbox_OSCError(self): [Deprecated]

@@ -122,10 +122,17 @@ class VRCT_GUI(CTk):
             message_text_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_TEXT_COLOR,
         )
 
-        self.update_confirmation_modal = _CreateConfirmationModal(
+        self.confirmation_modal = _CreateConfirmationModal(
             attach_window=self.toplevel_wrapper,
-            settings=self.settings.update_confirmation_modal,
+            settings=self.settings.confirmation_modal,
             view_variable=self._view_variable
+        )
+
+        self.information_modal = _CreateConfirmationModal(
+            attach_window=self.toplevel_wrapper,
+            settings=self.settings.confirmation_modal,
+            view_variable=self._view_variable,
+            modal_type="information"
         )
 
 
@@ -219,13 +226,14 @@ class VRCT_GUI(CTk):
 
 
 
-    def _changeMainWindowWidgetsStatus(self, status, target_names):
+    def _changeMainWindowWidgetsStatus(self, status, target_names, to_hold_state:bool=False):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,
             settings=self.settings.main,
             view_variable=self._view_variable,
             status=status,
             target_names=target_names,
+            to_hold_state=to_hold_state,
         )
 
     def _changeConfigWindowWidgetsStatus(self, status, target_names):

@@ -1,3 +1,5 @@
+from functools import partial
+
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkSwitch, CTkImage
 
 from ....ui_utils import openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction
@@ -6,29 +8,29 @@ from utils import callFunctionIfCallable
 
 def createSidebarFeatures(settings, main_window, view_variable):
 
-    def toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, mark):
-        mark.place(relx=0.85) if is_turned_on else mark.place(relx=-1)
+    def toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, mark_widget):
+        mark_widget.place(relx=0.85) if is_turned_on else mark_widget.place(relx=-1)
 
 
     def toggleTranslationFeature():
         is_turned_on = main_window.translation_switch_box.get()
         callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSLATION, is_turned_on)
-        toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.translation_selected_mark)
+        main_window.translation_frame.markToggleManually(is_turned_on=is_turned_on)
 
     def toggleTranscriptionSendFeature():
         is_turned_on = main_window.transcription_send_switch_box.get()
         callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND, is_turned_on)
-        toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_send_selected_mark)
+        main_window.transcription_send_frame.markToggleManually(is_turned_on=is_turned_on)
 
     def toggleTranscriptionReceiveFeature():
         is_turned_on = main_window.transcription_receive_switch_box.get()
         callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE, is_turned_on)
-        toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.transcription_receive_selected_mark)
+        main_window.transcription_receive_frame.markToggleManually(is_turned_on=is_turned_on)
 
     def toggleForegroundFeature():
         is_turned_on = main_window.foreground_switch_box.get()
         callFunctionIfCallable(view_variable.CALLBACK_TOGGLE_FOREGROUND, is_turned_on)
-        toggleSidebarFeatureSelectedMarkIfTurnedOn(is_turned_on, main_window.foreground_selected_mark)
+        main_window.foreground_frame.markToggleManually(is_turned_on=is_turned_on)
 
 
 
@@ -278,5 +280,8 @@ def createSidebarFeatures(settings, main_window, view_variable):
         bindEnterAndLeaveFunction([compact_mode_icon_widget, frame_widget, compact_mode_frame_widget, label_widget, selected_mark_widget, switch_box_widget._canvas, switch_box_widget._bg_canvas], enterFunction, leaveFunction)
 
         bindButtonPressAndReleaseFunction([compact_mode_icon_widget, frame_widget, compact_mode_frame_widget, label_widget, selected_mark_widget, switch_box_widget._canvas, switch_box_widget._bg_canvas], buttonPressFunction, buttonReleasedFunction)
+
+        callback = partial(toggleSidebarFeatureSelectedMarkIfTurnedOn, mark_widget=selected_mark_widget)
+        frame_widget.markToggleManually = callback
 
         row+=1
