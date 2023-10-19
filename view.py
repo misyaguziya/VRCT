@@ -593,7 +593,8 @@ class View():
             index = self.view_variable.LIST_UI_SCALING.index(str(target_percentage) + "%")
             callFunctionIfCallable(self.view_variable.CALLBACK_SET_UI_SCALING, self.view_variable.LIST_UI_SCALING[index])
             callFunctionIfCallable(self.view_variable.CALLBACK_RESTART_SOFTWARE)
-
+        else:
+            self._hideConfirmationModal()
         # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
 
 
