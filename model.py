@@ -81,20 +81,13 @@ class Model:
         del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
 
-    def authenticationTranslator(self, fnc, choice_translator=None, auth_key=None):
+    def authenticationTranslator(self, choice_translator=None, auth_key=None):
         if choice_translator == None:
             choice_translator = config.CHOICE_TRANSLATOR
         if auth_key == None:
             auth_key = config.AUTH_KEYS[choice_translator]
 
         result = self.translator.authentication(choice_translator, auth_key)
-        if result:
-            auth_keys = config.AUTH_KEYS
-            auth_keys[choice_translator] = auth_key
-            try:
-                fnc(auth_keys)
-            except:
-                pass
         return result
 
     def startLogger(self):
@@ -139,15 +132,14 @@ class Model:
         engine_name = compatible_engines[0]
 
         if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] != None:
+            engine_name = "DeepL_API"
+        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] == None:
             engine_name = "DeepL"
 
         return engine_name
 
     def getTranslatorStatus(self):
         return self.translator.translator_status[config.CHOICE_TRANSLATOR]
-
-    def getListTranslatorName(self):
-        return list(self.translator.translator_status.keys())
 
     def getInputTranslate(self, message):
         try:
