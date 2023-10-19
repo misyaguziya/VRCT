@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar, getLatestWidth, getLongestText
 from functools import partial
 
 from utils import isEven, makeEven
@@ -22,6 +22,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             value_ipady,
             value_pady,
             value_font_size,
+            dropdown_menu_default_min_width,
 
             window_bg_color,
             window_border_color,
@@ -53,6 +54,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.value_ipady=value_ipady
         self.value_pady=value_pady
         self.value_font_size=value_font_size
+        self.dropdown_menu_default_min_width=dropdown_menu_default_min_width
 
         self.window_bg_color=window_bg_color
         self.window_border_color=window_border_color
@@ -97,19 +99,19 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             wrapper_widget=self.dropdown_menu_widgets[dropdown_menu_widget_id].wrapper_widget,
             attach_widget=self.dropdown_menu_widgets[dropdown_menu_widget_id].attach_widget,
 
-            dropdown_menu_width=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.dropdown_menu_width,
+            dropdown_menu_min_width=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.dropdown_menu_min_width,
             dropdown_menu_height=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.dropdown_menu_height,
             max_display_length=self.dropdown_menu_widgets[dropdown_menu_widget_id].dropdown_menu_settings.max_display_length,
         )
 
 
-    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values, command, wrapper_widget, attach_widget, dropdown_menu_width=None, dropdown_menu_height=None, max_display_length=None):
+    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values, command, wrapper_widget, attach_widget, dropdown_menu_min_width=None, dropdown_menu_height=None, max_display_length=None):
 
         self.attach_widget = attach_widget
         self.wrapper_widget = wrapper_widget
 
-        self.update()
-        self.new_width = dropdown_menu_width if dropdown_menu_width is not None else self.attach_widget.winfo_width()
+
+        self.new_width = dropdown_menu_min_width if dropdown_menu_min_width is not None else self.dropdown_menu_default_min_width
         self.new_height = dropdown_menu_height if dropdown_menu_height is not None else self.init_height
         self.max_display_length = max_display_length if max_display_length is not None else self.init_max_display_length
 
@@ -151,7 +153,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             wrapper_widget=wrapper_widget,
             attach_widget=attach_widget,
             dropdown_menu_settings=SimpleNamespace(
-                dropdown_menu_width=dropdown_menu_width,
+                dropdown_menu_min_width=dropdown_menu_min_width,
                 dropdown_menu_height=dropdown_menu_height,
                 max_display_length=max_display_length,
             ),
@@ -166,6 +168,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
     def _createDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values, command):
 
+        longest_text = getLongestText(dropdown_menu_values)
         self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.window_bg_color)
         self.dropdown_menu_values_wrapper.grid(row=0, column=0, sticky="nsew")
         self.dropdown_menu_values_wrapper.grid_columnconfigure(0, weight=1)
@@ -177,10 +180,10 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
         __dropdown_menu_value_wrapper.grid_rowconfigure((0,2), weight=1)
-        __dropdown_menu_value_wrapper.grid_columnconfigure(0, weight=1)
+        # __dropdown_menu_value_wrapper.grid_columnconfigure(0, weight=1)
         __label_widget = CTkLabel(
             __dropdown_menu_value_wrapper,
-            text="Aa",
+            text=longest_text,
             height=0,
             corner_radius=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.value_font_size, weight="normal"),
@@ -190,7 +193,13 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         # setattr(self, f"l", __label_widget)
 
         __label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
+
         label_height = getLatestHeight(__dropdown_menu_value_wrapper)
+        label_width = getLatestWidth(__label_widget)
+        label_width += self.scroll_frame_container._scrollbar.winfo_width() + (self.window_border_width*2) + (self.scrollbar_ipadx[0] + self.scrollbar_ipadx[1])
+        if label_width > self.new_width:
+            additional_width = int(label_width - self.new_width)
+            self.new_width += additional_width
 
         # for fixing 1px bug
         if isEven(label_height) is False:
@@ -223,7 +232,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
             dropdown_menu_value_wrapper.grid_rowconfigure((0,2), weight=1)
-            dropdown_menu_value_wrapper.grid_columnconfigure(0, weight=1)
             label_widget = CTkLabel(
                 dropdown_menu_value_wrapper,
                 text=dropdown_menu_value,
