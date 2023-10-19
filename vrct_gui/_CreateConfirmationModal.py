@@ -5,9 +5,13 @@ from .ui_utils import fadeInAnimation, setGeometryToCenterOfTheWidget, bindButto
 from utils import callFunctionIfCallable
 
 class _CreateConfirmationModal(CTkToplevel):
-    def __init__(self, attach_window, settings, view_variable):
+    def __init__(self, attach_window, settings, view_variable, modal_type=None):
         super().__init__()
         self.withdraw()
+
+        self.attach_window = attach_window
+        self.settings = settings
+        self._view_variable = view_variable
 
 
         self.title("")
@@ -16,10 +20,6 @@ class _CreateConfirmationModal(CTkToplevel):
 
         self.BIND_FOCUS_OUT_FUNC_ID=None
 
-
-        self.attach_window = attach_window
-        self.settings = settings
-        self._view_variable = view_variable
 
 
         # self.configure(fg_color="#ff7f50")
@@ -70,85 +70,131 @@ class _CreateConfirmationModal(CTkToplevel):
         self.modal_buttons_wrapper.grid(row=1, column=0, sticky="ew")
 
 
-        self.modal_buttons_wrapper.grid_columnconfigure(1, weight=1, minsize=self.settings.uism.BUTTONS_BETWEEN_PADDING)
-        self.modal_buttons_wrapper.grid_columnconfigure((0,2), weight=0, uniform="button_wrapper")
+        if modal_type == "information":
+            # self.modal_buttons_wrapper.grid_columnconfigure(1, weight=1, minsize=self.settings.uism.BUTTONS_BETWEEN_PADDING)
+            self.modal_buttons_wrapper.grid_columnconfigure((0,2), weight=1)
 
 
+            self.accept_button = CTkFrame(self.modal_buttons_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR, cursor="hand2")
+            self.accept_button.grid(row=0, column=1, sticky="ew")
 
 
+            self.accept_button.grid_columnconfigure(0, weight=1)
+            self.accept_button_label_wrapper = CTkFrame(self.accept_button, corner_radius=0, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR)
+            self.accept_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.BUTTONS_IPADX, pady=self.settings.uism.BUTTONS_IPADY, sticky="ew")
 
-        self.deny_button = CTkFrame(self.modal_buttons_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.DENY_BUTTON_BG_COLOR, cursor="hand2")
-        self.deny_button.grid(row=0, column=0, sticky="ew")
-
-
-        self.deny_button.grid_columnconfigure(0, weight=1)
-        self.deny_button_label_wrapper = CTkFrame(self.deny_button, corner_radius=0, fg_color=self.settings.ctm.DENY_BUTTON_BG_COLOR)
-        self.deny_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.BUTTONS_IPADX, pady=self.settings.uism.BUTTONS_IPADY, sticky="ew")
-
-        self.deny_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
-
-
-        self.deny_button_label_wrapper.grid_columnconfigure(0, weight=1)
-        self.deny_button_label = CTkLabel(
-            self.deny_button_label_wrapper,
-            textvariable=self._view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON,
-            height=0,
-            corner_radius=0,
-            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE, weight="normal"),
-            anchor="w",
-            text_color=self.settings.ctm.CONFIRMATION_BUTTONS_TEXT_COLOR,
-        )
-        self.deny_button_label.grid(row=0, column=1)
-
-
-
-        bindButtonFunctionAndColor(
-            target_widgets=[
-                self.deny_button,
-                self.deny_button_label_wrapper,
-                self.deny_button_label,
-            ],
-            enter_color=settings.ctm.DENY_BUTTON_HOVERED_BG_COLOR,
-            leave_color=settings.ctm.DENY_BUTTON_BG_COLOR,
-            clicked_color=settings.ctm.DENY_BUTTON_CLICKED_BG_COLOR,
-            buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL),
-        )
-
-
-
-        self.accept_button = CTkFrame(self.modal_buttons_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR, cursor="hand2")
-        self.accept_button.grid(row=0, column=2, sticky="ew")
-
-
-        self.accept_button.grid_columnconfigure(0, weight=1)
-        self.accept_button_label_wrapper = CTkFrame(self.accept_button, corner_radius=0, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR)
-        self.accept_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.BUTTONS_IPADX, pady=self.settings.uism.BUTTONS_IPADY, sticky="ew")
-
-        self.accept_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
-        self.accept_button_label = CTkLabel(
-            self.accept_button_label_wrapper,
-            textvariable=self._view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON,
-            height=0,
-            corner_radius=0,
-            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE, weight="normal"),
-            anchor="w",
-            text_color=self.settings.ctm.CONFIRMATION_BUTTONS_TEXT_COLOR,
-        )
-        self.accept_button_label.grid(row=0, column=1)
-
-
-
-        bindButtonFunctionAndColor(
-            target_widgets=[
-                self.accept_button,
+            self.accept_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
+            self.accept_button_label = CTkLabel(
                 self.accept_button_label_wrapper,
-                self.accept_button_label,
-            ],
-            enter_color=settings.ctm.ACCEPT_BUTTON_HOVERED_BG_COLOR,
-            leave_color=settings.ctm.ACCEPT_BUTTON_BG_COLOR,
-            clicked_color=settings.ctm.ACCEPT_BUTTON_CLICKED_BG_COLOR,
-            buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL),
-        )
+                textvariable=self._view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON,
+                height=0,
+                corner_radius=0,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE, weight="normal"),
+                anchor="w",
+                text_color=self.settings.ctm.CONFIRMATION_BUTTONS_TEXT_COLOR,
+            )
+            self.accept_button_label.grid(row=0, column=1)
+
+
+
+            bindButtonFunctionAndColor(
+                target_widgets=[
+                    self.accept_button,
+                    self.accept_button_label_wrapper,
+                    self.accept_button_label,
+                ],
+                enter_color=settings.ctm.ACCEPT_BUTTON_HOVERED_BG_COLOR,
+                leave_color=settings.ctm.ACCEPT_BUTTON_BG_COLOR,
+                clicked_color=settings.ctm.ACCEPT_BUTTON_CLICKED_BG_COLOR,
+                buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL),
+            )
+
+
+
+
+
+
+        else:
+            self.modal_buttons_wrapper.grid_columnconfigure(1, weight=1, minsize=self.settings.uism.BUTTONS_BETWEEN_PADDING)
+            self.modal_buttons_wrapper.grid_columnconfigure((0,2), weight=0, uniform="button_wrapper")
+
+
+
+
+
+            self.deny_button = CTkFrame(self.modal_buttons_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.DENY_BUTTON_BG_COLOR, cursor="hand2")
+            self.deny_button.grid(row=0, column=0, sticky="ew")
+
+
+            self.deny_button.grid_columnconfigure(0, weight=1)
+            self.deny_button_label_wrapper = CTkFrame(self.deny_button, corner_radius=0, fg_color=self.settings.ctm.DENY_BUTTON_BG_COLOR)
+            self.deny_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.BUTTONS_IPADX, pady=self.settings.uism.BUTTONS_IPADY, sticky="ew")
+
+            self.deny_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
+
+
+            self.deny_button_label_wrapper.grid_columnconfigure(0, weight=1)
+            self.deny_button_label = CTkLabel(
+                self.deny_button_label_wrapper,
+                textvariable=self._view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON,
+                height=0,
+                corner_radius=0,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE, weight="normal"),
+                anchor="w",
+                text_color=self.settings.ctm.CONFIRMATION_BUTTONS_TEXT_COLOR,
+            )
+            self.deny_button_label.grid(row=0, column=1)
+
+
+
+            bindButtonFunctionAndColor(
+                target_widgets=[
+                    self.deny_button,
+                    self.deny_button_label_wrapper,
+                    self.deny_button_label,
+                ],
+                enter_color=settings.ctm.DENY_BUTTON_HOVERED_BG_COLOR,
+                leave_color=settings.ctm.DENY_BUTTON_BG_COLOR,
+                clicked_color=settings.ctm.DENY_BUTTON_CLICKED_BG_COLOR,
+                buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL),
+            )
+
+
+
+            self.accept_button = CTkFrame(self.modal_buttons_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR, cursor="hand2")
+            self.accept_button.grid(row=0, column=2, sticky="ew")
+
+
+            self.accept_button.grid_columnconfigure(0, weight=1)
+            self.accept_button_label_wrapper = CTkFrame(self.accept_button, corner_radius=0, fg_color=self.settings.ctm.ACCEPT_BUTTON_BG_COLOR)
+            self.accept_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.BUTTONS_IPADX, pady=self.settings.uism.BUTTONS_IPADY, sticky="ew")
+
+            self.accept_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
+            self.accept_button_label = CTkLabel(
+                self.accept_button_label_wrapper,
+                textvariable=self._view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON,
+                height=0,
+                corner_radius=0,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.CONFIRMATION_BUTTONS_TEXT_FONT_SIZE, weight="normal"),
+                anchor="w",
+                text_color=self.settings.ctm.CONFIRMATION_BUTTONS_TEXT_COLOR,
+            )
+            self.accept_button_label.grid(row=0, column=1)
+
+
+
+            bindButtonFunctionAndColor(
+                target_widgets=[
+                    self.accept_button,
+                    self.accept_button_label_wrapper,
+                    self.accept_button_label,
+                ],
+                enter_color=settings.ctm.ACCEPT_BUTTON_HOVERED_BG_COLOR,
+                leave_color=settings.ctm.ACCEPT_BUTTON_BG_COLOR,
+                clicked_color=settings.ctm.ACCEPT_BUTTON_CLICKED_BG_COLOR,
+                buttonReleasedFunction=lambda _e: callFunctionIfCallable(self._view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL),
+            )
+
 
 
     def hide_buttons(self):
@@ -156,6 +202,8 @@ class _CreateConfirmationModal(CTkToplevel):
 
 
     def show(self, hide_title_bar:bool=True, close_when_focusout:bool=True):
+        self.modal_buttons_wrapper.grid()
+
         if hide_title_bar is False:
             self.overrideredirect(False)
         else:
