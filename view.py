@@ -627,14 +627,14 @@ class View():
         self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
         vrct_gui.main_window_cover.show()
 
-        # self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
         self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
         # self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
 
         self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
         # self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
-        vrct_gui.information_modal.show(close_when_focusout=False)
+        vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
 
 
 
