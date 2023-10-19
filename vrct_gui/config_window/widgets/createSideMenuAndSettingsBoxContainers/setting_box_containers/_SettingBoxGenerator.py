@@ -177,6 +177,8 @@ class _SettingBoxGenerator():
             fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
             # bg_color="red",
             progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
+            button_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_COLOR,
+            button_hover_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_HOVERED_COLOR,
         )
         setattr(self.config_window, switch_attr_name, switch_widget)
 
@@ -249,6 +251,8 @@ class _SettingBoxGenerator():
             from_=slider_range[0],
             to=slider_range[1],
             number_of_steps=slider_number_of_steps,
+            fg_color=self.settings.ctm.SB__SLIDER_BG_COLOR,
+            progress_color=self.settings.ctm.SB__SLIDER_PROGRESS_BG_COLOR,
             button_color=self.settings.ctm.SB__SLIDER_BUTTON_COLOR,
             button_hover_color=self.settings.ctm.SB__SLIDER_BUTTON_HOVERED_COLOR,
             command=command,
@@ -302,6 +306,9 @@ class _SettingBoxGenerator():
         setting_box_item_frame.grid_columnconfigure(1, weight=1)
         entry_widget = CTkEntry(
             setting_box_item_frame,
+            text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+            fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+            border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
             width=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
             textvariable=entry_variable,
@@ -348,6 +355,8 @@ class _SettingBoxGenerator():
             setting_box_item_frame,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_HEIGHT,
             corner_radius=0,
+            fg_color=self.settings.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_BG_COLOR,
+            progress_color=self.settings.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR,
         )
         setattr(self.config_window, progressbar_attr_name, progressbar_widget)
         progressbar_widget.grid(row=1, column=1, padx=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__BAR_PADX, sticky="ew")
@@ -400,6 +409,9 @@ class _SettingBoxGenerator():
 
         entry_widget = CTkEntry(
             setting_box_item_frame,
+            text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+            fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+            border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
             width=entry_width,
             height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
             textvariable=entry_textvariable,

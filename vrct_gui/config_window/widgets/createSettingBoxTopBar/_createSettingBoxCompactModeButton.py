@@ -56,9 +56,11 @@ def _createSettingBoxCompactModeButton(parent_widget, config_window, settings, v
         onvalue=True,
         offvalue=False,
         command=switchConfigWindowCompactMode,
-        # fg_color="",
+        fg_color=settings.ctm.COMPACT_MODE_SWITCH_BOX_BG_COLOR,
         # bg_color="red",
         progress_color=settings.ctm.COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR,
+        button_color=settings.ctm.COMPACT_MODE_SWITCH_BOX_BUTTON_COLOR,
+        button_hover_color=settings.ctm.COMPACT_MODE_SWITCH_BOX_BUTTON_HOVERED_COLOR,
     )
 
     config_window.setting_box_compact_mode_switch_box.grid(row=0, column=0)
