@@ -36,16 +36,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.withdraw()
         self.hide = True
 
-        self.title("")
-        self.overrideredirect(True)
-
-        self.wm_attributes("-alpha", 0)
-        self.wm_attributes("-toolwindow", True)
-
-        self.configure(fg_color="#ff7f50")
-        self.resizable(width=False, height=False)
-
-
         self.window_additional_y_pos=window_additional_y_pos
         self.window_border_width=window_border_width
         self.scrollbar_ipadx=scrollbar_ipadx
@@ -88,6 +78,16 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
         self.init_max_display_length = 8
         self.max_display_length = self.init_max_display_length
+
+        self.title("")
+        self.overrideredirect(True)
+
+        self.wm_attributes("-alpha", 0)
+        self.wm_attributes("-toolwindow", True)
+
+        self.configure(fg_color=self.window_bg_color)
+        self.resizable(width=False, height=False)
+
 
 
     def updateDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values):
