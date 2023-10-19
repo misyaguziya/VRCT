@@ -81,6 +81,7 @@ class VRCT_GUI(CTk):
             value_ipady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADY,
             value_pady=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADY,
             value_font_size=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_FONT_SIZE,
+            dropdown_menu_default_min_width=self.settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_DEFAULT_MIN_WIDTH,
 
             window_bg_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
             window_border_color=self.settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,
