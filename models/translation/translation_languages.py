@@ -1,4 +1,4 @@
-translatorEngine = ["DeepL", "Google", "Bing"]
+translatorEngine = ["DeepL", "DeepL_API", "Google", "Bing"]
 translation_lang = {}
 dict_deepl_languages = {
     "Japanese":"JA",
@@ -34,6 +34,76 @@ dict_deepl_languages = {
 translation_lang["DeepL"] = {
     "source":dict_deepl_languages,
     "target":dict_deepl_languages,
+}
+
+dict_deepl_api_source_languages = {
+    "Japanese":"ja",
+    "English":"en",
+    "Bulgarian":"bg",
+    "Czech":"cs",
+    "Danish":"da",
+    "German":"de",
+    "Greek":"el",
+    "Spanish":"es",
+    "Estonian":"et",
+    "Finnish":"fi",
+    "French":"fr",
+    "Hungarian":"hu",
+    "Indonesian":"id",
+    "Italian":"it",
+    "Korean":"ko",
+    "Lithuanian":"lt",
+    "Latvian":"lv",
+    "Norwegian":"nb",
+    "Dutch":"nl",
+    "Polish":"pl",
+    "Portuguese":"pt",
+    "Romanian":"ro",
+    "Russian":"ru",
+    "Slovak":"sk",
+    "Slovenian":"sl",
+    "Swedish":"sv",
+    "Turkish":"tr",
+    "Ukrainian":"uk",
+    "Chinese":"zh"
+}
+dict_deepl_api_target_languages = {
+    "Japanese":"ja",
+    "English American":"en-US",
+    "English British":"en-GB",
+    "Bulgarian":"bg",
+    "Czech":"cs",
+    "Danish":"da",
+    "German":"de",
+    "Greek":"el",
+    "English":"en",
+    "Spanish":"es",
+    "Estonian":"et",
+    "Finnish":"fi",
+    "French":"fr",
+    "Hungarian":"hu",
+    "Indonesian":"id",
+    "Italian":"it",
+    "Korean":"ko",
+    "Lithuanian":"lt",
+    "Latvian":"lv",
+    "Norwegian":"nb",
+    "Dutch":"nl",
+    "Polish":"pl",
+    "Portuguese Brazilian":"pt-BR",
+    "Portuguese European":"pt-PT",
+    "Romanian":"ro",
+    "Russian":"ru",
+    "Slovak":"sk",
+    "Slovenian":"sl",
+    "Swedish":"sv",
+    "Turkish":"tr",
+    "Ukrainian":"uk",
+    "Chinese":"zh"
+}
+translation_lang["DeepL_API"] = {
+    "source": dict_deepl_api_source_languages,
+    "target": dict_deepl_api_target_languages,
 }
 
 dict_google_languages = {

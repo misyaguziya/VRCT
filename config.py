@@ -416,6 +416,19 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('AUTH_KEYS')
+    def AUTH_KEYS(self):
+        return self._AUTH_KEYS
+
+    @AUTH_KEYS.setter
+    def AUTH_KEYS(self, value):
+        if type(value) is dict and set(value.keys()) == set(self.AUTH_KEYS.keys()):
+            for key, value in value.items():
+                if type(value) is str:
+                    self._AUTH_KEYS[key] = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
+
+    @property
     @json_serializable('MESSAGE_FORMAT')
     def MESSAGE_FORMAT(self):
         return self._MESSAGE_FORMAT
@@ -550,6 +563,12 @@ class Config:
         self._INPUT_SPEAKER_MAX_PHRASES = 10
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
+        self._AUTH_KEYS = {
+            "DeepL_API": None,
+            "DeepL": None,
+            "Bing": None,
+            "Google": None,
+        }
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
