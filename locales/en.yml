@@ -71,7 +71,7 @@ config_window:
 
   side_menu_labels:
     appearance: Appearance
-    # translation: Translation
+    translation: Translation
     transcription: Transcription
     transcription_mic: Mic
     transcription_speaker: Speaker
@@ -96,8 +96,8 @@ config_window:
   ui_language:
     label: UI Language
 
-  # deepl_auth_key:
-  #   label: DeepL Auth Key
+  deepl_auth_key:
+    label: DeepL Auth Key
 
   mic_host:
     label: Mic Host/Driver
