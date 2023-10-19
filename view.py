@@ -223,10 +223,10 @@ class View():
 
 
             # Translation Tab
-            # VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
-            # VAR_DESC_DEEPL_AUTH_KEY=None,
-            # CALLBACK_SET_DEEPL_AUTH_KEY=None,
-            # VAR_DEEPL_AUTH_KEY=StringVar(value=""),
+            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
+            VAR_DESC_DEEPL_AUTH_KEY=None,
+            CALLBACK_SET_DEEPL_AUTH_KEY=None,
+            VAR_DEEPL_AUTH_KEY=StringVar(value=""),
 
 
             # Transcription Tab (Mic)
@@ -435,7 +435,7 @@ class View():
 
 
             # Translation Tab
-            # self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
+            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
 
             # Transcription Tab (Mic)
             self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)
