@@ -19,7 +19,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     vrct_gui.grid_rowconfigure(0, weight=1)
     # vrct_gui.grid_columnconfigure(0, weight=1, minsize=settings.uism.MAIN_AREA_MIN_WIDTH)
 
-    vrct_gui.configure(fg_color="#ff7f50")
+    vrct_gui.configure(fg_color=settings.ctm.MAIN_BG_COLOR)
 
     vrct_gui.toplevel_wrapper = CTkFrame(vrct_gui, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     vrct_gui.toplevel_wrapper.grid(row=0, column=0, sticky="nsew")

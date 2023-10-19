@@ -1,26 +1,26 @@
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
 from .ui_utils import fadeInAnimation
+from utils import makeEven
 
 class _CreateWindowCover(CTkToplevel):
     def __init__(self, attach_window, settings, view_variable):
         super().__init__()
         self.withdraw()
 
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
+        self.BIND_FOCUS_IN_FUNC_ID=None
+
+        self.attach_window = attach_window
+        self.settings = settings
+        self._view_variable = view_variable
 
         self.title("")
         self.overrideredirect(True)
-
         self.wm_attributes("-toolwindow", True)
-
-        self.attach_window = attach_window
-
-
-        self.configure(fg_color="#ff7f50")
+        self.configure(fg_color="black")
         self.protocol("WM_DELETE_WINDOW", lambda: self.withdraw())
 
-        self.settings = settings
-        self._view_variable = view_variable
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
@@ -40,7 +40,14 @@ class _CreateWindowCover(CTkToplevel):
         self.cover_container_label_wrapper.place(relx=0.5, rely=0.5, anchor="center")
 
 
-    def show(self):
+    def show(self, bind_focusin=None):
+        self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID = self.attach_window.bind("<Configure>", self._adjustToMainWindowGeometry, "+")
+        if bind_focusin is not None:
+            self.BIND_FOCUS_IN_FUNC_ID = self.bind("<FocusIn>", lambda _e: bind_focusin(), "+")
+        else:
+            self.BIND_FOCUS_IN_FUNC_ID = None
+
+
         self.attributes("-alpha", 0)
         self.deiconify()
         self.attach_window.update_idletasks()
@@ -52,5 +59,22 @@ class _CreateWindowCover(CTkToplevel):
         fadeInAnimation(self, steps=5, interval=0.005, max_alpha=0.5)
 
 
+
     def hide(self):
+        self.attach_window.unbind("<Configure>", self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID)
+        if self.BIND_FOCUS_IN_FUNC_ID is not None:
+            self.unbind("<FocusIn>", self.BIND_FOCUS_IN_FUNC_ID)
+
         self.withdraw()
+
+
+
+    def _adjustToMainWindowGeometry(self, e=None):
+        self.attach_window.update_idletasks()
+        x_pos = self.attach_window.winfo_rootx()
+        y_pos = self.attach_window.winfo_rooty()
+        width_new = makeEven(self.attach_window.winfo_width())
+        height_new = makeEven(self.attach_window.winfo_height())
+        self.geometry("{}x{}+{}+{}".format(width_new, height_new, x_pos, y_pos))
+
+        self.lift()

@@ -10,28 +10,23 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         super().__init__()
         self.withdraw()
 
-
-        self.title("_CreateSelectableLanguagesWindow")
-        self.overrideredirect(True)
-
         self.attach = vrct_gui.main_bg_container
         self.vrct_gui = vrct_gui
-
-        self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", vrct_gui._closeSelectableLanguagesWindow)
-
         self.settings = settings
         self._view_variable = view_variable
 
+        self.is_created = False
+        self.selectable_language_window_type = None
 
+
+        self.title("_CreateSelectableLanguagesWindow")
+        self.overrideredirect(True)
+        self.configure(fg_color=self.settings.ctm.TOP_BG_COLOR)
+        self.protocol("WM_DELETE_WINDOW", vrct_gui._closeSelectableLanguagesWindow)
         self.bind("<FocusOut>", self.focusOutFunction)
 
 
 
-        self.is_created = False
-
-
-        self.selectable_language_window_type = None
 
     def createContainer(self, selectable_language_window_type):
         self.selectable_language_window_type = selectable_language_window_type

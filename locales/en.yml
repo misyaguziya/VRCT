@@ -29,6 +29,7 @@ main_window:
 
     no_mic_device_detected_error: No mic device detected.
     no_speaker_device_detected_error: No speaker device detected.
+    translation_engine_limit_error: It has automatically disabled the translation feature. Access has been temporarily restricted due to an excessive number of requests to the translation engine. Please wait for a while, restart VRCT, and try again.
 
     detected_by_word_filter: The word %{detected_message} has not been sent due to detection by the word filter.
 
@@ -53,6 +54,10 @@ main_window:
     detected_over_ui_size: "Current UI Size: %{current_ui_size}\nVRCT's window size may be larger than your display size.\n* Depending on your display size, you may need to adjust it multiple times."
     deny_adjust_ui_size: "Keep it at this size"
     accept_adjust_ui_size: "Set it smaller and restart"
+
+
+    translation_engine_limit_error: "It has automatically disabled the translation feature.\nAccess has been temporarily restricted\ndue to an excessive number of requests to the translation engine.\nPlease wait for a while, restart VRCT, and try again."
+    accept_translation_engine_limit_error: Accept and close
 
 
 selectable_language_window:
