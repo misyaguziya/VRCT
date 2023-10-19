@@ -19,7 +19,7 @@ class ConfigWindow(CTkToplevel):
         self.geometry(f"{self.settings.uism.DEFAULT_WIDTH}x{self.settings.uism.DEFAULT_HEIGHT}")
 
 
-        self.configure(fg_color="#ff7f50")
+        self.configure(fg_color=self.settings.ctm.MAIN_BG_COLOR)
         self.protocol("WM_DELETE_WINDOW", self._view_variable.CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON)
 
 

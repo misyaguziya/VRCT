@@ -11,19 +11,16 @@ class _CreateWindowCover(CTkToplevel):
         self.BIND_CONFIGURE_ADJUSTED_GEOMETRY_FUNC_ID=None
         self.BIND_FOCUS_IN_FUNC_ID=None
 
-        self.title("")
-        self.overrideredirect(True)
-
-        self.wm_attributes("-toolwindow", True)
-
         self.attach_window = attach_window
-
-
-        self.configure(fg_color="#ff7f50")
-        self.protocol("WM_DELETE_WINDOW", lambda: self.withdraw())
-
         self.settings = settings
         self._view_variable = view_variable
+
+        self.title("")
+        self.overrideredirect(True)
+        self.wm_attributes("-toolwindow", True)
+        self.configure(fg_color="black")
+        self.protocol("WM_DELETE_WINDOW", lambda: self.withdraw())
+
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
