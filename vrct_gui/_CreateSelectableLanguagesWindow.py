@@ -11,7 +11,6 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.withdraw()
 
 
-        # configure window
         self.title("_CreateSelectableLanguagesWindow")
         self.overrideredirect(True)
 
@@ -24,7 +23,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
-        self.bind("<FocusOut>", lambda e: vrct_gui._closeSelectableLanguagesWindow())
+
+        self.bind("<FocusOut>", self.focusOutFunction)
 
 
 
@@ -180,3 +180,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
         self.is_created = True
+
+
+    def focusOutFunction(self, e):
+        if str(e.widget) != ".!_createselectablelanguageswindow": return
+        self.vrct_gui._closeSelectableLanguagesWindow()
