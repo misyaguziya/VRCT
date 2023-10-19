@@ -213,6 +213,8 @@ def createSidebarFeatures(settings, main_window, view_variable):
             fg_color=settings.ctm.SF__SWITCH_BOX_BG_COLOR,
             bg_color=settings.ctm.SF__BG_COLOR,
             progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR,
+            button_color=settings.ctm.SF__SWITCH_BOX_BUTTON_COLOR,
+            # button_hover_color=settings.ctm.SF__SWITCH_BOX_BUTTON_HOVERED_COLOR,
         )
         setattr(main_window, switch_box_attr_name, switch_box_widget)
 
