@@ -96,7 +96,7 @@ class _SettingBoxGenerator():
             for_var_label_text, for_var_desc_text,
             optionmenu_attr_name,
             command,
-            dropdown_menu_width=None,
+            dropdown_menu_min_width=None,
             dropdown_menu_values=None,
             variable=None,
         ):
@@ -144,7 +144,7 @@ class _SettingBoxGenerator():
             command=adjustedCommand,
             wrapper_widget=self.config_window.main_bg_container,
             attach_widget=option_menu_widget,
-            dropdown_menu_width=dropdown_menu_width,
+            dropdown_menu_min_width=dropdown_menu_min_width,
         )
 
         return setting_box_frame

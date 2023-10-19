@@ -217,7 +217,7 @@ class UiScalingManager():
 
         self.config_window.SB__ERROR_MESSAGE_IPADX = (self._calculateUiSize(10), self._calculateUiSize(10))
         self.config_window.SB__ERROR_MESSAGE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
-        self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(12)
+        self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(14)
 
 
         self.config_window.SB__SELECTOR_FONT_SIZE = self._calculateUiSize(14)
@@ -243,6 +243,7 @@ class UiScalingManager():
         self.config_window.SB__DROPDOWN_MENU_VALUE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
         self.config_window.SB__DROPDOWN_MENU_VALUE_PADY = (0, self._calculateUiSize(1, is_allowed_odd=True))
         self.config_window.SB__DROPDOWN_MENU_VALUE_FONT_SIZE = self._calculateUiSize(14)
+        self.config_window.SB__DROPDOWN_MENU_VALUE_DEFAULT_MIN_WIDTH = self._calculateUiSize(200)
 
 
         self.config_window.SB__SWITCH_WIDTH = self._calculateUiSize(50)
