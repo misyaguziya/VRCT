@@ -22,7 +22,6 @@ class _CreateConfirmationModal(CTkToplevel):
 
 
 
-        # self.configure(fg_color="#ff7f50")
         self.configure(fg_color=self.settings.ctm.FAKE_BORDER_COLOR)
         self.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL))
 

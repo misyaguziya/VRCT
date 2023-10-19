@@ -24,14 +24,6 @@ class _CreateErrorWindow(CTkToplevel):
         self.withdraw()
         self.hide = True
 
-        self.title("")
-        self.overrideredirect(True)
-
-        self.wm_attributes("-alpha", 0)
-        self.wm_attributes("-toolwindow", True)
-
-        self.configure(fg_color="#fff")
-
         self.settings = settings
         self.attach_widget = None
         self._view_variable = view_variable
@@ -52,6 +44,15 @@ class _CreateErrorWindow(CTkToplevel):
         self.attach_widget_y_pos = None
         self.x_pos = None
         self.y_pos = None
+
+        self.title("")
+        self.overrideredirect(True)
+
+        self.wm_attributes("-alpha", 0)
+        self.wm_attributes("-toolwindow", True)
+
+        self.configure(fg_color=self.message_bg_color)
+
 
 
 
