@@ -66,5 +66,5 @@ class Translator():
                         to_language=target_language,
                         )
         except:
-            pass
+            result = False
         return result
