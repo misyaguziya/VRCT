@@ -41,7 +41,7 @@ Initial setup, basic functions, and other features are also described.
 # How to Use (YouTube)
 <div align="center">
 
-[![](https://img.youtube.com/vi/mI4DQaeaAPI/0.jpg)](https://www.youtube.com/watch?v=mI4DQaeaAPI)
+[![](https://img.youtube.com/vi/rUTad037n8Q/0.jpg)](https://www.youtube.com/watch?v=rUTad037n8Q)
 
 <div align="left">
 
