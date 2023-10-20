@@ -368,7 +368,7 @@ class Model:
                     fnc(energy)
                 except:
                     pass
-            # sleep(0.01)
+            sleep(0.01)
 
         mic_energy_queue = Queue()
         mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
@@ -450,7 +450,7 @@ class Model:
                     fnc(energy)
                 except:
                     pass
-            # sleep(0.01)
+            sleep(0.01)
 
         speaker_energy_queue = Queue()
         self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
