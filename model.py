@@ -139,53 +139,63 @@ class Model:
         return engine_name
 
     def getInputTranslate(self, message):
-        if config.CHOICE_TRANSLATOR == "DeepL_API":
-            if config.TARGET_LANGUAGE == "English":
-                if config.TARGET_COUNTRY in ["United States", "Canada", "Philippines"]:
-                    config.TARGET_LANGUAGE = "English American"
+        translator_name=config.CHOICE_TRANSLATOR
+        source_language=config.SOURCE_LANGUAGE
+        target_language=config.TARGET_LANGUAGE
+        target_country = config.TARGET_COUNTRY
+
+        if translator_name == "DeepL_API":
+            if target_language == "English":
+                if target_country in ["United States", "Canada", "Philippines"]:
+                    target_language = "English American"
                 else:
-                    config.TARGET_LANGUAGE = "English British"
-            elif config.TARGET_LANGUAGE in ["Portuguese"]:
-                if config.TARGET_COUNTRY == "Portugal":
-                    config.TARGET_LANGUAGE = "Portuguese European"
+                    target_language = "English British"
+            elif target_language == "Portuguese":
+                if target_country in ["Portugal"]:
+                    target_language = "Portuguese European"
                 else:
-                    config.TARGET_LANGUAGE = "Portuguese Brazilian"
-        elif config.CHOICE_TRANSLATOR == "DeepL":
-            if config.TARGET_LANGUAGE in ["English American", "English British"]:
-                config.TARGET_LANGUAGE = "English"
-            elif config.TARGET_LANGUAGE in ["Portuguese European", "Portuguese Brazilian"]:
-                config.TARGET_COUNTRY = "Portugal"
+                    target_language = "Portuguese Brazilian"
+        elif translator_name == "DeepL":
+            if target_language in ["English American", "English British"]:
+                target_language = "English"
+            elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
+                target_language = "Portuguese"
 
         translation = self.translator.translate(
-                        translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.SOURCE_LANGUAGE,
-                        target_language=config.TARGET_LANGUAGE,
+                        translator_name=translator_name,
+                        source_language=source_language,
+                        target_language=target_language,
                         message=message
                 )
         return translation
 
     def getOutputTranslate(self, message):
-        if config.CHOICE_TRANSLATOR == "DeepL_API":
-            if config.SOURCE_LANGUAGE == "English":
-                if config.SOURCE_COUNTRY in ["United States", "Canada", "Philippines"]:
-                    config.SOURCE_LANGUAGE = "English American"
+        translator_name=config.CHOICE_TRANSLATOR
+        source_language=config.TARGET_LANGUAGE
+        target_language=config.SOURCE_LANGUAGE
+        target_country = config.SOURCE_COUNTRY
+
+        if translator_name == "DeepL_API":
+            if target_language == "English":
+                if target_country in ["United States", "Canada", "Philippines"]:
+                    target_language = "English American"
                 else:
-                    config.SOURCE_LANGUAGE = "English British"
-            elif config.SOURCE_LANGUAGE in ["Portuguese"]:
-                if config.SOURCE_COUNTRY == "Portugal":
-                    config.SOURCE_LANGUAGE = "Portuguese European"
+                    target_language = "English British"
+            elif target_language == "Portuguese":
+                if target_country in ["Portugal"]:
+                    target_language = "Portuguese European"
                 else:
-                    config.SOURCE_LANGUAGE = "Portuguese Brazilian"
-        elif config.CHOICE_TRANSLATOR == "DeepL":
-            if config.SOURCE_LANGUAGE in ["English American", "English British"]:
-                config.SOURCE_LANGUAGE = "English"
-            elif config.SOURCE_LANGUAGE in ["Portuguese European", "Portuguese Brazilian"]:
-                config.SOURCE_COUNTRY = "Portugal"
+                    target_language = "Portuguese Brazilian"
+        elif translator_name == "DeepL":
+            if target_language in ["English American", "English British"]:
+                target_language = "English"
+            elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
+                target_language = "Portuguese"
 
         translation = self.translator.translate(
-                        translator_name=config.CHOICE_TRANSLATOR,
-                        source_language=config.TARGET_LANGUAGE,
-                        target_language=config.SOURCE_LANGUAGE,
+                        translator_name=translator_name,
+                        source_language=source_language,
+                        target_language=target_language,
                         message=message
                 )
         return translation
