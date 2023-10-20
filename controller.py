@@ -26,9 +26,10 @@ def sendMicMessage(message):
             view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
-
-        if translation == None:
-            translation = ""
+            if translation == False:
+                config.ENABLE_TRANSLATION = False
+                translation = ""
+                view.translationEngineLimitErrorProcess()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -91,9 +92,10 @@ def receiveSpeakerMessage(message):
             view.printToTextbox_AuthenticationError()
         else:
             translation = model.getOutputTranslate(message)
-
-        if translation == None:
-            translation = ""
+            if translation == False:
+                config.ENABLE_TRANSLATION = False
+                translation = ""
+                view.translationEngineLimitErrorProcess()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
@@ -158,9 +160,10 @@ def sendChatMessage(message):
             view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
-
-        if translation == None:
-            translation = ""
+            if translation == False:
+                config.ENABLE_TRANSLATION = False
+                translation = ""
+                view.translationEngineLimitErrorProcess()
 
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -389,7 +392,6 @@ def callbackSetDeeplAuthkey(value):
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     else:
         view.printToTextbox_AuthenticationError()
-    print(config.AUTH_KEYS, config.CHOICE_TRANSLATOR)
 
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
