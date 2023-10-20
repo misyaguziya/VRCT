@@ -52,6 +52,9 @@ class Translator():
                         from_language=source_language,
                         to_language=target_language,
                         )
-        except:
+        except Exception as e:
+            import traceback
+            with open('error.log', 'a') as f:
+                traceback.print_exc(file=f)
             result = False
         return result
