@@ -27,7 +27,7 @@ class AudioTranscriber:
                 "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
 
-    def transcribeAudioQueue(self, audio_queue, language):
+    def transcribeAudioQueue(self, audio_queue, language, country):
         # while True:
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
@@ -37,7 +37,7 @@ class AudioTranscriber:
             # fd, path = tempfile.mkstemp(suffix=".wav")
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
-            text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language])
+            text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country])
         except Exception as e:
             pass
         finally:

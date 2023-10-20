@@ -18,6 +18,7 @@
 import socket
 import json
 import base64
+from os import path as os_path
 
 def XSOverlay(
     endpoint:tuple=("127.0.0.1", 42069), messageType:int=1, index:int=0, timeout:float=2,
@@ -63,7 +64,7 @@ def xsoverlayForVRCT(content:str="") -> int:
         title="VRCT",
         content=content,
         useBase64Icon=True,
-        icon="./img/xsoverlay.png",
+        icon=os_path.join(os_path.dirname(__file__), "img", "xsoverlay2.png"),
         sourceApp="VRCT"
     )
     return response

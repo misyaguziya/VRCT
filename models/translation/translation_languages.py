@@ -1,6 +1,6 @@
-translatorEngine = ["DeepL(web)", "DeepL(auth)", "Google(web)", "Bing(web)"]
+translatorEngine = ["DeepL", "DeepL_API", "Google", "Bing"]
 translation_lang = {}
-dict_deepl_web_languages = {
+dict_deepl_languages = {
     "Japanese":"JA",
     "English":"EN",
     "Korean":"KO",
@@ -31,12 +31,12 @@ dict_deepl_web_languages = {
     "Turkish":"TR",
     "Norwegian":"NB",
 }
-translation_lang["DeepL(web)"] = {
-    "source":dict_deepl_web_languages,
-    "target":dict_deepl_web_languages,
+translation_lang["DeepL"] = {
+    "source":dict_deepl_languages,
+    "target":dict_deepl_languages,
 }
 
-dict_deepl_auth_source_languages = {
+dict_deepl_api_source_languages = {
     "Japanese":"ja",
     "English":"en",
     "Bulgarian":"bg",
@@ -67,7 +67,7 @@ dict_deepl_auth_source_languages = {
     "Ukrainian":"uk",
     "Chinese":"zh"
 }
-dict_deepl_auth_target_languages = {
+dict_deepl_api_target_languages = {
     "Japanese":"ja",
     "English American":"en-US",
     "English British":"en-GB",
@@ -101,12 +101,12 @@ dict_deepl_auth_target_languages = {
     "Ukrainian":"uk",
     "Chinese":"zh"
 }
-translation_lang["DeepL(auth)"] = {
-    "source": dict_deepl_auth_source_languages,
-    "target": dict_deepl_auth_target_languages,
+translation_lang["DeepL_API"] = {
+    "source": dict_deepl_api_source_languages,
+    "target": dict_deepl_api_target_languages,
 }
 
-dict_google_web_languages = {
+dict_google_languages = {
     "Japanese":"ja",
     "English":"en",
     "Chinese":"zh",
@@ -170,12 +170,12 @@ dict_google_web_languages = {
     "Basque":"eu",
     "Irish":"ga"
 }
-translation_lang["Google(web)"] = {
-    "source":dict_google_web_languages,
-    "target":dict_google_web_languages,
+translation_lang["Google"] = {
+    "source":dict_google_languages,
+    "target":dict_google_languages,
 }
 
-dict_bing_web_languages = {
+dict_bing_languages = {
     "Japanese":"ja",
     "English":"en",
     "Chinese":"zh",
@@ -237,7 +237,7 @@ dict_bing_web_languages = {
     "Punjabi":"pa",
     "Irish":"ga"
 }
-translation_lang["Bing(web)"] = {
-    "source":dict_bing_web_languages,
-    "target":dict_bing_web_languages,
+translation_lang["Bing"] = {
+    "source":dict_bing_languages,
+    "target":dict_bing_languages,
 }

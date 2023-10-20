@@ -12,15 +12,8 @@ def getInputDevices():
                         devices[host["name"]].append(device)
                     else:
                         devices[host["name"]] = [device]
-    return devices
-
-def getOutputDevices():
-    devices =[]
-    with PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(paWASAPI)
-        for device in p.get_loopback_device_info_generator():
-            if device["hostApi"] == wasapi_info["index"] and device["isLoopbackDevice"] is True:
-                devices.append(device)
+    if len(devices) == 0:
+        devices = {"NoHost": [{"name": "NoDevice"}]}
     return devices
 
 def getDefaultInputDevice():
@@ -33,7 +26,8 @@ def getDefaultInputDevice():
             for device_index in range(0, p. get_host_api_info_by_index(host_index)['deviceCount']):
                 device = p.get_device_info_by_host_api_device_index(host_index, device_index)
                 if device["index"] == defaultInputDevice:
-                    return {"host":host, "device": device}
+                    return {"host": host, "device": device}
+    return {"host": {"name": "NoHost"}, "device": {"name": "NoDevice"}}
 
 def getDefaultOutputDevice():
     with PyAudio() as p:
@@ -50,3 +44,4 @@ def getDefaultOutputDevice():
                             if default_speakers["name"] in loopback["name"]:
                                 default_device = loopback
                                 return default_device
+    return {"name":"NoDevice"}
