@@ -139,7 +139,6 @@ class Model:
         return engine_name
 
     def getInputTranslate(self, message):
-        print(config.CHOICE_TRANSLATOR, config.AUTH_KEYS)
         if config.CHOICE_TRANSLATOR == "DeepL_API":
             if config.TARGET_LANGUAGE == "English":
                 if config.TARGET_COUNTRY in ["United States", "Canada", "Philippines"]:

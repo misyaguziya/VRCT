@@ -84,6 +84,7 @@ class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
         source = Microphone(speaker=True,
             device_index= device["index"],
             sample_rate=int(device["defaultSampleRate"]),
+            channels=device["maxInputChannels"]
         )
         super().__init__(source=source)
         # self.adjustForNoise()
