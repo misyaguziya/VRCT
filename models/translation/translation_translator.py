@@ -21,7 +21,6 @@ class Translator():
         return result
 
     def translate(self, translator_name, source_language, target_language, message):
-        print(translator_name, source_language, target_language, message)
         try:
             result = ""
             source_language=translation_lang[translator_name]["source"][source_language]
