@@ -22,8 +22,6 @@ def sendMicMessage(message):
             return
         elif config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
             if translation == False:
@@ -88,8 +86,6 @@ def receiveSpeakerMessage(message):
         translation = ""
         if config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getOutputTranslate(message)
             if translation == False:
@@ -156,8 +152,6 @@ def sendChatMessage(message):
         translation = ""
         if config.ENABLE_TRANSLATION is False:
             pass
-        elif model.getTranslatorStatus() is False:
-            view.printToTextbox_AuthenticationError()
         else:
             translation = model.getInputTranslate(message)
             if translation == False:
@@ -215,7 +209,6 @@ def initSetLanguageAndCountry():
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator()
 
 def setYourLanguageAndCountry(select):
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
@@ -225,7 +218,6 @@ def setYourLanguageAndCountry(select):
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator()
     view.printToTextbox_selectedYourLanguages(select)
 
 def setTargetLanguageAndCountry(select):
@@ -236,7 +228,6 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator()
     view.printToTextbox_selectedTargetLanguages(select)
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
@@ -253,7 +244,6 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    model.authenticationTranslator()
     view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
 
 # command func
@@ -377,21 +367,23 @@ def callbackSetUiLanguage(value):
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
-    if len(value) > 0:
+    if len(value) == 39:
         result = model.authenticationTranslator(choice_translator="DeepL_API", auth_key=value)
         if result is True:
-            auth_keys = config.AUTH_KEYS
-            auth_keys["DeepL_API"] = value
-            config.AUTH_KEYS = auth_keys
+            key = value
             view.printToTextbox_AuthenticationSuccess()
+        else:
+            key = None
+            view.printToTextbox_AuthenticationError()
+        auth_keys = config.AUTH_KEYS
+        auth_keys["DeepL_API"] = key
+        config.AUTH_KEYS = auth_keys
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     elif len(value) == 0:
         auth_keys = config.AUTH_KEYS
         auth_keys["DeepL_API"] = None
         config.AUTH_KEYS = auth_keys
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-    else:
-        view.printToTextbox_AuthenticationError()
 
 # Transcription Tab (Mic)
 def callbackSetMicHost(value):
@@ -638,11 +630,13 @@ def createMainWindow():
     # init config
     initSetLanguageAndCountry()
 
-    if model.authenticationTranslator() is False:
+    if model.authenticationTranslator(config.CHOICE_TRANSLATOR, config.AUTH_KEYS[config.CHOICE_TRANSLATOR]) is False:
         # error update Auth key
+        auth_keys = config.AUTH_KEYS
+        auth_keys[config.CHOICE_TRANSLATOR] = None
+        config.AUTH_KEYS = auth_keys
         view.printToTextbox_AuthenticationError()
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
-        model.authenticationTranslator()
 
     # set word filter
     model.addKeywords()

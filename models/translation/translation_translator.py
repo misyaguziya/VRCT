@@ -6,34 +6,22 @@ from .translation_languages import translatorEngine, translation_lang
 # Translator
 class Translator():
     def __init__(self):
+        pass
         self.translator_status = {}
-        for translator in translatorEngine:
-            self.translator_status[translator] = False
-        self.deepl_client = None
 
     def authentication(self, translator_name, authkey=None):
-        result = False
+        result = True
         match translator_name:
-            case "DeepL":
-                self.translator_status[translator_name] = True
-                result = True
             case "DeepL_API":
                 try:
                     self.deepl_client = deepl_Translator(authkey)
                     self.deepl_client.translate_text(" ", target_lang="EN-US")
-                    self.translator_status[translator_name] = True
-                    result = True
                 except:
-                    self.translator_status[translator_name] = False
-            case "Google":
-                self.translator_status[translator_name] = True
-                result = True
-            case "Bing":
-                self.translator_status[translator_name] = True
-                result = True
+                    result = False
         return result
 
     def translate(self, translator_name, source_language, target_language, message):
+        print(translator_name, source_language, target_language, message)
         try:
             result = ""
             source_language=translation_lang[translator_name]["source"][source_language]
