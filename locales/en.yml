@@ -128,7 +128,7 @@ config_window:
     error_message: It cannot be set lower than '%{mic_record_timeout_label}' with a value of 0 or more.
 
   mic_max_phrase:
-    label: Mic Max Phrases
+    label: Mic Max Words
     desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat.
     error_message: You can set a number equal to or greater than 0.
 
@@ -156,7 +156,7 @@ config_window:
     error_message: It cannot be set lower than '%{speaker_record_timeout_label}' with a value of 0 or more.
 
   speaker_max_phrase:
-    label: Speaker Max Phrases
+    label: Speaker Max Words
     desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.
     error_message: You can set a number equal to or greater than 0.
 
