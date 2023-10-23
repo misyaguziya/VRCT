@@ -16,21 +16,15 @@ from config import config
 
 class View():
     def __init__(self):
-        self.settings = SimpleNamespace()
-        # theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
-        theme = "Dark"
-        all_ctm = ColorThemeManager(theme)
-        all_uism = UiScalingManager(config.UI_SCALING)
-        image_file = ImageFileManager(theme)
-
+        # Localization
         i18n.load_path.append(os_path.join(os_path.dirname(__file__), "locales"))
         i18n.set("fallback", "en") # The fallback language is English.
         i18n.set("skip_locale_root_data", True)
         i18n.set("filename_format", "{locale}.{format}")
         i18n.set("enable_memoization", True)
-
         i18n.set("locale", config.UI_LANGUAGE)
 
+        # Save settings at startup for items that require a restart VRCT for the changes to apply
         self.restart_required_configs_pre_data = SimpleNamespace(
             appearance_theme=config.APPEARANCE_THEME,
             ui_scaling=config.UI_SCALING,
@@ -38,6 +32,12 @@ class View():
             ui_language=config.UI_LANGUAGE,
         )
 
+        self.settings = SimpleNamespace()
+        # theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
+        theme = "Dark"
+        all_ctm = ColorThemeManager(theme)
+        all_uism = UiScalingManager(config.UI_SCALING)
+        image_file = ImageFileManager(theme)
 
         common_args = {
             "image_file": image_file,
@@ -95,7 +95,7 @@ class View():
             VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON=StringVar(value=""),
             VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON=StringVar(value=""),
 
-            # Open Config Window
+            # Window Control (Config Window)
             CALLBACK_CLICKED_OPEN_CONFIG_WINDOW_BUTTON=self._openConfigWindow,
             CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON=self._closeConfigWindow,
             CALLBACK_OPEN_CONFIG_WINDOW=None,
@@ -253,26 +253,26 @@ class View():
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
-            CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.setLatestConfigVariable_MicEnergyThreshold,
+            CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.callbackBindFocusOut_MicEnergyThreshold,
 
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
             VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.desc")),
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
-            CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.setLatestConfigVariable_MicRecordTimeout,
+            CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.callbackBindFocusOut_MicRecordTimeout,
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
             VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.desc")),
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
-            CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
+            CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.callbackBindFocusOut_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
             VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
-            CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
+            CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.callbackBindFocusOut_MicMaxPhrases,
 
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.label")),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.desc")),
@@ -290,26 +290,26 @@ class View():
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
-            CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.setLatestConfigVariable_SpeakerEnergyThreshold,
+            CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.callbackBindFocusOut_SpeakerEnergyThreshold,
 
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.desc")),
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
-            CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.setLatestConfigVariable_SpeakerRecordTimeout,
+            CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.callbackBindFocusOut_SpeakerRecordTimeout,
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
             VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.desc")),
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
-            CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
+            CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.callbackBindFocusOut_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
             VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
-            CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,
+            CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.callbackBindFocusOut_SpeakerMaxPhrases,
 
 
             # Others Tab
@@ -518,6 +518,23 @@ class View():
         # self._insertSampleConversationToTextbox()
 
 
+
+# GUI process
+    def createGUI(self):
+        vrct_gui._createGUI(settings=self.settings, view_variable=self.view_variable)
+
+    @staticmethod
+    def showGUI():
+        vrct_gui._showGUI()
+
+    @staticmethod
+    def startMainLoop():
+        vrct_gui._showGUI()
+        vrct_gui._startMainLoop()
+
+
+
+# Common
     @staticmethod
     def getAvailableFonts():
         available_fonts = list(tk_font.families())
@@ -529,6 +546,8 @@ class View():
     def openWebPage(url:str):
         webbrowser.open_new_tab(url)
 
+
+# Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_booth"))
@@ -536,6 +555,16 @@ class View():
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
+
+# Widget Control
+    # Common
+    @staticmethod
+    def _clearEntryBox(entry_widget):
+        entry_widget.delete(0, CTK_END)
+
+    def clearErrorMessage(self):
+        vrct_gui._clearErrorMessage()
+
 
     @staticmethod
     def showUpdateAvailableButton():
@@ -550,7 +579,179 @@ class View():
         vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
 
+    def enableMainWindowSidebarCompactMode(self):
+        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+        vrct_gui._enableMainWindowSidebarCompactMode()
 
+    def disableMainWindowSidebarCompactMode(self):
+        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        vrct_gui._disableMainWindowSidebarCompactMode()
+
+
+    # Config Window
+    def enableConfigWindowCompactMode(self):
+        for additional_widget in vrct_gui.config_window.additional_widgets:
+            additional_widget.grid_remove()
+
+    def disableConfigWindowCompactMode(self):
+        for additional_widget in vrct_gui.config_window.additional_widgets:
+            additional_widget.grid()
+
+
+    def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
+        is_restart_required = not (
+            self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
+            self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
+            self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
+            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE
+        )
+
+        if locale is None:
+            locale = config.UI_LANGUAGE
+
+        if is_restart_required is True:
+            self._showRestartButton(locale)
+        else:
+            self._hideRestartButton()
+
+
+    def _showRestartButton(self, locale:Union[None,str]=None):
+        self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
+        vrct_gui.config_window.restart_button_container.grid()
+    def _hideRestartButton(self):
+        vrct_gui.config_window.restart_button_container.grid_remove()
+
+
+
+    @staticmethod
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
+        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
+
+    @staticmethod
+    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
+        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
+
+
+
+    def openMicEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_manual"))
+        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_manual"))
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__mic_energy_threshold.grid()
+
+    def closeMicEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_automatic"))
+        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_automatic"))
+        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__mic_energy_threshold.grid_remove()
+
+    def openSpeakerEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_manual"))
+        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_manual"))
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=0)
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid()
+
+    def closeSpeakerEnergyThresholdWidget(self):
+        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_automatic"))
+        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_automatic"))
+        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
+        vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
+
+
+
+    def initMicThresholdCheckButton(self):
+        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+            self.replaceMicThresholdCheckButton_Disabled()
+        else:
+            self.replaceMicThresholdCheckButton_Passive()
+
+    @staticmethod
+    def replaceMicThresholdCheckButton_Active():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
+
+    @staticmethod
+    def replaceMicThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid()
+
+    @staticmethod
+    def replaceMicThresholdCheckButton_Passive():
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
+
+
+
+    def initSpeakerThresholdCheckButton(self):
+        self.replaceSpeakerThresholdCheckButton_Passive()
+
+    @staticmethod
+    def replaceSpeakerThresholdCheckButton_Active():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
+
+    @staticmethod
+    def replaceSpeakerThresholdCheckButton_Disabled():
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid()
+
+    @staticmethod
+    def replaceSpeakerThresholdCheckButton_Passive():
+        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
+        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
+
+
+
+
+    def updateList_MicHost(self, new_mic_host_list:list):
+        self.view_variable.LIST_MIC_HOST = new_mic_host_list
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_mic_host",
+            dropdown_menu_values=new_mic_host_list,
+        )
+
+    def updateSelected_MicHost(self, selected_mic_host_name:str):
+        self.view_variable.VAR_MIC_HOST.set(selected_mic_host_name)
+
+    def updateList_MicDevice(self, new_mic_device_list:list):
+        self.view_variable.LIST_MIC_DEVICE = new_mic_device_list
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_mic_device",
+            dropdown_menu_values=new_mic_device_list,
+        )
+
+    def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
+        self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
+
+
+    @staticmethod
+    def updateSetProgressBar_MicEnergy(new_mic_energy):
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_MicEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
+
+
+    @staticmethod
+    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+
+    @staticmethod
+    def initProgressBar_SpeakerEnergy():
+        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
+
+
+
+
+
+# Widget Control (Whole)
     def foregroundOnIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOn()
@@ -569,6 +770,12 @@ class View():
         vrct_gui.attributes("-topmost", False)
 
 
+    @staticmethod
+    def setMainWindowTransparency(transparency:float):
+        vrct_gui.wm_attributes("-alpha", transparency)
+
+
+# Function
     def _adjustUiSizeAndRestart(self):
         current_percentage = int(config.UI_SCALING.replace("%",""))
         target_percentage = current_percentage - 20
@@ -582,8 +789,22 @@ class View():
 
 
 
+    def translationEngineLimitErrorProcess(self):
+        # turn off translation switch.
+        vrct_gui.translation_switch_box.deselect()
+        vrct_gui.translation_frame.markToggleManually(False)
+
+        # disable translation feature.
+        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
+
+        # print system message that mention to stopped translation feature.
+        view.printToTextbox_TranslationEngineLimitError()
+        view.showTheLimitOfTranslationEngineConfirmationModal()
 
 
+
+
+# Show Modal
     def _showDisplayOverUiSizeConfirmationModal(self):
         self.foregroundOffIfForegroundEnabled()
 
@@ -629,33 +850,15 @@ class View():
 
         self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
         self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
-        # self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
 
         self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
-        # self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
         vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
 
 
 
-    def translationEngineLimitErrorProcess(self):
-        # turn off translation switch.
-        vrct_gui.translation_switch_box.deselect()
-        vrct_gui.translation_frame.markToggleManually(False)
 
-        # disable translation feature.
-        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
-
-        # print system message that mention to stopped translation feature.
-        view.printToTextbox_TranslationEngineLimitError()
-        view.showTheLimitOfTranslationEngineConfirmationModal()
-
-
-
-
-
-
-
+# Hide Modal
     def _hideInformationModal(self):
         vrct_gui.information_modal.hide()
         vrct_gui.main_window_cover.hide()
@@ -667,9 +870,8 @@ class View():
         vrct_gui.main_window_cover.hide()
         self.foregroundOnIfForegroundEnabled()
 
-    # def _deniedUpdateSoftware(self):
-    #     self._hideConfirmationModal()
 
+# Process
     def _startUpdateSoftware(self):
         self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
         vrct_gui.confirmation_modal.hide_buttons()
@@ -679,6 +881,7 @@ class View():
 
 
 
+# Window Control
     def _openConfigWindow(self):
         self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set(i18n.t("main_window.cover_message"))
         callFunctionIfCallable(self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
@@ -688,8 +891,7 @@ class View():
         callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
         vrct_gui._closeConfigWindow()
 
-
-
+# Window Control (Main Window Cover)
     def _openTheCoverOfMainWindow(self):
         vrct_gui.main_window_cover.show()
         vrct_gui.config_window.lift()
@@ -698,14 +900,7 @@ class View():
     def _closeTheCoverOfMainWindow():
         vrct_gui.main_window_cover.withdraw()
 
-    def enableMainWindowSidebarCompactMode(self):
-        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-        vrct_gui._enableMainWindowSidebarCompactMode()
-
-    def disableMainWindowSidebarCompactMode(self):
-        self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-        vrct_gui._disableMainWindowSidebarCompactMode()
-
+# Window Control (Selectable Languages Window)
     def openSelectableLanguagesWindow_YourLanguage(self, _e):
         self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
         vrct_gui._openSelectableLanguagesWindow("your_language")
@@ -715,6 +910,7 @@ class View():
         vrct_gui._openSelectableLanguagesWindow("target_language")
 
 
+# Update GuiVariable (view_variable)
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
         self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
         self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
@@ -723,7 +919,75 @@ class View():
     def updateList_selectableLanguages(self, new_selectable_language_list:list):
         self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
 
+    # (Config Window Setting Box Tab)
+    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
+        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
 
+
+# Set GuiVariable (view_variable)
+    def setGuiVariable_MicEnergyThreshold(self, value):
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
+        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
+
+
+    def setGuiVariable_SpeakerEnergyThreshold(self, value):
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(int(value))
+        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(str(value))
+
+
+    def setGuiVariable_MicRecordTimeout(self, value):
+        self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(str(value))
+
+
+    def setGuiVariable_MicPhraseTimeout(self, value):
+        self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(str(value))
+
+
+    def setGuiVariable_MicMaxPhrases(self, value):
+        self.view_variable.VAR_MIC_MAX_PHRASES.set(str(value))
+
+
+
+    def setGuiVariable_SpeakerRecordTimeout(self, value):
+        self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(str(value))
+
+
+    def setGuiVariable_SpeakerPhraseTimeout(self, value):
+        self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(str(value))
+
+
+    def setGuiVariable_SpeakerMaxPhrases(self, value):
+        self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(str(value))
+
+
+
+
+
+
+    def setLatestConfigVariable(self, target_name:str):
+        match (target_name):
+            case "MicEnergyThreshold":
+                self.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+            case "SpeakerEnergyThreshold":
+                self.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+            case "MicRecordTimeout":
+                self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
+            case "MicPhraseTimeout":
+                self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
+            case "MicMaxPhrases":
+                self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
+            case "SpeakerRecordTimeout":
+                self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
+            case "SpeakerPhraseTimeout":
+                self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
+            case "SpeakerMaxPhrases":
+                self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
+
+            case _:
+                raise ValueError(f"No matching case for target_name: {target_name}")
+
+
+# Print To Textbox.
     def printToTextbox_enableTranslation(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
     def printToTextbox_disableTranslation(self):
@@ -821,271 +1085,59 @@ class View():
         )
 
 
+# Message Box
     @staticmethod
     def getTextFromMessageBox():
         return vrct_gui.entry_message_box.get()
 
-    @staticmethod
-    def clearMessageBox():
-        vrct_gui.entry_message_box.delete(0, CTK_END)
-
-    @staticmethod
-    def setMainWindowTransparency(transparency:float):
-        vrct_gui.wm_attributes("-alpha", transparency)
-
-
-    def enableConfigWindowCompactMode(self):
-        for additional_widget in vrct_gui.config_window.additional_widgets:
-            additional_widget.grid_remove()
-
-    def disableConfigWindowCompactMode(self):
-        for additional_widget in vrct_gui.config_window.additional_widgets:
-            additional_widget.grid()
+    def clearMessageBox(self):
+        self._clearEntryBox(vrct_gui.entry_message_box)
 
 
 
-    def createGUI(self):
-        vrct_gui._createGUI(settings=self.settings, view_variable=self.view_variable)
 
-    @staticmethod
-    def showGUI():
-        vrct_gui._showGUI()
+# Callback Bind FocusOut
+    def callbackBindFocusOut_MicEnergyThreshold(self, _e=None):
+        self.setLatestConfigVariable("MicEnergyThreshold")
+        self.clearErrorMessage()
 
-    @staticmethod
-    def startMainLoop():
-        vrct_gui._showGUI()
-        vrct_gui._startMainLoop()
-
-
-    # Config Window
-    def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
-        is_restart_required = not (
-            self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
-            self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
-            self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
-            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE
-        )
-
-        if locale is None:
-            locale = config.UI_LANGUAGE
-
-        if is_restart_required is True:
-            self._showRestartButton(locale)
-        else:
-            self._hideRestartButton()
-
-
-    def _showRestartButton(self, locale:Union[None,str]=None):
-        self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
-        vrct_gui.config_window.restart_button_container.grid()
-    def _hideRestartButton(self):
-        vrct_gui.config_window.restart_button_container.grid_remove()
-
-    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
-        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
-
-    @staticmethod
-    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
-        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="disabled")
-
-    @staticmethod
-    def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
-        vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
-
-    def openMicEnergyThresholdWidget(self):
-        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_manual"))
-        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_manual"))
-        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=0)
-        vrct_gui.config_window.sb__mic_energy_threshold.grid()
-
-    def closeMicEnergyThresholdWidget(self):
-        self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_automatic"))
-        self.view_variable.VAR_DESC_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.desc_for_automatic"))
-        vrct_gui.config_window.sb__mic_dynamic_energy_threshold.grid(pady=(0,1))
-        vrct_gui.config_window.sb__mic_energy_threshold.grid_remove()
-
-    def openSpeakerEnergyThresholdWidget(self):
-        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_manual"))
-        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_manual"))
-        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=0)
-        vrct_gui.config_window.sb__speaker_energy_threshold.grid()
-
-    def closeSpeakerEnergyThresholdWidget(self):
-        self.view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.label_for_automatic"))
-        self.view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.speaker_dynamic_energy_threshold.desc_for_automatic"))
-        vrct_gui.config_window.sb__speaker_dynamic_energy_threshold.grid(pady=(0,1))
-        vrct_gui.config_window.sb__speaker_energy_threshold.grid_remove()
-
-
-
-    def initMicThresholdCheckButton(self):
-        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
-            self.replaceMicThresholdCheckButton_Disabled()
-        else:
-            self.replaceMicThresholdCheckButton_Passive()
-
-    @staticmethod
-    def replaceMicThresholdCheckButton_Active():
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid()
-
-    @staticmethod
-    def replaceMicThresholdCheckButton_Disabled():
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid()
-
-    @staticmethod
-    def replaceMicThresholdCheckButton_Passive():
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_mic_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_mic_energy_threshold.grid()
-
-
-
-    def initSpeakerThresholdCheckButton(self):
-        self.replaceSpeakerThresholdCheckButton_Passive()
-
-    @staticmethod
-    def replaceSpeakerThresholdCheckButton_Active():
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid()
-
-    @staticmethod
-    def replaceSpeakerThresholdCheckButton_Disabled():
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid()
-
-    @staticmethod
-    def replaceSpeakerThresholdCheckButton_Passive():
-        vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__disabled_button_speaker_energy_threshold.grid_remove()
-        vrct_gui.config_window.sb__progressbar_x_slider__passive_button_speaker_energy_threshold.grid()
-
-
-
-    def updateList_MicHost(self, new_mic_host_list:list):
-        self.view_variable.LIST_MIC_HOST = new_mic_host_list
-        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
-            dropdown_menu_widget_id="sb__optionmenu_mic_host",
-            dropdown_menu_values=new_mic_host_list,
-        )
-
-    def updateSelected_MicHost(self, selected_mic_host_name:str):
-        self.view_variable.VAR_MIC_HOST.set(selected_mic_host_name)
-
-    def updateList_MicDevice(self, new_mic_device_list:list):
-        self.view_variable.LIST_MIC_DEVICE = new_mic_device_list
-        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
-            dropdown_menu_widget_id="sb__optionmenu_mic_device",
-            dropdown_menu_values=new_mic_device_list,
-        )
-
-    def updateSelected_MicDevice(self, default_selected_mic_device_name:str):
-        self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
-
-
-    @staticmethod
-    def updateSetProgressBar_MicEnergy(new_mic_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
-
-    @staticmethod
-    def initProgressBar_MicEnergy():
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
-
-
-    @staticmethod
-    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
-
-    @staticmethod
-    def initProgressBar_SpeakerEnergy():
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
-
-
-
-    def setGuiVariable_MicEnergyThreshold(self, value):
-        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
-        self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
-
-    def setLatestConfigVariable_MicEnergyThreshold(self, _e=None):
-        self.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+    def callbackBindFocusOut_SpeakerEnergyThreshold(self, _e=None):
+        self.setLatestConfigVariable("SpeakerEnergyThreshold")
         self.clearErrorMessage()
 
 
-    def setGuiVariable_SpeakerEnergyThreshold(self, value):
-        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(int(value))
-        self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(str(value))
+    def callbackBindFocusOut_MicRecordTimeout(self, _e=None):
+        self.setLatestConfigVariable("MicRecordTimeout")
+        self.clearErrorMessage()
 
-    def setLatestConfigVariable_SpeakerEnergyThreshold(self, _e=None):
-        self.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+    def callbackBindFocusOut_MicPhraseTimeout(self, _e=None):
+        self.setLatestConfigVariable("MicPhraseTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_MicMaxPhrases(self, _e=None):
+        self.setLatestConfigVariable("MicMaxPhrases")
+        self.clearErrorMessage()
+
+
+    def callbackBindFocusOut_SpeakerRecordTimeout(self, _e=None):
+        self.setLatestConfigVariable("SpeakerRecordTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_SpeakerPhraseTimeout(self, _e=None):
+        self.setLatestConfigVariable("SpeakerPhraseTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_SpeakerMaxPhrases(self, _e=None):
+        self.setLatestConfigVariable("SpeakerMaxPhrases")
         self.clearErrorMessage()
 
 
 
-    def setGuiVariable_MicRecordTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_record_timeout)
-        self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(str(value))
-
-    def setLatestConfigVariable_MicRecordTimeout(self, _e=None):
-        self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
-        self.clearErrorMessage()
-
-
-    def setGuiVariable_MicPhraseTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_phrase_timeout)
-        self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(str(value))
-
-    def setLatestConfigVariable_MicPhraseTimeout(self, _e=None):
-        self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
-        self.clearErrorMessage()
-
-
-    def setGuiVariable_MicMaxPhrases(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_max_phrases)
-        self.view_variable.VAR_MIC_MAX_PHRASES.set(str(value))
-
-    def setLatestConfigVariable_MicMaxPhrases(self, _e=None):
-        self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
-        self.clearErrorMessage()
 
 
 
-    def setGuiVariable_SpeakerRecordTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_record_timeout)
-        self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(str(value))
 
-    def setLatestConfigVariable_SpeakerRecordTimeout(self, _e=None):
-        self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
-        self.clearErrorMessage()
-
-
-    def setGuiVariable_SpeakerPhraseTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_phrase_timeout)
-        self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(str(value))
-
-    def setLatestConfigVariable_SpeakerPhraseTimeout(self, _e=None):
-        self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
-        self.clearErrorMessage()
-
-
-    def setGuiVariable_SpeakerMaxPhrases(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_max_phrases)
-        self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(str(value))
-
-    def setLatestConfigVariable_SpeakerMaxPhrases(self, _e=None):
-        self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
-        self.clearErrorMessage()
-
-
-    @staticmethod
-    def _clearEntryBox(entry_widget):
-        entry_widget.delete(0, CTK_END)
-
-
+# Show Error Message (Config Window)
     def showErrorMessage_MicEnergyThreshold(self):
         self._showErrorMessage(
             vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold,
@@ -1162,27 +1214,17 @@ class View():
             self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.no_device_error_message"))
         )
 
-    def _showErrorMessage(self, target_widget, message):
-        self.view_variable.VAR_ERROR_MESSAGE.set(message)
-        vrct_gui._showErrorMessage(target_widget=target_widget)
-
     @staticmethod
     def _makeInvalidValueErrorMessage(error_message):
         return i18n.t("config_window.common_error_message.invalid_value") + "\n" + error_message
 
-    def clearErrorMessage(self):
-        vrct_gui._clearErrorMessage()
+    def _showErrorMessage(self, target_widget, message):
+        self.view_variable.VAR_ERROR_MESSAGE.set(message)
+        vrct_gui._showErrorMessage(target_widget=target_widget)
 
 
 
 
-    @staticmethod
-    def showSplash():
-        vrct_gui.showSplash()
-
-    @staticmethod
-    def destroySplash():
-        vrct_gui.destroySplash()
 
     # These conversations are generated by ChatGPT
     def _insertSampleConversationToTextbox(self):
