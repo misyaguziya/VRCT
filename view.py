@@ -85,6 +85,8 @@ class View():
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
 
+            CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
+
             CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE=self._showDisplayOverUiSizeConfirmationModal,
 
             # Confirmation Modal

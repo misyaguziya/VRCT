@@ -6,7 +6,7 @@ from utils import callFunctionIfCallable
 from ..ui_utils import createButtonWithImage, getImagePath, bindButtonFunctionAndColor
 
 def createMainWindowWidgets(vrct_gui, settings, view_variable):
-    vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui._quitVRCT)
+    vrct_gui.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(view_variable.CALLBACK_QUIT_VRCT))
 
 
     vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
