@@ -95,6 +95,10 @@ config_window:
   ui_size:
     label: UI Size
 
+  textbox_ui_size:
+    label: Text Box Font Size
+    desc: You can adjust the font size used in the logs relative to the UI size.
+
   font_family:
     label: Font Family
 

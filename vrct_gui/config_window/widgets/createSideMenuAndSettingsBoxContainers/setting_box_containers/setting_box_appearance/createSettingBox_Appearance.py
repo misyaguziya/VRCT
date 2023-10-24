@@ -18,6 +18,9 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     def optionmenu_ui_scaling_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_UI_SCALING, value)
 
+    def slider_text_box_ui_scaling_callback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING, value)
+
     def optionmenu_font_family_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_FONT_FAMILY, value)
 
@@ -62,6 +65,19 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         variable=view_variable.VAR_UI_SCALING,
     )
     config_window.sb__ui_scaling.grid(row=row)
+    row+=1
+
+    config_window.sb__textbox_uis_scaling = createSettingBoxSlider(
+        for_var_label_text=view_variable.VAR_LABEL_TEXTBOX_UI_SCALING,
+        for_var_desc_text=view_variable.VAR_DESC_TEXTBOX_UI_SCALING,
+        slider_attr_name="sb__slider_transparency",
+        slider_range=view_variable.SLIDER_RANGE_TEXTBOX_UI_SCALING,
+        command=lambda value: slider_text_box_ui_scaling_callback(value),
+        variable=view_variable.VAR_TEXTBOX_UI_SCALING,
+        slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING,
+        slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_TEXTBOX_UI_SCALING,
+    )
+    config_window.sb__textbox_uis_scaling.grid(row=row)
     row+=1
 
 
