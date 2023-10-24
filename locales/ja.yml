@@ -95,6 +95,10 @@ config_window:
   ui_size:
     label: UIサイズ
 
+  textbox_ui_size:
+    label: テキストボックス フォントサイズ
+    desc: ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。
+
   font_family:
     label: 使用フォント
 

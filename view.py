@@ -211,6 +211,14 @@ class View():
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
+            VAR_LABEL_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.label")),
+            VAR_DESC_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.desc")),
+            SLIDER_RANGE_TEXTBOX_UI_SCALING=(50, 200),
+            CALLBACK_SET_TEXTBOX_UI_SCALING=None,
+            VAR_TEXTBOX_UI_SCALING=IntVar(value=config.TEXTBOX_UI_SCALING),
+            CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING=self._closeTheCoverOfMainWindow,
+            CALLBACK_BUTTON_RELEASE_TEXTBOX_UI_SCALING=self._openTheCoverOfMainWindow,
+
             VAR_LABEL_FONT_FAMILY=StringVar(value=i18n.t("config_window.font_family.label")),
             VAR_DESC_FONT_FAMILY=None,
             LIST_FONT_FAMILY=self.getAvailableFonts(),
@@ -432,6 +440,7 @@ class View():
 
             self.view_variable.CALLBACK_SET_APPEARANCE = config_window_registers.get("callback_set_appearance", None)
             self.view_variable.CALLBACK_SET_UI_SCALING = config_window_registers.get("callback_set_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING = config_window_registers.get("callback_set_textbox_ui_scaling", None)
             self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window_registers.get("callback_set_font_family", None)
             self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window_registers.get("callback_set_ui_language", None)
 
@@ -517,7 +526,7 @@ class View():
 
 
         # Insert sample conversation for testing.
-        self._insertSampleConversationToTextbox()
+        # self._insertSampleConversationToTextbox()
 
 
 
@@ -776,6 +785,9 @@ class View():
     def setMainWindowTransparency(transparency:float):
         vrct_gui.wm_attributes("-alpha", transparency)
 
+    @staticmethod
+    def setMainWindowTextboxUiSize(custom_font_size_scale:float):
+        vrct_gui.print_to_textbox.setTagsSettings(custom_font_size_scale=custom_font_size_scale)
 
 # Function
     def _adjustUiSizeAndRestart(self):

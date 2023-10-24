@@ -136,6 +136,7 @@ class VRCT_GUI(CTk):
         self.print_to_textbox = _PrintToTextbox(
             vrct_gui=self,
             settings=self.settings.main,
+            init_scaling=(self._view_variable.VAR_TEXTBOX_UI_SCALING.get()/100)
         )
 
 

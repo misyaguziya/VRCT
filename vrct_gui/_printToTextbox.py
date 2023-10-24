@@ -7,10 +7,12 @@ class _PrintToTextbox():
             self,
             vrct_gui,
             settings,
+            init_scaling:float,
         ):
 
         self.vrct_gui = vrct_gui
         self.settings = settings
+        self.init_scaling = init_scaling
 
         self._DEFAULT_TEXTBOX_FIRST_INSERT_SPACING = self.settings.uism.TEXTBOX_FIRST_INSERT_SPACING
         self._DEFAULT_TEXTBOX_FONT_SIZE__LABEL = self.settings.uism.TEXTBOX_FONT_SIZE__LABEL
@@ -32,7 +34,7 @@ class _PrintToTextbox():
         self.all_textbox_widgets = [self.vrct_gui.textbox_all, self.vrct_gui.textbox_system, self.vrct_gui.textbox_sent, self.vrct_gui.textbox_received]
 
 
-        self.setTagsSettings()
+        self.setTagsSettings(self.init_scaling)
 
 
     def printToTextbox(self, target_type, original_message=None, translated_message=None, to_print_to_textbox_all:bool=True):
@@ -63,6 +65,8 @@ class _PrintToTextbox():
 
         for each_textbox_widget in self.all_textbox_widgets:
             self._setTagsSettings(target_textbox=each_textbox_widget)
+            each_textbox_widget.see("end")
+
 
 
     def _setTagsSettings(self, target_textbox):

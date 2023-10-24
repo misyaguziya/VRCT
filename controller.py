@@ -352,6 +352,11 @@ def callbackSetUiScaling(value):
     print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
     view.showRestartButtonIfRequired()
 
+def callbackSetTextboxUiScaling(value):
+    print("callbackSetTextboxUiScaling", int(value))
+    config.TEXTBOX_UI_SCALING = int(value)
+    view.setMainWindowTextboxUiSize(config.TEXTBOX_UI_SCALING/100)
+
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
@@ -694,6 +699,7 @@ def createMainWindow():
             "callback_set_transparency": callbackSetTransparency,
             "callback_set_appearance": callbackSetAppearance,
             "callback_set_ui_scaling": callbackSetUiScaling,
+            "callback_set_textbox_ui_scaling": callbackSetTextboxUiScaling,
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
 
