@@ -27,3 +27,6 @@ def generatePercentageStringsList(start=40, end=200, step=10):
     for percent in range(start, end + 1, step):
         strings.append(f"{percent}%")
     return strings
+
+def intToPercentageStringsFormatter(value:int):
+    return f"{value}%"

@@ -239,11 +239,14 @@ class _SettingBoxGenerator():
             slider_number_of_steps: Union[int,
             None] = None,
             slider_bind__ButtonPress=None,
-            slider_bind__ButtonRelease=None
+            slider_bind__ButtonRelease=None,
+            sliderTooltipFormatter=None,
         ):
 
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(slider_attr_name, for_var_label_text, for_var_desc_text)
 
+        if slider_number_of_steps is None:
+            slider_number_of_steps = int(slider_range[1] - slider_range[0])
 
         slider_widget = CTkSlider(
             setting_box_item_frame,
@@ -261,9 +264,14 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, slider_attr_name, slider_widget)
 
+        def getSliderValueWAfterFormatting():
+            return sliderTooltipFormatter(variable.get()) if sliderTooltipFormatter else variable.get()
+
+
+
         slider_tooltip = CTkToolTip(
             slider_widget,
-            message=variable.get(),
+            message=getSliderValueWAfterFormatting(),
             delay=0,
             bg_color=self.settings.ctm.SB__SLIDER_TOOLTIP_BG_COLOR,
             text_color=self.settings.ctm.SB__SLIDER_TOOLTIP_TEXT_COLOR,
@@ -275,7 +283,7 @@ class _SettingBoxGenerator():
         if slider_bind__ButtonPress is not None:
             def adjusted_slider_bind__ButtonPress(_e):
                 command(_e)
-                slider_tooltip.configure(message=slider_widget.get())
+                slider_tooltip.configure(message=getSliderValueWAfterFormatting())
                 slider_bind__ButtonPress()
             slider_widget.configure(command=adjusted_slider_bind__ButtonPress)
 
