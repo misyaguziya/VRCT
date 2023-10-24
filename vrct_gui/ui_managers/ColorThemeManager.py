@@ -282,6 +282,8 @@ class ColorThemeManager():
         self.config_window.SB__SLIDER_PROGRESS_BG_COLOR = self.DARK_500_COLOR
         self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
         self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
+        self.config_window.SB__SLIDER_TOOLTIP_BG_COLOR = self.DARK_850_COLOR
+        self.config_window.SB__SLIDER_TOOLTIP_TEXT_COLOR = self.DARK_200_COLOR
 
         self.config_window.SB__SWITCH_BOX_BG_COLOR = self.DARK_800_COLOR
         self.config_window.SB__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR

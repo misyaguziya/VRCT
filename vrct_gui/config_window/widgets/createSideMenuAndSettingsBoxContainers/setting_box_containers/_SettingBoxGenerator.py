@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from typing import Union
 
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
+from CTkToolTip import *
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
 from vrct_gui import vrct_gui
@@ -260,11 +261,21 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, slider_attr_name, slider_widget)
 
+        slider_tooltip = CTkToolTip(
+            slider_widget,
+            message=variable.get(),
+            delay=0,
+            bg_color=self.settings.ctm.SB__SLIDER_TOOLTIP_BG_COLOR,
+            text_color=self.settings.ctm.SB__SLIDER_TOOLTIP_TEXT_COLOR,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__SLIDER_TOOLTIP_FONT_SIZE, weight="normal"),
+        )
+
         slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         if slider_bind__ButtonPress is not None:
             def adjusted_slider_bind__ButtonPress(_e):
                 command(_e)
+                slider_tooltip.configure(message=slider_widget.get())
                 slider_bind__ButtonPress()
             slider_widget.configure(command=adjusted_slider_bind__ButtonPress)
 

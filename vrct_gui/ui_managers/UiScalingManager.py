@@ -262,6 +262,7 @@ class UiScalingManager():
 
         self.config_window.SB__SLIDER_WIDTH = self._calculateUiSize(200)
         self.config_window.SB__SLIDER_HEIGHT = self._calculateUiSize(16)
+        self.config_window.SB__SLIDER_TOOLTIP_FONT_SIZE = self._calculateUiSize(16)
 
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.RESPONSIVE_UI_SIZE_INT_50
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
