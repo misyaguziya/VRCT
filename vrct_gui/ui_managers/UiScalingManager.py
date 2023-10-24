@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from ..ui_utils import calculateUiSize
+
 class UiScalingManager():
     def __init__(self, scaling_percentage):
         scaling_float = int(scaling_percentage.replace("%", "")) / 100
@@ -274,11 +276,7 @@ class UiScalingManager():
 
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
-        size = int(default_size * self.SCALING_FLOAT)
-        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
-        if size <= 0:
-            size = 0 if is_zero_allowed else 1
-
+        size = calculateUiSize(default_size, self.SCALING_FLOAT, is_allowed_odd, is_zero_allowed)
         return size
 
     @staticmethod
