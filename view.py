@@ -517,7 +517,7 @@ class View():
 
 
         # Insert sample conversation for testing.
-        # self._insertSampleConversationToTextbox()
+        self._insertSampleConversationToTextbox()
 
 
 
@@ -1054,11 +1054,11 @@ class View():
 
 
     @staticmethod
-    def _printToTextbox_Info(info_message):
+    def _printToTextbox_Info(info_message, **kwargs):
         vrct_gui._printToTextbox(
             target_type="SYSTEM",
             original_message=info_message,
-            # translated_message="",
+            **kwargs,
         )
 
 
