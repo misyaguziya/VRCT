@@ -10,7 +10,7 @@ from languages import selectable_languages
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, generatePercentageStringsList
+from utils import callFunctionIfCallable, generatePercentageStringsList, intToPercentageStringsFormatter
 
 from config import config
 
@@ -175,6 +175,8 @@ class View():
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
             VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
+
+            CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER=intToPercentageStringsFormatter,
 
 
             # Side Menu Labels

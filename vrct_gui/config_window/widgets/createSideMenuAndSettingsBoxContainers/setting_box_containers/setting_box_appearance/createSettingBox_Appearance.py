@@ -38,6 +38,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         variable=view_variable.VAR_TRANSPARENCY,
         slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_TRANSPARENCY,
         slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_TRANSPARENCY,
+        sliderTooltipFormatter=view_variable.CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER,
     )
     config_window.sb__transparency.grid(row=row)
     row+=1
@@ -76,6 +77,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         variable=view_variable.VAR_TEXTBOX_UI_SCALING,
         slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING,
         slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_TEXTBOX_UI_SCALING,
+        sliderTooltipFormatter=view_variable.CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER,
     )
     config_window.sb__textbox_uis_scaling.grid(row=row)
     row+=1
