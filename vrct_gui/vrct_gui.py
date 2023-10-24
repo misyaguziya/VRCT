@@ -134,9 +134,6 @@ class VRCT_GUI(CTk):
         )
 
 
-        # self.update()
-        # self.geometry("{}x{}".format(self.winfo_width(), self.winfo_height()))
-
 
     def _startMainLoop(self):
         self.mainloop()
@@ -174,9 +171,6 @@ class VRCT_GUI(CTk):
 
 
     def _openSelectableLanguagesWindow(self, selectable_language_window_type):
-        # print("___________________________________open____________________________________________________")
-        # print("your", self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW)
-        # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
         if selectable_language_window_type == "your_language":
             if self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is False:
                 self.sls__arrow_img_your_language.configure(image=CTkImage(self.settings.main.image_file.ARROW_LEFT, size=self.settings.main.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE))
@@ -208,9 +202,6 @@ class VRCT_GUI(CTk):
         self.selectable_languages_window.withdraw()
 
 
-        # print("______________________________________close_________________________________________________")
-        # print("your", self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW)
-        # print("target", self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW)
         if self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW is not False or self._view_variable.IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW is not False:
             def callback():
                 self._view_variable.IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW = False
