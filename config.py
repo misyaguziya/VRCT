@@ -226,6 +226,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('TEXTBOX_UI_SCALING')
+    def TEXTBOX_UI_SCALING(self):
+        return self._TEXTBOX_UI_SCALING
+
+    @TEXTBOX_UI_SCALING.setter
+    def TEXTBOX_UI_SCALING(self, value):
+        if type(value) is int and 50 <= value <= 200:
+            self._TEXTBOX_UI_SCALING = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('FONT_FAMILY')
     def FONT_FAMILY(self):
         return self._FONT_FAMILY
@@ -546,6 +557,7 @@ class Config:
         self._TRANSPARENCY = 100
         self._APPEARANCE_THEME = "System"
         self._UI_SCALING = "100%"
+        self._TEXTBOX_UI_SCALING = 100
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]

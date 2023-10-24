@@ -8,7 +8,7 @@ from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
 from ._CreateConfirmationModal import _CreateConfirmationModal
-from ._printToTextbox import _printToTextbox
+from ._PrintToTextbox import _PrintToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
@@ -133,6 +133,13 @@ class VRCT_GUI(CTk):
             modal_type="information"
         )
 
+        self.print_to_textbox = _PrintToTextbox(
+            vrct_gui=self,
+            settings=self.settings.main,
+            init_scaling=(self._view_variable.VAR_TEXTBOX_UI_SCALING.get()/100)
+        )
+
+
 
 
     def _startMainLoop(self):
@@ -229,14 +236,10 @@ class VRCT_GUI(CTk):
             target_names=target_names,
         )
 
-    def _printToTextbox(self, target_type, original_message=None, translated_message=None):
-        _printToTextbox(
-            vrct_gui=self,
-            settings=self.settings.main,
+    def _printToTextbox(self, target_type, **kwargs):
+        self.print_to_textbox.printToTextbox(
             target_type=target_type,
-            original_message=original_message,
-            translated_message=translated_message,
-            tags=target_type,
+            **kwargs
         )
 
     def _setDefaultActiveLanguagePresetTab(self, tab_no:str):

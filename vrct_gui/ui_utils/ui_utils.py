@@ -42,6 +42,14 @@ def getLongestText(text_list:list):
             longest_text = text
     return longest_text
 
+def calculateUiSize(default_size, scaling_float, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
+        size = int(default_size * scaling_float)
+        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
+        if size <= 0:
+            size = 0 if is_zero_allowed else 1
+
+        return size
+
 def bindEnterAndLeaveColor(target_widgets, enter_color, leave_color):
     for target_widget in target_widgets:
         target_widget.bind("<Enter>", lambda e, widgets=target_widgets: [w.configure(fg_color=enter_color) for w in widgets], "+")
