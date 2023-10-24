@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from ..ui_utils import calculateUiSize
+
 class UiScalingManager():
     def __init__(self, scaling_percentage):
         scaling_float = int(scaling_percentage.replace("%", "")) / 100
@@ -260,6 +262,7 @@ class UiScalingManager():
 
         self.config_window.SB__SLIDER_WIDTH = self._calculateUiSize(200)
         self.config_window.SB__SLIDER_HEIGHT = self._calculateUiSize(16)
+        self.config_window.SB__SLIDER_TOOLTIP_FONT_SIZE = self._calculateUiSize(16)
 
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.RESPONSIVE_UI_SIZE_INT_50
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
@@ -274,11 +277,7 @@ class UiScalingManager():
 
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
-        size = int(default_size * self.SCALING_FLOAT)
-        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
-        if size <= 0:
-            size = 0 if is_zero_allowed else 1
-
+        size = calculateUiSize(default_size, self.SCALING_FLOAT, is_allowed_odd, is_zero_allowed)
         return size
 
     @staticmethod

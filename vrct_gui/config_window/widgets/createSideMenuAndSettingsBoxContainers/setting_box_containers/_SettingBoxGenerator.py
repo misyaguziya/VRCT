@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from typing import Union
 
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
+from CTkToolTip import *
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
 from vrct_gui import vrct_gui
@@ -238,11 +239,14 @@ class _SettingBoxGenerator():
             slider_number_of_steps: Union[int,
             None] = None,
             slider_bind__ButtonPress=None,
-            slider_bind__ButtonRelease=None
+            slider_bind__ButtonRelease=None,
+            sliderTooltipFormatter=None,
         ):
 
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(slider_attr_name, for_var_label_text, for_var_desc_text)
 
+        if slider_number_of_steps is None:
+            slider_number_of_steps = int(slider_range[1] - slider_range[0])
 
         slider_widget = CTkSlider(
             setting_box_item_frame,
@@ -260,11 +264,26 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, slider_attr_name, slider_widget)
 
+        def getSliderValueWAfterFormatting():
+            return sliderTooltipFormatter(variable.get()) if sliderTooltipFormatter else variable.get()
+
+
+
+        slider_tooltip = CTkToolTip(
+            slider_widget,
+            message=getSliderValueWAfterFormatting(),
+            delay=0,
+            bg_color=self.settings.ctm.SB__SLIDER_TOOLTIP_BG_COLOR,
+            text_color=self.settings.ctm.SB__SLIDER_TOOLTIP_TEXT_COLOR,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__SLIDER_TOOLTIP_FONT_SIZE, weight="normal"),
+        )
+
         slider_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         if slider_bind__ButtonPress is not None:
             def adjusted_slider_bind__ButtonPress(_e):
                 command(_e)
+                slider_tooltip.configure(message=getSliderValueWAfterFormatting())
                 slider_bind__ButtonPress()
             slider_widget.configure(command=adjusted_slider_bind__ButtonPress)
 
