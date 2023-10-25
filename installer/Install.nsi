@@ -5,6 +5,7 @@
 # LogicLib
 !include LogicLib.nsh
 
+Unicode True
 # アプリケーション名
 Name "VRCT Setup"
 # 作成されるインストーラ
@@ -36,14 +37,17 @@ Page custom OptionPage OptionPageLeave
 !define MUI_ABORTWARNING
 # 変数
 Var Checkbox_InstallDocs
+Var Checkbox_InstallShortcut
 Var Dialog_Options
 Var InstallDocs
+Var InstallShortcut
 Var Label_DescriptionOptions
 
 # 初期化時コールバック
 Function .onInit
   # オプション値を初期化します。
   StrCpy $InstallDocs ${BST_CHECKED}
+  StrCpy $InstallShortcut ${BST_CHECKED}
 FunctionEnd
 
 # オプション ページ
@@ -66,9 +70,16 @@ Function OptionPage
   ${NSD_CreateCheckbox} 0 13u 100% 12u "ドキュメントをインストールする(&D)"
   Pop $Checkbox_InstallDocs
 
+  ${NSD_CreateCheckbox} 0 26u 100% 12u "デスクトップにショートカットを作成(&D)"
+  Pop $Checkbox_InstallShortcut
+
   ${If} $InstallDocs == ${BST_CHECKED}
     # チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallDocs
+  ${EndIf}
+  ${If} $InstallShortcut == ${BST_CHECKED}
+    # チェックが入力済の場合、チェックボックスにチェックを入れます。
+    ${NSD_Check} $Checkbox_InstallShortcut
   ${EndIf}
   nsDialogs::Show
 FunctionEnd
@@ -76,6 +87,7 @@ FunctionEnd
 # オプション ページ退出コールバック
 Function OptionPageLeave
   ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
+  ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
 FunctionEnd
 
 # デフォルト セクション
@@ -83,7 +95,7 @@ Section
   # 出力先を指定します。
   SetOutPath "$INSTDIR"
   # インストールされるファイル
-  File "..\dist\VRCT.exe"
+  File /r "..\dist\VRCT\"
 
   ${If} $InstallDocs == ${BST_CHECKED}
     # ドキュメントをインストールする場合
@@ -95,6 +107,12 @@ Section
 
   # アンインストーラを出力
   WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+  ${If} $InstallDocs == ${BST_CHECKED}
+    # デスクトップにショートカットを作成
+    CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
+  ${EndIf}
+
   # スタート メニューにショートカットを登録
   CreateDirectory "$SMPROGRAMS\VRCT"
   SetOutPath "$INSTDIR"
@@ -102,6 +120,7 @@ Section
   # レジストリに登録
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayName" "VRCT"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayIcon" '"$INSTDIR\_internal\img\vrct_logo_mark_black.ico"'
 SectionEnd
 
 # アンインストーラ
