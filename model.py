@@ -91,10 +91,10 @@ class Model:
         return result
 
     def startLogger(self):
-        os_makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
+        os_makedirs(config.PATH_LOGS, exist_ok=True)
         logger = getLogger()
         logger.setLevel(INFO)
-        file_name = os_path.join(os_path.dirname(sys.argv[0]), "logs", f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
+        file_name = os_path.join(config.PATH_LOGS, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
         file_handler = FileHandler(file_name, encoding="utf-8", delay=True)
         formatter = Formatter("[%(asctime)s] %(message)s")
         file_handler.setFormatter(formatter)
