@@ -1,41 +1,41 @@
-# Modern UI
+ï»¿# Modern UI
 !include MUI2.nsh
 # nsDialogs
 !include nsDialogs.nsh
 # LogicLib
 !include LogicLib.nsh
 
-Unicode True
-# ƒAƒvƒŠƒP[ƒVƒ‡ƒ“–¼
+Unicode true
+# ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³å
 Name "VRCT Setup"
-# ì¬‚³‚ê‚éƒCƒ“ƒXƒg[ƒ‰
+# ä½œæˆã•ã‚Œã‚‹ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ©
 OutFile "VRCT_Setup.exe"
 
 RequestExecutionLevel admin
 ShowInstDetails show
 
-# ˆ³kƒƒ\ƒbƒh
+# åœ§ç¸®ãƒ¡ã‚½ãƒƒãƒ‰
 SetCompressor lzma
-# ƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚éƒfƒBƒŒƒNƒgƒŠ
+# ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã‚‹ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª
 InstallDir "$PROGRAMFILES\VRCT"
-# XPƒ}ƒjƒtƒFƒXƒg
+# XPãƒãƒ‹ãƒ•ã‚§ã‚¹ãƒˆ
 XPStyle on
-# ƒy[ƒW
+# ãƒšãƒ¼ã‚¸
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
 Page custom OptionPage OptionPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
-# ƒAƒ“ƒCƒ“ƒXƒg[ƒ‰ ƒy[ƒW
+# ã‚¢ãƒ³ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ© ãƒšãƒ¼ã‚¸
 !insertmacro MUI_UNPAGE_WELCOME
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_UNPAGE_FINISH
-# “ú–{ŒêUI
+# æ—¥æœ¬èªUI
 !insertmacro MUI_LANGUAGE "Japanese"
-# ƒCƒ“ƒ^[ƒtƒF[ƒX İ’è
+# ã‚¤ãƒ³ã‚¿ãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ è¨­å®š
 !define MUI_ABORTWARNING
-# •Ï”
+# å¤‰æ•°
 Var Checkbox_InstallDocs
 Var Checkbox_InstallShortcut
 Var Dialog_Options
@@ -43,85 +43,85 @@ Var InstallDocs
 Var InstallShortcut
 Var Label_DescriptionOptions
 
-# ‰Šú‰»ƒR[ƒ‹ƒoƒbƒN
+# åˆæœŸåŒ–æ™‚ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 Function .onInit
-  # ƒIƒvƒVƒ‡ƒ“’l‚ğ‰Šú‰»‚µ‚Ü‚·B
+  # ã‚ªãƒ—ã‚·ãƒ§ãƒ³å€¤ã‚’åˆæœŸåŒ–ã—ã¾ã™ã€‚
   StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
 FunctionEnd
 
-# ƒIƒvƒVƒ‡ƒ“ ƒy[ƒW
+# ã‚ªãƒ—ã‚·ãƒ§ãƒ³ ãƒšãƒ¼ã‚¸
 Function OptionPage
-  # nsDialogs‚ğì¬‚µ‚Ü‚·B
+  # nsDialogsã‚’ä½œæˆã—ã¾ã™ã€‚
   nsDialogs::Create 1018
-  # ì¬‚³‚ê‚½nsDialogs‚ğ•Ï”‚É‘ã“ü‚µ‚Ü‚·B
+  # ä½œæˆã•ã‚ŒãŸnsDialogsã‚’å¤‰æ•°ã«ä»£å…¥ã—ã¾ã™ã€‚
   Pop $Dialog_Options
 
   ${If} $Dialog_Options == error
-    # ƒ_ƒCƒAƒƒO‚Ìì¬‚É¸”s‚µ‚½ê‡‚É‚ÍI—¹‚µ‚Ü‚·B
+    # ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã®ä½œæˆã«å¤±æ•—ã—ãŸå ´åˆã«ã¯çµ‚äº†ã—ã¾ã™ã€‚
     Abort
   ${EndIf}
 
-  # ƒ‰ƒxƒ‹‚ğì¬‚µ‚Ü‚·B
-  ${NSD_CreateLabel} 0 0 100% 12u "ƒIƒvƒVƒ‡ƒ“‚ğ‘I‘ğ‚µ‚Ä‚­‚¾‚³‚¢B"
-  # ƒ‰ƒxƒ‹‚ğ•Ï”‚É‘ã“ü‚µ‚Ü‚·B
+  # ãƒ©ãƒ™ãƒ«ã‚’ä½œæˆã—ã¾ã™ã€‚
+  ${NSD_CreateLabel} 0 0 100% 12u "ã‚ªãƒ—ã‚·ãƒ§ãƒ³ã‚’é¸æŠã—ã¦ãã ã•ã„ã€‚"
+  # ãƒ©ãƒ™ãƒ«ã‚’å¤‰æ•°ã«ä»£å…¥ã—ã¾ã™ã€‚
   Pop $Label_DescriptionOptions
 
-  ${NSD_CreateCheckbox} 0 13u 100% 12u "ƒhƒLƒ…ƒƒ“ƒg‚ğƒCƒ“ƒXƒg[ƒ‹‚·‚é(&D)"
+  ${NSD_CreateCheckbox} 0 13u 100% 12u "ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹(&D)"
   Pop $Checkbox_InstallDocs
 
-  ${NSD_CreateCheckbox} 0 26u 100% 12u "ƒfƒXƒNƒgƒbƒv‚ÉƒVƒ‡[ƒgƒJƒbƒg‚ğì¬(&D)"
+  ${NSD_CreateCheckbox} 0 26u 100% 12u "ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ã«ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚’ä½œæˆ(&D)"
   Pop $Checkbox_InstallShortcut
 
   ${If} $InstallDocs == ${BST_CHECKED}
-    # ƒ`ƒFƒbƒN‚ª“ü—ÍÏ‚Ìê‡Aƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Éƒ`ƒFƒbƒN‚ğ“ü‚ê‚Ü‚·B
+    # ãƒã‚§ãƒƒã‚¯ãŒå…¥åŠ›æ¸ˆã®å ´åˆã€ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã«ãƒã‚§ãƒƒã‚¯ã‚’å…¥ã‚Œã¾ã™ã€‚
     ${NSD_Check} $Checkbox_InstallDocs
   ${EndIf}
   ${If} $InstallShortcut == ${BST_CHECKED}
-    # ƒ`ƒFƒbƒN‚ª“ü—ÍÏ‚Ìê‡Aƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Éƒ`ƒFƒbƒN‚ğ“ü‚ê‚Ü‚·B
+    # ãƒã‚§ãƒƒã‚¯ãŒå…¥åŠ›æ¸ˆã®å ´åˆã€ãƒã‚§ãƒƒã‚¯ãƒœãƒƒã‚¯ã‚¹ã«ãƒã‚§ãƒƒã‚¯ã‚’å…¥ã‚Œã¾ã™ã€‚
     ${NSD_Check} $Checkbox_InstallShortcut
   ${EndIf}
   nsDialogs::Show
 FunctionEnd
 
-# ƒIƒvƒVƒ‡ƒ“ ƒy[ƒW‘ŞoƒR[ƒ‹ƒoƒbƒN
+# ã‚ªãƒ—ã‚·ãƒ§ãƒ³ ãƒšãƒ¼ã‚¸é€€å‡ºã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
 Function OptionPageLeave
   ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
   ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
 FunctionEnd
 
-# ƒfƒtƒHƒ‹ƒg ƒZƒNƒVƒ‡ƒ“
+# ãƒ‡ãƒ•ã‚©ãƒ«ãƒˆ ã‚»ã‚¯ã‚·ãƒ§ãƒ³
 Section
-  # o—Íæ‚ğw’è‚µ‚Ü‚·B
+  # å‡ºåŠ›å…ˆã‚’æŒ‡å®šã—ã¾ã™ã€‚
   SetOutPath "$INSTDIR"
-  # ƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚éƒtƒ@ƒCƒ‹
+  # ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã‚‹ãƒ•ã‚¡ã‚¤ãƒ«
   File /r "..\dist\VRCT\"
 
   ${If} $InstallDocs == ${BST_CHECKED}
-    # ƒhƒLƒ…ƒƒ“ƒg‚ğƒCƒ“ƒXƒg[ƒ‹‚·‚éê‡
-    # o—Íæ‚ğw’è‚µ‚Ü‚·B
+    # ãƒ‰ã‚­ãƒ¥ãƒ¡ãƒ³ãƒˆã‚’ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã™ã‚‹å ´åˆ
+    # å‡ºåŠ›å…ˆã‚’æŒ‡å®šã—ã¾ã™ã€‚
     SetOutPath "$INSTDIR\docs"
-    # ƒCƒ“ƒXƒg[ƒ‹‚³‚ê‚éƒtƒ@ƒCƒ‹
+    # ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ«ã•ã‚Œã‚‹ãƒ•ã‚¡ã‚¤ãƒ«
     File "..\dist\README.txt"
   ${EndIf}
 
-  # ƒAƒ“ƒCƒ“ƒXƒg[ƒ‰‚ğo—Í
+  # ã‚¢ãƒ³ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ©ã‚’å‡ºåŠ›
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
   ${If} $InstallDocs == ${BST_CHECKED}
-    # ƒfƒXƒNƒgƒbƒv‚ÉƒVƒ‡[ƒgƒJƒbƒg‚ğì¬
+    # ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ã«ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚’ä½œæˆ
     CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
   ${EndIf}
 
-  # ƒXƒ^[ƒg ƒƒjƒ…[‚ÉƒVƒ‡[ƒgƒJƒbƒg‚ğ“o˜^
+  # ã‚¹ã‚¿ãƒ¼ãƒˆ ãƒ¡ãƒ‹ãƒ¥ãƒ¼ã«ã‚·ãƒ§ãƒ¼ãƒˆã‚«ãƒƒãƒˆã‚’ç™»éŒ²
   CreateDirectory "$SMPROGRAMS\VRCT"
   SetOutPath "$INSTDIR"
   CreateShortcut "$SMPROGRAMS\VRCT\VRCT.lnk" "$INSTDIR\VRCT.exe" ""
-  # ƒŒƒWƒXƒgƒŠ‚É“o˜^
+  # ãƒ¬ã‚¸ã‚¹ãƒˆãƒªã«ç™»éŒ²
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayName" "VRCT"
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "UninstallString" '"$INSTDIR\Uninstall.exe"'
   WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayIcon" '"$INSTDIR\_internal\img\vrct_logo_mark_black.ico"'
 SectionEnd
 
-# ƒAƒ“ƒCƒ“ƒXƒg[ƒ‰
+# ã‚¢ãƒ³ã‚¤ãƒ³ã‚¹ãƒˆãƒ¼ãƒ©
 !include Uninstall.nsi
