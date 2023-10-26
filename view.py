@@ -743,24 +743,45 @@ class View():
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
 
 
-    @staticmethod
-    def updateSetProgressBar_MicEnergy(new_mic_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+    def updateSetProgressBar_MicEnergy(self, new_mic_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold,
+            new_energy=new_mic_energy,
+            max_energy=config.MAX_MIC_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
+        )
+
 
     @staticmethod
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
 
-    @staticmethod
-    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+    def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold,
+            new_energy=new_speaker_energy,
+            max_energy=config.MAX_SPEAKER_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
+        )
 
     @staticmethod
     def initProgressBar_SpeakerEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
 
 
+    def updateProgressBar(
+            self,
+            target_progressbar_widget,
+            new_energy,
+            max_energy,
+            energy_threshold,
+        ):
+        target_progressbar_widget.set(new_energy/max_energy)
+        if new_energy >= energy_threshold:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_EXCEED_THRESHOLD_BG_COLOR)
+        else:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR)
 
 
 
