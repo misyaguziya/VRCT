@@ -215,7 +215,7 @@ class ColorThemeManager():
 
             TOP_BG_COLOR = self.DARK_850_COLOR,
             TITLE_TEXT_COLOR = self.DARK_400_COLOR,
-            LANGUAGE_BUTTON_BG_COLOR = self.LIGHT_100_COLOR,
+            LANGUAGE_BUTTON_BG_COLOR = self.DARK_875_COLOR,
             LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR,
             LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR,
         )
