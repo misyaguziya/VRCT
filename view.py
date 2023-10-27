@@ -69,7 +69,6 @@ class View():
         )
 
         self.settings.error_message_window = SimpleNamespace(
-            ctm=all_ctm.error_message_window,
             uism=all_uism.error_message_window,
             **common_args
         )
