@@ -1,13 +1,8 @@
+import pprint
 from types import SimpleNamespace
 
 class ColorThemeManager():
     def __init__(self, theme):
-        # self.main = SimpleNamespace()
-        # self.config_window = SimpleNamespace()
-        # self.selectable_language_window = SimpleNamespace()
-        # self.main_window_cover = SimpleNamespace()
-        # self.error_message_window = SimpleNamespace()
-        # self.confirmation_modal = SimpleNamespace()
 
         # old one. But leave it here for now.
         # self.PRIMARY_100_COLOR = "#c4eac1"
@@ -86,13 +81,22 @@ class ColorThemeManager():
         self.LIGHT_1000_COLOR = "#010101"
 
 
+        self._createDarkModeColor__Default()
         if theme == "Dark":
-            self._createDarkModeColor()
-        # elif theme == "Light":
-        #     self._createLightModeColor()
+            pass
+
+        elif theme == "Light":
+            color = self._createLightModeColor()
+            for c in color.__dict__.keys():
+                s = getattr(self, c)
+                s_dict = s.__dict__
+                data = getattr(color, c)
+                data_dict = data.__dict__
+
+                self.mergeNestedDicts(s_dict, data_dict)
 
 
-    def _createDarkModeColor(self):
+    def _createDarkModeColor__Default(self):
         self.main = SimpleNamespace(
             # Common
             BASIC_TEXT_COLOR = self.LIGHT_100_COLOR,
@@ -337,3 +341,30 @@ class ColorThemeManager():
             SB__ERROR_MESSAGE_BG_COLOR = "#bb4448",
             SB__ERROR_MESSAGE_TEXT_COLOR = "#fff",
         )
+
+    def _createLightModeColor(self):
+        color = SimpleNamespace(
+            main = SimpleNamespace(
+                # Main
+                MAIN_BG_COLOR = self.DARK_200_COLOR,
+            ),
+
+            config_window = SimpleNamespace(
+                # Common
+                BASIC_TEXT_COLOR = self.LIGHT_100_COLOR,
+            ),
+        )
+
+        return color
+
+
+
+    @staticmethod
+    def mergeNestedDicts(d1, d2):
+        for key, value in d2.items():
+            if key in d1 and isinstance(d1[key], dict) and isinstance(value, dict):
+                mergeNestedDicts(d1[key], value)
+            else:
+                d1[key] = value
+
+        return d1

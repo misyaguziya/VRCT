@@ -3,8 +3,9 @@ from ..ui_utils import getImageFileFromUiUtils
 
 class ImageFileManager():
     def __init__(self, theme:str ="Dark"):
+        self._createDarkModeImages()
         if theme == "Dark":
-            self._createDarkModeImages()
+            pass
         elif theme == "Light":
             self._createLightModeImages()
 
