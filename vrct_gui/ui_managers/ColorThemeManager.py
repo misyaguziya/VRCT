@@ -2,12 +2,12 @@ from types import SimpleNamespace
 
 class ColorThemeManager():
     def __init__(self, theme):
-        self.main = SimpleNamespace()
-        self.config_window = SimpleNamespace()
-        self.selectable_language_window = SimpleNamespace()
-        self.main_window_cover = SimpleNamespace()
-        self.error_message_window = SimpleNamespace()
-        self.confirmation_modal = SimpleNamespace()
+        # self.main = SimpleNamespace()
+        # self.config_window = SimpleNamespace()
+        # self.selectable_language_window = SimpleNamespace()
+        # self.main_window_cover = SimpleNamespace()
+        # self.error_message_window = SimpleNamespace()
+        # self.confirmation_modal = SimpleNamespace()
 
         # old one. But leave it here for now.
         # self.PRIMARY_100_COLOR = "#c4eac1"
@@ -88,401 +88,252 @@ class ColorThemeManager():
 
         if theme == "Dark":
             self._createDarkModeColor()
-        elif theme == "Light":
-            self._createLightModeColor()
+        # elif theme == "Light":
+        #     self._createLightModeColor()
 
 
     def _createDarkModeColor(self):
-        # Common
-        self.main.BASIC_TEXT_COLOR = self.LIGHT_100_COLOR
-        self.main.LABELS_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+        self.main = SimpleNamespace(
+            # Common
+            BASIC_TEXT_COLOR = self.LIGHT_100_COLOR,
+            LABELS_TEXT_COLOR = self.LIGHT_100_COLOR,
 
-        # Main
-        self.main.MAIN_BG_COLOR = self.DARK_888_COLOR
-
-        self.main.TEXTBOX_BG_COLOR = self.DARK_900_COLOR
-        self.main.TEXTBOX_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-        self.main.TEXTBOX_TEXT_SUB_COLOR = self.DARK_450_COLOR
-        self.main.TEXTBOX_SYSTEM_TAG_TEXT_COLOR = self.PRIMARY_300_COLOR
-        self.main.TEXTBOX_SENT_TAG_TEXT_COLOR = "#6197b4"
-        self.main.TEXTBOX_RECEIVED_TAG_TEXT_COLOR = "#a861b4"
-        self.main.TEXTBOX_ERROR_TAG_TEXT_COLOR = "#c27583"
-        self.main.TEXTBOX_TIMESTAMP_TEXT_COLOR = self.DARK_600_COLOR
-
-        self.main.TEXTBOX_TAB_BG_PASSIVE_COLOR = self.DARK_850_COLOR
-        self.main.TEXTBOX_TAB_BG_ACTIVE_COLOR = self.main.TEXTBOX_BG_COLOR
-        self.main.TEXTBOX_TAB_BG_HOVERED_COLOR = self.DARK_800_COLOR
-        self.main.TEXTBOX_TAB_BG_CLICKED_COLOR = self.DARK_925_COLOR
-        self.main.TEXTBOX_TAB_TEXT_ACTIVE_COLOR = self.main.BASIC_TEXT_COLOR
-        self.main.TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.DARK_500_COLOR
-
-        self.main.TEXTBOX_ENTRY_TEXT_COLOR = self.DARK_300_COLOR
-        self.main.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR = self.DARK_500_COLOR
-        self.main.TEXTBOX_ENTRY_BG_COLOR = self.DARK_875_COLOR
-        self.main.TEXTBOX_ENTRY_BORDER_COLOR = self.DARK_750_COLOR
-        self.main.TEXTBOX_ENTRY_PLACEHOLDER_COLOR = self.DARK_500_COLOR
-        self.main.TEXTBOX_ENTRY_PLACEHOLDER_DISABLED_COLOR = self.DARK_700_COLOR
+            # Main
+            MAIN_BG_COLOR = self.DARK_888_COLOR,
 
 
+            TEXTBOX_BG_COLOR = self.DARK_900_COLOR,
+            TEXTBOX_TEXT_COLOR = self.LIGHT_100_COLOR,
+            TEXTBOX_TEXT_SUB_COLOR = self.DARK_450_COLOR,
+            TEXTBOX_SYSTEM_TAG_TEXT_COLOR = self.PRIMARY_300_COLOR,
+            TEXTBOX_SENT_TAG_TEXT_COLOR = "#6197b4",
+            TEXTBOX_RECEIVED_TAG_TEXT_COLOR = "#a861b4",
+            TEXTBOX_ERROR_TAG_TEXT_COLOR = "#c27583",
+            TEXTBOX_TIMESTAMP_TEXT_COLOR = self.DARK_600_COLOR,
 
-        # Sidebar
-        self.main.SIDEBAR_BG_COLOR = self.DARK_850_COLOR
+            TEXTBOX_TAB_BG_PASSIVE_COLOR = self.DARK_850_COLOR,
+            TEXTBOX_TAB_BG_ACTIVE_COLOR = self.DARK_900_COLOR,
+            TEXTBOX_TAB_BG_HOVERED_COLOR = self.DARK_800_COLOR,
+            TEXTBOX_TAB_BG_CLICKED_COLOR = self.DARK_925_COLOR,
+            TEXTBOX_TAB_TEXT_ACTIVE_COLOR = self.LIGHT_100_COLOR,
+            TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.DARK_500_COLOR,
 
-        # Sidebar Features
-        self.main.SF__BG_COLOR = self.DARK_825_COLOR
-        self.main.SF__HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.main.SF__CLICKED_BG_COLOR = self.DARK_875_COLOR
-        self.main.SF__TEXT_DISABLED_COLOR = self.DARK_500_COLOR
-
-        self.main.SF__SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR
-        self.main.SF__SWITCH_BOX_HOVERED_BG_COLOR = self.DARK_725_COLOR
-        self.main.SF__SWITCH_BOX_CLICKED_BG_COLOR = self.DARK_825_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_400_COLOR
-        self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
-        self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_800_COLOR
-
-        self.main.SF__SWITCH_BOX_BUTTON_COLOR = self.DARK_400_COLOR
-        # It's not working because It overrode internally.
-        self.main.SF__SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_350_COLOR
-
-        self.main.SF__SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
-        self.main.SF__SELECTED_MARK_ACTIVE_HOVERED_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR
-        self.main.SF__SELECTED_MARK_ACTIVE_CLICKED_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR
-        self.main.SF__SELECTED_MARK_DISABLE_BG_COLOR = self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR
+            TEXTBOX_ENTRY_TEXT_COLOR = self.DARK_300_COLOR,
+            TEXTBOX_ENTRY_TEXT_DISABLED_COLOR = self.DARK_500_COLOR,
+            TEXTBOX_ENTRY_BG_COLOR = self.DARK_875_COLOR,
+            TEXTBOX_ENTRY_BORDER_COLOR = self.DARK_750_COLOR,
+            TEXTBOX_ENTRY_PLACEHOLDER_COLOR = self.DARK_500_COLOR,
+            TEXTBOX_ENTRY_PLACEHOLDER_DISABLED_COLOR = self.DARK_700_COLOR,
 
 
-        # Sidebar Languages Settings
-        self.main.SLS__TITLE_TEXT_COLOR = self.DARK_400_COLOR
+            # Sidebar
+            SIDEBAR_BG_COLOR = self.DARK_850_COLOR,
 
-        self.main.SLS__BG_COLOR = self.DARK_800_COLOR
+            # Sidebar Features
+            SF__BG_COLOR = self.DARK_825_COLOR,
+            SF__HOVERED_BG_COLOR = self.DARK_800_COLOR,
+            SF__CLICKED_BG_COLOR = self.DARK_875_COLOR,
+            SF__TEXT_DISABLED_COLOR = self.DARK_500_COLOR,
 
-        self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_825_COLOR
-        self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_875_COLOR
-        self.main.SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.main.SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SLS__BG_COLOR
-        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.DARK_600_COLOR
-        self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+            SF__SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR,
+            SF__SWITCH_BOX_HOVERED_BG_COLOR = self.DARK_725_COLOR,
+            SF__SWITCH_BOX_CLICKED_BG_COLOR = self.DARK_825_COLOR,
+            SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR,
+            SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_400_COLOR,
+            SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR,
+            SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_800_COLOR,
 
-        self.main.SLS__BOX_BG_COLOR = self.DARK_825_COLOR
-        self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR
-        self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR
+            SF__SWITCH_BOX_BUTTON_COLOR = self.DARK_400_COLOR,
+            # It's not working because It overrode internally.
+            SF__SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_350_COLOR,
 
-        self.main.SLS__OPTIONMENU_BG_COLOR = self.DARK_888_COLOR
-        self.main.SLS__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
-        self.main.SLS__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
-
-
-        self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.main.CONFIG_BUTTON_HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.main.CONFIG_BUTTON_CLICKED_BG_COLOR = self.DARK_875_COLOR
-        # self.main.CONFIG_BUTTON_DISABLE_COLOR = self.DARK_900_COLOR
-
-        self.main.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.main.MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.main.MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR
-        # self.main.MINIMIZE_SIDEBAR_BUTTON_DISABLE_COLOR = self.DARK_900_COLOR
+            SF__SELECTED_MARK_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR,
+            SF__SELECTED_MARK_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_400_COLOR,
+            SF__SELECTED_MARK_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR,
+            SF__SELECTED_MARK_DISABLE_BG_COLOR = self.PRIMARY_800_COLOR,
 
 
+            # Sidebar Languages Settings
+            SLS__TITLE_TEXT_COLOR = self.DARK_400_COLOR,
 
-        self.main.TOP_BAR_BUTTON_BG_COLOR = self.main.MAIN_BG_COLOR
-        self.main.TOP_BAR_BUTTON_HOVERED_BG_COLOR = self.DARK_850_COLOR
-        self.main.TOP_BAR_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR
-        # self.main.TOP_BAR_BUTTON_DISABLE_COLOR = self.DARK_900_COLOR
+            SLS__BG_COLOR = self.DARK_800_COLOR,
 
-        self.main.UPDATE_AVAILABLE_BUTTON_BG_COLOR = self.main.TOP_BAR_BUTTON_BG_COLOR
-        self.main.UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR = self.main.TOP_BAR_BUTTON_HOVERED_BG_COLOR
-        self.main.UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR = self.main.TOP_BAR_BUTTON_CLICKED_BG_COLOR
-        # self.main.UPDATE_AVAILABLE_BUTTON_DISABLE_COLOR = self.main.TOP_BAR_BUTTON_DISABLE_COLOR
-        self.main.UPDATE_AVAILABLE_BUTTON_TEXT_COLOR = self.PRIMARY_300_COLOR
+            SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.DARK_825_COLOR,
+            SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.DARK_875_COLOR,
+            SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.DARK_850_COLOR,
+            SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.DARK_800_COLOR,
+            SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.DARK_600_COLOR,
+            SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.LIGHT_100_COLOR,
 
-        self.main.HELP_AND_INFO_BUTTON_BG_COLOR = self.main.TOP_BAR_BUTTON_BG_COLOR
-        self.main.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR = self.main.TOP_BAR_BUTTON_HOVERED_BG_COLOR
-        self.main.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR = self.main.TOP_BAR_BUTTON_CLICKED_BG_COLOR
-        # self.main.HELP_AND_INFO_BUTTON_DISABLE_COLOR = self.main.TOP_BAR_BUTTON_DISABLE_COLOR
+            SLS__BOX_BG_COLOR = self.DARK_825_COLOR,
+            SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.DARK_400_COLOR,
+            SLS__BOX_ARROWS_TEXT_COLOR = self.DARK_500_COLOR,
+
+            SLS__OPTIONMENU_BG_COLOR = self.DARK_888_COLOR,
+            SLS__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR,
+            SLS__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_900_COLOR,
+
+
+            CONFIG_BUTTON_BG_COLOR = self.DARK_850_COLOR,
+            CONFIG_BUTTON_HOVERED_BG_COLOR = self.DARK_800_COLOR,
+            CONFIG_BUTTON_CLICKED_BG_COLOR = self.DARK_875_COLOR,
+
+            MINIMIZE_SIDEBAR_BUTTON_BG_COLOR = self.DARK_850_COLOR,
+            MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR = self.DARK_800_COLOR,
+            MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR,
 
 
 
-        # Selectable Language Window
-        self.selectable_language_window.BASIC_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
+            TOP_BAR_BUTTON_BG_COLOR = self.DARK_888_COLOR,
+            TOP_BAR_BUTTON_HOVERED_BG_COLOR = self.DARK_850_COLOR,
+            TOP_BAR_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR,
 
-        self.selectable_language_window.MAIN_BG_COLOR = self.DARK_875_COLOR
+            UPDATE_AVAILABLE_BUTTON_BG_COLOR = self.DARK_888_COLOR,
+            UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR = self.DARK_850_COLOR,
+            UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR,
+            UPDATE_AVAILABLE_BUTTON_TEXT_COLOR = self.PRIMARY_300_COLOR,
 
-        self.selectable_language_window.GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR
-        self.selectable_language_window.GO_BACK_BUTTON_BG_HOVERED_COLOR = self.DARK_750_COLOR
-        self.selectable_language_window.GO_BACK_BUTTON_BG_CLICKED_COLOR = self.DARK_875_COLOR
+            HELP_AND_INFO_BUTTON_BG_COLOR = self.DARK_888_COLOR,
+            HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR = self.DARK_850_COLOR,
+            HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR = self.DARK_900_COLOR,
+        )
 
 
-        self.selectable_language_window.TOP_BG_COLOR = self.main.SIDEBAR_BG_COLOR
-        self.selectable_language_window.TITLE_TEXT_COLOR = self.DARK_400_COLOR
-        self.selectable_language_window.LANGUAGE_BUTTON_BG_COLOR = self.selectable_language_window.MAIN_BG_COLOR
-        self.selectable_language_window.LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR
-        self.selectable_language_window.LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR
+        self.selectable_language_window = SimpleNamespace(
+            # Selectable Language Window
+            BASIC_TEXT_COLOR = self.LIGHT_100_COLOR,
+
+            MAIN_BG_COLOR = self.DARK_875_COLOR,
+
+            GO_BACK_BUTTON_BG_COLOR = self.DARK_800_COLOR,
+            GO_BACK_BUTTON_BG_HOVERED_COLOR = self.DARK_750_COLOR,
+            GO_BACK_BUTTON_BG_CLICKED_COLOR = self.DARK_875_COLOR,
+
+            TOP_BG_COLOR = self.DARK_850_COLOR,
+            TITLE_TEXT_COLOR = self.DARK_400_COLOR,
+            LANGUAGE_BUTTON_BG_COLOR = self.LIGHT_100_COLOR,
+            LANGUAGE_BUTTON_BG_HOVERED_COLOR = self.DARK_825_COLOR,
+            LANGUAGE_BUTTON_BG_CLICKED_COLOR = self.DARK_888_COLOR,
+        )
+
 
 
         # Modal Window (Main Window)
-        self.main_window_cover.TEXT_COLOR = self.LIGHT_100_COLOR
+        self.main_window_cover = SimpleNamespace(
+            TEXT_COLOR = self.LIGHT_100_COLOR,
+        )
 
 
-        self.confirmation_modal.MESSAGE_TEXT_COLOR = self.LIGHT_100_COLOR
-        self.confirmation_modal.FAKE_BORDER_COLOR = self.DARK_600_COLOR
-        self.confirmation_modal.BG_COLOR = self.DARK_800_COLOR
-        self.confirmation_modal.CONFIRMATION_BUTTONS_TEXT_COLOR = self.LIGHT_100_COLOR
+        self.confirmation_modal = SimpleNamespace(
+            MESSAGE_TEXT_COLOR = self.LIGHT_100_COLOR,
+            FAKE_BORDER_COLOR = self.DARK_600_COLOR,
+            BG_COLOR = self.DARK_800_COLOR,
+            CONFIRMATION_BUTTONS_TEXT_COLOR = self.LIGHT_100_COLOR,
 
-        self.confirmation_modal.ACCEPT_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR
-        self.confirmation_modal.ACCEPT_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_450_COLOR
-        self.confirmation_modal.ACCEPT_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR
-        self.confirmation_modal.DENY_BUTTON_BG_COLOR = self.DARK_750_COLOR
-        self.confirmation_modal.DENY_BUTTON_HOVERED_BG_COLOR = self.DARK_700_COLOR
-        self.confirmation_modal.DENY_BUTTON_CLICKED_BG_COLOR = self.DARK_825_COLOR
+            ACCEPT_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR,
+            ACCEPT_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_450_COLOR,
+            ACCEPT_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR,
+            DENY_BUTTON_BG_COLOR = self.DARK_750_COLOR,
+            DENY_BUTTON_HOVERED_BG_COLOR = self.DARK_700_COLOR,
+            DENY_BUTTON_CLICKED_BG_COLOR = self.DARK_825_COLOR,
+        )
 
 
-        # Common
-        self.config_window.BASIC_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-        self.config_window.LABELS_TEXT_COLOR = self.config_window.BASIC_TEXT_COLOR
-        self.config_window.LABELS_DESC_TEXT_COLOR = self.DARK_500_COLOR
+        self.config_window = SimpleNamespace(
+            # Common
+            BASIC_TEXT_COLOR = self.LIGHT_100_COLOR,
+            LABELS_TEXT_COLOR = self.LIGHT_100_COLOR,
+            LABELS_DESC_TEXT_COLOR = self.DARK_500_COLOR,
 
-        self.config_window.LABELS_TEXT_DISABLED_COLOR = self.DARK_600_COLOR
+            LABELS_TEXT_DISABLED_COLOR = self.DARK_600_COLOR,
 
 
-        # Top bar
-        self.config_window.TOP_BAR_BG_COLOR = self.DARK_850_COLOR
+            # Top bar
+            TOP_BAR_BG_COLOR = self.DARK_850_COLOR,
 
-        # Restart Button
-        self.config_window.RESTART_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR
-        self.config_window.RESTART_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR
-        self.config_window.RESTART_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
+            # Restart Button
+            RESTART_BUTTON_BG_COLOR = self.PRIMARY_600_COLOR,
+            RESTART_BUTTON_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR,
+            RESTART_BUTTON_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR,
 
 
-        # Compact Mode
-        self.config_window.COMPACT_MODE_SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR
-        self.config_window.COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR
-        self.config_window.COMPACT_MODE_SWITCH_BOX_BUTTON_COLOR = self.DARK_350_COLOR
-        self.config_window.COMPACT_MODE_SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_300_COLOR
+            # Compact Mode
+            COMPACT_MODE_SWITCH_BOX_BG_COLOR = self.DARK_775_COLOR,
+            COMPACT_MODE_SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR,
+            COMPACT_MODE_SWITCH_BOX_BUTTON_COLOR = self.DARK_350_COLOR,
+            COMPACT_MODE_SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_300_COLOR,
 
-        # Main
-        self.config_window.MAIN_BG_COLOR = self.DARK_950_COLOR
+            # Main
+            MAIN_BG_COLOR = self.DARK_950_COLOR,
 
-        # This is for fake border color
-        self.config_window.SB__WRAPPER_BG_COLOR = self.DARK_750_COLOR
+            # This is for fake border color
+            SB__WRAPPER_BG_COLOR = self.DARK_750_COLOR,
 
-        self.config_window.SB__BG_COLOR = self.DARK_888_COLOR
+            SB__BG_COLOR = self.DARK_888_COLOR,
 
-        self.config_window.SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR
-        self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_850_COLOR
-        self.config_window.SB__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_950_COLOR
-        self.config_window.SB__DROPDOWN_MENU_WINDOW_BG_COLOR = self.config_window.MAIN_BG_COLOR
-        self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR = self.DARK_600_COLOR
-        # self.config_window.SB__DROPDOWN_MENU_WINDOW_BG_COLOR = self.DARK_700_COLOR
-        self.config_window.SB__DROPDOWN_MENU_BG_COLOR = self.DARK_875_COLOR
-        self.config_window.SB__DROPDOWN_MENU_HOVERED_BG_COLOR = self.DARK_800_COLOR
-        self.config_window.SB__DROPDOWN_MENU_CLICKED_BG_COLOR = self.DARK_900_COLOR
+            SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR,
+            SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_850_COLOR,
+            SB__OPTIONMENU_CLICKED_BG_COLOR = self.DARK_950_COLOR,
+            SB__DROPDOWN_MENU_WINDOW_BG_COLOR = self.DARK_950_COLOR,
+            SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR = self.DARK_600_COLOR,
+            SB__DROPDOWN_MENU_BG_COLOR = self.DARK_875_COLOR,
+            SB__DROPDOWN_MENU_HOVERED_BG_COLOR = self.DARK_800_COLOR,
+            SB__DROPDOWN_MENU_CLICKED_BG_COLOR = self.DARK_900_COLOR,
 
-        self.config_window.SB__SLIDER_BG_COLOR = self.DARK_700_COLOR
-        self.config_window.SB__SLIDER_PROGRESS_BG_COLOR = self.DARK_500_COLOR
-        self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
-        self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
-        self.config_window.SB__SLIDER_TOOLTIP_BG_COLOR = self.DARK_850_COLOR
-        self.config_window.SB__SLIDER_TOOLTIP_TEXT_COLOR = self.DARK_200_COLOR
+            SB__SLIDER_BG_COLOR = self.DARK_700_COLOR,
+            SB__SLIDER_PROGRESS_BG_COLOR = self.DARK_500_COLOR,
+            SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR,
+            SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR,
+            SB__SLIDER_TOOLTIP_BG_COLOR = self.DARK_850_COLOR,
+            SB__SLIDER_TOOLTIP_TEXT_COLOR = self.DARK_200_COLOR,
 
-        self.config_window.SB__SWITCH_BOX_BG_COLOR = self.DARK_800_COLOR
-        self.config_window.SB__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR
-        self.config_window.SB__SWITCH_BOX_BUTTON_COLOR = self.DARK_400_COLOR
-        self.config_window.SB__SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_350_COLOR
+            SB__SWITCH_BOX_BG_COLOR = self.DARK_800_COLOR,
+            SB__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR,
+            SB__SWITCH_BOX_BUTTON_COLOR = self.DARK_400_COLOR,
+            SB__SWITCH_BOX_BUTTON_HOVERED_COLOR = self.DARK_350_COLOR,
 
-        self.config_window.SB__CHECKBOX_BORDER_COLOR = self.DARK_600_COLOR
-        self.config_window.SB__CHECKBOX_HOVER_COLOR = self.DARK_800_COLOR
-        self.config_window.SB__CHECKBOX_CHECKED_COLOR = self.PRIMARY_700_COLOR
-        self.config_window.SB__CHECKBOX_CHECKMARK_COLOR = self.config_window.BASIC_TEXT_COLOR
+            SB__CHECKBOX_BORDER_COLOR = self.DARK_600_COLOR,
+            SB__CHECKBOX_HOVER_COLOR = self.DARK_800_COLOR,
+            SB__CHECKBOX_CHECKED_COLOR = self.PRIMARY_700_COLOR,
+            SB__CHECKBOX_CHECKMARK_COLOR = self.LIGHT_100_COLOR,
 
-        self.config_window.SB__ENTRY_TEXT_COLOR = self.DARK_300_COLOR
-        self.config_window.SB__ENTRY_BG_COLOR = self.DARK_863_COLOR
-        self.config_window.SB__ENTRY_BORDER_COLOR = self.DARK_775_COLOR
+            SB__ENTRY_TEXT_COLOR = self.DARK_300_COLOR,
+            SB__ENTRY_BG_COLOR = self.DARK_863_COLOR,
+            SB__ENTRY_BORDER_COLOR = self.DARK_775_COLOR,
 
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_BG_COLOR = self.DARK_800_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR = self.PRIMARY_750_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_EXCEED_THRESHOLD_BG_COLOR = self.PRIMARY_400_COLOR
+            SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_BG_COLOR = self.DARK_800_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR = self.PRIMARY_750_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_EXCEED_THRESHOLD_BG_COLOR = self.PRIMARY_400_COLOR,
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_COLOR = self.PRIMARY_600_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_HOVERED_COLOR = self.PRIMARY_400_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
+            SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_COLOR = self.PRIMARY_600_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_HOVERED_COLOR = self.PRIMARY_400_COLOR,
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_HOVERED_COLOR = self.DARK_700_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_CLICKED_COLOR = self.DARK_900_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR = self.DARK_850_COLOR
+            SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_HOVERED_COLOR = self.DARK_700_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_CLICKED_COLOR = self.DARK_900_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR = self.DARK_850_COLOR,
 
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR = self.PRIMARY_600_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = self.PRIMARY_500_COLOR
-        self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = self.PRIMARY_800_COLOR
-        # self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_DISABLED_COLOR = self.PRIMARY_900_COLOR
+            SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR = self.PRIMARY_600_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = self.PRIMARY_500_COLOR,
+            SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = self.PRIMARY_800_COLOR,
 
 
-        # Side menu
-        self.config_window.SIDE_MENU_BG_COLOR = self.config_window.MAIN_BG_COLOR
-
-        self.config_window.SIDE_MENU_LABELS_BG_COLOR = self.config_window.SIDE_MENU_BG_COLOR
-        self.config_window.SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR = self.config_window.SIDE_MENU_BG_COLOR
-        self.config_window.SIDE_MENU_LABELS_HOVERED_BG_COLOR = self.DARK_850_COLOR
-        self.config_window.SIDE_MENU_LABELS_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR
-        self.config_window.SIDE_MENU_LABELS_SELECTED_TEXT_COLOR = self.PRIMARY_200_COLOR
-
-        self.config_window.SIDE_MENU_SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
-
-        self.config_window.NOW_VERSION_TEXT_COLOR = self.DARK_300_COLOR
-
-        # Error Message Window for Config Window
-        # The color code [#bb4448] is a mixture of [#a9555c] and [#cc3333] (for a redder shade).
-        self.config_window.SB__ERROR_MESSAGE_BG_COLOR = "#bb4448"
-        self.config_window.SB__ERROR_MESSAGE_TEXT_COLOR = "#fff"
-
-
-
-
-
-
-
-
-
-    # def _createLightModeColor(self):
-    #     # Common
-    #     self.main.BASIC_TEXT_COLOR = self.DARK_1000_COLOR
-    #     self.main.LABELS_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-
-    #     # Main
-    #     self.main.MAIN_BG_COLOR = self.LIGHT_300_COLOR
-
-    #     self.main.TEXTBOX_BG_COLOR = self.LIGHT_200_COLOR
-    #     self.main.TEXTBOX_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-    #     self.main.TEXTBOX_TAB_BG_PASSIVE_COLOR = self.LIGHT_350_COLOR
-    #     self.main.TEXTBOX_TAB_BG_ACTIVE_COLOR = self.main.TEXTBOX_BG_COLOR
-    #     self.main.TEXTBOX_TAB_BG_HOVERED_COLOR = self.LIGHT_300_COLOR
-    #     self.main.TEXTBOX_TAB_BG_CLICKED_COLOR = self.LIGHT_350_COLOR
-    #     self.main.TEXTBOX_TAB_TEXT_ACTIVE_COLOR = self.main.BASIC_TEXT_COLOR
-    #     self.main.TEXTBOX_TAB_TEXT_PASSIVE_COLOR = self.LIGHT_600_COLOR
-
-    #     self.main.TEXTBOX_ENTRY_TEXT_COLOR = self.LIGHT_800_COLOR
-    #     self.main.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR = self.LIGHT_500_COLOR
-    #     self.main.TEXTBOX_ENTRY_BG_COLOR = self.LIGHT_325_COLOR
-    #     self.main.TEXTBOX_ENTRY_BORDER_COLOR = self.LIGHT_400_COLOR
-    #     self.main.TEXTBOX_ENTRY_PLACEHOLDER_COLOR = self.LIGHT_600_COLOR
-    #     self.main.TEXTBOX_ENTRY_PLACEHOLDER_DISABLED_COLOR = self.LIGHT_700_COLOR
-
-
-
-    #     # Sidebar
-    #     self.main.SIDEBAR_BG_COLOR = self.LIGHT_350_COLOR
-
-    #     # Sidebar Features
-    #     self.main.SF__BG_COLOR = self.LIGHT_375_COLOR
-    #     self.main.SF__HOVERED_BG_COLOR = self.LIGHT_300_COLOR
-    #     self.main.SF__CLICKED_BG_COLOR = self.LIGHT_200_COLOR
-    #     self.main.SF__TEXT_DISABLED_COLOR = self.LIGHT_500_COLOR
-
-    #     self.main.SF__SWITCH_BOX_BG_COLOR = self.LIGHT_300_COLOR
-    #     self.main.SF__SWITCH_BOX_HOVERED_BG_COLOR = self.LIGHT_450_COLOR
-    #     self.main.SF__SWITCH_BOX_CLICKED_BG_COLOR = self.LIGHT_350_COLOR
-    #     self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR = self.PRIMARY_650_COLOR
-    #     self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR = self.PRIMARY_500_COLOR
-    #     self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR = self.PRIMARY_700_COLOR
-    #     self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR = self.PRIMARY_900_COLOR
-
-    #     self.main.SF__SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
-    #     self.main.SF__SELECTED_MARK_ACTIVE_HOVERED_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_HOVERED_BG_COLOR
-    #     self.main.SF__SELECTED_MARK_ACTIVE_CLICKED_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_CLICKED_BG_COLOR
-    #     self.main.SF__SELECTED_MARK_DISABLE_BG_COLOR = self.main.SF__SWITCH_BOX_DISABLE_BG_COLOR
-
-
-    #     # Sidebar quick settings
-    #     self.main.SLS__TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
-
-    #     self.main.SLS__BG_COLOR = self.LIGHT_300_COLOR
-
-    #     self.main.SLS__PRESETS_TAB_BG_HOVERED_COLOR = self.LIGHT_350_COLOR
-    #     self.main.SLS__PRESETS_TAB_BG_CLICKED_COLOR = self.LIGHT_800_COLOR
-    #     self.main.SLS__PRESETS_TAB_BG_PASSIVE_COLOR = self.main.SIDEBAR_BG_COLOR
-    #     self.main.SLS__PRESETS_TAB_BG_ACTIVE_COLOR = self.main.SLS__BG_COLOR
-    #     self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = self.LIGHT_600_COLOR
-    #     self.main.SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-
-    #     self.main.SLS__BOX_BG_COLOR = self.LIGHT_350_COLOR
-    #     self.main.SLS__BOX_SECTION_TITLE_TEXT_COLOR = self.LIGHT_800_COLOR
-    #     self.main.SLS__BOX_ARROWS_TEXT_COLOR = self.LIGHT_700_COLOR
-
-    #     self.main.SLS__OPTIONMENU_BG_COLOR = self.LIGHT_500_COLOR
-
-
-    #     self.main.CONFIG_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
-    #     self.main.CONFIG_BUTTON_HOVERED_BG_COLOR = self.LIGHT_800_COLOR
-    #     self.main.CONFIG_BUTTON_CLICKED_BG_COLOR = self.LIGHT_900_COLOR
-    #     # self.main.CONFIG_BUTTON_DISABLE_COLOR = self.LIGHT_900_COLOR
-
-    #     self.main.MINIMIZE_SIDEBAR_BUTTON_BG_COLOR = self.main.SIDEBAR_BG_COLOR
-    #     self.main.MINIMIZE_SIDEBAR_BUTTON_HOVERED_BG_COLOR = self.LIGHT_800_COLOR
-    #     self.main.MINIMIZE_SIDEBAR_BUTTON_CLICKED_BG_COLOR = self.LIGHT_900_COLOR
-    #     # self.main.MINIMIZE_SIDEBAR_BUTTON_DISABLE_COLOR = self.LIGHT_900_COLOR
-
-    #     self.main.HELP_AND_INFO_BUTTON_BG_COLOR = self.main.MAIN_BG_COLOR
-    #     self.main.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR = self.LIGHT_350_COLOR
-    #     self.main.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR = self.LIGHT_450_COLOR
-    #     # self.main.HELP_AND_INFO_BUTTON_DISABLE_COLOR = self.LIGHT_900_COLOR
-
-
-    #     # Common
-    #     self.config_window.BASIC_TEXT_COLOR = self.main.BASIC_TEXT_COLOR
-    #     self.config_window.LABELS_TEXT_COLOR = self.config_window.BASIC_TEXT_COLOR
-    #     self.config_window.LABELS_DESC_TEXT_COLOR = self.DARK_500_COLOR
-
-
-    #     # Top bar
-    #     self.config_window.TOP_BAR_BG_COLOR = self.DARK_850_COLOR
-
-
-    #     # Main
-    #     self.config_window.MAIN_BG_COLOR = self.DARK_950_COLOR
-
-    #     # This is for fake border color
-    #     self.config_window.SB__WRAPPER_BG_COLOR = self.DARK_750_COLOR
-
-    #     self.config_window.SB__BG_COLOR = self.DARK_888_COLOR
-
-    #     self.config_window.SB__OPTIONMENU_BG_COLOR = self.DARK_925_COLOR
-    #     self.config_window.SB__OPTIONMENU_HOVERED_BG_COLOR = self.DARK_875_COLOR
-
-    #     self.config_window.SB__SLIDER_BUTTON_COLOR = self.DARK_700_COLOR
-    #     self.config_window.SB__SLIDER_BUTTON_HOVERED_COLOR = self.DARK_600_COLOR
-
-    #     self.config_window.SB__SWITCH_BOX_BG_COLOR = self.main.SF__SWITCH_BOX_BG_COLOR
-    #     self.config_window.SB__SWITCH_BOX_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
-
-    #     self.config_window.SB__CHECKBOX_BORDER_COLOR = self.DARK_500_COLOR
-    #     self.config_window.SB__CHECKBOX_HOVER_COLOR = self.DARK_800_COLOR
-    #     self.config_window.SB__CHECKBOX_CHECKED_COLOR = self.PRIMARY_700_COLOR
-    #     self.config_window.SB__CHECKBOX_CHECKMARK_COLOR = self.config_window.BASIC_TEXT_COLOR
-
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_COLOR = self.PRIMARY_700_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__SLIDER_BUTTON_HOVERED_COLOR = self.PRIMARY_500_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
-
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_COLOR = self.DARK_800_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_HOVERED_COLOR = self.DARK_700_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_CLICKED_COLOR = self.DARK_900_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__PASSIVE_BUTTON_DISABLED_COLOR = self.DARK_850_COLOR
-
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_COLOR = self.PRIMARY_700_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = self.PRIMARY_600_COLOR
-    #     self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = self.PRIMARY_900_COLOR
-    #     # self.config_window.SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_DISABLED_COLOR = self.PRIMARY_900_COLOR
-
-
-    #     # Side menu
-    #     self.config_window.SIDE_MENU_BG_COLOR = self.config_window.MAIN_BG_COLOR
-
-    #     self.config_window.SIDE_MENU_LABELS_BG_COLOR = self.config_window.SIDE_MENU_BG_COLOR
-    #     self.config_window.SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR = self.config_window.SIDE_MENU_BG_COLOR
-    #     self.config_window.SIDE_MENU_LABELS_HOVERED_BG_COLOR = self.DARK_850_COLOR
-    #     self.config_window.SIDE_MENU_LABELS_CLICKED_BG_COLOR = self.PRIMARY_900_COLOR
-    #     self.config_window.SIDE_MENU_LABELS_SELECTED_TEXT_COLOR = self.PRIMARY_300_COLOR
-
-    #     self.config_window.SIDE_MENU_SELECTED_MARK_ACTIVE_BG_COLOR = self.main.SF__SWITCH_BOX_ACTIVE_BG_COLOR
+            # Side menu
+            SIDE_MENU_BG_COLOR = self.DARK_950_COLOR,
+
+            SIDE_MENU_LABELS_BG_COLOR = self.DARK_950_COLOR,
+            SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR = self.DARK_950_COLOR,
+            SIDE_MENU_LABELS_HOVERED_BG_COLOR = self.DARK_850_COLOR,
+            SIDE_MENU_LABELS_CLICKED_BG_COLOR = self.PRIMARY_750_COLOR,
+            SIDE_MENU_LABELS_SELECTED_TEXT_COLOR = self.PRIMARY_200_COLOR,
+
+            SIDE_MENU_SELECTED_MARK_ACTIVE_BG_COLOR = self.PRIMARY_500_COLOR,
+
+            NOW_VERSION_TEXT_COLOR = self.DARK_300_COLOR,
+
+            # Error Message Window for Config Window
+            # The color code [#bb4448] is a mixture of [#a9555c] and [#cc3333] (for a redder shade).
+            SB__ERROR_MESSAGE_BG_COLOR = "#bb4448",
+            SB__ERROR_MESSAGE_TEXT_COLOR = "#fff",
+        )
