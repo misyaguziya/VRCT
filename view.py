@@ -8,7 +8,7 @@ import i18n
 from languages import selectable_languages
 
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
+from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
 from vrct_gui import vrct_gui
 from utils import callFunctionIfCallable, generatePercentageStringsList, intToPercentageStringsFormatter
 
@@ -37,10 +37,9 @@ class View():
         theme = "Dark"
         all_ctm = ColorThemeManager(theme)
         all_uism = UiScalingManager(config.UI_SCALING)
-        image_file = ImageFileManager(theme)
 
         common_args = {
-            "image_file": image_file,
+            "image_file": all_ctm.image_file,
             "FONT_FAMILY": config.FONT_FAMILY,
         }
 
