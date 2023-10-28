@@ -5,27 +5,27 @@ def _darkTheme(base_color):
     theme_settings = SimpleNamespace(
         main = SimpleNamespace(
             # Common
-            BASIC_TEXT_COLOR = base_color.LIGHT_100_COLOR,
-            LABELS_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            BASIC_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
+            LABELS_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             # Main
             MAIN_BG_COLOR = base_color.DARK_888_COLOR,
 
 
             TEXTBOX_BG_COLOR = base_color.DARK_900_COLOR,
-            TEXTBOX_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            TEXTBOX_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
             TEXTBOX_TEXT_SUB_COLOR = base_color.DARK_450_COLOR,
             TEXTBOX_SYSTEM_TAG_TEXT_COLOR = base_color.PRIMARY_300_COLOR,
-            TEXTBOX_SENT_TAG_TEXT_COLOR = "#6197b4",
-            TEXTBOX_RECEIVED_TAG_TEXT_COLOR = "#a861b4",
-            TEXTBOX_ERROR_TAG_TEXT_COLOR = "#c27583",
+            TEXTBOX_SENT_TAG_TEXT_COLOR = base_color.SENT_400_COLOR,
+            TEXTBOX_RECEIVED_TAG_TEXT_COLOR = base_color.RECEIVED_300_COLOR,
+            # TEXTBOX_ERROR_TAG_TEXT_COLOR = "#c27583",
             TEXTBOX_TIMESTAMP_TEXT_COLOR = base_color.DARK_600_COLOR,
 
             TEXTBOX_TAB_BG_PASSIVE_COLOR = base_color.DARK_850_COLOR,
             TEXTBOX_TAB_BG_ACTIVE_COLOR = base_color.DARK_900_COLOR,
             TEXTBOX_TAB_BG_HOVERED_COLOR = base_color.DARK_800_COLOR,
             TEXTBOX_TAB_BG_CLICKED_COLOR = base_color.DARK_925_COLOR,
-            TEXTBOX_TAB_TEXT_ACTIVE_COLOR = base_color.LIGHT_100_COLOR,
+            TEXTBOX_TAB_TEXT_ACTIVE_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
             TEXTBOX_TAB_TEXT_PASSIVE_COLOR = base_color.DARK_500_COLOR,
 
             TEXTBOX_ENTRY_TEXT_COLOR = base_color.DARK_300_COLOR,
@@ -73,7 +73,7 @@ def _darkTheme(base_color):
             SLS__PRESETS_TAB_BG_PASSIVE_COLOR = base_color.DARK_850_COLOR,
             SLS__PRESETS_TAB_BG_ACTIVE_COLOR = base_color.DARK_800_COLOR,
             SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR_PASSIVE = base_color.DARK_600_COLOR,
-            SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            SLS__PRESETS_TAB_ACTIVE_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             SLS__BOX_BG_COLOR = base_color.DARK_825_COLOR,
             SLS__BOX_SECTION_TITLE_TEXT_COLOR = base_color.DARK_400_COLOR,
@@ -111,7 +111,7 @@ def _darkTheme(base_color):
 
         selectable_language_window = SimpleNamespace(
             # Selectable Language Window
-            BASIC_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            BASIC_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             MAIN_BG_COLOR = base_color.DARK_875_COLOR,
 
@@ -130,15 +130,15 @@ def _darkTheme(base_color):
 
         # Modal Window (Main Window)
         main_window_cover = SimpleNamespace(
-            TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
         ),
 
 
         confirmation_modal = SimpleNamespace(
-            MESSAGE_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            MESSAGE_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
             FAKE_BORDER_COLOR = base_color.DARK_600_COLOR,
             BG_COLOR = base_color.DARK_800_COLOR,
-            CONFIRMATION_BUTTONS_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            CONFIRMATION_BUTTONS_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             ACCEPT_BUTTON_BG_COLOR = base_color.PRIMARY_600_COLOR,
             ACCEPT_BUTTON_HOVERED_BG_COLOR = base_color.PRIMARY_450_COLOR,
@@ -151,8 +151,8 @@ def _darkTheme(base_color):
 
         config_window = SimpleNamespace(
             # Common
-            BASIC_TEXT_COLOR = base_color.LIGHT_100_COLOR,
-            LABELS_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            BASIC_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
+            LABELS_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
             LABELS_DESC_TEXT_COLOR = base_color.DARK_500_COLOR,
 
             LABELS_TEXT_DISABLED_COLOR = base_color.DARK_600_COLOR,
@@ -205,7 +205,7 @@ def _darkTheme(base_color):
             SB__CHECKBOX_BORDER_COLOR = base_color.DARK_600_COLOR,
             SB__CHECKBOX_HOVER_COLOR = base_color.DARK_800_COLOR,
             SB__CHECKBOX_CHECKED_COLOR = base_color.PRIMARY_700_COLOR,
-            SB__CHECKBOX_CHECKMARK_COLOR = base_color.LIGHT_100_COLOR,
+            SB__CHECKBOX_CHECKMARK_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             SB__ENTRY_TEXT_COLOR = base_color.DARK_300_COLOR,
             SB__ENTRY_BG_COLOR = base_color.DARK_863_COLOR,

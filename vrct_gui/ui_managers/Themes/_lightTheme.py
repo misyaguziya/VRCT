@@ -4,8 +4,12 @@ from ...ui_utils import getImageFileFromUiUtils
 def _lightTheme(base_color):
     theme_settings = SimpleNamespace(
         main = SimpleNamespace(
+            # Common
+            BASIC_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+            LABELS_TEXT_COLOR = base_color.LIGHT_100_COLOR,
+
             # Main
-            MAIN_BG_COLOR = base_color.DARK_200_COLOR,
+            MAIN_BG_COLOR = base_color.DARK_888_COLOR,
         ),
 
         config_window = SimpleNamespace(
