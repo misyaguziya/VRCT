@@ -274,6 +274,7 @@ class _SettingBoxGenerator():
             message=getSliderValueWAfterFormatting(),
             delay=0,
             bg_color=self.settings.ctm.SB__SLIDER_TOOLTIP_BG_COLOR,
+            corner_radius=0,
             text_color=self.settings.ctm.SB__SLIDER_TOOLTIP_TEXT_COLOR,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__SLIDER_TOOLTIP_FONT_SIZE, weight="normal"),
         )
