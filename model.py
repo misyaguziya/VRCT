@@ -268,7 +268,7 @@ class Model:
     def updateSoftware(restart:bool=True):
         filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
-        temporary_name = '_VRCT.exe'
+        folder_name = '_internal'
         tmp_directory_name = 'tmp'
         batch_name = 'update.bat'
         current_directory = os_path.dirname(sys.argv[0])
@@ -285,9 +285,7 @@ class Model:
                     file.write(chunk)
             with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
                 zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
-            os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
-            rmtree(os_path.join(current_directory, tmp_directory_name))
-            command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
+            command = [os_path.join(program_directory, "batch", batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
             Popen(command)
         except:
             webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)

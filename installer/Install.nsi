@@ -139,7 +139,7 @@ Section
     ; 出力先を指定します。
     SetOutPath "$INSTDIR\docs"
     ; インストールされるファイル
-    File "..\dist\README.txt"
+    File "..\README.txt"
   ${EndIf}
 
   ; アンインストーラを出力
