@@ -266,7 +266,7 @@ class Model:
 
     @staticmethod
     def updateSoftware(restart:bool=True):
-        filename = 'download.zip'
+        filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
         temporary_name = '_VRCT.exe'
         tmp_directory_name = 'tmp'
@@ -276,7 +276,8 @@ class Model:
 
         try:
             res = requests_get(config.GITHUB_URL)
-            url = res.json()['assets'][0]['browser_download_url']
+            assets = res.json()['assets'][0]['browser_download_url']
+            url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
             res = requests_get(url, stream=True)
             os_makedirs(os_path.join(current_directory, tmp_directory_name), exist_ok=True)
             with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
