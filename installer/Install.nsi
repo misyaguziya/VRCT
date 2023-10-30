@@ -32,13 +32,13 @@ ShowInstDetails show
 ; 圧縮メソッド
 SetCompressor lzma
 ; インストールされるディレクトリ
-InstallDir "$PROGRAMFILES\VRCT"
+InstallDir "$LOCALAPPDATA\VRCT"
 ; XPマニフェスト
 XPStyle on
 ; ページ
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
-!insertmacro MUI_PAGE_DIRECTORY
+;!insertmacro MUI_PAGE_DIRECTORY
 Page custom OptionPage OptionPageLeave
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
@@ -132,7 +132,7 @@ Section
   ; 出力先を指定します。
   SetOutPath "$INSTDIR"
   ; インストールされるファイル
-  File /r "..\dist\VRCT\"
+  File /r "..\dist\VRCT"
 
   ${If} $InstallDocs == ${BST_CHECKED}
     ; ドキュメントをインストールする場合
