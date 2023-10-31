@@ -286,11 +286,8 @@ class Model:
                     file.write(chunk)
             with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
                 zf.extractall(os_path.join(current_directory, tmp_directory_name))
-            move(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, program_tmp_name))
-            move(os_path.join(current_directory, tmp_directory_name, folder_name), os_path.join(current_directory, folder_tmp_name))
             move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
-            rmtree(os_path.join(current_directory, tmp_directory_name))
-            command = [os_path.join(current_directory, batch_name), program_name, program_tmp_name, folder_name, folder_tmp_name, str(restart)]
+            command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
             Popen(command, cwd=current_directory)
         except Exception as e:
             print(e)
