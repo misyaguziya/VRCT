@@ -132,7 +132,7 @@ Section
   ; 出力先を指定します。
   SetOutPath "$INSTDIR"
   ; インストールされるファイル
-  File /r "..\dist\VRCT"
+  File /r "..\dist\VRCT\"
 
   ${If} $InstallDocs == ${BST_CHECKED}
     ; ドキュメントをインストールする場合
