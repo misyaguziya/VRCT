@@ -268,9 +268,7 @@ class Model:
     def updateSoftware(restart:bool=True):
         filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
-        program_tmp_name = '_VRCT.exe'
         folder_name = '_internal'
-        folder_tmp_name = '__internal'
         tmp_directory_name = 'tmp'
         batch_name = 'update.bat'
         current_directory = config.LOCAL_PATH
@@ -296,9 +294,11 @@ class Model:
     @staticmethod
     def reStartSoftware():
         program_name = 'VRCT.exe'
+        folder_name = '_internal'
         batch_name = 'restart.bat'
-        program_directory = os_path.dirname(__file__)
-        command = [os_path.join(program_directory, "batch", batch_name), program_name]
+        current_directory = config.LOCAL_PATH
+
+        command = [os_path.join(current_directory, folder_name, "batch", batch_name), program_name]
         Popen(command, cwd=current_directory)
 
     @staticmethod
