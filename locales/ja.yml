@@ -138,7 +138,9 @@ config_window:
 
   mic_word_filter:
     label: ワードフィルター
-    desc: "設定された単語を検出すると、その文章は送信されません。\n設定の例: AAA,BBB,CCC"
+    desc: "登録された単語を検出すると、その文章は送信されません。\n「,」カンマで区切ると、まとめて複数の単語を追加できます。\n※重複した単語は登録されません。"
+    add_button_label: 追加
+    count_desc: "現在登録されている単語数: %{count}"
 
 
   speaker_dynamic_energy_threshold:
