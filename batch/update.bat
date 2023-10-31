@@ -4,6 +4,7 @@ set exe_name=%1
 set folder_name=%2
 set folder_tmp=%3
 set restart=%4
+set path=%~dp0
 
 taskkill /im %exe_name% /F
 ping -n 2 127.0.0.1 > nul
@@ -13,7 +14,7 @@ move /Y %exe_tmp_name%\* .\
 rmdir /s /q %exe_tmp_name%
 
 if %restart% == True (
-    START "" %exe_name%
+    START "" %path%/%exe_name%
 )
 
 del /f "%~dp0%~nx0"
