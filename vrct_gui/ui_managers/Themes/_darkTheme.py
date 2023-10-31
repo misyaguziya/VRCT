@@ -229,6 +229,24 @@ def _darkTheme(base_color):
             SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = base_color.PRIMARY_800_COLOR,
 
 
+            SB__ARROW_SWITCH_BUTTON_COLOR = base_color.DARK_888_COLOR,
+            SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
+            SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR = base_color.DARK_900_COLOR,
+
+            SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR = base_color.PRIMARY_600_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_HOVERED_COLOR = base_color.PRIMARY_500_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_CLICKED_COLOR = base_color.PRIMARY_700_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST_BG_COLOR = base_color.DARK_800_COLOR,
+
+            SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_HOVERED_BG_COLOR = base_color.DARK_750_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CLICKED_BG_COLOR = base_color.DARK_850_COLOR,
+
+            SB__ADD_AND_DELETE_ABLE_LIST_DELETED_BG_COLOR = base_color.DARK_850_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_HOVERED_BG_COLOR = base_color.DARK_800_COLOR,
+            SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
+
+
+
             # Side menu
             SIDE_MENU_BG_COLOR = base_color.DARK_950_COLOR,
 
@@ -273,6 +291,9 @@ def _darkTheme(base_color):
 
             REFRESH_ICON = getImageFileFromUiUtils("refresh_icon.png"),
             HELP_ICON = getImageFileFromUiUtils("help_icon_white.png"),
+
+            CANCEL_ICON = getImageFileFromUiUtils("cancel_icon.png"),
+            REDO_ICON = getImageFileFromUiUtils("redo_white.png"),
         ),
     )
 

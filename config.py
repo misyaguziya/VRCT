@@ -346,7 +346,7 @@ class Config:
     @INPUT_MIC_WORD_FILTER.setter
     def INPUT_MIC_WORD_FILTER(self, value):
         if type(value) is list:
-            self._INPUT_MIC_WORD_FILTER = value
+            self._INPUT_MIC_WORD_FILTER = sorted(set(value), key=value.index)
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
