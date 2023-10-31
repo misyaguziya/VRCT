@@ -1,9 +1,9 @@
 import sys
 from zipfile import ZipFile
-from subprocess import Popen
+from subprocess import Popen, PIPE
 from os import makedirs as os_makedirs
-from os import path as os_path, rename as os_rename
-from shutil import rmtree
+from os import path as os_path
+from shutil import rmtree, move
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
@@ -268,15 +268,16 @@ class Model:
     def updateSoftware(restart:bool=True):
         filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
+        program_tmp_name = '_VRCT.exe'
         folder_name = '_internal'
+        folder_tmp_name = '__internal'
         tmp_directory_name = 'tmp'
         batch_name = 'update.bat'
-        current_directory = os_path.dirname(sys.argv[0])
-        program_directory = os_path.dirname(__file__)
+        current_directory = config.LOCAL_PATH
 
         try:
             res = requests_get(config.GITHUB_URL)
-            assets = res.json()['assets'][0]['browser_download_url']
+            assets = res.json()['assets']
             url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
             res = requests_get(url, stream=True)
             os_makedirs(os_path.join(current_directory, tmp_directory_name), exist_ok=True)
@@ -284,10 +285,15 @@ class Model:
                 for chunk in res.iter_content(chunk_size=1024):
                     file.write(chunk)
             with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
-                zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
-            command = [os_path.join(program_directory, "batch", batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
-            Popen(command)
-        except:
+                zf.extractall(os_path.join(current_directory, tmp_directory_name))
+            move(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, program_tmp_name))
+            move(os_path.join(current_directory, tmp_directory_name, folder_name), os_path.join(current_directory, folder_tmp_name))
+            move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+            rmtree(os_path.join(current_directory, tmp_directory_name))
+            command = [os_path.join(current_directory, batch_name), program_name, program_tmp_name, folder_name, folder_tmp_name, str(restart)]
+            Popen(command, cwd=current_directory)
+        except Exception as e:
+            print(e)
             webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
 
     @staticmethod
@@ -296,7 +302,7 @@ class Model:
         batch_name = 'restart.bat'
         program_directory = os_path.dirname(__file__)
         command = [os_path.join(program_directory, "batch", batch_name), program_name]
-        Popen(command)
+        Popen(command, cwd=current_directory)
 
     @staticmethod
     def getListInputHost():
