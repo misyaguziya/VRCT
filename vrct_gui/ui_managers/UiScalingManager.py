@@ -217,6 +217,10 @@ class UiScalingManager():
         self.config_window.SB__DESC_TOP_PADY = self._calculateUiSize(2)
 
 
+        self.config_window.BUTTONS_CORNER_RADIUS = self._calculateUiSize(6)
+        # self.config_window.BUTTONS_IPADX = self._calculateUiSize(10)
+        # self.config_window.BUTTONS_IPADY = self._calculateUiSize(6)
+
         self.config_window.SB__ERROR_MESSAGE_IPADX = (self._calculateUiSize(10), self._calculateUiSize(10))
         self.config_window.SB__ERROR_MESSAGE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
         self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(14)
@@ -275,6 +279,28 @@ class UiScalingManager():
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
 
+
+        self.config_window.SB__ARROW_SWITCH_BUTTON_IPADXY = self._calculateUiSize(16)
+        self.config_window.SB__ARROW_SWITCH_BUTTON_ICON_SIZE = self._calculateUiSize(24)
+        self.config_window.SB__ARROW_SWITCH_DESC_FONT_SIZE = self._calculateUiSize(16)
+        self.config_window.SB__ARROW_SWITCH_LEFT_PADX = (self._calculateUiSize(20), 0)
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADX = self._calculateUiSize(16)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADY = self._calculateUiSize(6)
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_CORNER_RADIUS = self._calculateUiSize(2)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_LEFT_PADX = (0, self._calculateUiSize(4))
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_BOTTOM_PADY = (0, self._calculateUiSize(4))
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_FONT_SIZE = self._calculateUiSize(14)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX = (self._calculateUiSize(8), 0)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY = self._calculateUiSize(6)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE = self._calculateUiSize(14)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY = self._calculateUiSize(6)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_PADX = (self._calculateUiSize(6), self._calculateUiSize(8))
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_LEFT_PADX = (self._calculateUiSize(20), 0)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_FONT_SIZE = self._calculateUiSize(14)
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
         size = calculateUiSize(default_size, self.SCALING_FLOAT, is_allowed_odd, is_zero_allowed)
