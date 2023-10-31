@@ -5,8 +5,9 @@ from typing import Union
 from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar
 from CTkToolTip import *
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor
 from vrct_gui import vrct_gui
+from utils import isEven, callFunctionIfCallable
 
 SETTING_BOX_COLUMN = 1
 
@@ -16,6 +17,8 @@ class _SettingBoxGenerator():
         self.config_window = config_window
         self.parent_widget = parent_widget
         self.settings = settings
+
+        self.MAIN_INNER_AREA_MIN_WIDTH = int(self.settings.uism.MAIN_AREA_MIN_WIDTH - self.settings.uism.SB__IPADX)
 
         self.dropdown_menu_window = vrct_gui.vrct_gui.dropdown_menu_window
 
@@ -274,6 +277,7 @@ class _SettingBoxGenerator():
             message=getSliderValueWAfterFormatting(),
             delay=0,
             bg_color=self.settings.ctm.SB__SLIDER_TOOLTIP_BG_COLOR,
+            corner_radius=0,
             text_color=self.settings.ctm.SB__SLIDER_TOOLTIP_TEXT_COLOR,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__SLIDER_TOOLTIP_FONT_SIZE, weight="normal"),
         )
@@ -446,6 +450,315 @@ class _SettingBoxGenerator():
             entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
 
         return setting_box_frame
+
+
+    def createSettingBoxArrowSwitch(
+            self,
+            for_var_label_text, for_var_desc_text,
+            arrow_switch_attr_name,
+            open_command,
+            close_command,
+            var_switch_desc=None,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(arrow_switch_attr_name, for_var_label_text, for_var_desc_text)
+
+        ARROW_BUTTON_COLUMN = SETTING_BOX_COLUMN
+
+        if var_switch_desc is not None:
+            label_widget = CTkLabel(
+                setting_box_item_frame,
+                textvariable=var_switch_desc,
+                height=0,
+                corner_radius=0,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ARROW_SWITCH_DESC_FONT_SIZE, weight="normal"),
+                anchor="w",
+                text_color=self.settings.ctm.LABELS_DESC_TEXT_COLOR,
+            )
+
+            label_widget.grid(row=1, column=SETTING_BOX_COLUMN)
+            ARROW_BUTTON_COLUMN = SETTING_BOX_COLUMN + 1
+
+
+        for_opening_button_wrapper = createButtonWithImage(
+            parent_widget=setting_box_item_frame,
+            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_image_file=self.settings.image_file.ARROW_LEFT.rotate(270),
+            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_command=open_command,
+        )
+        for_opening_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
+
+        self.config_window.sb__widgets[arrow_switch_attr_name].arrow_switch_open = for_opening_button_wrapper
+
+        for_closing_button_wrapper = createButtonWithImage(
+            parent_widget=setting_box_item_frame,
+            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
+            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_command=close_command,
+        )
+        for_closing_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
+        for_closing_button_wrapper.grid_remove()
+
+        self.config_window.sb__widgets[arrow_switch_attr_name].arrow_switch_close = for_closing_button_wrapper
+
+
+        return setting_box_frame
+
+
+
+    # I've added it for the word filter, but it's not currently generalized. If you want to use it in the same way elsewhere, it will require refactoring.
+    def createSettingBoxAddAndDeleteAbleList(
+            self,
+            add_and_delete_able_list_attr_name,
+            entry_attr_name,
+            entry_width,
+            mic_word_filter_list,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(add_and_delete_able_list_attr_name)
+
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].items = []
+
+
+        list_container = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        list_container.grid(row=1, column=0, sticky="nsew")
+
+
+        max_width = int(self.MAIN_INNER_AREA_MIN_WIDTH - (self.settings.uism.SB__IPADX*2))
+
+        def addValues(mic_word_filter_list, mic_word_filter_item_row_wrapper, accumulated_labels_width, row, column):
+            for mic_word_filter_item in mic_word_filter_list:
+                mic_word_filter_item_wrapper = self._createValue(add_and_delete_able_list_attr_name, mic_word_filter_item_row_wrapper, row, column, mic_word_filter_item)
+
+                if int(accumulated_labels_width + getLatestWidth(mic_word_filter_item_wrapper) + self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_LEFT_PADX[1]) >= max_width:
+                    accumulated_labels_width = 0
+                    column = 0
+                    row += 1
+                    mic_word_filter_item_wrapper.destroy()
+                    mic_word_filter_item_row_wrapper = self._createRowFrame(list_container, row)
+                    mic_word_filter_item_wrapper = self._createValue(add_and_delete_able_list_attr_name, mic_word_filter_item_row_wrapper, row, column, mic_word_filter_item)
+                    column += 1
+                else:
+                    column += 1
+
+                accumulated_labels_width += int(getLatestWidth(mic_word_filter_item_wrapper) + self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_LEFT_PADX[1])
+
+
+
+            return mic_word_filter_item_row_wrapper, accumulated_labels_width, row, column
+
+        accumulated_labels_width = 0
+        row=0
+        column=0
+        mic_word_filter_item_row_wrapper = self._createRowFrame(list_container, row)
+
+
+        mic_word_filter_list = self.view_variable.MIC_WORD_FILTER_LIST
+
+        mic_word_filter_item_row_wrapper, accumulated_labels_width, row, column = addValues(mic_word_filter_list, mic_word_filter_item_row_wrapper, accumulated_labels_width, row, column)
+
+
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].mic_word_filter_item_row_wrapper = mic_word_filter_item_row_wrapper
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].accumulated_labels_width = accumulated_labels_width
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].last_row = row
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].last_column = column
+        self.config_window.sb__widgets[add_and_delete_able_list_attr_name].addValues = lambda values, mic_word_filter_item_row_wrapper, accumulated_labels_width, last_row, last_column: addValues(values, mic_word_filter_item_row_wrapper, accumulated_labels_width, last_row, last_column)
+
+
+        entry_and_add_button_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR)
+        entry_and_add_button_wrapper.grid(row=2, column=0, pady=(self.settings.uism.SB__IPADY, 0), sticky="ew")
+
+        entry_and_add_button_wrapper.grid_columnconfigure((0,3), weight=1)
+
+
+
+        entry_widget = CTkEntry(
+            entry_and_add_button_wrapper,
+            text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+            fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+            border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
+            width=entry_width,
+            placeholder_text="AAA or AAA,BBB,CCC",
+            height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
+        )
+        setattr(self.config_window, entry_attr_name, entry_widget)
+
+        entry_widget.grid(row=0, column=1, sticky="ew")
+
+
+
+        add_button = CTkFrame(entry_and_add_button_wrapper, corner_radius=self.settings.uism.BUTTONS_CORNER_RADIUS, fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR, cursor="hand2")
+        add_button.grid(row=0, column=2, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_LEFT_PADX, sticky="ew")
+
+
+        add_button.grid_columnconfigure(0, weight=1)
+        add_button_label_wrapper = CTkFrame(add_button, corner_radius=0, fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR)
+        add_button_label_wrapper.grid(row=0, column=0, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADX, pady=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADY, sticky="ew")
+
+        add_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
+        add_button_label = CTkLabel(
+            add_button_label_wrapper,
+            textvariable=self.view_variable.VAR_LABEL_MIC_WORD_FILTER_ADD_BUTTON,
+            height=0,
+            corner_radius=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_FONT_SIZE, weight="normal"),
+            anchor="w",
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+        )
+        add_button_label.grid(row=0, column=1)
+
+
+        def adjustedCommand():
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_MIC_WORD_FILTER, entry_widget.get())
+            entry_widget.focus_set()
+
+        bindButtonFunctionAndColor(
+            target_widgets=[
+                add_button,
+                add_button_label_wrapper,
+                add_button_label,
+            ],
+            enter_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_HOVERED_COLOR,
+            leave_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR,
+            clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_CLICKED_COLOR,
+            buttonReleasedFunction=lambda _e: adjustedCommand(),
+        )
+
+
+        return setting_box_frame
+
+
+    def _createRowFrame(self, parent_widget, row):
+        mic_word_filter_item_row_wrapper = CTkFrame(parent_widget, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        mic_word_filter_item_row_wrapper.grid(row=row, column=0, pady=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_BOTTOM_PADY, sticky="nsew")
+
+        return mic_word_filter_item_row_wrapper
+
+
+
+    def _createValue(self, add_and_delete_able_list_attr_name, parent_row_frame, row, column, mic_word_filter_item):
+        mic_word_filter_item_wrapper = CTkFrame(parent_row_frame, corner_radius=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_CORNER_RADIUS, fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST_BG_COLOR, width=0, height=0)
+        mic_word_filter_item_wrapper.grid(row=0, column=column, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_LEFT_PADX, sticky="nsew")
+        setattr(self, f"{row}_{column}", mic_word_filter_item_wrapper)
+
+
+
+        mic_word_filter_item_wrapper.grid_rowconfigure((0,2), weight=1)
+        label_widget = CTkLabel(
+            mic_word_filter_item_wrapper,
+            text=mic_word_filter_item,
+            height=0,
+            corner_radius=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_FONT_SIZE, weight="normal"),
+            anchor="w",
+            text_color=self.settings.ctm.BASIC_TEXT_COLOR,
+        )
+
+        label_widget.grid(row=1, column=0, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX, pady=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY)
+
+
+        if isEven(getLatestHeight(label_widget)) is False:
+            label_widget.grid(
+                pady=(
+                    self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY,
+                    self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY + 1
+                )
+            )
+
+
+        if isEven(getLatestWidth(label_widget)) is False:
+            label_widget.grid(
+                padx=(
+                    self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX[0],
+                    self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX[1] + 1
+                )
+            )
+
+
+
+        def pressedDeleteButtonCommand(_e, delete_button, redo_button):
+            # overstrike true
+            label_widget.configure(font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_FONT_SIZE, weight="normal", overstrike=True))
+            # change fg_color
+            mic_word_filter_item_wrapper.configure(fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST_DELETED_BG_COLOR)
+            # change button img to redo button
+            delete_button.grid_remove()
+            redo_button.grid()
+            # callback delete function
+            callFunctionIfCallable(self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER, mic_word_filter_item)
+
+        def pressedRedoButtonCommand(_e, delete_button, redo_button):
+            # overstrike false
+            label_widget.configure(font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_FONT_SIZE, weight="normal", overstrike=False))
+            # change fg_color
+            mic_word_filter_item_wrapper.configure(fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST_BG_COLOR)
+            # change button img to delete button
+            redo_button.grid_remove()
+            delete_button.grid()
+            # callback add function
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_MIC_WORD_FILTER, mic_word_filter_item)
+
+
+
+        delete_button = createButtonWithImage(
+            parent_widget=mic_word_filter_item_wrapper,
+            button_fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST_BG_COLOR,
+            button_enter_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_HOVERED_BG_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CLICKED_BG_COLOR,
+            button_image_file=self.settings.image_file.CANCEL_ICON,
+            button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
+            button_command=lambda _e: pressedDeleteButtonCommand(_e, delete_button, redo_button),
+        )
+        delete_button.grid(row=1, column=1, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_PADX, sticky="e")
+
+        redo_button = createButtonWithImage(
+            parent_widget=mic_word_filter_item_wrapper,
+            button_fg_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST_DELETED_BG_COLOR,
+            button_enter_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_HOVERED_BG_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR,
+            button_image_file=self.settings.image_file.REDO_ICON,
+            button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
+            button_command=lambda _e: pressedRedoButtonCommand(_e, delete_button, redo_button),
+        )
+        redo_button.grid(row=1, column=1, padx=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_PADX, sticky="e")
+        redo_button.grid_remove()
+
+
+        partial_pressedRedoButtonCommand = partial(pressedRedoButtonCommand, _e=None, delete_button=delete_button, redo_button=redo_button)
+        item_data = SimpleNamespace(
+            label = mic_word_filter_item,
+            redoFunction = lambda: partial_pressedRedoButtonCommand(),
+        )
+
+
+        items = self.config_window.sb__widgets[add_and_delete_able_list_attr_name].items
+        if len(items) == 0:
+            items.append(item_data)
+        else:
+            is_replaced = False
+            for i, item in enumerate(items):
+                if item.label == mic_word_filter_item:
+                    items[i] = item_data
+                    is_replaced = True
+                    break
+            if is_replaced is False: items.append(item_data)
+
+
+        return mic_word_filter_item_wrapper
+
+
+
 
 
 

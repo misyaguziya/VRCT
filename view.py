@@ -8,7 +8,7 @@ import i18n
 from languages import selectable_languages
 
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
+from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
 from vrct_gui import vrct_gui
 from utils import callFunctionIfCallable, generatePercentageStringsList, intToPercentageStringsFormatter
 
@@ -37,10 +37,9 @@ class View():
         theme = "Dark"
         all_ctm = ColorThemeManager(theme)
         all_uism = UiScalingManager(config.UI_SCALING)
-        image_file = ImageFileManager(theme)
 
         common_args = {
-            "image_file": image_file,
+            "image_file": all_ctm.image_file,
             "FONT_FAMILY": config.FONT_FAMILY,
         }
 
@@ -69,7 +68,6 @@ class View():
         )
 
         self.settings.error_message_window = SimpleNamespace(
-            ctm=all_ctm.error_message_window,
             uism=all_uism.error_message_window,
             **common_args
         )
@@ -286,10 +284,15 @@ class View():
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.callbackBindFocusOut_MicMaxPhrases,
 
+            CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_OPEN=self._openMicWordFilterList,
+            CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_CLOSE=self._closeMicWordFilterList,
+
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.label")),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.desc")),
+            VAR_SWITCH_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.count_desc", count=len(config.INPUT_MIC_WORD_FILTER))),
+            VAR_LABEL_MIC_WORD_FILTER_ADD_BUTTON=StringVar(value=i18n.t("config_window.mic_word_filter.add_button_label")),
             CALLBACK_SET_MIC_WORD_FILTER=None,
-            VAR_MIC_WORD_FILTER=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER) if len(config.INPUT_MIC_WORD_FILTER) > 0 else ""),
+            MIC_WORD_FILTER_LIST=config.INPUT_MIC_WORD_FILTER,
 
 
             # Transcription Tab (Speaker)
@@ -464,6 +467,7 @@ class View():
             self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window_registers.get("callback_set_mic_phrase_timeout", None)
             self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window_registers.get("callback_set_mic_max_phrases", None)
             self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window_registers.get("callback_set_mic_word_filter", None)
+            self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER = config_window_registers.get("callback_delete_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
             self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_energy_threshold", None)
@@ -605,10 +609,12 @@ class View():
     def enableConfigWindowCompactMode(self):
         for additional_widget in vrct_gui.config_window.additional_widgets:
             additional_widget.grid_remove()
+        self._closeMicWordFilterList()
 
     def disableConfigWindowCompactMode(self):
         for additional_widget in vrct_gui.config_window.additional_widgets:
             additional_widget.grid()
+        self._closeMicWordFilterList()
 
 
     def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
@@ -743,25 +749,83 @@ class View():
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
 
 
-    @staticmethod
-    def updateSetProgressBar_MicEnergy(new_mic_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+    def updateSetProgressBar_MicEnergy(self, new_mic_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold,
+            new_energy=new_mic_energy,
+            max_energy=config.MAX_MIC_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
+        )
+
 
     @staticmethod
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
 
-    @staticmethod
-    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+    def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold,
+            new_energy=new_speaker_energy,
+            max_energy=config.MAX_SPEAKER_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
+        )
 
     @staticmethod
     def initProgressBar_SpeakerEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
 
 
+    def updateProgressBar(
+            self,
+            target_progressbar_widget,
+            new_energy,
+            max_energy,
+            energy_threshold,
+        ):
+        target_progressbar_widget.set(new_energy/max_energy)
+        if new_energy >= energy_threshold:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_EXCEED_THRESHOLD_BG_COLOR)
+        else:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR)
 
+
+
+    def _openMicWordFilterList(self):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__arrow_switch_mic_word_filter"]
+        target_widget.arrow_switch_open.grid_remove()
+        target_widget.arrow_switch_close.grid()
+
+        vrct_gui.config_window.sb__mic_word_filter_list.grid()
+
+    def _closeMicWordFilterList(self):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__arrow_switch_mic_word_filter"]
+        target_widget.arrow_switch_close.grid_remove()
+        target_widget.arrow_switch_open.grid()
+
+        vrct_gui.config_window.sb__mic_word_filter_list.grid_remove()
+
+
+    def addValueToList_WordFilter(self, values:list):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__add_and_delete_able_list_mic_word_filter_list"]
+        for t_item in target_widget.items:
+            if t_item.label in values:
+                values.remove(t_item.label)
+                t_item.redoFunction()
+        mic_word_filter_item_row_wrapper, accumulated_labels_width, last_row, last_column = target_widget.addValues(
+            values,
+            target_widget.mic_word_filter_item_row_wrapper,
+            target_widget.accumulated_labels_width,
+            target_widget.last_row,
+            target_widget.last_column
+        )
+        target_widget.mic_word_filter_item_row_wrapper = mic_word_filter_item_row_wrapper
+        target_widget.accumulated_labels_width = accumulated_labels_width
+        target_widget.last_row = last_row
+        target_widget.last_column = last_column
+
+    def clearEntryBox_WordFilter(self):
+        self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_word_filter_list)
 
 
 # Widget Control (Whole)
@@ -905,6 +969,7 @@ class View():
 
     def _closeConfigWindow(self):
         callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+        self._closeMicWordFilterList()
         vrct_gui._closeConfigWindow()
 
 # Window Control (Main Window Cover)
@@ -962,7 +1027,8 @@ class View():
     def setGuiVariable_MicMaxPhrases(self, value):
         self.view_variable.VAR_MIC_MAX_PHRASES.set(str(value))
 
-
+    def setGuiVariable_MicWordFilter_Length(self, value):
+        self.view_variable.VAR_SWITCH_DESC_MIC_WORD_FILTER.set(i18n.t("config_window.mic_word_filter.count_desc", count=value))
 
     def setGuiVariable_SpeakerRecordTimeout(self, value):
         self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(str(value))
@@ -992,6 +1058,9 @@ class View():
                 self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
             case "MicMaxPhrases":
                 self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
+            case "MicMicWordFilter":
+                self.setGuiVariable_MicWordFilter_Length(len(config.INPUT_MIC_WORD_FILTER))
+
             case "SpeakerRecordTimeout":
                 self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
             case "SpeakerPhraseTimeout":

@@ -487,18 +487,39 @@ def callbackSetMicMaxPhrases(value):
     except:
         view.showErrorMessage_MicMaxPhrases()
 
-def callbackSetMicWordFilter(value):
-    print("callbackSetMicWordFilter", value)
-    word_filter = str(value)
-    word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
-    word_filter = ",".join(word_filter)
-    print("callbackSetMicWordFilter_afterSplitting", word_filter)
-    if len(word_filter) > 0:
-        config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
-    else:
-        config.INPUT_MIC_WORD_FILTER = []
+def callbackSetMicWordFilter(values):
+    print("callbackSetMicWordFilter", values)
+    values = str(values)
+    values = [w.strip() for w in values.split(",") if len(w.strip()) > 0]
+    # Copy the list
+    new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
+    new_added_value = []
+    for value in values:
+        if value in new_input_mic_word_filter_list:
+            # If the value is already in the list, do nothing.
+            pass
+        else:
+            new_input_mic_word_filter_list.append(value)
+            new_added_value.append(value)
+    config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+
+    view.addValueToList_WordFilter(new_added_value)
+    view.clearEntryBox_WordFilter()
+    view.setLatestConfigVariable("MicMicWordFilter")
+
     model.resetKeywordProcessor()
     model.addKeywords()
+
+def callbackDeleteMicWordFilter(value):
+    print("callbackDeleteMicWordFilter", value)
+    try:
+        new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
+        new_input_mic_word_filter_list.remove(str(value))
+        config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+        view.setLatestConfigVariable("MicMicWordFilter")
+    except:
+        print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
+
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
@@ -718,6 +739,7 @@ def createMainWindow():
             "callback_set_mic_phrase_timeout": callbackSetMicPhraseTimeout,
             "callback_set_mic_max_phrases": callbackSetMicMaxPhrases,
             "callback_set_mic_word_filter": callbackSetMicWordFilter,
+            "callback_delete_mic_word_filter": callbackDeleteMicWordFilter,
 
             # Transcription Tab (Speaker)
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
