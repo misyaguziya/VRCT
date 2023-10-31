@@ -138,7 +138,9 @@ config_window:
 
   mic_word_filter:
     label: Mic Word Filter
-    desc: "It will not send the sentence if the word(s) included in the set list of words.\nHow to set: e.g. AAA,BBB,CCC"
+    desc: "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a \",\" (comma). \n*Duplicate words will not be registered."
+    add_button_label: Add
+    count_desc: "Current registered word count: %{count}"
 
 
   speaker_dynamic_energy_threshold:
