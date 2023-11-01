@@ -447,6 +447,8 @@ class Config:
     @MESSAGE_FORMAT.setter
     def MESSAGE_FORMAT(self, value):
         if type(value) is str:
+            if "[message]" not in value or "[translation]" not in value:
+                value = "[message]([translation])"
             self._MESSAGE_FORMAT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
