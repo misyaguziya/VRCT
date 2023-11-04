@@ -347,7 +347,14 @@ class View():
             VAR_LABEL_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.label")),
             VAR_DESC_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.desc")),
             CALLBACK_SET_MESSAGE_FORMAT=None,
+            CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT=self._swapMessageFormatRequiredText,
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
+            VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_0_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_1_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_2_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT=StringVar(value="[message]"),
+            VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT=StringVar(value="[translation]"),
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
@@ -531,9 +538,55 @@ class View():
             self.openSpeakerEnergyThresholdWidget()
 
 
+        self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
+
+    def setMessageFormatEntryWidgets(self, message_format:str):
+        result = self.extractMessageFormat(message_format)
+
+        if result.is_message_first is True:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[message]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[translation]")
+        else:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[translation]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[message]")
+
+        self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.set(result.before)
+        self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.set(result.between)
+        self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.set(result.after)
+        self.updateMessageFormat_ExampleTextWidget()
+
+    def _swapMessageFormatRequiredText(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set(text_1)
+        self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set(text_0)
+        self.updateMessageFormat_ExampleTextWidget()
+
+        new_message_format = self.getLatestMessageFormatFromWidget()
+        callFunctionIfCallable(self.view_variable.CALLBACK_SET_MESSAGE_FORMAT, new_message_format)
+
+
+    def getLatestMessageFormatFromWidget(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        entry_0 = self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.get()
+        entry_1 = self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.get()
+        entry_2 = self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.get()
+        return entry_0+text_0+entry_1+text_1+entry_2
+
+    def updateMessageFormat_ExampleTextWidget(self):
+        message = i18n.t("config_window.message_format.example_text", locale=config.UI_LANGUAGE)
+        translation_locale = "ja" if config.UI_LANGUAGE == "en" else "en"
+        translation = i18n.t("config_window.message_format.example_text", locale=translation_locale)
+
+        example_message = config.MESSAGE_FORMAT.replace("[message]", message)
+        example_message = example_message.replace("[translation]", translation)
+
+        self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT.set(example_message)
 
 
 # GUI process
@@ -1306,6 +1359,59 @@ class View():
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)
         vrct_gui._showErrorMessage(target_widget=target_widget)
+
+
+    @staticmethod
+    def extractMessageFormat(text):
+        import re
+        message_index = text.find("[message]")
+        translation_index = text.find("[translation]")
+
+        result_data = SimpleNamespace(
+            is_message_first = True,
+            before = "",
+            between = "",
+            after = "",
+        )
+
+        if message_index < translation_index:
+            text_before_message = text[:message_index]
+            result_data.before = text_before_message
+
+            match = re.search(r"\[message\](.*?)\[translation\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_translation = text[translation_index + len("[translation]"):]
+            result_data.after = text_after_translation
+
+
+
+
+        elif translation_index < message_index:
+            result_data.is_message_first = False
+            text_before_translation = text[:translation_index]
+            result_data.before = text_before_translation
+
+            match = re.search(r"\[translation\](.*?)\[message\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_message = text[message_index + len("[message]"):]
+            result_data.after = text_after_message
+
+        else:
+            raise ValueError("Invalid Message Format")
+
+        return result_data
+
 
 
 

@@ -246,6 +246,13 @@ def _darkTheme(base_color):
             SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
 
 
+            SB__MESSAGE_FORMAT__EXAMPLE_BG_COLOR = "#3a4554", # from VRChat' chat display color
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_COLOR = base_color.DARK_875_COLOR,
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR = base_color.DARK_888_COLOR,
+
+
+
 
             # Side menu
             SIDE_MENU_BG_COLOR = base_color.DARK_950_COLOR,
@@ -289,11 +296,13 @@ def _darkTheme(base_color):
             ARROW_LEFT = getImageFileFromUiUtils("arrow_left_white.png"),
             ARROW_LEFT_DISABLED = getImageFileFromUiUtils("arrow_left_disabled.png"),
 
+            REFRESH_UPDATE_ICON = getImageFileFromUiUtils("refresh_update_icon.png"),
             REFRESH_ICON = getImageFileFromUiUtils("refresh_icon.png"),
             HELP_ICON = getImageFileFromUiUtils("help_icon_white.png"),
 
             CANCEL_ICON = getImageFileFromUiUtils("cancel_icon.png"),
             REDO_ICON = getImageFileFromUiUtils("redo_white.png"),
+            SWAP_ICON = getImageFileFromUiUtils("swap_icon.png"),
         ),
     )
 

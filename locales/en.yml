@@ -181,6 +181,7 @@ config_window:
   message_format:
     label: Message Format
     desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\nIt will be used in Notification XSOverlay too."
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
 
   send_message_to_vrc:
     label: Send Message To VRChat
