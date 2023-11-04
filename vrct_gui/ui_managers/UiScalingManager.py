@@ -302,6 +302,25 @@ class UiScalingManager():
         self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_LEFT_PADX = (self._calculateUiSize(20), 0)
         self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_FONT_SIZE = self._calculateUiSize(14)
 
+
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_CORNER_RADIUS = self._calculateUiSize(16)
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY = self._calculateUiSize(10)
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH = self._calculateUiSize(300)
+
+        self.config_window.SB__MESSAGE_FORMAT__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
+        self.config_window.SB__MESSAGE_FORMAT__REQUIRED_TEXT_PADX = self._calculateUiSize(10)
+        self.config_window.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE = self._calculateUiSize(16)
+
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_ARROWS_IMG_SIZE = self.dupTuple(self._calculateUiSize(20))
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_IPADX = self._calculateUiSize(16)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_IPADY = self._calculateUiSize(6)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_FONT_SIZE = self._calculateUiSize(14)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_TEXT_PADX = self._calculateUiSize(10)
+
+        self.config_window.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY = (0, self._calculateUiSize(14))
+
+
+
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
         size = calculateUiSize(default_size, self.SCALING_FLOAT, is_allowed_odd, is_zero_allowed)
         return size

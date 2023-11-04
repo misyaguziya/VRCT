@@ -628,6 +628,7 @@ def callbackSetMessageFormat(value):
     print("callbackSetMessageFormat", value)
     if len(value) > 0:
         config.MESSAGE_FORMAT = value
+        view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
