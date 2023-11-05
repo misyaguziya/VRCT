@@ -3,7 +3,7 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import get_key_by_value
+from utils import get_key_by_value, isUniqueStrings
 from languages import selectable_languages
 
 # Common
@@ -627,8 +627,14 @@ def callbackSetEnableAutoExportMessageLogs(value):
 def callbackSetMessageFormat(value):
     print("callbackSetMessageFormat", value)
     if len(value) > 0:
-        config.MESSAGE_FORMAT = value
-        view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.MESSAGE_FORMAT = value
+            view.clearErrorMessage()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+        else:
+            view.showErrorMessage_MessageFormat()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
