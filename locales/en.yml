@@ -7,6 +7,7 @@ main_window:
   language_settings: Language Settings
   your_language: Your Language
   both_direction_desc: Translate Each Other
+  swap_button_label: Swap Languages
   target_language: Target Language
 
   textbox_tab_all: All
