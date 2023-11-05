@@ -230,6 +230,15 @@ def setTargetLanguageAndCountry(select):
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     view.printToTextbox_selectedTargetLanguages(select)
 
+def swapYourLanguageAndTargetLanguage():
+    your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    setYourLanguageAndCountry(target_language)
+    setTargetLanguageAndCountry(your_language)
+    # Update Selected Languages for UI
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
+
+
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
     view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
@@ -710,6 +719,7 @@ def createMainWindow():
             "callback_your_language": setYourLanguageAndCountry,
             "callback_target_language": setTargetLanguageAndCountry,
             "values": model.getListLanguageAndCountry(),
+            "callback_swap_languages": swapYourLanguageAndTargetLanguage,
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
             "message_box_bind_Return": messageBoxPressKeyEnter,
