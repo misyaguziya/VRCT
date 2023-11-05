@@ -78,6 +78,9 @@ def _darkTheme(base_color):
             SLS__BOX_BG_COLOR = base_color.DARK_825_COLOR,
             SLS__BOX_SECTION_TITLE_TEXT_COLOR = base_color.DARK_400_COLOR,
             SLS__BOX_ARROWS_TEXT_COLOR = base_color.DARK_500_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_HOVERED_COLOR = base_color.DARK_750_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_CLICKED_COLOR = base_color.DARK_850_COLOR,
 
             SLS__OPTIONMENU_BG_COLOR = base_color.DARK_888_COLOR,
             SLS__OPTIONMENU_HOVERED_BG_COLOR = base_color.DARK_875_COLOR,
