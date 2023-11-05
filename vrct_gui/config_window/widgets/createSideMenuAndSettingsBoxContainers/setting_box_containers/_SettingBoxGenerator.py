@@ -547,7 +547,7 @@ class _SettingBoxGenerator():
                 justify="center",
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
             )
-            setattr(self.config_window, base_entry_attr_name + str(i), entry_widget)
+            setattr(self.config_window, base_entry_attr_name + "_" + str(i), entry_widget)
 
 
 
@@ -588,9 +588,9 @@ class _SettingBoxGenerator():
         entries_wrapper.grid_columnconfigure((0,2,4), weight=1)
         entries_wrapper.grid_columnconfigure((1,3), weight=0, uniform="message_format_fixed_labels")
 
-        entry_widget_0 = getattr(self.config_window, base_entry_attr_name+"0")
-        entry_widget_1 = getattr(self.config_window, base_entry_attr_name+"1")
-        entry_widget_2 = getattr(self.config_window, base_entry_attr_name+"2")
+        entry_widget_0 = getattr(self.config_window, base_entry_attr_name+"_0")
+        entry_widget_1 = getattr(self.config_window, base_entry_attr_name+"_1")
+        entry_widget_2 = getattr(self.config_window, base_entry_attr_name+"_2")
         entry_widget_0.grid(row=0, column=0, sticky="ew")
         entry_widget_1.grid(row=0, column=2, sticky="ew")
         entry_widget_2.grid(row=0, column=4, sticky="ew")

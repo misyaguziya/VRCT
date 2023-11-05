@@ -82,6 +82,7 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         textvariable_1=view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT,
         entry_bind__Any_KeyRelease=lambda value: entry_message_format_callback(value),
         # entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_MESSAGE_FORMAT,
     )
     config_window.sb__message_format.grid(row=row)
     row+=1

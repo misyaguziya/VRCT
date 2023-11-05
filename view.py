@@ -355,6 +355,7 @@ class View():
             VAR_ENTRY_2_MESSAGE_FORMAT=StringVar(value=""),
             VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT=StringVar(value="[message]"),
             VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT=StringVar(value="[translation]"),
+            CALLBACK_FOCUS_OUT_MESSAGE_FORMAT=self.callbackBindFocusOut_MessageFormat,
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
@@ -1121,6 +1122,9 @@ class View():
             case "SpeakerMaxPhrases":
                 self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
 
+            case "MessageFormat":
+                self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")
 
@@ -1270,7 +1274,9 @@ class View():
         self.clearErrorMessage()
 
 
-
+    def callbackBindFocusOut_MessageFormat(self, _e=None):
+        self.setLatestConfigVariable("MessageFormat")
+        self.clearErrorMessage()
 
 
 
@@ -1350,6 +1356,13 @@ class View():
         self._showErrorMessage(
             vrct_gui.config_window.sb__progressbar_x_slider__active_button_speaker_energy_threshold,
             self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.no_device_error_message"))
+        )
+
+
+    def showErrorMessage_MessageFormat(self):
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_message_format_2,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.message_format.error_message"))
         )
 
     @staticmethod
