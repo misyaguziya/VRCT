@@ -8,7 +8,7 @@ from tkinter import font
 from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
-from utils import generatePercentageStringsList
+from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -447,6 +447,8 @@ class Config:
     @MESSAGE_FORMAT.setter
     def MESSAGE_FORMAT(self, value):
         if type(value) is str:
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
             self._MESSAGE_FORMAT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

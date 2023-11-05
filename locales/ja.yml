@@ -179,7 +179,9 @@ config_window:
 
   message_format:
     label: 送信するメッセージのフォーマット
-    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、\n[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]と[translation]という文字は使えません。"
 
   send_message_to_vrc:
     label: VRChatにメッセージを送信する
