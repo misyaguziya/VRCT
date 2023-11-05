@@ -5,7 +5,8 @@ from .._SettingBoxGenerator import _SettingBoxGenerator
 def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_variable):
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
-    createSettingBoxEntry = sbg.createSettingBoxEntry
+    createSettingBox_Labels = sbg.createSettingBox_Labels
+    createSettingBoxMessageFormatEntries = sbg.createSettingBoxMessageFormatEntries
 
 
     # 元 checkbox_auto_clear_chatbox_callback
@@ -63,13 +64,25 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     row+=1
 
 
-    config_window.sb__message_format = createSettingBoxEntry(
+    config_window.sb__message_format_labels = createSettingBox_Labels(
         for_var_label_text=view_variable.VAR_LABEL_MESSAGE_FORMAT,
         for_var_desc_text=view_variable.VAR_DESC_MESSAGE_FORMAT,
-        entry_attr_name="sb__entry_message_format",
-        entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_250,
+        labels_attr_name="sb__labels_message_format",
+    )
+    config_window.sb__message_format_labels.grid(row=row, pady=0)
+    row+=1
+
+    config_window.sb__message_format = createSettingBoxMessageFormatEntries(
+        base_entry_attr_name="sb__entry_message_format",
+        # entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_150,
+        entry_textvariable_0=view_variable.VAR_ENTRY_0_MESSAGE_FORMAT,
+        entry_textvariable_1=view_variable.VAR_ENTRY_1_MESSAGE_FORMAT,
+        entry_textvariable_2=view_variable.VAR_ENTRY_2_MESSAGE_FORMAT,
+        textvariable_0=view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT,
+        textvariable_1=view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT,
         entry_bind__Any_KeyRelease=lambda value: entry_message_format_callback(value),
-        entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
+        # entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_MESSAGE_FORMAT,
     )
     config_window.sb__message_format.grid(row=row)
     row+=1
