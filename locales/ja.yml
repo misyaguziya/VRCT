@@ -7,6 +7,7 @@ main_window:
   language_settings: 言語設定
   your_language: あなたの言語
   both_direction_desc: 双方向に翻訳
+  swap_button_label: 言語を入れ替え
   target_language: 相手の言語
 
   textbox_tab_all: 全て

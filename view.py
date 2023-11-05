@@ -140,6 +140,8 @@ class View():
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
+            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=i18n.t("main_window.swap_button_label")),
+            CALLBACK_SWAP_LANGUAGES=None,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
@@ -418,6 +420,7 @@ class View():
             self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = main_window_registers.get("callback_your_language", None)
             self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = main_window_registers.get("callback_target_language", None)
             main_window_registers.get("values", None) and self.updateList_selectableLanguages(main_window_registers["values"])
+            self.view_variable.CALLBACK_SWAP_LANGUAGES = main_window_registers.get("callback_swap_languages", None)
 
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
