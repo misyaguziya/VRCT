@@ -740,6 +740,33 @@ class _SettingBoxGenerator():
 
 
 
+    def createSettingBoxButtonWithImage(
+            self,
+            for_var_label_text, for_var_desc_text,
+            button_attr_name,
+            button_image,
+            button_command,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(button_attr_name, for_var_label_text, for_var_desc_text)
+
+
+        button_with_image_widget = createButtonWithImage(
+            parent_widget=setting_box_item_frame,
+            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_image_file=button_image,
+            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_command=button_command,
+        )
+        button_with_image_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
+
+        return setting_box_frame
+
+
+
 
     def createSettingBoxArrowSwitch(
             self,

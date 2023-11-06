@@ -83,6 +83,7 @@ class View():
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
             CALLBACK_OPEN_FILEPATH_LOGS=None,
+            CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
 
             CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
 
@@ -385,6 +386,9 @@ class View():
             VAR_DESC_OSC_PORT=None,
             CALLBACK_SET_OSC_PORT=None,
             VAR_OSC_PORT=StringVar(value=config.OSC_PORT),
+
+            VAR_LABEL_OPEN_CONFIG_FILEPATH=StringVar(value=i18n.t("config_window.open_config_filepath.label")),
+            VAR_DESC_OPEN_CONFIG_FILEPATH=None,
         )
 
 
@@ -402,6 +406,7 @@ class View():
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
             self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_CONFIG_FILE=common_registers.get("callback_filepath_config_file", None)
 
 
         if window_action_registers is not None:
