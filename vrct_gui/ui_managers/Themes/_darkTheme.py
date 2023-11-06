@@ -160,6 +160,10 @@ def _darkTheme(base_color):
 
             LABELS_TEXT_DISABLED_COLOR = base_color.DARK_600_COLOR,
 
+            SB__BUTTON_COLOR = base_color.DARK_888_COLOR,
+            SB__BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
+            SB__BUTTON_CLICKED_COLOR = base_color.DARK_900_COLOR,
+
 
             # Top bar
             TOP_BAR_BG_COLOR = base_color.DARK_850_COLOR,
@@ -231,11 +235,6 @@ def _darkTheme(base_color):
             SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = base_color.PRIMARY_500_COLOR,
             SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = base_color.PRIMARY_800_COLOR,
 
-
-            SB__ARROW_SWITCH_BUTTON_COLOR = base_color.DARK_888_COLOR,
-            SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
-            SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR = base_color.DARK_900_COLOR,
-
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR = base_color.PRIMARY_600_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_HOVERED_COLOR = base_color.PRIMARY_500_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_CLICKED_COLOR = base_color.PRIMARY_700_COLOR,
@@ -306,6 +305,7 @@ def _darkTheme(base_color):
             CANCEL_ICON = getImageFileFromUiUtils("cancel_icon.png"),
             REDO_ICON = getImageFileFromUiUtils("redo_white.png"),
             SWAP_ICON = getImageFileFromUiUtils("swap_icon.png"),
+            FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon.png"),
         ),
     )
 
