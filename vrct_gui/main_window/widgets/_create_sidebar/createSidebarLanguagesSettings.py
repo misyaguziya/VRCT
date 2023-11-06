@@ -1,6 +1,6 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox
+from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, bindButtonFunctionAndColor, bindEnterAndLeaveFunction
 
 from utils import callFunctionIfCallable
 
@@ -226,36 +226,85 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     # Both direction arrow icon
     main_window.sls__arrow_direction_box = CTkFrame(main_window.sls__box_frame, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
-    main_window.sls__arrow_direction_box.grid(row=3, column=0, pady=settings.uism.SLS__BOX_ARROWS_PADY,sticky="ew")
+    main_window.sls__arrow_direction_box.grid(row=3, column=0, pady=settings.uism.SLS__BOX_ARROWS_PADY, sticky="ew")
 
-    main_window.sls__arrow_direction_box.grid_columnconfigure((0,4), weight=1)
+    main_window.sls__arrow_direction_box.grid_columnconfigure((0,2), weight=0, minsize=settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_PADX)
+    main_window.sls__arrow_direction_box.grid_columnconfigure(1, weight=1)
+
+    main_window.sls__arrow_direction_swap_box = CTkFrame(main_window.sls__arrow_direction_box, corner_radius=settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_CORNER_RADIUS, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0, cursor="hand2")
+    main_window.sls__arrow_direction_swap_box.grid(row=0, column=1, ipady=settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY, sticky="ew")
+
+    main_window.sls__arrow_direction_swap_box.grid_rowconfigure((0,2), weight=1)
+    main_window.sls__arrow_direction_swap_box.grid_columnconfigure(1, weight=1)
 
     main_window.sls__both_direction_up = CTkLabel(
-        main_window.sls__arrow_direction_box,
+        main_window.sls__arrow_direction_swap_box,
         text=None,
         height=0,
         image=CTkImage((settings.image_file.NARROW_ARROW_DOWN).rotate(180),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
 
     )
-    main_window.sls__both_direction_up.grid(row=0, column=1, pady=0)
+    main_window.sls__both_direction_up.grid(row=1, column=0, padx=(settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_IPADX, 0), pady=0)
 
     main_window.sls__both_direction_desc = CTkLabel(
-        main_window.sls__arrow_direction_box,
+        main_window.sls__arrow_direction_swap_box,
         textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_ARROWS_DESC_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
     )
-    main_window.sls__both_direction_desc.grid(row=0, column=2, padx=settings.uism.SLS__BOX_ARROWS_DESC_PADX)
+    main_window.sls__both_direction_desc.grid(row=1, column=1, padx=settings.uism.SLS__BOX_ARROWS_DESC_PADX)
 
-    main_window.sls__both_direction_label_down = CTkLabel(
-        main_window.sls__arrow_direction_box,
+    main_window.sls__both_direction_down = CTkLabel(
+        main_window.sls__arrow_direction_swap_box,
         text=None,
         height=0,
         image=CTkImage((settings.image_file.NARROW_ARROW_DOWN).rotate(0),size=settings.uism.SLS__BOX_ARROWS_IMAGE_SIZE)
 
     )
-    main_window.sls__both_direction_label_down.grid(row=0, column=3)
+    main_window.sls__both_direction_down.grid(row=1, column=2, padx=(0, settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_IPADX))
+
+
+
+    def adjustedCommand_ButtonReleased():
+        callFunctionIfCallable(view_variable.CALLBACK_SWAP_LANGUAGES)
+
+    bindButtonFunctionAndColor(
+        target_widgets=[
+            main_window.sls__arrow_direction_swap_box,
+            main_window.sls__both_direction_up,
+            main_window.sls__both_direction_desc,
+            main_window.sls__both_direction_down
+        ],
+        enter_color=settings.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_HOVERED_COLOR,
+        leave_color=settings.ctm.SLS__BG_COLOR,
+        clicked_color=settings.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_CLICKED_COLOR,
+        buttonReleasedFunction=lambda _e: adjustedCommand_ButtonReleased(),
+    )
+
+
+    def adjustedCommand_Entered():
+        main_window.sls__both_direction_desc.configure(
+            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON,
+            text_color=settings.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR,
+        )
+
+    def adjustedCommand_Leaved():
+        main_window.sls__both_direction_desc.configure(
+            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
+            text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
+        )
+
+    bindEnterAndLeaveFunction(
+        target_widgets=[
+            main_window.sls__arrow_direction_swap_box,
+            main_window.sls__both_direction_up,
+            main_window.sls__both_direction_desc,
+            main_window.sls__both_direction_down
+        ],
+        enterFunction=lambda _e: adjustedCommand_Entered(),
+        leaveFunction=lambda _e: adjustedCommand_Leaved(),
+    )
 
 
 

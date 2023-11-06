@@ -7,6 +7,7 @@ main_window:
   language_settings: Language Settings
   your_language: Your Language
   both_direction_desc: Translate Each Other
+  swap_button_label: Swap Languages
   target_language: Target Language
 
   textbox_tab_all: All
@@ -181,6 +182,8 @@ config_window:
   message_format:
     label: Message Format
     desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\nIt will be used in Notification XSOverlay too."
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' and '[translation]' cannot be used."
 
   send_message_to_vrc:
     label: Send Message To VRChat
@@ -191,3 +194,6 @@ config_window:
 
   osc_port:
     label: OSC Port
+
+  open_config_filepath:
+    label: Open Config File

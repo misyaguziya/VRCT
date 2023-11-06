@@ -68,7 +68,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         text=None,
         corner_radius=0,
         height=0,
-        image=CTkImage(settings.image_file.REFRESH_ICON.rotate(25), size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
+        image=CTkImage(settings.image_file.REFRESH_UPDATE_ICON.rotate(25), size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
     )
     vrct_gui.update_available_icon.grid(row=1, column=0, padx=(settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX, settings.uism.UPDATE_AVAILABLE_PADX_BETWEEN_LABEL_AND_ICON), pady=0)
 

@@ -3,7 +3,7 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import get_key_by_value
+from utils import get_key_by_value, isUniqueStrings
 from languages import selectable_languages
 
 # Common
@@ -12,6 +12,12 @@ def callbackUpdateSoftware():
 
 def callbackRestartSoftware():
     model.reStartSoftware()
+
+def callbackFilepathLogs():
+    print("callbackFilepathLogs")
+
+def callbackFilepathConfigFile():
+    print("callbackFilepathConfigFile")
 
 # func transcription send message
 def sendMicMessage(message):
@@ -229,6 +235,15 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     view.printToTextbox_selectedTargetLanguages(select)
+
+def swapYourLanguageAndTargetLanguage():
+    your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    setYourLanguageAndCountry(target_language)
+    setTargetLanguageAndCountry(your_language)
+    # Update Selected Languages for UI
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
+
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
@@ -627,7 +642,14 @@ def callbackSetEnableAutoExportMessageLogs(value):
 def callbackSetMessageFormat(value):
     print("callbackSetMessageFormat", value)
     if len(value) > 0:
-        config.MESSAGE_FORMAT = value
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.MESSAGE_FORMAT = value
+            view.clearErrorMessage()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+        else:
+            view.showErrorMessage_MessageFormat()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
@@ -684,6 +706,8 @@ def createMainWindow():
         common_registers={
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
+            "callback_filepath_logs": callbackFilepathLogs,
+            "callback_filepath_config_file": callbackFilepathConfigFile,
         },
 
         window_action_registers={
@@ -703,6 +727,7 @@ def createMainWindow():
             "callback_your_language": setYourLanguageAndCountry,
             "callback_target_language": setTargetLanguageAndCountry,
             "values": model.getListLanguageAndCountry(),
+            "callback_swap_languages": swapYourLanguageAndTargetLanguage,
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
             "message_box_bind_Return": messageBoxPressKeyEnter,

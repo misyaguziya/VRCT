@@ -82,6 +82,8 @@ class View():
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
+            CALLBACK_OPEN_FILEPATH_LOGS=None,
+            CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
 
             CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
 
@@ -140,6 +142,8 @@ class View():
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
+            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=i18n.t("main_window.swap_button_label")),
+            CALLBACK_SWAP_LANGUAGES=None,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
@@ -347,7 +351,15 @@ class View():
             VAR_LABEL_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.label")),
             VAR_DESC_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.desc")),
             CALLBACK_SET_MESSAGE_FORMAT=None,
+            CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT=self._swapMessageFormatRequiredText,
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
+            VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_0_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_1_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_2_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT=StringVar(value="[message]"),
+            VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT=StringVar(value="[translation]"),
+            CALLBACK_FOCUS_OUT_MESSAGE_FORMAT=self.callbackBindFocusOut_MessageFormat,
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
@@ -374,6 +386,9 @@ class View():
             VAR_DESC_OSC_PORT=None,
             CALLBACK_SET_OSC_PORT=None,
             VAR_OSC_PORT=StringVar(value=config.OSC_PORT),
+
+            VAR_LABEL_OPEN_CONFIG_FILEPATH=StringVar(value=i18n.t("config_window.open_config_filepath.label")),
+            VAR_DESC_OPEN_CONFIG_FILEPATH=None,
         )
 
 
@@ -390,6 +405,8 @@ class View():
         if common_registers is not None:
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_CONFIG_FILE=common_registers.get("callback_filepath_config_file", None)
 
 
         if window_action_registers is not None:
@@ -410,6 +427,7 @@ class View():
             self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = main_window_registers.get("callback_your_language", None)
             self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = main_window_registers.get("callback_target_language", None)
             main_window_registers.get("values", None) and self.updateList_selectableLanguages(main_window_registers["values"])
+            self.view_variable.CALLBACK_SWAP_LANGUAGES = main_window_registers.get("callback_swap_languages", None)
 
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
@@ -531,9 +549,55 @@ class View():
             self.openSpeakerEnergyThresholdWidget()
 
 
+        self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
+
+    def setMessageFormatEntryWidgets(self, message_format:str):
+        result = self.extractMessageFormat(message_format)
+
+        if result.is_message_first is True:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[message]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[translation]")
+        else:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[translation]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[message]")
+
+        self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.set(result.before)
+        self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.set(result.between)
+        self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.set(result.after)
+        self.updateMessageFormat_ExampleTextWidget()
+
+    def _swapMessageFormatRequiredText(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set(text_1)
+        self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set(text_0)
+        self.updateMessageFormat_ExampleTextWidget()
+
+        new_message_format = self.getLatestMessageFormatFromWidget()
+        callFunctionIfCallable(self.view_variable.CALLBACK_SET_MESSAGE_FORMAT, new_message_format)
+
+
+    def getLatestMessageFormatFromWidget(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        entry_0 = self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.get()
+        entry_1 = self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.get()
+        entry_2 = self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.get()
+        return entry_0+text_0+entry_1+text_1+entry_2
+
+    def updateMessageFormat_ExampleTextWidget(self):
+        message = i18n.t("config_window.message_format.example_text", locale=config.UI_LANGUAGE)
+        translation_locale = "ja" if config.UI_LANGUAGE == "en" else "en"
+        translation = i18n.t("config_window.message_format.example_text", locale=translation_locale)
+
+        example_message = config.MESSAGE_FORMAT.replace("[message]", message)
+        example_message = example_message.replace("[translation]", translation)
+
+        self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT.set(example_message)
 
 
 # GUI process
@@ -1068,6 +1132,9 @@ class View():
             case "SpeakerMaxPhrases":
                 self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
 
+            case "MessageFormat":
+                self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")
 
@@ -1217,7 +1284,9 @@ class View():
         self.clearErrorMessage()
 
 
-
+    def callbackBindFocusOut_MessageFormat(self, _e=None):
+        self.setLatestConfigVariable("MessageFormat")
+        self.clearErrorMessage()
 
 
 
@@ -1299,6 +1368,13 @@ class View():
             self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.no_device_error_message"))
         )
 
+
+    def showErrorMessage_MessageFormat(self):
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_message_format_2,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.message_format.error_message"))
+        )
+
     @staticmethod
     def _makeInvalidValueErrorMessage(error_message):
         return i18n.t("config_window.common_error_message.invalid_value") + "\n" + error_message
@@ -1306,6 +1382,59 @@ class View():
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)
         vrct_gui._showErrorMessage(target_widget=target_widget)
+
+
+    @staticmethod
+    def extractMessageFormat(text):
+        import re
+        message_index = text.find("[message]")
+        translation_index = text.find("[translation]")
+
+        result_data = SimpleNamespace(
+            is_message_first = True,
+            before = "",
+            between = "",
+            after = "",
+        )
+
+        if message_index < translation_index:
+            text_before_message = text[:message_index]
+            result_data.before = text_before_message
+
+            match = re.search(r"\[message\](.*?)\[translation\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_translation = text[translation_index + len("[translation]"):]
+            result_data.after = text_after_translation
+
+
+
+
+        elif translation_index < message_index:
+            result_data.is_message_first = False
+            text_before_translation = text[:translation_index]
+            result_data.before = text_before_translation
+
+            match = re.search(r"\[translation\](.*?)\[message\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_message = text[message_index + len("[message]"):]
+            result_data.after = text_after_message
+
+        else:
+            raise ValueError("Invalid Message Format")
+
+        return result_data
+
 
 
 
