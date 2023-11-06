@@ -13,6 +13,9 @@ def callbackUpdateSoftware():
 def callbackRestartSoftware():
     model.reStartSoftware()
 
+def callbackFilepathLogs():
+    print("callbackFilepathLogs")
+
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
@@ -700,6 +703,7 @@ def createMainWindow():
         common_registers={
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
+            "callback_filepath_logs": callbackFilepathLogs,
         },
 
         window_action_registers={
