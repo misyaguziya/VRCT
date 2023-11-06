@@ -277,12 +277,12 @@ class _SettingBoxGenerator():
 
         button_widget = createButtonWithImage(
             parent_widget=all_wrapper,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.FOLDER_OPEN_ICON,
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=button_command,
         )
         button_widget.grid(row=0, column=0, padx=0, sticky="w")
@@ -753,15 +753,15 @@ class _SettingBoxGenerator():
 
         button_with_image_widget = createButtonWithImage(
             parent_widget=setting_box_item_frame,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=button_image,
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY,
             button_command=button_command,
         )
-        button_with_image_widget.grid(row=1, column=SETTING_BOX_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
+        button_with_image_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
 
@@ -798,12 +798,12 @@ class _SettingBoxGenerator():
 
         for_opening_button_wrapper = createButtonWithImage(
             parent_widget=setting_box_item_frame,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(270),
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=open_command,
         )
         for_opening_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
@@ -812,12 +812,12 @@ class _SettingBoxGenerator():
 
         for_closing_button_wrapper = createButtonWithImage(
             parent_widget=setting_box_item_frame,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=close_command,
         )
         for_closing_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
