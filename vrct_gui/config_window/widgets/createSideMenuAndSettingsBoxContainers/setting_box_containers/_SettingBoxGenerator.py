@@ -254,6 +254,67 @@ class _SettingBoxGenerator():
 
 
 
+    def createSettingBoxAutoExportMessageLogs(
+            self,
+            for_var_label_text, for_var_desc_text,
+            checkbox_attr_name,
+            checkbox_command,
+            button_command,
+            variable,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(checkbox_attr_name, for_var_label_text, for_var_desc_text)
+
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(1, weight=1)
+
+
+
+
+        button_widget = createButtonWithImage(
+            parent_widget=all_wrapper,
+            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_image_file=self.settings.image_file.FOLDER_OPEN_ICON,
+            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_command=button_command,
+        )
+        button_widget.grid(row=0, column=0, padx=0, sticky="w")
+
+
+
+        checkbox_widget = CTkCheckBox(
+            all_wrapper,
+            text=None,
+            width=0,
+            checkbox_width=self.settings.uism.SB__CHECKBOX_SIZE,
+            checkbox_height=self.settings.uism.SB__CHECKBOX_SIZE,
+            onvalue=True,
+            offvalue=False,
+            variable=variable,
+            command=checkbox_command,
+            corner_radius=self.settings.uism.SB__CHECKBOX_CORNER_RADIUS,
+            border_width=self.settings.uism.SB__CHECKBOX_BORDER_WIDTH,
+            border_color=self.settings.ctm.SB__CHECKBOX_BORDER_COLOR,
+            hover_color=self.settings.ctm.SB__CHECKBOX_HOVER_COLOR,
+            checkmark_color=self.settings.ctm.SB__CHECKBOX_CHECKMARK_COLOR,
+            fg_color=self.settings.ctm.SB__CHECKBOX_CHECKED_COLOR,
+        )
+        setattr(self.config_window, checkbox_attr_name, checkbox_widget)
+
+        checkbox_widget.grid(row=0, column=2, sticky="e")
+
+        return setting_box_frame
+
+
+
+
 
 
     def createSettingBoxSlider(

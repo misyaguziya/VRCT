@@ -82,6 +82,7 @@ class View():
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
+            CALLBACK_OPEN_FILEPATH_LOGS=None,
 
             CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
 
@@ -400,6 +401,7 @@ class View():
         if common_registers is not None:
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
 
 
         if window_action_registers is not None:
