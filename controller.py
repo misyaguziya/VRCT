@@ -16,6 +16,9 @@ def callbackRestartSoftware():
 def callbackFilepathLogs():
     print("callbackFilepathLogs")
 
+def callbackFilepathConfigFile():
+    print("callbackFilepathConfigFile")
+
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
@@ -704,6 +707,7 @@ def createMainWindow():
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
             "callback_filepath_logs": callbackFilepathLogs,
+            "callback_filepath_config_file": callbackFilepathConfigFile,
         },
 
         window_action_registers={

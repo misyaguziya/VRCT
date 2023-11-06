@@ -194,3 +194,6 @@ config_window:
 
   osc_port:
     label: OSC Port
+
+  open_config_filepath:
+    label: Open Config File
