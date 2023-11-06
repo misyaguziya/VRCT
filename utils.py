@@ -1,3 +1,4 @@
+from typing import Union
 from os import path as os_path
 from PIL.Image import open as Image_open
 
@@ -30,3 +31,18 @@ def generatePercentageStringsList(start=40, end=200, step=10):
 
 def intToPercentageStringsFormatter(value:int):
     return f"{value}%"
+
+def isUniqueStrings(unique_strings:Union[str, list], input_string:str, require=False):
+    import re
+    if isinstance(unique_strings, str):
+        unique_strings = [unique_strings]
+    patterns = [re.escape(s) for s in unique_strings]
+
+    counts = [len(re.findall(pattern, input_string)) for pattern in patterns]
+
+    if require is True:
+        # If require is True, unique_strings must appear once
+        return all(count == 1 for count in counts) and counts.count(1) == 2
+    else:
+        # If require is False, check if unique strings are used exactly once
+        return all(count == 1 for count in counts)

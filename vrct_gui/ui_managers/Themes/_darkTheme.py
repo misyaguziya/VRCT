@@ -78,6 +78,9 @@ def _darkTheme(base_color):
             SLS__BOX_BG_COLOR = base_color.DARK_825_COLOR,
             SLS__BOX_SECTION_TITLE_TEXT_COLOR = base_color.DARK_400_COLOR,
             SLS__BOX_ARROWS_TEXT_COLOR = base_color.DARK_500_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_HOVERED_COLOR = base_color.DARK_750_COLOR,
+            SLS__BOX_ARROWS_SWAP_BUTTON_CLICKED_COLOR = base_color.DARK_850_COLOR,
 
             SLS__OPTIONMENU_BG_COLOR = base_color.DARK_888_COLOR,
             SLS__OPTIONMENU_HOVERED_BG_COLOR = base_color.DARK_875_COLOR,
@@ -157,6 +160,10 @@ def _darkTheme(base_color):
 
             LABELS_TEXT_DISABLED_COLOR = base_color.DARK_600_COLOR,
 
+            SB__BUTTON_COLOR = base_color.DARK_888_COLOR,
+            SB__BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
+            SB__BUTTON_CLICKED_COLOR = base_color.DARK_900_COLOR,
+
 
             # Top bar
             TOP_BAR_BG_COLOR = base_color.DARK_850_COLOR,
@@ -228,11 +235,6 @@ def _darkTheme(base_color):
             SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_HOVERED_COLOR = base_color.PRIMARY_500_COLOR,
             SB__PROGRESSBAR_X_SLIDER__ACTIVE_BUTTON_CLICKED_COLOR = base_color.PRIMARY_800_COLOR,
 
-
-            SB__ARROW_SWITCH_BUTTON_COLOR = base_color.DARK_888_COLOR,
-            SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
-            SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR = base_color.DARK_900_COLOR,
-
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_COLOR = base_color.PRIMARY_600_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_HOVERED_COLOR = base_color.PRIMARY_500_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_CLICKED_COLOR = base_color.PRIMARY_700_COLOR,
@@ -244,6 +246,13 @@ def _darkTheme(base_color):
             SB__ADD_AND_DELETE_ABLE_LIST_DELETED_BG_COLOR = base_color.DARK_850_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_HOVERED_BG_COLOR = base_color.DARK_800_COLOR,
             SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
+
+
+            SB__MESSAGE_FORMAT__EXAMPLE_BG_COLOR = "#3a4554", # from VRChat' chat display color
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_COLOR = base_color.DARK_875_COLOR,
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
+            SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR = base_color.DARK_888_COLOR,
+
 
 
 
@@ -289,11 +298,14 @@ def _darkTheme(base_color):
             ARROW_LEFT = getImageFileFromUiUtils("arrow_left_white.png"),
             ARROW_LEFT_DISABLED = getImageFileFromUiUtils("arrow_left_disabled.png"),
 
+            REFRESH_UPDATE_ICON = getImageFileFromUiUtils("refresh_update_icon.png"),
             REFRESH_ICON = getImageFileFromUiUtils("refresh_icon.png"),
             HELP_ICON = getImageFileFromUiUtils("help_icon_white.png"),
 
             CANCEL_ICON = getImageFileFromUiUtils("cancel_icon.png"),
             REDO_ICON = getImageFileFromUiUtils("redo_white.png"),
+            SWAP_ICON = getImageFileFromUiUtils("swap_icon.png"),
+            FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon.png"),
         ),
     )
 
