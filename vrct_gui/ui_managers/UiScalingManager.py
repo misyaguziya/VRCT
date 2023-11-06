@@ -282,10 +282,6 @@ class UiScalingManager():
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY = self._calculateUiSize(10)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
-
-
-        self.config_window.SB__ARROW_SWITCH_BUTTON_IPADXY = self._calculateUiSize(16)
-        self.config_window.SB__ARROW_SWITCH_BUTTON_ICON_SIZE = self._calculateUiSize(24)
         self.config_window.SB__ARROW_SWITCH_DESC_FONT_SIZE = self._calculateUiSize(16)
         self.config_window.SB__ARROW_SWITCH_LEFT_PADX = (self._calculateUiSize(20), 0)
 
@@ -323,6 +319,12 @@ class UiScalingManager():
 
         self.config_window.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY = (0, self._calculateUiSize(14))
 
+
+        self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)
+        self.config_window.SB__BUTTON_ICON_SIZE = self._calculateUiSize(24)
+
+        self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY = self._calculateUiSize(10)
+        self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):

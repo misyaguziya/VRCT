@@ -193,3 +193,6 @@ config_window:
 
   osc_port:
     label: OSC Port
+
+  open_config_filepath:
+    label: 設定ファイルを開く

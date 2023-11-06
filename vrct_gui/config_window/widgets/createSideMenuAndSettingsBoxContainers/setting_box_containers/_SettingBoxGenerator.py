@@ -254,6 +254,67 @@ class _SettingBoxGenerator():
 
 
 
+    def createSettingBoxAutoExportMessageLogs(
+            self,
+            for_var_label_text, for_var_desc_text,
+            checkbox_attr_name,
+            checkbox_command,
+            button_command,
+            variable,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(checkbox_attr_name, for_var_label_text, for_var_desc_text)
+
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(1, weight=1)
+
+
+
+
+        button_widget = createButtonWithImage(
+            parent_widget=all_wrapper,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
+            button_image_file=self.settings.image_file.FOLDER_OPEN_ICON,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
+            button_command=button_command,
+        )
+        button_widget.grid(row=0, column=0, padx=0, sticky="w")
+
+
+
+        checkbox_widget = CTkCheckBox(
+            all_wrapper,
+            text=None,
+            width=0,
+            checkbox_width=self.settings.uism.SB__CHECKBOX_SIZE,
+            checkbox_height=self.settings.uism.SB__CHECKBOX_SIZE,
+            onvalue=True,
+            offvalue=False,
+            variable=variable,
+            command=checkbox_command,
+            corner_radius=self.settings.uism.SB__CHECKBOX_CORNER_RADIUS,
+            border_width=self.settings.uism.SB__CHECKBOX_BORDER_WIDTH,
+            border_color=self.settings.ctm.SB__CHECKBOX_BORDER_COLOR,
+            hover_color=self.settings.ctm.SB__CHECKBOX_HOVER_COLOR,
+            checkmark_color=self.settings.ctm.SB__CHECKBOX_CHECKMARK_COLOR,
+            fg_color=self.settings.ctm.SB__CHECKBOX_CHECKED_COLOR,
+        )
+        setattr(self.config_window, checkbox_attr_name, checkbox_widget)
+
+        checkbox_widget.grid(row=0, column=2, sticky="e")
+
+        return setting_box_frame
+
+
+
+
 
 
     def createSettingBoxSlider(
@@ -679,6 +740,33 @@ class _SettingBoxGenerator():
 
 
 
+    def createSettingBoxButtonWithImage(
+            self,
+            for_var_label_text, for_var_desc_text,
+            button_attr_name,
+            button_image,
+            button_command,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(button_attr_name, for_var_label_text, for_var_desc_text)
+
+
+        button_with_image_widget = createButtonWithImage(
+            parent_widget=setting_box_item_frame,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
+            button_image_file=button_image,
+            button_image_size=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY,
+            button_command=button_command,
+        )
+        button_with_image_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
+
+        return setting_box_frame
+
+
+
 
     def createSettingBoxArrowSwitch(
             self,
@@ -710,12 +798,12 @@ class _SettingBoxGenerator():
 
         for_opening_button_wrapper = createButtonWithImage(
             parent_widget=setting_box_item_frame,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(270),
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=open_command,
         )
         for_opening_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
@@ -724,12 +812,12 @@ class _SettingBoxGenerator():
 
         for_closing_button_wrapper = createButtonWithImage(
             parent_widget=setting_box_item_frame,
-            button_fg_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_COLOR,
-            button_enter_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_HOVERED_COLOR,
-            button_clicked_color=self.settings.ctm.SB__ARROW_SWITCH_BUTTON_CLICKED_COLOR,
+            button_fg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
-            button_image_size=self.settings.uism.SB__ARROW_SWITCH_BUTTON_ICON_SIZE,
-            button_ipadxy=self.settings.uism.SB__ARROW_SWITCH_BUTTON_IPADXY,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=close_command,
         )
         for_closing_button_wrapper.grid(row=1, column=ARROW_BUTTON_COLUMN, padx=self.settings.uism.SB__ARROW_SWITCH_LEFT_PADX, sticky="e")
