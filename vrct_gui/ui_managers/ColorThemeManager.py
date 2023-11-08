@@ -10,8 +10,11 @@ class ColorThemeManager():
         self.base_color = SimpleNamespace(
 
             PRIMARY_100_COLOR = "#b7ded8",
+            PRIMARY_150_COLOR = "#A1D4CC",
             PRIMARY_200_COLOR = "#8acac0",
+            PRIMARY_250_COLOR = "#76BFB4",
             PRIMARY_300_COLOR = "#61b4a7",
+            PRIMARY_350_COLOR = "#55AC9E",
             PRIMARY_400_COLOR = "#48a495", # Source
             PRIMARY_450_COLOR = "#429c8c",
             PRIMARY_500_COLOR = "#3b9483",
@@ -25,12 +28,12 @@ class ColorThemeManager():
             SENT_400_COLOR = "#6197b4", # Source PRIMARY_300_COLOR #61b4a7. ANALOGOUS' Second one.
             RECEIVED_300_COLOR = "#a861b4", # Source PRIMARY_300_COLOR #61b4a7. TRIADIC' Second one.
 
-            DARK_BASIC_TEXT_COLOR = "#f2f2f2",
+            DARK_BASIC_TEXT_COLOR = "#f2f2f2", # Icon normal color too
             DARK_100_COLOR = "#f5f7fb", # THE LIGHTEST BG COLOR
             DARK_200_COLOR = "#f1f2f6",
             DARK_300_COLOR = "#e9eaee",
             DARK_350_COLOR = "#d8d9dd",
-            DARK_400_COLOR = "#c7c8cc",
+            DARK_400_COLOR = "#c7c8cc", # Icon second color
             DARK_450_COLOR = "#b8b9bd",
             DARK_500_COLOR = "#a9aaae",
             DARK_600_COLOR = "#7f8084",
@@ -52,27 +55,30 @@ class ColorThemeManager():
             DARK_1000_COLOR = "#151517", # THE DARKEST BG COLOR
 
 
-            LIGHT_100_COLOR = "#f2f2f2", # THE LIGHTEST BG COLOR
-            LIGHT_200_COLOR = "#e9e9e9",
-            LIGHT_250_COLOR = "#e1e1e1",
-            LIGHT_300_COLOR = "#d9d9d9",
-            LIGHT_325_COLOR = "#d0d0d0",
-            LIGHT_350_COLOR = "#c7c7c7",
-            LIGHT_375_COLOR = "#bebebe",
-            LIGHT_400_COLOR = "#b5b5b5",
-            LIGHT_450_COLOR = "#a5a5a5",
-            LIGHT_500_COLOR = "#959595",
-            LIGHT_600_COLOR = "#6d6d6d",
-            LIGHT_700_COLOR = "#5a5a5a",
-            LIGHT_750_COLOR = "#515151",
-            LIGHT_800_COLOR = "#3b3b3b",
-            LIGHT_850_COLOR = "#323232",
-            LIGHT_875_COLOR = "#2b2b2b",
-            LIGHT_900_COLOR = "#1b1b1b",
-            # LIGHT_925_COLOR = "#121212",
-            # LIGHT_950_COLOR = "#0c0c0c",
-            # LIGHT_975_COLOR = "#070707",
-            LIGHT_1000_COLOR = "#010101", # THE DARKEST BG COLOR
+            LIGHT_BASIC_TEXT_COLOR = "#050505",
+            LIGHT_100_COLOR = "#f5f7fb", # THE LIGHTEST BG COLOR
+            LIGHT_125_COLOR = "#F4F6FA",
+            LIGHT_150_COLOR = "#F2F4F8",
+            LIGHT_175_COLOR = "#F1F3F7",
+            LIGHT_200_COLOR = "#eff1f5",
+            LIGHT_225_COLOR = "#ECEEF2",
+            LIGHT_250_COLOR = "#E9EBEF",
+            LIGHT_275_COLOR = "#E6E8EC",
+            LIGHT_300_COLOR = "#e2e4e8",
+            LIGHT_313_COLOR = "#DEE0E4",
+            LIGHT_325_COLOR = "#DADCE0",
+            LIGHT_333_COLOR = "#D6D8DC",
+            LIGHT_350_COLOR = "#D1D3D7",
+            LIGHT_375_COLOR = "#C9CBCF",
+            LIGHT_400_COLOR = "#c0c2c6",
+            LIGHT_450_COLOR = "#B1B3B7",
+            LIGHT_500_COLOR = "#a2a3a7",
+            LIGHT_550_COLOR = "#8D8F93",
+            LIGHT_600_COLOR = "#787a7e",
+            LIGHT_700_COLOR = "#646669", # Icon second color
+            LIGHT_800_COLOR = "#45464a",
+            LIGHT_900_COLOR = "#242528", # Icon normal color
+            LIGHT_1000_COLOR = "#1b1b1b", # THE DARKEST BG COLOR
         )
 
 

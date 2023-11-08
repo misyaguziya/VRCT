@@ -134,6 +134,7 @@ def _darkTheme(base_color):
         # Modal Window (Main Window)
         main_window_cover = SimpleNamespace(
             TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
+            BG_COLOR = "#000",
         ),
 
 
@@ -249,6 +250,7 @@ def _darkTheme(base_color):
 
 
             SB__MESSAGE_FORMAT__EXAMPLE_BG_COLOR = "#3a4554", # from VRChat' chat display color
+            SB__MESSAGE_FORMAT__EXAMPLE_TEXT_COLOR = base_color.DARK_100_COLOR,
             SB__MESSAGE_FORMAT__SWAP_BUTTON_COLOR = base_color.DARK_875_COLOR,
             SB__MESSAGE_FORMAT__SWAP_BUTTON_HOVERED_COLOR = base_color.DARK_800_COLOR,
             SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR = base_color.DARK_888_COLOR,
@@ -290,7 +292,7 @@ def _darkTheme(base_color):
             FOREGROUND_ICON = getImageFileFromUiUtils("foreground_icon_white.png"),
             FOREGROUND_ICON_DISABLED = getImageFileFromUiUtils("foreground_icon_disabled.png"),
 
-            NARROW_ARROW_DOWN = getImageFileFromUiUtils("narrow_arrow_down.png"),
+            NARROW_ARROW_DOWN = getImageFileFromUiUtils("narrow_arrow_down_white.png"),
 
             CONFIGURATION_ICON = getImageFileFromUiUtils("configuration_icon_white.png"),
             CONFIGURATION_ICON_DISABLED = getImageFileFromUiUtils("configuration_icon_disabled.png"),
@@ -303,9 +305,9 @@ def _darkTheme(base_color):
             HELP_ICON = getImageFileFromUiUtils("help_icon_white.png"),
 
             CANCEL_ICON = getImageFileFromUiUtils("cancel_icon.png"),
-            REDO_ICON = getImageFileFromUiUtils("redo_white.png"),
-            SWAP_ICON = getImageFileFromUiUtils("swap_icon.png"),
-            FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon.png"),
+            REDO_ICON = getImageFileFromUiUtils("redo_icon_white.png"),
+            SWAP_ICON = getImageFileFromUiUtils("swap_icon_white.png"),
+            FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon_white.png"),
         ),
     )
 
