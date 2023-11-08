@@ -269,7 +269,7 @@ class VRCT_GUI(CTk):
     def _clearErrorMessage(self):
         try:
             self.error_message_window._withdraw()
-        except:
+        except Exception:
             pass
 
 

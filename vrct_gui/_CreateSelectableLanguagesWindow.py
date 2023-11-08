@@ -178,5 +178,6 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def focusOutFunction(self, e):
-        if str(e.widget) != ".!_createselectablelanguageswindow": return
+        if str(e.widget) != ".!_createselectablelanguageswindow":
+            return
         self.vrct_gui._closeSelectableLanguagesWindow()
