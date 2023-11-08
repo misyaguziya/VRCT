@@ -18,13 +18,13 @@ class _CreateWindowCover(CTkToplevel):
         self.title("")
         self.overrideredirect(True)
         self.wm_attributes("-toolwindow", True)
-        self.configure(fg_color="black")
+        self.configure(fg_color=self.settings.ctm.BG_COLOR)
         self.protocol("WM_DELETE_WINDOW", lambda: self.withdraw())
 
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
-        self.cover_container = CTkFrame(self, corner_radius=0, fg_color="black", width=0, height=0)
+        self.cover_container = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.BG_COLOR, width=0, height=0)
         self.cover_container.grid(row=0, column=0, sticky="nsew")
 
 

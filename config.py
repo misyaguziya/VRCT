@@ -80,7 +80,7 @@ class Config:
 
     @ENABLE_TRANSLATION.setter
     def ENABLE_TRANSLATION(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_TRANSLATION = value
 
     @property
@@ -89,7 +89,7 @@ class Config:
 
     @ENABLE_TRANSCRIPTION_SEND.setter
     def ENABLE_TRANSCRIPTION_SEND(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_TRANSCRIPTION_SEND = value
 
     @property
@@ -98,7 +98,7 @@ class Config:
 
     @ENABLE_TRANSCRIPTION_RECEIVE.setter
     def ENABLE_TRANSCRIPTION_RECEIVE(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_TRANSCRIPTION_RECEIVE = value
 
     @property
@@ -107,7 +107,7 @@ class Config:
 
     @ENABLE_FOREGROUND.setter
     def ENABLE_FOREGROUND(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_FOREGROUND = value
 
     @property
@@ -116,7 +116,7 @@ class Config:
 
     @SOURCE_COUNTRY.setter
     def SOURCE_COUNTRY(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._SOURCE_COUNTRY = value
 
     @property
@@ -125,7 +125,7 @@ class Config:
 
     @SOURCE_LANGUAGE.setter
     def SOURCE_LANGUAGE(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._SOURCE_LANGUAGE = value
 
     @property
@@ -134,7 +134,7 @@ class Config:
 
     @TARGET_COUNTRY.setter
     def TARGET_COUNTRY(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._TARGET_COUNTRY = value
 
     @property
@@ -143,7 +143,7 @@ class Config:
 
     @TARGET_LANGUAGE.setter
     def TARGET_LANGUAGE(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._TARGET_LANGUAGE = value
 
     @property
@@ -164,7 +164,7 @@ class Config:
 
     @SELECTED_TAB_NO.setter
     def SELECTED_TAB_NO(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._SELECTED_TAB_NO = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -175,7 +175,7 @@ class Config:
 
     @SELECTED_TAB_YOUR_LANGUAGES.setter
     def SELECTED_TAB_YOUR_LANGUAGES(self, value):
-        if type(value) is dict:
+        if isinstance(value, dict):
             self._SELECTED_TAB_YOUR_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -186,7 +186,7 @@ class Config:
 
     @SELECTED_TAB_TARGET_LANGUAGES.setter
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
-        if type(value) is dict:
+        if isinstance(value, dict):
             self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -197,7 +197,7 @@ class Config:
 
     @IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
     def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -209,7 +209,7 @@ class Config:
 
     @TRANSPARENCY.setter
     def TRANSPARENCY(self, value):
-        if type(value) is int and 0 <= value <= 100:
+        if isinstance(value, int) and 0 <= value <= 100:
             self._TRANSPARENCY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -242,7 +242,7 @@ class Config:
 
     @TEXTBOX_UI_SCALING.setter
     def TEXTBOX_UI_SCALING(self, value):
-        if type(value) is int and 50 <= value <= 200:
+        if isinstance(value, int) and 50 <= value <= 200:
             self._TEXTBOX_UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -300,7 +300,7 @@ class Config:
 
     @INPUT_MIC_ENERGY_THRESHOLD.setter
     def INPUT_MIC_ENERGY_THRESHOLD(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_MIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -311,7 +311,7 @@ class Config:
 
     @INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD.setter
     def INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -322,7 +322,7 @@ class Config:
 
     @INPUT_MIC_RECORD_TIMEOUT.setter
     def INPUT_MIC_RECORD_TIMEOUT(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_MIC_RECORD_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -333,7 +333,7 @@ class Config:
 
     @INPUT_MIC_PHRASE_TIMEOUT.setter
     def INPUT_MIC_PHRASE_TIMEOUT(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_MIC_PHRASE_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -344,7 +344,7 @@ class Config:
 
     @INPUT_MIC_MAX_PHRASES.setter
     def INPUT_MIC_MAX_PHRASES(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_MIC_MAX_PHRASES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -355,7 +355,7 @@ class Config:
 
     @INPUT_MIC_WORD_FILTER.setter
     def INPUT_MIC_WORD_FILTER(self, value):
-        if type(value) is list:
+        if isinstance(value, list):
             self._INPUT_MIC_WORD_FILTER = sorted(set(value), key=value.index)
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -366,7 +366,7 @@ class Config:
 
     @INPUT_SPEAKER_ENERGY_THRESHOLD.setter
     def INPUT_SPEAKER_ENERGY_THRESHOLD(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_SPEAKER_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -377,7 +377,7 @@ class Config:
 
     @INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.setter
     def INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -388,7 +388,7 @@ class Config:
 
     @INPUT_SPEAKER_RECORD_TIMEOUT.setter
     def INPUT_SPEAKER_RECORD_TIMEOUT(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_SPEAKER_RECORD_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -399,7 +399,7 @@ class Config:
 
     @INPUT_SPEAKER_PHRASE_TIMEOUT.setter
     def INPUT_SPEAKER_PHRASE_TIMEOUT(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_SPEAKER_PHRASE_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -410,7 +410,7 @@ class Config:
 
     @INPUT_SPEAKER_MAX_PHRASES.setter
     def INPUT_SPEAKER_MAX_PHRASES(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._INPUT_SPEAKER_MAX_PHRASES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -421,7 +421,7 @@ class Config:
 
     @OSC_IP_ADDRESS.setter
     def OSC_IP_ADDRESS(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             self._OSC_IP_ADDRESS = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -432,7 +432,7 @@ class Config:
 
     @OSC_PORT.setter
     def OSC_PORT(self, value):
-        if type(value) is int:
+        if isinstance(value, int):
             self._OSC_PORT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -443,9 +443,9 @@ class Config:
 
     @AUTH_KEYS.setter
     def AUTH_KEYS(self, value):
-        if type(value) is dict and set(value.keys()) == set(self.AUTH_KEYS.keys()):
+        if isinstance(value, dict) and set(value.keys()) == set(self.AUTH_KEYS.keys()):
             for key, value in value.items():
-                if type(value) is str:
+                if isinstance(value, str):
                     self._AUTH_KEYS[key] = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
@@ -456,7 +456,7 @@ class Config:
 
     @MESSAGE_FORMAT.setter
     def MESSAGE_FORMAT(self, value):
-        if type(value) is str:
+        if isinstance(value, str):
             if isUniqueStrings(["[message]", "[translation]"], value) is False:
                 value = "[message]([translation])"
             self._MESSAGE_FORMAT = value
@@ -469,7 +469,7 @@ class Config:
 
     @ENABLE_AUTO_CLEAR_MESSAGE_BOX.setter
     def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -480,7 +480,7 @@ class Config:
 
     @ENABLE_NOTICE_XSOVERLAY.setter
     def ENABLE_NOTICE_XSOVERLAY(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_NOTICE_XSOVERLAY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -491,7 +491,7 @@ class Config:
 
     @ENABLE_SEND_MESSAGE_TO_VRC.setter
     def ENABLE_SEND_MESSAGE_TO_VRC(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_SEND_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -503,7 +503,7 @@ class Config:
 
     # @STARTUP_OSC_ENABLED_CHECK.setter
     # def STARTUP_OSC_ENABLED_CHECK(self, value):
-    #     if type(value) is bool:
+    #     if isinstance(value, bool):
     #         self._STARTUP_OSC_ENABLED_CHECK = value
     #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -514,7 +514,7 @@ class Config:
 
     @ENABLE_LOGGER.setter
     def ENABLE_LOGGER(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._ENABLE_LOGGER = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -525,7 +525,7 @@ class Config:
 
     @IS_CONFIG_WINDOW_COMPACT_MODE.setter
     def IS_CONFIG_WINDOW_COMPACT_MODE(self, value):
-        if type(value) is bool:
+        if isinstance(value, bool):
             self._IS_CONFIG_WINDOW_COMPACT_MODE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

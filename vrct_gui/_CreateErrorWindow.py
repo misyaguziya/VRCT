@@ -80,7 +80,8 @@ class _CreateErrorWindow(CTkToplevel):
 
 
     def show(self, target_widget):
-        if self.hide is False: return
+        if self.hide is False:
+            return
 
         self.attach_widget = target_widget
 

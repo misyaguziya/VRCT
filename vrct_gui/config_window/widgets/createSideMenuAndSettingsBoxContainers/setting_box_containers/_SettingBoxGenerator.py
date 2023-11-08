@@ -2,7 +2,7 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Union
 
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
+from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
 from CTkToolTip import *
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor
@@ -587,7 +587,7 @@ class _SettingBoxGenerator():
             wraplength=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH,
             height=0,
             font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE, weight="normal"),
-            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+            text_color=self.settings.ctm.SB__MESSAGE_FORMAT__EXAMPLE_TEXT_COLOR,
         )
         example_label_widget.grid(row=1, column=1, padx=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, pady=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, sticky="ew")
 
@@ -1068,7 +1068,8 @@ class _SettingBoxGenerator():
                     items[i] = item_data
                     is_replaced = True
                     break
-            if is_replaced is False: items.append(item_data)
+            if is_replaced is False:
+                items.append(item_data)
 
 
         return mic_word_filter_item_wrapper

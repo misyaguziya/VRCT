@@ -13,7 +13,8 @@ def get_key_by_value(dictionary, value):
     return None
 
 def callFunctionIfCallable(function, *args):
-    if callable(function) is True: function(*args)
+    if callable(function) is True:
+        function(*args)
 
 def isEven(number):
     return number % 2 == 0
