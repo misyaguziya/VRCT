@@ -1,4 +1,5 @@
 from time import sleep
+from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
@@ -14,10 +15,12 @@ def callbackRestartSoftware():
     model.reStartSoftware()
 
 def callbackFilepathLogs():
-    print("callbackFilepathLogs")
+    print("callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
+    Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
 
 def callbackFilepathConfigFile():
-    print("callbackFilepathConfigFile")
+    print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
+    Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
 # func transcription send message
 def sendMicMessage(message):
