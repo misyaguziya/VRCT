@@ -89,7 +89,7 @@ config_window:
     # desc: Change the main window's transparency.
 
   appearance_theme:
-    label: 테마 [Under development]
+    label: 테마
     # desc: Change the color theme. Currently, only the Dark theme is supported. The Light theme is under development.
 
   ui_size:
