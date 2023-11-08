@@ -90,8 +90,8 @@ config_window:
     desc: Change the main window's transparency.
 
   appearance_theme:
-    label: Theme [Under development]
-    desc: Change the color theme. Currently, only the Dark theme is supported. The Light theme is under development.
+    label: Theme
+    desc: Change the color theme. Currently.
 
   ui_size:
     label: UI Size

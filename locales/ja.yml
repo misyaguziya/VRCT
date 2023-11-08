@@ -90,8 +90,8 @@ config_window:
     desc: メイン画面の透明度を変更できます。
 
   appearance_theme:
-    label: 外観テーマ [開発中]
-    desc: カラーテーマを変更できます。現在はDarkテーマのみ対応。Lightテーマは制作中です。
+    label: 外観テーマ
+    desc: カラーテーマを変更できます。
 
   ui_size:
     label: UIサイズ
