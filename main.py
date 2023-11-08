@@ -12,7 +12,7 @@ if __name__ == "__main__":
         splash.destroySplash()
         controller.showMainWindow()
 
-    except Exception as e:
+    except Exception:
         import traceback
         with open('error.log', 'a') as f:
             traceback.print_exc(file=f)

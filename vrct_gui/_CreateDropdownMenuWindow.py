@@ -262,7 +262,8 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
     def show(self, dropdown_menu_widget_id):
-        if self.hide is False: return
+        if self.hide is False:
+            return
         self.wm_attributes("-alpha", 0)
 
 

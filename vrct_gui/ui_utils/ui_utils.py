@@ -162,10 +162,12 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
     option_menu_box = CTkFrame(parent_widget, corner_radius=6, fg_color=optionmenu_bg_color, cursor="hand2")
 
     option_menu_box.grid_rowconfigure(0, weight=1)
-    if optionmenu_min_height is not None: option_menu_box.grid_rowconfigure(0, minsize=optionmenu_min_height)
+    if optionmenu_min_height is not None:
+        option_menu_box.grid_rowconfigure(0, minsize=optionmenu_min_height)
 
     option_menu_box.grid_columnconfigure(0, weight=1)
-    if optionmenu_min_width is not None: option_menu_box.grid_columnconfigure(0, minsize=optionmenu_min_width)
+    if optionmenu_min_width is not None:
+        option_menu_box.grid_columnconfigure(0, minsize=optionmenu_min_width)
 
     optionmenu_label_wrapper = CTkFrame(option_menu_box, corner_radius=0, fg_color=optionmenu_bg_color)
     optionmenu_label_wrapper.grid(row=0, column=0, padx=(optionmenu_ipadx[0],0), pady=optionmenu_ipady, sticky="ew")
