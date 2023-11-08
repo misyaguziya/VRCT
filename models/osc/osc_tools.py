@@ -1,5 +1,4 @@
 from time import sleep
-from typing import List
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
@@ -15,7 +14,7 @@ def sendTyping(flag=False, ip_address="127.0.0.1", port=9000):
 
 # send OSC message
 def sendMessage(message=None, ip_address="127.0.0.1", port=9000):
-    if message != None:
+    if message is not None:
         msg = osc_message_builder.OscMessageBuilder(address="/chatbox/input")
         msg.add_arg(f"{message}")
         msg.add_arg(True)
