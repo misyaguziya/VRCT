@@ -8,29 +8,23 @@ import i18n
 from languages import selectable_languages
 
 from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, ImageFileManager, UiScalingManager
+from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, generatePercentageStringsList
+from utils import callFunctionIfCallable, generatePercentageStringsList, intToPercentageStringsFormatter
 
 from config import config
 
 class View():
     def __init__(self):
-        self.settings = SimpleNamespace()
-        # theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
-        theme = "Dark"
-        all_ctm = ColorThemeManager(theme)
-        all_uism = UiScalingManager(config.UI_SCALING)
-        image_file = ImageFileManager(theme)
-
+        # Localization
         i18n.load_path.append(os_path.join(os_path.dirname(__file__), "locales"))
         i18n.set("fallback", "en") # The fallback language is English.
         i18n.set("skip_locale_root_data", True)
         i18n.set("filename_format", "{locale}.{format}")
         i18n.set("enable_memoization", True)
-
         i18n.set("locale", config.UI_LANGUAGE)
 
+        # Save settings at startup for items that require a restart VRCT for the changes to apply
         self.restart_required_configs_pre_data = SimpleNamespace(
             appearance_theme=config.APPEARANCE_THEME,
             ui_scaling=config.UI_SCALING,
@@ -38,9 +32,13 @@ class View():
             ui_language=config.UI_LANGUAGE,
         )
 
+        self.settings = SimpleNamespace()
+        theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
+        all_ctm = ColorThemeManager(theme)
+        all_uism = UiScalingManager(config.UI_SCALING)
 
         common_args = {
-            "image_file": image_file,
+            "image_file": all_ctm.image_file,
             "FONT_FAMILY": config.FONT_FAMILY,
         }
 
@@ -69,7 +67,6 @@ class View():
         )
 
         self.settings.error_message_window = SimpleNamespace(
-            ctm=all_ctm.error_message_window,
             uism=all_uism.error_message_window,
             **common_args
         )
@@ -84,6 +81,10 @@ class View():
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
+            CALLBACK_OPEN_FILEPATH_LOGS=None,
+            CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
+
+            CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
 
             CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE=self._showDisplayOverUiSizeConfirmationModal,
 
@@ -95,7 +96,7 @@ class View():
             VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON=StringVar(value=""),
             VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON=StringVar(value=""),
 
-            # Open Config Window
+            # Window Control (Config Window)
             CALLBACK_CLICKED_OPEN_CONFIG_WINDOW_BUTTON=self._openConfigWindow,
             CALLBACK_CLICKED_CLOSE_CONFIG_WINDOW_BUTTON=self._closeConfigWindow,
             CALLBACK_OPEN_CONFIG_WINDOW=None,
@@ -140,6 +141,8 @@ class View():
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
             VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
+            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=i18n.t("main_window.swap_button_label")),
+            CALLBACK_SWAP_LANGUAGES=None,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
@@ -174,6 +177,8 @@ class View():
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
             VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
 
+            CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER=intToPercentageStringsFormatter,
+
 
             # Side Menu Labels
             VAR_SIDE_MENU_LABEL_APPEARANCE=StringVar(value=i18n.t("config_window.side_menu_labels.appearance")),
@@ -197,17 +202,23 @@ class View():
 
             VAR_LABEL_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.label")),
             VAR_DESC_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.desc")),
-            LIST_APPEARANCE_THEME=["Dark"],
-            # LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
+            LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
             CALLBACK_SET_APPEARANCE_THEME=None,
-            VAR_APPEARANCE_THEME=StringVar(value="Dark"),
-            # VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
+            VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
             LIST_UI_SCALING=generatePercentageStringsList(start=40,end=200, step=10),
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
+
+            VAR_LABEL_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.label")),
+            VAR_DESC_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.desc")),
+            SLIDER_RANGE_TEXTBOX_UI_SCALING=(50, 200),
+            CALLBACK_SET_TEXTBOX_UI_SCALING=None,
+            VAR_TEXTBOX_UI_SCALING=IntVar(value=config.TEXTBOX_UI_SCALING),
+            CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING=self._closeTheCoverOfMainWindow,
+            CALLBACK_BUTTON_RELEASE_TEXTBOX_UI_SCALING=self._openTheCoverOfMainWindow,
 
             VAR_LABEL_FONT_FAMILY=StringVar(value=i18n.t("config_window.font_family.label")),
             VAR_DESC_FONT_FAMILY=None,
@@ -253,31 +264,36 @@ class View():
             CALLBACK_CHECK_MIC_THRESHOLD=None,
             VAR_MIC_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
             VAR_MIC_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_MIC_ENERGY_THRESHOLD),
-            CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.setLatestConfigVariable_MicEnergyThreshold,
+            CALLBACK_FOCUS_OUT_MIC_ENERGY_THRESHOLD=self.callbackBindFocusOut_MicEnergyThreshold,
 
 
             VAR_LABEL_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.label")),
             VAR_DESC_MIC_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.mic_record_timeout.desc")),
             CALLBACK_SET_MIC_RECORD_TIMEOUT=None,
             VAR_MIC_RECORD_TIMEOUT=StringVar(value=config.INPUT_MIC_RECORD_TIMEOUT),
-            CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.setLatestConfigVariable_MicRecordTimeout,
+            CALLBACK_FOCUS_OUT_MIC_RECORD_TIMEOUT=self.callbackBindFocusOut_MicRecordTimeout,
 
             VAR_LABEL_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.label")),
             VAR_DESC_MIC_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.mic_phrase_timeout.desc")),
             CALLBACK_SET_MIC_PHRASE_TIMEOUT=None,
             VAR_MIC_PHRASE_TIMEOUT=StringVar(value=config.INPUT_MIC_PHRASE_TIMEOUT),
-            CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.setLatestConfigVariable_MicPhraseTimeout,
+            CALLBACK_FOCUS_OUT_MIC_PHRASE_TIMEOUT=self.callbackBindFocusOut_MicPhraseTimeout,
 
             VAR_LABEL_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.label")),
             VAR_DESC_MIC_MAX_PHRASES=StringVar(value=i18n.t("config_window.mic_max_phrase.desc")),
             CALLBACK_SET_MIC_MAX_PHRASES=None,
             VAR_MIC_MAX_PHRASES=StringVar(value=config.INPUT_MIC_MAX_PHRASES),
-            CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.setLatestConfigVariable_MicMaxPhrases,
+            CALLBACK_FOCUS_OUT_MIC_MAX_PHRASES=self.callbackBindFocusOut_MicMaxPhrases,
+
+            CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_OPEN=self._openMicWordFilterList,
+            CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_CLOSE=self._closeMicWordFilterList,
 
             VAR_LABEL_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.label")),
             VAR_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.desc")),
+            VAR_SWITCH_DESC_MIC_WORD_FILTER=StringVar(value=i18n.t("config_window.mic_word_filter.count_desc", count=len(config.INPUT_MIC_WORD_FILTER))),
+            VAR_LABEL_MIC_WORD_FILTER_ADD_BUTTON=StringVar(value=i18n.t("config_window.mic_word_filter.add_button_label")),
             CALLBACK_SET_MIC_WORD_FILTER=None,
-            VAR_MIC_WORD_FILTER=StringVar(value=",".join(config.INPUT_MIC_WORD_FILTER) if len(config.INPUT_MIC_WORD_FILTER) > 0 else ""),
+            MIC_WORD_FILTER_LIST=config.INPUT_MIC_WORD_FILTER,
 
 
             # Transcription Tab (Speaker)
@@ -290,26 +306,26 @@ class View():
             CALLBACK_CHECK_SPEAKER_THRESHOLD=None,
             VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER=IntVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
             VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY=StringVar(value=config.INPUT_SPEAKER_ENERGY_THRESHOLD),
-            CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.setLatestConfigVariable_SpeakerEnergyThreshold,
+            CALLBACK_FOCUS_OUT_SPEAKER_ENERGY_THRESHOLD=self.callbackBindFocusOut_SpeakerEnergyThreshold,
 
 
             VAR_LABEL_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.label")),
             VAR_DESC_SPEAKER_RECORD_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_record_timeout.desc")),
             CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=None,
             VAR_SPEAKER_RECORD_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_RECORD_TIMEOUT),
-            CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.setLatestConfigVariable_SpeakerRecordTimeout,
+            CALLBACK_FOCUS_OUT_SPEAKER_RECORD_TIMEOUT=self.callbackBindFocusOut_SpeakerRecordTimeout,
 
             VAR_LABEL_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.label")),
             VAR_DESC_SPEAKER_PHRASE_TIMEOUT=StringVar(value=i18n.t("config_window.speaker_phrase_timeout.desc")),
             CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=None,
             VAR_SPEAKER_PHRASE_TIMEOUT=StringVar(value=config.INPUT_SPEAKER_PHRASE_TIMEOUT),
-            CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.setLatestConfigVariable_SpeakerPhraseTimeout,
+            CALLBACK_FOCUS_OUT_SPEAKER_PHRASE_TIMEOUT=self.callbackBindFocusOut_SpeakerPhraseTimeout,
 
             VAR_LABEL_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.label")),
             VAR_DESC_SPEAKER_MAX_PHRASES=StringVar(value=i18n.t("config_window.speaker_max_phrase.desc")),
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
-            CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.setLatestConfigVariable_SpeakerMaxPhrases,
+            CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.callbackBindFocusOut_SpeakerMaxPhrases,
 
 
             # Others Tab
@@ -332,7 +348,15 @@ class View():
             VAR_LABEL_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.label")),
             VAR_DESC_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.message_format.desc")),
             CALLBACK_SET_MESSAGE_FORMAT=None,
+            CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT=self._swapMessageFormatRequiredText,
             VAR_MESSAGE_FORMAT=StringVar(value=config.MESSAGE_FORMAT),
+            VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_0_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_1_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_2_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT=StringVar(value="[message]"),
+            VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT=StringVar(value="[translation]"),
+            CALLBACK_FOCUS_OUT_MESSAGE_FORMAT=self.callbackBindFocusOut_MessageFormat,
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
@@ -359,6 +383,9 @@ class View():
             VAR_DESC_OSC_PORT=None,
             CALLBACK_SET_OSC_PORT=None,
             VAR_OSC_PORT=StringVar(value=config.OSC_PORT),
+
+            VAR_LABEL_OPEN_CONFIG_FILEPATH=StringVar(value=i18n.t("config_window.open_config_filepath.label")),
+            VAR_DESC_OPEN_CONFIG_FILEPATH=None,
         )
 
 
@@ -375,6 +402,8 @@ class View():
         if common_registers is not None:
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
+            self.view_variable.CALLBACK_OPEN_FILEPATH_CONFIG_FILE=common_registers.get("callback_filepath_config_file", None)
 
 
         if window_action_registers is not None:
@@ -395,6 +424,7 @@ class View():
             self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = main_window_registers.get("callback_your_language", None)
             self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = main_window_registers.get("callback_target_language", None)
             main_window_registers.get("values", None) and self.updateList_selectableLanguages(main_window_registers["values"])
+            self.view_variable.CALLBACK_SWAP_LANGUAGES = main_window_registers.get("callback_swap_languages", None)
 
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
@@ -430,6 +460,7 @@ class View():
 
             self.view_variable.CALLBACK_SET_APPEARANCE = config_window_registers.get("callback_set_appearance", None)
             self.view_variable.CALLBACK_SET_UI_SCALING = config_window_registers.get("callback_set_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING = config_window_registers.get("callback_set_textbox_ui_scaling", None)
             self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window_registers.get("callback_set_font_family", None)
             self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window_registers.get("callback_set_ui_language", None)
 
@@ -451,6 +482,7 @@ class View():
             self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window_registers.get("callback_set_mic_phrase_timeout", None)
             self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window_registers.get("callback_set_mic_max_phrases", None)
             self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window_registers.get("callback_set_mic_word_filter", None)
+            self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER = config_window_registers.get("callback_delete_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
             self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_energy_threshold", None)
@@ -477,13 +509,6 @@ class View():
         if config.IS_CONFIG_WINDOW_COMPACT_MODE is True:
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
-
-        vrct_gui._changeConfigWindowWidgetsStatus(
-            status="disabled",
-            target_names=[
-                "sb__optionmenu_appearance_theme",
-            ]
-        )
 
 
         if config.CHOICE_MIC_HOST == "NoHost":
@@ -514,10 +539,73 @@ class View():
             self.openSpeakerEnergyThresholdWidget()
 
 
+        self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
 
+    def setMessageFormatEntryWidgets(self, message_format:str):
+        result = self.extractMessageFormat(message_format)
+
+        if result.is_message_first is True:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[message]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[translation]")
+        else:
+            self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set("[translation]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set("[message]")
+
+        self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.set(result.before)
+        self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.set(result.between)
+        self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.set(result.after)
+        self.updateMessageFormat_ExampleTextWidget()
+
+    def _swapMessageFormatRequiredText(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.set(text_1)
+        self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.set(text_0)
+        self.updateMessageFormat_ExampleTextWidget()
+
+        new_message_format = self.getLatestMessageFormatFromWidget()
+        callFunctionIfCallable(self.view_variable.CALLBACK_SET_MESSAGE_FORMAT, new_message_format)
+
+
+    def getLatestMessageFormatFromWidget(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT.get()
+        entry_0 = self.view_variable.VAR_ENTRY_0_MESSAGE_FORMAT.get()
+        entry_1 = self.view_variable.VAR_ENTRY_1_MESSAGE_FORMAT.get()
+        entry_2 = self.view_variable.VAR_ENTRY_2_MESSAGE_FORMAT.get()
+        return entry_0+text_0+entry_1+text_1+entry_2
+
+    def updateMessageFormat_ExampleTextWidget(self):
+        message = i18n.t("config_window.message_format.example_text", locale=config.UI_LANGUAGE)
+        translation_locale = "ja" if config.UI_LANGUAGE == "en" else "en"
+        translation = i18n.t("config_window.message_format.example_text", locale=translation_locale)
+
+        example_message = config.MESSAGE_FORMAT.replace("[message]", message)
+        example_message = example_message.replace("[translation]", translation)
+
+        self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT.set(example_message)
+
+
+# GUI process
+    def createGUI(self):
+        vrct_gui._createGUI(settings=self.settings, view_variable=self.view_variable)
+
+    @staticmethod
+    def showGUI():
+        vrct_gui._showGUI()
+
+    @staticmethod
+    def startMainLoop():
+        vrct_gui._showGUI()
+        vrct_gui._startMainLoop()
+
+
+
+# Common
     @staticmethod
     def getAvailableFonts():
         available_fonts = list(tk_font.families())
@@ -529,6 +617,8 @@ class View():
     def openWebPage(url:str):
         webbrowser.open_new_tab(url)
 
+
+# Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_booth"))
@@ -536,6 +626,16 @@ class View():
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
+
+# Widget Control
+    # Common
+    @staticmethod
+    def _clearEntryBox(entry_widget):
+        entry_widget.delete(0, CTK_END)
+
+    def clearErrorMessage(self):
+        vrct_gui._clearErrorMessage()
+
 
     @staticmethod
     def showUpdateAvailableButton():
@@ -550,154 +650,6 @@ class View():
         vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
 
-
-    def foregroundOnIfForegroundEnabled(self):
-        if config.ENABLE_FOREGROUND:
-            self.foregroundOn()
-
-    def foregroundOffIfForegroundEnabled(self):
-        if config.ENABLE_FOREGROUND:
-            self.foregroundOff()
-
-
-    @staticmethod
-    def foregroundOn():
-        vrct_gui.attributes("-topmost", True)
-
-    @staticmethod
-    def foregroundOff():
-        vrct_gui.attributes("-topmost", False)
-
-
-    def _adjustUiSizeAndRestart(self):
-        current_percentage = int(config.UI_SCALING.replace("%",""))
-        target_percentage = current_percentage - 20
-        if target_percentage >= 40 and str(target_percentage) + "%" in self.view_variable.LIST_UI_SCALING:
-            index = self.view_variable.LIST_UI_SCALING.index(str(target_percentage) + "%")
-            callFunctionIfCallable(self.view_variable.CALLBACK_SET_UI_SCALING, self.view_variable.LIST_UI_SCALING[index])
-            callFunctionIfCallable(self.view_variable.CALLBACK_RESTART_SOFTWARE)
-        else:
-            self._hideConfirmationModal()
-        # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
-
-
-
-
-
-    def _showDisplayOverUiSizeConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
-
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
-
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._adjustUiSizeAndRestart
-        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.detected_over_ui_size", current_ui_size=config.UI_SCALING))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_adjust_ui_size"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_adjust_ui_size"))
-
-        vrct_gui.confirmation_modal.show(hide_title_bar=False, close_when_focusout=False)
-
-
-
-    def _showUpdateSoftwareConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
-
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
-
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._startUpdateSoftware
-        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.update_software"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
-        vrct_gui.confirmation_modal.show()
-
-
-
-
-
-    def showTheLimitOfTranslationEngineConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
-
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
-
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
-        # self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
-        # self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
-        vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
-
-
-
-    def translationEngineLimitErrorProcess(self):
-        # turn off translation switch.
-        vrct_gui.translation_switch_box.deselect()
-        vrct_gui.translation_frame.markToggleManually(False)
-
-        # disable translation feature.
-        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
-
-        # print system message that mention to stopped translation feature.
-        view.printToTextbox_TranslationEngineLimitError()
-        view.showTheLimitOfTranslationEngineConfirmationModal()
-
-
-
-
-
-
-
-    def _hideInformationModal(self):
-        vrct_gui.information_modal.hide()
-        vrct_gui.main_window_cover.hide()
-        self.foregroundOnIfForegroundEnabled()
-
-
-    def _hideConfirmationModal(self):
-        vrct_gui.confirmation_modal.hide()
-        vrct_gui.main_window_cover.hide()
-        self.foregroundOnIfForegroundEnabled()
-
-    # def _deniedUpdateSoftware(self):
-    #     self._hideConfirmationModal()
-
-    def _startUpdateSoftware(self):
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
-        vrct_gui.confirmation_modal.hide_buttons()
-        vrct_gui.update()
-        vrct_gui.confirmation_modal.update()
-        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
-
-
-
-    def _openConfigWindow(self):
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set(i18n.t("main_window.cover_message"))
-        callFunctionIfCallable(self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
-        vrct_gui._openConfigWindow()
-
-    def _closeConfigWindow(self):
-        callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
-        vrct_gui._closeConfigWindow()
-
-
-
-    def _openTheCoverOfMainWindow(self):
-        vrct_gui.main_window_cover.show()
-        vrct_gui.config_window.lift()
-
-    @staticmethod
-    def _closeTheCoverOfMainWindow():
-        vrct_gui.main_window_cover.withdraw()
-
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
         vrct_gui._enableMainWindowSidebarCompactMode()
@@ -706,158 +658,19 @@ class View():
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         vrct_gui._disableMainWindowSidebarCompactMode()
 
-    def openSelectableLanguagesWindow_YourLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
-        vrct_gui._openSelectableLanguagesWindow("your_language")
 
-    def openSelectableLanguagesWindow_TargetLanguage(self, _e):
-        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
-        vrct_gui._openSelectableLanguagesWindow("target_language")
-
-
-    def updateGuiVariableByPresetTabNo(self, tab_no:str):
-        self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
-        self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
-
-
-    def updateList_selectableLanguages(self, new_selectable_language_list:list):
-        self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
-
-
-    def printToTextbox_enableTranslation(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
-    def printToTextbox_disableTranslation(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_translation"))
-
-    def printToTextbox_enableTranscriptionSend(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_voice2chatbox"))
-    def printToTextbox_disableTranscriptionSend(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_voice2chatbox"))
-
-    def printToTextbox_enableTranscriptionReceive(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_speaker2log"))
-    def printToTextbox_disableTranscriptionReceive(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_speaker2log"))
-
-    def printToTextbox_enableForeground(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_foreground"))
-    def printToTextbox_disableForeground(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_foreground"))
-
-    def printToTextbox_AuthenticationSuccess(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_success"))
-    def printToTextbox_AuthenticationError(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_error"))
-
-
-    def printToTextbox_TranscriptionSendNoDeviceError(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_mic_device_detected_error"))
-
-    def printToTextbox_TranscriptionReceiveNoDeviceError(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_speaker_device_detected_error"))
-
-
-    def printToTextbox_TranslationEngineLimitError(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.translation_engine_limit_error"))
-
-
-    # def printToTextbox_OSCError(self): [Deprecated]
-    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
-
-    def printToTextbox_DetectedByWordFilter(self, detected_message):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter"), detected_message=detected_message)
-
-
-
-    def printToTextbox_selectedYourLanguages(self, selected_your_language):
-        your_language = selected_your_language.replace("\n", " ")
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
-
-    def printToTextbox_selectedTargetLanguages(self, selected_target_language):
-        target_language = selected_target_language.replace("\n", " ")
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
-
-    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.switched_language_preset_tab", tab_no=tab_no))
-        self.printToTextbox_latestSelectedLanguages()
-
-    def printToTextbox_latestSelectedLanguages(self):
-        your_language = self.view_variable.VAR_YOUR_LANGUAGE.get().replace("\n", " ")
-        target_language = self.view_variable.VAR_TARGET_LANGUAGE.get().replace("\n", " ")
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.latest_language_setting", your_language=your_language, target_language=target_language))
-
-
-    @staticmethod
-    def _printToTextbox_Info(info_message):
-        vrct_gui._printToTextbox(
-            target_type="SYSTEM",
-            original_message=info_message,
-            # translated_message="",
-        )
-
-
-
-    def printToTextbox_SentMessage(self, original_message, translated_message):
-        self._printToTextbox_Sent(original_message, translated_message)
-
-    @staticmethod
-    def _printToTextbox_Sent(original_message, translated_message):
-        vrct_gui._printToTextbox(
-            target_type="SENT",
-            original_message=original_message,
-            translated_message=translated_message,
-        )
-
-
-    def printToTextbox_ReceivedMessage(self, original_message, translated_message):
-        self._printToTextbox_Received(original_message, translated_message)
-
-    @staticmethod
-    def _printToTextbox_Received(original_message, translated_message):
-        vrct_gui._printToTextbox(
-            target_type="RECEIVED",
-            original_message=original_message,
-            translated_message=translated_message,
-        )
-
-
-    @staticmethod
-    def getTextFromMessageBox():
-        return vrct_gui.entry_message_box.get()
-
-    @staticmethod
-    def clearMessageBox():
-        vrct_gui.entry_message_box.delete(0, CTK_END)
-
-    @staticmethod
-    def setMainWindowTransparency(transparency:float):
-        vrct_gui.wm_attributes("-alpha", transparency)
-
-
+    # Config Window
     def enableConfigWindowCompactMode(self):
         for additional_widget in vrct_gui.config_window.additional_widgets:
             additional_widget.grid_remove()
+        self._closeMicWordFilterList()
 
     def disableConfigWindowCompactMode(self):
         for additional_widget in vrct_gui.config_window.additional_widgets:
             additional_widget.grid()
+        self._closeMicWordFilterList()
 
 
-
-    def createGUI(self):
-        vrct_gui._createGUI(settings=self.settings, view_variable=self.view_variable)
-
-    @staticmethod
-    def showGUI():
-        vrct_gui._showGUI()
-
-    @staticmethod
-    def startMainLoop():
-        vrct_gui._showGUI()
-        vrct_gui._startMainLoop()
-
-
-    # Config Window
     def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
         is_restart_required = not (
             self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
@@ -881,8 +694,7 @@ class View():
     def _hideRestartButton(self):
         vrct_gui.config_window.restart_button_container.grid_remove()
 
-    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
-        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
+
 
     @staticmethod
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Disabled():
@@ -891,6 +703,8 @@ class View():
     @staticmethod
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
+
+
 
     def openMicEnergyThresholdWidget(self):
         self.view_variable.VAR_LABEL_MIC_DYNAMIC_ENERGY_THRESHOLD.set(i18n.t("config_window.mic_dynamic_energy_threshold.label_for_manual"))
@@ -967,6 +781,7 @@ class View():
 
 
 
+
     def updateList_MicHost(self, new_mic_host_list:list):
         self.view_variable.LIST_MIC_HOST = new_mic_host_list
         vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
@@ -988,104 +803,485 @@ class View():
         self.view_variable.VAR_MIC_DEVICE.set(default_selected_mic_device_name)
 
 
-    @staticmethod
-    def updateSetProgressBar_MicEnergy(new_mic_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(new_mic_energy/config.MAX_MIC_ENERGY_THRESHOLD)
+    def updateSetProgressBar_MicEnergy(self, new_mic_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold,
+            new_energy=new_mic_energy,
+            max_energy=config.MAX_MIC_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
+        )
+
 
     @staticmethod
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
 
-    @staticmethod
-    def updateSetProgressBar_SpeakerEnergy(new_speaker_energy):
-        vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(new_speaker_energy/config.MAX_SPEAKER_ENERGY_THRESHOLD)
+    def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
+        self.updateProgressBar(
+            target_progressbar_widget=vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold,
+            new_energy=new_speaker_energy,
+            max_energy=config.MAX_SPEAKER_ENERGY_THRESHOLD,
+            energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
+        )
 
     @staticmethod
     def initProgressBar_SpeakerEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_speaker_energy_threshold.set(0)
 
 
+    def updateProgressBar(
+            self,
+            target_progressbar_widget,
+            new_energy,
+            max_energy,
+            energy_threshold,
+        ):
+        target_progressbar_widget.set(new_energy/max_energy)
+        if new_energy >= energy_threshold:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_EXCEED_THRESHOLD_BG_COLOR)
+        else:
+            target_progressbar_widget.configure(progress_color=self.settings.config_window.ctm.SB__PROGRESSBAR_X_SLIDER__PROGRESSBAR_PROGRESS_BG_COLOR)
 
+
+
+    def _openMicWordFilterList(self):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__arrow_switch_mic_word_filter"]
+        target_widget.arrow_switch_open.grid_remove()
+        target_widget.arrow_switch_close.grid()
+
+        vrct_gui.config_window.sb__mic_word_filter_list.grid()
+
+    def _closeMicWordFilterList(self):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__arrow_switch_mic_word_filter"]
+        target_widget.arrow_switch_close.grid_remove()
+        target_widget.arrow_switch_open.grid()
+
+        vrct_gui.config_window.sb__mic_word_filter_list.grid_remove()
+
+
+    def addValueToList_WordFilter(self, values:list):
+        target_widget = vrct_gui.config_window.sb__widgets["sb__add_and_delete_able_list_mic_word_filter_list"]
+        for t_item in target_widget.items:
+            if t_item.label in values:
+                values.remove(t_item.label)
+                t_item.redoFunction()
+        mic_word_filter_item_row_wrapper, accumulated_labels_width, last_row, last_column = target_widget.addValues(
+            values,
+            target_widget.mic_word_filter_item_row_wrapper,
+            target_widget.accumulated_labels_width,
+            target_widget.last_row,
+            target_widget.last_column
+        )
+        target_widget.mic_word_filter_item_row_wrapper = mic_word_filter_item_row_wrapper
+        target_widget.accumulated_labels_width = accumulated_labels_width
+        target_widget.last_row = last_row
+        target_widget.last_column = last_column
+
+    def clearEntryBox_WordFilter(self):
+        self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_word_filter_list)
+
+
+# Widget Control (Whole)
+    def foregroundOnIfForegroundEnabled(self):
+        if config.ENABLE_FOREGROUND:
+            self.foregroundOn()
+
+    def foregroundOffIfForegroundEnabled(self):
+        if config.ENABLE_FOREGROUND:
+            self.foregroundOff()
+
+
+    @staticmethod
+    def foregroundOn():
+        vrct_gui.attributes("-topmost", True)
+
+    @staticmethod
+    def foregroundOff():
+        vrct_gui.attributes("-topmost", False)
+
+
+    @staticmethod
+    def setMainWindowTransparency(transparency:float):
+        vrct_gui.wm_attributes("-alpha", transparency)
+
+    @staticmethod
+    def setMainWindowTextboxUiSize(custom_font_size_scale:float):
+        vrct_gui.print_to_textbox.setTagsSettings(custom_font_size_scale=custom_font_size_scale)
+
+# Function
+    def _adjustUiSizeAndRestart(self):
+        current_percentage = int(config.UI_SCALING.replace("%",""))
+        target_percentage = current_percentage - 20
+        if target_percentage >= 40 and str(target_percentage) + "%" in self.view_variable.LIST_UI_SCALING:
+            index = self.view_variable.LIST_UI_SCALING.index(str(target_percentage) + "%")
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_UI_SCALING, self.view_variable.LIST_UI_SCALING[index])
+            callFunctionIfCallable(self.view_variable.CALLBACK_RESTART_SOFTWARE)
+        else:
+            self._hideConfirmationModal()
+        # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
+
+
+
+    def translationEngineLimitErrorProcess(self):
+        # turn off translation switch.
+        vrct_gui.translation_switch_box.deselect()
+        vrct_gui.translation_frame.markToggleManually(False)
+
+        # disable translation feature.
+        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
+
+        # print system message that mention to stopped translation feature.
+        view.printToTextbox_TranslationEngineLimitError()
+        view.showTheLimitOfTranslationEngineConfirmationModal()
+
+
+
+
+# Show Modal
+    def _showDisplayOverUiSizeConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._adjustUiSizeAndRestart
+        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.detected_over_ui_size", current_ui_size=config.UI_SCALING))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_adjust_ui_size"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_adjust_ui_size"))
+
+        vrct_gui.confirmation_modal.show(hide_title_bar=False, close_when_focusout=False)
+
+
+
+    def _showUpdateSoftwareConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideConfirmationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._startUpdateSoftware
+        self.view_variable.CALLBACK_DENIED_CONFIRMATION_MODAL=self._hideConfirmationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
+        vrct_gui.confirmation_modal.show()
+
+
+
+
+
+    def showTheLimitOfTranslationEngineConfirmationModal(self):
+        self.foregroundOffIfForegroundEnabled()
+
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+        vrct_gui.main_window_cover.show()
+
+        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
+        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
+
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
+        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
+        vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
+
+
+
+
+# Hide Modal
+    def _hideInformationModal(self):
+        vrct_gui.information_modal.hide()
+        vrct_gui.main_window_cover.hide()
+        self.foregroundOnIfForegroundEnabled()
+
+
+    def _hideConfirmationModal(self):
+        vrct_gui.confirmation_modal.hide()
+        vrct_gui.main_window_cover.hide()
+        self.foregroundOnIfForegroundEnabled()
+
+
+# Process
+    def _startUpdateSoftware(self):
+        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.updating"))
+        vrct_gui.confirmation_modal.hide_buttons()
+        vrct_gui.update()
+        vrct_gui.confirmation_modal.update()
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+
+
+
+# Window Control
+    def _openConfigWindow(self):
+        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set(i18n.t("main_window.cover_message"))
+        callFunctionIfCallable(self.view_variable.CALLBACK_OPEN_CONFIG_WINDOW)
+        vrct_gui._openConfigWindow()
+
+    def _closeConfigWindow(self):
+        callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
+        self._closeMicWordFilterList()
+        vrct_gui._closeConfigWindow()
+
+# Window Control (Main Window Cover)
+    def _openTheCoverOfMainWindow(self):
+        vrct_gui.main_window_cover.show()
+        vrct_gui.config_window.lift()
+
+    @staticmethod
+    def _closeTheCoverOfMainWindow():
+        vrct_gui.main_window_cover.withdraw()
+
+# Window Control (Selectable Languages Window)
+    def openSelectableLanguagesWindow_YourLanguage(self, _e):
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_your_language"))
+        vrct_gui._openSelectableLanguagesWindow("your_language")
+
+    def openSelectableLanguagesWindow_TargetLanguage(self, _e):
+        self.view_variable.VAR_TITLE_LABEL_SELECTABLE_LANGUAGE.set(i18n.t("selectable_language_window.title_target_language"))
+        vrct_gui._openSelectableLanguagesWindow("target_language")
+
+
+# Update GuiVariable (view_variable)
+    def updateGuiVariableByPresetTabNo(self, tab_no:str):
+        self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
+        self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
+
+
+    def updateList_selectableLanguages(self, new_selectable_language_list:list):
+        self.view_variable.LIST_SELECTABLE_LANGUAGES = new_selectable_language_list
+
+    # (Config Window Setting Box Tab)
+    def _updateActiveSettingBoxTabNo(self, active_setting_box_tab_attr_name:str):
+        self.view_variable.ACTIVE_SETTING_BOX_TAB_ATTR_NAME = active_setting_box_tab_attr_name
+
+
+# Set GuiVariable (view_variable)
     def setGuiVariable_MicEnergyThreshold(self, value):
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
-
-    def setLatestConfigVariable_MicEnergyThreshold(self, _e=None):
-        self.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
-        self.clearErrorMessage()
 
 
     def setGuiVariable_SpeakerEnergyThreshold(self, value):
         self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_SPEAKER_ENERGY_THRESHOLD__ENTRY.set(str(value))
 
-    def setLatestConfigVariable_SpeakerEnergyThreshold(self, _e=None):
-        self.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
-        self.clearErrorMessage()
 
-
-
-    def setGuiVariable_MicRecordTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_record_timeout)
+    def setGuiVariable_MicRecordTimeout(self, value):
         self.view_variable.VAR_MIC_RECORD_TIMEOUT.set(str(value))
 
-    def setLatestConfigVariable_MicRecordTimeout(self, _e=None):
-        self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
-        self.clearErrorMessage()
 
-
-    def setGuiVariable_MicPhraseTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_phrase_timeout)
+    def setGuiVariable_MicPhraseTimeout(self, value):
         self.view_variable.VAR_MIC_PHRASE_TIMEOUT.set(str(value))
 
-    def setLatestConfigVariable_MicPhraseTimeout(self, _e=None):
-        self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
-        self.clearErrorMessage()
 
-
-    def setGuiVariable_MicMaxPhrases(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_max_phrases)
+    def setGuiVariable_MicMaxPhrases(self, value):
         self.view_variable.VAR_MIC_MAX_PHRASES.set(str(value))
 
-    def setLatestConfigVariable_MicMaxPhrases(self, _e=None):
-        self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
-        self.clearErrorMessage()
+    def setGuiVariable_MicWordFilter_Length(self, value):
+        self.view_variable.VAR_SWITCH_DESC_MIC_WORD_FILTER.set(i18n.t("config_window.mic_word_filter.count_desc", count=value))
 
-
-
-    def setGuiVariable_SpeakerRecordTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_record_timeout)
+    def setGuiVariable_SpeakerRecordTimeout(self, value):
         self.view_variable.VAR_SPEAKER_RECORD_TIMEOUT.set(str(value))
 
-    def setLatestConfigVariable_SpeakerRecordTimeout(self, _e=None):
-        self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
-        self.clearErrorMessage()
 
-
-    def setGuiVariable_SpeakerPhraseTimeout(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_phrase_timeout)
+    def setGuiVariable_SpeakerPhraseTimeout(self, value):
         self.view_variable.VAR_SPEAKER_PHRASE_TIMEOUT.set(str(value))
 
-    def setLatestConfigVariable_SpeakerPhraseTimeout(self, _e=None):
-        self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
-        self.clearErrorMessage()
 
-
-    def setGuiVariable_SpeakerMaxPhrases(self, value, delete=False):
-        if delete is True: self._clearEntryBox(vrct_gui.config_window.sb__entry_speaker_max_phrases)
+    def setGuiVariable_SpeakerMaxPhrases(self, value):
         self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(str(value))
 
-    def setLatestConfigVariable_SpeakerMaxPhrases(self, _e=None):
-        self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
-        self.clearErrorMessage()
+
+
+
+
+
+    def setLatestConfigVariable(self, target_name:str):
+        match (target_name):
+            case "MicEnergyThreshold":
+                self.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+            case "SpeakerEnergyThreshold":
+                self.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+            case "MicRecordTimeout":
+                self.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
+            case "MicPhraseTimeout":
+                self.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
+            case "MicMaxPhrases":
+                self.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
+            case "MicMicWordFilter":
+                self.setGuiVariable_MicWordFilter_Length(len(config.INPUT_MIC_WORD_FILTER))
+
+            case "SpeakerRecordTimeout":
+                self.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
+            case "SpeakerPhraseTimeout":
+                self.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
+            case "SpeakerMaxPhrases":
+                self.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
+
+            case "MessageFormat":
+                self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
+            case _:
+                raise ValueError(f"No matching case for target_name: {target_name}")
+
+
+# Print To Textbox.
+    def printToTextbox_enableTranslation(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
+    def printToTextbox_disableTranslation(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_translation"))
+
+    def printToTextbox_enableTranscriptionSend(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_voice2chatbox"))
+    def printToTextbox_disableTranscriptionSend(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_voice2chatbox"))
+
+    def printToTextbox_enableTranscriptionReceive(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_speaker2log"))
+    def printToTextbox_disableTranscriptionReceive(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_speaker2log"))
+
+    def printToTextbox_enableForeground(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_foreground"))
+    def printToTextbox_disableForeground(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.disabled_foreground"))
+
+    def printToTextbox_AuthenticationSuccess(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_success"))
+    def printToTextbox_AuthenticationError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.auth_key_error"))
+
+
+    def printToTextbox_TranscriptionSendNoDeviceError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_mic_device_detected_error"))
+
+    def printToTextbox_TranscriptionReceiveNoDeviceError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.no_speaker_device_detected_error"))
+
+
+    def printToTextbox_TranslationEngineLimitError(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.translation_engine_limit_error"))
+
+
+    # def printToTextbox_OSCError(self): [Deprecated]
+    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
+
+    def printToTextbox_DetectedByWordFilter(self, detected_message):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter", detected_message=detected_message))
+
+
+
+    def printToTextbox_selectedYourLanguages(self, selected_your_language):
+        your_language = selected_your_language.replace("\n", " ")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
+
+    def printToTextbox_selectedTargetLanguages(self, selected_target_language):
+        target_language = selected_target_language.replace("\n", " ")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
+
+    def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.switched_language_preset_tab", tab_no=tab_no))
+        self.printToTextbox_latestSelectedLanguages()
+
+    def printToTextbox_latestSelectedLanguages(self):
+        your_language = self.view_variable.VAR_YOUR_LANGUAGE.get().replace("\n", " ")
+        target_language = self.view_variable.VAR_TARGET_LANGUAGE.get().replace("\n", " ")
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.latest_language_setting", your_language=your_language, target_language=target_language))
 
 
     @staticmethod
-    def _clearEntryBox(entry_widget):
-        entry_widget.delete(0, CTK_END)
+    def _printToTextbox_Info(info_message, **kwargs):
+        vrct_gui._printToTextbox(
+            target_type="SYSTEM",
+            original_message=info_message,
+            **kwargs,
+        )
 
 
+
+    def printToTextbox_SentMessage(self, original_message, translated_message):
+        self._printToTextbox_Sent(original_message, translated_message)
+
+    @staticmethod
+    def _printToTextbox_Sent(original_message, translated_message):
+        vrct_gui._printToTextbox(
+            target_type="SENT",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
+
+
+    def printToTextbox_ReceivedMessage(self, original_message, translated_message):
+        self._printToTextbox_Received(original_message, translated_message)
+
+    @staticmethod
+    def _printToTextbox_Received(original_message, translated_message):
+        vrct_gui._printToTextbox(
+            target_type="RECEIVED",
+            original_message=original_message,
+            translated_message=translated_message,
+        )
+
+
+# Message Box
+    @staticmethod
+    def getTextFromMessageBox():
+        return vrct_gui.entry_message_box.get()
+
+    def clearMessageBox(self):
+        self._clearEntryBox(vrct_gui.entry_message_box)
+
+
+
+
+# Callback Bind FocusOut
+    def callbackBindFocusOut_MicEnergyThreshold(self, _e=None):
+        self.setLatestConfigVariable("MicEnergyThreshold")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_SpeakerEnergyThreshold(self, _e=None):
+        self.setLatestConfigVariable("SpeakerEnergyThreshold")
+        self.clearErrorMessage()
+
+
+    def callbackBindFocusOut_MicRecordTimeout(self, _e=None):
+        self.setLatestConfigVariable("MicRecordTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_MicPhraseTimeout(self, _e=None):
+        self.setLatestConfigVariable("MicPhraseTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_MicMaxPhrases(self, _e=None):
+        self.setLatestConfigVariable("MicMaxPhrases")
+        self.clearErrorMessage()
+
+
+    def callbackBindFocusOut_SpeakerRecordTimeout(self, _e=None):
+        self.setLatestConfigVariable("SpeakerRecordTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_SpeakerPhraseTimeout(self, _e=None):
+        self.setLatestConfigVariable("SpeakerPhraseTimeout")
+        self.clearErrorMessage()
+
+    def callbackBindFocusOut_SpeakerMaxPhrases(self, _e=None):
+        self.setLatestConfigVariable("SpeakerMaxPhrases")
+        self.clearErrorMessage()
+
+
+    def callbackBindFocusOut_MessageFormat(self, _e=None):
+        self.setLatestConfigVariable("MessageFormat")
+        self.clearErrorMessage()
+
+
+
+
+# Show Error Message (Config Window)
     def showErrorMessage_MicEnergyThreshold(self):
         self._showErrorMessage(
             vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold,
@@ -1162,27 +1358,77 @@ class View():
             self._makeInvalidValueErrorMessage(i18n.t("config_window.speaker_dynamic_energy_threshold.no_device_error_message"))
         )
 
-    def _showErrorMessage(self, target_widget, message):
-        self.view_variable.VAR_ERROR_MESSAGE.set(message)
-        vrct_gui._showErrorMessage(target_widget=target_widget)
+
+    def showErrorMessage_MessageFormat(self):
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_message_format_2,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.message_format.error_message"))
+        )
 
     @staticmethod
     def _makeInvalidValueErrorMessage(error_message):
         return i18n.t("config_window.common_error_message.invalid_value") + "\n" + error_message
 
-    def clearErrorMessage(self):
-        vrct_gui._clearErrorMessage()
-
-
+    def _showErrorMessage(self, target_widget, message):
+        self.view_variable.VAR_ERROR_MESSAGE.set(message)
+        vrct_gui._showErrorMessage(target_widget=target_widget)
 
 
     @staticmethod
-    def showSplash():
-        vrct_gui.showSplash()
+    def extractMessageFormat(text):
+        import re
+        message_index = text.find("[message]")
+        translation_index = text.find("[translation]")
 
-    @staticmethod
-    def destroySplash():
-        vrct_gui.destroySplash()
+        result_data = SimpleNamespace(
+            is_message_first = True,
+            before = "",
+            between = "",
+            after = "",
+        )
+
+        if message_index < translation_index:
+            text_before_message = text[:message_index]
+            result_data.before = text_before_message
+
+            match = re.search(r"\[message\](.*?)\[translation\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_translation = text[translation_index + len("[translation]"):]
+            result_data.after = text_after_translation
+
+
+
+
+        elif translation_index < message_index:
+            result_data.is_message_first = False
+            text_before_translation = text[:translation_index]
+            result_data.before = text_before_translation
+
+            match = re.search(r"\[translation\](.*?)\[message\]", text)
+            if match:
+                extracted_text = match.group(1)
+                result_data.between = extracted_text
+            else:
+                raise ValueError("Invalid Message Format")
+
+            text_after_message = text[message_index + len("[message]"):]
+            result_data.after = text_after_message
+
+        else:
+            raise ValueError("Invalid Message Format")
+
+        return result_data
+
+
+
+
+
 
     # These conversations are generated by ChatGPT
     def _insertSampleConversationToTextbox(self):

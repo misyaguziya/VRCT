@@ -8,6 +8,8 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
     createSettingBoxEntry = sbg.createSettingBoxEntry
+    createSettingBoxArrowSwitch = sbg.createSettingBoxArrowSwitch
+    createSettingBoxAddAndDeleteAbleList = sbg.createSettingBoxAddAndDeleteAbleList
 
 
     def checkbox_input_mic_threshold_check_callback(is_turned_on):
@@ -35,6 +37,11 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
 
     def entry_input_mic_max_phrases_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_MIC_MAX_PHRASES, value)
+
+    def arrow_switch_mic_word_filter_list_open_callback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_OPEN)
+    def arrow_switch_mic_word_filter_list_close_callback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_ARROW_SWITCH_MIC_WORD_FILTER_LIST_CLOSE)
 
     def entry_input_mic_word_filters_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_MIC_WORD_FILTER, value)
@@ -140,13 +147,24 @@ def createSettingBox_Mic(setting_box_wrapper, config_window, settings, view_vari
     # # ＿＿＿＿＿＿＿＿＿＿
 
 
-    config_window.sb__mic_word_filter = createSettingBoxEntry(
+    config_window.sb__mic_word_filter = createSettingBoxArrowSwitch(
         for_var_label_text=view_variable.VAR_LABEL_MIC_WORD_FILTER,
         for_var_desc_text=view_variable.VAR_DESC_MIC_WORD_FILTER,
-        entry_attr_name="sb__entry_mic_word_filter",
-        entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
-        entry_bind__Any_KeyRelease=lambda value: entry_input_mic_word_filters_callback(value),
-        entry_textvariable=view_variable.VAR_MIC_WORD_FILTER,
+        arrow_switch_attr_name="sb__arrow_switch_mic_word_filter",
+        open_command=lambda value: arrow_switch_mic_word_filter_list_open_callback(value),
+        close_command=lambda value: arrow_switch_mic_word_filter_list_close_callback(value),
+        var_switch_desc=view_variable.VAR_SWITCH_DESC_MIC_WORD_FILTER,
     )
     config_window.sb__mic_word_filter.grid(row=row, pady=0)
+    row+=1
+
+    config_window.sb__mic_word_filter_list = createSettingBoxAddAndDeleteAbleList(
+        add_and_delete_able_list_attr_name="sb__add_and_delete_able_list_mic_word_filter_list",
+        entry_attr_name="sb__entry_mic_word_filter_list",
+        entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
+        mic_word_filter_list=view_variable.MIC_WORD_FILTER_LIST,
+    )
+    config_window.sb__mic_word_filter_list.grid(row=row, pady=0)
+    # Default, close the list.
+    config_window.sb__mic_word_filter_list.grid_remove()
     row+=1

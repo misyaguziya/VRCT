@@ -233,7 +233,8 @@ class _CreateConfirmationModal(CTkToplevel):
         self.grab_release()
 
     def focusOutFunction(self, e):
-        if str(e.widget) != ".!_createconfirmationmodal": return
+        if str(e.widget) != ".!_createconfirmationmodal":
+            return
         callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL)
 
     def _grab_set(self):

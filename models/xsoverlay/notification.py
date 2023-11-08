@@ -33,7 +33,7 @@ def XSOverlay(
             with open(icon, "rb") as f:
                 icon_data_bytes = f.read()
                 icon_data = base64.b64encode(icon_data_bytes).decode("utf-8")
-        except:
+        except Exception:
             icon_data = "default"
     else:
         icon_data = icon
