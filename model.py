@@ -3,7 +3,7 @@ from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
 from os import remove as os_remove
-from shutil import move
+from shutil import copyfile
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
@@ -285,7 +285,7 @@ class Model:
             with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
                 zf.extractall(os_path.join(current_directory, tmp_directory_name))
             os_remove(os_path.join(current_directory, tmp_directory_name, filename))
-            move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+            copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
             command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
             Popen(command, cwd=current_directory)
         except Exception:
@@ -297,7 +297,7 @@ class Model:
         folder_name = '_internal'
         batch_name = 'restart.bat'
         current_directory = config.LOCAL_PATH
-        move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+        copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
         command = [os_path.join(current_directory, batch_name), program_name]
         Popen(command, cwd=current_directory)
 
