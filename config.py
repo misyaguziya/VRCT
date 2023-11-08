@@ -1,6 +1,6 @@
 import sys
 import inspect
-from os import path as os_path
+from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
@@ -533,6 +533,7 @@ class Config:
         self._LOCAL_PATH = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
         self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")
+        os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
