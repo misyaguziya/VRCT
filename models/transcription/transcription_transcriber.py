@@ -38,7 +38,7 @@ class AudioTranscriber:
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
             text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country])
-        except Exception as e:
+        except Exception:
             pass
         finally:
             pass

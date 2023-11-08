@@ -2,7 +2,7 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Union
 
-from customtkinter import CTkOptionMenu, CTkFont, CTkFrame, CTkLabel, CTkRadioButton, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
+from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
 from CTkToolTip import *
 
 from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor
@@ -1068,7 +1068,8 @@ class _SettingBoxGenerator():
                     items[i] = item_data
                     is_replaced = True
                     break
-            if is_replaced is False: items.append(item_data)
+            if is_replaced is False:
+                items.append(item_data)
 
 
         return mic_word_filter_item_wrapper

@@ -1,4 +1,5 @@
 from time import sleep
+from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
@@ -14,10 +15,12 @@ def callbackRestartSoftware():
     model.reStartSoftware()
 
 def callbackFilepathLogs():
-    print("callbackFilepathLogs")
+    print("callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
+    Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
 
 def callbackFilepathConfigFile():
-    print("callbackFilepathConfigFile")
+    print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
+    Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
 # func transcription send message
 def sendMicMessage(message):
@@ -30,7 +33,7 @@ def sendMicMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -94,7 +97,7 @@ def receiveSpeakerMessage(message):
             pass
         else:
             translation = model.getOutputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -160,7 +163,7 @@ def sendChatMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -426,7 +429,8 @@ def callbackSetMicDevice(value):
 
 def callbackSetMicEnergyThreshold(value):
     print("callbackSetMicEnergyThreshold", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
@@ -435,7 +439,7 @@ def callbackSetMicEnergyThreshold(value):
             view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicEnergyThreshold()
 
 def callbackSetMicDynamicEnergyThreshold(value):
@@ -462,7 +466,8 @@ def callbackCheckMicThreshold(is_turned_on):
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
@@ -471,12 +476,13 @@ def callbackSetMicRecordTimeout(value):
             view.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicRecordTimeout()
 
 def callbackSetMicPhraseTimeout(value):
     print("callbackSetMicPhraseTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
@@ -485,12 +491,13 @@ def callbackSetMicPhraseTimeout(value):
             view.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicPhraseTimeout()
 
 def callbackSetMicMaxPhrases(value):
     print("callbackSetMicMaxPhrases", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value:
@@ -499,7 +506,7 @@ def callbackSetMicMaxPhrases(value):
             view.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicMaxPhrases()
 
 def callbackSetMicWordFilter(values):
@@ -532,13 +539,14 @@ def callbackDeleteMicWordFilter(value):
         new_input_mic_word_filter_list.remove(str(value))
         config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
         view.setLatestConfigVariable("MicMicWordFilter")
-    except:
+    except Exception:
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
 
 
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
@@ -547,7 +555,7 @@ def callbackSetSpeakerEnergyThreshold(value):
             view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerEnergyThreshold()
 
 def callbackSetSpeakerDynamicEnergyThreshold(value):
@@ -580,7 +588,8 @@ def callbackCheckSpeakerThreshold(is_turned_on):
 
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
@@ -589,12 +598,13 @@ def callbackSetSpeakerRecordTimeout(value):
             view.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerRecordTimeout()
 
 def callbackSetSpeakerPhraseTimeout(value):
     print("callbackSetSpeakerPhraseTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
@@ -603,12 +613,13 @@ def callbackSetSpeakerPhraseTimeout(value):
             view.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerPhraseTimeout()
 
 def callbackSetSpeakerMaxPhrases(value):
     print("callbackSetSpeakerMaxPhrases", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value:
@@ -617,7 +628,7 @@ def callbackSetSpeakerMaxPhrases(value):
             view.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerMaxPhrases()
 
 
@@ -662,12 +673,14 @@ def callbackSetEnableSendMessageToVrc(value):
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
-    if value == "": return
+    if value == "":
+        return
     print("callbackSetOscIpAddress", str(value))
     config.OSC_IP_ADDRESS = str(value)
 
 def callbackSetOscPort(value):
-    if value == "": return
+    if value == "":
+        return
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 

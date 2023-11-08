@@ -1,9 +1,9 @@
-import sys
 from zipfile import ZipFile
 from subprocess import Popen
 from os import makedirs as os_makedirs
-from os import path as os_path, rename as os_rename
-from shutil import rmtree
+from os import path as os_path
+from os import remove as os_remove
+from shutil import move
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
@@ -82,19 +82,19 @@ class Model:
         self.keyword_processor = KeywordProcessor()
 
     def authenticationTranslator(self, choice_translator=None, auth_key=None):
-        if choice_translator == None:
+        if choice_translator is None:
             choice_translator = config.CHOICE_TRANSLATOR
-        if auth_key == None:
+        if auth_key is None:
             auth_key = config.AUTH_KEYS[choice_translator]
 
         result = self.translator.authentication(choice_translator, auth_key)
         return result
 
     def startLogger(self):
-        os_makedirs(os_path.join(os_path.dirname(sys.argv[0]), "logs"), exist_ok=True)
+        os_makedirs(config.PATH_LOGS, exist_ok=True)
         logger = getLogger()
         logger.setLevel(INFO)
-        file_name = os_path.join(os_path.dirname(sys.argv[0]), "logs", f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
+        file_name = os_path.join(config.PATH_LOGS, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
         file_handler = FileHandler(file_name, encoding="utf-8", delay=True)
         formatter = Formatter("[%(asctime)s] %(message)s")
         file_handler.setFormatter(formatter)
@@ -130,10 +130,10 @@ class Model:
                 compatible_engines.append(engine)
         engine_name = compatible_engines[0]
 
-        if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] != None:
+        if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
             if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
                 engine_name = "DeepL_API"
-        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] == None:
+        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
             engine_name = "DeepL"
 
         return engine_name
@@ -266,38 +266,40 @@ class Model:
 
     @staticmethod
     def updateSoftware(restart:bool=True):
-        filename = 'download.zip'
+        filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
-        temporary_name = '_VRCT.exe'
+        folder_name = '_internal'
         tmp_directory_name = 'tmp'
         batch_name = 'update.bat'
-        current_directory = os_path.dirname(sys.argv[0])
-        program_directory = os_path.dirname(__file__)
+        current_directory = config.LOCAL_PATH
 
         try:
             res = requests_get(config.GITHUB_URL)
-            url = res.json()['assets'][0]['browser_download_url']
+            assets = res.json()['assets']
+            url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
             res = requests_get(url, stream=True)
             os_makedirs(os_path.join(current_directory, tmp_directory_name), exist_ok=True)
             with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
                 for chunk in res.iter_content(chunk_size=1024):
                     file.write(chunk)
             with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
-                zf.extract(program_name, os_path.join(current_directory, tmp_directory_name))
-            os_rename(os_path.join(current_directory, tmp_directory_name, program_name), os_path.join(current_directory, temporary_name))
-            rmtree(os_path.join(current_directory, tmp_directory_name))
-            command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
-            Popen(command)
-        except:
+                zf.extractall(os_path.join(current_directory, tmp_directory_name))
+            os_remove(os_path.join(current_directory, tmp_directory_name, filename))
+            move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+            command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
+            Popen(command, cwd=current_directory)
+        except Exception:
             webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
 
     @staticmethod
     def reStartSoftware():
         program_name = 'VRCT.exe'
+        folder_name = '_internal'
         batch_name = 'restart.bat'
-        program_directory = os_path.dirname(__file__)
-        command = [os_path.join(program_directory, "batch", batch_name), program_name]
-        Popen(command)
+        current_directory = config.LOCAL_PATH
+        move(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+        command = [os_path.join(current_directory, batch_name), program_name]
+        Popen(command, cwd=current_directory)
 
     @staticmethod
     def getListInputHost():
@@ -319,7 +321,7 @@ class Model:
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -348,7 +350,7 @@ class Model:
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
-            except:
+            except Exception:
                 pass
 
         self.mic_print_transcript = threadFnc(sendMicTranscript)
@@ -367,7 +369,7 @@ class Model:
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -376,7 +378,7 @@ class Model:
                 energy = mic_energy_queue.get()
                 try:
                     fnc(energy)
-                except:
+                except Exception:
                     pass
             sleep(0.01)
 
@@ -401,7 +403,7 @@ class Model:
         if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -429,7 +431,7 @@ class Model:
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
-            except:
+            except Exception:
                 pass
 
         self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
@@ -449,7 +451,7 @@ class Model:
         if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -458,7 +460,7 @@ class Model:
                 energy = speaker_energy_queue.get()
                 try:
                     fnc(energy)
-                except:
+                except Exception:
                     pass
             sleep(0.01)
 
