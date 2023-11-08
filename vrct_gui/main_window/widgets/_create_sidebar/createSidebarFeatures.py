@@ -2,7 +2,7 @@ from functools import partial
 
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkSwitch, CTkImage
 
-from ....ui_utils import openImageKeepAspectRatio, retag, getLatestHeight, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction
+from ....ui_utils import openImageKeepAspectRatio, retag, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressAndReleaseFunction
 
 from utils import callFunctionIfCallable
 

@@ -42,6 +42,14 @@ def getLongestText(text_list:list):
             longest_text = text
     return longest_text
 
+def calculateUiSize(default_size, scaling_float, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
+        size = int(default_size * scaling_float)
+        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
+        if size <= 0:
+            size = 0 if is_zero_allowed else 1
+
+        return size
+
 def bindEnterAndLeaveColor(target_widgets, enter_color, leave_color):
     for target_widget in target_widgets:
         target_widget.bind("<Enter>", lambda e, widgets=target_widgets: [w.configure(fg_color=enter_color) for w in widgets], "+")
@@ -154,10 +162,12 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
     option_menu_box = CTkFrame(parent_widget, corner_radius=6, fg_color=optionmenu_bg_color, cursor="hand2")
 
     option_menu_box.grid_rowconfigure(0, weight=1)
-    if optionmenu_min_height is not None: option_menu_box.grid_rowconfigure(0, minsize=optionmenu_min_height)
+    if optionmenu_min_height is not None:
+        option_menu_box.grid_rowconfigure(0, minsize=optionmenu_min_height)
 
     option_menu_box.grid_columnconfigure(0, weight=1)
-    if optionmenu_min_width is not None: option_menu_box.grid_columnconfigure(0, minsize=optionmenu_min_width)
+    if optionmenu_min_width is not None:
+        option_menu_box.grid_columnconfigure(0, minsize=optionmenu_min_width)
 
     optionmenu_label_wrapper = CTkFrame(option_menu_box, corner_radius=0, fg_color=optionmenu_bg_color)
     optionmenu_label_wrapper.grid(row=0, column=0, padx=(optionmenu_ipadx[0],0), pady=optionmenu_ipady, sticky="ew")

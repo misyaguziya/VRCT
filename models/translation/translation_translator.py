@@ -1,7 +1,7 @@
 from deepl import Translator as deepl_Translator
 from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
-from .translation_languages import translatorEngine, translation_lang
+from .translation_languages import translation_lang
 
 # Translator
 class Translator():
@@ -16,7 +16,7 @@ class Translator():
                 try:
                     self.deepl_client = deepl_Translator(authkey)
                     self.deepl_client.translate_text(" ", target_lang="EN-US")
-                except:
+                except Exception:
                     result = False
         return result
 
@@ -52,7 +52,7 @@ class Translator():
                         from_language=source_language,
                         to_language=target_language,
                         )
-        except Exception as e:
+        except Exception:
             import traceback
             with open('error.log', 'a') as f:
                 traceback.print_exc(file=f)

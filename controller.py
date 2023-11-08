@@ -1,9 +1,10 @@
 from time import sleep
+from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import get_key_by_value
+from utils import get_key_by_value, isUniqueStrings
 from languages import selectable_languages
 
 # Common
@@ -12,6 +13,14 @@ def callbackUpdateSoftware():
 
 def callbackRestartSoftware():
     model.reStartSoftware()
+
+def callbackFilepathLogs():
+    print("callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
+    Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
+
+def callbackFilepathConfigFile():
+    print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
+    Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
 # func transcription send message
 def sendMicMessage(message):
@@ -24,7 +33,7 @@ def sendMicMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -88,7 +97,7 @@ def receiveSpeakerMessage(message):
             pass
         else:
             translation = model.getOutputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -154,7 +163,7 @@ def sendChatMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation == False:
+            if translation is False:
                 config.ENABLE_TRANSLATION = False
                 translation = ""
                 view.translationEngineLimitErrorProcess()
@@ -229,6 +238,15 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_COUNTRY = country
     config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
     view.printToTextbox_selectedTargetLanguages(select)
+
+def swapYourLanguageAndTargetLanguage():
+    your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+    setYourLanguageAndCountry(target_language)
+    setTargetLanguageAndCountry(your_language)
+    # Update Selected Languages for UI
+    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
+
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
@@ -352,6 +370,11 @@ def callbackSetUiScaling(value):
     print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
     view.showRestartButtonIfRequired()
 
+def callbackSetTextboxUiScaling(value):
+    print("callbackSetTextboxUiScaling", int(value))
+    config.TEXTBOX_UI_SCALING = int(value)
+    view.setMainWindowTextboxUiSize(config.TEXTBOX_UI_SCALING/100)
+
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
@@ -406,7 +429,8 @@ def callbackSetMicDevice(value):
 
 def callbackSetMicEnergyThreshold(value):
     print("callbackSetMicEnergyThreshold", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
@@ -415,7 +439,7 @@ def callbackSetMicEnergyThreshold(value):
             view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicEnergyThreshold()
 
 def callbackSetMicDynamicEnergyThreshold(value):
@@ -442,7 +466,8 @@ def callbackCheckMicThreshold(is_turned_on):
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
@@ -451,12 +476,13 @@ def callbackSetMicRecordTimeout(value):
             view.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicRecordTimeout()
 
 def callbackSetMicPhraseTimeout(value):
     print("callbackSetMicPhraseTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
@@ -465,12 +491,13 @@ def callbackSetMicPhraseTimeout(value):
             view.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicPhraseTimeout()
 
 def callbackSetMicMaxPhrases(value):
     print("callbackSetMicMaxPhrases", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value:
@@ -479,25 +506,47 @@ def callbackSetMicMaxPhrases(value):
             view.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_MicMaxPhrases()
 
-def callbackSetMicWordFilter(value):
-    print("callbackSetMicWordFilter", value)
-    word_filter = str(value)
-    word_filter = [w.strip() for w in word_filter.split(",") if len(w.strip()) > 0]
-    word_filter = ",".join(word_filter)
-    print("callbackSetMicWordFilter_afterSplitting", word_filter)
-    if len(word_filter) > 0:
-        config.INPUT_MIC_WORD_FILTER = word_filter.split(",")
-    else:
-        config.INPUT_MIC_WORD_FILTER = []
+def callbackSetMicWordFilter(values):
+    print("callbackSetMicWordFilter", values)
+    values = str(values)
+    values = [w.strip() for w in values.split(",") if len(w.strip()) > 0]
+    # Copy the list
+    new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
+    new_added_value = []
+    for value in values:
+        if value in new_input_mic_word_filter_list:
+            # If the value is already in the list, do nothing.
+            pass
+        else:
+            new_input_mic_word_filter_list.append(value)
+            new_added_value.append(value)
+    config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+
+    view.addValueToList_WordFilter(new_added_value)
+    view.clearEntryBox_WordFilter()
+    view.setLatestConfigVariable("MicMicWordFilter")
+
     model.resetKeywordProcessor()
     model.addKeywords()
 
+def callbackDeleteMicWordFilter(value):
+    print("callbackDeleteMicWordFilter", value)
+    try:
+        new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
+        new_input_mic_word_filter_list.remove(str(value))
+        config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+        view.setLatestConfigVariable("MicMicWordFilter")
+    except Exception:
+        print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
+
+
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
@@ -506,7 +555,7 @@ def callbackSetSpeakerEnergyThreshold(value):
             view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerEnergyThreshold()
 
 def callbackSetSpeakerDynamicEnergyThreshold(value):
@@ -539,7 +588,8 @@ def callbackCheckSpeakerThreshold(is_turned_on):
 
 def callbackSetSpeakerRecordTimeout(value):
     print("callbackSetSpeakerRecordTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
@@ -548,12 +598,13 @@ def callbackSetSpeakerRecordTimeout(value):
             view.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerRecordTimeout()
 
 def callbackSetSpeakerPhraseTimeout(value):
     print("callbackSetSpeakerPhraseTimeout", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
@@ -562,12 +613,13 @@ def callbackSetSpeakerPhraseTimeout(value):
             view.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerPhraseTimeout()
 
 def callbackSetSpeakerMaxPhrases(value):
     print("callbackSetSpeakerMaxPhrases", value)
-    if value == "": return
+    if value == "":
+        return
     try:
         value = int(value)
         if 0 <= value:
@@ -576,7 +628,7 @@ def callbackSetSpeakerMaxPhrases(value):
             view.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
         else:
             raise ValueError()
-    except:
+    except Exception:
         view.showErrorMessage_SpeakerMaxPhrases()
 
 
@@ -601,7 +653,14 @@ def callbackSetEnableAutoExportMessageLogs(value):
 def callbackSetMessageFormat(value):
     print("callbackSetMessageFormat", value)
     if len(value) > 0:
-        config.MESSAGE_FORMAT = value
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.MESSAGE_FORMAT = value
+            view.clearErrorMessage()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+        else:
+            view.showErrorMessage_MessageFormat()
+            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
@@ -614,12 +673,14 @@ def callbackSetEnableSendMessageToVrc(value):
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
-    if value == "": return
+    if value == "":
+        return
     print("callbackSetOscIpAddress", str(value))
     config.OSC_IP_ADDRESS = str(value)
 
 def callbackSetOscPort(value):
-    if value == "": return
+    if value == "":
+        return
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
@@ -658,6 +719,8 @@ def createMainWindow():
         common_registers={
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
+            "callback_filepath_logs": callbackFilepathLogs,
+            "callback_filepath_config_file": callbackFilepathConfigFile,
         },
 
         window_action_registers={
@@ -677,6 +740,7 @@ def createMainWindow():
             "callback_your_language": setYourLanguageAndCountry,
             "callback_target_language": setTargetLanguageAndCountry,
             "values": model.getListLanguageAndCountry(),
+            "callback_swap_languages": swapYourLanguageAndTargetLanguage,
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
             "message_box_bind_Return": messageBoxPressKeyEnter,
@@ -694,6 +758,7 @@ def createMainWindow():
             "callback_set_transparency": callbackSetTransparency,
             "callback_set_appearance": callbackSetAppearance,
             "callback_set_ui_scaling": callbackSetUiScaling,
+            "callback_set_textbox_ui_scaling": callbackSetTextboxUiScaling,
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
 
@@ -712,6 +777,7 @@ def createMainWindow():
             "callback_set_mic_phrase_timeout": callbackSetMicPhraseTimeout,
             "callback_set_mic_max_phrases": callbackSetMicMaxPhrases,
             "callback_set_mic_word_filter": callbackSetMicWordFilter,
+            "callback_delete_mic_word_filter": callbackDeleteMicWordFilter,
 
             # Transcription Tab (Speaker)
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,

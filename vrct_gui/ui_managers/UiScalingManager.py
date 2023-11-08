@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+from ..ui_utils import calculateUiSize
+
 class UiScalingManager():
     def __init__(self, scaling_percentage):
         scaling_float = int(scaling_percentage.replace("%", "")) / 100
@@ -92,7 +94,11 @@ class UiScalingManager():
         self.main.SLS__BOX_OPTION_MENU_IPADY = self._calculateUiSize(2)
         self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = (self._calculateUiSize(20), self._calculateUiSize(20))
         # self.main.SLS__BOX_OPTION_MENU_WIDTH = self._calculateUiSize(200)
-        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(10)
+        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(4)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_PADX = self._calculateUiSize(20)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADX = self._calculateUiSize(8)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY = self._calculateUiSize(6)
         self.main.SLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
         self.main.SLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
         self.main.SLS__BOX_ARROWS_DESC_PADX = self._calculateUiSize(6)
@@ -215,6 +221,10 @@ class UiScalingManager():
         self.config_window.SB__DESC_TOP_PADY = self._calculateUiSize(2)
 
 
+        self.config_window.BUTTONS_CORNER_RADIUS = self._calculateUiSize(6)
+        # self.config_window.BUTTONS_IPADX = self._calculateUiSize(10)
+        # self.config_window.BUTTONS_IPADY = self._calculateUiSize(6)
+
         self.config_window.SB__ERROR_MESSAGE_IPADX = (self._calculateUiSize(10), self._calculateUiSize(10))
         self.config_window.SB__ERROR_MESSAGE_IPADY = (self._calculateUiSize(6), self._calculateUiSize(6))
         self.config_window.SB__ERROR_MESSAGE_FONT_SIZE = self._calculateUiSize(14)
@@ -260,6 +270,7 @@ class UiScalingManager():
 
         self.config_window.SB__SLIDER_WIDTH = self._calculateUiSize(200)
         self.config_window.SB__SLIDER_HEIGHT = self._calculateUiSize(16)
+        self.config_window.SB__SLIDER_TOOLTIP_FONT_SIZE = self._calculateUiSize(16)
 
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_WIDTH = self.config_window.RESPONSIVE_UI_SIZE_INT_50
         self.config_window.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
@@ -271,14 +282,53 @@ class UiScalingManager():
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_IPADXY = self._calculateUiSize(10)
         self.config_window.SB__PROGRESSBAR_X_SLIDER__BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
+        self.config_window.SB__ARROW_SWITCH_DESC_FONT_SIZE = self._calculateUiSize(16)
+        self.config_window.SB__ARROW_SWITCH_LEFT_PADX = (self._calculateUiSize(20), 0)
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADX = self._calculateUiSize(16)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_IPADY = self._calculateUiSize(6)
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_CORNER_RADIUS = self._calculateUiSize(2)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_LEFT_PADX = (0, self._calculateUiSize(4))
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_BOTTOM_PADY = (0, self._calculateUiSize(4))
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_FONT_SIZE = self._calculateUiSize(14)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX = (self._calculateUiSize(8), 0)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY = self._calculateUiSize(6)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE = self._calculateUiSize(14)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY = self._calculateUiSize(6)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_PADX = (self._calculateUiSize(6), self._calculateUiSize(8))
+
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_LEFT_PADX = (self._calculateUiSize(20), 0)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__ADD_BUTTON_FONT_SIZE = self._calculateUiSize(14)
+
+
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_CORNER_RADIUS = self._calculateUiSize(16)
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY = self._calculateUiSize(10)
+        self.config_window.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH = self._calculateUiSize(300)
+
+        self.config_window.SB__MESSAGE_FORMAT__ENTRY_HEIGHT = self.config_window.SB__ENTRY_HEIGHT
+        self.config_window.SB__MESSAGE_FORMAT__REQUIRED_TEXT_PADX = self._calculateUiSize(10)
+        self.config_window.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE = self._calculateUiSize(16)
+
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_ARROWS_IMG_SIZE = self.dupTuple(self._calculateUiSize(20))
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_IPADX = self._calculateUiSize(16)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_IPADY = self._calculateUiSize(6)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_BUTTON_FONT_SIZE = self._calculateUiSize(14)
+        self.config_window.SB__MESSAGE_FORMAT__SWAP_TEXT_PADX = self._calculateUiSize(10)
+
+        self.config_window.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY = (0, self._calculateUiSize(14))
+
+
+        self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)
+        self.config_window.SB__BUTTON_ICON_SIZE = self._calculateUiSize(24)
+
+        self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY = self._calculateUiSize(10)
+        self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
-        size = int(default_size * self.SCALING_FLOAT)
-        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
-        if size <= 0:
-            size = 0 if is_zero_allowed else 1
-
+        size = calculateUiSize(default_size, self.SCALING_FLOAT, is_allowed_odd, is_zero_allowed)
         return size
 
     @staticmethod

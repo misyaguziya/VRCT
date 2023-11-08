@@ -6,7 +6,7 @@ from utils import callFunctionIfCallable
 from ..ui_utils import createButtonWithImage, getImagePath, bindButtonFunctionAndColor
 
 def createMainWindowWidgets(vrct_gui, settings, view_variable):
-    vrct_gui.protocol("WM_DELETE_WINDOW", vrct_gui._quitVRCT)
+    vrct_gui.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(view_variable.CALLBACK_QUIT_VRCT))
 
 
     vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
@@ -68,7 +68,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         text=None,
         corner_radius=0,
         height=0,
-        image=CTkImage(settings.image_file.REFRESH_ICON.rotate(25), size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
+        image=CTkImage(settings.image_file.REFRESH_UPDATE_ICON.rotate(25), size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
     )
     vrct_gui.update_available_icon.grid(row=1, column=0, padx=(settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX, settings.uism.UPDATE_AVAILABLE_PADX_BETWEEN_LABEL_AND_ICON), pady=0)
 
@@ -92,9 +92,9 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
             vrct_gui.update_available_label,
             vrct_gui.update_available_icon,
         ],
-        enter_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR,
-        leave_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_BG_COLOR,
-        clicked_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_CLICKED_BG_COLOR,
+        enter_color=settings.ctm.TOP_BAR_BUTTON_HOVERED_BG_COLOR,
+        leave_color=settings.ctm.TOP_BAR_BUTTON_BG_COLOR,
+        clicked_color=settings.ctm.TOP_BAR_BUTTON_CLICKED_BG_COLOR,
         buttonReleasedFunction=lambda e: callFunctionIfCallable(view_variable.CALLBACK_CLICKED_UPDATE_AVAILABLE),
     )
 
@@ -105,9 +105,9 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     # Help and Info button
     vrct_gui.help_and_info_button_container = createButtonWithImage(
         parent_widget=vrct_gui.main_topbar_container,
-        button_fg_color=settings.ctm.HELP_AND_INFO_BUTTON_BG_COLOR,
-        button_enter_color=settings.ctm.HELP_AND_INFO_BUTTON_HOVERED_BG_COLOR,
-        button_clicked_color=settings.ctm.HELP_AND_INFO_BUTTON_CLICKED_BG_COLOR,
+        button_fg_color=settings.ctm.TOP_BAR_BUTTON_BG_COLOR,
+        button_enter_color=settings.ctm.TOP_BAR_BUTTON_HOVERED_BG_COLOR,
+        button_clicked_color=settings.ctm.TOP_BAR_BUTTON_CLICKED_BG_COLOR,
         button_image_file=settings.image_file.HELP_ICON,
         button_image_size=settings.uism.HELP_AND_INFO_BUTTON_SIZE,
         button_ipadxy=settings.uism.HELP_AND_INFO_BUTTON_IPADXY,

@@ -7,6 +7,7 @@ main_window:
   language_settings: 言語設定
   your_language: あなたの言語
   both_direction_desc: 双方向に翻訳
+  swap_button_label: 言語を入れ替え
   target_language: 相手の言語
 
   textbox_tab_all: 全て
@@ -95,6 +96,10 @@ config_window:
   ui_size:
     label: UIサイズ
 
+  textbox_ui_size:
+    label: テキストボックス フォントサイズ
+    desc: ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。
+
   font_family:
     label: 使用フォント
 
@@ -134,7 +139,9 @@ config_window:
 
   mic_word_filter:
     label: ワードフィルター
-    desc: "設定された単語を検出すると、その文章は送信されません。\n設定の例: AAA,BBB,CCC"
+    desc: "登録された単語を検出すると、その文章は送信されません。\n「,」カンマで区切ると、まとめて複数の単語を追加できます。\n※重複した単語は登録されません。"
+    add_button_label: 追加
+    count_desc: "現在登録されている単語数: %{count}"
 
 
   speaker_dynamic_energy_threshold:
@@ -173,7 +180,9 @@ config_window:
 
   message_format:
     label: 送信するメッセージのフォーマット
-    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、\n[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]と[translation]という文字は使えません。"
 
   send_message_to_vrc:
     label: VRChatにメッセージを送信する
@@ -184,3 +193,6 @@ config_window:
 
   osc_port:
     label: OSC Port
+
+  open_config_filepath:
+    label: 設定ファイルを開く
