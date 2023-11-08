@@ -82,9 +82,9 @@ class Model:
         self.keyword_processor = KeywordProcessor()
 
     def authenticationTranslator(self, choice_translator=None, auth_key=None):
-        if choice_translator == None:
+        if choice_translator is None:
             choice_translator = config.CHOICE_TRANSLATOR
-        if auth_key == None:
+        if auth_key is None:
             auth_key = config.AUTH_KEYS[choice_translator]
 
         result = self.translator.authentication(choice_translator, auth_key)
@@ -130,10 +130,10 @@ class Model:
                 compatible_engines.append(engine)
         engine_name = compatible_engines[0]
 
-        if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] != None:
+        if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
             if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
                 engine_name = "DeepL_API"
-        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] == None:
+        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
             engine_name = "DeepL"
 
         return engine_name
@@ -288,7 +288,7 @@ class Model:
             rmtree(os_path.join(current_directory, tmp_directory_name))
             command = [os_path.join(program_directory, "batch", batch_name), program_name, temporary_name, str(restart)]
             Popen(command)
-        except:
+        except Exception:
             webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
 
     @staticmethod
@@ -319,7 +319,7 @@ class Model:
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -348,7 +348,7 @@ class Model:
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
-            except:
+            except Exception:
                 pass
 
         self.mic_print_transcript = threadFnc(sendMicTranscript)
@@ -367,7 +367,7 @@ class Model:
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -376,7 +376,7 @@ class Model:
                 energy = mic_energy_queue.get()
                 try:
                     fnc(energy)
-                except:
+                except Exception:
                     pass
             sleep(0.01)
 
@@ -401,7 +401,7 @@ class Model:
         if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -429,7 +429,7 @@ class Model:
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
-            except:
+            except Exception:
                 pass
 
         self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
@@ -449,7 +449,7 @@ class Model:
         if speaker_device["name"] == "NoDevice":
             try:
                 error_fnc()
-            except:
+            except Exception:
                 pass
             return
 
@@ -458,7 +458,7 @@ class Model:
                 energy = speaker_energy_queue.get()
                 try:
                     fnc(energy)
-                except:
+                except Exception:
                     pass
             sleep(0.01)
 
