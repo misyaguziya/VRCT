@@ -1,8 +1,6 @@
 import sys
 import inspect
 from os import path as os_path
-from os import getenv as os_getenv
-from os import makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
