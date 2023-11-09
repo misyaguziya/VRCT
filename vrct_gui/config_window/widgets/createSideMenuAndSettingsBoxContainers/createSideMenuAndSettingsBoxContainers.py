@@ -131,7 +131,6 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             config_window=config_window,
             settings=settings,
             view_variable=view_variable,
-            # view_variable=view_variable,
             side_menu_settings=sm_and_sbc_setting,
             side_menu_row=side_menu_row,
             all_side_menu_tab_attr_name=all_side_menu_tab_attr_name,
