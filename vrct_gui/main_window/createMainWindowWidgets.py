@@ -11,13 +11,11 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
     vrct_gui.title("VRCT")
-    # vrct_gui.minsize(200, 200)
 
 
     # Main Container
     vrct_gui.grid_columnconfigure(0, weight=1)
     vrct_gui.grid_rowconfigure(0, weight=1)
-    # vrct_gui.grid_columnconfigure(0, weight=1, minsize=settings.uism.MAIN_AREA_MIN_WIDTH)
 
     vrct_gui.configure(fg_color=settings.ctm.MAIN_BG_COLOR)
 
