@@ -203,7 +203,6 @@ class _SettingBoxGenerator():
             variable=variable,
             command=command,
             fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
-            # bg_color="red",
             progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
             button_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_COLOR,
             button_hover_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_HOVERED_COLOR,
@@ -241,9 +240,6 @@ class _SettingBoxGenerator():
             hover_color=self.settings.ctm.SB__CHECKBOX_HOVER_COLOR,
             checkmark_color=self.settings.ctm.SB__CHECKBOX_CHECKMARK_COLOR,
             fg_color=self.settings.ctm.SB__CHECKBOX_CHECKED_COLOR,
-            # fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
-            # bg_color="red",
-            # progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
 
@@ -1074,106 +1070,6 @@ class _SettingBoxGenerator():
 
         return mic_word_filter_item_wrapper
 
-
-
-
-
-
-        # if setting_box_type == "dropdown_menu_x_dropdown_menu":
-        #     self.setting_box_dropdown_menu_x_dropdown_menu = CTkFrame(self.setting_box, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        #     self.setting_box_dropdown_menu_x_dropdown_menu.grid(row=0, column=1, padx=(0, self.settings.uism.SB__RIGHT_PADX), rowspan=2, sticky="e")
-
-
-
-        #     # Labels
-        #     self.optionmenu_label_left = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=kwargs["left_dropdown_menu_label"],
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #     )
-        #     self.optionmenu_label_left.grid(row=0, column=0)
-
-        #     self.the_space_between_optionmenu = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=None,
-        #     )
-        #     self.the_space_between_optionmenu.grid(row=0, column=1)
-
-
-        #     self.optionmenu_label_right = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=kwargs["right_dropdown_menu_label"],
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #     )
-        #     self.optionmenu_label_right.grid(row=0, column=2)
-
-
-
-        #     # Option menus
-        #     self.createOption_DropdownMenu(
-        #         setattr_obj,
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         kwargs["left_optionmenu_attr_name"],
-        #         kwargs["left_dropdown_menu_attr_name"],
-        #         dropdown_menu_values=kwargs["left_dropdown_menu_values"],
-        #         width=150,
-        #         command=kwargs["left_dropdown_menu_command"],
-        #         variable=kwargs["left_dropdown_menu_variable"],
-        #     )
-        #     getattr(setattr_obj, kwargs["left_optionmenu_attr_name"]).grid(row=1, column=0)
-
-
-
-        #     self.the_label_between_optionmenu = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text="-->",
-        #         # anchor="w",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #         text_color=self.settings.ctm.LABELS_TEXT_COLOR
-        #     )
-        #     self.the_label_between_optionmenu.grid(row=1, column=1, padx=self.settings.uism.SB__RIGHT_PADX/2)
-
-
-        #     self.createOption_DropdownMenu(
-        #         setattr_obj,
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         kwargs["right_optionmenu_attr_name"],
-        #         kwargs["right_dropdown_menu_attr_name"],
-        #         dropdown_menu_values=kwargs["right_dropdown_menu_values"],
-        #         width=150,
-        #         command=kwargs["right_dropdown_menu_command"],
-        #         variable=kwargs["right_dropdown_menu_variable"],
-        #     )
-        #     getattr(setattr_obj, kwargs["right_optionmenu_attr_name"]).grid(row=1, column=2)
-
-
-
-
-        # if setting_box_type == "radio_buttons":
-        #     self.setting_box_radio_buttons_frame = CTkFrame(self.setting_box, corner_radius=0, width=0, height=0)
-        #     self.setting_box_radio_buttons_frame.grid(row=0, column=1, padx=(0, self.settings.uism.SB__RIGHT_PADX), rowspan=2, sticky="e")
-
-        #     RADIO_BUTTON_RIGHT_PAD = 14
-        #     self.setting_box_radio_button_1 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_1.grid(row=0, column=0, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
-
-        #     self.setting_box_radio_button_2 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_2.grid(row=0, column=1, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
-
-        #     self.setting_box_radio_button_3 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_3.grid(row=0, column=2, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
 
 
 

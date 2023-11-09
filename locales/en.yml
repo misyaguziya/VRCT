@@ -91,7 +91,7 @@ config_window:
 
   appearance_theme:
     label: Theme
-    desc: Change the color theme. Currently.
+    desc: Change the color theme.
 
   ui_size:
     label: UI Size
