@@ -70,7 +70,6 @@ class _CreateConfirmationModal(CTkToplevel):
 
 
         if modal_type == "information":
-            # self.modal_buttons_wrapper.grid_columnconfigure(1, weight=1, minsize=self.settings.uism.BUTTONS_BETWEEN_PADDING)
             self.modal_buttons_wrapper.grid_columnconfigure((0,2), weight=1)
 
 
