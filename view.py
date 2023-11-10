@@ -1096,7 +1096,11 @@ class View():
         self.view_variable.VAR_SPEAKER_MAX_PHRASES.set(str(value))
 
 
+    def setGuiVariable_OscIpAddress(self, value):
+        self.view_variable.VAR_OSC_IP_ADDRESS.set(str(value))
 
+    def setGuiVariable_OscPort(self, value):
+        self.view_variable.VAR_OSC_PORT.set(int(value))
 
 
 
