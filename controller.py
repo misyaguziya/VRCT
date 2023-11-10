@@ -6,6 +6,7 @@ from model import model
 from view import view
 from utils import get_key_by_value, isUniqueStrings
 from languages import selectable_languages
+import argparse
 
 # Common
 def callbackUpdateSoftware():
@@ -684,11 +685,24 @@ def callbackSetOscPort(value):
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
+def initSetConfigByExeArguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip")
+    parser.add_argument("--port")
+    args = parser.parse_args()
+    if args.ip is not None:
+        config.OSC_IP_ADDRESS = str(args.ip)
+        view.setGuiVariable_OscIpAddress(config.OSC_IP_ADDRESS)
+    if args.port is not None:
+        config.OSC_PORT = int(args.port)
+        view.setGuiVariable_OscPort(config.OSC_PORT)
+
 def createMainWindow():
     # create GUI
     view.createGUI()
 
     # init config
+    initSetConfigByExeArguments()
     initSetLanguageAndCountry()
 
     if model.authenticationTranslator(config.CHOICE_TRANSLATOR, config.AUTH_KEYS[config.CHOICE_TRANSLATOR]) is False:
