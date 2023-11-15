@@ -40,8 +40,8 @@ class Config:
         return self._VERSION
 
     @property
-    def LOCAL_PATH(self):
-        return self._LOCAL_PATH
+    def PATH_LOCAL(self):
+        return self._PATH_LOCAL
 
     @property
     def PATH_CONFIG(self):
@@ -530,9 +530,9 @@ class Config:
     def init_config(self):
         # Read Only
         self._VERSION = "2.0.1"
-        self._LOCAL_PATH = os_path.dirname(sys.argv[0])
-        self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
-        self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")
+        self._PATH_LOCAL = os_path.dirname(sys.argv[0])
+        self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
+        self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"

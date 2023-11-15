@@ -1,3 +1,4 @@
+import os
 from deepl import Translator as deepl_Translator
 from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
@@ -14,11 +15,10 @@ TRANSLATE_MODELS = {
 
 # Translator
 class Translator():
-    def __init__(self):
-        pass
+    def __init__(self, path):
         self.translator_status = {}
-
-        self.translator = ctranslate2.Translator("D:\\WORKSPACE\\WORK\\VRChatProject\\VRCT\\weight", device="cpu", device_index=0, compute_type="int8", inter_threads=1, intra_threads=4)
+        self.weight_path = os.path.join(path, "weight")
+        self.translator = ctranslate2.Translator(self.weight_path, device="cpu", device_index=0, compute_type="int8", inter_threads=1, intra_threads=4)
         self.tokenizer = transformers.AutoTokenizer.from_pretrained("facebook/m2m100_418M")
 
     def authentication(self, translator_name, authkey=None):
@@ -83,5 +83,4 @@ class Translator():
         target = results[0].hypotheses[0][1:]
 
         result = self.tokenizer.decode(self.tokenizer.convert_tokens_to_ids(target))
-        print(result)
         return result
