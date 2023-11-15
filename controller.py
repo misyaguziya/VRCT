@@ -20,8 +20,8 @@ def callbackFilepathLogs():
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
 
 def callbackFilepathConfigFile():
-    print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
-    Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
+    print("callbackFilepathConfigFile", config.PATH_LOCAL.replace('/', '\\'))
+    Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
 
 # func transcription send message
 def sendMicMessage(message):

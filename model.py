@@ -70,12 +70,12 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
-        self.translator = Translator()
+        self.translator = Translator(config.PATH_LOCAL)
         self.keyword_processor = KeywordProcessor()
 
     def resetTranslator(self):
         del self.translator
-        self.translator = Translator()
+        self.translator = Translator(config.PATH_LOCAL)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
@@ -271,7 +271,7 @@ class Model:
         folder_name = '_internal'
         tmp_directory_name = 'tmp'
         batch_name = 'update.bat'
-        current_directory = config.LOCAL_PATH
+        current_directory = config.PATH_LOCAL
 
         try:
             res = requests_get(config.GITHUB_URL)
@@ -296,7 +296,7 @@ class Model:
         program_name = 'VRCT.exe'
         folder_name = '_internal'
         batch_name = 'restart.bat'
-        current_directory = config.LOCAL_PATH
+        current_directory = config.PATH_LOCAL
         copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
         command = [os_path.join(current_directory, batch_name), program_name]
         Popen(command, cwd=current_directory)
