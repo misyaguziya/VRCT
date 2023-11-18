@@ -58,7 +58,7 @@ Initial setup, basic functions, and other features are also described.
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (Main Development)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
 - [レラ](https://github.com/soumt-r) (Translation:Korean)
-- [どね]() (Logo Design)
+- [どね](https://twitter.com/done_vrc) (Logo Design)
 
 ---
 
