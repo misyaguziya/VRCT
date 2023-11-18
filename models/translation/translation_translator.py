@@ -4,7 +4,6 @@ from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translation_lang
 
-from ctranslate2.converters import TransformersConverter
 import ctranslate2
 import transformers
 
@@ -15,11 +14,13 @@ TRANSLATE_MODELS = {
 
 # Translator
 class Translator():
-    def __init__(self, path):
+    def __init__(self, path, weight_config):
         self.translator_status = {}
-        self.weight_path = os.path.join(path, "weight")
+        directory_name = weight_config["directory_name"]
+        tokenizer = weight_config["tokenizer"]
+        self.weight_path = os.path.join(path, "weight", directory_name)
         self.translator = ctranslate2.Translator(self.weight_path, device="cpu", device_index=0, compute_type="int8", inter_threads=1, intra_threads=4)
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained("facebook/m2m100_418M")
+        self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
 
     def authentication(self, translator_name, authkey=None):
         result = True

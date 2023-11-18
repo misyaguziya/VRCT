@@ -64,6 +64,10 @@ class Config:
         return self._DOCUMENTS_URL
 
     @property
+    def CTRANSLATE2_WIGHTS(self):
+        return self._CTRANSLATE2_WIGHTS
+
+    @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
         return self._MAX_MIC_ENERGY_THRESHOLD
 
@@ -448,6 +452,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
+    @json_serializable('WEIGHT_TYPE')
+    def WEIGHT_TYPE(self):
+        return self._WEIGHT_TYPE
+
+    @WEIGHT_TYPE.setter
+    def WEIGHT_TYPE(self, value):
+        if isinstance(value, str):
+            self._WEIGHT_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('MESSAGE_FORMAT')
     def MESSAGE_FORMAT(self):
         return self._MESSAGE_FORMAT
@@ -537,6 +552,18 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
+        self._CTRANSLATE2_WIGHTS = {
+            "small": { # M2M-100 418M-parameter model
+                "url": "https://bit.ly/33fM1AO",
+                "directory_name": "m2m100_418m",
+                "tokenizer": "facebook/m2m100_418M"
+            },
+            "large": { # M2M-100 1.2B-parameter model
+                "url": "https://bit.ly/3GYiaed",
+                "directory_name": "m2m100_12b",
+                "tokenizer": "facebook/m2m100_12b"
+            },
+        }
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -594,6 +621,7 @@ class Config:
             "Bing": None,
             "Google": None,
         }
+        self.WEIGHT_TYPE = "small"
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
