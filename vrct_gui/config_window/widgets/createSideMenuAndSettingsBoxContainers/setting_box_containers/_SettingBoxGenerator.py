@@ -109,8 +109,9 @@ class _SettingBoxGenerator():
 
     def createSettingBox_Labels(
             self,
-            for_var_label_text, for_var_desc_text,
+            for_var_label_text,
             labels_attr_name,
+            for_var_desc_text=None,
         ):
 
         setting_box_frame= self._createSettingBoxFrame(labels_attr_name, for_var_label_text, for_var_desc_text, expand_label_frame=True)
@@ -217,10 +218,11 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxCheckbox(self,
-            for_var_label_text, for_var_desc_text,
+            for_var_label_text,
             checkbox_attr_name,
             command,
             variable,
+            for_var_desc_text=None,
         ):
 
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(checkbox_attr_name, for_var_label_text, for_var_desc_text)
@@ -547,6 +549,8 @@ class _SettingBoxGenerator():
             entry_textvariable_2,
             textvariable_0,
             textvariable_1,
+            example_label_textvariable,
+            swap_button_command,
             entry_bind__Any_KeyRelease,
             entry_bind__FocusOut=None,
         ):
@@ -581,7 +585,7 @@ class _SettingBoxGenerator():
         example_frame_widget.grid_columnconfigure((0,2), weight=1)
         example_label_widget = CTkLabel(
             example_frame_widget,
-            textvariable=self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT,
+            textvariable=example_label_textvariable,
             anchor="center",
             justify="center",
             wraplength=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH,
@@ -717,10 +721,6 @@ class _SettingBoxGenerator():
         )
         swap_button_label_1.grid(row=1, column=3)
 
-
-        def adjustedCommand():
-            callFunctionIfCallable(self.view_variable.CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT)
-
         bindButtonFunctionAndColor(
             target_widgets=[
                 swap_button,
@@ -732,7 +732,7 @@ class _SettingBoxGenerator():
             enter_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_HOVERED_COLOR,
             leave_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_COLOR,
             clicked_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR,
-            buttonReleasedFunction=lambda _e: adjustedCommand(),
+            buttonReleasedFunction=swap_button_command,
         )
 
 
