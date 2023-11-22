@@ -373,6 +373,32 @@ class View():
 
 
 
+            # -------------------Speaker2Chatbox-----------
+            VAR_SECOND_TITLE_OTHERS_SPEAKER2CHATBOX=StringVar(value=i18n.t("config_window.side_menu_labels.others_speaker2chatbox")),
+
+
+            VAR_LABEL_RECEIVED_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.received_message_format.label")),
+            VAR_DESC_RECEIVED_MESSAGE_FORMAT=StringVar(value=i18n.t("config_window.received_message_format.desc")),
+            CALLBACK_SET_RECEIVED_MESSAGE_FORMAT=None,
+            CALLBACK_SWAP_RECEIVED_MESSAGE_FORMAT_REQUIRED_TEXT=self._swapReceivedMessageFormatRequiredText,
+            VAR_RECEIVED_MESSAGE_FORMAT=StringVar(value=config.RECEIVED_MESSAGE_FORMAT),
+            VAR_LABEL_EXAMPLE_TEXT_RECEIVED_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_0_RECEIVED_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_1_RECEIVED_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_ENTRY_2_RECEIVED_MESSAGE_FORMAT=StringVar(value=""),
+            VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT=StringVar(value="[message]"),
+            VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT=StringVar(value="[translation]"),
+            CALLBACK_FOCUS_OUT_RECEIVED_MESSAGE_FORMAT=self.callbackBindFocusOut_ReceivedMessageFormat,
+
+
+            VAR_LABEL_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_received_message_to_vrc.label")),
+            VAR_DESC_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_received_message_to_vrc.desc")),
+            CALLBACK_SET_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC=None,
+            VAR_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC=BooleanVar(value=config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC),
+            # -------------------Speaker2Chatbox-----------
+
+
+
             # Advanced Settings Tab
             VAR_LABEL_OSC_IP_ADDRESS=StringVar(value=i18n.t("config_window.osc_ip_address.label")),
             VAR_DESC_OSC_IP_ADDRESS=None,
@@ -501,6 +527,13 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
             # self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None) #[deprecated]
 
+
+            self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT = config_window_registers.get("callback_set_received_message_format", None)
+
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_received_message_to_vrc", None)
+
+
+
             # Advanced Settings Tab
             self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
             self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
@@ -540,6 +573,7 @@ class View():
 
 
         self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+        self.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
 
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
@@ -588,6 +622,57 @@ class View():
         example_message = example_message.replace("[translation]", translation)
 
         self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT.set(example_message)
+
+
+
+# Speaker2Chatbox----------------------------
+    def setReceivedMessageFormatEntryWidgets(self, message_format:str):
+        result = self.extractMessageFormat(message_format)
+
+        if result.is_message_first is True:
+            self.view_variable.VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT.set("[message]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT.set("[translation]")
+        else:
+            self.view_variable.VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT.set("[translation]")
+            self.view_variable.VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT.set("[message]")
+
+        self.view_variable.VAR_ENTRY_0_RECEIVED_MESSAGE_FORMAT.set(result.before)
+        self.view_variable.VAR_ENTRY_1_RECEIVED_MESSAGE_FORMAT.set(result.between)
+        self.view_variable.VAR_ENTRY_2_RECEIVED_MESSAGE_FORMAT.set(result.after)
+        self.updateReceivedMessageFormat_ExampleTextWidget()
+
+    def _swapReceivedMessageFormatRequiredText(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT.get()
+        self.view_variable.VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT.set(text_1)
+        self.view_variable.VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT.set(text_0)
+        self.updateReceivedMessageFormat_ExampleTextWidget()
+
+        new_message_format = self.getLatestReceivedMessageFormatFromWidget()
+        callFunctionIfCallable(self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT, new_message_format)
+
+
+    def getLatestReceivedMessageFormatFromWidget(self):
+        text_0 = self.view_variable.VAR_TEXT_REQUIRED_0_RECEIVED_MESSAGE_FORMAT.get()
+        text_1 = self.view_variable.VAR_TEXT_REQUIRED_1_RECEIVED_MESSAGE_FORMAT.get()
+        entry_0 = self.view_variable.VAR_ENTRY_0_RECEIVED_MESSAGE_FORMAT.get()
+        entry_1 = self.view_variable.VAR_ENTRY_1_RECEIVED_MESSAGE_FORMAT.get()
+        entry_2 = self.view_variable.VAR_ENTRY_2_RECEIVED_MESSAGE_FORMAT.get()
+        return entry_0+text_0+entry_1+text_1+entry_2
+
+    def updateReceivedMessageFormat_ExampleTextWidget(self):
+        message = i18n.t("config_window.message_format.example_text", locale=config.UI_LANGUAGE)
+        translation_locale = "ja" if config.UI_LANGUAGE == "en" else "en"
+        translation = i18n.t("config_window.message_format.example_text", locale=translation_locale)
+
+        example_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
+        example_message = example_message.replace("[translation]", translation)
+
+        self.view_variable.VAR_LABEL_EXAMPLE_TEXT_RECEIVED_MESSAGE_FORMAT.set(example_message)
+# Speaker2Chatbox----------------------------
+
+
+
 
 
 # GUI process
@@ -1124,6 +1209,8 @@ class View():
 
             case "MessageFormat":
                 self.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+            case "ReceivedMessageFormat":
+                self.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
 
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")
@@ -1278,6 +1365,10 @@ class View():
         self.setLatestConfigVariable("MessageFormat")
         self.clearErrorMessage()
 
+    def callbackBindFocusOut_ReceivedMessageFormat(self, _e=None):
+        self.setLatestConfigVariable("ReceivedMessageFormat")
+        self.clearErrorMessage()
+
 
 
 
@@ -1364,6 +1455,13 @@ class View():
             vrct_gui.config_window.sb__entry_message_format_2,
             self._makeInvalidValueErrorMessage(i18n.t("config_window.message_format.error_message"))
         )
+
+    def showErrorMessage_ReceivedMessageFormat(self):
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_received_message_format_2,
+            self._makeInvalidValueErrorMessage(i18n.t("config_window.message_format.error_message"))
+        )
+
 
     @staticmethod
     def _makeInvalidValueErrorMessage(error_message):
