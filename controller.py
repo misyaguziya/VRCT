@@ -111,6 +111,17 @@ def receiveSpeakerMessage(message):
                     xsoverlay_message = message
                 model.notificationXSOverlay(xsoverlay_message)
 
+        # ------------Speaker2Chatbox------------
+        # send OSC message
+        if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
+            if len(translation) > 0:
+                osc_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
+                osc_message = osc_message.replace("[translation]", translation)
+            else:
+                osc_message = message
+            model.oscSendMessage(osc_message)
+        # ------------Speaker2Chatbox------------
+
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
             if config.ENABLE_LOGGER is True:
