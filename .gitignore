@@ -5,3 +5,4 @@ memo.txt
 VRCT.spec
 *.pyc
 logs/
+.venv/
