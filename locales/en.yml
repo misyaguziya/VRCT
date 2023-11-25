@@ -82,6 +82,7 @@ config_window:
     transcription_mic: Mic
     transcription_speaker: Speaker
     others: Others
+    others_speaker2chatbox: Speaker2Chatbox
     advanced_settings: Advanced Settings
 
 
@@ -188,6 +189,16 @@ config_window:
   send_message_to_vrc:
     label: Send Message To VRChat
     desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
+
+  # Speaker2Chatbox
+  received_message_format:
+    label: Message Format (Speaker2Chatbox)
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' and '[translation]' cannot be used."
+
+  send_received_message_to_vrc:
+    label: Send Received Message To VRChat
+    # Speaker2Chatbox
 
   osc_ip_address:
     label: OSC IP Address
