@@ -72,7 +72,6 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
-        self.downloadCTranslate2Weight()
         self.translator = Translator(config.PATH_LOCAL, config.CTRANSLATE2_WIGHTS[config.WEIGHT_TYPE])
         self.keyword_processor = KeywordProcessor()
 
@@ -108,38 +107,6 @@ class Model:
     def stopLogger(self):
         self.logger.disabled = True
         self.logger = None
-
-    @staticmethod
-    def downloadCTranslate2Weight():
-        weight_type = config.WEIGHT_TYPE
-        url = config.CTRANSLATE2_WIGHTS[weight_type]["url"]
-        filename = 'weight.zip'
-        directory_name = 'weight'
-        current_directory = config.PATH_LOCAL
-        weight_directory_name = config.CTRANSLATE2_WIGHTS[weight_type]["directory_name"]
-        files = ["model.bin", "sentencepiece.model", "shared_vocabulary.txt"]
-
-        # check already downloaded
-        if all(os_path.exists(os_path.join(current_directory, directory_name, weight_directory_name, file)) for file in files):
-            return
-
-        try:
-            os_makedirs(os_path.join(current_directory, directory_name), exist_ok=True)
-            print(os_path.join(current_directory, directory_name))
-            with tempfile.TemporaryDirectory() as tmp_path:
-                file_size = int(requests_head(url).headers["content-length"])
-                res = requests_get(url, stream=True)
-                pbar = tqdm(total=file_size, unit="B", unit_scale=True)
-                with open(os_path.join(tmp_path, filename), 'wb') as file:
-                    for chunk in res.iter_content(chunk_size=1024):
-                        file.write(chunk)
-                        pbar.update(len(chunk))
-                    pbar.close()
-
-                with ZipFile(os_path.join(tmp_path, filename)) as zf:
-                    zf.extractall(os_path.join(current_directory, directory_name))
-        except Exception as e:
-                print("error:downloadCTranslate2Weight()", e)
 
     @staticmethod
     def getListLanguageAndCountry():
