@@ -33,6 +33,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def entry_message_format_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_MESSAGE_FORMAT, value)
 
+    def entry_swap_message_format_callback(_e):
+        callFunctionIfCallable(view_variable.CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT)
+
 
     row=0
     config_window.sb__auto_clear_message_box = createSettingBoxCheckbox(
@@ -85,7 +88,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         entry_textvariable_2=view_variable.VAR_ENTRY_2_MESSAGE_FORMAT,
         textvariable_0=view_variable.VAR_TEXT_REQUIRED_0_MESSAGE_FORMAT,
         textvariable_1=view_variable.VAR_TEXT_REQUIRED_1_MESSAGE_FORMAT,
+        example_label_textvariable=view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT,
         entry_bind__Any_KeyRelease=lambda value: entry_message_format_callback(value),
+        swap_button_command=entry_swap_message_format_callback,
         # entry_textvariable=view_variable.VAR_MESSAGE_FORMAT,
         entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_MESSAGE_FORMAT,
     )

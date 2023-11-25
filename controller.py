@@ -112,6 +112,17 @@ def receiveSpeakerMessage(message):
                     xsoverlay_message = message
                 model.notificationXSOverlay(xsoverlay_message)
 
+            # ------------Speaker2Chatbox------------
+            # send OSC message
+            if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
+                if len(translation) > 0:
+                    osc_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
+                    osc_message = osc_message.replace("[translation]", translation)
+                else:
+                    osc_message = message
+                model.oscSendMessage(osc_message)
+            # ------------Speaker2Chatbox------------
+
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
             if config.ENABLE_LOGGER is True:
@@ -672,6 +683,24 @@ def callbackSetEnableSendMessageToVrc(value):
 #     print("callbackSetStartupOscEnabledCheck", value)
 #     config.STARTUP_OSC_ENABLED_CHECK = value
 
+# ---------------------Speaker2Chatbox---------------------
+def callbackSetReceivedMessageFormat(value):
+    print("callbackSetReceivedMessageFormat", value)
+    if len(value) > 0:
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.RECEIVED_MESSAGE_FORMAT = value
+            view.clearErrorMessage()
+            view.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+        else:
+            view.showErrorMessage_ReceivedMessageFormat()
+            view.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+
+def callbackSetEnableSendReceivedMessageToVrc(value):
+    print("callbackSetEnableSendReceivedMessageToVrc", value)
+    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+# ---------------------Speaker2Chatbox---------------------
+
+
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
     if value == "":
@@ -808,6 +837,10 @@ def createMainWindow():
             "callback_set_message_format": callbackSetMessageFormat,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
             # "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck, # [deprecated]
+            # Speaker2Chatbox----------------
+            "callback_set_received_message_format": callbackSetReceivedMessageFormat,
+            "callback_set_enable_send_received_message_to_vrc": callbackSetEnableSendReceivedMessageToVrc,
+            # Speaker2Chatbox----------------
 
             # Advanced Settings Tab
             "callback_set_osc_ip_address": callbackSetOscIpAddress,
