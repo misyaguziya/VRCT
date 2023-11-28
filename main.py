@@ -9,7 +9,7 @@ if __name__ == "__main__":
 
         from config import config
         from models.translation.utils import downloadCTranslate2Weight
-        downloadCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE, config.CTRANSLATE2_WIGHTS)
+        downloadCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE, config.CTRANSLATE2_WEIGHTS, print)
 
         import controller
         controller.createMainWindow()
