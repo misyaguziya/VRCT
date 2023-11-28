@@ -8,6 +8,7 @@ from tkinter import font
 from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from models.translation.utils import ctranslate2_weights
 from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
@@ -552,18 +553,7 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
-        self._CTRANSLATE2_WIGHTS = {
-            "small": { # M2M-100 418M-parameter model
-                "url": "https://bit.ly/33fM1AO",
-                "directory_name": "m2m100_418m",
-                "tokenizer": "facebook/m2m100_418M"
-            },
-            "large": { # M2M-100 1.2B-parameter model
-                "url": "https://bit.ly/3GYiaed",
-                "directory_name": "m2m100_12b",
-                "tokenizer": "facebook/m2m100_12b"
-            },
-        }
+        self._CTRANSLATE2_WEIGHTS = ctranslate2_weights
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
