@@ -72,7 +72,7 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
-        self.translator = Translator(config.PATH_LOCAL, config.CTRANSLATE2_WIGHTS[config.WEIGHT_TYPE])
+        self.translator = Translator(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHTS[config.WEIGHT_TYPE])
         self.keyword_processor = KeywordProcessor()
 
     def resetTranslator(self):

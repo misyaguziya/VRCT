@@ -65,8 +65,8 @@ class Config:
         return self._DOCUMENTS_URL
 
     @property
-    def CTRANSLATE2_WIGHTS(self):
-        return self._CTRANSLATE2_WIGHTS
+    def CTRANSLATE2_WEIGHTS(self):
+        return self._CTRANSLATE2_WEIGHTS
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
