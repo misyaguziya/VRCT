@@ -1,4 +1,4 @@
-from customtkinter import CTkImage, CTkLabel, CTkToplevel
+from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar
 from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation
 
 class SplashWindow(CTkToplevel):
@@ -10,6 +10,7 @@ class SplashWindow(CTkToplevel):
         self.title("SplashWindow")
         self.wm_attributes("-toolwindow", True)
 
+        self.is_showed_progressbar = False
 
         sw=self.winfo_screenwidth()
 
@@ -26,6 +27,37 @@ class SplashWindow(CTkToplevel):
             image=CTkImage(img, size=(desired_width, height))
         )
         label.grid(row=1, column=1, padx=int(desired_width/7), pady=int(height/3))
+
+
+        self.progressbar_widget = CTkProgressBar(
+            self,
+            height=10,
+            corner_radius=0,
+            fg_color="#4b4c4f",
+            progress_color="#48a495",
+        )
+        self.progressbar_widget.set(0)
+
+
+        (img, desired_width, height) = openImageKeepAspectRatio(getImageFileFromUiUtils("VRCT_now_downloading.png"), 320)
+        self.text_label = CTkLabel(
+            self,
+            text=None,
+            height=0,
+            fg_color="#292a2d",
+            image=CTkImage(img, size=(desired_width, height))
+        )
+
+
+
+    def updateDownloadProgress(self, progress:float):
+        if self.is_showed_progressbar is False:
+            self.progressbar_widget.place(relwidth=0.9, relx=0.5, rely=0.9, anchor="s")
+            self.text_label.place(relx=0.98, rely=0.98, anchor="se")
+            self.is_showed_progressbar = True
+
+        self.progressbar_widget.set(progress)
+        self.update_idletasks()
 
 
     def showSplash(self):
