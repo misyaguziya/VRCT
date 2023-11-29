@@ -611,7 +611,7 @@ class Config:
             "Bing": None,
             "Google": None,
         }
-        self.WEIGHT_TYPE = "small"
+        self._WEIGHT_TYPE = "small"
         self._MESSAGE_FORMAT = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
