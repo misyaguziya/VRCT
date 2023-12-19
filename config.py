@@ -459,6 +459,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_SEND_ONLY_TRANSLATED_MESSAGES')
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self):
+        return self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES
+
+    @ENABLE_SEND_ONLY_TRANSLATED_MESSAGES.setter
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('ENABLE_NOTICE_XSOVERLAY')
     def ENABLE_NOTICE_XSOVERLAY(self):
         return self._ENABLE_NOTICE_XSOVERLAY
@@ -655,6 +666,7 @@ class Config:
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
         self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
+        self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # speaker2Chatbox

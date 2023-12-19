@@ -334,6 +334,11 @@ class View():
             CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=None,
             VAR_ENABLE_AUTO_CLEAR_MESSAGE_BOX=BooleanVar(value=config.ENABLE_AUTO_CLEAR_MESSAGE_BOX),
 
+            VAR_LABEL_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=StringVar(value=i18n.t("config_window.send_only_translated_messages.label")),
+            VAR_DESC_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=None,
+            CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=None,
+            VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=BooleanVar(value=config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES),
+
             VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.label")),
             VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.desc")),
             CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
@@ -546,6 +551,7 @@ class View():
 
             # Others Tab
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = config_window_registers.get("callback_set_send_only_translated_messages", None)
             self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
