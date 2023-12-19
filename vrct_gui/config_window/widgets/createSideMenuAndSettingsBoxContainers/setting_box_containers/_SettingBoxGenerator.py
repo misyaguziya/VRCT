@@ -538,7 +538,7 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxMessageFormatEntries(self,
+    def createSettingBoxMessageFormatEntries_WithTranslation(self,
             base_entry_attr_name,
             entry_textvariable_0,
             entry_textvariable_1,
@@ -730,6 +730,119 @@ class _SettingBoxGenerator():
             clicked_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR,
             buttonReleasedFunction=swap_button_command,
         )
+
+
+        return setting_box_frame
+
+
+
+
+    def createSettingBoxMessageFormatEntries(self,
+            base_entry_attr_name,
+            entry_textvariable_0,
+            entry_textvariable_1,
+            textvariable_0,
+            example_label_textvariable,
+            entry_bind__Any_KeyRelease,
+            entry_bind__FocusOut=None,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(base_entry_attr_name)
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(0, weight=1)
+
+
+        example_box_wrapper = CTkFrame(all_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        example_box_wrapper.grid(row=0, column=0, pady=self.settings.uism.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY, sticky="ew")
+
+        entries_wrapper = CTkFrame(all_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        entries_wrapper.grid(row=1, column=0, pady=self.settings.uism.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY, sticky="ew")
+
+
+
+
+        example_box_wrapper.grid_columnconfigure((0,2), weight=1)
+        example_frame_widget = CTkFrame(example_box_wrapper, corner_radius=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_CORNER_RADIUS, fg_color=self.settings.ctm.SB__MESSAGE_FORMAT__EXAMPLE_BG_COLOR, width=0, height=0)
+        example_frame_widget.grid(row=0, column=1)
+
+        example_frame_widget.grid_rowconfigure((0,2), weight=1)
+        example_frame_widget.grid_columnconfigure((0,2), weight=1)
+        example_label_widget = CTkLabel(
+            example_frame_widget,
+            textvariable=example_label_textvariable,
+            anchor="center",
+            justify="center",
+            wraplength=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH,
+            height=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE, weight="normal"),
+            text_color=self.settings.ctm.SB__MESSAGE_FORMAT__EXAMPLE_TEXT_COLOR,
+        )
+        example_label_widget.grid(row=1, column=1, padx=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, pady=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, sticky="ew")
+
+        self.config_window.additional_widgets.append(example_box_wrapper)
+
+
+
+
+        entry_textvariables = [entry_textvariable_0, entry_textvariable_1]
+        for i in range(2):
+            entry_widget = CTkEntry(
+                entries_wrapper,
+                text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+                fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+                border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
+                height=self.settings.uism.SB__MESSAGE_FORMAT__ENTRY_HEIGHT,
+                textvariable=entry_textvariables[i],
+                justify="center",
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
+            )
+            setattr(self.config_window, base_entry_attr_name + "_" + str(i), entry_widget)
+
+
+
+            if entry_bind__FocusOut is not None:
+                entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
+
+
+        label_frame_widget_0 = CTkFrame(entries_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+
+        label_frame_widget_0.grid_rowconfigure((0,2), weight=1)
+        label_frame_widget_0.grid_columnconfigure(0, weight=1)
+        label_widget_0 = CTkLabel(
+            label_frame_widget_0,
+            textvariable=textvariable_0,
+            anchor="center",
+            height=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE, weight="normal"),
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR
+        )
+        label_widget_0.grid(row=1, column=0, padx=0, pady=0, sticky="ew")
+
+
+
+
+
+        entries_wrapper.grid_columnconfigure((0,2), weight=1)
+        entries_wrapper.grid_columnconfigure(1, weight=0)
+
+        entry_widget_0 = getattr(self.config_window, base_entry_attr_name+"_0")
+        entry_widget_1 = getattr(self.config_window, base_entry_attr_name+"_1")
+        entry_widget_0.grid(row=0, column=0, sticky="ew")
+        entry_widget_1.grid(row=0, column=2, sticky="ew")
+        label_frame_widget_0.grid(row=0, column=1, padx=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_PADX, sticky="ew")
+
+        def adjusted_command__for_entry_bind__Any_KeyRelease(_e):
+            message_format = entry_widget_0.get() + textvariable_0.get() + entry_widget_1.get()
+            entry_bind__Any_KeyRelease(message_format)
+
+
+        entry_widget_0.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+        entry_widget_1.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+
 
 
         return setting_box_frame

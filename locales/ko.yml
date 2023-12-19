@@ -172,7 +172,7 @@ config_window:
   #   label: Auto Export Message Logs
   #   desc: Automatically export the conversation messages as a text file.
 
-  message_format:
+  send_message_format_with_t:
     label: 전송 형식
     # desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\nIt will be used in Notification XSOverlay too."
     example_text: 예문입니다. 글꼴, 줄 바꿈 등이 실제 표시와 다를 수 있습니다.
