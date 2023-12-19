@@ -178,15 +178,35 @@ config_window:
     label: 会話ログを自動的に保存する
     desc: テキストファイルとしてログがlogsフォルダ内に保存されます。
 
-  message_format:
-    label: 送信するメッセージのフォーマット
-    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能でも使われます。"
-    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
-    error_message: "[message]と[translation]という文字は使えません。"
-
   send_message_to_vrc:
     label: VRChatにメッセージを送信する
     desc: "サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。"
+
+
+  send_message_format:
+    label: 送信するメッセージのフォーマット
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換されます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]という文字は使えません。"
+
+  send_message_format_with_t:
+    label: 送信するメッセージのフォーマット（翻訳付き）
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]と[translation]という文字は使えません。"
+
+  received_message_format:
+    label: 送信するメッセージのフォーマット
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換されます。\n※XSOverlayでの通知受け取り機能にも使われます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]という文字は使えません。"
+
+  received_message_format_with_t:
+    label: 送信するメッセージのフォーマット（翻訳付き）
+    desc: "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。\n※XSOverlayでの通知受け取り機能にも使われます。"
+    example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
+    error_message: "[message]と[translation]という文字は使えません。"
+
 
   osc_ip_address:
     label: OSC IP Address

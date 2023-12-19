@@ -23,6 +23,23 @@ def callbackFilepathConfigFile():
     print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
     Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
+def messageFormatter(format_type:str, translation, message):
+    if format_type == "RECEIVED":
+        FORMAT_WITH_T = config.RECEIVED_MESSAGE_FORMAT_WITH_T
+        FORMAT = config.RECEIVED_MESSAGE_FORMAT
+    elif format_type == "SEND":
+        FORMAT_WITH_T = config.SEND_MESSAGE_FORMAT_WITH_T
+        FORMAT = config.SEND_MESSAGE_FORMAT
+    else:
+        raise ValueError("format_type is not found", format_type)
+
+    if len(translation) > 0:
+        osc_message = FORMAT_WITH_T.replace("[message]", message)
+        osc_message = osc_message.replace("[translation]", translation)
+    else:
+        osc_message = FORMAT.replace("[message]", message)
+    return osc_message
+
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
@@ -41,11 +58,7 @@ def sendMicMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-                if len(translation) > 0:
-                    osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                    osc_message = osc_message.replace("[translation]", translation)
-                else:
-                    osc_message = message
+                osc_message = messageFormatter("SEND", translation, message)
                 model.oscSendMessage(osc_message)
 
             view.printToTextbox_SentMessage(message, translation)
@@ -105,21 +118,13 @@ def receiveSpeakerMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
-                if len(translation) > 0:
-                    xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                    xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
-                else:
-                    xsoverlay_message = message
+                xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
             # ------------Speaker2Chatbox------------
             # send OSC message
             if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                if len(translation) > 0:
-                    osc_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
-                    osc_message = osc_message.replace("[translation]", translation)
-                else:
-                    osc_message = message
+                osc_message = messageFormatter("RECEIVED", translation, message)
                 model.oscSendMessage(osc_message)
             # ------------Speaker2Chatbox------------
 
@@ -182,11 +187,7 @@ def sendChatMessage(message):
 
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-            if len(translation) > 0:
-                osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                osc_message = osc_message.replace("[translation]", translation)
-            else:
-                osc_message = message
+            osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
 
         # update textbox message log (Sent)
@@ -662,16 +663,26 @@ def callbackSetEnableAutoExportMessageLogs(value):
     else:
         model.stopLogger()
 
-def callbackSetMessageFormat(value):
-    print("callbackSetMessageFormat", value)
+def callbackSetSendMessageFormat(value):
+    print("callbackSetSendMessageFormat", value)
+    if isUniqueStrings(["[message]"], value) is True:
+        config.SEND_MESSAGE_FORMAT = value
+        view.clearErrorMessage()
+        view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
+    else:
+        view.showErrorMessage_SendMessageFormat()
+        view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
+
+def callbackSetSendMessageFormatWithT(value):
+    print("callbackSetSendMessageFormatWithT", value)
     if len(value) > 0:
         if isUniqueStrings(["[message]", "[translation]"], value) is True:
-            config.MESSAGE_FORMAT = value
+            config.SEND_MESSAGE_FORMAT_WITH_T = value
             view.clearErrorMessage()
-            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+            view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
         else:
-            view.showErrorMessage_MessageFormat()
-            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
+            view.showErrorMessage_SendMessageFormatWithT()
+            view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
 
 
 def callbackSetEnableSendMessageToVrc(value):
@@ -683,18 +694,31 @@ def callbackSetEnableSendMessageToVrc(value):
 #     print("callbackSetStartupOscEnabledCheck", value)
 #     config.STARTUP_OSC_ENABLED_CHECK = value
 
-# ---------------------Speaker2Chatbox---------------------
+
 def callbackSetReceivedMessageFormat(value):
     print("callbackSetReceivedMessageFormat", value)
+    if isUniqueStrings(["[message]"], value) is True:
+        config.RECEIVED_MESSAGE_FORMAT = value
+        view.clearErrorMessage()
+        view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+    else:
+        view.showErrorMessage_ReceivedMessageFormat()
+        view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+
+
+def callbackSetReceivedMessageFormatWithT(value):
+    print("callbackSetReceivedMessageFormatWithT", value)
     if len(value) > 0:
         if isUniqueStrings(["[message]", "[translation]"], value) is True:
-            config.RECEIVED_MESSAGE_FORMAT = value
+            config.RECEIVED_MESSAGE_FORMAT_WITH_T = value
             view.clearErrorMessage()
-            view.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+            view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
         else:
-            view.showErrorMessage_ReceivedMessageFormat()
-            view.setReceivedMessageFormatEntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+            view.showErrorMessage_ReceivedMessageFormatWithT()
+            view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
 
+
+# ---------------------Speaker2Chatbox---------------------
 def callbackSetEnableSendReceivedMessageToVrc(value):
     print("callbackSetEnableSendReceivedMessageToVrc", value)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
@@ -834,11 +858,14 @@ def createMainWindow():
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
-            "callback_set_message_format": callbackSetMessageFormat,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
             # "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck, # [deprecated]
-            # Speaker2Chatbox----------------
+            "callback_set_send_message_format": callbackSetSendMessageFormat,
+            "callback_set_send_message_format_with_t": callbackSetSendMessageFormatWithT,
             "callback_set_received_message_format": callbackSetReceivedMessageFormat,
+            "callback_set_received_message_format_with_t": callbackSetReceivedMessageFormatWithT,
+
+            # Speaker2Chatbox----------------
             "callback_set_enable_send_received_message_to_vrc": callbackSetEnableSendReceivedMessageToVrc,
             # Speaker2Chatbox----------------
 
