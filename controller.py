@@ -58,8 +58,15 @@ def sendMicMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-                osc_message = messageFormatter("SEND", translation, message)
+                if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+                    if config.ENABLE_TRANSLATION is False:
+                        osc_message = messageFormatter("SEND", "", message)
+                    else:
+                        osc_message = messageFormatter("SEND", "", translation)
+                else:
+                    osc_message = messageFormatter("SEND", translation, message)
                 model.oscSendMessage(osc_message)
+
 
             view.printToTextbox_SentMessage(message, translation)
             if config.ENABLE_LOGGER is True:
@@ -187,7 +194,13 @@ def sendChatMessage(message):
 
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-            osc_message = messageFormatter("SEND", translation, message)
+            if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+                if config.ENABLE_TRANSLATION is False:
+                    osc_message = messageFormatter("SEND", "", message)
+                else:
+                    osc_message = messageFormatter("SEND", "", translation)
+            else:
+                osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
 
         # update textbox message log (Sent)
@@ -650,6 +663,10 @@ def callbackSetEnableAutoClearMessageBox(value):
     print("callbackSetEnableAutoClearMessageBox", value)
     config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
 
+def callbackSetEnableSendOnlyTranslatedMessages(value):
+    print("callbackSetEnableSendOnlyTranslatedMessages", value)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+
 def callbackSetEnableNoticeXsoverlay(value):
     print("callbackSetEnableNoticeXsoverlay", value)
     config.ENABLE_NOTICE_XSOVERLAY = value
@@ -856,6 +873,7 @@ def createMainWindow():
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
+            "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,

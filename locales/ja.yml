@@ -167,8 +167,12 @@ config_window:
     desc: 文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。
     error_message: 0以上の数値を設定できます。
 
+
   auto_clear_the_message_box:
     label: 送信後はチャットボックスを空にする
+
+  send_only_translated_messages:
+    label: 翻訳後のメッセージのみ送信する
 
   notice_xsoverlay:
     label: XSOverlayでの通知受け取り機能を有効 (VR限定)
