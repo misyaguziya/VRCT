@@ -448,19 +448,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
-    @json_serializable('MESSAGE_FORMAT')
-    def MESSAGE_FORMAT(self):
-        return self._MESSAGE_FORMAT
-
-    @MESSAGE_FORMAT.setter
-    def MESSAGE_FORMAT(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
-            self._MESSAGE_FORMAT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('ENABLE_AUTO_CLEAR_MESSAGE_BOX')
     def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self):
         return self._ENABLE_AUTO_CLEAR_MESSAGE_BOX
@@ -505,7 +492,32 @@ class Config:
     #         self._STARTUP_OSC_ENABLED_CHECK = value
     #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # Speaker2Chatbox------------------
+    @property
+    @json_serializable('SEND_MESSAGE_FORMAT')
+    def SEND_MESSAGE_FORMAT(self):
+        return self._SEND_MESSAGE_FORMAT
+
+    @SEND_MESSAGE_FORMAT.setter
+    def SEND_MESSAGE_FORMAT(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]"], value) is False:
+                value = "[message]"
+            self._SEND_MESSAGE_FORMAT = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
+    def SEND_MESSAGE_FORMAT_WITH_T(self):
+        return self._SEND_MESSAGE_FORMAT_WITH_T
+
+    @SEND_MESSAGE_FORMAT_WITH_T.setter
+    def SEND_MESSAGE_FORMAT_WITH_T(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
+            self._SEND_MESSAGE_FORMAT_WITH_T = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     @property
     @json_serializable('RECEIVED_MESSAGE_FORMAT')
     def RECEIVED_MESSAGE_FORMAT(self):
@@ -514,11 +526,27 @@ class Config:
     @RECEIVED_MESSAGE_FORMAT.setter
     def RECEIVED_MESSAGE_FORMAT(self, value):
         if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
+            if isUniqueStrings(["[message]"], value) is False:
+                value = "[message]"
             self._RECEIVED_MESSAGE_FORMAT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    @property
+    @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
+    def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
+        return self._RECEIVED_MESSAGE_FORMAT_WITH_T
+
+    @RECEIVED_MESSAGE_FORMAT_WITH_T.setter
+    def RECEIVED_MESSAGE_FORMAT_WITH_T(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
+            self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+
+
+    # Speaker2Chatbox------------------
     @property
     @json_serializable('ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC')
     def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self):
@@ -529,7 +557,6 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
     # Speaker2Chatbox------------------
 
 
@@ -623,8 +650,10 @@ class Config:
             "Bing": None,
             "Google": None,
         }
-        self._MESSAGE_FORMAT = "[message]([translation])"
-        self._RECEIVED_MESSAGE_FORMAT = "[message]([translation])" # speaker2Chatbox
+        self._SEND_MESSAGE_FORMAT = "[message]"
+        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        self._RECEIVED_MESSAGE_FORMAT = "[message]"
+        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
