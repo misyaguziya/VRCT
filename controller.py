@@ -45,7 +45,7 @@ def sendMicMessage(message):
                     osc_message = config.SEND_MESSAGE_FORMAT_WITH_T.replace("[message]", message)
                     osc_message = osc_message.replace("[translation]", translation)
                 else:
-                    osc_message = message
+                    osc_message = config.SEND_MESSAGE_FORMAT.replace("[message]", message)
                 model.oscSendMessage(osc_message)
 
             view.printToTextbox_SentMessage(message, translation)
@@ -106,10 +106,10 @@ def receiveSpeakerMessage(message):
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
                 if len(translation) > 0:
-                    xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
+                    xsoverlay_message = config.RECEIVED_MESSAGE_FORMAT_WITH_T.replace("[message]", message)
                     xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
                 else:
-                    xsoverlay_message = message
+                    xsoverlay_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
                 model.notificationXSOverlay(xsoverlay_message)
 
             # ------------Speaker2Chatbox------------
@@ -119,7 +119,7 @@ def receiveSpeakerMessage(message):
                     osc_message = config.RECEIVED_MESSAGE_FORMAT_WITH_T.replace("[message]", message)
                     osc_message = osc_message.replace("[translation]", translation)
                 else:
-                    osc_message = message
+                    osc_message = config.RECEIVED_MESSAGE_FORMAT.replace("[message]", message)
                 model.oscSendMessage(osc_message)
             # ------------Speaker2Chatbox------------
 
@@ -183,10 +183,10 @@ def sendChatMessage(message):
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
             if len(translation) > 0:
-                osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
+                osc_message = config.SEND_MESSAGE_FORMAT_WITH_T.replace("[message]", message)
                 osc_message = osc_message.replace("[translation]", translation)
             else:
-                osc_message = message
+                osc_message = config.SEND_MESSAGE_FORMAT.replace("[message]", message)
             model.oscSendMessage(osc_message)
 
         # update textbox message log (Sent)
