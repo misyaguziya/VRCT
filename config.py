@@ -667,8 +667,13 @@ class Config:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 config = json_load(fp)
 
+            old_message_format = None
             for key in config.keys():
+                if key == "MESSAGE_FORMAT":
+                    old_message_format = config[key]
                 setattr(self, key, config[key])
+            if old_message_format is not None:
+                setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             config = {}
