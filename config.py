@@ -491,18 +491,6 @@ class Config:
             self._ENABLE_SEND_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # [deprecated]
-    # @property
-    # @json_serializable('STARTUP_OSC_ENABLED_CHECK')
-    # def STARTUP_OSC_ENABLED_CHECK(self):
-    #     return self._STARTUP_OSC_ENABLED_CHECK
-
-    # @STARTUP_OSC_ENABLED_CHECK.setter
-    # def STARTUP_OSC_ENABLED_CHECK(self, value):
-    #     if isinstance(value, bool):
-    #         self._STARTUP_OSC_ENABLED_CHECK = value
-    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
     @property
     @json_serializable('SEND_MESSAGE_FORMAT')
     def SEND_MESSAGE_FORMAT(self):
@@ -670,7 +658,6 @@ class Config:
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # speaker2Chatbox
-        # self._STARTUP_OSC_ENABLED_CHECK = True # [deprecated]
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 

@@ -6,11 +6,8 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
     createSettingBoxAutoExportMessageLogs = sbg.createSettingBoxAutoExportMessageLogs
-    createSettingBox_Labels = sbg.createSettingBox_Labels
-    createSettingBoxMessageFormatEntries_WithTranslation = sbg.createSettingBoxMessageFormatEntries_WithTranslation
 
 
-    # 元 checkbox_auto_clear_chatbox_callback
     def checkbox_auto_clear_message_box_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX, checkbox_box_widget.get())
 
@@ -29,9 +26,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkbox_enable_send_message_to_vrc_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC, checkbox_box_widget.get())
 
-    # [deprecated]
-    # def checkbox_startup_osc_enabled_check_callback(checkbox_box_widget):
-    #     callFunctionIfCallable(view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK, checkbox_box_widget.get())
 
     row=0
     config_window.sb__auto_clear_message_box = createSettingBoxCheckbox(
@@ -87,15 +81,3 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     )
     config_window.sb__enable_send_message_to_vrc.grid(row=row, pady=0)
     row+=1
-
-    # [deprecated]
-    # config_window.sb__startup_osc_enabled_check = createSettingBoxCheckbox(
-    #     for_var_label_text=view_variable.VAR_LABEL_STARTUP_OSC_ENABLED_CHECK,
-    #     for_var_desc_text=view_variable.VAR_DESC_STARTUP_OSC_ENABLED_CHECK,
-    #     checkbox_attr_name="sb__checkbox_startup_osc_enabled_check",
-    #     command=lambda: checkbox_startup_osc_enabled_check_callback(config_window.sb__checkbox_startup_osc_enabled_check),
-    #     variable=view_variable.VAR_STARTUP_OSC_ENABLED_CHECK,
-    # )
-    # config_window.sb__startup_osc_enabled_check.grid(row=row, pady=0)
-    # row+=1
-

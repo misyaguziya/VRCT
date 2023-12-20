@@ -345,9 +345,7 @@ def callbackCloseConfigWindow():
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
     view.initMicThresholdCheckButton()
-    # view.initProgressBar_MicEnergy() # ProgressBarに0をセットしたい
     view.initSpeakerThresholdCheckButton()
-    # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         startThreadingTranscriptionSendMessageOnCloseConfigWindow()
@@ -413,6 +411,7 @@ def callbackSetUiLanguage(value):
     config.UI_LANGUAGE = value
     view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
 
+
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
@@ -434,7 +433,8 @@ def callbackSetDeeplAuthkey(value):
         config.AUTH_KEYS = auth_keys
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
-# Transcription Tab (Mic)
+# Transcription Tab
+# Transcription (Mic)
 def callbackSetMicHost(value):
     print("callbackSetMicHost", value)
     config.CHOICE_MIC_HOST = value
@@ -568,7 +568,7 @@ def callbackDeleteMicWordFilter(value):
     except Exception:
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
 
-
+# Transcription (Speaker)
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
     if value == "":
@@ -591,7 +591,6 @@ def callbackSetSpeakerDynamicEnergyThreshold(value):
         view.closeSpeakerEnergyThresholdWidget()
     else:
         view.openSpeakerEnergyThresholdWidget()
-
 
 def setProgressBarSpeakerEnergy(energy):
     view.updateSetProgressBar_SpeakerEnergy(energy)
@@ -680,6 +679,11 @@ def callbackSetEnableAutoExportMessageLogs(value):
     else:
         model.stopLogger()
 
+def callbackSetEnableSendMessageToVrc(value):
+    print("callbackSetEnableSendMessageToVrc", value)
+    config.ENABLE_SEND_MESSAGE_TO_VRC = value
+
+# Others (Message Formats(Send)
 def callbackSetSendMessageFormat(value):
     print("callbackSetSendMessageFormat", value)
     if isUniqueStrings(["[message]"], value) is True:
@@ -701,17 +705,7 @@ def callbackSetSendMessageFormatWithT(value):
             view.showErrorMessage_SendMessageFormatWithT()
             view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
 
-
-def callbackSetEnableSendMessageToVrc(value):
-    print("callbackSetEnableSendMessageToVrc", value)
-    config.ENABLE_SEND_MESSAGE_TO_VRC = value
-
-# [deprecated]
-# def callbackSetStartupOscEnabledCheck(value):
-#     print("callbackSetStartupOscEnabledCheck", value)
-#     config.STARTUP_OSC_ENABLED_CHECK = value
-
-
+# Others (Message Formats(Received)
 def callbackSetReceivedMessageFormat(value):
     print("callbackSetReceivedMessageFormat", value)
     if isUniqueStrings(["[message]"], value) is True:
@@ -721,7 +715,6 @@ def callbackSetReceivedMessageFormat(value):
     else:
         view.showErrorMessage_ReceivedMessageFormat()
         view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
-
 
 def callbackSetReceivedMessageFormatWithT(value):
     print("callbackSetReceivedMessageFormatWithT", value)
@@ -733,7 +726,6 @@ def callbackSetReceivedMessageFormatWithT(value):
         else:
             view.showErrorMessage_ReceivedMessageFormatWithT()
             view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
-
 
 # ---------------------Speaker2Chatbox---------------------
 def callbackSetEnableSendReceivedMessageToVrc(value):
@@ -754,6 +746,7 @@ def callbackSetOscPort(value):
         return
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
+
 
 def initSetConfigByExeArguments():
     parser = argparse.ArgumentParser()
@@ -785,10 +778,6 @@ def createMainWindow():
 
     # set word filter
     model.addKeywords()
-
-    # check OSC started [deprecated]
-    # if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-    #     model.checkOSCStarted(view.printToTextbox_OSCError)
 
     # check Software Updated
     if model.checkSoftwareUpdated() is True:
@@ -877,9 +866,10 @@ def createMainWindow():
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
-            # "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck, # [deprecated]
+            # Others(Message Formats(Send)
             "callback_set_send_message_format": callbackSetSendMessageFormat,
             "callback_set_send_message_format_with_t": callbackSetSendMessageFormatWithT,
+            # Others(Message Formats(Received)
             "callback_set_received_message_format": callbackSetReceivedMessageFormat,
             "callback_set_received_message_format_with_t": callbackSetReceivedMessageFormatWithT,
 
