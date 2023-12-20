@@ -355,12 +355,6 @@ class View():
             CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=None,
             VAR_ENABLE_SEND_MESSAGE_TO_VRC=BooleanVar(value=config.ENABLE_SEND_MESSAGE_TO_VRC),
 
-            # [deprecated]
-            # VAR_LABEL_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.label")),
-            # VAR_DESC_STARTUP_OSC_ENABLED_CHECK=StringVar(value=i18n.t("config_window.startup_osc_enabled_check.desc")),
-            # CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK=None,
-            # VAR_STARTUP_OSC_ENABLED_CHECK=BooleanVar(value=config.STARTUP_OSC_ENABLED_CHECK),
-
 
 
             VAR_SECOND_TITLE_OTHERS_SEND_MESSAGE_FORMATS=StringVar(value=i18n.t("config_window.side_menu_labels.others_send_message_formats")),
@@ -556,7 +550,6 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
             self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
-            # self.view_variable.CALLBACK_SET_STARTUP_OSC_ENABLED_CHECK = config_window_registers.get("callback_set_startup_osc_enabled_check", None) #[deprecated]
 
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT = config_window_registers.get("callback_set_send_message_format", None)
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT_WITH_T = config_window_registers.get("callback_set_send_message_format_with_t", None)
