@@ -801,6 +801,17 @@ class View():
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         vrct_gui._disableMainWindowSidebarCompactMode()
 
+    def changeTranscriptionDisplayStatus(self, status):
+        match (status):
+            case "MIC_ON":
+                vrct_gui.sls__box_your_language_mic_status__enabled.place(relx=0.1, rely=0.2, anchor="center")
+            case "MIC_OFF":
+                vrct_gui.sls__box_your_language_mic_status__enabled.place_forget()
+            case "SPEAKER_ON":
+                vrct_gui.sls__box_target_language_speaker_status__enabled.place(relx=0.1, rely=0.2, anchor="center")
+            case "SPEAKER_OFF":
+                vrct_gui.sls__box_target_language_speaker_status__enabled.place_forget()
+
 
     # Config Window
     def enableConfigWindowCompactMode(self):

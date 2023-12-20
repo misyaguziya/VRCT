@@ -303,16 +303,20 @@ def callbackToggleTranscriptionSend(is_turned_on):
     config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         startThreadingTranscriptionSendMessage()
+        view.changeTranscriptionDisplayStatus("MIC_ON")
     else:
         stopThreadingTranscriptionSendMessage()
+        view.changeTranscriptionDisplayStatus("MIC_OFF")
 
 def callbackToggleTranscriptionReceive(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
     config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessage()
+        view.changeTranscriptionDisplayStatus("SPEAKER_ON")
     else:
         stopThreadingTranscriptionReceiveMessage()
+        view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
