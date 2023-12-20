@@ -318,3 +318,22 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         variable=view_variable.VAR_TARGET_LANGUAGE
     )
     main_window.sls__box_target_language.grid(row=4, column=0, sticky="ew")
+
+
+
+    # Set Transcription ON/OFF Indicator Widgets
+    main_window.sls__box_your_language_mic_status__enabled = CTkLabel(
+        main_window.sls__box_your_language,
+        text=None,
+        height=0,
+        corner_radius=0,
+        image=CTkImage(settings.image_file.MIC_ICON_DISABLED, size=settings.uism.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE),
+    )
+
+    main_window.sls__box_target_language_speaker_status__enabled = CTkLabel(
+        main_window.sls__box_target_language,
+        text=None,
+        height=0,
+        corner_radius=0,
+        image=CTkImage(settings.image_file.HEADPHONES_ICON_DISABLED, size=settings.uism.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE),
+    )

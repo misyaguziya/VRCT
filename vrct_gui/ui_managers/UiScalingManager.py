@@ -86,6 +86,9 @@ class UiScalingManager():
         self.main.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT = self._calculateUiSize(36)
 
+        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
+
+
         self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
         self.main.SLS__BOX_IPADX = self._calculateUiSize(10)
