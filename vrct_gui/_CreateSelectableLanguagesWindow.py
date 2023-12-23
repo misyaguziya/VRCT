@@ -1,9 +1,9 @@
 from functools import partial
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, applyUiScalingAndFixTheBugScrollBar
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, applyUiScalingAndFixTheBugScrollBar, CustomizedCTkScrollableFrame
 from utils import callFunctionIfCallable, makeEven
 
-from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
+from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 
 class _CreateSelectableLanguagesWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
@@ -116,7 +116,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
 
-        self.scroll_frame_container = CTkScrollableFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=self.width_new, height=self.height_new)
+        self.scroll_frame_container = CustomizedCTkScrollableFrame(self, corner_radius=0, fg_color=self.settings.ctm.MAIN_BG_COLOR, width=self.width_new, height=self.height_new)
         self.scroll_frame_container.grid(row=1, column=0, sticky="nsew")
 
         applyUiScalingAndFixTheBugScrollBar(
