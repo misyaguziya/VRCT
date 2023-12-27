@@ -1,35 +1,41 @@
-translatorEngine = ["DeepL", "DeepL_API", "Google", "Bing"]
+translatorEngine = ["DeepL", "DeepL_API", "Google", "Bing", "Papago"]
 translation_lang = {}
 dict_deepl_languages = {
-    "Japanese":"JA",
-    "English":"EN",
-    "Korean":"KO",
-    "Bulgarian":"BG",
-    "Chinese":"ZH",
-    "Czech":"CS",
-    "Danish":"DA",
-    "Dutch":"NL",
-    "Estonian":"ET",
-    "Finnish":"FI",
-    "French":"FR",
-    "German":"DE",
-    "Greek":"EL",
-    "Hungarian":"HU",
-    "Italian":"IT",
-    "Latvian":"LV",
-    "Lithuanian":"LT",
-    "Polish":"PL",
-    "Portuguese":"PT",
-    "Romanian":"RO",
-    "Russian":"RU",
-    "Slovak":"SK",
-    "Slovenian":"SL",
-    "Spanish":"ES",
-    "Swedish":"SV",
-    "Indonesian":"ID",
-    "Ukrainian":"UK",
-    "Turkish":"TR",
-    "Norwegian":"NB",
+    'Arabic':'ar',
+    'Bulgarian':'bg',
+    'Czech':'cs',
+    'Danish':'da',
+    'German':'de',
+    'Greek':'el',
+    'English':'en',
+    'Spanish':'es',
+    'Estonian':'et',
+    'Finnish':'fi',
+    'French':'fr',
+    'Irish':'ga',
+	'Croatian':'hr',
+	'Hungarian':'hu',
+	'Indonesian':'id',
+	'Icelandic':'is',
+	'Italian':'it',
+	'Japanese':'ja',
+	'Korean':'ko',
+	'Lithuanian':'lt',
+	'Latvian':'lv',
+	'Maltese':'mt',
+	'Bokmal':'nb',
+	'Dutch':'nl',
+	'Norwegian':'no',
+	'Polish':'pl',
+	'Portuguese':'pt',
+	'Romanian':'ro',
+	'Russian':'ru',
+	'Slovak':'sk',
+	'Slovenian':'sl',
+	'Swedish':'sv',
+	'Turkish':'tr',
+	'Ukrainian':'uk',
+	'Chinese':'zh',
 }
 translation_lang["DeepL"] = {
     "source":dict_deepl_languages,
@@ -242,7 +248,29 @@ translation_lang["Bing"] = {
     "target":dict_bing_languages,
 }
 
-dict_ctranslate2_lang = {
+dict_papago_languages = {
+    'German': 'de',
+    'English': 'en',
+    'Spanish':'es',
+    'French': 'fr',
+    'Hindi': 'hi',
+    'Indonesian': 'id',
+    'Italian': 'it',
+    'Japanese': 'ja',
+    'Korean': 'ko',
+    'Portuguese': 'pt',
+    'Russian': 'ru',
+    'Thai': 'th',
+    'Vietnamese': 'vi',
+    'Chinese':'zh-CN',
+}
+
+translation_lang["Papago"] = {
+    "source":dict_papago_languages,
+    "target":dict_papago_languages,
+}
+
+dict_ctranslate2_languages = {
     'English': 'en',
     'Chinese': 'zh',
     'German': 'de',
@@ -345,6 +373,6 @@ dict_ctranslate2_lang = {
 }
 
 translation_lang["ctranslate2"] = {
-    "source":dict_ctranslate2_lang,
-    "target":dict_ctranslate2_lang,
+    "source":dict_ctranslate2_languages,
+    "target":dict_ctranslate2_languages,
 }
