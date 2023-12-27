@@ -163,7 +163,14 @@ class Model:
             elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
                 target_language = "Portuguese"
 
-        translation = self.translator.translate_ctranslate2(
+        # translation = self.translator.translate_ctranslate2(
+        #                 translator_name=translator_name,
+        #                 source_language=source_language,
+        #                 target_language=target_language,
+        #                 message=message
+        #         )
+
+        translation = self.translator.translate(
                         translator_name=translator_name,
                         source_language=source_language,
                         target_language=target_language,
@@ -194,7 +201,13 @@ class Model:
             elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
                 target_language = "Portuguese"
 
-        translation = self.translator.translate_ctranslate2(
+        # translation = self.translator.translate_ctranslate2(
+        #                 translator_name=translator_name,
+        #                 source_language=source_language,
+        #                 target_language=target_language,
+        #                 message=message
+        #         )
+        translation = self.translator.translate(
                         translator_name=translator_name,
                         source_language=source_language,
                         target_language=target_language,
