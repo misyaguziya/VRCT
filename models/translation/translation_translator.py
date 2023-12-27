@@ -1,6 +1,5 @@
 import os
 from deepl import Translator as deepl_Translator
-from deepl_translate import translate as deepl_web_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translation_lang
 
@@ -40,10 +39,11 @@ class Translator():
             target_language=translation_lang[translator_name]["target"][target_language]
             match translator_name:
                 case "DeepL":
-                    result = deepl_web_Translator(
-                        source_language=source_language,
-                        target_language=target_language,
-                        text=message
+                    result = other_web_Translator(
+                        query_text=message,
+                        translator="deepl",
+                        from_language=source_language,
+                        to_language=target_language,
                         )
                 case "DeepL_API":
                     result = self.deepl_client.translate_text(
@@ -65,6 +65,20 @@ class Translator():
                         from_language=source_language,
                         to_language=target_language,
                         )
+                case "Papago":
+                    result = other_web_Translator(
+                        query_text=message,
+                        translator="papago",
+                        from_language=source_language,
+                        to_language=target_language,
+                        )
+                case "CTranslate2":
+                    self.tokenizer.src_lang = source_language
+                    source = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(message))
+                    target_prefix = [self.tokenizer.lang_code_to_token[target_language]]
+                    results = self.translator.translate_batch([source], target_prefix=[target_prefix])
+                    target = results[0].hypotheses[0][1:]
+                    result = self.tokenizer.decode(self.tokenizer.convert_tokens_to_ids(target))
         except Exception:
             import traceback
             with open('error.log', 'a') as f:
@@ -72,16 +86,16 @@ class Translator():
             result = False
         return result
 
-    def translate_ctranslate2(self, translator_name, source_language, target_language, message):
+    # def translate_ctranslate2(self, translator_name, source_language, target_language, message):
 
-        source_language=translation_lang["ctranslate2"]["source"][source_language]
-        target_language=translation_lang["ctranslate2"]["target"][target_language]
+    #     source_language=translation_lang["ctranslate2"]["source"][source_language]
+    #     target_language=translation_lang["ctranslate2"]["target"][target_language]
 
-        self.tokenizer.src_lang = source_language
-        source = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(message))
-        target_prefix = [self.tokenizer.lang_code_to_token[target_language]]
-        results = self.translator.translate_batch([source], target_prefix=[target_prefix])
-        target = results[0].hypotheses[0][1:]
+    #     self.tokenizer.src_lang = source_language
+    #     source = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(message))
+    #     target_prefix = [self.tokenizer.lang_code_to_token[target_language]]
+    #     results = self.translator.translate_batch([source], target_prefix=[target_prefix])
+    #     target = results[0].hypotheses[0][1:]
 
-        result = self.tokenizer.decode(self.tokenizer.convert_tokens_to_ids(target))
-        return result
+    #     result = self.tokenizer.decode(self.tokenizer.convert_tokens_to_ids(target))
+    #     return result
