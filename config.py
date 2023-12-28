@@ -245,6 +245,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('MESSAGE_BOX_RATIO')
+    def MESSAGE_BOX_RATIO(self):
+        return self._MESSAGE_BOX_RATIO
+
+    @MESSAGE_BOX_RATIO.setter
+    def MESSAGE_BOX_RATIO(self, value):
+        if isinstance(value, int) and 1 <= value <= 99:
+            self._MESSAGE_BOX_RATIO = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('FONT_FAMILY')
     def FONT_FAMILY(self):
         return self._FONT_FAMILY
@@ -626,6 +637,7 @@ class Config:
         self._APPEARANCE_THEME = "System"
         self._UI_SCALING = "100%"
         self._TEXTBOX_UI_SCALING = 100
+        self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]

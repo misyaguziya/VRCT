@@ -141,9 +141,11 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
 
             case "entry_message_box":
                 if status == "disabled":
-                    vrct_gui.entry_message_box.configure(state="disabled", placeholder_text_color=settings.ctm.TEXTBOX_ENTRY_PLACEHOLDER_DISABLED_COLOR, text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR)
+                    pass
+                    vrct_gui.entry_message_box.configure(state="disabled", text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR)
                 elif status == "normal":
-                    vrct_gui.entry_message_box.configure(state="normal", placeholder_text_color=settings.ctm.TEXTBOX_ENTRY_PLACEHOLDER_COLOR, text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_COLOR)
+                    pass
+                    vrct_gui.entry_message_box.configure(state="normal", text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_COLOR)
 
 
             case _:

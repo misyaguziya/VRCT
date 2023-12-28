@@ -214,7 +214,7 @@ def sendChatMessage(message):
         if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
             view.clearMessageBox()
 
-def messageBoxPressKeyEnter(e):
+def messageBoxPressKeyEnter():
     model.oscStopSendTyping()
     message = view.getTextFromMessageBox()
     sendChatMessage(message)
@@ -402,6 +402,11 @@ def callbackSetTextboxUiScaling(value):
     print("callbackSetTextboxUiScaling", int(value))
     config.TEXTBOX_UI_SCALING = int(value)
     view.setMainWindowTextboxUiSize(config.TEXTBOX_UI_SCALING/100)
+
+def callbackSetMessageBoxRatio(value):
+    print("callbackSetMessageBoxRatio", int(value))
+    config.MESSAGE_BOX_RATIO = int(value)
+    view.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
 
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
@@ -836,6 +841,7 @@ def createMainWindow():
             "callback_set_appearance": callbackSetAppearance,
             "callback_set_ui_scaling": callbackSetUiScaling,
             "callback_set_textbox_ui_scaling": callbackSetTextboxUiScaling,
+            "callback_set_message_box_ratio": callbackSetMessageBoxRatio,
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
 
