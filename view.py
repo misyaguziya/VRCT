@@ -490,7 +490,7 @@ class View():
 
             def adjustedMessageBoxReturnFunction(_e):
                 main_window_registers.get("message_box_bind_Return")()
-                return "break"
+                return "break" # For deleting the next line that will be inserted when the Enter key is pressed.
 
             entry_message_box = getattr(vrct_gui, "entry_message_box")
             entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
@@ -788,7 +788,7 @@ class View():
     # Common
     @staticmethod
     def _clearEntryBox(entry_widget):
-        entry_widget.delete("1.0", "end-1c")
+        entry_widget.delete("1.0", "end")
 
     def clearErrorMessage(self):
         vrct_gui._clearErrorMessage()
@@ -1421,7 +1421,7 @@ class View():
 # Message Box
     @staticmethod
     def getTextFromMessageBox():
-        return vrct_gui.entry_message_box.get('1.0', CTK_END)
+        return vrct_gui.entry_message_box.get('1.0', "end-1c")
 
     def clearMessageBox(self):
         self._clearEntryBox(vrct_gui.entry_message_box)
