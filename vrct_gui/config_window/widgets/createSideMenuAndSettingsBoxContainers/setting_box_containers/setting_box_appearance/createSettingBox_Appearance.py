@@ -21,6 +21,9 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     def slider_text_box_ui_scaling_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING, value)
 
+    def slider_message_box_ratio_callback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO, value)
+
     def optionmenu_font_family_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_FONT_FAMILY, value)
 
@@ -82,6 +85,19 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     config_window.sb__textbox_uis_scaling.grid(row=row)
     row+=1
 
+    config_window.sb__message_box_ratio = createSettingBoxSlider(
+        for_var_label_text=view_variable.VAR_LABEL_MESSAGE_BOX_RATIO,
+        for_var_desc_text=view_variable.VAR_DESC_MESSAGE_BOX_RATIO,
+        slider_attr_name="sb__slider_message_box_ratio",
+        slider_range=view_variable.SLIDER_RANGE_MESSAGE_BOX_RATIO,
+        command=lambda value: slider_message_box_ratio_callback(value),
+        variable=view_variable.VAR_MESSAGE_BOX_RATIO,
+        slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_MESSAGE_BOX_RATIO,
+        slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_MESSAGE_BOX_RATIO,
+        sliderTooltipFormatter=view_variable.CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER,
+    )
+    config_window.sb__message_box_ratio.grid(row=row)
+    row+=1
 
     config_window.sb__font_family = createSettingBoxDropdownMenu(
         for_var_label_text=view_variable.VAR_LABEL_FONT_FAMILY,
