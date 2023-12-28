@@ -634,7 +634,7 @@ class Config:
 
         ## Config Window
         self._TRANSPARENCY = 100
-        self._APPEARANCE_THEME = "System"
+        self._APPEARANCE_THEME = "Dark"
         self._UI_SCALING = "100%"
         self._TEXTBOX_UI_SCALING = 100
         self._MESSAGE_BOX_RATIO = 10
