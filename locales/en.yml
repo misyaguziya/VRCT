@@ -103,6 +103,10 @@ config_window:
     label: Text Box Font Size
     desc: You can adjust the font size used in the logs relative to the UI size.
 
+  message_box_ratio:
+    label: Message Box Size
+    desc: "You can change the size of the input message box. It is in ratio to the text box.\n*No exact calculations."
+
   font_family:
     label: Font Family
 
