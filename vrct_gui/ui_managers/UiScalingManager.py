@@ -50,11 +50,10 @@ class UiScalingManager():
         self.main.TEXTBOX_FONT_SIZE__MAIN_TEXT_FONT = self._calculateUiSize(16)
 
         self.main.TEXTBOX_ENTRY_FONT_SIZE = self._calculateUiSize(16)
+        self.main.TEXTBOX_ENTRY_BORDER_SIZE = self._calculateUiSize(2, is_allowed_odd=True)
         self.main.TEXTBOX_ENTRY_HEIGHT = self._calculateUiSize(40)
         self.main.TEXTBOX_ENTRY_PADX = self.main.TEXTBOX_PADX
         self.main.TEXTBOX_ENTRY_PADY = self._calculateUiSize(10)
-        self.main.TEXTBOX_ENTRY_IPADX = self._calculateUiSize(14)
-        self.main.TEXTBOX_ENTRY_IPADY = (self._calculateUiSize(2, True), self._calculateUiSize(3, True))
 
 
         # Sidebar

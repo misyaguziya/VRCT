@@ -220,6 +220,14 @@ class View():
             CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING=self._closeTheCoverOfMainWindow,
             CALLBACK_BUTTON_RELEASE_TEXTBOX_UI_SCALING=self._openTheCoverOfMainWindow,
 
+            VAR_LABEL_MESSAGE_BOX_RATIO=StringVar(value=i18n.t("config_window.message_box_ratio.label")),
+            VAR_DESC_MESSAGE_BOX_RATIO=StringVar(value=i18n.t("config_window.message_box_ratio.desc")),
+            SLIDER_RANGE_MESSAGE_BOX_RATIO=(1, 99),
+            CALLBACK_SET_MESSAGE_BOX_RATIO=None,
+            VAR_MESSAGE_BOX_RATIO=IntVar(value=config.MESSAGE_BOX_RATIO),
+            CALLBACK_BUTTON_PRESS_MESSAGE_BOX_RATIO=self._closeTheCoverOfMainWindow,
+            CALLBACK_BUTTON_RELEASE_MESSAGE_BOX_RATIO=self._openTheCoverOfMainWindow,
+
             VAR_LABEL_FONT_FAMILY=StringVar(value=i18n.t("config_window.font_family.label")),
             VAR_DESC_FONT_FAMILY=None,
             LIST_FONT_FAMILY=self.getAvailableFonts(),
@@ -480,8 +488,12 @@ class View():
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
 
+            def adjustedMessageBoxReturnFunction(_e):
+                main_window_registers.get("message_box_bind_Return")()
+                return "break" # For deleting the next line that will be inserted when the Enter key is pressed.
+
             entry_message_box = getattr(vrct_gui, "entry_message_box")
-            entry_message_box.bind("<Return>", main_window_registers.get("message_box_bind_Return"))
+            entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
             entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
 
 
@@ -512,6 +524,7 @@ class View():
             self.view_variable.CALLBACK_SET_APPEARANCE = config_window_registers.get("callback_set_appearance", None)
             self.view_variable.CALLBACK_SET_UI_SCALING = config_window_registers.get("callback_set_ui_scaling", None)
             self.view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING = config_window_registers.get("callback_set_textbox_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO = config_window_registers.get("callback_set_message_box_ratio", None)
             self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window_registers.get("callback_set_font_family", None)
             self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window_registers.get("callback_set_ui_language", None)
 
@@ -571,6 +584,7 @@ class View():
             self.enableConfigWindowCompactMode()
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
 
+        self.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -774,7 +788,7 @@ class View():
     # Common
     @staticmethod
     def _clearEntryBox(entry_widget):
-        entry_widget.delete(0, CTK_END)
+        entry_widget.delete("1.0", "end")
 
     def clearErrorMessage(self):
         vrct_gui._clearErrorMessage()
@@ -1062,6 +1076,19 @@ class View():
     @staticmethod
     def setMainWindowTextboxUiSize(custom_font_size_scale:float):
         vrct_gui.print_to_textbox.setTagsSettings(custom_font_size_scale=custom_font_size_scale)
+
+    @staticmethod
+    def setMainWindowMessageBoxRatio(message_box_ratio:int):
+        if message_box_ratio <= 0 or message_box_ratio > 99:
+            raise ValueError("Input must be between 1 and 99 (inclusive)")
+
+        vrct_gui.main_bg_container.grid_rowconfigure(tuple(range(1, 101)), weight=1)
+        textbox_ratio = int(100 - message_box_ratio)
+        message_box_row = int(textbox_ratio + 1)
+        message_box_rowwpan = int(100 - textbox_ratio)
+        # print(textbox_ratio, message_box_row, message_box_rowwpan)
+        vrct_gui.main_textbox_container.grid(row=1, rowspan=textbox_ratio, column=0, sticky="nsew")
+        vrct_gui.main_entry_message_container.grid(row=message_box_row, rowspan=message_box_rowwpan, column=0, sticky="nsew")
 
 # Function
     def _adjustUiSizeAndRestart(self):
@@ -1394,7 +1421,7 @@ class View():
 # Message Box
     @staticmethod
     def getTextFromMessageBox():
-        return vrct_gui.entry_message_box.get()
+        return vrct_gui.entry_message_box.get('1.0', "end-1c")
 
     def clearMessageBox(self):
         self._clearEntryBox(vrct_gui.entry_message_box)
