@@ -23,6 +23,10 @@ def callbackFilepathConfigFile():
     print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
     Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
+def callbackQuitVrct():
+    main_window_geometry = view.getMainWindowGeometry()
+    config.MAIN_WINDOW_GEOMETRY = main_window_geometry
+
 def messageFormatter(format_type:str, translation, message):
     if format_type == "RECEIVED":
         FORMAT_WITH_T = config.RECEIVED_MESSAGE_FORMAT_WITH_T
@@ -420,6 +424,9 @@ def callbackSetUiLanguage(value):
     config.UI_LANGUAGE = value
     view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
 
+def callbackSetEnableRestoreMainWindowGeometry(value):
+    print("callbackSetEnableAutoClearMessageBox", value)
+    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
 
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
@@ -803,6 +810,7 @@ def createMainWindow():
             "callback_restart_software": callbackRestartSoftware,
             "callback_filepath_logs": callbackFilepathLogs,
             "callback_filepath_config_file": callbackFilepathConfigFile,
+            "callback_quit_vrct": callbackQuitVrct,
         },
 
         window_action_registers={
@@ -844,6 +852,7 @@ def createMainWindow():
             "callback_set_message_box_ratio": callbackSetMessageBoxRatio,
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
+            "callback_set_enable_restore_main_window_geometry": callbackSetEnableRestoreMainWindowGeometry,
 
             # Translation Tab
             "callback_set_deepl_authkey": callbackSetDeeplAuthkey,

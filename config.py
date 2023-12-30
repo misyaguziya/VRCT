@@ -281,6 +281,30 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY')
+    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self):
+        return self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY
+
+    @ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY.setter
+    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('MAIN_WINDOW_GEOMETRY')
+    def MAIN_WINDOW_GEOMETRY(self):
+        return self._MAIN_WINDOW_GEOMETRY
+
+    @MAIN_WINDOW_GEOMETRY.setter
+    def MAIN_WINDOW_GEOMETRY(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.MAIN_WINDOW_GEOMETRY.keys()):
+            for key, value in value.items():
+                if isinstance(value, str):
+                    self._MAIN_WINDOW_GEOMETRY[key] = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
+
+    @property
     @json_serializable('CHOICE_MIC_HOST')
     def CHOICE_MIC_HOST(self):
         return self._CHOICE_MIC_HOST
@@ -640,6 +664,13 @@ class Config:
         self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
+        self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
+        self._MAIN_WINDOW_GEOMETRY = {
+            "x_pos": "0",
+            "y_pos": "0",
+            "width": "870",
+            "height": "640",
+        }
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
