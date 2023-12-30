@@ -43,11 +43,21 @@ class VRCT_GUI(CTk):
     def _showGUI(self):
         self.attributes("-alpha", 0)
         self.deiconify()
-        self.geometry("{}x{}".format(
-            self.settings.main.uism.MAIN_AREA_MIN_WIDTH + self.settings.main.uism.SIDEBAR_MIN_WIDTH,
-            self.winfo_height()
-        ))
-        setGeometryToCenterOfScreen(root_widget=self)
+        if self.settings.main.to_restore_main_window_geometry is True:
+            self.geometry("{}x{}+{}+{}".format(
+                self.settings.main.geometry.width,
+                self.settings.main.geometry.height,
+                self.settings.main.geometry.x_pos,
+                self.settings.main.geometry.y_pos,
+            ))
+        else:
+            self.geometry("{}x{}".format(
+                self.settings.main.uism.MAIN_AREA_MIN_WIDTH + self.settings.main.uism.SIDEBAR_MIN_WIDTH,
+                self.winfo_height()
+            ))
+            setGeometryToCenterOfScreen(root_widget=self)
+
+
         if self._view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
             self._enableMainWindowSidebarCompactMode()
         fadeInAnimation(self, steps=5, interval=0.008)
