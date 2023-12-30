@@ -40,6 +40,10 @@ class Config:
         return self._VERSION
 
     @property
+    def ENABLE_SPEAKER2CHATBOX(self):
+        return self._ENABLE_SPEAKER2CHATBOX
+
+    @property
     def LOCAL_PATH(self):
         return self._LOCAL_PATH
 
@@ -589,7 +593,10 @@ class Config:
     @ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC.setter
     def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
-            self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+            if self._ENABLE_SPEAKER2CHATBOX is True:
+                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+            else:
+                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
     # Speaker2Chatbox------------------
 
@@ -620,6 +627,7 @@ class Config:
     def init_config(self):
         # Read Only
         self._VERSION = "2.0.1"
+        self._ENABLE_SPEAKER2CHATBOX = False
         self._LOCAL_PATH = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
         self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")

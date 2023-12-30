@@ -5,10 +5,13 @@ def _changeConfigWindowWidgetsStatus(config_window, settings, view_variable, sta
     #     target_names = []
 
 
-    def disableOptionmenuWidget(target_widget):
+    def disableLabelsWidgets(target_widget):
         target_widget.label_widget.configure(text_color=settings.ctm.LABELS_TEXT_DISABLED_COLOR)
         if target_widget.desc_widget is not None:
             target_widget.desc_widget.configure(text_color=settings.ctm.LABELS_TEXT_DISABLED_COLOR)
+
+    def disableOptionmenuWidget(target_widget):
+        disableLabelsWidgets(target_widget)
         target_widget.optionmenu_label_widget.configure(text_color=settings.ctm.LABELS_TEXT_DISABLED_COLOR)
         target_widget.optionmenu_img_widget.configure(image=CTkImage(settings.image_file.ARROW_LEFT_DISABLED.rotate(90), size=settings.uism.SB__OPTIONMENU_IMG_SIZE))
         target_widget.optionmenu_box.unbindFunction()
@@ -31,6 +34,16 @@ def _changeConfigWindowWidgetsStatus(config_window, settings, view_variable, sta
                 if status == "disabled":
                     target_widget = config_window.sb__widgets["sb__optionmenu_appearance_theme"]
                     disableOptionmenuWidget(target_widget)
+
+
+            case "sb__checkbox_enable_send_received_message_to_vrc":
+                if status == "disabled":
+                    target_widget = config_window.sb__widgets["sb__checkbox_enable_send_received_message_to_vrc"]
+                    disableLabelsWidgets(target_widget)
+                    config_window.sb__checkbox_enable_send_received_message_to_vrc.configure(
+                        state="disabled",
+                        border_color=settings.ctm.SB__CHECKBOX_BORDER_DISABLED_COLOR
+                    )
 
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")
