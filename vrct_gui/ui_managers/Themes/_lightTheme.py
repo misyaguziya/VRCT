@@ -204,6 +204,7 @@ def _lightTheme(base_color):
             SB__SWITCH_BOX_BUTTON_HOVERED_COLOR = base_color.LIGHT_200_COLOR,
 
             SB__CHECKBOX_BORDER_COLOR = base_color.LIGHT_600_COLOR,
+            SB__CHECKBOX_BORDER_DISABLED_COLOR = base_color.LIGHT_300_COLOR,
             SB__CHECKBOX_HOVER_COLOR = base_color.LIGHT_350_COLOR,
             SB__CHECKBOX_CHECKED_COLOR = base_color.PRIMARY_250_COLOR,
             SB__CHECKBOX_CHECKMARK_COLOR = base_color.LIGHT_BASIC_TEXT_COLOR,
