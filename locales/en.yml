@@ -113,6 +113,10 @@ config_window:
   ui_language:
     label: UI Language
 
+  to_restore_main_window_geometry:
+    label: Remember The Main Window Position
+    desc: Restore the position and size of the previous window upon startup.
+
   deepl_auth_key:
     label: DeepL Auth Key
 

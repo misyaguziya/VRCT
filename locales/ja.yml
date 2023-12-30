@@ -110,6 +110,10 @@ config_window:
   ui_language:
     label: UIの言語 / UI Language
 
+  to_restore_main_window_geometry:
+    label: メイン画面の位置を記憶する
+    desc: 起動時、前回の画面の位置とサイズを復元します。
+
   deepl_auth_key:
     label: DeepL 認証キー
 
