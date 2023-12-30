@@ -221,6 +221,7 @@ class _CreateConfirmationModal(CTkToplevel):
             target_widget=self
         )
         fadeInAnimation(self, steps=5, interval=0.005, max_alpha=1)
+        self.lift()
         self.focus_set()
 
 
