@@ -126,14 +126,31 @@ class Model:
     #         if source_lang in source_languages and target_lang in target_languages:
     #             compatible_engines.append(engine)
     #     engine_name = compatible_engines[0]
-
     #     if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
     #         if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
     #             engine_name = "DeepL_API"
     #     elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
     #         engine_name = "DeepL"
-
     #     return engine_name
+
+    def getDictTranslationEngineValidity(self):
+        ts_keys = transcription_lang.keys()
+        tl_keys = translation_lang.keys()
+        te_dict = {}
+        for ts_key in ts_keys:
+            te_dict[ts_key] = {}
+            for tl_key in tl_keys:
+                te_dict[ts_key][tl_key] = False
+                if ts_key in translation_lang[tl_key]["source"]:
+                    te_dict[ts_key][tl_key] = True
+
+        keys_to_remove = []
+        for language, translation_dict in te_dict.items():
+            if all(value is False for value in translation_dict.values()):
+                keys_to_remove.append(language)
+        for key in keys_to_remove:
+            del te_dict[key]
+        return te_dict
 
     def getInputTranslate(self, message):
         translator_name=config.CHOICE_INPUT_TRANSLATOR
