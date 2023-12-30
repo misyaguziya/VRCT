@@ -616,6 +616,13 @@ class View():
             )
             self.replaceMicThresholdCheckButton_Disabled()
 
+        if config.ENABLE_SPEAKER2CHATBOX is False:
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__checkbox_enable_send_received_message_to_vrc",
+                ]
+            )
 
         if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
             self.closeMicEnergyThresholdWidget()
