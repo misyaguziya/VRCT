@@ -150,13 +150,22 @@ class Config:
             self._TARGET_LANGUAGE = value
 
     @property
-    def CHOICE_TRANSLATOR(self):
-        return self._CHOICE_TRANSLATOR
+    def CHOICE_INPUT_TRANSLATOR(self):
+        return self._CHOICE_INPUT_TRANSLATOR
 
-    @CHOICE_TRANSLATOR.setter
-    def CHOICE_TRANSLATOR(self, value):
+    @CHOICE_INPUT_TRANSLATOR.setter
+    def CHOICE_INPUT_TRANSLATOR(self, value):
         if value in translatorEngine:
-            self._CHOICE_TRANSLATOR = value
+            self._CHOICE_INPUT_TRANSLATOR= value
+
+    @property
+    def CHOICE_OUTPUT_TRANSLATOR(self):
+        return self._CHOICE_OUTPUT_TRANSLATOR
+
+    @CHOICE_OUTPUT_TRANSLATOR.setter
+    def CHOICE_OUTPUT_TRANSLATOR(self, value):
+        if value in translatorEngine:
+            self._CHOICE_OUTPUT_TRANSLATOR = value
 
     # Save Json Data
     ## Main Window
@@ -169,6 +178,28 @@ class Config:
     def SELECTED_TAB_NO(self, value):
         if isinstance(value, str):
             self._SELECTED_TAB_NO = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TAB_YOUR_TRANSLATOR_ENGINES')
+    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self):
+        return self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
+
+    @SELECTED_TAB_YOUR_TRANSLATOR_ENGINES.setter
+    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TAB_TARGET_TRANSLATOR_ENGINES')
+    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self):
+        return self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
+
+    @SELECTED_TAB_TARGET_TRANSLATOR_ENGINES.setter
+    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -562,7 +593,8 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-        self._CHOICE_TRANSLATOR = translatorEngine[0]
+        self._CHOICE_INPUT_TRANSLATOR = translatorEngine[0]
+        self._CHOICE_OUTPUT_TRANSLATOR = translatorEngine[0]
         self._SOURCE_LANGUAGE = "Japanese"
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
@@ -571,6 +603,16 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
+        self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = {
+            "1":translatorEngine[0],
+            "2":translatorEngine[0],
+            "3":translatorEngine[0],
+        }
+        self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = {
+            "1":translatorEngine[0],
+            "2":translatorEngine[0],
+            "3":translatorEngine[0],
+        }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
             "1":"Japanese\n(Japan)",
             "2":"Japanese\n(Japan)",

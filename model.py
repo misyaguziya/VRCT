@@ -83,13 +83,8 @@ class Model:
         del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
 
-    def authenticationTranslator(self, choice_translator=None, auth_key=None):
-        if choice_translator is None:
-            choice_translator = config.CHOICE_TRANSLATOR
-        if auth_key is None:
-            auth_key = config.AUTH_KEYS[choice_translator]
-
-        result = self.translator.authentication(choice_translator, auth_key)
+    def authenticationTranslatorDeepLAuthKey(self, auth_key):
+        result = self.translator.authenticationDeepLAuthKey(auth_key)
         return result
 
     def startLogger(self):
@@ -123,25 +118,25 @@ class Model:
         country = parts[1][1:-1]
         return language, country
 
-    def findTranslationEngine(self, source_lang, target_lang):
-        compatible_engines = []
-        for engine in translatorEngine:
-            source_languages = translation_lang.get(engine, {}).get("source", {})
-            target_languages = translation_lang.get(engine, {}).get("target", {})
-            if source_lang in source_languages and target_lang in target_languages:
-                compatible_engines.append(engine)
-        engine_name = compatible_engines[0]
+    # def findTranslationEngine(self, source_lang, target_lang):
+    #     compatible_engines = []
+    #     for engine in translatorEngine:
+    #         source_languages = translation_lang.get(engine, {}).get("source", {})
+    #         target_languages = translation_lang.get(engine, {}).get("target", {})
+    #         if source_lang in source_languages and target_lang in target_languages:
+    #             compatible_engines.append(engine)
+    #     engine_name = compatible_engines[0]
 
-        if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
-            if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
-                engine_name = "DeepL_API"
-        elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
-            engine_name = "DeepL"
+    #     if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
+    #         if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
+    #             engine_name = "DeepL_API"
+    #     elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
+    #         engine_name = "DeepL"
 
-        return engine_name
+    #     return engine_name
 
     def getInputTranslate(self, message):
-        translator_name=config.CHOICE_TRANSLATOR
+        translator_name=config.CHOICE_INPUT_TRANSLATOR
         source_language=config.SOURCE_LANGUAGE
         target_language=config.TARGET_LANGUAGE
         target_country = config.TARGET_COUNTRY
@@ -157,18 +152,11 @@ class Model:
                     target_language = "Portuguese European"
                 else:
                     target_language = "Portuguese Brazilian"
-        elif translator_name == "DeepL":
+        else:
             if target_language in ["English American", "English British"]:
                 target_language = "English"
             elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
                 target_language = "Portuguese"
-
-        # translation = self.translator.translate_ctranslate2(
-        #                 translator_name=translator_name,
-        #                 source_language=source_language,
-        #                 target_language=target_language,
-        #                 message=message
-        #         )
 
         translation = self.translator.translate(
                         translator_name=translator_name,
@@ -179,7 +167,7 @@ class Model:
         return translation
 
     def getOutputTranslate(self, message):
-        translator_name=config.CHOICE_TRANSLATOR
+        translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
         target_country = config.SOURCE_COUNTRY
@@ -195,18 +183,12 @@ class Model:
                     target_language = "Portuguese European"
                 else:
                     target_language = "Portuguese Brazilian"
-        elif translator_name == "DeepL":
+        else:
             if target_language in ["English American", "English British"]:
                 target_language = "English"
             elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
                 target_language = "Portuguese"
 
-        # translation = self.translator.translate_ctranslate2(
-        #                 translator_name=translator_name,
-        #                 source_language=source_language,
-        #                 target_language=target_language,
-        #                 message=message
-        #         )
         translation = self.translator.translate(
                         translator_name=translator_name,
                         source_language=source_language,

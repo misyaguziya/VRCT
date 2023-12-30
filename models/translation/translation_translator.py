@@ -21,15 +21,13 @@ class Translator():
         self.translator = ctranslate2.Translator(self.weight_path, device="cpu", device_index=0, compute_type="int8", inter_threads=1, intra_threads=4)
         self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
 
-    def authentication(self, translator_name, authkey=None):
+    def authenticationDeepLAuthKey(self, authkey):
         result = True
-        match translator_name:
-            case "DeepL_API":
-                try:
-                    self.deepl_client = deepl_Translator(authkey)
-                    self.deepl_client.translate_text(" ", target_lang="EN-US")
-                except Exception:
-                    result = False
+        try:
+            self.deepl_client = deepl_Translator(authkey)
+            self.deepl_client.translate_text(" ", target_lang="EN-US")
+        except Exception:
+            result = False
         return result
 
     def translate(self, translator_name, source_language, target_language, message):
