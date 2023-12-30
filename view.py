@@ -45,6 +45,13 @@ class View():
         self.settings.main = SimpleNamespace(
             ctm=all_ctm.main,
             uism=all_uism.main,
+            geometry=SimpleNamespace(
+                width=config.MAIN_WINDOW_GEOMETRY["width"],
+                height=config.MAIN_WINDOW_GEOMETRY["height"],
+                x_pos=config.MAIN_WINDOW_GEOMETRY["x_pos"],
+                y_pos=config.MAIN_WINDOW_GEOMETRY["y_pos"],
+            ),
+            to_restore_main_window_geometry=config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY,
             **common_args
         )
 
@@ -84,7 +91,8 @@ class View():
             CALLBACK_OPEN_FILEPATH_LOGS=None,
             CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
 
-            CALLBACK_QUIT_VRCT=vrct_gui._quitVRCT,
+            CALLBACK_DELETE_MAIN_WINDOW=self.quitVRCT,
+            CALLBACK_QUIT_VRCT=None,
 
             CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE=self._showDisplayOverUiSizeConfirmationModal,
 
@@ -240,6 +248,10 @@ class View():
             CALLBACK_SET_UI_LANGUAGE=None,
             VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
 
+            VAR_LABEL_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=StringVar(value=i18n.t("config_window.to_restore_main_window_geometry.label")),
+            VAR_DESC_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=StringVar(value=i18n.t("config_window.to_restore_main_window_geometry.desc")),
+            CALLBACK_SET_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=None,
+            VAR_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=BooleanVar(value=config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY),
 
             # Translation Tab
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
@@ -463,6 +475,7 @@ class View():
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
             self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
             self.view_variable.CALLBACK_OPEN_FILEPATH_CONFIG_FILE=common_registers.get("callback_filepath_config_file", None)
+            self.view_variable.CALLBACK_QUIT_VRCT=common_registers.get("callback_quit_vrct", None)
 
 
         if window_action_registers is not None:
@@ -527,6 +540,7 @@ class View():
             self.view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO = config_window_registers.get("callback_set_message_box_ratio", None)
             self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window_registers.get("callback_set_font_family", None)
             self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window_registers.get("callback_set_ui_language", None)
+            self.view_variable.CALLBACK_SET_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = config_window_registers.get("callback_set_enable_restore_main_window_geometry", None)
 
 
             # Translation Tab
@@ -760,7 +774,9 @@ class View():
         vrct_gui._showGUI()
         vrct_gui._startMainLoop()
 
-
+    def quitVRCT(self):
+        callFunctionIfCallable(self.view_variable.CALLBACK_QUIT_VRCT)
+        vrct_gui._quitVRCT()
 
 # Common
     @staticmethod
@@ -774,6 +790,15 @@ class View():
     def openWebPage(url:str):
         webbrowser.open_new_tab(url)
 
+    @staticmethod
+    def getMainWindowGeometry():
+        result = {
+            "width": str(vrct_gui.winfo_toplevel().winfo_width()),
+            "height": str(vrct_gui.winfo_toplevel().winfo_height()),
+            "x_pos": str(vrct_gui.winfo_toplevel().winfo_x()),
+            "y_pos": str(vrct_gui.winfo_toplevel().winfo_y()),
+        }
+        return result
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
