@@ -211,6 +211,7 @@ def _darkTheme(base_color):
             SB__SWITCH_BOX_BUTTON_HOVERED_COLOR = base_color.DARK_350_COLOR,
 
             SB__CHECKBOX_BORDER_COLOR = base_color.DARK_600_COLOR,
+            SB__CHECKBOX_BORDER_DISABLED_COLOR = base_color.DARK_800_COLOR,
             SB__CHECKBOX_HOVER_COLOR = base_color.DARK_800_COLOR,
             SB__CHECKBOX_CHECKED_COLOR = base_color.PRIMARY_700_COLOR,
             SB__CHECKBOX_CHECKMARK_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
