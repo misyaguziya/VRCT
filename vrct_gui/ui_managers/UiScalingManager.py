@@ -162,6 +162,8 @@ class UiScalingManager():
         self.confirmation_modal.BUTTONS_IPADX = self._calculateUiSize(10)
         self.confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
 
+        # Dropdown Menu Window
+        self.config_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
