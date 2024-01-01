@@ -4,8 +4,7 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import get_key_by_value, isUniqueStrings
-from languages import selectable_languages
+from utils import getKeyByValue, isUniqueStrings
 import argparse
 
 # Common
@@ -420,8 +419,8 @@ def callbackSetFontFamily(value):
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
-    value = get_key_by_value(selectable_languages, value)
-    print("callbackSetUiLanguage__after_get_key_by_value", value)
+    value = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, value)
+    print("callbackSetUiLanguage__after_getKeyByValue", value)
     config.UI_LANGUAGE = value
     view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
 
