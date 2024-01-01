@@ -5,12 +5,10 @@ from tkinter import font as tk_font
 import webbrowser
 import i18n
 
-from languages import selectable_languages
-
-from customtkinter import StringVar, IntVar, BooleanVar, END as CTK_END, get_appearance_mode
+from customtkinter import StringVar, IntVar, BooleanVar, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, generatePercentageStringsList, intToPercentageStringsFormatter
+from utils import callFunctionIfCallable, intToPercentageStringsFormatter
 
 from config import config
 
@@ -143,7 +141,7 @@ class View():
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
 
             VAR_LABEL_YOUR_LANGUAGE=StringVar(value=i18n.t("main_window.your_language")),
-            VAR_YOUR_LANGUAGE = StringVar(value="Japanese\n(Japan)"),
+            VAR_YOUR_LANGUAGE = StringVar(value=f"{config.SOURCE_LANGUAGE}\n({config.SOURCE_COUNTRY})"),
             CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
@@ -153,7 +151,7 @@ class View():
             CALLBACK_SWAP_LANGUAGES=None,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
-            VAR_TARGET_LANGUAGE = StringVar(value="English\n(United States)"),
+            VAR_TARGET_LANGUAGE = StringVar(value=f"{config.TARGET_LANGUAGE}\n({config.TARGET_COUNTRY})"),
             CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
@@ -202,7 +200,7 @@ class View():
             # Appearance Tab
             VAR_LABEL_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.label")),
             VAR_DESC_TRANSPARENCY=StringVar(value=i18n.t("config_window.transparency.desc")),
-            SLIDER_RANGE_TRANSPARENCY=(50, 100),
+            SLIDER_RANGE_TRANSPARENCY=config.TRANSPARENCY_RANGE,
             CALLBACK_SET_TRANSPARENCY=None,
             VAR_TRANSPARENCY=IntVar(value=config.TRANSPARENCY),
             CALLBACK_BUTTON_PRESS_TRANSPARENCY=self._closeTheCoverOfMainWindow,
@@ -210,19 +208,19 @@ class View():
 
             VAR_LABEL_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.label")),
             VAR_DESC_APPEARANCE_THEME=StringVar(value=i18n.t("config_window.appearance_theme.desc")),
-            LIST_APPEARANCE_THEME=["Light", "Dark", "System"],
+            LIST_APPEARANCE_THEME=config.APPEARANCE_THEME_LIST,
             CALLBACK_SET_APPEARANCE_THEME=None,
             VAR_APPEARANCE_THEME=StringVar(value=config.APPEARANCE_THEME),
 
             VAR_LABEL_UI_SCALING=StringVar(value=i18n.t("config_window.ui_size.label")),
             VAR_DESC_UI_SCALING=None,
-            LIST_UI_SCALING=generatePercentageStringsList(start=40,end=200, step=10),
+            LIST_UI_SCALING=config.UI_SCALING_LIST,
             CALLBACK_SET_UI_SCALING=None,
             VAR_UI_SCALING=StringVar(value=config.UI_SCALING),
 
             VAR_LABEL_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.label")),
             VAR_DESC_TEXTBOX_UI_SCALING=StringVar(value=i18n.t("config_window.textbox_ui_size.desc")),
-            SLIDER_RANGE_TEXTBOX_UI_SCALING=(50, 200),
+            SLIDER_RANGE_TEXTBOX_UI_SCALING=config.TEXTBOX_UI_SCALING_RANGE,
             CALLBACK_SET_TEXTBOX_UI_SCALING=None,
             VAR_TEXTBOX_UI_SCALING=IntVar(value=config.TEXTBOX_UI_SCALING),
             CALLBACK_BUTTON_PRESS_TEXTBOX_UI_SCALING=self._closeTheCoverOfMainWindow,
@@ -230,7 +228,7 @@ class View():
 
             VAR_LABEL_MESSAGE_BOX_RATIO=StringVar(value=i18n.t("config_window.message_box_ratio.label")),
             VAR_DESC_MESSAGE_BOX_RATIO=StringVar(value=i18n.t("config_window.message_box_ratio.desc")),
-            SLIDER_RANGE_MESSAGE_BOX_RATIO=(1, 99),
+            SLIDER_RANGE_MESSAGE_BOX_RATIO=config.MESSAGE_BOX_RATIO_RANGE,
             CALLBACK_SET_MESSAGE_BOX_RATIO=None,
             VAR_MESSAGE_BOX_RATIO=IntVar(value=config.MESSAGE_BOX_RATIO),
             CALLBACK_BUTTON_PRESS_MESSAGE_BOX_RATIO=self._closeTheCoverOfMainWindow,
@@ -244,9 +242,9 @@ class View():
 
             VAR_LABEL_UI_LANGUAGE=StringVar(value=i18n.t("config_window.ui_language.label")),
             VAR_DESC_UI_LANGUAGE=None,
-            LIST_UI_LANGUAGE=list(selectable_languages.values()),
+            LIST_UI_LANGUAGE=list(config.SELECTABLE_UI_LANGUAGES_DICT.values()),
             CALLBACK_SET_UI_LANGUAGE=None,
-            VAR_UI_LANGUAGE=StringVar(value=selectable_languages[config.UI_LANGUAGE]),
+            VAR_UI_LANGUAGE=StringVar(value=config.SELECTABLE_UI_LANGUAGES_DICT[config.UI_LANGUAGE]),
 
             VAR_LABEL_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=StringVar(value=i18n.t("config_window.to_restore_main_window_geometry.label")),
             VAR_DESC_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=StringVar(value=i18n.t("config_window.to_restore_main_window_geometry.desc")),
@@ -1111,13 +1109,13 @@ class View():
 
     @staticmethod
     def setMainWindowMessageBoxRatio(message_box_ratio:int):
-        if message_box_ratio <= 0 or message_box_ratio > 99:
-            raise ValueError("Input must be between 1 and 99 (inclusive)")
+        if message_box_ratio < config.MESSAGE_BOX_RATIO_RANGE[0] or message_box_ratio > config.MESSAGE_BOX_RATIO_RANGE[1]:
+            raise ValueError(f"Input must be between {config.MESSAGE_BOX_RATIO_RANGE[0]} and {config.MESSAGE_BOX_RATIO_RANGE[1]} (inclusive)")
 
-        vrct_gui.main_bg_container.grid_rowconfigure(tuple(range(1, 101)), weight=1)
-        textbox_ratio = int(100 - message_box_ratio)
+        vrct_gui.main_bg_container.grid_rowconfigure(tuple(range(config.MESSAGE_BOX_RATIO_RANGE[0], config.MESSAGE_BOX_RATIO_RANGE[1]+2)), weight=1)
+        textbox_ratio = int((config.MESSAGE_BOX_RATIO_RANGE[1]+1) - message_box_ratio)
         message_box_row = int(textbox_ratio + 1)
-        message_box_rowwpan = int(100 - textbox_ratio)
+        message_box_rowwpan = int((config.MESSAGE_BOX_RATIO_RANGE[1]+1) - textbox_ratio)
         # print(textbox_ratio, message_box_row, message_box_rowwpan)
         vrct_gui.main_textbox_container.grid(row=1, rowspan=textbox_ratio, column=0, sticky="nsew")
         vrct_gui.main_entry_message_container.grid(row=message_box_row, rowspan=message_box_rowwpan, column=0, sticky="nsew")

@@ -5,7 +5,6 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -66,6 +65,30 @@ class Config:
     @property
     def DOCUMENTS_URL(self):
         return self._DOCUMENTS_URL
+
+    @property
+    def TRANSPARENCY_RANGE(self):
+        return self._TRANSPARENCY_RANGE
+
+    @property
+    def APPEARANCE_THEME_LIST(self):
+        return self._APPEARANCE_THEME_LIST
+
+    @property
+    def UI_SCALING_LIST(self):
+        return self._UI_SCALING_LIST
+
+    @property
+    def TEXTBOX_UI_SCALING_RANGE(self):
+        return self._TEXTBOX_UI_SCALING_RANGE
+
+    @property
+    def MESSAGE_BOX_RATIO_RANGE(self):
+        return self._MESSAGE_BOX_RATIO_RANGE
+
+    @property
+    def SELECTABLE_UI_LANGUAGES_DICT(self):
+        return self._SELECTABLE_UI_LANGUAGES_DICT
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
@@ -211,7 +234,7 @@ class Config:
 
     @TRANSPARENCY.setter
     def TRANSPARENCY(self, value):
-        if isinstance(value, int) and 0 <= value <= 100:
+        if isinstance(value, int) and self.TRANSPARENCY_RANGE[0] <= value <= self.TRANSPARENCY_RANGE[1]:
             self._TRANSPARENCY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -222,7 +245,7 @@ class Config:
 
     @APPEARANCE_THEME.setter
     def APPEARANCE_THEME(self, value):
-        if value in ["Light", "Dark", "System"]:
+        if value in self.APPEARANCE_THEME_LIST:
             self._APPEARANCE_THEME = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -233,7 +256,7 @@ class Config:
 
     @UI_SCALING.setter
     def UI_SCALING(self, value):
-        if value in generatePercentageStringsList(start=40,end=200, step=10):
+        if value in self.UI_SCALING_LIST:
             self._UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -244,7 +267,7 @@ class Config:
 
     @TEXTBOX_UI_SCALING.setter
     def TEXTBOX_UI_SCALING(self, value):
-        if isinstance(value, int) and 50 <= value <= 200:
+        if isinstance(value, int) and self.TEXTBOX_UI_SCALING_RANGE[0] <= value <= self.TEXTBOX_UI_SCALING_RANGE[1]:
             self._TEXTBOX_UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -255,7 +278,7 @@ class Config:
 
     @MESSAGE_BOX_RATIO.setter
     def MESSAGE_BOX_RATIO(self, value):
-        if isinstance(value, int) and 1 <= value <= 99:
+        if isinstance(value, int) and self.MESSAGE_BOX_RATIO_RANGE[0] <= value <= self.MESSAGE_BOX_RATIO_RANGE[1]:
             self._MESSAGE_BOX_RATIO = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -280,7 +303,7 @@ class Config:
 
     @UI_LANGUAGE.setter
     def UI_LANGUAGE(self, value):
-        if value in list(selectable_languages.keys()):
+        if value in list(self.SELECTABLE_UI_LANGUAGES_DICT.keys()):
             self._UI_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -627,7 +650,7 @@ class Config:
     def init_config(self):
         # Read Only
         self._VERSION = "2.0.1"
-        self._ENABLE_SPEAKER2CHATBOX = False
+        self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._LOCAL_PATH = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
         self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")
@@ -635,6 +658,17 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
+        self._TRANSPARENCY_RANGE = (50, 100)
+        self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
+        self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
+        self._TEXTBOX_UI_SCALING_RANGE = (50, 200)
+        self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
+        self._SELECTABLE_UI_LANGUAGES_DICT = {
+            "en": "English",
+            "ja": "日本語",
+            "ko": "한국어（일부 지원）"
+            # If you want to add a new language and key, please append it here.
+        }
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -708,7 +742,7 @@ class Config:
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
-        self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # speaker2Chatbox
+        self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
