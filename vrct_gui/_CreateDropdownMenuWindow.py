@@ -1,9 +1,9 @@
 from types import SimpleNamespace
 
-from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkScrollableFrame
+from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar, getLatestWidth, getLongestText
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar, getLatestWidth, getLongestText, CustomizedCTkScrollableFrame
 from functools import partial
 
 from utils import isEven, makeEven
@@ -121,7 +121,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
         BORDER_WIDTH=self.window_border_width
-        self.scroll_frame_container = CTkScrollableFrame(
+        self.scroll_frame_container = CustomizedCTkScrollableFrame(
             self.dropdown_menu_container,
             corner_radius=0,
             fg_color=self.window_bg_color,
@@ -180,7 +180,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
         __dropdown_menu_value_wrapper.grid_rowconfigure((0,2), weight=1)
-        # __dropdown_menu_value_wrapper.grid_columnconfigure(0, weight=1)
         __label_widget = CTkLabel(
             __dropdown_menu_value_wrapper,
             text=longest_text,
@@ -190,7 +189,6 @@ class _CreateDropdownMenuWindow(CTkToplevel):
             anchor="w",
             text_color=self.values_text_color,
         )
-        # setattr(self, f"l", __label_widget)
 
         __label_widget.grid(row=1, column=0, padx=self.value_ipadx, pady=self.value_ipady, sticky="w")
 
@@ -198,7 +196,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         label_width = getLatestWidth(__label_widget)
         label_width += self.scroll_frame_container._scrollbar.winfo_width() + (self.window_border_width*2) + (self.scrollbar_ipadx[0] + self.scrollbar_ipadx[1])
         if label_width > self.new_width:
-            additional_width = int(label_width - self.new_width)
+            additional_width = int(label_width - self.new_width + self.settings.uism.MARGIN_WIDTH)
             self.new_width += additional_width
 
         # for fixing 1px bug
