@@ -187,7 +187,7 @@ class Model:
         translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
-        target_country = config.SOURCE_COUNTRY
+        target_country=config.SOURCE_COUNTRY
 
         if translator_name == "DeepL_API":
             if target_language == "English":
@@ -212,6 +212,15 @@ class Model:
                         target_language=target_language,
                         message=message
                 )
+        
+        # 翻訳失敗時のフェールセーフ処理
+        if translation is False and "Filipino":
+            translation = self.translator.translate(
+                                translator_name="CTranslate2",
+                                source_language=config.TARGET_LANGUAGE,
+                                target_language=config.SOURCE_LANGUAGE,
+                                message=message
+                        )
         return translation
 
     def addKeywords(self):
