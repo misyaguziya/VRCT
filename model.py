@@ -45,15 +45,6 @@ class threadFnc(Thread):
             self.fnc(*self._args, **self._kwargs)
 
 class Model:
-    # Languages available for both transcription and translation
-    SUPPORTED_LANGUAGES = [
-        'Afrikaans', 'Arabic', 'Basque', 'Bulgarian', 'Catalan', 'Chinese', 'Croatian',
-        'Czech', 'Danish', 'Dutch', 'English', 'Filipino', 'Finnish', 'French', 'German',
-        'Greek', 'Hebrew', 'Hindi', 'Hungarian', 'Indonesian', 'Italian', 'Japanese',
-        'Korean', 'Lithuanian', 'Malay', 'Norwegian', 'Polish', 'Portuguese', 'Romanian',
-        'Russian', 'Serbian', 'Slovak', 'Slovenian', 'Spanish', 'Swedish', 'Thai', 'Turkish',
-        'Ukrainian', 'Vietnamese'
-        ]
     _instance = None
 
     def __new__(cls):
@@ -103,13 +94,23 @@ class Model:
         self.logger.disabled = True
         self.logger = None
 
-    @staticmethod
-    def getListLanguageAndCountry():
+    def getListLanguageAndCountry(self):
+        transcription_langs = list(transcription_lang.keys())
+        tl_keys = translation_lang.keys()
+        translation_langs = []
+        for tl_key in tl_keys:
+            for lang in translation_lang[tl_key]["source"]:
+                translation_langs.append(lang)
+            for lang in translation_lang[tl_key]["target"]:
+                translation_langs.append(lang)
+        translation_langs = list(set(translation_langs))
+        supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
+
         langs = []
-        for lang in model.SUPPORTED_LANGUAGES:
+        for lang in supported_langs:
             for country in transcription_lang[lang]:
                 langs.append(f"{lang}\n({country})")
-        return langs
+        return sorted(langs)
 
     @staticmethod
     def getLanguageAndCountry(select):
@@ -118,39 +119,14 @@ class Model:
         country = parts[1][1:-1]
         return language, country
 
-    # def findTranslationEngine(self, source_lang, target_lang):
-    #     compatible_engines = []
-    #     for engine in translatorEngine:
-    #         source_languages = translation_lang.get(engine, {}).get("source", {})
-    #         target_languages = translation_lang.get(engine, {}).get("target", {})
-    #         if source_lang in source_languages and target_lang in target_languages:
-    #             compatible_engines.append(engine)
-    #     engine_name = compatible_engines[0]
-    #     if engine_name == "DeepL" and config.AUTH_KEYS["DeepL_API"] is not None:
-    #         if self.authenticationTranslator(engine_name, config.AUTH_KEYS["DeepL_API"]) is True:
-    #             engine_name = "DeepL_API"
-    #     elif engine_name == "DeepL_API" and config.AUTH_KEYS["DeepL_API"] is None:
-    #         engine_name = "DeepL"
-    #     return engine_name
-
-    def getDictTranslationEngineValidity(self):
-        ts_keys = transcription_lang.keys()
-        tl_keys = translation_lang.keys()
-        te_dict = {}
-        for ts_key in ts_keys:
-            te_dict[ts_key] = {}
-            for tl_key in tl_keys:
-                te_dict[ts_key][tl_key] = False
-                if ts_key in translation_lang[tl_key]["source"]:
-                    te_dict[ts_key][tl_key] = True
-
-        keys_to_remove = []
-        for language, translation_dict in te_dict.items():
-            if all(value is False for value in translation_dict.values()):
-                keys_to_remove.append(language)
-        for key in keys_to_remove:
-            del te_dict[key]
-        return te_dict
+    def findTranslationEngines(self, source_lang, target_lang):
+        compatible_engines = []
+        for engine in translatorEngine:
+            source_languages = translation_lang.get(engine, {}).get("source", {})
+            target_languages = translation_lang.get(engine, {}).get("target", {})
+            if source_lang in source_languages and target_lang in target_languages:
+                compatible_engines.append(engine)
+        return compatible_engines
 
     def getInputTranslate(self, message):
         translator_name=config.CHOICE_INPUT_TRANSLATOR
