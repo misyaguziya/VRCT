@@ -8,7 +8,7 @@ import i18n
 from customtkinter import StringVar, IntVar, BooleanVar, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, intToPercentageStringsFormatter
+from utils import callFunctionIfCallable, intToPctStr
 
 from config import config
 
@@ -183,7 +183,7 @@ class View():
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
             VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
 
-            CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER=intToPercentageStringsFormatter,
+            CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER=intToPctStr,
 
 
             # Side Menu Labels
@@ -796,14 +796,24 @@ class View():
         webbrowser.open_new_tab(url)
 
     @staticmethod
-    def getMainWindowGeometry():
-        result = {
+    def getMainWindowGeometry(return_int:bool=False):
+        if return_int is True:
+            return {
+                "width": vrct_gui.winfo_toplevel().winfo_width(),
+                "height": vrct_gui.winfo_toplevel().winfo_height(),
+                "x_pos": vrct_gui.winfo_toplevel().winfo_x(),
+                "y_pos": vrct_gui.winfo_toplevel().winfo_y(),
+            }
+
+        return {
             "width": str(vrct_gui.winfo_toplevel().winfo_width()),
             "height": str(vrct_gui.winfo_toplevel().winfo_height()),
             "x_pos": str(vrct_gui.winfo_toplevel().winfo_x()),
             "y_pos": str(vrct_gui.winfo_toplevel().winfo_y()),
         }
-        return result
+
+    def getPreUiScaling(self):
+        return self.restart_required_configs_pre_data.ui_scaling
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
