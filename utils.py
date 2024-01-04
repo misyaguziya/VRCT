@@ -30,8 +30,11 @@ def generatePercentageStringsList(start:int, end:int, step:int):
         strings.append(f"{percent}%")
     return strings
 
-def intToPercentageStringsFormatter(value:int):
+def intToPctStr(value:int):
     return f"{value}%"
+
+def strPctToInt(value:str):
+    return int(value.replace("%", ""))
 
 def isUniqueStrings(unique_strings:Union[str, list], input_string:str, require=False):
     import re

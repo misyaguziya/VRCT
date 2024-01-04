@@ -4,14 +4,16 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import getKeyByValue, isUniqueStrings
+from utils import getKeyByValue, isUniqueStrings, strPctToInt
 import argparse
 
 # Common
 def callbackUpdateSoftware():
+    setMainWindowGeometry()
     model.updateSoftware()
 
 def callbackRestartSoftware():
+    setMainWindowGeometry()
     model.reStartSoftware()
 
 def callbackFilepathLogs():
@@ -23,7 +25,17 @@ def callbackFilepathConfigFile():
     Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
 
 def callbackQuitVrct():
-    main_window_geometry = view.getMainWindowGeometry()
+    setMainWindowGeometry()
+
+def setMainWindowGeometry():
+    PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
+    NEW_SCALING_INT = strPctToInt(config.UI_SCALING)
+    MULTIPLY_FLOAT = (NEW_SCALING_INT / PRE_SCALING_INT)
+    main_window_geometry = view.getMainWindowGeometry(return_int=True)
+    main_window_geometry["width"] = str(int(main_window_geometry["width"] * MULTIPLY_FLOAT))
+    main_window_geometry["height"] = str(int(main_window_geometry["height"] * MULTIPLY_FLOAT))
+    main_window_geometry["x_pos"] = str(main_window_geometry["x_pos"])
+    main_window_geometry["y_pos"] = str(main_window_geometry["y_pos"])
     config.MAIN_WINDOW_GEOMETRY = main_window_geometry
 
 def messageFormatter(format_type:str, translation, message):
@@ -398,7 +410,7 @@ def callbackSetAppearance(value):
 def callbackSetUiScaling(value):
     print("callbackSetUiScaling", value)
     config.UI_SCALING = value
-    new_scaling_float = int(value.replace("%", "")) / 100
+    new_scaling_float = strPctToInt(value) / 100
     print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
     view.showRestartButtonIfRequired()
 
