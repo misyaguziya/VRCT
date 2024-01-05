@@ -504,6 +504,7 @@ class View():
                 return "break" # For deleting the next line that will be inserted when the Enter key is pressed.
 
             entry_message_box = getattr(vrct_gui, "entry_message_box")
+            entry_message_box.bind("<Shift-Return>", lambda _e: None) # This is to prevent message sending on Shift + Enter key press and just add a new line.
             entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
             entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
 
