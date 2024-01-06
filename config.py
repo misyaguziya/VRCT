@@ -649,9 +649,6 @@ class Config:
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
             "DeepL_API": None,
-            "DeepL": None,
-            "Bing": None,
-            "Google": None,
         }
         self._WEIGHT_TYPE = "small"
         self._MESSAGE_FORMAT = "[message]([translation])"
