@@ -50,10 +50,17 @@ class UiScalingManager():
         self.main.TEXTBOX_FONT_SIZE__MAIN_TEXT_FONT = self._calculateUiSize(16)
 
         self.main.TEXTBOX_ENTRY_FONT_SIZE = self._calculateUiSize(16)
+        self.main.TEXTBOX_ENTRY_CORNER_RADIUS = self._calculateUiSize(4)
         self.main.TEXTBOX_ENTRY_BORDER_SIZE = self._calculateUiSize(2, is_allowed_odd=True)
         self.main.TEXTBOX_ENTRY_HEIGHT = self._calculateUiSize(40)
         self.main.TEXTBOX_ENTRY_PADX = self.main.TEXTBOX_PADX
         self.main.TEXTBOX_ENTRY_PADY = self._calculateUiSize(10)
+
+        self.main.SEND_MESSAGE_BUTTON_CORNER_RADIUS = self.main.TEXTBOX_ENTRY_CORNER_RADIUS
+        self.main.SEND_MESSAGE_BUTTON_IMAGE_SIZE = self._calculateUiSize(20)
+        self.main.SEND_MESSAGE_BUTTON_MIN_WIDTH = self._calculateUiSize(40)
+        self.main.SEND_MESSAGE_BUTTON_RATE_WIDTH = self._calculateUiSize(6)
+        self.main.SEND_MESSAGE_BUTTON_MAX_WIDTH = self._calculateUiSize(100)
 
 
         # Sidebar
