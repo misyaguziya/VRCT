@@ -532,6 +532,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
+    def SEND_MESSAGE_BUTTON_TYPE(self):
+        return self._SEND_MESSAGE_BUTTON_TYPE
+
+    @SEND_MESSAGE_BUTTON_TYPE.setter
+    def SEND_MESSAGE_BUTTON_TYPE(self, value):
+        if isinstance(value, str):
+            self._SEND_MESSAGE_BUTTON_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('ENABLE_NOTICE_XSOVERLAY')
     def ENABLE_NOTICE_XSOVERLAY(self):
         return self._ENABLE_NOTICE_XSOVERLAY
@@ -740,6 +751,7 @@ class Config:
         self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
+        self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox

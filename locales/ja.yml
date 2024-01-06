@@ -182,6 +182,12 @@ config_window:
   send_only_translated_messages:
     label: 翻訳後のメッセージのみ送信する
 
+  send_message_button_type:
+    label: メッセージ送信ボタン
+    hide: 非表示 (エンターキーを使って送信)
+    show: 表示
+    show_and_disable_enter_key: 表示し、エンターキーでの送信を無効
+
   notice_xsoverlay:
     label: XSOverlayでの通知受け取り機能を有効 (VR限定)
     desc: 文字起こし（受信）されたメッセージをXSOverlayの機能を使って通知として受け取れます。

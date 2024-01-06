@@ -2,10 +2,10 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Union
 
-from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
+from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage, CTkRadioButton
 from CTkToolTip import *
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressFunction
 from vrct_gui import vrct_gui
 from utils import isEven, callFunctionIfCallable
 
@@ -249,6 +249,81 @@ class _SettingBoxGenerator():
 
         return setting_box_frame
 
+
+
+    # 3 Options
+    def createSettingBoxRadioButtons(
+            self,
+            for_var_label_text, for_var_desc_text,
+            radio_button_attr_name,
+            variable,
+            command,
+            radiobutton_keys_values=dict,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(radio_button_attr_name, for_var_label_text, for_var_desc_text)
+
+        row=0
+        for key, value in radiobutton_keys_values.items():
+            radiobutton_wrapper = CTkFrame(setting_box_item_frame, corner_radius=6, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0, cursor="hand2")
+            radiobutton_wrapper.grid(row=row, column=0, sticky="ew")
+            row+=1
+
+            radiobutton_wrapper.grid_rowconfigure((0,2), weight=1)
+            setting_box_radio_button = CTkRadioButton(
+                radiobutton_wrapper,
+                textvariable=value,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal"),
+                variable=variable,
+                value=key,
+                text_color=self.settings.ctm.SB__RADIOBUTTON_TEXT_COLOR,
+                fg_color=self.settings.ctm.SB__RADIOBUTTON_SELECTED_COLOR,
+                border_color=self.settings.ctm.SB__RADIOBUTTON_BORDER_COLOR,
+                hover=False
+            )
+            setting_box_radio_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+
+            if key == variable.get():
+                setting_box_radio_button.select()
+
+            setting_box_radio_button._canvas.unbind("<Button-1>")
+            setting_box_radio_button._text_label.unbind("<Button-1>")
+            setting_box_radio_button._text_label.grid(padx=(10,0))
+
+
+            def buttonPressedFunction(radiobutton_wrapper, radiobutton_widget, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_CLICKED_COLOR)
+
+            def buttonReleasedFunction(radiobutton_wrapper, radiobutton_widget, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_HOVERED_COLOR)
+                radiobutton_widget.select()
+                command()
+
+            def enterFunction(radiobutton_wrapper, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_HOVERED_COLOR)
+
+            def leaveFunction(radiobutton_wrapper, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__BG_COLOR)
+
+
+            bindEnterAndLeaveFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                enterFunction=partial(enterFunction, radiobutton_wrapper),
+                leaveFunction=partial(leaveFunction, radiobutton_wrapper)
+            )
+
+            bindButtonPressFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                buttonPressedFunction=partial(buttonPressedFunction, radiobutton_wrapper, setting_box_radio_button)
+            )
+
+            bindButtonReleaseFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                buttonReleasedFunction=partial(buttonReleasedFunction, radiobutton_wrapper, setting_box_radio_button)
+            )
+
+
+        return setting_box_frame
 
 
 
