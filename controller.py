@@ -728,14 +728,13 @@ def createMainWindow():
     initSetTranslateEngine()
     initSetLanguageAndCountry()
 
-    # if (config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] == "DeepL_API" or
-    #     config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] == "DeepL_API"):
-    #     if model.authenticationTranslator("DeepL_API", config.AUTH_KEYS["DeepL_API"]) is False:
-    #         # error update Auth key
-    #         auth_keys = config.AUTH_KEYS
-    #         auth_keys["DeepL_API"] = None
-    #         config.AUTH_KEYS = auth_keys
-    #         view.printToTextbox_AuthenticationError()
+    if config.AUTH_KEYS["DeepL_API"] is not None:
+        if model.authenticationTranslatorDeepLAuthKey("DeepL_API", config.AUTH_KEYS["DeepL_API"]) is False:
+            # error update Auth key
+            auth_keys = config.AUTH_KEYS
+            auth_keys["DeepL_API"] = None
+            config.AUTH_KEYS = auth_keys
+            view.printToTextbox_AuthenticationError()
 
     # set word filter
     model.addKeywords()
