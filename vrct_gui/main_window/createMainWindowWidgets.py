@@ -120,4 +120,4 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     createTextbox(settings, vrct_gui, view_variable)
 
-    createEntryMessageBox(settings, vrct_gui)
+    createEntryMessageBox(settings, vrct_gui, view_variable)

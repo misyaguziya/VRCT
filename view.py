@@ -357,6 +357,16 @@ class View():
             CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=None,
             VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=BooleanVar(value=config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES),
 
+            VAR_LABEL_SEND_MESSAGE_BUTTON_TYPE=StringVar(value=i18n.t("config_window.send_message_button_type.label")),
+            VAR_DESC_SEND_MESSAGE_BUTTON_TYPE=None,
+            CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE=None,
+            VAR_SEND_MESSAGE_BUTTON_TYPE=StringVar(value=config.SEND_MESSAGE_BUTTON_TYPE),
+            KEYS_VALUES_SEND_MESSAGE_BUTTON_TYPE={
+                "hide": StringVar(value=i18n.t("config_window.send_message_button_type.hide")),
+                "show": StringVar(value=i18n.t("config_window.send_message_button_type.show")),
+                "show_and_disable_enter_key": StringVar(value=i18n.t("config_window.send_message_button_type.show_and_disable_enter_key")),
+            },
+
             VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.label")),
             VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.desc")),
             CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
@@ -500,13 +510,17 @@ class View():
 
 
             def adjustedMessageBoxReturnFunction(_e):
-                main_window_registers.get("message_box_bind_Return")()
+                if config.SEND_MESSAGE_BUTTON_TYPE != "show_and_disable_enter_key":
+                    main_window_registers.get("message_box_bind_Return")()
                 return "break" # For deleting the next line that will be inserted when the Enter key is pressed.
+            def pressedSendMessageButtonFunction(_e):
+                main_window_registers.get("message_box_bind_Return")()
 
             entry_message_box = getattr(vrct_gui, "entry_message_box")
             entry_message_box.bind("<Shift-Return>", lambda _e: None) # This is to prevent message sending on Shift + Enter key press and just add a new line.
             entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
             entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
+            self.view_variable.CALLBACK_CLICKED_SEND_MESSAGE_BUTTON = pressedSendMessageButtonFunction
 
 
             entry_message_box.bind("<FocusIn>", main_window_registers.get("message_box_bind_FocusIn"))
@@ -572,6 +586,7 @@ class View():
             # Others Tab
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = config_window_registers.get("callback_set_send_only_translated_messages", None)
+            self.view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE = config_window_registers.get("callback_set_send_message_button_type", None)
             self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
@@ -1118,8 +1133,7 @@ class View():
     def setMainWindowTextboxUiSize(custom_font_size_scale:float):
         vrct_gui.print_to_textbox.setTagsSettings(custom_font_size_scale=custom_font_size_scale)
 
-    @staticmethod
-    def setMainWindowMessageBoxRatio(message_box_ratio:int):
+    def setMainWindowMessageBoxRatio(self, message_box_ratio:int):
         if message_box_ratio < config.MESSAGE_BOX_RATIO_RANGE[0] or message_box_ratio > config.MESSAGE_BOX_RATIO_RANGE[1]:
             raise ValueError(f"Input must be between {config.MESSAGE_BOX_RATIO_RANGE[0]} and {config.MESSAGE_BOX_RATIO_RANGE[1]} (inclusive)")
 
@@ -1127,9 +1141,26 @@ class View():
         textbox_ratio = int((config.MESSAGE_BOX_RATIO_RANGE[1]+1) - message_box_ratio)
         message_box_row = int(textbox_ratio + 1)
         message_box_rowwpan = int((config.MESSAGE_BOX_RATIO_RANGE[1]+1) - textbox_ratio)
-        # print(textbox_ratio, message_box_row, message_box_rowwpan)
         vrct_gui.main_textbox_container.grid(row=1, rowspan=textbox_ratio, column=0, sticky="nsew")
         vrct_gui.main_entry_message_container.grid(row=message_box_row, rowspan=message_box_rowwpan, column=0, sticky="nsew")
+
+        new_send_message_button_width = int(self.settings.main.uism.SEND_MESSAGE_BUTTON_RATE_WIDTH * message_box_ratio)
+
+        if new_send_message_button_width > self.settings.main.uism.SEND_MESSAGE_BUTTON_MAX_WIDTH:
+            new_send_message_button_width = self.settings.main.uism.SEND_MESSAGE_BUTTON_MAX_WIDTH
+
+        if new_send_message_button_width < self.settings.main.uism.SEND_MESSAGE_BUTTON_MIN_WIDTH:
+            new_send_message_button_width = self.settings.main.uism.SEND_MESSAGE_BUTTON_MIN_WIDTH
+
+        vrct_gui.main_send_message_button_container.grid_columnconfigure(0, weight=0, minsize=new_send_message_button_width)
+
+    @staticmethod
+    def changeMainWindowSendMessageButton(status:str):
+        match (status):
+            case "hide":
+                vrct_gui.main_send_message_button_container.grid_remove()
+            case "show" | "show_and_disable_enter_key":
+                vrct_gui.main_send_message_button_container.grid()
 
 # Function
     def _adjustUiSizeAndRestart(self):
