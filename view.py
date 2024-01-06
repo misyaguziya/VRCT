@@ -852,8 +852,15 @@ class View():
 
 # Widget Control
     # Common
+
+    # Note: The difference between _clearEntryBox and _clearTextBox
+    # idk why, but in CTkEntry and CTkTextbox, the first argument for the delete function is different. Otherwise, it throws an error.
     @staticmethod
     def _clearEntryBox(entry_widget):
+        entry_widget.delete(0, "end")
+
+    @staticmethod
+    def _clearTextBox(entry_widget):
         entry_widget.delete("1.0", "end")
 
     def clearErrorMessage(self):
@@ -1508,7 +1515,7 @@ class View():
         return vrct_gui.entry_message_box.get('1.0', "end-1c")
 
     def clearMessageBox(self):
-        self._clearEntryBox(vrct_gui.entry_message_box)
+        self._clearTextBox(vrct_gui.entry_message_box)
 
 
 

@@ -593,6 +593,8 @@ def callbackDeleteMicWordFilter(value):
         new_input_mic_word_filter_list.remove(str(value))
         config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
         view.setLatestConfigVariable("MicMicWordFilter")
+        model.resetKeywordProcessor()
+        model.addKeywords()
     except Exception:
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
 
