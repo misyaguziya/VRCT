@@ -34,10 +34,10 @@ def sendMicMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation is False:
-                config.ENABLE_TRANSLATION = False
-                translation = ""
-                view.translationEngineLimitErrorProcess()
+            # if translation is False:
+            #     config.ENABLE_TRANSLATION = False
+            #     translation = ""
+            #     view.translationEngineLimitErrorProcess()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -98,10 +98,10 @@ def receiveSpeakerMessage(message):
             pass
         else:
             translation = model.getOutputTranslate(message)
-            if translation is False:
-                config.ENABLE_TRANSLATION = False
-                translation = ""
-                view.translationEngineLimitErrorProcess()
+            # if translation is False:
+            #     config.ENABLE_TRANSLATION = False
+            #     translation = ""
+            #     view.translationEngineLimitErrorProcess()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
@@ -164,10 +164,10 @@ def sendChatMessage(message):
             pass
         else:
             translation = model.getInputTranslate(message)
-            if translation is False:
-                config.ENABLE_TRANSLATION = False
-                translation = ""
-                view.translationEngineLimitErrorProcess()
+            # if translation is False:
+            #     config.ENABLE_TRANSLATION = False
+            #     translation = ""
+            #     view.translationEngineLimitErrorProcess()
 
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
