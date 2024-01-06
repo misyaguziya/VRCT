@@ -20,7 +20,7 @@ from models.transcription.transcription_recorder import SelectedMicRecorder, Sel
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
-from models.translation.translation_languages import translatorEngine, translation_lang
+from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from config import config
 
@@ -117,7 +117,7 @@ class Model:
 
     def findTranslationEngines(self, source_lang, target_lang):
         compatible_engines = []
-        for engine in translatorEngine:
+        for engine in list(translation_lang.keys()):
             languages = translation_lang.get(engine, {}).get("source", {})
             if source_lang in languages and target_lang in languages:
                 compatible_engines.append(engine)

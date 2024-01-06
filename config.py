@@ -6,7 +6,7 @@ from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
 from languages import selectable_languages
-from models.translation.translation_languages import translatorEngine
+from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
 from models.translation.utils import ctranslate2_weights
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -155,7 +155,7 @@ class Config:
 
     @CHOICE_INPUT_TRANSLATOR.setter
     def CHOICE_INPUT_TRANSLATOR(self, value):
-        if value in translatorEngine:
+        if value in list(translation_lang.keys()):
             self._CHOICE_INPUT_TRANSLATOR= value
 
     @property
@@ -164,7 +164,7 @@ class Config:
 
     @CHOICE_OUTPUT_TRANSLATOR.setter
     def CHOICE_OUTPUT_TRANSLATOR(self, value):
-        if value in translatorEngine:
+        if value in list(translation_lang.keys()):
             self._CHOICE_OUTPUT_TRANSLATOR = value
 
     # Save Json Data
@@ -593,8 +593,8 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-        self._CHOICE_INPUT_TRANSLATOR = translatorEngine[0]
-        self._CHOICE_OUTPUT_TRANSLATOR = translatorEngine[0]
+        self._CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+        self._CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
         self._SOURCE_LANGUAGE = "Japanese"
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
@@ -604,14 +604,14 @@ class Config:
         ## Main Window
         self._SELECTED_TAB_NO = "1"
         self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = {
-            "1":translatorEngine[0],
-            "2":translatorEngine[0],
-            "3":translatorEngine[0],
+            "1":"CTranslate2",
+            "2":"CTranslate2",
+            "3":"CTranslate2",
         }
         self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = {
-            "1":translatorEngine[0],
-            "2":translatorEngine[0],
-            "3":translatorEngine[0],
+            "1":"CTranslate2",
+            "2":"CTranslate2",
+            "3":"CTranslate2",
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
             "1":"Japanese\n(Japan)",
