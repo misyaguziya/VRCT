@@ -1,4 +1,3 @@
-translatorEngine = ["DeepL", "DeepL_API", "Google", "Bing", "Papago"]
 translation_lang = {}
 dict_deepl_languages = {
     'Arabic':'ar',
