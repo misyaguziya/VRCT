@@ -3,7 +3,7 @@ hold_state_list=[]
 def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names:list, to_hold_state:bool=False):
     global hold_state_list
     if target_names == "All":
-        target_names = ["translation_switch", "transcription_send_switch", "transcription_receive_switch", "foreground_switch", "quick_language_settings", "config_button", "minimize_sidebar_button", "entry_message_box"]
+        target_names = ["translation_switch", "transcription_send_switch", "transcription_receive_switch", "foreground_switch", "quick_language_settings", "config_button", "minimize_sidebar_button", "entry_message_box", "send_message_button"]
 
 
     for item in hold_state_list:
@@ -141,12 +141,18 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
 
             case "entry_message_box":
                 if status == "disabled":
-                    pass
                     vrct_gui.entry_message_box.configure(state="disabled", text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_DISABLED_COLOR)
+                    view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED = True
                 elif status == "normal":
-                    pass
                     vrct_gui.entry_message_box.configure(state="normal", text_color=settings.ctm.TEXTBOX_ENTRY_TEXT_COLOR)
+                    view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED = False
 
+
+            case "send_message_button":
+                if status == "disabled":
+                    vrct_gui.main_send_message_button__disabled.grid()
+                elif status == "normal":
+                    vrct_gui.main_send_message_button__disabled.grid_remove()
 
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")

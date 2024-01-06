@@ -5,6 +5,7 @@ from .._SettingBoxGenerator import _SettingBoxGenerator
 def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_variable):
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
+    createSettingBoxRadioButtons = sbg.createSettingBoxRadioButtons
     createSettingBoxAutoExportMessageLogs = sbg.createSettingBoxAutoExportMessageLogs
 
 
@@ -13,6 +14,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
 
     def checkbox_send_only_translated_messages_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES, checkbox_box_widget.get())
+
+    def checkbox_send_message_button_type_callback():
+        callFunctionIfCallable(view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE, view_variable.VAR_SEND_MESSAGE_BUTTON_TYPE.get())
 
     def checkbox_notice_xsoverlay_callback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, checkbox_box_widget.get())
@@ -48,6 +52,16 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     config_window.sb__send_only_translated_messages.grid(row=row)
     row+=1
 
+    config_window.sb__send_message_button_type = createSettingBoxRadioButtons(
+        for_var_label_text=view_variable.VAR_LABEL_SEND_MESSAGE_BUTTON_TYPE,
+        for_var_desc_text=view_variable.VAR_DESC_SEND_MESSAGE_BUTTON_TYPE,
+        radio_button_attr_name="sb__radiobutton_send_message_button_type",
+        command=lambda: checkbox_send_message_button_type_callback(),
+        variable=view_variable.VAR_SEND_MESSAGE_BUTTON_TYPE,
+        radiobutton_keys_values=view_variable.KEYS_VALUES_SEND_MESSAGE_BUTTON_TYPE,
+    )
+    config_window.sb__send_message_button_type.grid(row=row)
+    row+=1
 
     config_window.sb__notice_xsoverlay = createSettingBoxCheckbox(
         for_var_label_text=view_variable.VAR_LABEL_ENABLE_NOTICE_XSOVERLAY,
