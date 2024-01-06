@@ -94,6 +94,8 @@ class View():
 
             CALLBACK_WHEN_DETECT_WINDOW_OVERED_SIZE=self._showDisplayOverUiSizeConfirmationModal,
 
+            IS_ENTRY_MESSAGE_BOX_DISABLED=False,
+
             # Confirmation Modal
             CALLBACK_HIDE_CONFIRMATION_MODAL=None,
             CALLBACK_ACCEPTED_CONFIRMATION_MODAL=None,
@@ -510,6 +512,8 @@ class View():
 
 
             def adjustedMessageBoxReturnFunction(_e):
+                if self.view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED is True:
+                    return
                 if config.SEND_MESSAGE_BUTTON_TYPE != "show_and_disable_enter_key":
                     main_window_registers.get("message_box_bind_Return")()
                 return "break" # For deleting the next line that will be inserted when the Enter key is pressed.
