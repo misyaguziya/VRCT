@@ -813,8 +813,9 @@ def createMainWindow():
     model.addKeywords()
 
     # check Software Updated
-    if model.checkSoftwareUpdated() is True:
-        view.showUpdateAvailableButton()
+    if config.ENABLE_SPEAKER2CHATBOX is False:
+        if model.checkSoftwareUpdated() is True:
+            view.showUpdateAvailableButton()
 
     # init logger
     if config.ENABLE_LOGGER is True:

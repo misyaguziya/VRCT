@@ -30,6 +30,11 @@ class View():
             ui_language=config.UI_LANGUAGE,
         )
 
+        if config.ENABLE_SPEAKER2CHATBOX is False:
+            VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION)
+        else:
+            VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION) + " (Speaker2Chatbox)"
+
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
         all_ctm = ColorThemeManager(theme)
@@ -180,7 +185,7 @@ class View():
             ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
-            VAR_VERSION=StringVar(value=i18n.t("config_window.version", version=config.VERSION)),
+            VAR_VERSION=StringVar(value=VERSION_TEXT),
             VAR_CONFIG_WINDOW_TITLE=StringVar(value=i18n.t("config_window.config_title")),
             VAR_CONFIG_WINDOW_COMPACT_MODE_LABEL=StringVar(value=i18n.t("config_window.compact_mode")),
             VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL=StringVar(value=i18n.t("config_window.restart_message")),
