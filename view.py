@@ -1159,8 +1159,10 @@ class View():
         match (status):
             case "hide":
                 vrct_gui.main_send_message_button_container.grid_remove()
+                vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
             case "show" | "show_and_disable_enter_key":
                 vrct_gui.main_send_message_button_container.grid()
+                vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
 
 # Function
     def _adjustUiSizeAndRestart(self):
