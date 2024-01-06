@@ -1,4 +1,3 @@
-import tempfile
 from zipfile import ZipFile
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -10,10 +9,9 @@ from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
 from threading import Thread, Event
-from requests import get as requests_get, head as requests_head
+from requests import get as requests_get
 import webbrowser
 
-from tqdm import tqdm
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
@@ -68,7 +66,7 @@ class Model:
 
     def resetTranslator(self):
         del self.translator
-        self.translator = Translator(config.PATH_LOCAL)
+        self.translator = Translator(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHTS[config.WEIGHT_TYPE])
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
@@ -101,8 +99,6 @@ class Model:
         for tl_key in tl_keys:
             for lang in translation_lang[tl_key]["source"]:
                 translation_langs.append(lang)
-            for lang in translation_lang[tl_key]["target"]:
-                translation_langs.append(lang)
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
@@ -122,81 +118,70 @@ class Model:
     def findTranslationEngines(self, source_lang, target_lang):
         compatible_engines = []
         for engine in translatorEngine:
-            source_languages = translation_lang.get(engine, {}).get("source", {})
-            target_languages = translation_lang.get(engine, {}).get("target", {})
-            if source_lang in source_languages and target_lang in target_languages:
+            languages = translation_lang.get(engine, {}).get("source", {})
+            if source_lang in languages and target_lang in languages:
                 compatible_engines.append(engine)
+        if "DeepL_API" in compatible_engines:
+            if self.translator.deepl_client is None:
+                compatible_engines.remove('DeepL_API')
         return compatible_engines
 
-    def getInputTranslate(self, message):
+    def getInputTranslate(self, message, fnc=None):
         translator_name=config.CHOICE_INPUT_TRANSLATOR
         source_language=config.SOURCE_LANGUAGE
         target_language=config.TARGET_LANGUAGE
         target_country = config.TARGET_COUNTRY
 
-        if translator_name == "DeepL_API":
-            if target_language == "English":
-                if target_country in ["United States", "Canada", "Philippines"]:
-                    target_language = "English American"
-                else:
-                    target_language = "English British"
-            elif target_language == "Portuguese":
-                if target_country in ["Portugal"]:
-                    target_language = "Portuguese European"
-                else:
-                    target_language = "Portuguese Brazilian"
-        else:
-            if target_language in ["English American", "English British"]:
-                target_language = "English"
-            elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
-                target_language = "Portuguese"
-
         translation = self.translator.translate(
                         translator_name=translator_name,
                         source_language=source_language,
                         target_language=target_language,
+                        target_country=target_country,
                         message=message
                 )
+
+        # 翻訳失敗時のフェールセーフ処理
+        if translation is False:
+            translation = self.translator.translate(
+                                translator_name="CTranslate2",
+                                source_language=source_language,
+                                target_language=target_language,
+                                target_country=target_country,
+                                message=message
+                        )
+            try:
+                fnc()
+            except Exception:
+                pass
         return translation
 
-    def getOutputTranslate(self, message):
+    def getOutputTranslate(self, message, fnc=None):
         translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
         target_country=config.SOURCE_COUNTRY
 
-        if translator_name == "DeepL_API":
-            if target_language == "English":
-                if target_country in ["United States", "Canada", "Philippines"]:
-                    target_language = "English American"
-                else:
-                    target_language = "English British"
-            elif target_language == "Portuguese":
-                if target_country in ["Portugal"]:
-                    target_language = "Portuguese European"
-                else:
-                    target_language = "Portuguese Brazilian"
-        else:
-            if target_language in ["English American", "English British"]:
-                target_language = "English"
-            elif target_language in ["Portuguese European", "Portuguese Brazilian"]:
-                target_language = "Portuguese"
-
         translation = self.translator.translate(
                         translator_name=translator_name,
                         source_language=source_language,
                         target_language=target_language,
+                        target_country=target_country,
                         message=message
                 )
-        
+
         # 翻訳失敗時のフェールセーフ処理
-        if translation is False and "Filipino":
+        if translation is False:
             translation = self.translator.translate(
                                 translator_name="CTranslate2",
-                                source_language=config.TARGET_LANGUAGE,
-                                target_language=config.SOURCE_LANGUAGE,
+                                source_language=source_language,
+                                target_language=target_language,
+                                target_country=target_country,
                                 message=message
                         )
+            try:
+                fnc()
+            except Exception:
+                pass
         return translation
 
     def addKeywords(self):
