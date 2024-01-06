@@ -1,8 +1,8 @@
+import tempfile
 from zipfile import ZipFile
 from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
-from os import remove as os_remove
 from shutil import copyfile
 from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
@@ -12,6 +12,8 @@ from threading import Thread, Event
 from requests import get as requests_get
 import webbrowser
 
+from tqdm import tqdm
+from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
@@ -265,7 +267,7 @@ class Model:
         return update_flag
 
     @staticmethod
-    def updateSoftware(restart:bool=True):
+    def updateSoftware(restart:bool=True, func=None):
         filename = 'VRCT.zip'
         program_name = 'VRCT.exe'
         folder_name = '_internal'
@@ -277,14 +279,22 @@ class Model:
             res = requests_get(config.GITHUB_URL)
             assets = res.json()['assets']
             url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
-            res = requests_get(url, stream=True)
-            os_makedirs(os_path.join(current_directory, tmp_directory_name), exist_ok=True)
-            with open(os_path.join(current_directory, tmp_directory_name, filename), 'wb') as file:
-                for chunk in res.iter_content(chunk_size=1024):
-                    file.write(chunk)
-            with ZipFile(os_path.join(current_directory, tmp_directory_name, filename)) as zf:
-                zf.extractall(os_path.join(current_directory, tmp_directory_name))
-            os_remove(os_path.join(current_directory, tmp_directory_name, filename))
+            with tempfile.TemporaryDirectory() as tmp_path:
+                res = requests_get(url, stream=True)
+                file_size = int(res.headers.get('content-length', 0))
+                pbar = tqdm(total=file_size, unit="B", unit_scale=True)
+                total_chunk = 0
+                with open(os_path.join(tmp_path, filename), 'wb') as file:
+                    for chunk in res.iter_content(chunk_size=1024*5):
+                        file.write(chunk)
+                        pbar.update(len(chunk))
+                        if isinstance(func, Callable):
+                            total_chunk += len(chunk)
+                            func(total_chunk/file_size)
+                    pbar.close()
+
+                with ZipFile(os_path.join(tmp_path, filename)) as zf:
+                    zf.extractall(os_path.join(current_directory, tmp_directory_name))
             copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
             command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
             Popen(command, cwd=current_directory)
