@@ -355,6 +355,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.FOLDER_OPEN_ICON,
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=button_command,
         )
@@ -941,7 +942,8 @@ class _SettingBoxGenerator():
             button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=button_image,
-            button_image_size=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY,
             button_command=button_command,
         )
@@ -987,6 +989,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(270),
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=open_command,
         )
@@ -1001,6 +1004,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=close_command,
         )
@@ -1216,6 +1220,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CLICKED_BG_COLOR,
             button_image_file=self.settings.image_file.CANCEL_ICON,
             button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            corner_radius=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
             button_command=lambda _e: pressedDeleteButtonCommand(_e, delete_button, redo_button),
         )
@@ -1228,6 +1233,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR,
             button_image_file=self.settings.image_file.REDO_ICON,
             button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            corner_radius=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
             button_command=lambda _e: pressedRedoButtonCommand(_e, delete_button, redo_button),
         )
