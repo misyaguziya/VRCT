@@ -360,7 +360,7 @@ dict_ctranslate2_languages = {
     'Luxembourgish': 'lb',
     'Myanmar': 'my',
     'Tibetan': 'bo',
-    'Tagalog': 'tl',
+    'Filipino': 'tl',
     'Malagasy': 'mg',
     'Assamese': 'as',
     'Tatar': 'tt',
@@ -372,7 +372,7 @@ dict_ctranslate2_languages = {
     'Sundanese': 'su'
 }
 
-translation_lang["ctranslate2"] = {
+translation_lang["CTranslate2"] = {
     "source":dict_ctranslate2_languages,
     "target":dict_ctranslate2_languages,
 }
