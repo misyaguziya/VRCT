@@ -677,7 +677,7 @@ class Config:
         self._SELECTABLE_UI_LANGUAGES_DICT = {
             "en": "English",
             "ja": "日本語",
-            "ko": "한국어（일부 지원）"
+            "ko": "한국어"
             # If you want to add a new language and key, please append it here.
         }
         self._MAX_MIC_ENERGY_THRESHOLD = 2000

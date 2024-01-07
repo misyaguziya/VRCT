@@ -228,13 +228,7 @@ config_window:
     example_text: 이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.
     error_message: "[message]와 [translation]이라는 문자는 사용할 수 없습니다."
 
-  # Speaker2Chatbox
-  send_received_message_to_vrc:
-    label: 수신된 메시지를 VRChat으로 전송
-    desc: 스피커의 소리로 받은 메시지를 VRChat의 챗박스로 보냅니다. 이 기능은 정말 필요한 사용자를 위한 기능입니다. 개발자에게 문의하시기 바랍니다.
-  # Speaker2Chatbox
 
-  
   osc_ip_address:
     label: OSC IP 주소
 
