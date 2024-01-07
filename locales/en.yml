@@ -228,6 +228,7 @@ config_window:
     example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
     error_message: "The characters '[message]' and '[translation]' cannot be used."
 
+  # Note: Speaker2Chatbox localization is fine only in English. Do not translate it into other languages.
   # Speaker2Chatbox
   send_received_message_to_vrc:
     label: Send Received Message To VRChat
