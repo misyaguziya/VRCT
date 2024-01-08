@@ -6,3 +6,4 @@ VRCT.spec
 *.pyc
 logs/
 .venv/
+weight/
