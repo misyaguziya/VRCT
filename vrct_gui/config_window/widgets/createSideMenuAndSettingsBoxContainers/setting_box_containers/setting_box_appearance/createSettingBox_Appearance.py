@@ -6,6 +6,7 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSlider = sbg.createSettingBoxSlider
+    createSettingBoxCheckbox = sbg.createSettingBoxCheckbox
 
     # 関数名は変えるかもしれない。
     # テーマ変更、フォント変更時、 Widget再生成か再起動かは検討中
@@ -21,12 +22,17 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     def slider_text_box_ui_scaling_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING, value)
 
+    def slider_message_box_ratio_callback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO, value)
+
     def optionmenu_font_family_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_FONT_FAMILY, value)
 
     def optionmenu_ui_language_callback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_UI_LANGUAGE, value)
 
+    def checkbox_enable_restore_main_window_geometry_callback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY, checkbox_box_widget.get())
 
     row=0
     config_window.sb__transparency = createSettingBoxSlider(
@@ -82,6 +88,19 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
     config_window.sb__textbox_uis_scaling.grid(row=row)
     row+=1
 
+    config_window.sb__message_box_ratio = createSettingBoxSlider(
+        for_var_label_text=view_variable.VAR_LABEL_MESSAGE_BOX_RATIO,
+        for_var_desc_text=view_variable.VAR_DESC_MESSAGE_BOX_RATIO,
+        slider_attr_name="sb__slider_message_box_ratio",
+        slider_range=view_variable.SLIDER_RANGE_MESSAGE_BOX_RATIO,
+        command=lambda value: slider_message_box_ratio_callback(value),
+        variable=view_variable.VAR_MESSAGE_BOX_RATIO,
+        slider_bind__ButtonPress=view_variable.CALLBACK_BUTTON_PRESS_MESSAGE_BOX_RATIO,
+        slider_bind__ButtonRelease=view_variable.CALLBACK_BUTTON_RELEASE_MESSAGE_BOX_RATIO,
+        sliderTooltipFormatter=view_variable.CALLBACK_SLIDER_TOOLTIP_PERCENTAGE_FORMATTER,
+    )
+    config_window.sb__message_box_ratio.grid(row=row)
+    row+=1
 
     config_window.sb__font_family = createSettingBoxDropdownMenu(
         for_var_label_text=view_variable.VAR_LABEL_FONT_FAMILY,
@@ -103,5 +122,15 @@ def createSettingBox_Appearance(setting_box_wrapper, config_window, settings, vi
         command=lambda value: optionmenu_ui_language_callback(value),
         variable=view_variable.VAR_UI_LANGUAGE,
     )
-    config_window.sb__ui_language.grid(row=row, pady=0)
+    config_window.sb__ui_language.grid(row=row)
+    row+=1
+
+    config_window.sb__enable_restore_main_window_geometry = createSettingBoxCheckbox(
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY,
+        checkbox_attr_name="sb__checkbox_enable_restore_main_window_geometry",
+        command=lambda: checkbox_enable_restore_main_window_geometry_callback(config_window.sb__checkbox_enable_restore_main_window_geometry),
+        variable=view_variable.VAR_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY,
+    )
+    config_window.sb__enable_restore_main_window_geometry.grid(row=row, pady=0)
     row+=1

@@ -1,6 +1,6 @@
-from customtkinter import CTkFrame, CTkScrollableFrame
+from customtkinter import CTkFrame
 
-from ....ui_utils import setDefaultActiveTab, applyUiScalingAndFixTheBugScrollBar
+from ....ui_utils import setDefaultActiveTab, applyUiScalingAndFixTheBugScrollBar, CustomizedCTkScrollableFrame
 
 from ._addConfigSideMenuItem import _addConfigSideMenuItem
 from ._createSettingBoxContainer import _createSettingBoxContainer
@@ -8,7 +8,7 @@ from ._createSettingBoxContainer import _createSettingBoxContainer
 
 from .setting_box_containers.setting_box_appearance import createSettingBox_Appearance
 from .setting_box_containers.setting_box_transcription import createSettingBox_Mic, createSettingBox_Speaker
-from .setting_box_containers.setting_box_others import createSettingBox_Others
+from .setting_box_containers.setting_box_others import createSettingBox_Others, createSettingBox_Others_SendMessageFormats, createSettingBox_Others_ReceivedMessageFormats, createSettingBox_Others_Additional
 from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
 from .setting_box_containers.setting_box_translation import createSettingBox_Translation
 
@@ -38,7 +38,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
 
     # Setting box container
     config_window.main_bg_container.grid_rowconfigure(1, weight=1)
-    config_window.main_setting_box_scrollable_container = CTkScrollableFrame(config_window.main_bg_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR)
+    config_window.main_setting_box_scrollable_container = CustomizedCTkScrollableFrame(config_window.main_bg_container, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR)
     config_window.main_setting_box_scrollable_container.grid(row=1, column=0, sticky="nsew")
 
     applyUiScalingAndFixTheBugScrollBar(
@@ -106,6 +106,9 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 "setting_box_container_attr_name": "setting_box_container_others",
                 "setting_boxes": [
                     { "var_section_title": None, "setting_box": createSettingBox_Others },
+                    { "var_section_title": view_variable.VAR_SECOND_TITLE_OTHERS_SEND_MESSAGE_FORMATS, "setting_box": createSettingBox_Others_SendMessageFormats },
+                    { "var_section_title": view_variable.VAR_SECOND_TITLE_OTHERS_RECEIVED_MESSAGE_FORMATS, "setting_box": createSettingBox_Others_ReceivedMessageFormats },
+                    { "var_section_title": view_variable.VAR_SECOND_TITLE_OTHERS_SPEAKER2CHATBOX, "setting_box": createSettingBox_Others_Additional },
                 ]
             },
         },
@@ -131,7 +134,6 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
             config_window=config_window,
             settings=settings,
             view_variable=view_variable,
-            # view_variable=view_variable,
             side_menu_settings=sm_and_sbc_setting,
             side_menu_row=side_menu_row,
             all_side_menu_tab_attr_name=all_side_menu_tab_attr_name,

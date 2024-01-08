@@ -5,7 +5,6 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from languages import selectable_languages
 from models.translation.translation_languages import translatorEngine
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -40,6 +39,10 @@ class Config:
         return self._VERSION
 
     @property
+    def ENABLE_SPEAKER2CHATBOX(self):
+        return self._ENABLE_SPEAKER2CHATBOX
+
+    @property
     def LOCAL_PATH(self):
         return self._LOCAL_PATH
 
@@ -62,6 +65,30 @@ class Config:
     @property
     def DOCUMENTS_URL(self):
         return self._DOCUMENTS_URL
+
+    @property
+    def TRANSPARENCY_RANGE(self):
+        return self._TRANSPARENCY_RANGE
+
+    @property
+    def APPEARANCE_THEME_LIST(self):
+        return self._APPEARANCE_THEME_LIST
+
+    @property
+    def UI_SCALING_LIST(self):
+        return self._UI_SCALING_LIST
+
+    @property
+    def TEXTBOX_UI_SCALING_RANGE(self):
+        return self._TEXTBOX_UI_SCALING_RANGE
+
+    @property
+    def MESSAGE_BOX_RATIO_RANGE(self):
+        return self._MESSAGE_BOX_RATIO_RANGE
+
+    @property
+    def SELECTABLE_UI_LANGUAGES_DICT(self):
+        return self._SELECTABLE_UI_LANGUAGES_DICT
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
@@ -207,7 +234,7 @@ class Config:
 
     @TRANSPARENCY.setter
     def TRANSPARENCY(self, value):
-        if isinstance(value, int) and 0 <= value <= 100:
+        if isinstance(value, int) and self.TRANSPARENCY_RANGE[0] <= value <= self.TRANSPARENCY_RANGE[1]:
             self._TRANSPARENCY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -218,7 +245,7 @@ class Config:
 
     @APPEARANCE_THEME.setter
     def APPEARANCE_THEME(self, value):
-        if value in ["Light", "Dark", "System"]:
+        if value in self.APPEARANCE_THEME_LIST:
             self._APPEARANCE_THEME = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -229,7 +256,7 @@ class Config:
 
     @UI_SCALING.setter
     def UI_SCALING(self, value):
-        if value in generatePercentageStringsList(start=40,end=200, step=10):
+        if value in self.UI_SCALING_LIST:
             self._UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -240,8 +267,19 @@ class Config:
 
     @TEXTBOX_UI_SCALING.setter
     def TEXTBOX_UI_SCALING(self, value):
-        if isinstance(value, int) and 50 <= value <= 200:
+        if isinstance(value, int) and self.TEXTBOX_UI_SCALING_RANGE[0] <= value <= self.TEXTBOX_UI_SCALING_RANGE[1]:
             self._TEXTBOX_UI_SCALING = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('MESSAGE_BOX_RATIO')
+    def MESSAGE_BOX_RATIO(self):
+        return self._MESSAGE_BOX_RATIO
+
+    @MESSAGE_BOX_RATIO.setter
+    def MESSAGE_BOX_RATIO(self, value):
+        if isinstance(value, int) and self.MESSAGE_BOX_RATIO_RANGE[0] <= value <= self.MESSAGE_BOX_RATIO_RANGE[1]:
+            self._MESSAGE_BOX_RATIO = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -265,9 +303,33 @@ class Config:
 
     @UI_LANGUAGE.setter
     def UI_LANGUAGE(self, value):
-        if value in list(selectable_languages.keys()):
+        if value in list(self.SELECTABLE_UI_LANGUAGES_DICT.keys()):
             self._UI_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY')
+    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self):
+        return self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY
+
+    @ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY.setter
+    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('MAIN_WINDOW_GEOMETRY')
+    def MAIN_WINDOW_GEOMETRY(self):
+        return self._MAIN_WINDOW_GEOMETRY
+
+    @MAIN_WINDOW_GEOMETRY.setter
+    def MAIN_WINDOW_GEOMETRY(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.MAIN_WINDOW_GEOMETRY.keys()):
+            for key, value in value.items():
+                if isinstance(value, str):
+                    self._MAIN_WINDOW_GEOMETRY[key] = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
     @json_serializable('CHOICE_MIC_HOST')
@@ -448,19 +510,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
-    @json_serializable('MESSAGE_FORMAT')
-    def MESSAGE_FORMAT(self):
-        return self._MESSAGE_FORMAT
-
-    @MESSAGE_FORMAT.setter
-    def MESSAGE_FORMAT(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
-            self._MESSAGE_FORMAT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('ENABLE_AUTO_CLEAR_MESSAGE_BOX')
     def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self):
         return self._ENABLE_AUTO_CLEAR_MESSAGE_BOX
@@ -469,6 +518,28 @@ class Config:
     def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self, value):
         if isinstance(value, bool):
             self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('ENABLE_SEND_ONLY_TRANSLATED_MESSAGES')
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self):
+        return self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES
+
+    @ENABLE_SEND_ONLY_TRANSLATED_MESSAGES.setter
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
+    def SEND_MESSAGE_BUTTON_TYPE(self):
+        return self._SEND_MESSAGE_BUTTON_TYPE
+
+    @SEND_MESSAGE_BUTTON_TYPE.setter
+    def SEND_MESSAGE_BUTTON_TYPE(self, value):
+        if isinstance(value, str):
+            self._SEND_MESSAGE_BUTTON_TYPE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -493,17 +564,77 @@ class Config:
             self._ENABLE_SEND_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # [deprecated]
-    # @property
-    # @json_serializable('STARTUP_OSC_ENABLED_CHECK')
-    # def STARTUP_OSC_ENABLED_CHECK(self):
-    #     return self._STARTUP_OSC_ENABLED_CHECK
+    @property
+    @json_serializable('SEND_MESSAGE_FORMAT')
+    def SEND_MESSAGE_FORMAT(self):
+        return self._SEND_MESSAGE_FORMAT
 
-    # @STARTUP_OSC_ENABLED_CHECK.setter
-    # def STARTUP_OSC_ENABLED_CHECK(self, value):
-    #     if isinstance(value, bool):
-    #         self._STARTUP_OSC_ENABLED_CHECK = value
-    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+    @SEND_MESSAGE_FORMAT.setter
+    def SEND_MESSAGE_FORMAT(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]"], value) is False:
+                value = "[message]"
+            self._SEND_MESSAGE_FORMAT = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
+    def SEND_MESSAGE_FORMAT_WITH_T(self):
+        return self._SEND_MESSAGE_FORMAT_WITH_T
+
+    @SEND_MESSAGE_FORMAT_WITH_T.setter
+    def SEND_MESSAGE_FORMAT_WITH_T(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
+            self._SEND_MESSAGE_FORMAT_WITH_T = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('RECEIVED_MESSAGE_FORMAT')
+    def RECEIVED_MESSAGE_FORMAT(self):
+        return self._RECEIVED_MESSAGE_FORMAT
+
+    @RECEIVED_MESSAGE_FORMAT.setter
+    def RECEIVED_MESSAGE_FORMAT(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]"], value) is False:
+                value = "[message]"
+            self._RECEIVED_MESSAGE_FORMAT = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
+    def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
+        return self._RECEIVED_MESSAGE_FORMAT_WITH_T
+
+    @RECEIVED_MESSAGE_FORMAT_WITH_T.setter
+    def RECEIVED_MESSAGE_FORMAT_WITH_T(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
+            self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+
+
+    # Speaker2Chatbox------------------
+    @property
+    @json_serializable('ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC')
+    def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self):
+        return self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC
+
+    @ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC.setter
+    def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
+        if isinstance(value, bool):
+            if self._ENABLE_SPEAKER2CHATBOX is True:
+                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+            else:
+                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+    # Speaker2Chatbox------------------
+
+
 
     @property
     @json_serializable('ENABLE_LOGGER')
@@ -529,7 +660,8 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.0.1"
+        self._VERSION = "2.0.2"
+        self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._LOCAL_PATH = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
         self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")
@@ -537,6 +669,17 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
+        self._TRANSPARENCY_RANGE = (50, 100)
+        self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
+        self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
+        self._TEXTBOX_UI_SCALING_RANGE = (50, 200)
+        self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
+        self._SELECTABLE_UI_LANGUAGES_DICT = {
+            "en": "English",
+            "ja": "日本語",
+            "ko": "한국어"
+            # If you want to add a new language and key, please append it here.
+        }
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -568,11 +711,19 @@ class Config:
 
         ## Config Window
         self._TRANSPARENCY = 100
-        self._APPEARANCE_THEME = "System"
+        self._APPEARANCE_THEME = "Dark"
         self._UI_SCALING = "100%"
         self._TEXTBOX_UI_SCALING = 100
+        self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
+        self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
+        self._MAIN_WINDOW_GEOMETRY = {
+            "x_pos": "0",
+            "y_pos": "0",
+            "width": "870",
+            "height": "640",
+        }
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
@@ -594,11 +745,16 @@ class Config:
             "Bing": None,
             "Google": None,
         }
-        self._MESSAGE_FORMAT = "[message]([translation])"
+        self._SEND_MESSAGE_FORMAT = "[message]"
+        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        self._RECEIVED_MESSAGE_FORMAT = "[message]"
+        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
+        self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
+        self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
-        # self._STARTUP_OSC_ENABLED_CHECK = True # [deprecated]
+        self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
@@ -607,8 +763,13 @@ class Config:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 config = json_load(fp)
 
+            old_message_format = None
             for key in config.keys():
+                if key == "MESSAGE_FORMAT":
+                    old_message_format = config[key]
                 setattr(self, key, config[key])
+            if old_message_format is not None:
+                setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             config = {}

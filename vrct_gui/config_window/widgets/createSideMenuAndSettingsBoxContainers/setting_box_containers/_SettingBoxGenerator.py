@@ -2,10 +2,10 @@ from functools import partial
 from types import SimpleNamespace
 from typing import Union
 
-from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage
+from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage, CTkRadioButton
 from CTkToolTip import *
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressFunction
 from vrct_gui import vrct_gui
 from utils import isEven, callFunctionIfCallable
 
@@ -109,8 +109,9 @@ class _SettingBoxGenerator():
 
     def createSettingBox_Labels(
             self,
-            for_var_label_text, for_var_desc_text,
+            for_var_label_text,
             labels_attr_name,
+            for_var_desc_text=None,
         ):
 
         setting_box_frame= self._createSettingBoxFrame(labels_attr_name, for_var_label_text, for_var_desc_text, expand_label_frame=True)
@@ -203,7 +204,6 @@ class _SettingBoxGenerator():
             variable=variable,
             command=command,
             fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
-            # bg_color="red",
             progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
             button_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_COLOR,
             button_hover_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_HOVERED_COLOR,
@@ -217,10 +217,11 @@ class _SettingBoxGenerator():
 
 
     def createSettingBoxCheckbox(self,
-            for_var_label_text, for_var_desc_text,
+            for_var_label_text,
             checkbox_attr_name,
             command,
             variable,
+            for_var_desc_text=None,
         ):
 
         (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(checkbox_attr_name, for_var_label_text, for_var_desc_text)
@@ -241,9 +242,6 @@ class _SettingBoxGenerator():
             hover_color=self.settings.ctm.SB__CHECKBOX_HOVER_COLOR,
             checkmark_color=self.settings.ctm.SB__CHECKBOX_CHECKMARK_COLOR,
             fg_color=self.settings.ctm.SB__CHECKBOX_CHECKED_COLOR,
-            # fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
-            # bg_color="red",
-            # progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
 
@@ -251,6 +249,81 @@ class _SettingBoxGenerator():
 
         return setting_box_frame
 
+
+
+    # 3 Options
+    def createSettingBoxRadioButtons(
+            self,
+            for_var_label_text, for_var_desc_text,
+            radio_button_attr_name,
+            variable,
+            command,
+            radiobutton_keys_values=dict,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(radio_button_attr_name, for_var_label_text, for_var_desc_text)
+
+        row=0
+        for key, value in radiobutton_keys_values.items():
+            radiobutton_wrapper = CTkFrame(setting_box_item_frame, corner_radius=6, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0, cursor="hand2")
+            radiobutton_wrapper.grid(row=row, column=0, sticky="ew")
+            row+=1
+
+            radiobutton_wrapper.grid_rowconfigure((0,2), weight=1)
+            setting_box_radio_button = CTkRadioButton(
+                radiobutton_wrapper,
+                textvariable=value,
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal"),
+                variable=variable,
+                value=key,
+                text_color=self.settings.ctm.SB__RADIOBUTTON_TEXT_COLOR,
+                fg_color=self.settings.ctm.SB__RADIOBUTTON_SELECTED_COLOR,
+                border_color=self.settings.ctm.SB__RADIOBUTTON_BORDER_COLOR,
+                hover=False
+            )
+            setting_box_radio_button.grid(row=1, column=0, padx=10, pady=10, sticky="ew")
+
+            if key == variable.get():
+                setting_box_radio_button.select()
+
+            setting_box_radio_button._canvas.unbind("<Button-1>")
+            setting_box_radio_button._text_label.unbind("<Button-1>")
+            setting_box_radio_button._text_label.grid(padx=(10,0))
+
+
+            def buttonPressedFunction(radiobutton_wrapper, radiobutton_widget, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_CLICKED_COLOR)
+
+            def buttonReleasedFunction(radiobutton_wrapper, radiobutton_widget, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_HOVERED_COLOR)
+                radiobutton_widget.select()
+                command()
+
+            def enterFunction(radiobutton_wrapper, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__RADIOBUTTON_BG_HOVERED_COLOR)
+
+            def leaveFunction(radiobutton_wrapper, _e):
+                radiobutton_wrapper.configure(fg_color=self.settings.ctm.SB__BG_COLOR)
+
+
+            bindEnterAndLeaveFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                enterFunction=partial(enterFunction, radiobutton_wrapper),
+                leaveFunction=partial(leaveFunction, radiobutton_wrapper)
+            )
+
+            bindButtonPressFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                buttonPressedFunction=partial(buttonPressedFunction, radiobutton_wrapper, setting_box_radio_button)
+            )
+
+            bindButtonReleaseFunction(
+                target_widgets=[radiobutton_wrapper, setting_box_radio_button, setting_box_radio_button._bg_canvas],
+                buttonReleasedFunction=partial(buttonReleasedFunction, radiobutton_wrapper, setting_box_radio_button)
+            )
+
+
+        return setting_box_frame
 
 
 
@@ -282,6 +355,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.FOLDER_OPEN_ICON,
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=button_command,
         )
@@ -540,13 +614,15 @@ class _SettingBoxGenerator():
 
 
 
-    def createSettingBoxMessageFormatEntries(self,
+    def createSettingBoxMessageFormatEntries_WithTranslation(self,
             base_entry_attr_name,
             entry_textvariable_0,
             entry_textvariable_1,
             entry_textvariable_2,
             textvariable_0,
             textvariable_1,
+            example_label_textvariable,
+            swap_button_command,
             entry_bind__Any_KeyRelease,
             entry_bind__FocusOut=None,
         ):
@@ -581,7 +657,7 @@ class _SettingBoxGenerator():
         example_frame_widget.grid_columnconfigure((0,2), weight=1)
         example_label_widget = CTkLabel(
             example_frame_widget,
-            textvariable=self.view_variable.VAR_LABEL_EXAMPLE_TEXT_MESSAGE_FORMAT,
+            textvariable=example_label_textvariable,
             anchor="center",
             justify="center",
             wraplength=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH,
@@ -717,10 +793,6 @@ class _SettingBoxGenerator():
         )
         swap_button_label_1.grid(row=1, column=3)
 
-
-        def adjustedCommand():
-            callFunctionIfCallable(self.view_variable.CALLBACK_SWAP_MESSAGE_FORMAT_REQUIRED_TEXT)
-
         bindButtonFunctionAndColor(
             target_widgets=[
                 swap_button,
@@ -732,8 +804,121 @@ class _SettingBoxGenerator():
             enter_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_HOVERED_COLOR,
             leave_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_COLOR,
             clicked_color=self.settings.ctm.SB__MESSAGE_FORMAT__SWAP_BUTTON_CLICKED_COLOR,
-            buttonReleasedFunction=lambda _e: adjustedCommand(),
+            buttonReleasedFunction=swap_button_command,
         )
+
+
+        return setting_box_frame
+
+
+
+
+    def createSettingBoxMessageFormatEntries(self,
+            base_entry_attr_name,
+            entry_textvariable_0,
+            entry_textvariable_1,
+            textvariable_0,
+            example_label_textvariable,
+            entry_bind__Any_KeyRelease,
+            entry_bind__FocusOut=None,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(base_entry_attr_name)
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(0, weight=1)
+
+
+        example_box_wrapper = CTkFrame(all_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        example_box_wrapper.grid(row=0, column=0, pady=self.settings.uism.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY, sticky="ew")
+
+        entries_wrapper = CTkFrame(all_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        entries_wrapper.grid(row=1, column=0, pady=self.settings.uism.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY, sticky="ew")
+
+
+
+
+        example_box_wrapper.grid_columnconfigure((0,2), weight=1)
+        example_frame_widget = CTkFrame(example_box_wrapper, corner_radius=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_CORNER_RADIUS, fg_color=self.settings.ctm.SB__MESSAGE_FORMAT__EXAMPLE_BG_COLOR, width=0, height=0)
+        example_frame_widget.grid(row=0, column=1)
+
+        example_frame_widget.grid_rowconfigure((0,2), weight=1)
+        example_frame_widget.grid_columnconfigure((0,2), weight=1)
+        example_label_widget = CTkLabel(
+            example_frame_widget,
+            textvariable=example_label_textvariable,
+            anchor="center",
+            justify="center",
+            wraplength=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_WRAP_LENGTH,
+            height=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE, weight="normal"),
+            text_color=self.settings.ctm.SB__MESSAGE_FORMAT__EXAMPLE_TEXT_COLOR,
+        )
+        example_label_widget.grid(row=1, column=1, padx=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, pady=self.settings.uism.SB__MESSAGE_FORMAT__EXAMPLE_IPADXY, sticky="ew")
+
+        self.config_window.additional_widgets.append(example_box_wrapper)
+
+
+
+
+        entry_textvariables = [entry_textvariable_0, entry_textvariable_1]
+        for i in range(2):
+            entry_widget = CTkEntry(
+                entries_wrapper,
+                text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+                fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+                border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
+                height=self.settings.uism.SB__MESSAGE_FORMAT__ENTRY_HEIGHT,
+                textvariable=entry_textvariables[i],
+                justify="center",
+                font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
+            )
+            setattr(self.config_window, base_entry_attr_name + "_" + str(i), entry_widget)
+
+
+
+            if entry_bind__FocusOut is not None:
+                entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
+
+
+        label_frame_widget_0 = CTkFrame(entries_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+
+        label_frame_widget_0.grid_rowconfigure((0,2), weight=1)
+        label_frame_widget_0.grid_columnconfigure(0, weight=1)
+        label_widget_0 = CTkLabel(
+            label_frame_widget_0,
+            textvariable=textvariable_0,
+            anchor="center",
+            height=0,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_FONT_SIZE, weight="normal"),
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR
+        )
+        label_widget_0.grid(row=1, column=0, padx=0, pady=0, sticky="ew")
+
+
+
+
+
+        entries_wrapper.grid_columnconfigure((0,2), weight=1)
+        entries_wrapper.grid_columnconfigure(1, weight=0)
+
+        entry_widget_0 = getattr(self.config_window, base_entry_attr_name+"_0")
+        entry_widget_1 = getattr(self.config_window, base_entry_attr_name+"_1")
+        entry_widget_0.grid(row=0, column=0, sticky="ew")
+        entry_widget_1.grid(row=0, column=2, sticky="ew")
+        label_frame_widget_0.grid(row=0, column=1, padx=self.settings.uism.SB__MESSAGE_FORMAT__REQUIRED_TEXT_PADX, sticky="ew")
+
+        def adjusted_command__for_entry_bind__Any_KeyRelease(_e):
+            message_format = entry_widget_0.get() + textvariable_0.get() + entry_widget_1.get()
+            entry_bind__Any_KeyRelease(message_format)
+
+
+        entry_widget_0.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+        entry_widget_1.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+
 
 
         return setting_box_frame
@@ -757,7 +942,8 @@ class _SettingBoxGenerator():
             button_enter_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=button_image,
-            button_image_size=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE,
+            button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY,
             button_command=button_command,
         )
@@ -803,6 +989,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(270),
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=open_command,
         )
@@ -817,6 +1004,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
             button_image_file=self.settings.image_file.ARROW_LEFT.rotate(90),
             button_image_size=self.settings.uism.SB__BUTTON_ICON_SIZE,
+            corner_radius=self.settings.uism.SB__BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.SB__BUTTON_IPADXY,
             button_command=close_command,
         )
@@ -1032,6 +1220,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CLICKED_BG_COLOR,
             button_image_file=self.settings.image_file.CANCEL_ICON,
             button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            corner_radius=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
             button_command=lambda _e: pressedDeleteButtonCommand(_e, delete_button, redo_button),
         )
@@ -1044,6 +1233,7 @@ class _SettingBoxGenerator():
             button_clicked_color=self.settings.ctm.SB__ADD_AND_DELETE_ABLE_LIST__VALUES_DELETED_BUTTON_CLICKED_BG_COLOR,
             button_image_file=self.settings.image_file.REDO_ICON,
             button_image_size=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE,
+            corner_radius=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CORNER_RADIUS,
             button_ipadxy=self.settings.uism.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY,
             button_command=lambda _e: pressedRedoButtonCommand(_e, delete_button, redo_button),
         )
@@ -1074,106 +1264,6 @@ class _SettingBoxGenerator():
 
         return mic_word_filter_item_wrapper
 
-
-
-
-
-
-        # if setting_box_type == "dropdown_menu_x_dropdown_menu":
-        #     self.setting_box_dropdown_menu_x_dropdown_menu = CTkFrame(self.setting_box, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        #     self.setting_box_dropdown_menu_x_dropdown_menu.grid(row=0, column=1, padx=(0, self.settings.uism.SB__RIGHT_PADX), rowspan=2, sticky="e")
-
-
-
-        #     # Labels
-        #     self.optionmenu_label_left = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=kwargs["left_dropdown_menu_label"],
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #     )
-        #     self.optionmenu_label_left.grid(row=0, column=0)
-
-        #     self.the_space_between_optionmenu = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=None,
-        #     )
-        #     self.the_space_between_optionmenu.grid(row=0, column=1)
-
-
-        #     self.optionmenu_label_right = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text=kwargs["right_dropdown_menu_label"],
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #     )
-        #     self.optionmenu_label_right.grid(row=0, column=2)
-
-
-
-        #     # Option menus
-        #     self.createOption_DropdownMenu(
-        #         setattr_obj,
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         kwargs["left_optionmenu_attr_name"],
-        #         kwargs["left_dropdown_menu_attr_name"],
-        #         dropdown_menu_values=kwargs["left_dropdown_menu_values"],
-        #         width=150,
-        #         command=kwargs["left_dropdown_menu_command"],
-        #         variable=kwargs["left_dropdown_menu_variable"],
-        #     )
-        #     getattr(setattr_obj, kwargs["left_optionmenu_attr_name"]).grid(row=1, column=0)
-
-
-
-        #     self.the_label_between_optionmenu = CTkLabel(
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         text="-->",
-        #         # anchor="w",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__OPTION_MENU_FONT_SIZE, weight="normal"),
-        #         text_color=self.settings.ctm.LABELS_TEXT_COLOR
-        #     )
-        #     self.the_label_between_optionmenu.grid(row=1, column=1, padx=self.settings.uism.SB__RIGHT_PADX/2)
-
-
-        #     self.createOption_DropdownMenu(
-        #         setattr_obj,
-        #         self.setting_box_dropdown_menu_x_dropdown_menu,
-        #         kwargs["right_optionmenu_attr_name"],
-        #         kwargs["right_dropdown_menu_attr_name"],
-        #         dropdown_menu_values=kwargs["right_dropdown_menu_values"],
-        #         width=150,
-        #         command=kwargs["right_dropdown_menu_command"],
-        #         variable=kwargs["right_dropdown_menu_variable"],
-        #     )
-        #     getattr(setattr_obj, kwargs["right_optionmenu_attr_name"]).grid(row=1, column=2)
-
-
-
-
-        # if setting_box_type == "radio_buttons":
-        #     self.setting_box_radio_buttons_frame = CTkFrame(self.setting_box, corner_radius=0, width=0, height=0)
-        #     self.setting_box_radio_buttons_frame.grid(row=0, column=1, padx=(0, self.settings.uism.SB__RIGHT_PADX), rowspan=2, sticky="e")
-
-        #     RADIO_BUTTON_RIGHT_PAD = 14
-        #     self.setting_box_radio_button_1 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_1.grid(row=0, column=0, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
-
-        #     self.setting_box_radio_button_2 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_2.grid(row=0, column=1, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
-
-        #     self.setting_box_radio_button_3 = CTkRadioButton(
-        #         self.setting_box_radio_buttons_frame,
-        #         text="lorem ipsum",
-        #         font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__RADIO_BUTTON_FONT_SIZE, weight="normal")
-        #     )
-        #     self.setting_box_radio_button_3.grid(row=0, column=2, padx=(0,RADIO_BUTTON_RIGHT_PAD), sticky="e")
 
 
 

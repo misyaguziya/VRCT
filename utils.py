@@ -6,7 +6,7 @@ def getImageFile(file_name):
     img = Image_open(os_path.join(os_path.dirname(__file__), "img", file_name))
     return img
 
-def get_key_by_value(dictionary, value):
+def getKeyByValue(dictionary, value):
     for key, val in dictionary.items():
         if val == value:
             return key
@@ -24,14 +24,17 @@ def makeEven(number, minus:bool=False):
         return number if isEven(number) else number - 1
     return number if isEven(number) else number + 1
 
-def generatePercentageStringsList(start=40, end=200, step=10):
+def generatePercentageStringsList(start:int, end:int, step:int):
     strings = []
     for percent in range(start, end + 1, step):
         strings.append(f"{percent}%")
     return strings
 
-def intToPercentageStringsFormatter(value:int):
+def intToPctStr(value:int):
     return f"{value}%"
+
+def strPctToInt(value:str):
+    return int(value.replace("%", ""))
 
 def isUniqueStrings(unique_strings:Union[str, list], input_string:str, require=False):
     import re

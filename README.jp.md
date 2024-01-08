@@ -58,7 +58,7 @@ VRCTはあなたの会話を以下でサポートをします。
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (メイン開発)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI多言語対応)
 - [レラ](https://github.com/soumt-r) (翻訳:韓国語)
-- [どね]() (ロゴデザイン)
+- [どね](https://twitter.com/done_vrc) (ロゴデザイン)
 
 ---
 

@@ -4,14 +4,16 @@ from threading import Thread
 from config import config
 from model import model
 from view import view
-from utils import get_key_by_value, isUniqueStrings
-from languages import selectable_languages
+from utils import getKeyByValue, isUniqueStrings, strPctToInt
+import argparse
 
 # Common
 def callbackUpdateSoftware():
+    setMainWindowGeometry()
     model.updateSoftware()
 
 def callbackRestartSoftware():
+    setMainWindowGeometry()
     model.reStartSoftware()
 
 def callbackFilepathLogs():
@@ -21,6 +23,37 @@ def callbackFilepathLogs():
 def callbackFilepathConfigFile():
     print("callbackFilepathConfigFile", config.LOCAL_PATH.replace('/', '\\'))
     Popen(['explorer', config.LOCAL_PATH.replace('/', '\\')], shell=True)
+
+def callbackQuitVrct():
+    setMainWindowGeometry()
+
+def setMainWindowGeometry():
+    PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
+    NEW_SCALING_INT = strPctToInt(config.UI_SCALING)
+    MULTIPLY_FLOAT = (NEW_SCALING_INT / PRE_SCALING_INT)
+    main_window_geometry = view.getMainWindowGeometry(return_int=True)
+    main_window_geometry["width"] = str(int(main_window_geometry["width"] * MULTIPLY_FLOAT))
+    main_window_geometry["height"] = str(int(main_window_geometry["height"] * MULTIPLY_FLOAT))
+    main_window_geometry["x_pos"] = str(main_window_geometry["x_pos"])
+    main_window_geometry["y_pos"] = str(main_window_geometry["y_pos"])
+    config.MAIN_WINDOW_GEOMETRY = main_window_geometry
+
+def messageFormatter(format_type:str, translation, message):
+    if format_type == "RECEIVED":
+        FORMAT_WITH_T = config.RECEIVED_MESSAGE_FORMAT_WITH_T
+        FORMAT = config.RECEIVED_MESSAGE_FORMAT
+    elif format_type == "SEND":
+        FORMAT_WITH_T = config.SEND_MESSAGE_FORMAT_WITH_T
+        FORMAT = config.SEND_MESSAGE_FORMAT
+    else:
+        raise ValueError("format_type is not found", format_type)
+
+    if len(translation) > 0:
+        osc_message = FORMAT_WITH_T.replace("[message]", message)
+        osc_message = osc_message.replace("[translation]", translation)
+    else:
+        osc_message = FORMAT.replace("[message]", message)
+    return osc_message
 
 # func transcription send message
 def sendMicMessage(message):
@@ -40,12 +73,15 @@ def sendMicMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-                if len(translation) > 0:
-                    osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                    osc_message = osc_message.replace("[translation]", translation)
+                if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+                    if config.ENABLE_TRANSLATION is False:
+                        osc_message = messageFormatter("SEND", "", message)
+                    else:
+                        osc_message = messageFormatter("SEND", "", translation)
                 else:
-                    osc_message = message
+                    osc_message = messageFormatter("SEND", translation, message)
                 model.oscSendMessage(osc_message)
+
 
             view.printToTextbox_SentMessage(message, translation)
             if config.ENABLE_LOGGER is True:
@@ -104,12 +140,16 @@ def receiveSpeakerMessage(message):
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
-                if len(translation) > 0:
-                    xsoverlay_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                    xsoverlay_message = xsoverlay_message.replace("[translation]", translation)
-                else:
-                    xsoverlay_message = message
+                xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
+
+            # ------------Speaker2Chatbox------------
+            if config.ENABLE_SPEAKER2CHATBOX is True:
+                # send OSC message
+                if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
+                    osc_message = messageFormatter("RECEIVED", translation, message)
+                    model.oscSendMessage(osc_message)
+                # ------------Speaker2Chatbox------------
 
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
@@ -170,11 +210,13 @@ def sendChatMessage(message):
 
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-            if len(translation) > 0:
-                osc_message = config.MESSAGE_FORMAT.replace("[message]", message)
-                osc_message = osc_message.replace("[translation]", translation)
+            if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+                if config.ENABLE_TRANSLATION is False:
+                    osc_message = messageFormatter("SEND", "", message)
+                else:
+                    osc_message = messageFormatter("SEND", "", translation)
             else:
-                osc_message = message
+                osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
 
         # update textbox message log (Sent)
@@ -188,7 +230,7 @@ def sendChatMessage(message):
         if config.ENABLE_AUTO_CLEAR_MESSAGE_BOX is True:
             view.clearMessageBox()
 
-def messageBoxPressKeyEnter(e):
+def messageBoxPressKeyEnter():
     model.oscStopSendTyping()
     message = view.getTextFromMessageBox()
     sendChatMessage(message)
@@ -277,16 +319,20 @@ def callbackToggleTranscriptionSend(is_turned_on):
     config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         startThreadingTranscriptionSendMessage()
+        view.changeTranscriptionDisplayStatus("MIC_ON")
     else:
         stopThreadingTranscriptionSendMessage()
+        view.changeTranscriptionDisplayStatus("MIC_OFF")
 
 def callbackToggleTranscriptionReceive(is_turned_on):
     view.setMainWindowAllWidgetsStatusToDisabled()
     config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessage()
+        view.changeTranscriptionDisplayStatus("SPEAKER_ON")
     else:
         stopThreadingTranscriptionReceiveMessage()
+        view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
@@ -319,9 +365,7 @@ def callbackCloseConfigWindow():
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
     view.initMicThresholdCheckButton()
-    # view.initProgressBar_MicEnergy() # ProgressBarに0をセットしたい
     view.initSpeakerThresholdCheckButton()
-    # view.initProgressBar_SpeakerEnergy() # ProgressBarに0をセットしたい
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         startThreadingTranscriptionSendMessageOnCloseConfigWindow()
@@ -366,7 +410,7 @@ def callbackSetAppearance(value):
 def callbackSetUiScaling(value):
     print("callbackSetUiScaling", value)
     config.UI_SCALING = value
-    new_scaling_float = int(value.replace("%", "")) / 100
+    new_scaling_float = strPctToInt(value) / 100
     print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
     view.showRestartButtonIfRequired()
 
@@ -375,6 +419,11 @@ def callbackSetTextboxUiScaling(value):
     config.TEXTBOX_UI_SCALING = int(value)
     view.setMainWindowTextboxUiSize(config.TEXTBOX_UI_SCALING/100)
 
+def callbackSetMessageBoxRatio(value):
+    print("callbackSetMessageBoxRatio", int(value))
+    config.MESSAGE_BOX_RATIO = int(value)
+    view.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
+
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
@@ -382,10 +431,14 @@ def callbackSetFontFamily(value):
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
-    value = get_key_by_value(selectable_languages, value)
-    print("callbackSetUiLanguage__after_get_key_by_value", value)
+    value = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, value)
+    print("callbackSetUiLanguage__after_getKeyByValue", value)
     config.UI_LANGUAGE = value
     view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
+
+def callbackSetEnableRestoreMainWindowGeometry(value):
+    print("callbackSetEnableAutoClearMessageBox", value)
+    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
 
 # Translation Tab
 def callbackSetDeeplAuthkey(value):
@@ -408,7 +461,8 @@ def callbackSetDeeplAuthkey(value):
         config.AUTH_KEYS = auth_keys
         config.CHOICE_TRANSLATOR = model.findTranslationEngine(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
 
-# Transcription Tab (Mic)
+# Transcription Tab
+# Transcription (Mic)
 def callbackSetMicHost(value):
     print("callbackSetMicHost", value)
     config.CHOICE_MIC_HOST = value
@@ -539,10 +593,12 @@ def callbackDeleteMicWordFilter(value):
         new_input_mic_word_filter_list.remove(str(value))
         config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
         view.setLatestConfigVariable("MicMicWordFilter")
+        model.resetKeywordProcessor()
+        model.addKeywords()
     except Exception:
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
 
-
+# Transcription (Speaker)
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
     if value == "":
@@ -565,7 +621,6 @@ def callbackSetSpeakerDynamicEnergyThreshold(value):
         view.closeSpeakerEnergyThresholdWidget()
     else:
         view.openSpeakerEnergyThresholdWidget()
-
 
 def setProgressBarSpeakerEnergy(energy):
     view.updateSetProgressBar_SpeakerEnergy(energy)
@@ -637,6 +692,15 @@ def callbackSetEnableAutoClearMessageBox(value):
     print("callbackSetEnableAutoClearMessageBox", value)
     config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
 
+def callbackSetEnableSendOnlyTranslatedMessages(value):
+    print("callbackSetEnableSendOnlyTranslatedMessages", value)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+
+def callbackSetSendMessageButtonType(value):
+    print("callbackSetSendMessageButtonType", value)
+    config.SEND_MESSAGE_BUTTON_TYPE = value
+    view.changeMainWindowSendMessageButton(config.SEND_MESSAGE_BUTTON_TYPE)
+
 def callbackSetEnableNoticeXsoverlay(value):
     print("callbackSetEnableNoticeXsoverlay", value)
     config.ENABLE_NOTICE_XSOVERLAY = value
@@ -650,26 +714,60 @@ def callbackSetEnableAutoExportMessageLogs(value):
     else:
         model.stopLogger()
 
-def callbackSetMessageFormat(value):
-    print("callbackSetMessageFormat", value)
-    if len(value) > 0:
-        if isUniqueStrings(["[message]", "[translation]"], value) is True:
-            config.MESSAGE_FORMAT = value
-            view.clearErrorMessage()
-            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
-        else:
-            view.showErrorMessage_MessageFormat()
-            view.setMessageFormatEntryWidgets(config.MESSAGE_FORMAT)
-
-
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
     config.ENABLE_SEND_MESSAGE_TO_VRC = value
 
-# [deprecated]
-# def callbackSetStartupOscEnabledCheck(value):
-#     print("callbackSetStartupOscEnabledCheck", value)
-#     config.STARTUP_OSC_ENABLED_CHECK = value
+# Others (Message Formats(Send)
+def callbackSetSendMessageFormat(value):
+    print("callbackSetSendMessageFormat", value)
+    if isUniqueStrings(["[message]"], value) is True:
+        config.SEND_MESSAGE_FORMAT = value
+        view.clearErrorMessage()
+        view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
+    else:
+        view.showErrorMessage_SendMessageFormat()
+        view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
+
+def callbackSetSendMessageFormatWithT(value):
+    print("callbackSetSendMessageFormatWithT", value)
+    if len(value) > 0:
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.SEND_MESSAGE_FORMAT_WITH_T = value
+            view.clearErrorMessage()
+            view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
+        else:
+            view.showErrorMessage_SendMessageFormatWithT()
+            view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
+
+# Others (Message Formats(Received)
+def callbackSetReceivedMessageFormat(value):
+    print("callbackSetReceivedMessageFormat", value)
+    if isUniqueStrings(["[message]"], value) is True:
+        config.RECEIVED_MESSAGE_FORMAT = value
+        view.clearErrorMessage()
+        view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+    else:
+        view.showErrorMessage_ReceivedMessageFormat()
+        view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
+
+def callbackSetReceivedMessageFormatWithT(value):
+    print("callbackSetReceivedMessageFormatWithT", value)
+    if len(value) > 0:
+        if isUniqueStrings(["[message]", "[translation]"], value) is True:
+            config.RECEIVED_MESSAGE_FORMAT_WITH_T = value
+            view.clearErrorMessage()
+            view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
+        else:
+            view.showErrorMessage_ReceivedMessageFormatWithT()
+            view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
+
+# ---------------------Speaker2Chatbox---------------------
+def callbackSetEnableSendReceivedMessageToVrc(value):
+    print("callbackSetEnableSendReceivedMessageToVrc", value)
+    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+# ---------------------Speaker2Chatbox---------------------
+
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
@@ -684,11 +782,25 @@ def callbackSetOscPort(value):
     print("callbackSetOscPort", int(value))
     config.OSC_PORT = int(value)
 
+
+def initSetConfigByExeArguments():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--ip")
+    parser.add_argument("--port")
+    args = parser.parse_args()
+    if args.ip is not None:
+        config.OSC_IP_ADDRESS = str(args.ip)
+        view.setGuiVariable_OscIpAddress(config.OSC_IP_ADDRESS)
+    if args.port is not None:
+        config.OSC_PORT = int(args.port)
+        view.setGuiVariable_OscPort(config.OSC_PORT)
+
 def createMainWindow():
     # create GUI
     view.createGUI()
 
     # init config
+    initSetConfigByExeArguments()
     initSetLanguageAndCountry()
 
     if model.authenticationTranslator(config.CHOICE_TRANSLATOR, config.AUTH_KEYS[config.CHOICE_TRANSLATOR]) is False:
@@ -702,13 +814,10 @@ def createMainWindow():
     # set word filter
     model.addKeywords()
 
-    # check OSC started [deprecated]
-    # if config.STARTUP_OSC_ENABLED_CHECK is True and config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-    #     model.checkOSCStarted(view.printToTextbox_OSCError)
-
     # check Software Updated
-    if model.checkSoftwareUpdated() is True:
-        view.showUpdateAvailableButton()
+    if config.ENABLE_SPEAKER2CHATBOX is False:
+        if model.checkSoftwareUpdated() is True:
+            view.showUpdateAvailableButton()
 
     # init logger
     if config.ENABLE_LOGGER is True:
@@ -721,6 +830,7 @@ def createMainWindow():
             "callback_restart_software": callbackRestartSoftware,
             "callback_filepath_logs": callbackFilepathLogs,
             "callback_filepath_config_file": callbackFilepathConfigFile,
+            "callback_quit_vrct": callbackQuitVrct,
         },
 
         window_action_registers={
@@ -759,8 +869,10 @@ def createMainWindow():
             "callback_set_appearance": callbackSetAppearance,
             "callback_set_ui_scaling": callbackSetUiScaling,
             "callback_set_textbox_ui_scaling": callbackSetTextboxUiScaling,
+            "callback_set_message_box_ratio": callbackSetMessageBoxRatio,
             "callback_set_font_family": callbackSetFontFamily,
             "callback_set_ui_language": callbackSetUiLanguage,
+            "callback_set_enable_restore_main_window_geometry": callbackSetEnableRestoreMainWindowGeometry,
 
             # Translation Tab
             "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
@@ -789,11 +901,21 @@ def createMainWindow():
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
+            "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
+            "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
-            "callback_set_message_format": callbackSetMessageFormat,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
-            # "callback_set_startup_osc_enabled_check": callbackSetStartupOscEnabledCheck, # [deprecated]
+            # Others(Message Formats(Send)
+            "callback_set_send_message_format": callbackSetSendMessageFormat,
+            "callback_set_send_message_format_with_t": callbackSetSendMessageFormatWithT,
+            # Others(Message Formats(Received)
+            "callback_set_received_message_format": callbackSetReceivedMessageFormat,
+            "callback_set_received_message_format_with_t": callbackSetReceivedMessageFormatWithT,
+
+            # Speaker2Chatbox----------------
+            "callback_set_enable_send_received_message_to_vrc": callbackSetEnableSendReceivedMessageToVrc,
+            # Speaker2Chatbox----------------
 
             # Advanced Settings Tab
             "callback_set_osc_ip_address": callbackSetOscIpAddress,

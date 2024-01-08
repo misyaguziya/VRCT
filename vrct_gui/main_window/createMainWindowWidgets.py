@@ -6,18 +6,16 @@ from utils import callFunctionIfCallable
 from ..ui_utils import createButtonWithImage, getImagePath, bindButtonFunctionAndColor
 
 def createMainWindowWidgets(vrct_gui, settings, view_variable):
-    vrct_gui.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(view_variable.CALLBACK_QUIT_VRCT))
+    vrct_gui.protocol("WM_DELETE_WINDOW", lambda: callFunctionIfCallable(view_variable.CALLBACK_DELETE_MAIN_WINDOW))
 
 
     vrct_gui.iconbitmap(getImagePath("vrct_logo_mark_black.ico"))
     vrct_gui.title("VRCT")
-    # vrct_gui.minsize(200, 200)
 
 
     # Main Container
     vrct_gui.grid_columnconfigure(0, weight=1)
     vrct_gui.grid_rowconfigure(0, weight=1)
-    # vrct_gui.grid_columnconfigure(0, weight=1, minsize=settings.uism.MAIN_AREA_MIN_WIDTH)
 
     vrct_gui.configure(fg_color=settings.ctm.MAIN_BG_COLOR)
 
@@ -122,4 +120,4 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     createTextbox(settings, vrct_gui, view_variable)
 
-    createEntryMessageBox(settings, vrct_gui)
+    createEntryMessageBox(settings, vrct_gui, view_variable)

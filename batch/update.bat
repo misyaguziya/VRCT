@@ -16,5 +16,5 @@ rmdir /s /q %local_path%%folder_tmp%
 if %restart% == True (
     START "" %local_path%%exe_name%
 )
-pause
+
 del /f "%~dp0%~nx0"

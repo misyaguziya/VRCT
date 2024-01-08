@@ -50,11 +50,17 @@ class UiScalingManager():
         self.main.TEXTBOX_FONT_SIZE__MAIN_TEXT_FONT = self._calculateUiSize(16)
 
         self.main.TEXTBOX_ENTRY_FONT_SIZE = self._calculateUiSize(16)
+        self.main.TEXTBOX_ENTRY_CORNER_RADIUS = self._calculateUiSize(4)
+        self.main.TEXTBOX_ENTRY_BORDER_SIZE = self._calculateUiSize(2, is_allowed_odd=True)
         self.main.TEXTBOX_ENTRY_HEIGHT = self._calculateUiSize(40)
         self.main.TEXTBOX_ENTRY_PADX = self.main.TEXTBOX_PADX
         self.main.TEXTBOX_ENTRY_PADY = self._calculateUiSize(10)
-        self.main.TEXTBOX_ENTRY_IPADX = self._calculateUiSize(14)
-        self.main.TEXTBOX_ENTRY_IPADY = (self._calculateUiSize(2, True), self._calculateUiSize(3, True))
+
+        self.main.SEND_MESSAGE_BUTTON_CORNER_RADIUS = self.main.TEXTBOX_ENTRY_CORNER_RADIUS
+        self.main.SEND_MESSAGE_BUTTON_IMAGE_SIZE = self._calculateUiSize(20)
+        self.main.SEND_MESSAGE_BUTTON_MIN_WIDTH = self._calculateUiSize(40)
+        self.main.SEND_MESSAGE_BUTTON_RATE_WIDTH = self._calculateUiSize(6)
+        self.main.SEND_MESSAGE_BUTTON_MAX_WIDTH = self._calculateUiSize(100)
 
 
         # Sidebar
@@ -85,6 +91,9 @@ class UiScalingManager():
         self.main.SLS__PRESET_TAB_NUMBER_HEIGHT = self._calculateUiSize(30)
         self.main.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT = self._calculateUiSize(36)
+
+        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
+
 
         self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
@@ -160,6 +169,8 @@ class UiScalingManager():
         self.confirmation_modal.BUTTONS_IPADX = self._calculateUiSize(10)
         self.confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
 
+        # Dropdown Menu Window
+        self.config_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
@@ -296,6 +307,7 @@ class UiScalingManager():
         self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADX = (self._calculateUiSize(8), 0)
         self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_TEXT_IPADY = self._calculateUiSize(6)
         self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IMG_SIZE = self._calculateUiSize(14)
+        self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_CORNER_RADIUS = self._calculateUiSize(4)
         self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_IPADXY = self._calculateUiSize(6)
         self.config_window.ADD_AND_DELETE_ABLE_LIST__VALUES_ACTION_BUTTON_PADX = (self._calculateUiSize(6), self._calculateUiSize(8))
 
@@ -322,9 +334,9 @@ class UiScalingManager():
 
         self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)
         self.config_window.SB__BUTTON_ICON_SIZE = self._calculateUiSize(24)
+        self.config_window.SB__BUTTON_CORNER_RADIUS = self.config_window.BUTTONS_CORNER_RADIUS
 
         self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_IPADXY = self._calculateUiSize(10)
-        self.config_window.SB__OPEN_CONFIG_FILE_BUTTON_ICON_SIZE = self._calculateUiSize(20)
 
 
     def _calculateUiSize(self, default_size, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
