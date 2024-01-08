@@ -5,8 +5,10 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from models.translation.translation_languages import translatorEngine
+from languages import selectable_languages
+from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from models.translation.utils import ctranslate2_weights
 from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
@@ -43,8 +45,12 @@ class Config:
         return self._ENABLE_SPEAKER2CHATBOX
 
     @property
-    def LOCAL_PATH(self):
-        return self._LOCAL_PATH
+    def ENABLE_SPEAKER2CHATBOX(self):
+        return self._ENABLE_SPEAKER2CHATBOX
+
+    @property
+    def PATH_LOCAL(self):
+        return self._PATH_LOCAL
 
     @property
     def PATH_CONFIG(self):
@@ -89,6 +95,10 @@ class Config:
     @property
     def SELECTABLE_UI_LANGUAGES_DICT(self):
         return self._SELECTABLE_UI_LANGUAGES_DICT
+
+    @property
+    def CTRANSLATE2_WEIGHTS(self):
+        return self._CTRANSLATE2_WEIGHTS
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
@@ -172,13 +182,22 @@ class Config:
             self._TARGET_LANGUAGE = value
 
     @property
-    def CHOICE_TRANSLATOR(self):
-        return self._CHOICE_TRANSLATOR
+    def CHOICE_INPUT_TRANSLATOR(self):
+        return self._CHOICE_INPUT_TRANSLATOR
 
-    @CHOICE_TRANSLATOR.setter
-    def CHOICE_TRANSLATOR(self, value):
-        if value in translatorEngine:
-            self._CHOICE_TRANSLATOR = value
+    @CHOICE_INPUT_TRANSLATOR.setter
+    def CHOICE_INPUT_TRANSLATOR(self, value):
+        if value in list(translation_lang.keys()):
+            self._CHOICE_INPUT_TRANSLATOR= value
+
+    @property
+    def CHOICE_OUTPUT_TRANSLATOR(self):
+        return self._CHOICE_OUTPUT_TRANSLATOR
+
+    @CHOICE_OUTPUT_TRANSLATOR.setter
+    def CHOICE_OUTPUT_TRANSLATOR(self, value):
+        if value in list(translation_lang.keys()):
+            self._CHOICE_OUTPUT_TRANSLATOR = value
 
     # Save Json Data
     ## Main Window
@@ -191,6 +210,28 @@ class Config:
     def SELECTED_TAB_NO(self, value):
         if isinstance(value, str):
             self._SELECTED_TAB_NO = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TAB_YOUR_TRANSLATOR_ENGINES')
+    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self):
+        return self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
+
+    @SELECTED_TAB_YOUR_TRANSLATOR_ENGINES.setter
+    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TAB_TARGET_TRANSLATOR_ENGINES')
+    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self):
+        return self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
+
+    @SELECTED_TAB_TARGET_TRANSLATOR_ENGINES.setter
+    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -510,6 +551,30 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
+    @json_serializable('WEIGHT_TYPE')
+    def WEIGHT_TYPE(self):
+        return self._WEIGHT_TYPE
+
+    @WEIGHT_TYPE.setter
+    def WEIGHT_TYPE(self, value):
+        if isinstance(value, str):
+            self._WEIGHT_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('MESSAGE_FORMAT')
+    def MESSAGE_FORMAT(self):
+        return self._MESSAGE_FORMAT
+
+    @MESSAGE_FORMAT.setter
+    def MESSAGE_FORMAT(self, value):
+        if isinstance(value, str):
+            if isUniqueStrings(["[message]", "[translation]"], value) is False:
+                value = "[message]([translation])"
+            self._MESSAGE_FORMAT = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('ENABLE_AUTO_CLEAR_MESSAGE_BOX')
     def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self):
         return self._ENABLE_AUTO_CLEAR_MESSAGE_BOX
@@ -662,9 +727,9 @@ class Config:
         # Read Only
         self._VERSION = "2.0.2"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
-        self._LOCAL_PATH = os_path.dirname(sys.argv[0])
-        self._PATH_CONFIG = os_path.join(self._LOCAL_PATH, "config.json")
-        self._PATH_LOGS = os_path.join(self._LOCAL_PATH, "logs")
+        self._PATH_LOCAL = os_path.dirname(sys.argv[0])
+        self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
+        self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
@@ -680,6 +745,7 @@ class Config:
             "ko": "한국어"
             # If you want to add a new language and key, please append it here.
         }
+        self._CTRANSLATE2_WEIGHTS = ctranslate2_weights
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -688,7 +754,8 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-        self._CHOICE_TRANSLATOR = translatorEngine[0]
+        self._CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+        self._CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
         self._SOURCE_LANGUAGE = "Japanese"
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
@@ -697,6 +764,16 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
+        self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = {
+            "1":"CTranslate2",
+            "2":"CTranslate2",
+            "3":"CTranslate2",
+        }
+        self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = {
+            "1":"CTranslate2",
+            "2":"CTranslate2",
+            "3":"CTranslate2",
+        }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
             "1":"Japanese\n(Japan)",
             "2":"Japanese\n(Japan)",
@@ -741,10 +818,8 @@ class Config:
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
             "DeepL_API": None,
-            "DeepL": None,
-            "Bing": None,
-            "Google": None,
         }
+        self._WEIGHT_TYPE = "small"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
