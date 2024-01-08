@@ -12,7 +12,6 @@ class SplashWindow(CTkToplevel):
 
 
         sw=self.winfo_screenwidth()
-        # sh=self.winfo_screenheight()
 
         pw=int(sw/4)
 

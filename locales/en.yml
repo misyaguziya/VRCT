@@ -82,6 +82,9 @@ config_window:
     transcription_mic: Mic
     transcription_speaker: Speaker
     others: Others
+    others_send_message_formats: Message Formats(Send)
+    others_received_message_formats: Message Formats(Received)
+    others_speaker2chatbox: Speaker2Chatbox
     advanced_settings: Advanced Settings
 
 
@@ -91,7 +94,7 @@ config_window:
 
   appearance_theme:
     label: Theme
-    desc: Change the color theme. Currently.
+    desc: Change the color theme.
 
   ui_size:
     label: UI Size
@@ -100,11 +103,19 @@ config_window:
     label: Text Box Font Size
     desc: You can adjust the font size used in the logs relative to the UI size.
 
+  message_box_ratio:
+    label: Message Box Size
+    desc: "You can change the size of the input message box. It is in ratio to the text box.\n*No exact calculations."
+
   font_family:
     label: Font Family
 
   ui_language:
     label: UI Language
+
+  to_restore_main_window_geometry:
+    label: Remember The Main Window Position
+    desc: Restore the position and size of the previous window upon startup.
 
   deepl_auth_key:
     label: DeepL Auth Key
@@ -171,6 +182,15 @@ config_window:
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
 
+  send_only_translated_messages:
+    label: Send Only Translated Messages
+
+  send_message_button_type:
+    label: Send Message Button
+    hide: Hide (Use enter key to send)
+    show: Show
+    show_and_disable_enter_key: Show and disable to send when pressed enter key
+
   notice_xsoverlay:
     label: Notification XSOverlay (VR Only)
     desc: Notify received messages by using XSOverlay's notification feature.
@@ -179,15 +199,42 @@ config_window:
     label: Auto Export Message Logs
     desc: Automatically export the conversation messages as a text file.
 
-  message_format:
-    label: Message Format
-    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\nIt will be used in Notification XSOverlay too."
-    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
-    error_message: "The characters '[message]' and '[translation]' cannot be used."
-
   send_message_to_vrc:
     label: Send Message To VRChat
     desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
+
+
+  send_message_format:
+    label: Message Format
+    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message."
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' cannot be used."
+
+  send_message_format_with_t:
+    label: Message Format(With translation)
+    desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message."
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' and '[translation]' cannot be used."
+
+  received_message_format:
+    label: Message Format
+    desc: "You can change the decoration of the received message you want to send.\n[message] will be replaced with the message.\nIt will be used in Notification XSOverlay too."
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' cannot be used."
+
+  received_message_format_with_t:
+    label: Message Format(With translation)
+    desc: It will be used in Notification XSOverlay too.
+    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
+    error_message: "The characters '[message]' and '[translation]' cannot be used."
+
+  # Note: Speaker2Chatbox localization is fine only in English. Do not translate it into other languages.
+  # Speaker2Chatbox
+  send_received_message_to_vrc:
+    label: Send Received Message To VRChat
+    desc: Send the message you received from the speaker's sound to VRChat's chatbox. However, this feature is intended for users who genuinely need it. Please consult with the developer.
+  # Speaker2Chatbox
+
 
   osc_ip_address:
     label: OSC IP Address
