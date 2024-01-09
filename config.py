@@ -5,7 +5,6 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from languages import selectable_languages
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
 from models.translation.utils import ctranslate2_weights
@@ -559,19 +558,6 @@ class Config:
     def WEIGHT_TYPE(self, value):
         if isinstance(value, str):
             self._WEIGHT_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('MESSAGE_FORMAT')
-    def MESSAGE_FORMAT(self):
-        return self._MESSAGE_FORMAT
-
-    @MESSAGE_FORMAT.setter
-    def MESSAGE_FORMAT(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
-            self._MESSAGE_FORMAT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
