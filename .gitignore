@@ -7,3 +7,5 @@ VRCT.spec
 logs/
 .venv/
 weight/
+.vscode
+error.log
