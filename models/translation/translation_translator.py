@@ -6,11 +6,6 @@ from .translation_languages import translation_lang
 import ctranslate2
 import transformers
 
-TRANSLATE_MODELS = {
-    "small": "facebook/m2m100_418M",
-    "large": "facebook/m2m100_1.2B"
-}
-
 # Translator
 class Translator():
     def __init__(self, path, weight_config):

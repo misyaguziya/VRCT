@@ -2,7 +2,7 @@ import tempfile
 from zipfile import ZipFile
 from os import path as os_path
 from os import makedirs as os_makedirs
-from requests import get as requests_get, head as requests_head
+from requests import get as requests_get
 from tqdm import tqdm
 from typing import Callable
 import hashlib
