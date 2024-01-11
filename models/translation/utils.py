@@ -8,7 +8,7 @@ from typing import Callable
 import hashlib
 
 ctranslate2_weights = {
-    "small": { # M2M-100 418M-parameter model
+    "m2m100_418m": { # M2M-100 418M-parameter model
         "url": "https://bit.ly/33fM1AO",
         "directory_name": "m2m100_418m",
         "tokenizer": "facebook/m2m100_418M",
@@ -18,7 +18,7 @@ ctranslate2_weights = {
             "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
         }
     },
-    "large": { # M2M-100 1.2B-parameter model
+    "m2m100_12b": { # M2M-100 1.2B-parameter model
         "url": "https://bit.ly/3GYiaed",
         "directory_name": "m2m100_12b",
         "tokenizer": "facebook/m2m100_1.2b",
@@ -39,7 +39,7 @@ def calculate_file_hash(file_path, block_size=65536):
 
     return hash_object.hexdigest()
 
-def downloadCTranslate2Weight(path, weight_type="small", ctranslate2_weights=ctranslate2_weights, func=None):
+def downloadCTranslate2Weight(path, weight_type="small", func=None):
     url = ctranslate2_weights[weight_type]["url"]
     filename = 'weight.zip'
     directory_name = 'weight'
