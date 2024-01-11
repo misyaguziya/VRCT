@@ -2,25 +2,27 @@ import os
 from deepl import Translator as deepl_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translation_lang
+from .utils import ctranslate2_weights
 
 import ctranslate2
 import transformers
 
-TRANSLATE_MODELS = {
-    "small": "facebook/m2m100_418M",
-    "large": "facebook/m2m100_1.2B"
-}
-
 # Translator
 class Translator():
-    def __init__(self, path, weight_config):
-        self.translator_status = {}
-        directory_name = weight_config["directory_name"]
-        tokenizer = weight_config["tokenizer"]
-        self.weight_path = os.path.join(path, "weight", directory_name)
-        self.translator = ctranslate2.Translator(self.weight_path, device="cpu", device_index=0, compute_type="int8", inter_threads=1, intra_threads=4)
-        self.tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
+    def __init__(self, path, model_type):
         self.deepl_client = None
+        directory_name = ctranslate2_weights[model_type]["directory_name"]
+        tokenizer = ctranslate2_weights[model_type]["tokenizer"]
+        weight_path = os.path.join(path, "weight", directory_name)
+        self.ctranslate2_translator = ctranslate2.Translator(
+            weight_path,
+            device="cpu",
+            device_index=0,
+            compute_type="int8",
+            inter_threads=1,
+            intra_threads=4
+        )
+        self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
 
     def authenticationDeepLAuthKey(self, authkey):
         result = True
@@ -31,6 +33,20 @@ class Translator():
             self.deepl_client = None
             result = False
         return result
+
+    def changeCTranslate2Model(self, path, model_type):
+        directory_name = ctranslate2_weights[model_type]["directory_name"]
+        tokenizer = ctranslate2_weights[model_type]["tokenizer"]
+        weight_path = os.path.join(path, "weight", directory_name)
+        self.ctranslate2_translator = ctranslate2.Translator(
+            weight_path,
+            device="cpu",
+            device_index=0,
+            compute_type="int8",
+            inter_threads=1,
+            intra_threads=4
+        )
+        self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
 
     def translate(self, translator_name, source_language, target_language, target_country, message):
         try:
@@ -86,12 +102,12 @@ class Translator():
                         to_language=target_language,
                         )
                 case "CTranslate2":
-                    self.tokenizer.src_lang = source_language
-                    source = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(message))
-                    target_prefix = [self.tokenizer.lang_code_to_token[target_language]]
-                    results = self.translator.translate_batch([source], target_prefix=[target_prefix])
+                    self.ctranslate2_tokenizer.src_lang = source_language
+                    source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
+                    target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                    results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
                     target = results[0].hypotheses[0][1:]
-                    result = self.tokenizer.decode(self.tokenizer.convert_tokens_to_ids(target))
+                    result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
         except Exception:
             import traceback
             with open('error.log', 'a') as f:
