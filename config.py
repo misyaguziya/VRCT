@@ -7,7 +7,6 @@ import tkinter as tk
 from tkinter import font
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
-from models.translation.utils import ctranslate2_weights
 from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
@@ -94,10 +93,6 @@ class Config:
     @property
     def SELECTABLE_UI_LANGUAGES_DICT(self):
         return self._SELECTABLE_UI_LANGUAGES_DICT
-
-    @property
-    def CTRANSLATE2_WEIGHTS(self):
-        return self._CTRANSLATE2_WEIGHTS
 
     @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
@@ -731,7 +726,6 @@ class Config:
             "ko": "한국어"
             # If you want to add a new language and key, please append it here.
         }
-        self._CTRANSLATE2_WEIGHTS = ctranslate2_weights
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -805,7 +799,7 @@ class Config:
         self._AUTH_KEYS = {
             "DeepL_API": None,
         }
-        self._WEIGHT_TYPE = "small"
+        self._WEIGHT_TYPE = "m2m100_418m"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
