@@ -9,6 +9,8 @@ main_window:
   both_direction_desc: Translate Each Other
   swap_button_label: Swap Languages
   target_language: Target Language
+  translator: Translator
+  translator_ctranslate2: Internal
 
   textbox_tab_all: All
   textbox_tab_sent: Sent
