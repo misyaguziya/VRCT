@@ -42,6 +42,17 @@ def getLongestText(text_list:list):
             longest_text = text
     return longest_text
 
+def getLongestText_Dict(text_dict:dict):
+    max_length = 0
+    longest_text = ""
+
+    for key, text in text_dict.items():
+        if len(text) > max_length:
+            max_length = len(text)
+            longest_text = text
+
+    return longest_text
+
 def calculateUiSize(default_size, scaling_float, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
         size = int(default_size * scaling_float)
         size += 1 if not is_allowed_odd and size % 2 != 0 else 0

@@ -66,7 +66,7 @@ class UiScalingManager():
         # Sidebar
         # Sidebar Features
         self.main.SF__LOGO_MAX_SIZE = self._calculateUiSize(120)
-        self.main.SF__LOGO_PADY = (self._calculateUiSize(12),self._calculateUiSize(8))
+        self.main.SF__LOGO_PADY = (self._calculateUiSize(10),self._calculateUiSize(6))
         self.main.SF__LOGO_HEIGHT_FOR_ADJUSTMENT = (self._calculateUiSize(6))
 
         self.main.SF__LABELS_IPADY = self._calculateUiSize(16)
@@ -84,34 +84,34 @@ class UiScalingManager():
 
 
         # Sidebar Quick Language Settings, SQLS
-        self.main.SLS__TITLE_FONT_SIZE = self._calculateUiSize(16)
-        self.main.SLS__TITLE_PADY = (self._calculateUiSize(12), self._calculateUiSize(6))
+        self.main.SLS__TITLE_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__TITLE_PADY = (self._calculateUiSize(10), self._calculateUiSize(4))
 
         self.main.SLS__PRESET_TAB_NUMBER_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__PRESET_TAB_NUMBER_HEIGHT = self._calculateUiSize(30)
         self.main.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT = self._calculateUiSize(36)
 
-        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
+        self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(12)
 
+        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
 
         self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
         self.main.SLS__BOX_IPADX = self._calculateUiSize(10)
-        self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(18))
+        self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(14))
         self.main.SLS__BOX_OPTION_MENU_FONT_SIZE = self._calculateUiSize(14)
         self.main.SLS__BOX_OPTION_MENU_IPADY = self._calculateUiSize(2)
-        self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = (self._calculateUiSize(20), self._calculateUiSize(20))
+        self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(20))
         # self.main.SLS__BOX_OPTION_MENU_WIDTH = self._calculateUiSize(200)
-        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(4)
+        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(6)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_PADX = self._calculateUiSize(20)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADX = self._calculateUiSize(8)
-        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY = self._calculateUiSize(6)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY = self._calculateUiSize(4)
         self.main.SLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
         self.main.SLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
         self.main.SLS__BOX_ARROWS_DESC_PADX = self._calculateUiSize(6)
-        self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(16)
 
         self.main.SIDEBAR_CONFIG_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SIDEBAR_CONFIG_BUTTON_IMAGE_SIZE = self.main.SF__COMPACT_MODE_IMAGE_SIZE
