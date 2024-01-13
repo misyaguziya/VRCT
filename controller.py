@@ -250,6 +250,9 @@ def messageBoxFocusOut(e):
         model.oscStopSendTyping()
 
 # func select languages
+def getLatestSelectableTranslationEngines():
+    return model.findTranslationEngines(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+
 def initSetTranslateEngine():
     engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
     config.CHOICE_INPUT_TRANSLATOR = engine
@@ -285,6 +288,8 @@ def setYourLanguageAndCountry(select):
     language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
+    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
+    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
     view.printToTextbox_selectedYourLanguages(select)
 
 def setTargetLanguageAndCountry(select):
@@ -294,6 +299,8 @@ def setTargetLanguageAndCountry(select):
     language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
+    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
+    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
     view.printToTextbox_selectedTargetLanguages(select)
 
 def swapYourLanguageAndTargetLanguage():
@@ -329,6 +336,14 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
+    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
+    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
+
+def callbackSelectedTranslationEngine(selected_translation_engine):
+    print("callbackSelectedTranslationEngine", selected_translation_engine)
+    setYourTranslateEngine(selected_translation_engine)
+    setTargetTranslateEngine(selected_translation_engine)
+    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
 
 # command func
 def callbackToggleTranslation(is_turned_on):
@@ -825,6 +840,7 @@ def createMainWindow():
     initSetConfigByExeArguments()
     initSetTranslateEngine()
     initSetLanguageAndCountry()
+    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
 
     if config.AUTH_KEYS["DeepL_API"] is not None:
         if model.authenticationTranslatorDeepLAuthKey("DeepL_API", config.AUTH_KEYS["DeepL_API"]) is False:
@@ -876,6 +892,9 @@ def createMainWindow():
             "callback_swap_languages": swapYourLanguageAndTargetLanguage,
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
+
+            "callback_selected_translation_engine": callbackSelectedTranslationEngine,
+
             "message_box_bind_Return": messageBoxPressKeyEnter,
             "message_box_bind_Any_KeyPress": messageBoxPressKeyAny,
             "message_box_bind_FocusIn": messageBoxFocusIn,

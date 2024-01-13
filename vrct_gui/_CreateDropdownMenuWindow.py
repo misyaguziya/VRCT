@@ -1,9 +1,10 @@
+from typing import Union
 from types import SimpleNamespace
 
 from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
 from time import sleep
 
-from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar, getLatestWidth, getLongestText, CustomizedCTkScrollableFrame
+from .ui_utils import bindButtonReleaseFunction, bindEnterAndLeaveColor, bindButtonPressColor, getLatestHeight, applyUiScalingAndFixTheBugScrollBar, getLatestWidth, getLongestText,  getLongestText_Dict, CustomizedCTkScrollableFrame
 from functools import partial
 
 from utils import isEven, makeEven
@@ -90,7 +91,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
 
-    def updateDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values):
+    def updateDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values:Union[dict, list],):
         self.dropdown_menu_widgets[dropdown_menu_widget_id].widget.destroy()
         self.createDropdownMenuBox(
             dropdown_menu_widget_id=dropdown_menu_widget_id,
@@ -105,7 +106,7 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         )
 
 
-    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values, command, wrapper_widget, attach_widget, dropdown_menu_min_width=None, dropdown_menu_height=None, max_display_length=None):
+    def createDropdownMenuBox(self, dropdown_menu_widget_id, dropdown_menu_values:Union[dict, list], command, wrapper_widget, attach_widget, dropdown_menu_min_width=None, dropdown_menu_height=None, max_display_length=None):
 
         self.attach_widget = attach_widget
         self.wrapper_widget = wrapper_widget
@@ -166,9 +167,12 @@ class _CreateDropdownMenuWindow(CTkToplevel):
         self.dropdown_menu_container.grid_remove()
 
 
-    def _createDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values, command):
+    def _createDropdownMenuValues(self, dropdown_menu_widget_id, dropdown_menu_values:Union[dict, list], command):
+        if isinstance(dropdown_menu_values, list):
+            longest_text = getLongestText(dropdown_menu_values)
+        elif isinstance(dropdown_menu_values, dict):
+            longest_text = getLongestText_Dict(dropdown_menu_values)
 
-        longest_text = getLongestText(dropdown_menu_values)
         self.dropdown_menu_values_wrapper = CTkFrame(self.scroll_frame_container, corner_radius=0, fg_color=self.window_bg_color)
         self.dropdown_menu_values_wrapper.grid(row=0, column=0, sticky="nsew")
         self.dropdown_menu_values_wrapper.grid_columnconfigure(0, weight=1)
@@ -220,19 +224,31 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
 
-        row=0
-        for dropdown_menu_value in dropdown_menu_values:
+        IS_LIST_TYPE = False
+        if isinstance(dropdown_menu_values, list):
+            for_in_values = dropdown_menu_values
+            IS_LIST_TYPE = True
+        elif isinstance(dropdown_menu_values, dict):
+            for_in_values = dropdown_menu_values.keys()
+            IS_LIST_TYPE = False
 
+        row=0
+        for dropdown_menu_value in for_in_values:
             dropdown_menu_value_wrapper = CTkFrame(self.dropdown_menu_values_wrapper, corner_radius=0, fg_color=self.values_bg_color, width=0, height=0, cursor="hand2")
             dropdown_menu_value_wrapper.grid(row=row, column=0, pady=self.value_pady, sticky="nsew")
             setattr(self, f"{dropdown_menu_widget_id}__{row}", dropdown_menu_value_wrapper)
 
 
 
+            if IS_LIST_TYPE is True:
+                dropdown_menu_value_text = dropdown_menu_value
+            else:
+                dropdown_menu_value_text = dropdown_menu_values[dropdown_menu_value]
+
             dropdown_menu_value_wrapper.grid_rowconfigure((0,2), weight=1)
             label_widget = CTkLabel(
                 dropdown_menu_value_wrapper,
-                text=dropdown_menu_value,
+                text=dropdown_menu_value_text,
                 height=0,
                 corner_radius=0,
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.value_font_size, weight="normal"),
@@ -252,7 +268,11 @@ class _CreateDropdownMenuWindow(CTkToplevel):
                 command(value)
                 self._withdraw()
 
-            callback = partial(optimizedCommand, dropdown_menu_value)
+            if IS_LIST_TYPE is True:
+                callback = partial(optimizedCommand, dropdown_menu_value_text)
+            else:
+                callback = partial(optimizedCommand, dropdown_menu_value)
+
             bindButtonReleaseFunction([dropdown_menu_value_wrapper, label_widget], callback)
 
             row+=1
@@ -267,7 +287,10 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
 
         if self.active_dropdown_menu_widget is not None:
-            self.active_dropdown_menu_widget.grid_remove()
+            try:
+                self.active_dropdown_menu_widget.grid_remove()
+            except:
+                pass
 
         target_data = self.dropdown_menu_widgets[dropdown_menu_widget_id]
         self.attach_widget = target_data.attach_widget
