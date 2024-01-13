@@ -35,6 +35,8 @@ class View():
         else:
             VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION) + " (Speaker2Chatbox)"
 
+        self.TEXT_TRANSLATOR_CTRANSLATE2 = i18n.t("main_window.translator") + ": " + i18n.t("main_window.translator_ctranslate2")
+
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
         all_ctm = ColorThemeManager(theme)
@@ -163,6 +165,8 @@ class View():
             IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
+            VAR_SELECTED_TRANSLATION_ENGINE = StringVar(value="Translator: INIT"),
+            CALLBACK_SELECTED_TRANSLATION_ENGINE = None,
 
             VAR_LABEL_TEXTBOX_ALL=StringVar(value=i18n.t("main_window.textbox_tab_all")),
             VAR_LABEL_TEXTBOX_SENT=StringVar(value=i18n.t("main_window.textbox_tab_sent")),
@@ -515,6 +519,7 @@ class View():
 
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
+            self.view_variable.CALLBACK_SELECTED_TRANSLATION_ENGINE = main_window_registers.get("callback_selected_translation_engine", None)
 
             def adjustedMessageBoxReturnFunction(_e):
                 if self.view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED is True:
@@ -898,6 +903,15 @@ class View():
                 vrct_gui.sls__box_target_language_speaker_status__enabled.place(relx=0.1, rely=0.2, anchor="center")
             case "SPEAKER_OFF":
                 vrct_gui.sls__box_target_language_speaker_status__enabled.place_forget()
+
+    def updateSelectableTranslationEngineList(self, selectable_translation_engines_list):
+        translation_dict = {item: item for item in selectable_translation_engines_list}
+        translation_dict["CTranslate2"] = self.TEXT_TRANSLATOR_CTRANSLATE2
+
+        vrct_gui.translation_engine_dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="translation_engine_dropdown_menu",
+            dropdown_menu_values=translation_dict,
+        )
 
 
     # Config Window
@@ -1332,6 +1346,13 @@ class View():
 
 
 # Set GuiVariable (view_variable)
+    def setGuiVariable_SelectedTranslationEngine(self, value):
+        if value == "CTranslate2":
+            self.view_variable.VAR_SELECTED_TRANSLATION_ENGINE.set(self.TEXT_TRANSLATOR_CTRANSLATE2)
+            value = self.TEXT_TRANSLATOR_CTRANSLATE2
+        else:
+            self.view_variable.VAR_SELECTED_TRANSLATION_ENGINE.set(i18n.t("main_window.translator") + ": " + value)
+
     def setGuiVariable_MicEnergyThreshold(self, value):
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
