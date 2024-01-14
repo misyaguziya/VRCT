@@ -67,8 +67,8 @@ def sendMicMessage(message):
         else:
             translation, success = model.getInputTranslate(message)
             if success is False:
-                config.SOURCE_LANGUAGE = "CTranslate2"
-                config.TARGET_LANGUAGE = "CTranslate2"
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
                 updateTranslationEngineAndEngineList()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -134,8 +134,8 @@ def receiveSpeakerMessage(message):
         else:
             translation, success = model.getOutputTranslate(message)
             if success is False:
-                config.SOURCE_LANGUAGE = "CTranslate2"
-                config.TARGET_LANGUAGE = "CTranslate2"
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
                 updateTranslationEngineAndEngineList()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -204,8 +204,8 @@ def sendChatMessage(message):
         else:
             translation, success = model.getInputTranslate(message)
             if success is False:
-                config.SOURCE_LANGUAGE = "CTranslate2"
-                config.TARGET_LANGUAGE = "CTranslate2"
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
                 updateTranslationEngineAndEngineList()
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
