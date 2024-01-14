@@ -843,15 +843,17 @@ def createMainWindow():
     initSetConfigByExeArguments()
     initSetTranslateEngine()
     initSetLanguageAndCountry()
-    updateTranslationEngineAndEngineList()
 
     if config.AUTH_KEYS["DeepL_API"] is not None:
-        if model.authenticationTranslatorDeepLAuthKey("DeepL_API", config.AUTH_KEYS["DeepL_API"]) is False:
+        if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
             # error update Auth key
             auth_keys = config.AUTH_KEYS
             auth_keys["DeepL_API"] = None
             config.AUTH_KEYS = auth_keys
             view.printToTextbox_AuthenticationError()
+
+    # set Translation Engine
+    updateTranslationEngineAndEngineList()
 
     # set word filter
     model.addKeywords()
