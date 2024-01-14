@@ -123,7 +123,7 @@ class Model:
             if source_lang in languages and target_lang in languages:
                 compatible_engines.append(engine)
         if "DeepL_API" in compatible_engines:
-            if self.translator.deepl_client is None:
+            if config.AUTH_KEYS["DeepL_API"] is None:
                 compatible_engines.remove('DeepL_API')
         return compatible_engines
 
