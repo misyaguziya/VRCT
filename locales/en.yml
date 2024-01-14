@@ -10,7 +10,7 @@ main_window:
   swap_button_label: Swap Languages
   target_language: Target Language
   translator: Translator
-  translator_ctranslate2: Internal
+  translator_ctranslate2: Internal (Default)
 
   textbox_tab_all: All
   textbox_tab_sent: Sent
