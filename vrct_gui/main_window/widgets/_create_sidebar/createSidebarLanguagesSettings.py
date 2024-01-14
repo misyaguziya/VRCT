@@ -352,28 +352,6 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    main_window.translation_engine_dropdown_menu_window = _CreateDropdownMenuWindow(
-        settings=settings,
-        view_variable=main_window._view_variable,
-
-        window_additional_y_pos=4,
-        window_border_width=1,
-        scrollbar_ipadx=(2,2),
-        scrollbar_width=16,
-        value_ipadx=(8,0),
-        value_ipady=(6,6),
-        value_pady=0,
-        value_font_size=14,
-        dropdown_menu_default_min_width=200,
-
-        window_bg_color="#1f2022",
-        window_border_color="#7f8084",
-        values_bg_color="#323336",
-        values_hovered_bg_color="#4b4c4f",
-        values_clicked_bg_color="#292a2d",
-        values_text_color=settings.ctm.BASIC_TEXT_COLOR,
-    )
-
     # main_window.translation_engine_dropdown_menu_window = _CreateDropdownMenuWindow(
     #     settings=settings.config_window,
     #     view_variable=main_window._view_variable,

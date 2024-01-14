@@ -71,14 +71,37 @@ class VRCT_GUI(CTk):
         self.settings = settings
         self._view_variable = view_variable
 
+        self.translation_engine_dropdown_menu_window = _CreateDropdownMenuWindow(
+            settings=settings.dropdown_menu_window,
+            view_variable=self._view_variable,
+
+            window_additional_y_pos=4,
+            window_border_width=1,
+            scrollbar_ipadx=(2,2),
+            scrollbar_width=16,
+            value_ipadx=(8,0),
+            value_ipady=(6,6),
+            value_pady=0,
+            value_font_size=14,
+            dropdown_menu_default_min_width=200,
+
+            window_bg_color="#1f2022",
+            window_border_color="#7f8084",
+            values_bg_color="#323336",
+            values_hovered_bg_color="#4b4c4f",
+            values_clicked_bg_color="#292a2d",
+            values_text_color=settings.main.ctm.BASIC_TEXT_COLOR,
+        )
+
         createMainWindowWidgets(
             vrct_gui=self,
             settings=self.settings.main,
             view_variable=self._view_variable
         )
 
+        # For Config Window
         self.dropdown_menu_window = _CreateDropdownMenuWindow(
-            settings=self.settings.config_window,
+            settings=self.settings.dropdown_menu_window,
             view_variable=self._view_variable,
 
             window_additional_y_pos=self.settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,

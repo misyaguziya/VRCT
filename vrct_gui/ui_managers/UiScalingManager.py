@@ -13,6 +13,7 @@ class UiScalingManager():
         self.main_window_cover = SimpleNamespace()
         self.error_message_window = SimpleNamespace()
         self.confirmation_modal = SimpleNamespace()
+        self.dropdown_menu_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -170,7 +171,7 @@ class UiScalingManager():
         self.confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
 
         # Dropdown Menu Window
-        self.config_window.MARGIN_WIDTH = self._calculateUiSize(16)
+        self.dropdown_menu_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
