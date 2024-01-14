@@ -123,11 +123,12 @@ class Model:
             if source_lang in languages and target_lang in languages:
                 compatible_engines.append(engine)
         if "DeepL_API" in compatible_engines:
-            if self.translator.deepl_client is None:
+            if config.AUTH_KEYS["DeepL_API"] is None:
                 compatible_engines.remove('DeepL_API')
         return compatible_engines
 
-    def getInputTranslate(self, message, fnc=None):
+    def getInputTranslate(self, message):
+        translation_success_flag = True
         translator_name=config.CHOICE_INPUT_TRANSLATOR
         source_language=config.SOURCE_LANGUAGE
         target_language=config.TARGET_LANGUAGE
@@ -143,6 +144,7 @@ class Model:
 
         # 翻訳失敗時のフェールセーフ処理
         if translation is False:
+            translation_success_flag = False
             translation = self.translator.translate(
                                 translator_name="CTranslate2",
                                 source_language=source_language,
@@ -150,13 +152,10 @@ class Model:
                                 target_country=target_country,
                                 message=message
                         )
-            try:
-                fnc()
-            except Exception:
-                pass
-        return translation
+        return translation, translation_success_flag
 
-    def getOutputTranslate(self, message, fnc=None):
+    def getOutputTranslate(self, message):
+        translation_success_flag = True
         translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
@@ -172,6 +171,7 @@ class Model:
 
         # 翻訳失敗時のフェールセーフ処理
         if translation is False:
+            translation_success_flag = False
             translation = self.translator.translate(
                                 translator_name="CTranslate2",
                                 source_language=source_language,
@@ -179,11 +179,7 @@ class Model:
                                 target_country=target_country,
                                 message=message
                         )
-            try:
-                fnc()
-            except Exception:
-                pass
-        return translation
+        return translation, translation_success_flag
 
     def addKeywords(self):
         for f in config.INPUT_MIC_WORD_FILTER:
