@@ -65,11 +65,11 @@ def sendMicMessage(message):
         elif config.ENABLE_TRANSLATION is False:
             pass
         else:
-            translation = model.getInputTranslate(message)
-            # if translation is False:
-            #     config.ENABLE_TRANSLATION = False
-            #     translation = ""
-            #     view.translationEngineLimitErrorProcess()
+            translation, success = model.getInputTranslate(message)
+            if success is False:
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+                updateTranslationEngineAndEngineList()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -132,11 +132,11 @@ def receiveSpeakerMessage(message):
         if config.ENABLE_TRANSLATION is False:
             pass
         else:
-            translation = model.getOutputTranslate(message)
-            # if translation is False:
-            #     config.ENABLE_TRANSLATION = False
-            #     translation = ""
-            #     view.translationEngineLimitErrorProcess()
+            translation, success = model.getOutputTranslate(message)
+            if success is False:
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+                updateTranslationEngineAndEngineList()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
@@ -202,12 +202,11 @@ def sendChatMessage(message):
         if config.ENABLE_TRANSLATION is False:
             pass
         else:
-            translation = model.getInputTranslate(message)
-            # if translation is False:
-            #     config.ENABLE_TRANSLATION = False
-            #     translation = ""
-            #     view.translationEngineLimitErrorProcess()
-
+            translation, success = model.getInputTranslate(message)
+            if success is False:
+                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+                updateTranslationEngineAndEngineList()
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
             if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
@@ -249,9 +248,15 @@ def messageBoxFocusOut(e):
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
 
-# func select languages
-def getLatestSelectableTranslationEngines():
-    return model.findTranslationEngines(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+def updateTranslationEngineAndEngineList():
+    engine = config.CHOICE_INPUT_TRANSLATOR
+    engines = model.findTranslationEngines(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    if engine not in engines:
+        engine = engines[0]
+    config.CHOICE_INPUT_TRANSLATOR = engine
+    config.CHOICE_OUTPUT_TRANSLATOR = engine
+    view.updateSelectableTranslationEngineList(engines)
+    view.setGuiVariable_SelectedTranslationEngine(engine)
 
 def initSetTranslateEngine():
     engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
@@ -288,8 +293,7 @@ def setYourLanguageAndCountry(select):
     language, country = model.getLanguageAndCountry(select)
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
-    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
-    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
+    updateTranslationEngineAndEngineList()
     view.printToTextbox_selectedYourLanguages(select)
 
 def setTargetLanguageAndCountry(select):
@@ -299,8 +303,7 @@ def setTargetLanguageAndCountry(select):
     language, country = model.getLanguageAndCountry(select)
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
-    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
-    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
+    updateTranslationEngineAndEngineList()
     view.printToTextbox_selectedTargetLanguages(select)
 
 def swapYourLanguageAndTargetLanguage():
@@ -336,8 +339,7 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
-    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
-    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
+    updateTranslationEngineAndEngineList()
 
 def callbackSelectedTranslationEngine(selected_translation_engine):
     print("callbackSelectedTranslationEngine", selected_translation_engine)
@@ -497,6 +499,7 @@ def callbackSetDeeplAuthkey(value):
         auth_keys = config.AUTH_KEYS
         auth_keys["DeepL_API"] = None
         config.AUTH_KEYS = auth_keys
+    updateTranslationEngineAndEngineList()
 
 # Transcription Tab
 # Transcription (Mic)
@@ -840,15 +843,17 @@ def createMainWindow():
     initSetConfigByExeArguments()
     initSetTranslateEngine()
     initSetLanguageAndCountry()
-    view.updateSelectableTranslationEngineList(getLatestSelectableTranslationEngines())
 
     if config.AUTH_KEYS["DeepL_API"] is not None:
-        if model.authenticationTranslatorDeepLAuthKey("DeepL_API", config.AUTH_KEYS["DeepL_API"]) is False:
+        if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
             # error update Auth key
             auth_keys = config.AUTH_KEYS
             auth_keys["DeepL_API"] = None
             config.AUTH_KEYS = auth_keys
             view.printToTextbox_AuthenticationError()
+
+    # set Translation Engine
+    updateTranslationEngineAndEngineList()
 
     # set word filter
     model.addKeywords()
