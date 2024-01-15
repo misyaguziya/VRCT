@@ -10,7 +10,7 @@ main_window:
   swap_button_label: 言語を入れ替え
   target_language: 相手の言語
   translator: 翻訳エンジン
-  translator_ctranslate2: オフライン翻訳
+  translator_ctranslate2: オフライン翻訳 (Default)
 
   textbox_tab_all: 全て
   textbox_tab_sent: 送信

@@ -89,6 +89,12 @@ class View():
             **common_args
         )
 
+        self.settings.dropdown_menu_window = SimpleNamespace(
+            # ctm=all_ctm.dropdown_menu_window,
+            uism=all_uism.dropdown_menu_window,
+            **common_args
+        )
+
         self.view_variable = SimpleNamespace(
             # Common
             CALLBACK_RESTART_SOFTWARE=None,
@@ -906,7 +912,7 @@ class View():
 
     def updateSelectableTranslationEngineList(self, selectable_translation_engines_list):
         translation_dict = {item: item for item in selectable_translation_engines_list}
-        translation_dict["CTranslate2"] = self.TEXT_TRANSLATOR_CTRANSLATE2
+        translation_dict["CTranslate2"] = i18n.t("main_window.translator_ctranslate2")
 
         vrct_gui.translation_engine_dropdown_menu_window.updateDropdownMenuValues(
             dropdown_menu_widget_id="translation_engine_dropdown_menu",
