@@ -2,7 +2,7 @@ from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
 from ...._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 
-from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, bindButtonFunctionAndColor, bindEnterAndLeaveFunction
+from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, createLabelButton
 
 from utils import callFunctionIfCallable
 
@@ -345,58 +345,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     sls__box_translation_optionmenu_wrapper = CTkFrame(main_window.sls__box_frame, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
-    sls__box_translation_optionmenu_wrapper.grid(row=5, column=0, sticky="ew")
+    sls__box_translation_optionmenu_wrapper.grid(row=5, column=0, pady=settings.uism.SLS__SELECTABLE_TRANSLATION_PADY, sticky="ew")
 
-    sls__box_translation_optionmenu_wrapper.grid_columnconfigure((0,2), weight=1, minsize=settings.uism.SLS__BOX_ARROWS_SWAP_BUTTON_PADX)
+    sls__box_translation_optionmenu_wrapper.grid_columnconfigure((0,2), weight=0, minsize=settings.uism.SLS__SELECTABLE_TRANSLATION_MIN_PADX)
     sls__box_translation_optionmenu_wrapper.grid_columnconfigure(1, weight=1)
-
-
-
-    main_window.translation_engine_dropdown_menu_window = _CreateDropdownMenuWindow(
-        settings=settings,
-        view_variable=main_window._view_variable,
-
-        window_additional_y_pos=4,
-        window_border_width=1,
-        scrollbar_ipadx=(2,2),
-        scrollbar_width=16,
-        value_ipadx=(8,0),
-        value_ipady=(6,6),
-        value_pady=0,
-        value_font_size=14,
-        dropdown_menu_default_min_width=200,
-
-        window_bg_color="#1f2022",
-        window_border_color="#7f8084",
-        values_bg_color="#323336",
-        values_hovered_bg_color="#4b4c4f",
-        values_clicked_bg_color="#292a2d",
-        values_text_color=settings.ctm.BASIC_TEXT_COLOR,
-    )
-
-    # main_window.translation_engine_dropdown_menu_window = _CreateDropdownMenuWindow(
-    #     settings=settings.config_window,
-    #     view_variable=main_window._view_variable,
-
-    #     window_additional_y_pos=settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS,
-    #     window_border_width=settings.config_window.uism.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH,
-    #     scrollbar_ipadx=settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_IPADX,
-    #     scrollbar_width=settings.config_window.uism.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH,
-    #     value_ipadx=settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADX,
-    #     value_ipady=settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_IPADY,
-    #     value_pady=settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_PADY,
-    #     value_font_size=settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_FONT_SIZE,
-    #     dropdown_menu_default_min_width=settings.config_window.uism.SB__DROPDOWN_MENU_VALUE_DEFAULT_MIN_WIDTH,
-
-    #     window_bg_color=settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BG_COLOR,
-    #     window_border_color=settings.config_window.ctm.SB__DROPDOWN_MENU_WINDOW_BORDER_COLOR,
-    #     values_bg_color=settings.config_window.ctm.SB__DROPDOWN_MENU_BG_COLOR,
-    #     values_hovered_bg_color=settings.config_window.ctm.SB__DROPDOWN_MENU_HOVERED_BG_COLOR,
-    #     values_clicked_bg_color=settings.config_window.ctm.SB__DROPDOWN_MENU_CLICKED_BG_COLOR,
-    #     values_text_color=settings.config_window.ctm.BASIC_TEXT_COLOR,
-    # )
-
-
 
 
 
@@ -410,34 +362,25 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         command=adjustedCommand,
         wrapper_widget=main_window,
         attach_widget=sls__box_translation_optionmenu_wrapper,
-        dropdown_menu_min_width=200,
+        dropdown_menu_min_width=settings.uism.SIDEBAR_MIN_WIDTH,
     )
 
-
-
-
-    (sls__selected_translation_engine_box, optionmenu_label_widget, optionmenu_img_widget) = createOptionMenuBox(
+    (sls__selected_translation_engine_box, label_button_label_widget) = createLabelButton(
         parent_widget=sls__box_translation_optionmenu_wrapper,
-        optionmenu_bg_color=settings.ctm.SLS__BG_COLOR,
-        optionmenu_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
-        optionmenu_clicked_bg_color=settings.ctm.SLS__OPTIONMENU_CLICKED_BG_COLOR,
-        optionmenu_ipadx=(0,10),
-        optionmenu_ipady=6,
+        label_button_bg_color=settings.ctm.SLS__BG_COLOR,
+        label_button_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
+        label_button_clicked_bg_color=settings.ctm.SLS__OPTIONMENU_CLICKED_BG_COLOR,
+        label_button_ipadx=settings.uism.SLS__SELECTABLE_TRANSLATION_IPADX,
+        label_button_ipady=settings.uism.SLS__SELECTABLE_TRANSLATION_IPADY,
         variable=view_variable.VAR_SELECTED_TRANSLATION_ENGINE,
         font_family=settings.FONT_FAMILY,
-        font_size=12,
+        font_size=settings.uism.SLS__SELECTABLE_TRANSLATION_FONT_SIZE,
         text_color=settings.ctm.LABELS_TEXT_COLOR,
-        image_file=settings.image_file.REFRESH_ICON.rotate(45),
-        image_size=(14,14),
-        # image_size=settings.uism.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE,
-        optionmenu_clicked_command=lambda _e: main_window.translation_engine_dropdown_menu_window.show(
+        label_button_clicked_command=lambda _e: main_window.translation_engine_dropdown_menu_window.show(
             dropdown_menu_widget_id="translation_engine_dropdown_menu"
         ),
 
-        optionmenu_position="center",
-        setattr_widget=main_window,
-        image_widget_attr_name="sls__arrow_img_select",
+        label_button_position="center",
     )
     sls__selected_translation_engine_box.grid(row=0, column=1, sticky="ew")
-    optionmenu_img_widget.grid_remove()
 

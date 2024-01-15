@@ -90,6 +90,11 @@ def _darkTheme(base_color):
             SLS__OPTIONMENU_HOVERED_BG_COLOR = base_color.DARK_875_COLOR,
             SLS__OPTIONMENU_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
 
+            SLS__DROPDOWN_MENU_WINDOW_BG_COLOR = base_color.DARK_888_COLOR,
+            SLS__DROPDOWN_MENU_WINDOW_BORDER_COLOR = base_color.DARK_650_COLOR,
+            SLS__DROPDOWN_MENU_BG_COLOR = base_color.DARK_888_COLOR,
+            SLS__DROPDOWN_MENU_HOVERED_BG_COLOR = base_color.DARK_825_COLOR,
+            SLS__DROPDOWN_MENU_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
 
             CONFIG_BUTTON_BG_COLOR = base_color.DARK_850_COLOR,
             CONFIG_BUTTON_HOVERED_BG_COLOR = base_color.DARK_800_COLOR,

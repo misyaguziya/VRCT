@@ -13,6 +13,7 @@ class UiScalingManager():
         self.main_window_cover = SimpleNamespace()
         self.error_message_window = SimpleNamespace()
         self.confirmation_modal = SimpleNamespace()
+        self.dropdown_menu_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -140,6 +141,24 @@ class UiScalingManager():
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y = self._calculateUiSize(26)
 
 
+        self.main.SLS__SELECTABLE_TRANSLATION_IPADX = self.dupTuple(self._calculateUiSize(10))
+        self.main.SLS__SELECTABLE_TRANSLATION_IPADY = self._calculateUiSize(6)
+        self.main.SLS__SELECTABLE_TRANSLATION_FONT_SIZE = self._calculateUiSize(12)
+        self.main.SLS__SELECTABLE_TRANSLATION_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(10))
+        self.main.SLS__SELECTABLE_TRANSLATION_PADY = self._calculateUiSize(4)
+        self.main.SLS__SELECTABLE_TRANSLATION_MIN_PADX = self._calculateUiSize(8)
+
+
+        self.main.SLS__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
+        self.main.SLS__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(0, is_allowed_odd=True)
+        self.main.SLS__DROPDOWN_MENU_SCROLLBAR_IPADX = self.common.SCROLLBAR_IPADX
+        self.main.SLS__DROPDOWN_MENU_SCROLLBAR_WIDTH = self.common.SCROLLBAR_WIDTH
+        self.main.SLS__DROPDOWN_MENU_VALUE_IPADX = (self._calculateUiSize(8), 0)
+        self.main.SLS__DROPDOWN_MENU_VALUE_IPADY = self.dupTuple(self._calculateUiSize(8))
+        self.main.SLS__DROPDOWN_MENU_VALUE_PADY = 0
+        self.main.SLS__DROPDOWN_MENU_VALUE_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__DROPDOWN_MENU_VALUE_DEFAULT_MIN_WIDTH = self._calculateUiSize(200)
+
 
         # Selectable Language Window
         self.selectable_language_window.TOP_BAR_MIN_HEIGHT = self._calculateUiSize(50)
@@ -170,7 +189,7 @@ class UiScalingManager():
         self.confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
 
         # Dropdown Menu Window
-        self.config_window.MARGIN_WIDTH = self._calculateUiSize(16)
+        self.dropdown_menu_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
@@ -256,7 +275,6 @@ class UiScalingManager():
         self.config_window.SB__OPTIONMENU_IMG_SIZE = (self._calculateUiSize(14), self._calculateUiSize(14))
 
         self.config_window.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
-        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
         self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(1, is_allowed_odd=True)
         self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_IPADX = self.common.SCROLLBAR_IPADX
         self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH = self.common.SCROLLBAR_WIDTH
