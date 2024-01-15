@@ -1,6 +1,6 @@
 build/
 dist/
-config.json
+/config.json
 memo.txt
 VRCT.spec
 *.pyc

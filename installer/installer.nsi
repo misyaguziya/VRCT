@@ -61,12 +61,15 @@ Var Dialog_Options
 Var InstallDocs
 Var InstallShortcut
 Var Label_DescriptionOptions
+Var Label_DescriptionComboBox
+Var ComboBox_Language
 
 ; 初期化時コールバック
 Function .onInit
   ; オプション値を初期化します。
   StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
+  StrCpy $ComboBox_Language "Japanese"
 FunctionEnd
 
 ; オプション ページ
@@ -92,6 +95,18 @@ Function OptionPage
   ${NSD_CreateCheckbox} 0 26u 100% 12u "デスクトップにショートカットを作成(&D)"
   Pop $Checkbox_InstallShortcut
 
+  ; ComboBoxを作成します。
+  ${NSD_CreateLabel} 0 42u 100% 12u "UIの言語を設定してください。"
+  ; ラベルを変数に代入します。
+  Pop $Label_DescriptionComboBox
+
+  ${NSD_CreateComboBox} 0 55u 100% 12u ""
+  Pop $ComboBox_Language
+
+  ${NSD_CB_AddString} $ComboBox_Language "English"
+  ${NSD_CB_AddString} $ComboBox_Language "日本語"
+  ${NSD_CB_AddString} $ComboBox_Language "한국어"
+
   ${If} $InstallDocs == ${BST_CHECKED}
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallDocs
@@ -100,6 +115,7 @@ Function OptionPage
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallShortcut
   ${EndIf}
+  ${NSD_CB_SelectString} $ComboBox_Language "English"
   nsDialogs::Show
 FunctionEnd
 
@@ -107,6 +123,7 @@ FunctionEnd
 Function OptionPageLeave
   ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
   ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
+  ${NSD_GetText} $ComboBox_Language $ComboBox_Language
 FunctionEnd
 
 ; デフォルト セクション
@@ -148,6 +165,18 @@ Section
   ${If} $InstallDocs == ${BST_CHECKED}
     ; デスクトップにショートカットを作成
     CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
+  ${EndIf}
+
+  ; ComboBoxの選択値から言語を判定しinstaller\config\***\config.jsonを$INSTDIRにコピー
+  ${If} $ComboBox_Language == "English"
+    SetOutPath "$INSTDIR"
+    File "..\installer\config\English\config.json"
+  ${ElseIf} $ComboBox_Language == "日本語"
+    SetOutPath "$INSTDIR"
+    File "..\installer\config\Japanese\config.json"
+  ${ElseIf} $ComboBox_Language == "한국어"
+    SetOutPath "$INSTDIR"
+    File "..\installer\config\Korean\config.json"
   ${EndIf}
 
   ; スタート メニューにショートカットを登録
