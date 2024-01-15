@@ -90,6 +90,11 @@ def _lightTheme(base_color):
             SLS__OPTIONMENU_HOVERED_BG_COLOR = base_color.LIGHT_250_COLOR,
             SLS__OPTIONMENU_CLICKED_BG_COLOR = base_color.LIGHT_400_COLOR,
 
+            SLS__DROPDOWN_MENU_WINDOW_BG_COLOR = base_color.LIGHT_300_COLOR,
+            SLS__DROPDOWN_MENU_WINDOW_BORDER_COLOR = base_color.LIGHT_700_COLOR,
+            SLS__DROPDOWN_MENU_BG_COLOR = base_color.LIGHT_300_COLOR,
+            SLS__DROPDOWN_MENU_HOVERED_BG_COLOR = base_color.LIGHT_200_COLOR,
+            SLS__DROPDOWN_MENU_CLICKED_BG_COLOR = base_color.LIGHT_400_COLOR,
 
             CONFIG_BUTTON_BG_COLOR = base_color.LIGHT_250_COLOR,
             CONFIG_BUTTON_HOVERED_BG_COLOR = base_color.LIGHT_350_COLOR,
