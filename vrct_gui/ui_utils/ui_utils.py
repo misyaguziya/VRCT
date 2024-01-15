@@ -168,6 +168,55 @@ def createButtonWithImage(parent_widget, button_image_size, button_ipadxy, butto
     return button_wrapper
 
 
+def createLabelButton(parent_widget, label_button_bg_color, label_button_hovered_bg_color, label_button_clicked_bg_color, label_button_ipadx, label_button_ipady, variable, font_family, font_size, text_color, label_button_clicked_command, label_button_position=None, label_button_padx_between_img=0, label_button_min_height=None, label_button_min_width=None):
+
+    label_button_box = CTkFrame(parent_widget, corner_radius=6, fg_color=label_button_bg_color, cursor="hand2")
+
+    label_button_box.grid_rowconfigure(0, weight=1)
+    if label_button_min_height is not None:
+        label_button_box.grid_rowconfigure(0, minsize=label_button_min_height)
+
+    label_button_box.grid_columnconfigure(0, weight=1)
+    if label_button_min_width is not None:
+        label_button_box.grid_columnconfigure(0, minsize=label_button_min_width)
+
+    label_button_label_wrapper = CTkFrame(label_button_box, corner_radius=0, fg_color=label_button_bg_color)
+    label_button_label_wrapper.grid(row=0, column=0, padx=label_button_ipadx, pady=label_button_ipady, sticky="ew")
+
+    LABEL_COLUMN=0
+    if label_button_position == "center":
+        label_button_label_wrapper.grid_columnconfigure((0,2), weight=1)
+        LABEL_COLUMN=1
+
+    label_button_label_widget = CTkLabel(
+        label_button_label_wrapper,
+        textvariable=variable,
+        height=0,
+        font=CTkFont(family=font_family, size=font_size, weight="normal"),
+        text_color=text_color
+    )
+    label_button_label_widget.grid(row=0, column=LABEL_COLUMN, padx=(0, label_button_padx_between_img))
+
+
+    bindEnterAndLeaveColor([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_hovered_bg_color, label_button_bg_color)
+    bindButtonPressColor([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_bg_color, label_button_hovered_bg_color)
+
+
+
+    bindButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_command)
+
+    def unbindEventFromWidgets():
+        unbindEnterLEaveButtonPressButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget])
+
+    label_button_box.unbindFunction = unbindEventFromWidgets
+
+
+    return (label_button_box, label_button_label_widget)
+
+
+
+
+
 def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_bg_color, optionmenu_clicked_bg_color, optionmenu_ipadx, optionmenu_ipady, variable, font_family, font_size, text_color, image_file, image_size, optionmenu_clicked_command, optionmenu_position=None, optionmenu_padx_between_img=0, optionmenu_min_height=None, optionmenu_min_width=None, setattr_widget=None, image_widget_attr_name=None):
 
     option_menu_box = CTkFrame(parent_widget, corner_radius=6, fg_color=optionmenu_bg_color, cursor="hand2")
