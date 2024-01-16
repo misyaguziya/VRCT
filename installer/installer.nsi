@@ -61,12 +61,16 @@ Var Dialog_Options
 Var InstallDocs
 Var InstallShortcut
 Var Label_DescriptionOptions
+Var Label_DescriptionComboBox
+Var ComboBox_Language
+Var Set_Langage
 
 ; 初期化時コールバック
 Function .onInit
   ; オプション値を初期化します。
   StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
+  StrCpy $ComboBox_Language "English"
 FunctionEnd
 
 ; オプション ページ
@@ -92,6 +96,18 @@ Function OptionPage
   ${NSD_CreateCheckbox} 0 26u 100% 12u "デスクトップにショートカットを作成(&D)"
   Pop $Checkbox_InstallShortcut
 
+  ; ComboBoxを作成します。
+  ${NSD_CreateLabel} 0 42u 100% 12u "UIの言語を設定してください。"
+  ; ラベルを変数に代入します。
+  Pop $Label_DescriptionComboBox
+
+  ${NSD_CreateComboBox} 0 55u 100% 12u ""
+  Pop $ComboBox_Language
+
+  ${NSD_CB_AddString} $ComboBox_Language "English"
+  ${NSD_CB_AddString} $ComboBox_Language "日本語"
+  ${NSD_CB_AddString} $ComboBox_Language "한국어"
+
   ${If} $InstallDocs == ${BST_CHECKED}
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallDocs
@@ -100,6 +116,7 @@ Function OptionPage
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallShortcut
   ${EndIf}
+  ${NSD_CB_SelectString} $ComboBox_Language "English"
   nsDialogs::Show
 FunctionEnd
 
@@ -107,6 +124,7 @@ FunctionEnd
 Function OptionPageLeave
   ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
   ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
+  ${NSD_GetText} $ComboBox_Language $ComboBox_Language
 FunctionEnd
 
 ; デフォルト セクション
@@ -149,6 +167,20 @@ Section
     ; デスクトップにショートカットを作成
     CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
   ${EndIf}
+
+  ; ComboBoxの選択値から言語を判定しconfig.jsonを$INSTDIRに作成
+  ${If} $ComboBox_Language == "English"
+      StrCpy $Set_Langage "en"
+  ${ElseIf} $ComboBox_Language == "日本語"
+      StrCpy $Set_Langage "ja"
+  ${ElseIf} $ComboBox_Language == "한국어"
+      StrCpy $Set_Langage "ko"
+  ${EndIf}
+
+  StrCpy $1 '{"UI_LANGUAGE": "$Set_Langage"}'
+  FileOpen $0 "$INSTDIR\config.json" w
+  FileWrite $0 $1
+  FileClose $0
 
   ; スタート メニューにショートカットを登録
   CreateDirectory "$SMPROGRAMS\VRCT"
