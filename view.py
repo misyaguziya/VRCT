@@ -1476,9 +1476,6 @@ class View():
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.translation_engine_limit_error"))
 
 
-    # def printToTextbox_OSCError(self): [Deprecated]
-    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
-
     def printToTextbox_DetectedByWordFilter(self, detected_message):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter", detected_message=detected_message))
 
