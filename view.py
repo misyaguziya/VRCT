@@ -1214,18 +1214,18 @@ class View():
         # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
 
 
+# [Deprecated]
+    # def translationEngineLimitErrorProcess(self):
+    #     # turn off translation switch.
+    #     vrct_gui.translation_switch_box.deselect()
+    #     vrct_gui.translation_frame.markToggleManually(False)
 
-    def translationEngineLimitErrorProcess(self):
-        # turn off translation switch.
-        vrct_gui.translation_switch_box.deselect()
-        vrct_gui.translation_frame.markToggleManually(False)
+    #     # disable translation feature.
+    #     vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
 
-        # disable translation feature.
-        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
-
-        # print system message that mention to stopped translation feature.
-        view.printToTextbox_TranslationEngineLimitError()
-        view.showTheLimitOfTranslationEngineConfirmationModal()
+    #     # print system message that mention to stopped translation feature.
+    #     view.printToTextbox_TranslationEngineLimitError()
+    #     view.showTheLimitOfTranslationEngineConfirmationModal()
 
 
 
@@ -1267,19 +1267,19 @@ class View():
 
 
 
+# [Deprecated]
+    # def showTheLimitOfTranslationEngineConfirmationModal(self):
+    #     self.foregroundOffIfForegroundEnabled()
 
-    def showTheLimitOfTranslationEngineConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
+    #     self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
+    #     vrct_gui.main_window_cover.show()
 
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
+    #     self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
+    #     self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
 
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
-        vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
+    #     self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
+    #     self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
+    #     vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
 
 
 
