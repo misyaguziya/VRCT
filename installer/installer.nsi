@@ -63,13 +63,14 @@ Var InstallShortcut
 Var Label_DescriptionOptions
 Var Label_DescriptionComboBox
 Var ComboBox_Language
+Var Set_Langage
 
 ; 初期化時コールバック
 Function .onInit
   ; オプション値を初期化します。
   StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
-  StrCpy $ComboBox_Language "Japanese"
+  StrCpy $ComboBox_Language "English"
 FunctionEnd
 
 ; オプション ページ
@@ -167,17 +168,19 @@ Section
     CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
   ${EndIf}
 
-  ; ComboBoxの選択値から言語を判定しinstaller\config\***\config.jsonを$INSTDIRにコピー
+  ; ComboBoxの選択値から言語を判定しconfig.jsonを$INSTDIRに作成
   ${If} $ComboBox_Language == "English"
-    SetOutPath "$INSTDIR"
-    File "..\installer\config\English\config.json"
+      StrCpy $Set_Langage "en"
   ${ElseIf} $ComboBox_Language == "日本語"
-    SetOutPath "$INSTDIR"
-    File "..\installer\config\Japanese\config.json"
+      StrCpy $Set_Langage "ja"
   ${ElseIf} $ComboBox_Language == "한국어"
-    SetOutPath "$INSTDIR"
-    File "..\installer\config\Korean\config.json"
+      StrCpy $Set_Langage "ko"
   ${EndIf}
+
+  StrCpy $1 '{"UI_LANGUAGE": "$Set_Langage"}'
+  FileOpen $0 "$INSTDIR\config.json" w
+  FileWrite $0 $1
+  FileClose $0
 
   ; スタート メニューにショートカットを登録
   CreateDirectory "$SMPROGRAMS\VRCT"
