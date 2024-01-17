@@ -250,14 +250,15 @@ class VRCT_GUI(CTk):
 
 
 
-    def _changeMainWindowWidgetsStatus(self, status, target_names, to_hold_state:bool=False):
+    def _changeMainWindowWidgetsStatus(self, status, target_names, to_lock_state:bool=False, release_locked_state:bool=False):
         _changeMainWindowWidgetsStatus(
             vrct_gui=self,
             settings=self.settings.main,
             view_variable=self._view_variable,
             status=status,
             target_names=target_names,
-            to_hold_state=to_hold_state,
+            to_lock_state=to_lock_state,
+            release_locked_state=release_locked_state,
         )
 
     def _changeConfigWindowWidgetsStatus(self, status, target_names):

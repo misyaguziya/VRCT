@@ -1,12 +1,16 @@
 from customtkinter import CTkImage
-hold_state_list=[]
-def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names:list, to_hold_state:bool=False):
-    global hold_state_list
+lock_state_list=[]
+def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names:list, to_lock_state:bool=False, release_locked_state:bool=False):
+    global lock_state_list
     if target_names == "All":
         target_names = ["translation_switch", "transcription_send_switch", "transcription_receive_switch", "foreground_switch", "quick_language_settings", "config_button", "minimize_sidebar_button", "entry_message_box", "send_message_button"]
 
+    if release_locked_state is True:
+        for item in target_names:
+            if item in lock_state_list:
+                lock_state_list.remove(item)
 
-    for item in hold_state_list:
+    for item in lock_state_list:
         if item in target_names:
             target_names.remove(item)
 
@@ -158,9 +162,9 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                 raise ValueError(f"No matching case for target_name: {target_name}")
 
 
-    if to_hold_state is True:
+    if to_lock_state is True:
         for item in target_names:
-            if item not in hold_state_list:
-                hold_state_list.append(item)
+            if item not in lock_state_list:
+                lock_state_list.append(item)
 
     vrct_gui.update()
