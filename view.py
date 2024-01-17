@@ -269,6 +269,18 @@ class View():
             VAR_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=BooleanVar(value=config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY),
 
             # Translation Tab
+            VAR_LABEL_USE_TRANSLATION_FEATURE=StringVar(value=i18n.t("config_window.use_translation_feature.label")),
+            VAR_DESC_USE_TRANSLATION_FEATURE=StringVar(value=i18n.t("config_window.use_translation_feature.desc")),
+            CALLBACK_SET_USE_TRANSLATION_FEATURE=None,
+            VAR_USE_TRANSLATION_FEATURE=BooleanVar(value=config.USE_TRANSLATION_FEATURE),
+
+            VAR_LABEL_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.label")),
+            VAR_DESC_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.desc")),
+            DICT_CTRANSLATE2_WEIGHT_TYPE=self.getSelectableCtranslate2WeightTypeDict(),
+            CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
+            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()["Small"]),
+            # VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
+
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=None,
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
@@ -578,6 +590,8 @@ class View():
 
 
             # Translation Tab
+            self.view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE = config_window_registers.get("callback_set_use_translation_feature", None)
+            self.view_variable.CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE = config_window_registers.get("callback_set_ctranslate2_weight_type", None)
             self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
 
             # Transcription Tab (Mic)
@@ -634,6 +648,11 @@ class View():
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
 
         self.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
+
+        if config.USE_TRANSLATION_FEATURE is True:
+            self.openCtranslate2WeightTypeWidget()
+        else:
+            self.closeCtranslate2WeightTypeWidget()
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -852,6 +871,13 @@ class View():
     def getPreUiScaling(self):
         return self.restart_required_configs_pre_data.ui_scaling
 
+    @staticmethod
+    def getSelectableCtranslate2WeightTypeDict():
+        return {
+            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
+            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
+        }
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -965,6 +991,22 @@ class View():
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
+
+    def updateSelectedCtranslate2WeightType(self, selected_weight_type:str):
+        self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
+
+    def setLatestCTranslate2WeightType(self):
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
+
+
+    def openCtranslate2WeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_translation_feature.grid(pady=0)
+        vrct_gui.config_window.sb__ctranslate2_weight_type.grid()
+
+    def closeCtranslate2WeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_translation_feature.grid(pady=(0,1))
+        vrct_gui.config_window.sb__ctranslate2_weight_type.grid_remove()
 
 
     def openMicEnergyThresholdWidget(self):

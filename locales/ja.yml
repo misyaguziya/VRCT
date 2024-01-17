@@ -116,6 +116,16 @@ config_window:
     label: メイン画面の位置を記憶する
     desc: 起動時、前回の画面の位置とサイズを復元します。
 
+  use_translation_feature:
+    label: 翻訳機能を使用する
+    desc: "オフにしている間は、翻訳機能を使わない代わり、VRCTの起動が少し速くなります。\n翻訳機能を必要とせず、VRCTをチャット送信と文字起こしツールとしてのみ使用するユーザー用です。"
+
+  ctranslate2_weight_type:
+    label: オフライン翻訳のタイプ
+    desc: 翻訳エンジン（オフライン翻訳）で翻訳する際に、使用する翻訳モデルを選択できます。
+    small: "通常モデル (%{capacity})"
+    large: "高精度モデル (%{capacity})"
+
   deepl_auth_key:
     label: DeepL 認証キー
 

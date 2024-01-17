@@ -119,6 +119,16 @@ config_window:
     label: Remember The Main Window Position
     desc: Restore the position and size of the previous window upon startup.
 
+  use_translation_feature:
+    label: Use Translation Feature
+    desc: You can't use the translation feature while this is turned off. Instead, the VRCT startup becomes a little faster. This is for users who don't need the translation feature and only use VRCT as a chatbox and transcription tool.
+
+  ctranslate2_weight_type:
+    label: Select Internal Translation Model
+    desc: You can choose the translation model to use for the internal translation engine.
+    small: "Basic model (%{capacity})"
+    large: "High accuracy model (%{capacity})"
+
   deepl_auth_key:
     label: DeepL Auth Key
 

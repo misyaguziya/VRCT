@@ -483,6 +483,20 @@ def callbackSetEnableRestoreMainWindowGeometry(value):
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
 
 # Translation Tab
+def callbackSetUseTranslationFeature(value):
+    print("callbackSetUseTranslationFeature", value)
+    config.USE_TRANSLATION_FEATURE = value
+    if config.USE_TRANSLATION_FEATURE is True:
+        view.setLatestCTranslate2WeightType()
+        view.openCtranslate2WeightTypeWidget()
+    else:
+        view.closeCtranslate2WeightTypeWidget()
+
+def callbackSetCtranslate2WeightType(value):
+    print("callbackSetCtranslate2WeightType", value)
+    config.WEIGHT_TYPE = str(value)
+    view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
     if len(value) == 39:
@@ -923,6 +937,8 @@ def createMainWindow():
             "callback_set_enable_restore_main_window_geometry": callbackSetEnableRestoreMainWindowGeometry,
 
             # Translation Tab
+            "callback_set_use_translation_feature": callbackSetUseTranslationFeature,
+            "callback_set_ctranslate2_weight_type": callbackSetCtranslate2WeightType,
             "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
 
             # Transcription Tab (Mic)
