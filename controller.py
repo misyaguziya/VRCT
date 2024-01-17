@@ -488,6 +488,11 @@ def callbackSetUseTranslationFeature(value):
     config.USE_TRANSLATION_FEATURE = value
     if config.USE_TRANSLATION_FEATURE is True:
         view.useTranslationFeatureProcess("Normal")
+        if model.checkCTranslatorCTranslate2ModelWeight():
+            model.changeTranslatorCTranslate2Model()
+        else:
+            view.useTranslationFeatureProcess("Disable")
+            # CTranslate2 weight is not downloaded
     else:
         view.useTranslationFeatureProcess("Disable")
 
@@ -495,6 +500,11 @@ def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
     config.WEIGHT_TYPE = str(value)
     view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+    if model.checkCTranslatorCTranslate2ModelWeight():
+        model.changeTranslatorCTranslate2Model()
+    else:
+        view.useTranslationFeatureProcess("Disable")
+        # CTranslate2 weight is not downloaded
 
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))

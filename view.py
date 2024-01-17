@@ -278,8 +278,7 @@ class View():
             VAR_DESC_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.desc")),
             DICT_CTRANSLATE2_WEIGHT_TYPE=self.getSelectableCtranslate2WeightTypeDict(),
             CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
-            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()["Small"]),
-            # VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
+            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
 
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=None,
@@ -974,6 +973,11 @@ class View():
             additional_widget.grid()
         self._closeMicWordFilterList()
 
+    def showRestartButton(self):
+        self._showRestartButton()
+
+    def hideRestartButton(self):
+        self._hideRestartButton()
 
     def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
         is_restart_required = not (
@@ -1013,9 +1017,7 @@ class View():
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
     def setLatestCTranslate2WeightType(self):
-        if config.WEIGHT_TYPE == "m2m100_418m":
-            WEIGHT_TYPE = "Small"
-        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[WEIGHT_TYPE]
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
 
 
