@@ -652,6 +652,7 @@ class View():
         if config.USE_TRANSLATION_FEATURE is True:
             self.openCtranslate2WeightTypeWidget()
         else:
+            self.setTranslationSwitchStatus("disabled", to_lock_state=True)
             self.closeCtranslate2WeightTypeWidget()
 
         if config.CHOICE_MIC_HOST == "NoHost":
@@ -916,6 +917,9 @@ class View():
     def setMainWindowAllWidgetsStatusToDisabled():
         vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
+    @staticmethod
+    def setTranslationSwitchStatus(status:str, to_lock_state:bool=False, release_locked_state:bool=False):
+        vrct_gui._changeMainWindowWidgetsStatus(status, ["translation_switch"], to_lock_state, release_locked_state)
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
@@ -1263,7 +1267,7 @@ class View():
     #     vrct_gui.translation_frame.markToggleManually(False)
 
     #     # disable translation feature.
-    #     vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
+    #     vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_lock_state=True)
 
     #     # print system message that mention to stopped translation feature.
     #     view.printToTextbox_TranslationEngineLimitError()

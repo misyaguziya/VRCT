@@ -489,8 +489,10 @@ def callbackSetUseTranslationFeature(value):
     if config.USE_TRANSLATION_FEATURE is True:
         view.setLatestCTranslate2WeightType()
         view.openCtranslate2WeightTypeWidget()
+        view.setTranslationSwitchStatus("normal", release_locked_state=True)
     else:
         view.closeCtranslate2WeightTypeWidget()
+        view.setTranslationSwitchStatus("disabled", to_lock_state=True)
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
