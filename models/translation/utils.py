@@ -7,7 +7,7 @@ from typing import Callable
 import hashlib
 
 ctranslate2_weights = {
-    "m2m100_418m": { # M2M-100 418M-parameter model
+    "Small": { # M2M-100 418M-parameter model
         "url": "https://bit.ly/33fM1AO",
         "directory_name": "m2m100_418m",
         "tokenizer": "facebook/m2m100_418M",
@@ -17,7 +17,7 @@ ctranslate2_weights = {
             "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
         }
     },
-    "m2m100_12b": { # M2M-100 1.2B-parameter model
+    "Large": { # M2M-100 1.2B-parameter model
         "url": "https://bit.ly/3GYiaed",
         "directory_name": "m2m100_12b",
         "tokenizer": "facebook/m2m100_1.2b",
@@ -38,9 +38,7 @@ def calculate_file_hash(file_path, block_size=65536):
 
     return hash_object.hexdigest()
 
-def downloadCTranslate2Weight(path, weight_type="m2m100_418m", func=None):
-    url = ctranslate2_weights[weight_type]["url"]
-    filename = 'weight.zip'
+def checkCTranslate2Weight(path, weight_type="Small"):
     directory_name = 'weight'
     current_directory = path
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
@@ -48,6 +46,7 @@ def downloadCTranslate2Weight(path, weight_type="m2m100_418m", func=None):
     files = ["model.bin", "sentencepiece.model", "shared_vocabulary.txt"]
 
     # check already downloaded
+    already_downloaded = False
     if all(os_path.exists(os_path.join(current_directory, directory_name, weight_directory_name, file)) for file in files):
         # check hash
         for file in files:
@@ -55,6 +54,16 @@ def downloadCTranslate2Weight(path, weight_type="m2m100_418m", func=None):
             current_hash = calculate_file_hash(os_path.join(current_directory, directory_name, weight_directory_name, file))
             if original_hash != current_hash:
                 break
+        already_downloaded = True
+    return already_downloaded
+
+def downloadCTranslate2Weight(path, weight_type="Small", func=None):
+    url = ctranslate2_weights[weight_type]["url"]
+    filename = 'weight.zip'
+    directory_name = 'weight'
+    current_directory = path
+
+    if checkCTranslate2Weight(path, weight_type):
         return
 
     try:
