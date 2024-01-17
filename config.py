@@ -95,6 +95,10 @@ class Config:
         return self._SELECTABLE_UI_LANGUAGES_DICT
 
     @property
+    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self):
+        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
+
+    @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
         return self._MAX_MIC_ENERGY_THRESHOLD
 
@@ -545,12 +549,24 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
+    @json_serializable('USE_TRANSLATION_FEATURE')
+    def USE_TRANSLATION_FEATURE(self):
+        return self._USE_TRANSLATION_FEATURE
+
+    @USE_TRANSLATION_FEATURE.setter
+    def USE_TRANSLATION_FEATURE(self, value):
+        if isinstance(value, bool):
+            self._USE_TRANSLATION_FEATURE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('WEIGHT_TYPE')
     def WEIGHT_TYPE(self):
         return self._WEIGHT_TYPE
 
     @WEIGHT_TYPE.setter
     def WEIGHT_TYPE(self, value):
+        # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT:
         if isinstance(value, str):
             self._WEIGHT_TYPE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
@@ -726,6 +742,11 @@ class Config:
             "ko": "한국어"
             # If you want to add a new language and key, please append it here.
         }
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
+            # {Save json str}: {i18n_placeholder} pairs
+            "Small": "Small",
+            "Large": "Large",
+        }
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -799,6 +820,7 @@ class Config:
         self._AUTH_KEYS = {
             "DeepL_API": None,
         }
+        self._USE_TRANSLATION_FEATURE = True
         self._WEIGHT_TYPE = "m2m100_418m"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
