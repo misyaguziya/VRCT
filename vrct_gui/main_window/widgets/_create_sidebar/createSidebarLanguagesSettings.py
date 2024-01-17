@@ -344,11 +344,11 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
 
-    sls__box_translation_optionmenu_wrapper = CTkFrame(main_window.sls__box_frame, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
-    sls__box_translation_optionmenu_wrapper.grid(row=5, column=0, pady=settings.uism.SLS__SELECTABLE_TRANSLATION_PADY, sticky="ew")
+    main_window.sls__box_translation_optionmenu_wrapper = CTkFrame(main_window.sls__box_frame, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
+    main_window.sls__box_translation_optionmenu_wrapper.grid(row=5, column=0, pady=settings.uism.SLS__SELECTABLE_TRANSLATION_PADY, sticky="ew")
 
-    sls__box_translation_optionmenu_wrapper.grid_columnconfigure((0,2), weight=0, minsize=settings.uism.SLS__SELECTABLE_TRANSLATION_MIN_PADX)
-    sls__box_translation_optionmenu_wrapper.grid_columnconfigure(1, weight=1)
+    main_window.sls__box_translation_optionmenu_wrapper.grid_columnconfigure((0,2), weight=0, minsize=settings.uism.SLS__SELECTABLE_TRANSLATION_MIN_PADX)
+    main_window.sls__box_translation_optionmenu_wrapper.grid_columnconfigure(1, weight=1)
 
 
 
@@ -361,12 +361,12 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         dropdown_menu_values=[],
         command=adjustedCommand,
         wrapper_widget=main_window,
-        attach_widget=sls__box_translation_optionmenu_wrapper,
+        attach_widget=main_window.sls__box_translation_optionmenu_wrapper,
         dropdown_menu_min_width=settings.uism.SIDEBAR_MIN_WIDTH,
     )
 
     (sls__selected_translation_engine_box, label_button_label_widget) = createLabelButton(
-        parent_widget=sls__box_translation_optionmenu_wrapper,
+        parent_widget=main_window.sls__box_translation_optionmenu_wrapper,
         label_button_bg_color=settings.ctm.SLS__BG_COLOR,
         label_button_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
         label_button_clicked_bg_color=settings.ctm.SLS__OPTIONMENU_CLICKED_BG_COLOR,

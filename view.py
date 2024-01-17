@@ -650,10 +650,9 @@ class View():
         self.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
 
         if config.USE_TRANSLATION_FEATURE is True:
-            self.openCtranslate2WeightTypeWidget()
+            self.useTranslationFeatureProcess("Normal")
         else:
-            self.setTranslationSwitchStatus("disabled", to_lock_state=True)
-            self.closeCtranslate2WeightTypeWidget()
+            self.useTranslationFeatureProcess("Disable")
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -878,6 +877,17 @@ class View():
             config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
             config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
         }
+
+    def useTranslationFeatureProcess(self, state:str):
+        if state == "Normal":
+            self.setLatestCTranslate2WeightType()
+            self.openCtranslate2WeightTypeWidget()
+            self.setTranslationSwitchStatus("normal", release_locked_state=True)
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+        elif state == "Disable":
+            view.closeCtranslate2WeightTypeWidget()
+            view.setTranslationSwitchStatus("disabled", to_lock_state=True)
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
