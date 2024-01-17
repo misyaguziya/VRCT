@@ -9,7 +9,8 @@ if __name__ == "__main__":
 
         from config import config
         from models.translation.utils import downloadCTranslate2Weight
-        downloadCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE, splash.updateDownloadProgress)
+        if config.USE_TRANSLATION_FEATURE is True:
+            downloadCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE, splash.updateDownloadProgress)
 
         import controller
         controller.createMainWindow()

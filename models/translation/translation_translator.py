@@ -9,20 +9,10 @@ import transformers
 
 # Translator
 class Translator():
-    def __init__(self, path, model_type):
+    def __init__(self):
         self.deepl_client = None
-        directory_name = ctranslate2_weights[model_type]["directory_name"]
-        tokenizer = ctranslate2_weights[model_type]["tokenizer"]
-        weight_path = os.path.join(path, "weight", directory_name)
-        self.ctranslate2_translator = ctranslate2.Translator(
-            weight_path,
-            device="cpu",
-            device_index=0,
-            compute_type="int8",
-            inter_threads=1,
-            intra_threads=4
-        )
-        self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
+        self.ctranslate2_translator = None
+        self.ctranslate2_tokenizer = None
 
     def authenticationDeepLAuthKey(self, authkey):
         result = True

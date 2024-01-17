@@ -821,7 +821,7 @@ class Config:
             "DeepL_API": None,
         }
         self._USE_TRANSLATION_FEATURE = True
-        self._WEIGHT_TYPE = "m2m100_418m"
+        self._WEIGHT_TYPE = "Small"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"

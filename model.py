@@ -24,6 +24,7 @@ from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
+from models.translation.utils import checkCTranslate2Weight
 from config import config
 
 class threadFnc(Thread):
@@ -63,10 +64,15 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
-        self.translator = Translator(config.PATH_LOCAL, config.WEIGHT_TYPE)
+        self.translator = Translator()
+        if config.USE_TRANSLATION_FEATURE is True:
+            self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
         self.keyword_processor = KeywordProcessor()
 
-    def updateTranslator(self):
+    def checkCTranslatorCTranslate2ModelWeight(self):
+        return checkCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE)
+
+    def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
 
     def resetKeywordProcessor(self):
