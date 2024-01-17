@@ -884,10 +884,13 @@ class View():
             self.openCtranslate2WeightTypeWidget()
             self.setTranslationSwitchStatus("normal", release_locked_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
         elif state == "Disable":
             view.closeCtranslate2WeightTypeWidget()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
+            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
@@ -1010,7 +1013,9 @@ class View():
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
     def setLatestCTranslate2WeightType(self):
-        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        if config.WEIGHT_TYPE == "m2m100_418m":
+            WEIGHT_TYPE = "Small"
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[WEIGHT_TYPE]
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
 
 
