@@ -650,9 +650,9 @@ class View():
         self.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
 
         if config.USE_TRANSLATION_FEATURE is True:
-            self.openCtranslate2WeightTypeWidget()
+            self.useTranslationFeatureProcess("Normal")
         else:
-            self.closeCtranslate2WeightTypeWidget()
+            self.useTranslationFeatureProcess("Disable")
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -878,6 +878,20 @@ class View():
             config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
         }
 
+    def useTranslationFeatureProcess(self, state:str):
+        if state == "Normal":
+            self.setLatestCTranslate2WeightType()
+            self.openCtranslate2WeightTypeWidget()
+            self.setTranslationSwitchStatus("normal", release_locked_state=True)
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+        elif state == "Disable":
+            view.closeCtranslate2WeightTypeWidget()
+            view.setTranslationSwitchStatus("disabled", to_lock_state=True)
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
+            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -916,6 +930,9 @@ class View():
     def setMainWindowAllWidgetsStatusToDisabled():
         vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
+    @staticmethod
+    def setTranslationSwitchStatus(status:str, to_lock_state:bool=False, release_locked_state:bool=False):
+        vrct_gui._changeMainWindowWidgetsStatus(status, ["translation_switch"], to_lock_state, release_locked_state)
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
@@ -996,7 +1013,9 @@ class View():
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
     def setLatestCTranslate2WeightType(self):
-        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        if config.WEIGHT_TYPE == "m2m100_418m":
+            WEIGHT_TYPE = "Small"
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[WEIGHT_TYPE]
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
 
 
@@ -1263,7 +1282,7 @@ class View():
     #     vrct_gui.translation_frame.markToggleManually(False)
 
     #     # disable translation feature.
-    #     vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
+    #     vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_lock_state=True)
 
     #     # print system message that mention to stopped translation feature.
     #     view.printToTextbox_TranslationEngineLimitError()
