@@ -55,6 +55,12 @@ def messageFormatter(format_type:str, translation, message):
         osc_message = FORMAT.replace("[message]", message)
     return osc_message
 
+def changeToCTranslate2Process():
+    config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+    config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+    updateTranslationEngineAndEngineList()
+    view.printToTextbox_TranslationEngineLimitError()
+
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
@@ -67,9 +73,7 @@ def sendMicMessage(message):
         else:
             translation, success = model.getInputTranslate(message)
             if success is False:
-                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-                updateTranslationEngineAndEngineList()
+                changeToCTranslate2Process()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -134,9 +138,7 @@ def receiveSpeakerMessage(message):
         else:
             translation, success = model.getOutputTranslate(message)
             if success is False:
-                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-                updateTranslationEngineAndEngineList()
+                changeToCTranslate2Process()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_NOTICE_XSOVERLAY is True:
@@ -204,9 +206,8 @@ def sendChatMessage(message):
         else:
             translation, success = model.getInputTranslate(message)
             if success is False:
-                config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-                config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-                updateTranslationEngineAndEngineList()
+                changeToCTranslate2Process()
+
         # send OSC message
         if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
             if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
@@ -482,6 +483,20 @@ def callbackSetEnableRestoreMainWindowGeometry(value):
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
 
 # Translation Tab
+def callbackSetUseTranslationFeature(value):
+    print("callbackSetUseTranslationFeature", value)
+    config.USE_TRANSLATION_FEATURE = value
+    if config.USE_TRANSLATION_FEATURE is True:
+        view.setLatestCTranslate2WeightType()
+        view.openCtranslate2WeightTypeWidget()
+    else:
+        view.closeCtranslate2WeightTypeWidget()
+
+def callbackSetCtranslate2WeightType(value):
+    print("callbackSetCtranslate2WeightType", value)
+    config.WEIGHT_TYPE = str(value)
+    view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))
     if len(value) == 39:
@@ -922,6 +937,8 @@ def createMainWindow():
             "callback_set_enable_restore_main_window_geometry": callbackSetEnableRestoreMainWindowGeometry,
 
             # Translation Tab
+            "callback_set_use_translation_feature": callbackSetUseTranslationFeature,
+            "callback_set_ctranslate2_weight_type": callbackSetCtranslate2WeightType,
             "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
 
             # Transcription Tab (Mic)
