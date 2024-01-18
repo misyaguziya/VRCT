@@ -28,6 +28,8 @@ class View():
             ui_scaling=config.UI_SCALING,
             font_family=config.FONT_FAMILY,
             ui_language=config.UI_LANGUAGE,
+            use_translation_feature=config.USE_TRANSLATION_FEATURE,
+            ctranslate2_weight_type=config.WEIGHT_TYPE,
         )
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
@@ -891,6 +893,13 @@ class View():
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
             vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
 
+        elif state == "Restart":
+            view.setLatestCTranslate2WeightType()
+            view.setTranslationSwitchStatus("disabled", to_lock_state=True)
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -984,7 +993,9 @@ class View():
             self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
             self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
             self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
-            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE
+            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE and
+            self.restart_required_configs_pre_data.use_translation_feature == config.USE_TRANSLATION_FEATURE and
+            self.restart_required_configs_pre_data.ctranslate2_weight_type == config.WEIGHT_TYPE
         )
 
         if locale is None:
