@@ -326,11 +326,18 @@ class _CreateDropdownMenuWindow(CTkToplevel):
 
     def _withdraw(self, e=None):
         self.withdraw()
-        if self.BIND_CONFIGURE_FUNC_ID in self.attach_widget.winfo_toplevel().bind():
+        try:
             self.attach_widget.winfo_toplevel().unbind("<Configure>", self.BIND_CONFIGURE_FUNC_ID)
-        self.attach_widget.unbind("<Unmap>", self.BIND_UNMAP_FUNC_ID)
-        if self.BIND_BUTTON_1_FUNC_ID in self.attach_widget.winfo_toplevel().bind():
+        except Exception:
+            pass
+        try:
+            self.attach_widget.unbind("<Unmap>", self.BIND_UNMAP_FUNC_ID)
+        except Exception:
+            pass
+        try:
             self.attach_widget.winfo_toplevel().unbind("<Button-1>", self.BIND_BUTTON_1_FUNC_ID)
+        except Exception:
+            pass
         self.hide = True
 
 

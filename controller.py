@@ -489,7 +489,11 @@ def callbackSetUseTranslationFeature(value):
     if config.USE_TRANSLATION_FEATURE is True:
         view.useTranslationFeatureProcess("Normal")
         if model.checkCTranslatorCTranslate2ModelWeight():
-            model.changeTranslatorCTranslate2Model()
+            def callback():
+                model.changeTranslatorCTranslate2Model()
+            th_callback = Thread(target=callback)
+            th_callback.daemon = True
+            th_callback.start()
         else:
             view.showRestartButtonIfRequired()
             view.useTranslationFeatureProcess("Restart")
@@ -501,9 +505,13 @@ def callbackSetCtranslate2WeightType(value):
     config.WEIGHT_TYPE = str(value)
     view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
     if model.checkCTranslatorCTranslate2ModelWeight():
-        model.changeTranslatorCTranslate2Model()
-        view.showRestartButtonIfRequired()
-        view.useTranslationFeatureProcess("Normal")
+        def callback():
+            model.changeTranslatorCTranslate2Model()
+            view.showRestartButtonIfRequired()
+            view.useTranslationFeatureProcess("Normal")
+        th_callback = Thread(target=callback)
+        th_callback.daemon = True
+        th_callback.start()
     else:
         view.showRestartButtonIfRequired()
         view.useTranslationFeatureProcess("Restart")
