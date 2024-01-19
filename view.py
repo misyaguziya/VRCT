@@ -591,7 +591,7 @@ class View():
             # Translation Tab
             self.view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE = config_window_registers.get("callback_set_use_translation_feature", None)
             self.view_variable.CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE = config_window_registers.get("callback_set_ctranslate2_weight_type", None)
-            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
+            self.view_variable.CALLBACK_SET_DEEPL_AUTH_KEY = config_window_registers.get("callback_set_deepl_auth_key", None)
 
             # Transcription Tab (Mic)
             self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)

@@ -506,8 +506,8 @@ def callbackSetCtranslate2WeightType(value):
         view.useTranslationFeatureProcess("Disable")
         # CTranslate2 weight is not downloaded
 
-def callbackSetDeeplAuthkey(value):
-    print("callbackSetDeeplAuthkey", str(value))
+def callbackSetDeeplAuthKey(value):
+    print("callbackSetDeeplAuthKey", str(value))
     if len(value) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
         if result is True:
@@ -948,7 +948,7 @@ def createMainWindow():
             # Translation Tab
             "callback_set_use_translation_feature": callbackSetUseTranslationFeature,
             "callback_set_ctranslate2_weight_type": callbackSetCtranslate2WeightType,
-            "callback_set_deepl_authkey": callbackSetDeeplAuthkey,
+            "callback_set_deepl_auth_key": callbackSetDeeplAuthKey,
 
             # Transcription Tab (Mic)
             "callback_set_mic_host": callbackSetMicHost,
