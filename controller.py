@@ -479,7 +479,7 @@ def callbackSetUiLanguage(value):
     view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
 
 def callbackSetEnableRestoreMainWindowGeometry(value):
-    print("callbackSetEnableAutoClearMessageBox", value)
+    print("callbackSetEnableRestoreMainWindowGeometry", value)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
 
 # Translation Tab
