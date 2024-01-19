@@ -42,7 +42,7 @@ main_window:
     latest_language_setting: 現在「あなたの言語」は %{your_language}、「相手の言語」は %{target_language} に設定されています。
 
     opened_web_page_booth: お使いのブラウザで、Boothのページを開きました。
-    opened_web_page_vrct_documents: "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX(元Twitter)にて気軽にご連絡ください！"
+    opened_web_page_vrct_documents: "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！"
 
   update_available: 新しいバージョンが出ました！
 
@@ -202,7 +202,7 @@ config_window:
 
   notice_xsoverlay:
     label: XSOverlayでの通知受け取り機能を有効 (VR限定)
-    desc: 文字起こし（受信）されたメッセージをXSOverlayの機能を使って通知として受け取れます。
+    desc: 文字起こし (受信) されたメッセージをXSOverlayの機能を使って通知として受け取れます。
 
   auto_export_message_logs:
     label: 会話ログを自動的に保存する
