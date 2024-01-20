@@ -884,19 +884,21 @@ class View():
             self.openCtranslate2WeightTypeWidget()
             self.setTranslationSwitchStatus("normal", release_locked_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
-            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+            vrct_gui.update()
 
         elif state == "Disable":
             view.closeCtranslate2WeightTypeWidget()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
-            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+            vrct_gui.update()
 
         elif state == "Restart":
             view.setLatestCTranslate2WeightType()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
-            vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+        vrct_gui.update()
+        vrct_gui.config_window.lift()
 
 
 # Open Webpage Functions
