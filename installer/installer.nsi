@@ -64,6 +64,8 @@ Var Label_DescriptionOptions
 Var Label_DescriptionComboBox
 Var ComboBox_Language
 Var Set_Langage
+Var DownloadWeight
+Var Checkbox_DownloadWeight
 
 ; 初期化時コールバック
 Function .onInit
@@ -71,6 +73,7 @@ Function .onInit
   StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
   StrCpy $ComboBox_Language "English"
+  StrCpy $DownloadWeight ${BST_CHECKED}
 FunctionEnd
 
 ; オプション ページ
@@ -96,13 +99,17 @@ Function OptionPage
   ${NSD_CreateCheckbox} 0 26u 100% 12u "デスクトップにショートカットを作成(&D)"
   Pop $Checkbox_InstallShortcut
 
+  ${NSD_CreateLabel} 0 52u 100% 12u "初回起動時の設定を設定してください。"
   ; ComboBoxを作成します。
-  ${NSD_CreateLabel} 0 42u 100% 12u "UIの言語を設定してください。"
+  ${NSD_CreateLabel} 0 65u 100% 12u "UIの言語"
   ; ラベルを変数に代入します。
   Pop $Label_DescriptionComboBox
 
-  ${NSD_CreateComboBox} 0 55u 100% 12u ""
+  ${NSD_CreateComboBox} 0 77u 100% 12u ""
   Pop $ComboBox_Language
+
+  ${NSD_CreateCheckbox} 0 92u 100% 12u "翻訳モデルのダウンロード(&D)"
+  Pop $Checkbox_DownloadWeight
 
   ${NSD_CB_AddString} $ComboBox_Language "English"
   ${NSD_CB_AddString} $ComboBox_Language "日本語"
@@ -117,6 +124,10 @@ Function OptionPage
     ${NSD_Check} $Checkbox_InstallShortcut
   ${EndIf}
   ${NSD_CB_SelectString} $ComboBox_Language "English"
+  ${If} $DownloadWeight == ${BST_CHECKED}
+    ; チェックが入力済の場合、チェックボックスにチェックを入れます。
+    ${NSD_Check} $Checkbox_DownloadWeight
+  ${EndIf}
   nsDialogs::Show
 FunctionEnd
 
@@ -125,6 +136,7 @@ Function OptionPageLeave
   ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
   ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
   ${NSD_GetText} $ComboBox_Language $ComboBox_Language
+  ${NSD_GetState} $Checkbox_DownloadWeight $DownloadWeight
 FunctionEnd
 
 ; デフォルト セクション
@@ -177,7 +189,13 @@ Section
       StrCpy $Set_Langage "ko"
   ${EndIf}
 
-  StrCpy $1 '{"UI_LANGUAGE": "$Set_Langage"}'
+  ${If} $DownloadWeight == 1
+      StrCpy $DownloadWeight "true"
+  ${Else}
+      StrCpy $DownloadWeight "false"
+  ${EndIf}
+
+  StrCpy $1 '{"UI_LANGUAGE": "$Set_Langage", "USE_TRANSLATION_FEATURE": $DownloadWeight}'
   FileOpen $0 "$INSTDIR\config.json" w
   FileWrite $0 $1
   FileClose $0
