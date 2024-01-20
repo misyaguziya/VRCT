@@ -28,8 +28,7 @@ class View():
             ui_scaling=config.UI_SCALING,
             font_family=config.FONT_FAMILY,
             ui_language=config.UI_LANGUAGE,
-            use_translation_feature=config.USE_TRANSLATION_FEATURE,
-            ctranslate2_weight_type=config.WEIGHT_TYPE,
+            is_reset_button_displayed_for_translation=config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
         )
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
@@ -994,8 +993,7 @@ class View():
             self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
             self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
             self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE and
-            self.restart_required_configs_pre_data.use_translation_feature == config.USE_TRANSLATION_FEATURE and
-            self.restart_required_configs_pre_data.ctranslate2_weight_type == config.WEIGHT_TYPE
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
         )
 
         if locale is None:

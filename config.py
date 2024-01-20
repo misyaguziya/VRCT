@@ -197,6 +197,15 @@ class Config:
         if value in list(translation_lang.keys()):
             self._CHOICE_OUTPUT_TRANSLATOR = value
 
+    @property
+    def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self):
+        return self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
+
+    @IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION.setter
+    def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self, value):
+        if isinstance(value, bool):
+            self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -761,6 +770,7 @@ class Config:
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
+        self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
 
         # Save Json Data
         ## Main Window
