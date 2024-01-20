@@ -884,18 +884,24 @@ class View():
             self.openCtranslate2WeightTypeWidget()
             self.setTranslationSwitchStatus("normal", release_locked_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.compact_mode_translation_frame.grid()
+            vrct_gui.translation_frame.grid()
             vrct_gui.update()
 
         elif state == "Disable":
             view.closeCtranslate2WeightTypeWidget()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
+            vrct_gui.compact_mode_translation_frame.grid_remove()
+            vrct_gui.translation_frame.grid_remove()
             vrct_gui.update()
 
         elif state == "Restart":
             view.setLatestCTranslate2WeightType()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
             vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.compact_mode_translation_frame.grid()
+            vrct_gui.translation_frame.grid()
 
         vrct_gui.update()
         vrct_gui.config_window.lift()

@@ -28,13 +28,13 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
         if status == "disabled":
             widget_frame.configure(cursor="")
             widget_label.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
-            widget_switch_box.configure(state="disabled", progress_color=settings.ctm.SF__SWITCH_BOX_DISABLE_BG_COLOR)
+            widget_switch_box.configure(state="disabled", progress_color=settings.ctm.SF__SWITCH_BOX_DISABLE_BG_COLOR, button_color=settings.ctm.SF__SWITCH_BOX_BUTTON_DISABLED_COLOR)
             widget_selected_mark.configure(fg_color=settings.ctm.SF__SELECTED_MARK_DISABLE_BG_COLOR)
             icon_file = disabled_icon_name
         elif status == "normal":
             widget_frame.configure(cursor="hand2")
             widget_label.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
-            widget_switch_box.configure(state="normal", progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR)
+            widget_switch_box.configure(state="normal", progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR, button_color=settings.ctm.SF__SWITCH_BOX_BUTTON_COLOR)
             widget_selected_mark.configure(fg_color=settings.ctm.SF__SELECTED_MARK_ACTIVE_BG_COLOR)
             icon_file = icon_name
 
