@@ -58,6 +58,7 @@ def _lightTheme(base_color):
             SF__SWITCH_BOX_DISABLE_BG_COLOR = base_color.PRIMARY_200_COLOR,
 
             SF__SWITCH_BOX_BUTTON_COLOR = base_color.LIGHT_150_COLOR,
+            SF__SWITCH_BOX_BUTTON_DISABLED_COLOR = base_color.LIGHT_300_COLOR,
             # It's not working because It overrode internally.
             SF__SWITCH_BOX_BUTTON_HOVERED_COLOR = base_color.LIGHT_300_COLOR,
 
