@@ -22,7 +22,7 @@ VIAddVersionKey "FileDescription" "Communication tool with translation & transcr
 
 Unicode true
 ; アプリケーション名
-Name "VRCT Setup"
+Name "VRCT"
 ; 作成されるインストーラ
 OutFile "VRCT_Setup.exe"
 
@@ -38,8 +38,8 @@ XPStyle on
 ; ページ
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "..\LICENSE"
-;!insertmacro MUI_PAGE_DIRECTORY
-Page custom OptionPage OptionPageLeave
+Page custom OptionPage1 OptionPageLeave1
+Page custom OptionPage2 OptionPageLeave2
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 ; アンインストーラ ページ
@@ -66,6 +66,8 @@ Var ComboBox_Language
 Var Set_Langage
 Var DownloadWeight
 Var Checkbox_DownloadWeight
+Var RadioButton_Download
+Var RadioButton_NotDownload
 
 ; 初期化時コールバック
 Function .onInit
@@ -76,8 +78,9 @@ Function .onInit
   StrCpy $DownloadWeight ${BST_CHECKED}
 FunctionEnd
 
-; オプション ページ
-Function OptionPage
+; オプション ページ 1
+Function OptionPage1
+  !insertmacro MUI_HEADER_TEXT "オプション" "オプションを設定してください。"
   ; nsDialogsを作成します。
   nsDialogs::Create 1018
   ; 作成されたnsDialogsを変数に代入します。
@@ -98,31 +101,49 @@ Function OptionPage
 
   ${NSD_CreateCheckbox} 0 26u 100% 12u "デスクトップにショートカットを作成(&D)"
   Pop $Checkbox_InstallShortcut
+  nsDialogs::Show
+FunctionEnd
 
-  ${NSD_CreateLabel} 0 52u 100% 12u "初回起動時の設定を設定してください。"
+; オプション ページ 1 退出コールバック
+Function OptionPageLeave1
+  ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
+  ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
+FunctionEnd
+
+; オプション ページ 2
+Function OptionPage2
+  !insertmacro MUI_HEADER_TEXT "オプション" "初回起動時の設定を設定してください。"
+  ; nsDialogsを作成します。
+  nsDialogs::Create 1018
+  ; 作成されたnsDialogsを変数に代入します。
+  Pop $Dialog_Options
+
+  ${If} $Dialog_Options == error
+    ; ダイアログの作成に失敗した場合には終了します。
+    Abort
+  ${EndIf}
+
   ; ComboBoxを作成します。
-  ${NSD_CreateLabel} 0 65u 100% 12u "UIの言語"
+  ${NSD_CreateLabel} 0 0u 100% 12u "UIの言語"
   ; ラベルを変数に代入します。
   Pop $Label_DescriptionComboBox
 
-  ${NSD_CreateComboBox} 0 77u 100% 12u ""
+  ${NSD_CreateDropList} 0 15u 100% 12u ""
   Pop $ComboBox_Language
 
-  ${NSD_CreateCheckbox} 0 92u 100% 12u "翻訳モデルのダウンロード(&D)"
+  ${NSD_CreateCheckbox} 0 30u 100% 12u "翻訳モデルのダウンロード(&D)"
   Pop $Checkbox_DownloadWeight
+
+  # ラジオボタンを追加しWEIGHTをDownloadするか選択する
+  ${NSD_CreateRadioButton} 0 45u 100% 12u "Download"
+  Pop $RadioButton_Download
+  ${NSD_CreateRadioButton} 0 60u 100% 12u "Not Download"
+  Pop $RadioButton_NotDownload
 
   ${NSD_CB_AddString} $ComboBox_Language "English"
   ${NSD_CB_AddString} $ComboBox_Language "日本語"
   ${NSD_CB_AddString} $ComboBox_Language "한국어"
 
-  ${If} $InstallDocs == ${BST_CHECKED}
-    ; チェックが入力済の場合、チェックボックスにチェックを入れます。
-    ${NSD_Check} $Checkbox_InstallDocs
-  ${EndIf}
-  ${If} $InstallShortcut == ${BST_CHECKED}
-    ; チェックが入力済の場合、チェックボックスにチェックを入れます。
-    ${NSD_Check} $Checkbox_InstallShortcut
-  ${EndIf}
   ${NSD_CB_SelectString} $ComboBox_Language "English"
   ${If} $DownloadWeight == ${BST_CHECKED}
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
@@ -131,10 +152,8 @@ Function OptionPage
   nsDialogs::Show
 FunctionEnd
 
-; オプション ページ退出コールバック
-Function OptionPageLeave
-  ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
-  ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
+; オプション ページ 2 退出コールバック
+Function OptionPageLeave2
   ${NSD_GetText} $ComboBox_Language $ComboBox_Language
   ${NSD_GetState} $Checkbox_DownloadWeight $DownloadWeight
 FunctionEnd
