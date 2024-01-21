@@ -489,40 +489,36 @@ def callbackSetUseTranslationFeature(value):
     if config.USE_TRANSLATION_FEATURE is True:
         view.useTranslationFeatureProcess("Normal")
         if model.checkCTranslatorCTranslate2ModelWeight():
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
             def callback():
-                config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-                view.showRestartButtonIfRequired()
                 model.changeTranslatorCTranslate2Model()
             th_callback = Thread(target=callback)
             th_callback.daemon = True
             th_callback.start()
         else:
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-            view.showRestartButtonIfRequired()
             view.useTranslationFeatureProcess("Restart")
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-        view.showRestartButtonIfRequired()
         view.useTranslationFeatureProcess("Disable")
+    view.showRestartButtonIfRequired()
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
     config.WEIGHT_TYPE = str(value)
     view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
     if model.checkCTranslatorCTranslate2ModelWeight():
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         def callback():
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-            view.showRestartButtonIfRequired()
             model.changeTranslatorCTranslate2Model()
-            view.showRestartButtonIfRequired()
             view.useTranslationFeatureProcess("Normal")
         th_callback = Thread(target=callback)
         th_callback.daemon = True
         th_callback.start()
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-        view.showRestartButtonIfRequired()
         view.useTranslationFeatureProcess("Restart")
+    view.showRestartButtonIfRequired()
 
 def callbackSetDeeplAuthkey(value):
     print("callbackSetDeeplAuthkey", str(value))

@@ -1013,8 +1013,7 @@ class View():
 
     def _showRestartButton(self, locale:Union[None,str]=None):
         self.view_variable.VAR_CONFIG_WINDOW_RESTART_BUTTON_LABEL.set(i18n.t("config_window.restart_message", locale=locale))
-        # This .after() func is for fixing bug that it can't be shown the label widget after changing the weight type.
-        vrct_gui.config_window.after(100, vrct_gui.config_window.restart_button_container.grid)
+        vrct_gui.config_window.restart_button_container.grid()
     def _hideRestartButton(self):
         vrct_gui.config_window.restart_button_container.grid_remove()
 
