@@ -58,6 +58,7 @@ def _lightTheme(base_color):
             SF__SWITCH_BOX_DISABLE_BG_COLOR = base_color.PRIMARY_200_COLOR,
 
             SF__SWITCH_BOX_BUTTON_COLOR = base_color.LIGHT_150_COLOR,
+            SF__SWITCH_BOX_BUTTON_DISABLED_COLOR = base_color.LIGHT_300_COLOR,
             # It's not working because It overrode internally.
             SF__SWITCH_BOX_BUTTON_HOVERED_COLOR = base_color.LIGHT_300_COLOR,
 
@@ -208,8 +209,11 @@ def _lightTheme(base_color):
             SB__SLIDER_TOOLTIP_TEXT_COLOR = base_color.LIGHT_800_COLOR,
 
             SB__SWITCH_BOX_BG_COLOR = base_color.LIGHT_400_COLOR,
+            SB__SWITCH_BOX_BG_DISABLED_COLOR = base_color.LIGHT_200_COLOR,
             SB__SWITCH_BOX_ACTIVE_BG_COLOR = base_color.PRIMARY_300_COLOR,
+            SB__SWITCH_BOX_ACTIVE_BG_DISABLED_COLOR = base_color.PRIMARY_150_COLOR,
             SB__SWITCH_BOX_BUTTON_COLOR = base_color.LIGHT_300_COLOR,
+            SB__SWITCH_BOX_BUTTON_DISABLED_COLOR = base_color.LIGHT_150_COLOR,
             SB__SWITCH_BOX_BUTTON_HOVERED_COLOR = base_color.LIGHT_200_COLOR,
 
             SB__CHECKBOX_BORDER_COLOR = base_color.LIGHT_600_COLOR,

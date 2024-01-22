@@ -6,7 +6,7 @@ main_window:
 
   language_settings: 언어 설정
   your_language: 당신의 언어
-  both_direction_desc: 양방향으로 번역
+  translate_each_other_label: 양방향으로 번역
   swap_button_label: 언어 교체
   target_language: 상대방의 언어
 

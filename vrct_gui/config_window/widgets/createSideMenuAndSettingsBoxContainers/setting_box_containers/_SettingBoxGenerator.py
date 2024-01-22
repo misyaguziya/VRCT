@@ -210,6 +210,8 @@ class _SettingBoxGenerator():
         )
         setattr(self.config_window, switch_attr_name, switch_widget)
 
+        self.config_window.sb__widgets[switch_attr_name].switch_box = switch_widget
+
         switch_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
         return setting_box_frame
@@ -244,6 +246,8 @@ class _SettingBoxGenerator():
             fg_color=self.settings.ctm.SB__CHECKBOX_CHECKED_COLOR,
         )
         setattr(self.config_window, checkbox_attr_name, checkbox_widget)
+
+        self.config_window.sb__widgets[checkbox_attr_name].checkbox = checkbox_widget
 
         checkbox_widget.grid(row=1, column=SETTING_BOX_COLUMN, sticky="e")
 
