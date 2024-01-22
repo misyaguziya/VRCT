@@ -131,6 +131,7 @@ config_window:
 
   deepl_auth_key:
     label: DeepL Auth Key
+    desc: Please select %{translator} on the main screen with DeepL_API when using. ※Some languages may not be supported.
 
   mic_host:
     label: Mic Host/Driver
