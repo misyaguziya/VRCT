@@ -162,9 +162,10 @@ class View():
             IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
-            VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
-            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=i18n.t("main_window.swap_button_label")),
+            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=""),
             CALLBACK_SWAP_LANGUAGES=None,
+            CALLBACK_ENTERED_SWAP_LANGUAGES_BUTTON=self._enteredSwapLanguagesButton,
+            CALLBACK_LEAVED_SWAP_LANGUAGES_BUTTON=self._leavedSwapLanguagesButton,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value=f"{config.TARGET_LANGUAGE}\n({config.TARGET_COUNTRY})"),
@@ -651,7 +652,9 @@ class View():
 
         if config.USE_TRANSLATION_FEATURE is True:
             self.useTranslationFeatureProcess("Normal")
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
         else:
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
             self.useTranslationFeatureProcess("Disable")
 
         if config.CHOICE_MIC_HOST == "NoHost":
@@ -879,27 +882,34 @@ class View():
         }
 
     def useTranslationFeatureProcess(self, state:str):
+        def changeWidget_UseTranslationFeature():
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.compact_mode_translation_frame.grid()
+            vrct_gui.translation_frame.grid()
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
+
+        def changeWidget_DontUseTranslationFeature():
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
+            vrct_gui.compact_mode_translation_frame.grid_remove()
+            vrct_gui.translation_frame.grid_remove()
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
+
+
         if state == "Normal":
             self.setLatestCTranslate2WeightType()
             self.openCtranslate2WeightTypeWidget()
             self.setTranslationSwitchStatus("normal", release_locked_state=True)
-            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
-            vrct_gui.compact_mode_translation_frame.grid()
-            vrct_gui.translation_frame.grid()
+            changeWidget_UseTranslationFeature()
 
         elif state == "Disable":
             view.closeCtranslate2WeightTypeWidget()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
-            vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
-            vrct_gui.compact_mode_translation_frame.grid_remove()
-            vrct_gui.translation_frame.grid_remove()
+            changeWidget_DontUseTranslationFeature()
 
         elif state == "Restart":
             view.setLatestCTranslate2WeightType()
             view.setTranslationSwitchStatus("disabled", to_lock_state=True)
-            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
-            vrct_gui.compact_mode_translation_frame.grid()
-            vrct_gui.translation_frame.grid()
+            changeWidget_UseTranslationFeature()
 
         vrct_gui.update()
         vrct_gui.config_window.lift()
@@ -1221,7 +1231,7 @@ class View():
         self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_word_filter_list)
 
 
-# Widget Control (Whole)
+# Widget Control
     def foregroundOnIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOn()
@@ -1278,6 +1288,19 @@ class View():
             case "show" | "show_and_disable_enter_key":
                 vrct_gui.main_send_message_button_container.grid()
                 vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+    def _enteredSwapLanguagesButton(self):
+        self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
+        vrct_gui.sls__both_direction_desc.configure(
+            text_color=self.settings.main.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR,
+        )
+
+    def _leavedSwapLanguagesButton(self):
+        if config.USE_TRANSLATION_FEATURE is True:
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
+        vrct_gui.sls__both_direction_desc.configure(
+            text_color=self.settings.main.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
+        )
 
 # Function
     def _adjustUiSizeAndRestart(self):
