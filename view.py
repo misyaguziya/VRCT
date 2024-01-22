@@ -1038,6 +1038,28 @@ class View():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
 
+    @staticmethod
+    def setWidgetsStatus_changeWeightType_Pending():
+        vrct_gui.config_window.sb__switch_use_translation_feature.configure(state="disabled")
+        vrct_gui._changeConfigWindowWidgetsStatus(
+            status="disabled",
+            target_names=[
+                "sb__switch_use_translation_feature",
+                "sb__optionmenu_ctranslate2_weight_type",
+            ]
+        )
+    @staticmethod
+    def setWidgetsStatus_changeWeightType_Done():
+        vrct_gui.config_window.sb__switch_use_translation_feature.configure(state="normal")
+        vrct_gui._changeConfigWindowWidgetsStatus(
+            status="normal",
+            target_names=[
+                "sb__switch_use_translation_feature",
+                "sb__optionmenu_ctranslate2_weight_type",
+            ]
+        )
+
+
     def updateSelectedCtranslate2WeightType(self, selected_weight_type:str):
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
