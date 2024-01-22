@@ -57,11 +57,6 @@ main_window:
     accept_adjust_ui_size: "작게 줄이고 재부팅"
 
 
-# [Deprecated]
-    # translation_engine_limit_error: "번역 기능이 자동으로 중지되었습니다. \n번역 엔진에 대한 요청이 너무 많아 \n일시적으로 사용이 제한되었습니다. \n잠시 기다렸다가 VRCT를 재부팅한 후 다시 시도해 보십시오."
-    # accept_translation_engine_limit_error: 확인하고 닫기
-
-
 selectable_language_window:
   title_your_language: 당신의 언어
   title_target_language: 상대방의 언어
