@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
-| **English** | [日本語](./README.jp.md) |
+| **English** | [日本語](./README.jp.md) | [한국어](./README.kr.md) |
 
 <h3>
 VRCT is software that supports VRChat conversations with translation and transcription.
