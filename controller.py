@@ -489,22 +489,39 @@ def callbackSetUseTranslationFeature(value):
     if config.USE_TRANSLATION_FEATURE is True:
         view.useTranslationFeatureProcess("Normal")
         if model.checkCTranslatorCTranslate2ModelWeight():
-            model.changeTranslatorCTranslate2Model()
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+            def callback():
+                model.changeTranslatorCTranslate2Model()
+            th_callback = Thread(target=callback)
+            th_callback.daemon = True
+            th_callback.start()
         else:
-            view.useTranslationFeatureProcess("Disable")
-            # CTranslate2 weight is not downloaded
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
+            view.useTranslationFeatureProcess("Restart")
     else:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         view.useTranslationFeatureProcess("Disable")
+    view.showRestartButtonIfRequired()
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
     config.WEIGHT_TYPE = str(value)
     view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+    view.setWidgetsStatus_changeWeightType_Pending()
     if model.checkCTranslatorCTranslate2ModelWeight():
-        model.changeTranslatorCTranslate2Model()
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+        def callback():
+            model.changeTranslatorCTranslate2Model()
+            view.useTranslationFeatureProcess("Normal")
+            view.setWidgetsStatus_changeWeightType_Done()
+        th_callback = Thread(target=callback)
+        th_callback.daemon = True
+        th_callback.start()
     else:
-        view.useTranslationFeatureProcess("Disable")
-        # CTranslate2 weight is not downloaded
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
+        view.useTranslationFeatureProcess("Restart")
+        view.setWidgetsStatus_changeWeightType_Done()
+    view.showRestartButtonIfRequired()
 
 def callbackSetDeeplAuthKey(value):
     print("callbackSetDeeplAuthKey", str(value))

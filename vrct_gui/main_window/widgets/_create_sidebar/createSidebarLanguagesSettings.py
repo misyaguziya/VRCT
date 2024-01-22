@@ -250,7 +250,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     main_window.sls__both_direction_desc = CTkLabel(
         main_window.sls__arrow_direction_swap_box,
-        textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
+        textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_ARROWS_DESC_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
@@ -286,16 +286,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     def adjustedCommand_Entered():
-        main_window.sls__both_direction_desc.configure(
-            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON,
-            text_color=settings.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR,
-        )
+        callFunctionIfCallable(view_variable.CALLBACK_ENTERED_SWAP_LANGUAGES_BUTTON)
 
     def adjustedCommand_Leaved():
-        main_window.sls__both_direction_desc.configure(
-            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
-            text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
-        )
+        callFunctionIfCallable(view_variable.CALLBACK_LEAVED_SWAP_LANGUAGES_BUTTON)
 
     bindEnterAndLeaveFunction(
         target_widgets=[
