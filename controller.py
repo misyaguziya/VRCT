@@ -507,17 +507,20 @@ def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
     config.WEIGHT_TYPE = str(value)
     view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+    view.setWidgetsStatus_changeWeightType_Pending()
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         def callback():
             model.changeTranslatorCTranslate2Model()
             view.useTranslationFeatureProcess("Normal")
+            view.setWidgetsStatus_changeWeightType_Done()
         th_callback = Thread(target=callback)
         th_callback.daemon = True
         th_callback.start()
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
         view.useTranslationFeatureProcess("Restart")
+        view.setWidgetsStatus_changeWeightType_Done()
     view.showRestartButtonIfRequired()
 
 def callbackSetDeeplAuthkey(value):

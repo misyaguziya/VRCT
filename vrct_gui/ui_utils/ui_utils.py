@@ -205,10 +205,15 @@ def createLabelButton(parent_widget, label_button_bg_color, label_button_hovered
 
     bindButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_command)
 
+    def bindEventFromWidgets():
+        bindButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_command)
+    bindEventFromWidgets()
+
     def unbindEventFromWidgets():
         unbindEnterLEaveButtonPressButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget])
 
     label_button_box.unbindFunction = unbindEventFromWidgets
+    label_button_box.bindFunction = bindEventFromWidgets
 
 
     return (label_button_box, label_button_label_widget)
@@ -265,13 +270,15 @@ def createOptionMenuBox(parent_widget, optionmenu_bg_color, optionmenu_hovered_b
     bindButtonPressColor([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_bg_color, optionmenu_hovered_bg_color)
 
 
-
-    bindButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_command)
+    def bindEventFromWidgets():
+        bindButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget], optionmenu_clicked_command)
+    bindEventFromWidgets()
 
     def unbindEventFromWidgets():
         unbindEnterLEaveButtonPressButtonReleaseFunction([optionmenu_label_wrapper, option_menu_box, optionmenu_label_widget, optionmenu_img_widget])
 
     option_menu_box.unbindFunction = unbindEventFromWidgets
+    option_menu_box.bindFunction = bindEventFromWidgets
 
 
     return (option_menu_box, optionmenu_label_widget, optionmenu_img_widget)
