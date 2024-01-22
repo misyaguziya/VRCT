@@ -9,6 +9,8 @@ main_window:
   translate_each_other_label: 양방향으로 번역
   swap_button_label: 언어 교체
   target_language: 상대방의 언어
+  # translator:
+  # translator_ctranslate2:
 
   textbox_tab_all: 전체
   textbox_tab_sent: 전송
@@ -113,11 +115,22 @@ config_window:
     label: 메인 화면 위치 기억
     desc: 시작 시 이전 화면의 위치와 크기를 복원합니다.
 
+  # use_translation_feature:
+    # label:
+    # desc:
+
+  # ctranslate2_weight_type:
+  #   label:
+  #   desc:
+  #   small:
+  #   large:
+
   deepl_auth_key:
     label: DeepL 인증키
 
   mic_host:
     label: 마이크 호스트/드라이버
+    # desc:
 
   mic_device:
     label: 마이크 장치
