@@ -80,7 +80,7 @@ FunctionEnd
 
 ; オプション ページ 1
 Function OptionPage1
-  !insertmacro MUI_HEADER_TEXT "オプション(Options)" "オプションを設定してください。(Please set the options.)"
+  !insertmacro MUI_HEADER_TEXT "オプション (Options)" "オプションを設定してください。 (Please set the options.)"
   ; nsDialogsを作成します。
   nsDialogs::Create 1018
   ; 作成されたnsDialogsを変数に代入します。
@@ -91,10 +91,10 @@ Function OptionPage1
     Abort
   ${EndIf}
 
-  ${NSD_CreateCheckbox} 0 0u 100% 12u "ドキュメントをインストールする(Install documents)"
+  ${NSD_CreateCheckbox} 0 0u 100% 12u "ドキュメントをインストールする (Install documents)"
   Pop $Checkbox_InstallDocs
 
-  ${NSD_CreateCheckbox} 0 13u 100% 12u "デスクトップにショートカットを作成(Install shortcut on desktop)"
+  ${NSD_CreateCheckbox} 0 13u 100% 12u "デスクトップにショートカットを作成 (Install shortcut on desktop)"
   Pop $Checkbox_InstallShortcut
 
   ${If} $InstallDocs == ${BST_CHECKED}
@@ -118,7 +118,7 @@ FunctionEnd
 Function OptionPage2
   CreateFont $subFont "MS UI Gothic" "8" "400"
 
-  !insertmacro MUI_HEADER_TEXT "初期設定(Initial Settings)" "後から変更可能です。(Changeable later.)"
+  !insertmacro MUI_HEADER_TEXT "初期設定 (Initial Settings)" "後から変更可能です。 (Changeable later.)"
   ; nsDialogsを作成します。
   nsDialogs::Create 1018
   ; 作成されたnsDialogsを変数に代入します。
@@ -130,25 +130,25 @@ Function OptionPage2
   ${EndIf}
 
   ; ComboBoxを作成します。
-  ${NSD_CreateLabel} 0 0u 30% 12u "UIの言語(Language)"
+  ${NSD_CreateLabel} 0 20u 30% 12u "UIの言語 (Language)"
 
-  ${NSD_CreateDropList} 33% 0u 33% 12u ""
+  ${NSD_CreateDropList} 33% 20u 33% 12u ""
   Pop $DropList_Language
 
   # ラジオボタンを追加しWEIGHTをDownloadするか選択する
-  ${NSD_CreateLabel} 0 30u 30% 12u "翻訳機能(Translation)"
-  ${NSD_CreateLabel} 0 43u 30% 8u "言語モデルをダウンロード"
+  ${NSD_CreateLabel} 0 70u 30% 12u "翻訳機能 (Translation)"
+  ${NSD_CreateLabel} 0 83u 30% 8u "言語モデルをダウンロード"
   Pop $Label_Translation_subtitle_1
   SendMessage $Label_Translation_subtitle_1 ${WM_SETFONT} $subFont 0
   SetCtlColors $Label_Translation_subtitle_1 0x696969 0xF0F0F0
-  ${NSD_CreateLabel} 0 52u 30% 8u "(Download language model)"
+  ${NSD_CreateLabel} 0 92u 30% 8u "(Download language model)"
   Pop $Label_Translation_subtitle_2
   SendMessage $Label_Translation_subtitle_2 ${WM_SETFONT} $subFont 0
   SetCtlColors $Label_Translation_subtitle_2 0x696969 0xF0F0F0
 
-  ${NSD_CreateRadioButton} 33% 30u 33% 12u "使用する(use)"
+  ${NSD_CreateRadioButton} 33% 70u 33% 12u "使用する (Use)"
   Pop $RadioButton_Download
-  ${NSD_CreateRadioButton} 66% 30u 33% 12u "使用しない(Don't use)"
+  ${NSD_CreateRadioButton} 66% 70u 33% 12u "使用しない (Don't use)"
   Pop $RadioButton_NotDownload
 
   ${NSD_CB_AddString} $DropList_Language "English"
