@@ -282,8 +282,13 @@ class View():
             CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
             VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
 
-            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
-            VAR_DESC_DEEPL_AUTH_KEY=None,
+            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t( "config_window.deepl_auth_key.label")),
+            VAR_DESC_DEEPL_AUTH_KEY=StringVar(
+                value=i18n.t(
+                    "config_window.deepl_auth_key.desc",
+                    translator=i18n.t("main_window.translator")
+                )
+            ),
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL_API"]),
 
