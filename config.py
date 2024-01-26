@@ -731,7 +731,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.0.2"
+        self._VERSION = "2.1.0"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
