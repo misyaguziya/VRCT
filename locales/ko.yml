@@ -6,9 +6,11 @@ main_window:
 
   language_settings: 언어 설정
   your_language: 당신의 언어
-  both_direction_desc: 양방향으로 번역
+  translate_each_other_label: 양방향으로 번역
   swap_button_label: 언어 교체
   target_language: 상대방의 언어
+  translator: 번역 엔진
+  translator_ctranslate2: 오프라인 번역 (기본값)
 
   textbox_tab_all: 전체
   textbox_tab_sent: 전송
@@ -30,7 +32,7 @@ main_window:
 
     no_mic_device_detected_error: 마이크 디바이스를 찾지 못했습니다.
     no_speaker_device_detected_error: 스피커 디바이스를 찾지 못했습니다.
-    translation_engine_limit_error: 번역 기능이 자동으로 중지되었습니다. 번역 엔진에 대한 요청이 너무 많아 일시적으로 사용이 제한되고 있습니다. 잠시 기다렸다가 VRCT를 재부팅하고 다시 시도해 보세요.
+    translation_engine_limit_error: 번역 엔진을 자동으로 변경했습니다. 대상 번역 엔진에 대한 요청이 너무 많아 일시적으로 접근이 제한되었습니다. 해당 번역 엔진을 사용하려면 잠시 기다린 후 VRCT를 재부팅하여 다시 시도해 보시기 바랍니다
 
     detected_by_word_filter: 단어 필터에 등록된 단어 %{detected_message}(이)가 감지되어 전송하지 않았습니다.
 
@@ -55,10 +57,6 @@ main_window:
     detected_over_ui_size: "현재 UI 크기: %{current_ui_size}\nVRCT의 창 크기가 사용자의 디스플레이 크기보다 클 수 있습니다. \n* 디스플레이 크기에 따라 여러 번 재설정해야 할 수도 있습니다."
     deny_adjust_ui_size: "지금 상태를 유지"
     accept_adjust_ui_size: "작게 줄이고 재부팅"
-
-
-    translation_engine_limit_error: "번역 기능이 자동으로 중지되었습니다. \n번역 엔진에 대한 요청이 너무 많아 \n일시적으로 사용이 제한되었습니다. \n잠시 기다렸다가 VRCT를 재부팅한 후 다시 시도해 보십시오."
-    accept_translation_engine_limit_error: 확인하고 닫기
 
 
 selectable_language_window:
@@ -117,11 +115,22 @@ config_window:
     label: 메인 화면 위치 기억
     desc: 시작 시 이전 화면의 위치와 크기를 복원합니다.
 
+  use_translation_feature:
+    label: 번역 기능 사용
+    desc: "번역 기능이 꺼져 있는 동안에는 번역을 하지 않는 대신 VRCT가 조금 더 빠르게 실행됩니다. \n 번역 기능이 필요하지 않고 VRCT를 채팅 전송 및 음성 인식 도구로만 사용하는 사용자를 위한 기능입니다."
+
+  ctranslate2_weight_type:
+    label: 번역 모델
+    desc: "오프라인 번역 시의 번역 모델을 변경합니다."
+    small: "일반 모델 (%{capacity})"
+    large: "정밀 모델 (%{capacity})"
+
   deepl_auth_key:
     label: DeepL 인증키
 
   mic_host:
     label: 마이크 호스트/드라이버
+    # desc:
 
   mic_device:
     label: 마이크 장치

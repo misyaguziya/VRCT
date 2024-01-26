@@ -1,6 +1,8 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkImage
 
-from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, bindButtonFunctionAndColor, bindEnterAndLeaveFunction
+from ...._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
+
+from ....ui_utils import bindEnterAndLeaveColor, bindButtonPressColor, bindButtonReleaseFunction, switchActiveTabAndPassiveTab, switchTabsColor, createOptionMenuBox, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, createLabelButton
 
 from utils import callFunctionIfCallable
 
@@ -248,7 +250,7 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
     main_window.sls__both_direction_desc = CTkLabel(
         main_window.sls__arrow_direction_swap_box,
-        textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
+        textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.SLS__BOX_ARROWS_DESC_FONT_SIZE, weight="normal"),
         text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
@@ -284,16 +286,10 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
 
 
     def adjustedCommand_Entered():
-        main_window.sls__both_direction_desc.configure(
-            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON,
-            text_color=settings.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR,
-        )
+        callFunctionIfCallable(view_variable.CALLBACK_ENTERED_SWAP_LANGUAGES_BUTTON)
 
     def adjustedCommand_Leaved():
-        main_window.sls__both_direction_desc.configure(
-            textvariable=view_variable.VAR_LABEL_BOTH_DIRECTION_DESC,
-            text_color=settings.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
-        )
+        callFunctionIfCallable(view_variable.CALLBACK_LEAVED_SWAP_LANGUAGES_BUTTON)
 
     bindEnterAndLeaveFunction(
         target_widgets=[
@@ -337,3 +333,48 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         corner_radius=0,
         image=CTkImage(settings.image_file.HEADPHONES_ICON_DISABLED, size=settings.uism.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE),
     )
+
+
+
+
+
+    main_window.sls__box_translation_optionmenu_wrapper = CTkFrame(main_window.sls__box_frame, corner_radius=0, fg_color=settings.ctm.SLS__BG_COLOR, width=0, height=0)
+    main_window.sls__box_translation_optionmenu_wrapper.grid(row=5, column=0, pady=settings.uism.SLS__SELECTABLE_TRANSLATION_PADY, sticky="ew")
+
+    main_window.sls__box_translation_optionmenu_wrapper.grid_columnconfigure((0,2), weight=0, minsize=settings.uism.SLS__SELECTABLE_TRANSLATION_MIN_PADX)
+    main_window.sls__box_translation_optionmenu_wrapper.grid_columnconfigure(1, weight=1)
+
+
+
+
+    def adjustedCommand(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SELECTED_TRANSLATION_ENGINE, value)
+
+    main_window.translation_engine_dropdown_menu_window.createDropdownMenuBox(
+        dropdown_menu_widget_id="translation_engine_dropdown_menu",
+        dropdown_menu_values=[],
+        command=adjustedCommand,
+        wrapper_widget=main_window,
+        attach_widget=main_window.sls__box_translation_optionmenu_wrapper,
+        dropdown_menu_min_width=settings.uism.SIDEBAR_MIN_WIDTH,
+    )
+
+    (sls__selected_translation_engine_box, label_button_label_widget) = createLabelButton(
+        parent_widget=main_window.sls__box_translation_optionmenu_wrapper,
+        label_button_bg_color=settings.ctm.SLS__BG_COLOR,
+        label_button_hovered_bg_color=settings.ctm.SLS__OPTIONMENU_HOVERED_BG_COLOR,
+        label_button_clicked_bg_color=settings.ctm.SLS__OPTIONMENU_CLICKED_BG_COLOR,
+        label_button_ipadx=settings.uism.SLS__SELECTABLE_TRANSLATION_IPADX,
+        label_button_ipady=settings.uism.SLS__SELECTABLE_TRANSLATION_IPADY,
+        variable=view_variable.VAR_SELECTED_TRANSLATION_ENGINE,
+        font_family=settings.FONT_FAMILY,
+        font_size=settings.uism.SLS__SELECTABLE_TRANSLATION_FONT_SIZE,
+        text_color=settings.ctm.LABELS_TEXT_COLOR,
+        label_button_clicked_command=lambda _e: main_window.translation_engine_dropdown_menu_window.show(
+            dropdown_menu_widget_id="translation_engine_dropdown_menu"
+        ),
+
+        label_button_position="center",
+    )
+    sls__selected_translation_engine_box.grid(row=0, column=1, sticky="ew")
+

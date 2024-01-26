@@ -7,8 +7,14 @@ if __name__ == "__main__":
         splash = SplashWindow()
         splash.showSplash()
 
+        from config import config
+        from models.translation.utils import downloadCTranslate2Weight
+        if config.USE_TRANSLATION_FEATURE is True:
+            downloadCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE, splash.updateDownloadProgress)
+
+        splash.toProgress(0)
         import controller
-        controller.createMainWindow()
+        controller.createMainWindow(splash)
         splash.destroySplash()
         controller.showMainWindow()
 
