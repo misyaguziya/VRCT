@@ -8,14 +8,14 @@ def createSettingBox_Others_SendMessageFormats(setting_box_wrapper, config_windo
     createSettingBoxMessageFormatEntries = sbg.createSettingBoxMessageFormatEntries
     createSettingBoxMessageFormatEntries_WithTranslation = sbg.createSettingBoxMessageFormatEntries_WithTranslation
 
-    def entry_send_message_format_callback(value):
+    def entrySendMessageFormatCallback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT, value)
 
 
-    def entry_send_message_format_with_t_callback(value):
+    def entrySendMessageFormatWithTCallback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT_WITH_T, value)
 
-    def entry_swap_message_format_with_t_callback(_e):
+    def entrySwapMessageFormatWithTCallback(_e):
         callFunctionIfCallable(view_variable.CALLBACK_SWAP_SEND_MESSAGE_FORMAT_WITH_T_REQUIRED_TEXT)
 
 
@@ -34,7 +34,7 @@ def createSettingBox_Others_SendMessageFormats(setting_box_wrapper, config_windo
         entry_textvariable_1=view_variable.VAR_ENTRY_1_SEND_MESSAGE_FORMAT,
         textvariable_0=view_variable.VAR_TEXT_REQUIRED_0_SEND_MESSAGE_FORMAT,
         example_label_textvariable=view_variable.VAR_LABEL_EXAMPLE_TEXT_SEND_MESSAGE_FORMAT,
-        entry_bind__Any_KeyRelease=lambda value: entry_send_message_format_callback(value),
+        entry_bind__Any_KeyRelease=lambda value: entrySendMessageFormatCallback(value),
         entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SEND_MESSAGE_FORMAT,
     )
     config_window.sb__message_format.grid(row=row)
@@ -58,8 +58,8 @@ def createSettingBox_Others_SendMessageFormats(setting_box_wrapper, config_windo
         textvariable_0=view_variable.VAR_TEXT_REQUIRED_0_SEND_MESSAGE_FORMAT_WITH_T,
         textvariable_1=view_variable.VAR_TEXT_REQUIRED_1_SEND_MESSAGE_FORMAT_WITH_T,
         example_label_textvariable=view_variable.VAR_LABEL_EXAMPLE_TEXT_SEND_MESSAGE_FORMAT_WITH_T,
-        entry_bind__Any_KeyRelease=lambda value: entry_send_message_format_with_t_callback(value),
-        swap_button_command=entry_swap_message_format_with_t_callback,
+        entry_bind__Any_KeyRelease=lambda value: entrySendMessageFormatWithTCallback(value),
+        swap_button_command=entrySwapMessageFormatWithTCallback,
         entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_SEND_MESSAGE_FORMAT_WITH_T,
     )
     config_window.sb__message_format_with_t.grid(row=row, pady=0)

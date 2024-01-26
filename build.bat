@@ -1,2 +1,2 @@
-pyinstaller --windowed --clean --noconfirm --icon="./img/vrct_logo_mark_black.ico" --add-data "./img;img/" --add-data "./locales;locales/" --add-data "./batch;batch/" --name VRCT --exclude-module numpy --exclude-module pandas --exclude-module matplotlib --exclude-module PyQt5 main.py
+pyinstaller --windowed --clean --noconfirm --icon="./img/vrct_logo_mark_black.ico" --add-data "./img;img/" --add-data "./locales;locales/" --add-data "./batch;batch/" --name VRCT --add-data ".venv\Lib\site-packages\customtkinter;customtkinter/" --exclude-module pandas --exclude-module matplotlib --exclude-module PyQt5 main.py
 "C:\Program Files (x86)\NSIS\makensis.exe" installer/installer.nsi

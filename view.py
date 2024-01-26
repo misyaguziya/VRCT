@@ -28,12 +28,15 @@ class View():
             ui_scaling=config.UI_SCALING,
             font_family=config.FONT_FAMILY,
             ui_language=config.UI_LANGUAGE,
+            is_reset_button_displayed_for_translation=config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
         )
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
             VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION)
         else:
             VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION) + " (Speaker2Chatbox)"
+
+        self.TEXT_TRANSLATOR_CTRANSLATE2 = i18n.t("main_window.translator") + ": " + i18n.t("main_window.translator_ctranslate2")
 
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
@@ -84,6 +87,12 @@ class View():
         self.settings.confirmation_modal = SimpleNamespace(
             ctm=all_ctm.confirmation_modal,
             uism=all_uism.confirmation_modal,
+            **common_args
+        )
+
+        self.settings.dropdown_menu_window = SimpleNamespace(
+            # ctm=all_ctm.dropdown_menu_window,
+            uism=all_uism.dropdown_menu_window,
             **common_args
         )
 
@@ -153,9 +162,10 @@ class View():
             IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
 
-            VAR_LABEL_BOTH_DIRECTION_DESC=StringVar(value=i18n.t("main_window.both_direction_desc")),
-            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=i18n.t("main_window.swap_button_label")),
+            VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON=StringVar(value=""),
             CALLBACK_SWAP_LANGUAGES=None,
+            CALLBACK_ENTERED_SWAP_LANGUAGES_BUTTON=self._enteredSwapLanguagesButton,
+            CALLBACK_LEAVED_SWAP_LANGUAGES_BUTTON=self._leavedSwapLanguagesButton,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
             VAR_TARGET_LANGUAGE = StringVar(value=f"{config.TARGET_LANGUAGE}\n({config.TARGET_COUNTRY})"),
@@ -163,6 +173,8 @@ class View():
             IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
+            VAR_SELECTED_TRANSLATION_ENGINE = StringVar(value="Translator: INIT"),
+            CALLBACK_SELECTED_TRANSLATION_ENGINE = None,
 
             VAR_LABEL_TEXTBOX_ALL=StringVar(value=i18n.t("main_window.textbox_tab_all")),
             VAR_LABEL_TEXTBOX_SENT=StringVar(value=i18n.t("main_window.textbox_tab_sent")),
@@ -259,8 +271,24 @@ class View():
             VAR_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=BooleanVar(value=config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY),
 
             # Translation Tab
-            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t("config_window.deepl_auth_key.label")),
-            VAR_DESC_DEEPL_AUTH_KEY=None,
+            VAR_LABEL_USE_TRANSLATION_FEATURE=StringVar(value=i18n.t("config_window.use_translation_feature.label")),
+            VAR_DESC_USE_TRANSLATION_FEATURE=StringVar(value=i18n.t("config_window.use_translation_feature.desc")),
+            CALLBACK_SET_USE_TRANSLATION_FEATURE=None,
+            VAR_USE_TRANSLATION_FEATURE=BooleanVar(value=config.USE_TRANSLATION_FEATURE),
+
+            VAR_LABEL_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.label")),
+            VAR_DESC_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.desc")),
+            DICT_CTRANSLATE2_WEIGHT_TYPE=self.getSelectableCtranslate2WeightTypeDict(),
+            CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
+            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
+
+            VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t( "config_window.deepl_auth_key.label")),
+            VAR_DESC_DEEPL_AUTH_KEY=StringVar(
+                value=i18n.t(
+                    "config_window.deepl_auth_key.desc",
+                    translator=i18n.t("main_window.translator")
+                )
+            ),
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL_API"]),
 
@@ -515,6 +543,7 @@ class View():
 
             self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
 
+            self.view_variable.CALLBACK_SELECTED_TRANSLATION_ENGINE = main_window_registers.get("callback_selected_translation_engine", None)
 
             def adjustedMessageBoxReturnFunction(_e):
                 if self.view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED is True:
@@ -567,7 +596,9 @@ class View():
 
 
             # Translation Tab
-            self.view_variable.CALLBACK_SET_DEEPL_AUTHKEY = config_window_registers.get("callback_set_deepl_authkey", None)
+            self.view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE = config_window_registers.get("callback_set_use_translation_feature", None)
+            self.view_variable.CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE = config_window_registers.get("callback_set_ctranslate2_weight_type", None)
+            self.view_variable.CALLBACK_SET_DEEPL_AUTH_KEY = config_window_registers.get("callback_set_deepl_auth_key", None)
 
             # Transcription Tab (Mic)
             self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)
@@ -623,6 +654,13 @@ class View():
             vrct_gui.config_window.setting_box_compact_mode_switch_box.select()
 
         self.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
+
+        if config.USE_TRANSLATION_FEATURE is True:
+            self.useTranslationFeatureProcess("Normal")
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
+        else:
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
+            self.useTranslationFeatureProcess("Disable")
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -841,6 +879,47 @@ class View():
     def getPreUiScaling(self):
         return self.restart_required_configs_pre_data.ui_scaling
 
+    @staticmethod
+    def getSelectableCtranslate2WeightTypeDict():
+        return {
+            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
+            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
+        }
+
+    def useTranslationFeatureProcess(self, state:str):
+        def changeWidget_UseTranslationFeature():
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid()
+            vrct_gui.compact_mode_translation_frame.grid()
+            vrct_gui.translation_frame.grid()
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
+
+        def changeWidget_DontUseTranslationFeature():
+            vrct_gui.sls__box_translation_optionmenu_wrapper.grid_remove()
+            vrct_gui.compact_mode_translation_frame.grid_remove()
+            vrct_gui.translation_frame.grid_remove()
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
+
+
+        if state == "Normal":
+            self.setLatestCTranslate2WeightType()
+            self.openCtranslate2WeightTypeWidget()
+            self.setTranslationSwitchStatus("normal", release_locked_state=True)
+            changeWidget_UseTranslationFeature()
+
+        elif state == "Disable":
+            view.closeCtranslate2WeightTypeWidget()
+            view.setTranslationSwitchStatus("disabled", to_lock_state=True)
+            changeWidget_DontUseTranslationFeature()
+
+        elif state == "Restart":
+            view.setLatestCTranslate2WeightType()
+            view.setTranslationSwitchStatus("disabled", to_lock_state=True)
+            changeWidget_UseTranslationFeature()
+
+        vrct_gui.update()
+        vrct_gui.config_window.lift()
+
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -879,6 +958,9 @@ class View():
     def setMainWindowAllWidgetsStatusToDisabled():
         vrct_gui._changeMainWindowWidgetsStatus("disabled", "All")
 
+    @staticmethod
+    def setTranslationSwitchStatus(status:str, to_lock_state:bool=False, release_locked_state:bool=False):
+        vrct_gui._changeMainWindowWidgetsStatus(status, ["translation_switch"], to_lock_state, release_locked_state)
 
     def enableMainWindowSidebarCompactMode(self):
         self.view_variable.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
@@ -899,6 +981,15 @@ class View():
             case "SPEAKER_OFF":
                 vrct_gui.sls__box_target_language_speaker_status__enabled.place_forget()
 
+    def updateSelectableTranslationEngineList(self, selectable_translation_engines_list):
+        translation_dict = {item: item for item in selectable_translation_engines_list}
+        translation_dict["CTranslate2"] = i18n.t("main_window.translator_ctranslate2")
+
+        vrct_gui.translation_engine_dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="translation_engine_dropdown_menu",
+            dropdown_menu_values=translation_dict,
+        )
+
 
     # Config Window
     def enableConfigWindowCompactMode(self):
@@ -911,13 +1002,19 @@ class View():
             additional_widget.grid()
         self._closeMicWordFilterList()
 
+    def showRestartButton(self):
+        self._showRestartButton()
+
+    def hideRestartButton(self):
+        self._hideRestartButton()
 
     def showRestartButtonIfRequired(self, locale:Union[None,str]=None):
         is_restart_required = not (
             self.restart_required_configs_pre_data.appearance_theme == config.APPEARANCE_THEME and
             self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
             self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
-            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE
+            self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE and
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
         )
 
         if locale is None:
@@ -945,6 +1042,44 @@ class View():
     def setWidgetsStatus_ConfigWindowCompactModeSwitch_Normal():
         vrct_gui.config_window.setting_box_compact_mode_switch_box.configure(state="normal")
 
+
+    @staticmethod
+    def setWidgetsStatus_changeWeightType_Pending():
+        vrct_gui.config_window.sb__switch_use_translation_feature.configure(state="disabled")
+        vrct_gui._changeConfigWindowWidgetsStatus(
+            status="disabled",
+            target_names=[
+                "sb__switch_use_translation_feature",
+                "sb__optionmenu_ctranslate2_weight_type",
+            ]
+        )
+    @staticmethod
+    def setWidgetsStatus_changeWeightType_Done():
+        vrct_gui.config_window.sb__switch_use_translation_feature.configure(state="normal")
+        vrct_gui._changeConfigWindowWidgetsStatus(
+            status="normal",
+            target_names=[
+                "sb__switch_use_translation_feature",
+                "sb__optionmenu_ctranslate2_weight_type",
+            ]
+        )
+
+
+    def updateSelectedCtranslate2WeightType(self, selected_weight_type:str):
+        self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
+
+    def setLatestCTranslate2WeightType(self):
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
+
+
+    def openCtranslate2WeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_translation_feature.grid(pady=0)
+        vrct_gui.config_window.sb__ctranslate2_weight_type.grid()
+
+    def closeCtranslate2WeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_translation_feature.grid(pady=(0,1))
+        vrct_gui.config_window.sb__ctranslate2_weight_type.grid_remove()
 
 
     def openMicEnergyThresholdWidget(self):
@@ -1123,7 +1258,7 @@ class View():
         self._clearEntryBox(vrct_gui.config_window.sb__entry_mic_word_filter_list)
 
 
-# Widget Control (Whole)
+# Widget Control
     def foregroundOnIfForegroundEnabled(self):
         if config.ENABLE_FOREGROUND:
             self.foregroundOn()
@@ -1181,6 +1316,19 @@ class View():
                 vrct_gui.main_send_message_button_container.grid()
                 vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
 
+    def _enteredSwapLanguagesButton(self):
+        self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
+        vrct_gui.sls__both_direction_desc.configure(
+            text_color=self.settings.main.ctm.SLS__BOX_ARROWS_SWAP_BUTTON_TEXT_COLOR,
+        )
+
+    def _leavedSwapLanguagesButton(self):
+        if config.USE_TRANSLATION_FEATURE is True:
+            self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.translate_each_other_label"))
+        vrct_gui.sls__both_direction_desc.configure(
+            text_color=self.settings.main.ctm.SLS__BOX_ARROWS_TEXT_COLOR,
+        )
+
 # Function
     def _adjustUiSizeAndRestart(self):
         current_percentage = int(config.UI_SCALING.replace("%",""))
@@ -1192,21 +1340,6 @@ class View():
         else:
             self._hideConfirmationModal()
         # ※Below 40% of the UI size is not supported, and we cannot handle it at this time.
-
-
-
-    def translationEngineLimitErrorProcess(self):
-        # turn off translation switch.
-        vrct_gui.translation_switch_box.deselect()
-        vrct_gui.translation_frame.markToggleManually(False)
-
-        # disable translation feature.
-        vrct_gui._changeMainWindowWidgetsStatus("disabled", ["translation_switch"], to_hold_state=True)
-
-        # print system message that mention to stopped translation feature.
-        view.printToTextbox_TranslationEngineLimitError()
-        view.showTheLimitOfTranslationEngineConfirmationModal()
-
 
 
 
@@ -1243,23 +1376,6 @@ class View():
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_DENY_BUTTON.set(i18n.t("main_window.confirmation_message.deny_update_software"))
         self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_update_software"))
         vrct_gui.confirmation_modal.show()
-
-
-
-
-
-    def showTheLimitOfTranslationEngineConfirmationModal(self):
-        self.foregroundOffIfForegroundEnabled()
-
-        self.view_variable.VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE.set("")
-        vrct_gui.main_window_cover.show()
-
-        self.view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL=self._hideInformationModal
-        self.view_variable.CALLBACK_ACCEPTED_CONFIRMATION_MODAL=self._hideInformationModal
-
-        self.view_variable.VAR_MESSAGE_CONFIRMATION_MODAL.set(i18n.t("main_window.confirmation_message.translation_engine_limit_error"))
-        self.view_variable.VAR_LABEL_CONFIRMATION_MODAL_ACCEPT_BUTTON.set(i18n.t("main_window.confirmation_message.accept_translation_engine_limit_error"))
-        vrct_gui.information_modal.show(hide_title_bar=False, close_when_focusout=False)
 
 
 
@@ -1332,6 +1448,13 @@ class View():
 
 
 # Set GuiVariable (view_variable)
+    def setGuiVariable_SelectedTranslationEngine(self, value):
+        if value == "CTranslate2":
+            self.view_variable.VAR_SELECTED_TRANSLATION_ENGINE.set(self.TEXT_TRANSLATOR_CTRANSLATE2)
+            value = self.TEXT_TRANSLATOR_CTRANSLATE2
+        else:
+            self.view_variable.VAR_SELECTED_TRANSLATION_ENGINE.set(i18n.t("main_window.translator") + ": " + value)
+
     def setGuiVariable_MicEnergyThreshold(self, value):
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__SLIDER.set(int(value))
         self.view_variable.VAR_MIC_ENERGY_THRESHOLD__ENTRY.set(str(value))
@@ -1448,9 +1571,6 @@ class View():
     def printToTextbox_TranslationEngineLimitError(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.translation_engine_limit_error"))
 
-
-    # def printToTextbox_OSCError(self): [Deprecated]
-    #     self._printToTextbox_Info("OSC is not enabled, please enable OSC and rejoin. or turn off the \"Send Message To VRChat\" setting")
 
     def printToTextbox_DetectedByWordFilter(self, detected_message):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.detected_by_word_filter", detected_message=detected_message))

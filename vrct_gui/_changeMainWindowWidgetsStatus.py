@@ -1,12 +1,16 @@
 from customtkinter import CTkImage
-hold_state_list=[]
-def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names:list, to_hold_state:bool=False):
-    global hold_state_list
+lock_state_list=[]
+def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, target_names:list, to_lock_state:bool=False, release_locked_state:bool=False):
+    global lock_state_list
     if target_names == "All":
         target_names = ["translation_switch", "transcription_send_switch", "transcription_receive_switch", "foreground_switch", "quick_language_settings", "config_button", "minimize_sidebar_button", "entry_message_box", "send_message_button"]
 
+    if release_locked_state is True:
+        for item in target_names:
+            if item in lock_state_list:
+                lock_state_list.remove(item)
 
-    for item in hold_state_list:
+    for item in lock_state_list:
         if item in target_names:
             target_names.remove(item)
 
@@ -24,13 +28,13 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
         if status == "disabled":
             widget_frame.configure(cursor="")
             widget_label.configure(text_color=settings.ctm.SF__TEXT_DISABLED_COLOR)
-            widget_switch_box.configure(state="disabled", progress_color=settings.ctm.SF__SWITCH_BOX_DISABLE_BG_COLOR)
+            widget_switch_box.configure(state="disabled", progress_color=settings.ctm.SF__SWITCH_BOX_DISABLE_BG_COLOR, button_color=settings.ctm.SF__SWITCH_BOX_BUTTON_DISABLED_COLOR)
             widget_selected_mark.configure(fg_color=settings.ctm.SF__SELECTED_MARK_DISABLE_BG_COLOR)
             icon_file = disabled_icon_name
         elif status == "normal":
             widget_frame.configure(cursor="hand2")
             widget_label.configure(text_color=settings.ctm.LABELS_TEXT_COLOR)
-            widget_switch_box.configure(state="normal", progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR)
+            widget_switch_box.configure(state="normal", progress_color=settings.ctm.SF__SWITCH_BOX_ACTIVE_BG_COLOR, button_color=settings.ctm.SF__SWITCH_BOX_BUTTON_COLOR)
             widget_selected_mark.configure(fg_color=settings.ctm.SF__SELECTED_MARK_ACTIVE_BG_COLOR)
             icon_file = icon_name
 
@@ -158,9 +162,9 @@ def _changeMainWindowWidgetsStatus(vrct_gui, settings, view_variable, status, ta
                 raise ValueError(f"No matching case for target_name: {target_name}")
 
 
-    if to_hold_state is True:
+    if to_lock_state is True:
         for item in target_names:
-            if item not in hold_state_list:
-                hold_state_list.append(item)
+            if item not in lock_state_list:
+                lock_state_list.append(item)
 
     vrct_gui.update()

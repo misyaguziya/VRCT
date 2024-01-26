@@ -13,6 +13,7 @@ class UiScalingManager():
         self.main_window_cover = SimpleNamespace()
         self.error_message_window = SimpleNamespace()
         self.confirmation_modal = SimpleNamespace()
+        self.dropdown_menu_window = SimpleNamespace()
 
         self._calculatedUiSizes()
 
@@ -66,7 +67,7 @@ class UiScalingManager():
         # Sidebar
         # Sidebar Features
         self.main.SF__LOGO_MAX_SIZE = self._calculateUiSize(120)
-        self.main.SF__LOGO_PADY = (self._calculateUiSize(12),self._calculateUiSize(8))
+        self.main.SF__LOGO_PADY = (self._calculateUiSize(10),self._calculateUiSize(6))
         self.main.SF__LOGO_HEIGHT_FOR_ADJUSTMENT = (self._calculateUiSize(6))
 
         self.main.SF__LABELS_IPADY = self._calculateUiSize(16)
@@ -84,34 +85,34 @@ class UiScalingManager():
 
 
         # Sidebar Quick Language Settings, SQLS
-        self.main.SLS__TITLE_FONT_SIZE = self._calculateUiSize(16)
-        self.main.SLS__TITLE_PADY = (self._calculateUiSize(12), self._calculateUiSize(6))
+        self.main.SLS__TITLE_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__TITLE_PADY = (self._calculateUiSize(10), self._calculateUiSize(4))
 
         self.main.SLS__PRESET_TAB_NUMBER_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__PRESET_TAB_NUMBER_HEIGHT = self._calculateUiSize(30)
         self.main.SLS__PRESET_TAB_NUMBER_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__PRESET_TAB_NUMBER_ADJUSTED_HEIGHT = self._calculateUiSize(36)
 
-        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
+        self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(12)
 
+        self.main.SLS__BOX_TRANSCRIPTION_STATUS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(14))
 
         self.main.SLS__BOX_SECTION_TITLE_FONT_SIZE = self._calculateUiSize(16)
         self.main.SLS__BOX_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(10)
         self.main.SLS__BOX_IPADX = self._calculateUiSize(10)
-        self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(18))
+        self.main.SLS__BOX_IPADY = (self._calculateUiSize(8),self._calculateUiSize(14))
         self.main.SLS__BOX_OPTION_MENU_FONT_SIZE = self._calculateUiSize(14)
         self.main.SLS__BOX_OPTION_MENU_IPADY = self._calculateUiSize(2)
-        self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = (self._calculateUiSize(20), self._calculateUiSize(20))
+        self.main.SLS__BOX_OPTION_MENU_ARROW_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(20))
         # self.main.SLS__BOX_OPTION_MENU_WIDTH = self._calculateUiSize(200)
-        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(4)
+        self.main.SLS__BOX_ARROWS_PADY = self._calculateUiSize(6)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_PADX = self._calculateUiSize(20)
         self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADX = self._calculateUiSize(8)
-        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY = self._calculateUiSize(6)
+        self.main.SLS__BOX_ARROWS_SWAP_BUTTON_IPADY = self._calculateUiSize(4)
         self.main.SLS__BOX_ARROWS_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(16))
         self.main.SLS__BOX_ARROWS_DESC_FONT_SIZE = self._calculateUiSize(12)
         self.main.SLS__BOX_ARROWS_DESC_PADX = self._calculateUiSize(6)
-        self.main.SLS__BOX_TOP_PADY = self._calculateUiSize(16)
 
         self.main.SIDEBAR_CONFIG_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.SIDEBAR_CONFIG_BUTTON_IMAGE_SIZE = self.main.SF__COMPACT_MODE_IMAGE_SIZE
@@ -139,6 +140,24 @@ class UiScalingManager():
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_X = int(self.main.TEXTBOX_PADX/2+self.main.TEXTBOX_CORNER_RADIUS*2)
         self.main.MINIMIZE_SIDEBAR_BUTTON_ICON_SIZE_Y = self._calculateUiSize(26)
 
+
+        self.main.SLS__SELECTABLE_TRANSLATION_IPADX = self.dupTuple(self._calculateUiSize(10))
+        self.main.SLS__SELECTABLE_TRANSLATION_IPADY = self._calculateUiSize(6)
+        self.main.SLS__SELECTABLE_TRANSLATION_FONT_SIZE = self._calculateUiSize(12)
+        self.main.SLS__SELECTABLE_TRANSLATION_IMAGE_SIZE = self.dupTuple(self._calculateUiSize(10))
+        self.main.SLS__SELECTABLE_TRANSLATION_PADY = self._calculateUiSize(4)
+        self.main.SLS__SELECTABLE_TRANSLATION_MIN_PADX = self._calculateUiSize(8)
+
+
+        self.main.SLS__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
+        self.main.SLS__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(0, is_allowed_odd=True)
+        self.main.SLS__DROPDOWN_MENU_SCROLLBAR_IPADX = self.common.SCROLLBAR_IPADX
+        self.main.SLS__DROPDOWN_MENU_SCROLLBAR_WIDTH = self.common.SCROLLBAR_WIDTH
+        self.main.SLS__DROPDOWN_MENU_VALUE_IPADX = (self._calculateUiSize(8), 0)
+        self.main.SLS__DROPDOWN_MENU_VALUE_IPADY = self.dupTuple(self._calculateUiSize(8))
+        self.main.SLS__DROPDOWN_MENU_VALUE_PADY = 0
+        self.main.SLS__DROPDOWN_MENU_VALUE_FONT_SIZE = self._calculateUiSize(14)
+        self.main.SLS__DROPDOWN_MENU_VALUE_DEFAULT_MIN_WIDTH = self._calculateUiSize(200)
 
 
         # Selectable Language Window
@@ -170,7 +189,7 @@ class UiScalingManager():
         self.confirmation_modal.BUTTONS_IPADY = self._calculateUiSize(6)
 
         # Dropdown Menu Window
-        self.config_window.MARGIN_WIDTH = self._calculateUiSize(16)
+        self.dropdown_menu_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
@@ -256,7 +275,6 @@ class UiScalingManager():
         self.config_window.SB__OPTIONMENU_IMG_SIZE = (self._calculateUiSize(14), self._calculateUiSize(14))
 
         self.config_window.SB__DROPDOWN_MENU_WINDOW_ADDITIONAL_Y_POS = self._calculateUiSize(4)
-        self.config_window.SB__DROPDOWN_MENU_WIDTH = self.config_window.SB__OPTIONMENU_MIN_WIDTH
         self.config_window.SB__DROPDOWN_MENU_WINDOW_BORDER_WIDTH = self._calculateUiSize(1, is_allowed_odd=True)
         self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_IPADX = self.common.SCROLLBAR_IPADX
         self.config_window.SB__DROPDOWN_MENU_SCROLLBAR_WIDTH = self.common.SCROLLBAR_WIDTH

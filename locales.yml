@@ -55,7 +55,7 @@ en:
   # tab Parameter
   label_ip_address: "OSC IP address"
   label_port: "OSC Port"
-  label_authkey: "DeepL Auth Key"
+  label_auth_key: "DeepL Auth Key"
   label_message_format: "Message Format"
 
   # tab Others
@@ -121,7 +121,7 @@ ja:
   # tab Parameter
   # label_ip_address: ""
   # label_port: ""
-  # label_authkey: ""
+  # label_auth_key: ""
   label_message_format: "送信するメッセージのフォーマット"
 
   # tab Others
@@ -186,7 +186,7 @@ ko:
   # tab Parameter
   label_ip_address: "OSC IP 주소"
   label_port: "OSC 포트"
-  label_authkey: "DeepL 인증키"
+  label_auth_key: "DeepL 인증키"
   label_message_format: "전송 형식"
 
   # tab Others
