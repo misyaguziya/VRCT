@@ -876,9 +876,11 @@ def initSetConfigByExeArguments():
         config.OSC_PORT = int(args.port)
         view.setGuiVariable_OscPort(config.OSC_PORT)
 
-def createMainWindow():
+def createMainWindow(splash):
+    splash.toProgress(1)
     # create GUI
     view.createGUI()
+    splash.toProgress(2)
 
     # init config
     initSetConfigByExeArguments()
@@ -907,6 +909,8 @@ def createMainWindow():
     # init logger
     if config.ENABLE_LOGGER is True:
         model.startLogger()
+
+    splash.toProgress(3) # Last one.
 
     # set UI and callback
     view.register(
