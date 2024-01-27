@@ -38,11 +38,30 @@ class Translator():
         )
         self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
 
+    @staticmethod
+    def getLanguageCode(translator_name, target_country, source_language, target_language):
+        match translator_name:
+            case "DeepL_API":
+                if target_language == "English":
+                    if target_country in ["United States", "Canada", "Philippines"]:
+                        target_language = "English American"
+                    else:
+                        target_language = "English British"
+                elif target_language == "Portuguese":
+                    if target_country in ["Portugal"]:
+                        target_language = "Portuguese European"
+                    else:
+                        target_language = "Portuguese Brazilian"
+            case _:
+                pass
+        source_language=translation_lang[translator_name]["source"][source_language]
+        target_language=translation_lang[translator_name]["target"][target_language]
+        return source_language, target_language
+
     def translate(self, translator_name, source_language, target_language, target_country, message):
         try:
             result = ""
-            source_language=translation_lang[translator_name]["source"][source_language]
-            target_language=translation_lang[translator_name]["target"][target_language]
+            source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL":
                     result = other_web_Translator(
@@ -55,16 +74,6 @@ class Translator():
                     if self.deepl_client is None:
                         result = False
                     else:
-                        if target_language == "English":
-                            if target_country in ["United States", "Canada", "Philippines"]:
-                                target_language = "English American"
-                            else:
-                                target_language = "English British"
-                        elif target_language == "Portuguese":
-                            if target_country in ["Portugal"]:
-                                target_language = "Portuguese European"
-                            else:
-                                target_language = "Portuguese Brazilian"
                         result = self.deepl_client.translate_text(
                             message,
                             source_lang=source_language,
