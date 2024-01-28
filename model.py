@@ -12,7 +12,6 @@ from threading import Thread, Event
 from requests import get as requests_get
 import webbrowser
 
-from tqdm import tqdm
 from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
@@ -267,16 +266,13 @@ class Model:
             with tempfile.TemporaryDirectory() as tmp_path:
                 res = requests_get(url, stream=True)
                 file_size = int(res.headers.get('content-length', 0))
-                pbar = tqdm(total=file_size, unit="B", unit_scale=True)
                 total_chunk = 0
                 with open(os_path.join(tmp_path, filename), 'wb') as file:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
-                        pbar.update(len(chunk))
                         if isinstance(func, Callable):
                             total_chunk += len(chunk)
                             func(total_chunk/file_size)
-                    pbar.close()
 
                 with ZipFile(os_path.join(tmp_path, filename)) as zf:
                     zf.extractall(os_path.join(current_directory, tmp_directory_name))
