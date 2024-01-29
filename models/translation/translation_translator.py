@@ -37,7 +37,12 @@ class Translator():
             inter_threads=1,
             intra_threads=4
         )
-        self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        try:
+            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        except Exception as e:
+            print("Error: changeCTranslate2Model()", e)
+            tokenizer_path = os.path.join("./weight", directory_name, "tokenizer")
+            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
 
     @staticmethod
     def getLanguageCode(translator_name, target_country, source_language, target_language):
