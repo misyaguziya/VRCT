@@ -6,6 +6,10 @@ from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_languages import transcription_lang
 
+import torch
+import numpy as np
+from faster_whisper import WhisperModel
+
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
@@ -26,6 +30,7 @@ class AudioTranscriber:
                 "new_phrase": True,
                 "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
+        self.whisper_model = WhisperModel("base", device="cpu", device_index=0, compute_type="int8", cpu_threads=4, num_workers=1)
 
     def transcribeAudioQueue(self, audio_queue, language, country):
         # while True:
@@ -38,6 +43,29 @@ class AudioTranscriber:
             # os.close(fd)
             audio_data = self.audio_sources["process_data_func"]()
             text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country])
+
+            audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
+            if isinstance(audio_data, torch.Tensor):
+                audio_data = audio_data.detach().numpy()
+            segments, _ = self.whisper_model.transcribe(
+                audio_data,
+                beam_size=5,
+                temperature=0.0,
+                log_prob_threshold=-0.8,
+                no_speech_threshold=0.6,
+                language="ja",
+                word_timestamps=False,
+                without_timestamps=True,
+                task="transcribe",
+                vad_filter=False,
+                )
+            _text = ""
+            for s in segments:
+                if s.avg_logprob < -0.8 or s.no_speech_prob > 0.6:
+                    continue
+                _text += s.text
+            print(_text)
+
         except Exception:
             pass
         finally:

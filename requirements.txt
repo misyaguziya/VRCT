@@ -11,3 +11,4 @@ pyinstaller==6.2.0
 transformers[torch]
 sentencepiece==0.1.99
 ctranslate2==3.21.0
+faster-whisper==0.10.0
