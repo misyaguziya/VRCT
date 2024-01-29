@@ -28,6 +28,7 @@ class Translator():
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
         weight_path = os.path.join(path, "weight", directory_name)
+        tokenizer_path = os.path.join(path, "weight", directory_name, "tokenizer")
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
             device="cpu",
@@ -36,7 +37,12 @@ class Translator():
             inter_threads=1,
             intra_threads=4
         )
-        self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer)
+        try:
+            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        except Exception as e:
+            print("Error: changeCTranslate2Model()", e)
+            tokenizer_path = os.path.join("./weight", directory_name, "tokenizer")
+            self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
 
     @staticmethod
     def getLanguageCode(translator_name, target_country, source_language, target_language):
