@@ -280,7 +280,7 @@ class View():
             VAR_DESC_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.desc")),
             DICT_CTRANSLATE2_WEIGHT_TYPE=self.getSelectableCtranslate2WeightTypeDict(),
             CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
-            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
+            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.CTRANSLATE2_WEIGHT_TYPE]),
 
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t( "config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=StringVar(
@@ -1069,7 +1069,7 @@ class View():
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
     def setLatestCTranslate2WeightType(self):
-        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.CTRANSLATE2_WEIGHT_TYPE]
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
 
 
