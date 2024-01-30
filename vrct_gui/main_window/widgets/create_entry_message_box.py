@@ -19,6 +19,9 @@ def createEntryMessageBox(settings, main_window, view_variable):
         border_width=settings.uism.TEXTBOX_ENTRY_BORDER_SIZE,
         height=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TEXTBOX_ENTRY_FONT_SIZE, weight="normal"),
+        undo=True,
+        autoseparators=True,
+        maxundo=0,
     )
     main_window.entry_message_box.grid(row=0, column=0, padx=settings.uism.TEXTBOX_ENTRY_PADX, pady=settings.uism.TEXTBOX_ENTRY_PADY, sticky="nsew")
 
@@ -34,6 +37,15 @@ def createEntryMessageBox(settings, main_window, view_variable):
                 return "break"
 
     main_window.entry_message_box.bind("<Any-KeyPress>", messageBoxAnyKeyPress)
+
+    def messageBoxRedoFunction(_e):
+        try:
+            main_window.entry_message_box.edit_redo()
+        except:
+            pass
+
+    main_window.entry_message_box.bind("<Control-Shift-Z>", messageBoxRedoFunction, "+")
+    main_window.entry_message_box.bind("<Control-Y>", messageBoxRedoFunction, "+")
 
 
     main_window.main_send_message_button_container = CTkFrame(main_window.main_entry_message_container, corner_radius=settings.uism.SEND_MESSAGE_BUTTON_CORNER_RADIUS, fg_color=settings.ctm.SEND_MESSAGE_BUTTON_BG_COLOR, width=0, height=0)
