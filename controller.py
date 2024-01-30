@@ -505,8 +505,8 @@ def callbackSetUseTranslationFeature(value):
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
-    config.WEIGHT_TYPE = str(value)
-    view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+    config.CTRANSLATE2_WEIGHT_TYPE = str(value)
+    view.updateSelectedCtranslate2WeightType(config.CTRANSLATE2_WEIGHT_TYPE)
     view.setWidgetsStatus_changeWeightType_Pending()
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False

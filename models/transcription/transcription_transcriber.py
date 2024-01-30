@@ -14,7 +14,7 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, phrase_timeout, max_phrases):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases, whisper_enabled, whisper_weight_type, whisper_weight_path):
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
@@ -30,47 +30,59 @@ class AudioTranscriber:
                 "new_phrase": True,
                 "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
-        self.whisper_model = WhisperModel("base", device="cpu", device_index=0, compute_type="int8", cpu_threads=4, num_workers=1)
+        if whisper_enabled is True:
+            self.whisper_model = WhisperModel(
+                model_size_or_path=whisper_weight_type,
+                device="cpu",
+                device_index=0,
+                compute_type="int8",
+                cpu_threads=4,
+                num_workers=1,
+                download_root=whisper_weight_path)
+        else:
+            self.whisper_model = None
 
-    def transcribeAudioQueue(self, audio_queue, language, country):
+    def transcribeAudioQueue(self, recognizer, audio_queue, language, country):
         # while True:
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
         text = ''
         try:
-            # fd, path = tempfile.mkstemp(suffix=".wav")
-            # os.close(fd)
-            audio_data = self.audio_sources["process_data_func"]()
-            text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country])
+            # Whisperが使用できない場合はGoogle Speech-to-Textを使用する
+            if recognizer == "Whisper":
+                if self.whisper_model is None:
+                    recognizer = "Google"
 
-            audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
-            if isinstance(audio_data, torch.Tensor):
-                audio_data = audio_data.detach().numpy()
-            segments, _ = self.whisper_model.transcribe(
-                audio_data,
-                beam_size=5,
-                temperature=0.0,
-                log_prob_threshold=-0.8,
-                no_speech_threshold=0.6,
-                language="ja",
-                word_timestamps=False,
-                without_timestamps=True,
-                task="transcribe",
-                vad_filter=False,
-                )
-            _text = ""
-            for s in segments:
-                if s.avg_logprob < -0.8 or s.no_speech_prob > 0.6:
-                    continue
-                _text += s.text
-            print(_text)
+            audio_data = self.audio_sources["process_data_func"]()
+            match recognizer:
+                case "Google":
+                    text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country][recognizer])
+                case "Whisper":
+                    audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
+                    if isinstance(audio_data, torch.Tensor):
+                        audio_data = audio_data.detach().numpy()
+                    segments, _ = self.whisper_model.transcribe(
+                        audio_data,
+                        beam_size=5,
+                        temperature=0.0,
+                        log_prob_threshold=-0.8,
+                        no_speech_threshold=0.6,
+                        language=transcription_lang[language][country][recognizer],
+                        word_timestamps=False,
+                        without_timestamps=True,
+                        task="transcribe",
+                        vad_filter=False,
+                        )
+                    for s in segments:
+                        if s.avg_logprob < -0.8 or s.no_speech_prob > 0.6:
+                            continue
+                        text += s.text
 
         except Exception:
             pass
         finally:
             pass
-            # os.unlink(path)
 
         if text != '':
             self.updateTranscript(text)
