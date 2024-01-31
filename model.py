@@ -337,7 +337,7 @@ class Model:
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
             whisper_enabled=config.USE_RECOGNIZER_FEATURE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-            whisper_weight_path=os_path.join(config.PATH_LOCAL, "weight", "whisper"),
+            root=config.PATH_LOCAL,
         )
         def sendMicTranscript():
             mic_transcriber.transcribeAudioQueue(config.SELECTED_RECOGNIZER, mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
@@ -421,7 +421,7 @@ class Model:
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
             whisper_enabled=config.USE_RECOGNIZER_FEATURE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-            whisper_weight_path=os_path.join(config.PATH_LOCAL, "weight", "whisper"),
+            root=config.PATH_LOCAL,
         )
         def sendSpeakerTranscript():
             speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
