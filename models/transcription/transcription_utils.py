@@ -1,8 +1,4 @@
 from pyaudiowpatch import PyAudio, paWASAPI
-from faster_whisper.utils import download_model
-import logging
-logger = logging.getLogger('faster_whisper')
-logger.setLevel(logging.CRITICAL)
 
 def getInputDevices():
     devices = {}
@@ -49,37 +45,3 @@ def getDefaultOutputDevice():
                                 default_device = loopback
                                 return default_device
     return {"name":"NoDevice"}
-
-def downloadWhisperWeight(weight_type, path):
-    result = False
-    try:
-        download_model(
-            weight_type,
-            cache_dir=path)
-        result = True
-    except Exception:
-        pass
-    return result
-
-def checkWhisperWeight(weight_type, path):
-    result = False
-    try:
-        result = download_model(
-            weight_type,
-            local_files_only=True,
-            cache_dir=path)
-        result = True
-    except Exception:
-        pass
-    return result
-
-if __name__ == "__main__":
-
-
-    downloadWhisperWeight("base", "./weight/whisper/")
-
-    from faster_whisper import WhisperModel
-    whisper_model = WhisperModel("base", device="cpu", device_index=0, compute_type="int8", cpu_threads=4, num_workers=1, download_root="./weight/whisper/")
-
-    print(checkWhisperWeight("base", "./weight/whisper/"))
-    print(checkWhisperWeight("tiny", "./weight/whisper/"))

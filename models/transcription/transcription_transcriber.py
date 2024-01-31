@@ -5,16 +5,16 @@ from speech_recognition import Recognizer, AudioData, AudioFile
 from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_languages import transcription_lang
+from .transcription_whisper import getWhisperModel
 
 import torch
 import numpy as np
-from faster_whisper import WhisperModel
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, phrase_timeout, max_phrases, whisper_enabled, whisper_weight_type, whisper_weight_path):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases, whisper_enabled, whisper_weight_type, root):
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
@@ -31,14 +31,7 @@ class AudioTranscriber:
                 "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
         if whisper_enabled is True:
-            self.whisper_model = WhisperModel(
-                model_size_or_path=whisper_weight_type,
-                device="cpu",
-                device_index=0,
-                compute_type="int8",
-                cpu_threads=4,
-                num_workers=1,
-                download_root=whisper_weight_path)
+            self.whisper_model = getWhisperModel(root, whisper_weight_type)
         else:
             self.whisper_model = None
 
