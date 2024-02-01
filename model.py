@@ -23,7 +23,7 @@ from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.utils import checkCTranslate2Weight
+from models.translation.translation_utils import checkCTranslate2Weight
 from config import config
 
 class threadFnc(Thread):
@@ -424,7 +424,7 @@ class Model:
             root=config.PATH_LOCAL,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            speaker_transcriber.transcribeAudioQueue(config.SELECTED_RECOGNIZER, speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)

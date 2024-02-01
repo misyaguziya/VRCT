@@ -60,10 +60,9 @@ def checkWhisperWeight(path):
     return result
 
 def downloadWhisperWeight(root, weight_type, callbackFunc):
-    path = os_path.join(root, "weight", "whisper", weight_type)
+    path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if checkWhisperWeight(path) is True:
-        print("weight_type:", weight_type, checkWhisperWeight(path))
         return
 
     for filename in _FILENAMES:
@@ -72,10 +71,8 @@ def downloadWhisperWeight(root, weight_type, callbackFunc):
         url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
         downloadFile(url, file_path, func=callbackFunc)
 
-    print("weight_type:", weight_type, checkWhisperWeight(path))
-
 def getWhisperModel(root, weight_type):
-    path = os_path.join(root, "weight", "whisper", weight_type)
+    path = os_path.join(root, "weights", "whisper", weight_type)
     return WhisperModel(
         path,
         device="cpu",
