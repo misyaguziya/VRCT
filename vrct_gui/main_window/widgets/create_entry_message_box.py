@@ -21,7 +21,7 @@ def createEntryMessageBox(settings, main_window, view_variable):
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.TEXTBOX_ENTRY_FONT_SIZE, weight="normal"),
         undo=True,
         autoseparators=True,
-        maxundo=0,
+        maxundo=64,
     )
     main_window.entry_message_box.grid(row=0, column=0, padx=settings.uism.TEXTBOX_ENTRY_PADX, pady=settings.uism.TEXTBOX_ENTRY_PADY, sticky="nsew")
 
