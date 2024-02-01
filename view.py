@@ -184,6 +184,8 @@ class View():
             VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
 
+            CALLBACK_MESSAGE_BOX_BIND_KEYSYM__UP=None,
+            CALLBACK_MESSAGE_BOX_BIND_KEYSYM__DOWN=None,
             # Main Window Cover
             VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=""),
 
@@ -560,6 +562,10 @@ class View():
             entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
             entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
             self.view_variable.CALLBACK_CLICKED_SEND_MESSAGE_BUTTON = pressedSendMessageButtonFunction
+
+
+            self.view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__UP=main_window_registers.get("message_box_bind_Up_KeyPress")
+            self.view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__DOWN=main_window_registers.get("message_box_bind_Down_KeyPress")
 
 
             entry_message_box.bind("<FocusIn>", main_window_registers.get("message_box_bind_FocusIn"))
@@ -1637,6 +1643,13 @@ class View():
     def clearMessageBox(self):
         self._clearTextBox(vrct_gui.entry_message_box)
 
+    @staticmethod
+    def insertMessageBox(text):
+        vrct_gui.entry_message_box.insert("end", text)
+
+    def replaceMessageBox(self, text):
+        self.clearMessageBox()
+        self.insertMessageBox(text)
 
 
 
