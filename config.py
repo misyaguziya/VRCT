@@ -198,6 +198,24 @@ class Config:
             self._CHOICE_OUTPUT_TRANSLATOR = value
 
     @property
+    def SENT_MESSAGES_LOG(self):
+        return self._SENT_MESSAGES_LOG
+
+    @SENT_MESSAGES_LOG.setter
+    def SENT_MESSAGES_LOG(self, value):
+        if isinstance(value, list):
+            self._SENT_MESSAGES_LOG = value
+
+    @property
+    def CURRENT_SENT_MESSAGES_LOG_INDEX(self):
+        return self._CURRENT_SENT_MESSAGES_LOG_INDEX
+
+    @CURRENT_SENT_MESSAGES_LOG_INDEX.setter
+    def CURRENT_SENT_MESSAGES_LOG_INDEX(self, value):
+        if isinstance(value, int):
+            self._CURRENT_SENT_MESSAGES_LOG_INDEX = value
+
+    @property
     def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self):
         return self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
 
@@ -770,6 +788,8 @@ class Config:
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
+        self._SENT_MESSAGES_LOG = []
+        self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
 
         # Save Json Data

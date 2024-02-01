@@ -31,6 +31,14 @@ def createEntryMessageBox(settings, main_window, view_variable):
             "Delete", "Select", "Up", "Down", "Next", "End", "Print",
             "Prior","Insert","Home", "Left", "Clear", "Right", "Linefeed"
         ]
+        if e.keysym == "Up":
+            callFunctionIfCallable(view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__UP)
+            return "break"
+
+        if e.keysym == "Down":
+            callFunctionIfCallable(view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__DOWN)
+            return "break"
+
         if e.keysym != "??":
             if len(e.char) != 0 and e.keysym in BREAK_KEYSYM_LIST:
                 main_window.entry_message_box.insert("end", e.char)
