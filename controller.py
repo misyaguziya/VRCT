@@ -64,6 +64,7 @@ def changeToCTranslate2Process():
 # func transcription send message
 def sendMicMessage(message):
     if len(message) > 0:
+        addSentMessageLog(message)
         translation = ""
         if model.checkKeywords(message):
             view.printToTextbox_DetectedByWordFilter(detected_message=message)
@@ -200,6 +201,7 @@ def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow():
 # func message box
 def sendChatMessage(message):
     if len(message) > 0:
+        addSentMessageLog(message)
         translation = ""
         if config.ENABLE_TRANSLATION is False:
             pass
@@ -248,6 +250,29 @@ def messageBoxFocusOut(e):
     view.foregroundOnIfForegroundEnabled()
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
+
+def addSentMessageLog(sent_message):
+    config.SENT_MESSAGES_LOG.append(sent_message)
+    config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
+
+def updateMessageBox(index_offset):
+    if len(config.SENT_MESSAGES_LOG) == 0:
+        return
+    try:
+        new_index = config.CURRENT_SENT_MESSAGES_LOG_INDEX + index_offset
+        target_message_text = config.SENT_MESSAGES_LOG[new_index]
+        view.replaceMessageBox(target_message_text)
+        config.CURRENT_SENT_MESSAGES_LOG_INDEX = new_index
+    except IndexError:
+        pass
+
+def messageBoxUpKeyPress():
+    if config.CURRENT_SENT_MESSAGES_LOG_INDEX > 0:
+        updateMessageBox(-1)
+
+def messageBoxDownKeyPress():
+    if config.CURRENT_SENT_MESSAGES_LOG_INDEX < len(config.SENT_MESSAGES_LOG) - 1:
+        updateMessageBox(1)
 
 def updateTranslationEngineAndEngineList():
     engine = config.CHOICE_INPUT_TRANSLATOR
@@ -949,6 +974,8 @@ def createMainWindow(splash):
             "message_box_bind_Any_KeyPress": messageBoxPressKeyAny,
             "message_box_bind_FocusIn": messageBoxFocusIn,
             "message_box_bind_FocusOut": messageBoxFocusOut,
+            "message_box_bind_Up_KeyPress": messageBoxUpKeyPress,
+            "message_box_bind_Down_KeyPress": messageBoxDownKeyPress,
         },
 
         config_window_registers={
