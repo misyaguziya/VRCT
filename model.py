@@ -335,7 +335,7 @@ class Model:
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
-            whisper_enabled=config.USE_RECOGNIZER_FEATURE,
+            whisper_enabled=config.USE_WHISPER_FEATURE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
         )
@@ -419,7 +419,7 @@ class Model:
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
-            whisper_enabled=config.USE_RECOGNIZER_FEATURE,
+            whisper_enabled=config.USE_WHISPER_FEATURE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
         )

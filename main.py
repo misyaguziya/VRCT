@@ -14,7 +14,7 @@ if __name__ == "__main__":
         splash.toProgress(0)
 
         # whisperのダウンロードの説明に変更する必要あり
-        if config.USE_RECOGNIZER_FEATURE is True:
+        if config.USE_WHISPER_FEATURE is True:
             from models.transcription.transcription_whisper import downloadWhisperWeight
             downloadWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE, splash.updateDownloadProgress)
         splash.toProgress(0)

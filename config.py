@@ -584,14 +584,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('USE_RECOGNIZER_FEATURE')
-    def USE_RECOGNIZER_FEATURE(self):
-        return self._USE_RECOGNIZER_FEATURE
+    @json_serializable('USE_WHISPER_FEATURE')
+    def USE_WHISPER_FEATURE(self):
+        return self._USE_WHISPER_FEATURE
 
-    @USE_RECOGNIZER_FEATURE.setter
-    def USE_RECOGNIZER_FEATURE(self, value):
+    @USE_WHISPER_FEATURE.setter
+    def USE_WHISPER_FEATURE(self, value):
         if isinstance(value, bool):
-            self._USE_RECOGNIZER_FEATURE = value
+            self._USE_WHISPER_FEATURE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -797,17 +797,12 @@ class Config:
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
             # {Save json str}: {i18n_placeholder} pairs
             "tiny": "tiny",
-            "tiny.en": "tiny.en",
             "base": "base",
-            "base.en": "base.en",
             "small": "small",
-            "small.en": "small.en",
             "medium": "medium",
-            "medium.en": "medium.en",
             "large-v1": "large-v1",
             "large-v2": "large-v2",
             "large-v3": "large-v3",
-            "large": "large",
         }
 
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
@@ -887,7 +882,7 @@ class Config:
         }
         self._USE_TRANSLATION_FEATURE = True
         self._CTRANSLATE2_WEIGHT_TYPE = "Small"
-        self._USE_RECOGNIZER_FEATURE = True
+        self._USE_WHISPER_FEATURE = True
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
