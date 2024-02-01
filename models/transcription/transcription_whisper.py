@@ -8,18 +8,13 @@ logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
 
 _MODELS = {
-    "tiny.en": "Systran/faster-whisper-tiny.en",
     "tiny": "Systran/faster-whisper-tiny",
-    "base.en": "Systran/faster-whisper-base.en",
     "base": "Systran/faster-whisper-base",
-    "small.en": "Systran/faster-whisper-small.en",
     "small": "Systran/faster-whisper-small",
-    "medium.en": "Systran/faster-whisper-medium.en",
     "medium": "Systran/faster-whisper-medium",
     "large-v1": "Systran/faster-whisper-large-v1",
     "large-v2": "Systran/faster-whisper-large-v2",
     "large-v3": "Systran/faster-whisper-large-v3",
-    "large": "Systran/faster-whisper-large-v3",
 }
 
 _FILENAMES = [
@@ -28,6 +23,7 @@ _FILENAMES = [
     "model.bin",
     "tokenizer.json",
     "vocabulary.txt",
+    "vocabulary.json",
 ]
 
 def downloadFile(url, path, func=None):
@@ -67,6 +63,7 @@ def downloadWhisperWeight(root, weight_type, callbackFunc):
     path = os_path.join(root, "weight", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if checkWhisperWeight(path) is True:
+        print("weight_type:", weight_type, checkWhisperWeight(path))
         return
 
     for filename in _FILENAMES:
@@ -74,6 +71,8 @@ def downloadWhisperWeight(root, weight_type, callbackFunc):
         file_path = os_path.join(path, filename)
         url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
         downloadFile(url, file_path, func=callbackFunc)
+
+    print("weight_type:", weight_type, checkWhisperWeight(path))
 
 def getWhisperModel(root, weight_type):
     path = os_path.join(root, "weight", "whisper", weight_type)
@@ -90,9 +89,12 @@ def getWhisperModel(root, weight_type):
 if __name__ == "__main__":
     def callback(value):
         print(value)
+        pass
 
     downloadWhisperWeight("./", "tiny", callback)
     downloadWhisperWeight("./", "base", callback)
     downloadWhisperWeight("./", "small", callback)
     downloadWhisperWeight("./", "medium", callback)
-    downloadWhisperWeight("./", "large", callback)
+    downloadWhisperWeight("./", "large-v1", callback)
+    downloadWhisperWeight("./", "large-v2", callback)
+    downloadWhisperWeight("./", "large-v3", callback)
