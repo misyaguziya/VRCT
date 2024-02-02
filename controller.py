@@ -767,6 +767,35 @@ def callbackSetSpeakerMaxPhrases(value):
     except Exception:
         view.showErrorMessage_SpeakerMaxPhrases()
 
+# Transcription (Internal AI Model)
+def callbackSetUserWhisperFeature(value):
+    print("callbackSetUserWhisperFeature", value)
+    config.USE_WHISPER_FEATURE = value
+    if config.USE_WHISPER_FEATURE is True:
+        view.openWhisperWeightTypeWidget()
+    else:
+        view.closeWhisperWeightTypeWidget()
+
+def callbackSetWhisperWeightType(value):
+    print("callbackSetWhisperWeightType", value)
+    config.WHISPER_WEIGHT_TYPE = str(value)
+    view.updateSelectedWhisperWeightType(config.WHISPER_WEIGHT_TYPE)
+    # view.setWidgetsStatus_changeWeightType_Pending()
+    # if model.checkCTranslatorCTranslate2ModelWeight():
+    #     config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+    #     def callback():
+    #         model.changeTranslatorCTranslate2Model()
+    #         view.useTranslationFeatureProcess("Normal")
+    #         view.setWidgetsStatus_changeWeightType_Done()
+    #     th_callback = Thread(target=callback)
+    #     th_callback.daemon = True
+    #     th_callback.start()
+    # else:
+    #     config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
+    #     view.useTranslationFeatureProcess("Restart")
+    #     view.setWidgetsStatus_changeWeightType_Done()
+    # view.showRestartButtonIfRequired()
+
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -992,6 +1021,10 @@ def createMainWindow(splash):
             "callback_set_speaker_record_timeout": callbackSetSpeakerRecordTimeout,
             "callback_set_speaker_phrase_timeout": callbackSetSpeakerPhraseTimeout,
             "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
+
+            # Transcription Tab (Internal AI Model)
+            "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
+            "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,

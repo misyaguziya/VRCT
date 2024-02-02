@@ -211,6 +211,7 @@ class View():
             VAR_SIDE_MENU_LABEL_TRANSCRIPTION=StringVar(value=i18n.t("config_window.side_menu_labels.transcription")),
             VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
             VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
@@ -379,6 +380,19 @@ class View():
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.callbackBindFocusOut_SpeakerMaxPhrases,
+
+
+            # Transcription Tab (Whisper Internal AI Model)
+            VAR_LABEL_USE_WHISPER_FEATURE=StringVar(value=i18n.t("config_window.use_whisper_feature.label")),
+            VAR_DESC_USE_WHISPER_FEATURE=StringVar(value=i18n.t("config_window.use_whisper_feature.desc")),
+            CALLBACK_SET_USE_WHISPER_FEATURE=None,
+            VAR_USE_WHISPER_FEATURE=BooleanVar(value=config.USE_WHISPER_FEATURE),
+
+            VAR_LABEL_WHISPER_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.whisper_weight_type.label")),
+            VAR_DESC_WHISPER_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.whisper_weight_type.desc")),
+            DICT_WHISPER_WEIGHT_TYPE=self.getSelectableWhisperWeightTypeDict(),
+            CALLBACK_SET_WHISPER_WEIGHT_TYPE=None,
+            VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
 
 
             # Others Tab
@@ -624,6 +638,11 @@ class View():
             self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window_registers.get("callback_set_speaker_phrase_timeout", None)
             self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window_registers.get("callback_set_speaker_max_phrases", None)
 
+            # Transcription Tab (Internal AI Model)
+            self.view_variable.CALLBACK_SET_USE_WHISPER_FEATURE = config_window_registers.get("callback_set_use_whisper_feature", None)
+            self.view_variable.CALLBACK_SET_WHISPER_WEIGHT_TYPE = config_window_registers.get("callback_set_whisper_weight_type", None)
+
+
             # Others Tab
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = config_window_registers.get("callback_set_send_only_translated_messages", None)
@@ -677,6 +696,11 @@ class View():
                 ]
             )
             self.replaceMicThresholdCheckButton_Disabled()
+
+        if config.USE_WHISPER_FEATURE is True:
+            self.openWhisperWeightTypeWidget()
+        else:
+            self.closeWhisperWeightTypeWidget()
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
             vrct_gui._changeConfigWindowWidgetsStatus(
@@ -919,6 +943,17 @@ class View():
         vrct_gui.update()
         vrct_gui.config_window.lift()
 
+    @staticmethod
+    def getSelectableWhisperWeightTypeDict():
+        return {
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["tiny"]: i18n.t("config_window.whisper_weight_type.tiny", capacity="t"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["base"]: i18n.t("config_window.whisper_weight_type.base", capacity="b"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["small"]: i18n.t("config_window.whisper_weight_type.small", capacity="s"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["medium"]: i18n.t("config_window.whisper_weight_type.medium", capacity="m"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v1"]: i18n.t("config_window.whisper_weight_type.large_v1", capacity="l_v1"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v2"]: i18n.t("config_window.whisper_weight_type.large_v2", capacity="l_v2"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v3"]: i18n.t("config_window.whisper_weight_type.large_v3", capacity="l_v3"),
+        }
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
@@ -1080,6 +1115,23 @@ class View():
     def closeCtranslate2WeightTypeWidget(self):
         vrct_gui.config_window.sb__use_translation_feature.grid(pady=(0,1))
         vrct_gui.config_window.sb__ctranslate2_weight_type.grid_remove()
+
+
+    def openWhisperWeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_whisper_feature.grid()
+        vrct_gui.config_window.sb__whisper_weight_type.grid()
+
+    def closeWhisperWeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_whisper_feature.grid()
+        vrct_gui.config_window.sb__whisper_weight_type.grid_remove()
+
+
+    def updateSelectedWhisperWeightType(self, selected_weight_type:str):
+        self.view_variable.VAR_WHISPER_WEIGHT_TYPE.set(self.getSelectableWhisperWeightTypeDict()[selected_weight_type])
+
+    def setLatestCTranslate2WeightType(self):
+        selected_weight_type = self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]
+        self.view_variable.VAR_WHISPER_WEIGHT_TYPE.set(selected_weight_type)
 
 
     def openMicEnergyThresholdWidget(self):
