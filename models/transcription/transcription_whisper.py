@@ -42,7 +42,8 @@ def downloadFile(url, path, func=None):
     except Exception as e:
             print("error:downloadFile()", e)
 
-def checkWhisperWeight(path):
+def checkWhisperWeight(root, weight_type):
+    path = os_path.join(root, "weights", "whisper", weight_type)
     result = False
     try:
         WhisperModel(
@@ -62,7 +63,7 @@ def checkWhisperWeight(path):
 def downloadWhisperWeight(root, weight_type, callbackFunc):
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
-    if checkWhisperWeight(path) is True:
+    if checkWhisperWeight(root, weight_type) is True:
         return
 
     for filename in _FILENAMES:

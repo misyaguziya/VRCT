@@ -29,6 +29,7 @@ class View():
             font_family=config.FONT_FAMILY,
             ui_language=config.UI_LANGUAGE,
             is_reset_button_displayed_for_translation=config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
+            is_reset_button_displayed_for_whisper=config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
         )
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
@@ -1049,7 +1050,8 @@ class View():
             self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
             self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
             self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE and
-            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION and
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_whisper == config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
         )
 
         if locale is None:

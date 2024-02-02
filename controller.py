@@ -773,29 +773,27 @@ def callbackSetUserWhisperFeature(value):
     config.USE_WHISPER_FEATURE = value
     if config.USE_WHISPER_FEATURE is True:
         view.openWhisperWeightTypeWidget()
+        if model.checkTranscriptionWhisperModelWeight() is True:
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+            config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+        else:
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
+            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     else:
         view.closeWhisperWeightTypeWidget()
+    view.showRestartButtonIfRequired()
 
 def callbackSetWhisperWeightType(value):
     print("callbackSetWhisperWeightType", value)
     config.WHISPER_WEIGHT_TYPE = str(value)
     view.updateSelectedWhisperWeightType(config.WHISPER_WEIGHT_TYPE)
-    # view.setWidgetsStatus_changeWeightType_Pending()
-    # if model.checkCTranslatorCTranslate2ModelWeight():
-    #     config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-    #     def callback():
-    #         model.changeTranslatorCTranslate2Model()
-    #         view.useTranslationFeatureProcess("Normal")
-    #         view.setWidgetsStatus_changeWeightType_Done()
-    #     th_callback = Thread(target=callback)
-    #     th_callback.daemon = True
-    #     th_callback.start()
-    # else:
-    #     config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-    #     view.useTranslationFeatureProcess("Restart")
-    #     view.setWidgetsStatus_changeWeightType_Done()
-    # view.showRestartButtonIfRequired()
-
+    if model.checkTranscriptionWhisperModelWeight() is True:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+    else:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+    view.showRestartButtonIfRequired()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):

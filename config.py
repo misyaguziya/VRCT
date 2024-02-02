@@ -210,6 +210,15 @@ class Config:
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = value
 
+    @property
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self):
+        return self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
+
+    @IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER.setter
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self, value):
+        if isinstance(value, bool):
+            self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -268,14 +277,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SELECTED_RECOGNIZER')
-    def SELECTED_RECOGNIZER(self):
-        return self._SELECTED_RECOGNIZER
+    @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
+    def SELECTED_TRANSCRIPTION_ENGINE(self):
+        return self._SELECTED_TRANSCRIPTION_ENGINE
 
-    @SELECTED_RECOGNIZER.setter
-    def SELECTED_RECOGNIZER(self, value):
+    @SELECTED_TRANSCRIPTION_ENGINE.setter
+    def SELECTED_TRANSCRIPTION_ENGINE(self, value):
         if isinstance(value, str):
-            self._SELECTED_RECOGNIZER = value
+            self._SELECTED_TRANSCRIPTION_ENGINE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -820,6 +829,7 @@ class Config:
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+        self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
 
         # Save Json Data
         ## Main Window
@@ -844,7 +854,7 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
-        self._SELECTED_RECOGNIZER = "Google"
+        self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
