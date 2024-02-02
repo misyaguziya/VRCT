@@ -24,6 +24,7 @@ from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
+from models.transcription.transcription_whisper import checkWhisperWeight
 from config import config
 
 class threadFnc(Thread):
@@ -73,6 +74,9 @@ class Model:
 
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
+
+    def checkTranscriptionWhisperModelWeight(self):
+        return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
@@ -335,12 +339,12 @@ class Model:
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
-            whisper_enabled=config.USE_WHISPER_FEATURE,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(config.SELECTED_RECOGNIZER, mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
@@ -419,12 +423,12 @@ class Model:
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
-            whisper_enabled=config.USE_WHISPER_FEATURE,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(config.SELECTED_RECOGNIZER, speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
