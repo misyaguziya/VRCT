@@ -925,6 +925,12 @@ def createMainWindow(splash):
     # set Translation Engine
     updateTranslationEngineAndEngineList()
 
+    # set Transcription Engine
+    if config.USE_WHISPER_FEATURE is True:
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+    else:
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+
     # set word filter
     model.addKeywords()
 

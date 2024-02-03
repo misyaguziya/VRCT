@@ -812,6 +812,9 @@ class Config:
             "large-v1": "large-v1",
             "large-v2": "large-v2",
             "large-v3": "large-v3",
+            "distil-small": "distil-small",
+            "distil-medium": "distil-medium",
+            "distil-large-v2": "distil-large-v2",
         }
 
         self._MAX_MIC_ENERGY_THRESHOLD = 2000

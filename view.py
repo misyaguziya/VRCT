@@ -947,13 +947,16 @@ class View():
     @staticmethod
     def getSelectableWhisperWeightTypeDict():
         return {
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["tiny"]: i18n.t("config_window.whisper_weight_type.tiny", capacity="t"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["base"]: i18n.t("config_window.whisper_weight_type.base", capacity="b"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["small"]: i18n.t("config_window.whisper_weight_type.small", capacity="s"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["medium"]: i18n.t("config_window.whisper_weight_type.medium", capacity="m"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v1"]: i18n.t("config_window.whisper_weight_type.large_v1", capacity="l_v1"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v2"]: i18n.t("config_window.whisper_weight_type.large_v2", capacity="l_v2"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v3"]: i18n.t("config_window.whisper_weight_type.large_v3", capacity="l_v3"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["tiny"]: i18n.t("config_window.whisper_weight_type.tiny", capacity="74.5MB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["base"]: i18n.t("config_window.whisper_weight_type.base", capacity="141MB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["small"]: i18n.t("config_window.whisper_weight_type.small", capacity="463MB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["medium"]: i18n.t("config_window.whisper_weight_type.medium", capacity="1.42GB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v1"]: i18n.t("config_window.whisper_weight_type.large_v1", capacity="2.87GB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v2"]: i18n.t("config_window.whisper_weight_type.large_v2", capacity="2.87GB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v3"]: i18n.t("config_window.whisper_weight_type.large_v3", capacity="2.87GB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-small"]: i18n.t("config_window.whisper_weight_type.distil_small", capacity="319MB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-medium"]: i18n.t("config_window.whisper_weight_type.distil_medium", capacity="755MB"),
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-large-v2"]: i18n.t("config_window.whisper_weight_type.distil_large_v2", capacity="1.41GB"),
         }
 
 # Open Webpage Functions
