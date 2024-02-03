@@ -812,9 +812,6 @@ class Config:
             "large-v1": "large-v1",
             "large-v2": "large-v2",
             "large-v3": "large-v3",
-            "distil-small": "distil-small",
-            "distil-medium": "distil-medium",
-            "distil-large-v2": "distil-large-v2",
         }
 
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
@@ -895,7 +892,7 @@ class Config:
         }
         self._USE_TRANSLATION_FEATURE = True
         self._CTRANSLATE2_WEIGHT_TYPE = "Small"
-        self._USE_WHISPER_FEATURE = True
+        self._USE_WHISPER_FEATURE = False
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
