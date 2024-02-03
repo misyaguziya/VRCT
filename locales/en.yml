@@ -140,9 +140,6 @@ config_window:
     large_v1: "large_v1 model (%{capacity})"
     large_v2: "large_v2 model (%{capacity})"
     large_v3: "large_v3 model (%{capacity})"
-    distil_small: "distil-small model (%{capacity})"
-    distil_medium: "distil-medium model (%{capacity})"
-    distil_large_v2: "distil-large-v2 model (%{capacity})"
 
   deepl_auth_key:
     label: DeepL Auth Key

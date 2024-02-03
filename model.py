@@ -339,12 +339,11 @@ class Model:
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
-            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
@@ -423,12 +422,11 @@ class Model:
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
-            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)

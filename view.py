@@ -954,9 +954,6 @@ class View():
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v1"]: i18n.t("config_window.whisper_weight_type.large_v1", capacity="2.87GB"),
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v2"]: i18n.t("config_window.whisper_weight_type.large_v2", capacity="2.87GB"),
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v3"]: i18n.t("config_window.whisper_weight_type.large_v3", capacity="2.87GB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-small"]: i18n.t("config_window.whisper_weight_type.distil_small", capacity="319MB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-medium"]: i18n.t("config_window.whisper_weight_type.distil_medium", capacity="755MB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["distil-large-v2"]: i18n.t("config_window.whisper_weight_type.distil_large_v2", capacity="1.41GB"),
         }
 
 # Open Webpage Functions
