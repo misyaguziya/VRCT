@@ -79,7 +79,7 @@ config_window:
     transcription: Transcription
     transcription_mic: Mic
     transcription_speaker: Speaker
-    transcription_internal_model: Internal Model
+    transcription_internal_model: Transcription Model
     others: Others
     others_send_message_formats: Message Formats (Send)
     others_received_message_formats: Message Formats (Received)
@@ -125,21 +125,6 @@ config_window:
     desc: You can choose the translation model to use for the internal translation engine.
     small: "Basic model (%{capacity})"
     large: "High accuracy model (%{capacity})"
-
-  use_whisper_feature:
-    label: Use Whisper Feature
-    desc: Description
-
-  whisper_weight_type:
-    label: Select Whisper Model
-    desc: Description
-    tiny: "tiny model (%{capacity})"
-    base: "base model (%{capacity})"
-    small: "small model (%{capacity})"
-    medium: "medium model (%{capacity})"
-    large_v1: "large_v1 model (%{capacity})"
-    large_v2: "large_v2 model (%{capacity})"
-    large_v3: "large_v3 model (%{capacity})"
 
   deepl_auth_key:
     label: DeepL Auth Key
@@ -202,6 +187,21 @@ config_window:
     label: Speaker Max Words
     desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.
     error_message: You can set a number equal to or greater than 0.
+
+  use_whisper_feature:
+    label: Use Whisper Model As Transcription
+    desc: In some languages, the accuracy of speech recognition may improve. During speech recognition usage, CPU usage increases, so please consider your PC specs before using this feature.
+
+  whisper_weight_type:
+    label: Select Whisper Model
+    desc: Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.
+    tiny: "tiny model (%{capacity})"
+    base: "base model (%{capacity}) (Recommended)"
+    small: "small model (%{capacity})"
+    medium: "medium model (%{capacity})"
+    large_v1: "large_v1 model (%{capacity})"
+    large_v2: "large_v2 model (%{capacity})"
+    large_v3: "large_v3 model (%{capacity})"
 
 
   auto_clear_the_message_box:
