@@ -913,8 +913,8 @@ class View():
     @staticmethod
     def getSelectableCtranslate2WeightTypeDict():
         return {
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
         }
 
     def useTranslationFeatureProcess(self, state:str):
