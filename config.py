@@ -99,6 +99,10 @@ class Config:
         return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
 
     @property
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self):
+        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
+
+    @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
         return self._MAX_MIC_ENERGY_THRESHOLD
 
@@ -224,6 +228,15 @@ class Config:
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = value
 
+    @property
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self):
+        return self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
+
+    @IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER.setter
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self, value):
+        if isinstance(value, bool):
+            self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -279,6 +292,17 @@ class Config:
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
         if isinstance(value, dict):
             self._SELECTED_TAB_TARGET_LANGUAGES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
+    def SELECTED_TRANSCRIPTION_ENGINE(self):
+        return self._SELECTED_TRANSCRIPTION_ENGINE
+
+    @SELECTED_TRANSCRIPTION_ENGINE.setter
+    def SELECTED_TRANSCRIPTION_ENGINE(self, value):
+        if isinstance(value, str):
+            self._SELECTED_TRANSCRIPTION_ENGINE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -587,15 +611,37 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('WEIGHT_TYPE')
-    def WEIGHT_TYPE(self):
-        return self._WEIGHT_TYPE
+    @json_serializable('USE_WHISPER_FEATURE')
+    def USE_WHISPER_FEATURE(self):
+        return self._USE_WHISPER_FEATURE
 
-    @WEIGHT_TYPE.setter
-    def WEIGHT_TYPE(self, value):
+    @USE_WHISPER_FEATURE.setter
+    def USE_WHISPER_FEATURE(self, value):
+        if isinstance(value, bool):
+            self._USE_WHISPER_FEATURE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
+    def CTRANSLATE2_WEIGHT_TYPE(self):
+        return self._CTRANSLATE2_WEIGHT_TYPE
+
+    @CTRANSLATE2_WEIGHT_TYPE.setter
+    def CTRANSLATE2_WEIGHT_TYPE(self, value):
         # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT:
         if isinstance(value, str):
-            self._WEIGHT_TYPE = value
+            self._CTRANSLATE2_WEIGHT_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('WHISPER_WEIGHT_TYPE')
+    def WHISPER_WEIGHT_TYPE(self):
+        return self._WHISPER_WEIGHT_TYPE
+
+    @WHISPER_WEIGHT_TYPE.setter
+    def WHISPER_WEIGHT_TYPE(self, value):
+        if isinstance(value, str):
+            self._WHISPER_WEIGHT_TYPE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -774,6 +820,18 @@ class Config:
             "Small": "Small",
             "Large": "Large",
         }
+
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
+            # {Save json str}: {i18n_placeholder} pairs
+            "tiny": "tiny",
+            "base": "base",
+            "small": "small",
+            "medium": "medium",
+            "large-v1": "large-v1",
+            "large-v2": "large-v2",
+            "large-v3": "large-v3",
+        }
+
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -791,6 +849,7 @@ class Config:
         self._SENT_MESSAGES_LOG = []
         self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+        self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
 
         # Save Json Data
         ## Main Window
@@ -815,6 +874,7 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
+        self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
@@ -851,7 +911,9 @@ class Config:
             "DeepL_API": None,
         }
         self._USE_TRANSLATION_FEATURE = True
-        self._WEIGHT_TYPE = "Small"
+        self._CTRANSLATE2_WEIGHT_TYPE = "Small"
+        self._USE_WHISPER_FEATURE = False
+        self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"

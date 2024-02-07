@@ -23,7 +23,8 @@ from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.utils import checkCTranslate2Weight
+from models.translation.translation_utils import checkCTranslate2Weight
+from models.transcription.transcription_whisper import checkWhisperWeight
 from config import config
 
 class threadFnc(Thread):
@@ -65,14 +66,17 @@ class Model:
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
         if config.USE_TRANSLATION_FEATURE is True:
-            self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
+            self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
         self.keyword_processor = KeywordProcessor()
 
     def checkCTranslatorCTranslate2ModelWeight(self):
-        return checkCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE)
+        return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
 
     def changeTranslatorCTranslate2Model(self):
-        self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
+        self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
+
+    def checkTranscriptionWhisperModelWeight(self):
+        return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
@@ -335,9 +339,11 @@ class Model:
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
@@ -416,9 +422,11 @@ class Model:
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
