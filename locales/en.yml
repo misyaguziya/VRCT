@@ -79,6 +79,7 @@ config_window:
     transcription: Transcription
     transcription_mic: Mic
     transcription_speaker: Speaker
+    transcription_internal_model: Internal Model
     others: Others
     others_send_message_formats: Message Formats (Send)
     others_received_message_formats: Message Formats (Received)
@@ -124,6 +125,21 @@ config_window:
     desc: You can choose the translation model to use for the internal translation engine.
     small: "Basic model (%{capacity})"
     large: "High accuracy model (%{capacity})"
+
+  use_whisper_feature:
+    label: Use Whisper Feature
+    desc: Description
+
+  whisper_weight_type:
+    label: Select Whisper Model
+    desc: Description
+    tiny: "tiny model (%{capacity})"
+    base: "base model (%{capacity})"
+    small: "small model (%{capacity})"
+    medium: "medium model (%{capacity})"
+    large_v1: "large_v1 model (%{capacity})"
+    large_v2: "large_v2 model (%{capacity})"
+    large_v3: "large_v3 model (%{capacity})"
 
   deepl_auth_key:
     label: DeepL Auth Key

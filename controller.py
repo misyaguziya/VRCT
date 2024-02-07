@@ -530,8 +530,8 @@ def callbackSetUseTranslationFeature(value):
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
-    config.WEIGHT_TYPE = str(value)
-    view.updateSelectedCtranslate2WeightType(config.WEIGHT_TYPE)
+    config.CTRANSLATE2_WEIGHT_TYPE = str(value)
+    view.updateSelectedCtranslate2WeightType(config.CTRANSLATE2_WEIGHT_TYPE)
     view.setWidgetsStatus_changeWeightType_Pending()
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -792,6 +792,33 @@ def callbackSetSpeakerMaxPhrases(value):
     except Exception:
         view.showErrorMessage_SpeakerMaxPhrases()
 
+# Transcription (Internal AI Model)
+def callbackSetUserWhisperFeature(value):
+    print("callbackSetUserWhisperFeature", value)
+    config.USE_WHISPER_FEATURE = value
+    if config.USE_WHISPER_FEATURE is True:
+        view.openWhisperWeightTypeWidget()
+        if model.checkTranscriptionWhisperModelWeight() is True:
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+            config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+        else:
+            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
+            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+    else:
+        view.closeWhisperWeightTypeWidget()
+    view.showRestartButtonIfRequired()
+
+def callbackSetWhisperWeightType(value):
+    print("callbackSetWhisperWeightType", value)
+    config.WHISPER_WEIGHT_TYPE = str(value)
+    view.updateSelectedWhisperWeightType(config.WHISPER_WEIGHT_TYPE)
+    if model.checkTranscriptionWhisperModelWeight() is True:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+    else:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+    view.showRestartButtonIfRequired()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -923,6 +950,12 @@ def createMainWindow(splash):
     # set Translation Engine
     updateTranslationEngineAndEngineList()
 
+    # set Transcription Engine
+    if config.USE_WHISPER_FEATURE is True:
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+    else:
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+
     # set word filter
     model.addKeywords()
 
@@ -1019,6 +1052,10 @@ def createMainWindow(splash):
             "callback_set_speaker_record_timeout": callbackSetSpeakerRecordTimeout,
             "callback_set_speaker_phrase_timeout": callbackSetSpeakerPhraseTimeout,
             "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
+
+            # Transcription Tab (Internal AI Model)
+            "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
+            "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,

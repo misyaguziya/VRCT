@@ -39,36 +39,36 @@ def calculate_file_hash(file_path, block_size=65536):
     return hash_object.hexdigest()
 
 def checkCTranslate2Weight(path, weight_type="Small"):
-    directory_name = 'weight'
-    current_directory = path
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     hash_data = ctranslate2_weights[weight_type]["hash"]
-    files = ["model.bin", "sentencepiece.model", "shared_vocabulary.txt"]
+    files = [
+        "model.bin",
+        "sentencepiece.model",
+        "shared_vocabulary.txt"
+    ]
 
     # check already downloaded
     already_downloaded = False
-    if all(os_path.exists(os_path.join(current_directory, directory_name, weight_directory_name, file)) for file in files):
+    if all(os_path.exists(os_path.join(path, weight_directory_name, file)) for file in files):
         # check hash
         for file in files:
             original_hash = hash_data[file]
-            current_hash = calculate_file_hash(os_path.join(current_directory, directory_name, weight_directory_name, file))
+            current_hash = calculate_file_hash(os_path.join(path, weight_directory_name, file))
             if original_hash != current_hash:
                 break
         already_downloaded = True
     return already_downloaded
 
-def downloadCTranslate2Weight(path, weight_type="Small", func=None):
+def downloadCTranslate2Weight(root, weight_type="Small", func=None):
     url = ctranslate2_weights[weight_type]["url"]
-    filename = 'weight.zip'
-    directory_name = 'weight'
-    current_directory = path
+    filename = "weight.zip"
+    path = os_path.join(root, "weights", "ctranslate2")
+    os_makedirs(path, exist_ok=True)
 
     if checkCTranslate2Weight(path, weight_type):
         return
 
     try:
-        os_makedirs(os_path.join(current_directory, directory_name), exist_ok=True)
-        print(os_path.join(current_directory, directory_name))
         with tempfile.TemporaryDirectory() as tmp_path:
             res = requests_get(url, stream=True)
             file_size = int(res.headers.get('content-length', 0))
@@ -81,6 +81,6 @@ def downloadCTranslate2Weight(path, weight_type="Small", func=None):
                         func(total_chunk/file_size)
 
             with ZipFile(os_path.join(tmp_path, filename)) as zf:
-                zf.extractall(os_path.join(current_directory, directory_name))
+                zf.extractall(path)
     except Exception as e:
             print("error:downloadCTranslate2Weight()", e)
