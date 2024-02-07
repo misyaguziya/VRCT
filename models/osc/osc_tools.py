@@ -3,6 +3,8 @@ from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
 from pythonosc import osc_server
+from tinyoscquery.queryservice import OSCQueryService
+from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
 
 # send OSC message typing
 def sendTyping(flag=False, ip_address="127.0.0.1", port=9000):
@@ -45,12 +47,28 @@ def sendChangeVoice(ip_address="127.0.0.1", port=9000):
     sendInputVoice(flag=0, ip_address=ip_address, port=port)
     sleep(0.05)
 
-def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
-    _dispatcher = dispatcher.Dispatcher()
-    _dispatcher.map(filter, target)
-    server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
+# def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
+#     _dispatcher = dispatcher.Dispatcher()
+#     _dispatcher.map(filter, target)
+#     server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
     return server
 
+def receiveOscParameters(target, filter="/avatar/parameters/*", ip_address="127.0.0.1", title="VRCT"):
+    osc_port = get_open_udp_port()
+    http_port = get_open_tcp_port()
+    osc_dispatcher = dispatcher.Dispatcher()
+    osc_dispatcher.map(filter, target)
+    osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
+    osc_client = OSCQueryService(title, http_port, osc_port)
+    osc_client.advertise_endpoint(filter)
+    return osc_udp_server, osc_client
+
 if __name__ == "__main__":
-    sendChangeVoice()
-    sendChangeVoice()
+    import threading
+
+    def print_handler(address, *args):
+        print(f"{address}: {args}")
+
+    server, client = receiveOscParameters(print_handler, filter="/input/*")
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.start()
