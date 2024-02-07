@@ -195,14 +195,8 @@ config_window:
   whisper_weight_type:
     label: Select Whisper Model
     desc: Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.
-    tiny: "tiny model (%{capacity})"
-    base: "base model (%{capacity}) (Recommended)"
-    small: "small model (%{capacity})"
-    medium: "medium model (%{capacity})"
-    large_v1: "large_v1 model (%{capacity})"
-    large_v2: "large_v2 model (%{capacity})"
-    large_v3: "large_v3 model (%{capacity})"
-
+    model_template: "%{model_name} model (%{capacity})"
+    recommended_model_template: "%{model_name} model (%{capacity}) (Recommended)"
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
