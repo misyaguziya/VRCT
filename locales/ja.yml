@@ -192,13 +192,8 @@ config_window:
   whisper_weight_type:
     label: Whisperモデルのタイプ
     desc: 基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。
-    tiny: "tiny モデル (%{capacity})"
-    base: "base モデル (%{capacity}) (推奨)"
-    small: "small モデル (%{capacity})"
-    medium: "medium モデル (%{capacity})"
-    large_v1: "large_v1 モデル (%{capacity})"
-    large_v2: "large_v2 モデル (%{capacity})"
-    large_v3: "large_v3 モデル (%{capacity})"
+    model_template: "%{model_name} モデル (%{capacity})"
+    recommended_model_template: "%{model_name} モデル (%{capacity}) (推奨)"
 
 
   auto_clear_the_message_box:
