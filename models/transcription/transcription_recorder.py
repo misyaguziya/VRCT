@@ -123,3 +123,15 @@ class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         )
         super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
         # self.adjustForNoise()
+
+class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
+    def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
+
+        source = Microphone(speaker=True,
+            device_index= device["index"],
+            sample_rate=int(device["defaultSampleRate"]),
+            chunk_size=get_sample_size(paInt16),
+            channels=device["maxInputChannels"]
+        )
+        super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
+        # self.adjustForNoise()

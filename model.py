@@ -17,8 +17,7 @@ from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
-from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
-from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
@@ -355,7 +354,7 @@ class Model:
         def sendMicEnergy():
             if mic_energy_queue.empty() is False:
                 energy = mic_energy_queue.get()
-                print("mic energy:", energy)
+                # print("mic energy:", energy)
                 try:
                     fnc(energy)
                 except Exception:
@@ -377,6 +376,9 @@ class Model:
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
+        if isinstance(self.mic_get_energy, threadFnc):
+            self.mic_get_energy.stop()
+            self.mic_get_energy = None
 
     def startCheckMicEnergy(self, fnc, end_fnc, error_fnc=None):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
@@ -421,18 +423,19 @@ class Model:
             return
 
         speaker_audio_queue = Queue()
+        speaker_energy_queue = Queue()
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.speaker_audio_recorder = SelectedSpeakerRecorder(
+        self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue)
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
         speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
@@ -449,17 +452,34 @@ class Model:
             except Exception:
                 pass
 
+        def sendSpeakerEnergy():
+            if speaker_energy_queue.empty() is False:
+                energy = speaker_energy_queue.get()
+                # print("speaker energy:", energy)
+                try:
+                    fnc(energy)
+                except Exception:
+                    pass
+            sleep(0.01)
+
         self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
         self.speaker_print_transcript.daemon = True
         self.speaker_print_transcript.start()
+
+        self.speaker_get_energy = threadFnc(sendSpeakerEnergy)
+        self.speaker_get_energy.daemon = True
+        self.speaker_get_energy.start()
 
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript = None
-        if isinstance(self.speaker_audio_recorder, SelectedSpeakerRecorder):
+        if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
             self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
+        if isinstance(self.speaker_get_energy, threadFnc):
+            self.speaker_get_energy.stop()
+            self.speaker_get_energy = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
         speaker_device = getDefaultOutputDevice()
