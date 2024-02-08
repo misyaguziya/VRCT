@@ -39,12 +39,8 @@ class Config:
         return self._VERSION
 
     @property
-    def ENABLE_SPEAKER2CHATBOX(self):
-        return self._ENABLE_SPEAKER2CHATBOX
-
-    @property
-    def ENABLE_SPEAKER2CHATBOX(self):
-        return self._ENABLE_SPEAKER2CHATBOX
+    def ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION(self):
+        return self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION
 
     @property
     def PATH_LOCAL(self):
@@ -111,6 +107,15 @@ class Config:
         return self._MAX_SPEAKER_ENERGY_THRESHOLD
 
     # Read Write
+    @property
+    def ENABLE_SPEAKER2CHATBOX(self):
+        return self._ENABLE_SPEAKER2CHATBOX
+
+    @ENABLE_SPEAKER2CHATBOX.setter
+    def ENABLE_SPEAKER2CHATBOX(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_SPEAKER2CHATBOX = value
+
     @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
@@ -751,9 +756,18 @@ class Config:
             self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-
-
     # Speaker2Chatbox------------------
+    @property
+    @json_serializable('ENABLE_SPEAKER2CHATBOX_PASS')
+    def ENABLE_SPEAKER2CHATBOX_PASS(self):
+        return self._ENABLE_SPEAKER2CHATBOX_PASS
+
+    @ENABLE_SPEAKER2CHATBOX_PASS.setter
+    def ENABLE_SPEAKER2CHATBOX_PASS(self, value):
+        if isinstance(value, str):
+            self._ENABLE_SPEAKER2CHATBOX_PASS = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     @property
     @json_serializable('ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC')
     def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self):
@@ -797,6 +811,7 @@ class Config:
         # Read Only
         self._VERSION = "2.1.1"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
+        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "123456789"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
@@ -924,6 +939,7 @@ class Config:
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
+        self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
@@ -937,6 +953,11 @@ class Config:
                 if key == "MESSAGE_FORMAT":
                     old_message_format = config[key]
                 setattr(self, key, config[key])
+
+                if key == "ENABLE_SPEAKER2CHATBOX_PASS":
+                    if self.ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
+                        self.ENABLE_SPEAKER2CHATBOX = True
+
             if old_message_format is not None:
                 setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
 
