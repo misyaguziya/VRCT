@@ -913,8 +913,8 @@ class View():
     @staticmethod
     def getSelectableCtranslate2WeightTypeDict():
         return {
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
         }
 
     def useTranslationFeatureProcess(self, state:str):
@@ -952,14 +952,21 @@ class View():
 
     @staticmethod
     def getSelectableWhisperWeightTypeDict():
+        def callI18n(model_name, capacity, is_recommended=False):
+            if is_recommended is True:
+                return i18n.t("config_window.whisper_weight_type.recommended_model_template", model_name=model_name, capacity=capacity)
+            else:
+                return i18n.t("config_window.whisper_weight_type.model_template", model_name=model_name, capacity=capacity)
+
+        DICT_DATA = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
         return {
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["tiny"]: i18n.t("config_window.whisper_weight_type.tiny", capacity="74.5MB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["base"]: i18n.t("config_window.whisper_weight_type.base", capacity="141MB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["small"]: i18n.t("config_window.whisper_weight_type.small", capacity="463MB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["medium"]: i18n.t("config_window.whisper_weight_type.medium", capacity="1.42GB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v1"]: i18n.t("config_window.whisper_weight_type.large_v1", capacity="2.87GB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v2"]: i18n.t("config_window.whisper_weight_type.large_v2", capacity="2.87GB"),
-            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT["large-v3"]: i18n.t("config_window.whisper_weight_type.large_v3", capacity="2.87GB"),
+            DICT_DATA["tiny"]: callI18n("tiny", "74.5MB"),
+            DICT_DATA["base"]: callI18n("base", "141MB", True),
+            DICT_DATA["small"]: callI18n("small", "463MB"),
+            DICT_DATA["medium"]: callI18n("medium", "1.42GB"),
+            DICT_DATA["large-v1"]: callI18n("large-v1", "2.87GB"),
+            DICT_DATA["large-v2"]: callI18n("large-v2", "2.87GB"),
+            DICT_DATA["large-v3"]: callI18n("large-v3", "2.87GB"),
         }
 
 # Open Webpage Functions
