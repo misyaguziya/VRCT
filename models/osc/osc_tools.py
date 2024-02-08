@@ -1,4 +1,5 @@
 from time import sleep
+import threading
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
@@ -47,28 +48,40 @@ def sendChangeVoice(ip_address="127.0.0.1", port=9000):
     sendInputVoice(flag=0, ip_address=ip_address, port=port)
     sleep(0.05)
 
-# def receiveOscParameters(target, filter="/*", ip_address="127.0.0.1", port=9001):
-#     _dispatcher = dispatcher.Dispatcher()
-#     _dispatcher.map(filter, target)
-#     server = osc_server.ThreadingOSCUDPServer((ip_address, port), _dispatcher)
-    return server
 
-def receiveOscParameters(target, filter="/avatar/parameters/*", ip_address="127.0.0.1", title="VRCT"):
+def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="VRCT"):
     osc_port = get_open_udp_port()
     http_port = get_open_tcp_port()
     osc_dispatcher = dispatcher.Dispatcher()
-    osc_dispatcher.map(filter, target)
+    for filter, target in dict_filter_and_target.items():
+        osc_dispatcher.map(filter, target)
+
     osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
+    threading.Thread(target=osc_udp_server.serve_forever, daemon = True).start()
+
     osc_client = OSCQueryService(title, http_port, osc_port)
-    osc_client.advertise_endpoint(filter)
-    return osc_udp_server, osc_client
+    for filter, target in dict_filter_and_target.items():
+        osc_client.advertise_endpoint(filter)
 
 if __name__ == "__main__":
-    import threading
+    osc_parameter_prefix = "/avatar/parameters/"
+    osc_avatar_change_path = "/avatar/change"
+    param_MuteSelf = "MuteSelf"
+    param_Voice = "Voice"
 
-    def print_handler(address, *args):
-        print(f"{address}: {args}")
+    def print_handler_all(address, *args):
+        print(f"all {address}: {args}")
 
-    server, client = receiveOscParameters(print_handler, filter="/input/*")
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.start()
+    def print_handler_muteself(address, *args):
+        print(f"muteself {address}: {args}")
+
+    def print_handler_voice(address, *args):
+        print(f"voice {address}: {args}")
+
+    dict_filter_and_target = {
+        # osc_parameter_prefix + "*": print_handler_all,
+        osc_parameter_prefix + param_MuteSelf: print_handler_muteself,
+        osc_parameter_prefix + param_Voice: print_handler_voice,
+    }
+
+    receiveOscParameters(dict_filter_and_target)
