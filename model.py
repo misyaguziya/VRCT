@@ -18,6 +18,7 @@ from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
@@ -321,19 +322,20 @@ class Model:
             return
 
         mic_audio_queue = Queue()
+        mic_energy_queue = Queue()
         device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.mic_audio_recorder = SelectedMicRecorder(
+        self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue)
+        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, mic_energy_queue)
         mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
@@ -350,15 +352,29 @@ class Model:
             except Exception:
                 pass
 
+        def sendMicEnergy():
+            if mic_energy_queue.empty() is False:
+                energy = mic_energy_queue.get()
+                print("mic energy:", energy)
+                try:
+                    fnc(energy)
+                except Exception:
+                    pass
+            sleep(0.01)
+
         self.mic_print_transcript = threadFnc(sendMicTranscript)
         self.mic_print_transcript.daemon = True
         self.mic_print_transcript.start()
+
+        self.mic_get_energy = threadFnc(sendMicEnergy)
+        self.mic_get_energy.daemon = True
+        self.mic_get_energy.start()
 
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
             self.mic_print_transcript = None
-        if isinstance(self.mic_audio_recorder, SelectedMicRecorder):
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
 
