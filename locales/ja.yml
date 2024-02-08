@@ -79,6 +79,7 @@ config_window:
     transcription: 音声認識
     transcription_mic: マイク
     transcription_speaker: スピーカー
+    transcription_internal_model: 音声認識モデル
     others: その他
     advanced_settings: 高度な設定
 
@@ -183,6 +184,16 @@ config_window:
     label: ログとして表示するまでに保持する単語数
     desc: 文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。
     error_message: 0以上の数値を設定できます。
+
+  use_whisper_feature:
+    label: 音声認識にWhisperモデルを使用する
+    desc: 一部の言語では、音声認識の精度が向上するかもしれません。音声認識使用中、CPUの使用率が上がるので、お使いのPCスペックと相談してこの機能を使用してください。
+
+  whisper_weight_type:
+    label: Whisperモデルのタイプ
+    desc: 基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。
+    model_template: "%{model_name} モデル (%{capacity})"
+    recommended_model_template: "%{model_name} モデル (%{capacity}) (推奨)"
 
 
   auto_clear_the_message_box:
