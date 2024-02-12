@@ -18,7 +18,7 @@ from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
-from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
@@ -500,7 +500,7 @@ class Model:
             sleep(0.01)
 
         speaker_energy_queue = Queue()
-        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
+        self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
         self.speaker_energy_plot_progressbar.daemon = True
@@ -510,7 +510,7 @@ class Model:
         if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
-        if isinstance(self.speaker_energy_recorder, SelectedSpeakeEnergyRecorder):
+        if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 

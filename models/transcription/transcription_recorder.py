@@ -78,7 +78,7 @@ class SelectedMicEnergyRecorder(BaseEnergyRecorder):
         super().__init__(source=source)
         # self.adjustForNoise()
 
-class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
+class SelectedSpeakerEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
 
         source = Microphone(speaker=True,
