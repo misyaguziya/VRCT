@@ -1,5 +1,5 @@
 from typing import Union
-from os import path as os_path
+from os import path as os_path, rename as os_rename
 from PIL.Image import open as Image_open
 
 def getImageFile(file_name):
@@ -50,3 +50,9 @@ def isUniqueStrings(unique_strings:Union[str, list], input_string:str, require=F
     else:
         # If require is False, check if unique strings are used exactly once
         return all(count == 1 for count in counts)
+
+# path先のweightフォルダがある場合にはそのフォルダ名をweightsに変更する
+def renameWeightFolder(path):
+    weight_path = os_path.join(path, "weight")
+    if os_path.exists(weight_path):
+        os_rename(weight_path, os_path.join(path, "weights"))
