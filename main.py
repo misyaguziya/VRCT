@@ -8,6 +8,10 @@ if __name__ == "__main__":
         splash.showSplash()
 
         from config import config
+        # version 2.2.0からweightフォルダをweightsに変更する
+        from utils import renameWeightFolder
+        renameWeightFolder(config.PATH_LOCAL)
+
         from models.translation.translation_utils import downloadCTranslate2Weight
         if config.USE_TRANSLATION_FEATURE is True:
             downloadCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE, splash.updateDownloadProgress)
