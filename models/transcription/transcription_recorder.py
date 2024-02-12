@@ -1,6 +1,7 @@
 from speech_recognition import Recognizer, Microphone
 from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
+from queue import Queue
 
 class BaseRecorder:
     def __init__(self, source, energy_threshold, dynamic_energy_threshold, record_timeout):
@@ -78,7 +79,7 @@ class SelectedMicEnergyRecorder(BaseEnergyRecorder):
         super().__init__(source=source)
         # self.adjustForNoise()
 
-class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
+class SelectedSpeakerEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
 
         source = Microphone(speaker=True,
@@ -113,7 +114,10 @@ class BaseEnergyAndAudioRecorder:
         def energyRecordCallback(energy):
             energy_queue.put(energy)
 
-        self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout, callback_energy=energyRecordCallback)
+        if isinstance(energy_queue, Queue):
+            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout, callback_energy=energyRecordCallback)
+        else:
+            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout)
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
     def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
