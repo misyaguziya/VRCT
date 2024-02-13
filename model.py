@@ -66,8 +66,6 @@ class Model:
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
-        if config.USE_TRANSLATION_FEATURE is True:
-            self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
         self.keyword_processor = KeywordProcessor()
 
     def checkCTranslatorCTranslate2ModelWeight(self):
@@ -75,6 +73,9 @@ class Model:
 
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
+
+    def clearTranslatorCTranslate2Model(self):
+        self.translator.clearCTranslate2Model()
 
     def checkTranscriptionWhisperModelWeight(self):
         return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)

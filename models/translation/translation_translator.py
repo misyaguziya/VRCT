@@ -1,3 +1,4 @@
+import gc
 import os
 from deepl import Translator as deepl_Translator
 from translators import translate_text as other_web_Translator
@@ -43,6 +44,13 @@ class Translator():
             print("Error: changeCTranslate2Model()", e)
             tokenizer_path = os.path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+
+    def clearCTranslate2Model(self):
+        del self.ctranslate2_translator
+        del self.ctranslate2_tokenizer
+        gc.collect()
+        self.ctranslate2_translator = None
+        self.ctranslate2_tokenizer = None
 
     @staticmethod
     def getLanguageCode(translator_name, target_country, source_language, target_language):
