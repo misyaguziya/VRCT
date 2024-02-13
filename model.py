@@ -1,3 +1,4 @@
+import gc
 import tempfile
 from zipfile import ZipFile
 from subprocess import Popen
@@ -336,21 +337,28 @@ class Model:
         )
         # self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, mic_energy_queue)
         self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, None)
-        mic_transcriber = AudioTranscriber(
+        self.mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
-            message = mic_transcriber.getTranscript()
+            self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+            message = self.mic_transcriber.getTranscript()
             try:
                 fnc(message)
             except Exception:
                 pass
+
+        def endMicTranscript():
+            mic_audio_queue.queue.clear()
+            # mic_energy_queue.queue.clear()
+            del self.mic_transcriber
+            gc.collect()
 
         # def sendMicEnergy():
         #     if mic_energy_queue.empty() is False:
@@ -362,7 +370,7 @@ class Model:
         #             pass
         #     sleep(0.01)
 
-        self.mic_print_transcript = threadFnc(sendMicTranscript)
+        self.mic_print_transcript = threadFnc(sendMicTranscript, end_fnc=endMicTranscript)
         self.mic_print_transcript.daemon = True
         self.mic_print_transcript.start()
 
@@ -438,21 +446,28 @@ class Model:
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
         self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue ,None)
-        speaker_transcriber = AudioTranscriber(
+        self.speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
-            message = speaker_transcriber.getTranscript()
+            self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            message = self.speaker_transcriber.getTranscript()
             try:
                 fnc(message)
             except Exception:
                 pass
+
+        def endSpeakerTranscript():
+            speaker_audio_queue.queue.clear()
+            # speaker_energy_queue.queue.clear()
+            del self.speaker_transcriber
+            gc.collect()
 
         # def sendSpeakerEnergy():
         #     if speaker_energy_queue.empty() is False:
@@ -464,7 +479,7 @@ class Model:
         #             pass
         #     sleep(0.01)
 
-        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
+        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript, end_fnc=endSpeakerTranscript)
         self.speaker_print_transcript.daemon = True
         self.speaker_print_transcript.start()
 
