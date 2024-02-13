@@ -377,8 +377,10 @@ def callbackSelectedTranslationEngine(selected_translation_engine):
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
     if config.ENABLE_TRANSLATION is True:
+        model.changeTranslatorCTranslate2Model()
         view.printToTextbox_enableTranslation()
     else:
+        model.clearTranslatorCTranslate2Model()
         view.printToTextbox_disableTranslation()
 
 def callbackToggleTranscriptionSend(is_turned_on):
