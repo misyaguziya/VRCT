@@ -341,6 +341,7 @@ class Model:
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
@@ -443,6 +444,7 @@ class Model:
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
