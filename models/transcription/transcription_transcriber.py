@@ -14,13 +14,15 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, phrase_timeout, max_phrases, root=None, whisper_weight_type=None, ):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases, transcription_engine, root=None, whisper_weight_type=None):
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
         self.transcript_data = []
         self.transcript_changed_event = Event()
         self.audio_recognizer = Recognizer()
+        self.transcription_engine = "Google"
+        self.whisper_model = None
         self.audio_sources = {
                 "sample_rate": source.SAMPLE_RATE,
                 "sample_width": source.SAMPLE_WIDTH,
@@ -30,10 +32,10 @@ class AudioTranscriber:
                 "new_phrase": True,
                 "process_data_func": self.processSpeakerData if speaker else self.processSpeakerData
         }
-        if whisper_weight_type is not None and root is not None and checkWhisperWeight(root, whisper_weight_type) is True:
+
+        if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
             self.whisper_model = getWhisperModel(root, whisper_weight_type)
-        else:
-            self.whisper_model = None
+            self.transcription_engine = "Whisper"
 
     def transcribeAudioQueue(self, audio_queue, language, country, transcription_engine):
         audio, time_spoken = audio_queue.get()
