@@ -37,21 +37,16 @@ class AudioTranscriber:
             self.whisper_model = getWhisperModel(root, whisper_weight_type)
             self.transcription_engine = "Whisper"
 
-    def transcribeAudioQueue(self, audio_queue, language, country, transcription_engine):
+    def transcribeAudioQueue(self, audio_queue, language, country):
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
         text = ''
         try:
-            # Whisperが使用できない場合はGoogle Speech-to-Textを使用する
-            if transcription_engine == "Whisper":
-                if self.whisper_model is None:
-                    transcription_engine = "Google"
-
             audio_data = self.audio_sources["process_data_func"]()
-            match transcription_engine:
+            match self.transcription_engine:
                 case "Google":
-                    text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country][transcription_engine])
+                    text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country][self.transcription_engine])
                 case "Whisper":
                     audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
                     if isinstance(audio_data, torch.Tensor):
@@ -62,7 +57,7 @@ class AudioTranscriber:
                         temperature=0.0,
                         log_prob_threshold=-0.8,
                         no_speech_threshold=0.6,
-                        language=transcription_lang[language][country][transcription_engine],
+                        language=transcription_lang[language][country][self.transcription_engine],
                         word_timestamps=False,
                         without_timestamps=True,
                         task="transcribe",

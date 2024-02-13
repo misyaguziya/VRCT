@@ -346,7 +346,7 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
+            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
             message = mic_transcriber.getTranscript()
             try:
                 fnc(message)
@@ -449,7 +449,7 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY, config.SELECTED_TRANSCRIPTION_ENGINE)
+            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
             message = speaker_transcriber.getTranscript()
             try:
                 fnc(message)
