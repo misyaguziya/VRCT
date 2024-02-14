@@ -82,7 +82,7 @@ config_window:
     transcription_internal_model: Transcription Model
     others: Others
     others_send_message_formats: Message Formats (Send)
-    others_received_message_formats: Message Formats (Received)
+    others_received_message_formats: Message Formats (XSOverlay & Speaker2Chatbox)
     others_speaker2chatbox: Speaker2Chatbox
     advanced_settings: Advanced Settings
 
@@ -227,25 +227,26 @@ config_window:
     label: Message Format
     desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message."
     example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
-    error_message: "The characters '[message]' cannot be used."
+    error_message: "Cannot use the term '[message]'."
 
   send_message_format_with_t:
-    label: Message Format (With translation)
+    label: Message Format (with Translation)
     desc: "You can change the decoration of the message you want to send.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message."
     example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
-    error_message: "The characters '[message]' and '[translation]' cannot be used."
+    error_message: "Cannot use the terms '[message]' and '[translation]'."
 
   received_message_format:
-    label: Message Format
-    desc: "You can change the decoration of the received message you want to send.\n[message] will be replaced with the message.\nIt will be used in Notification XSOverlay too."
-    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
-    error_message: "The characters '[message]' cannot be used."
+    label: Format of Received Messages
+    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message. \n※It will be used in Speaker2Chatbox too"
+    example_text: This is an example sentence. Actual display may vary, including font and line breaks.
+    error_message: "Cannot use the term '[message]'."
 
   received_message_format_with_t:
-    label: Message Format (With translation)
-    desc: It will be used in Notification XSOverlay too.
-    example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
-    error_message: "The characters '[message]' and '[translation]' cannot be used."
+    label: Format of Received Messages (with Translation)
+    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\n※It will be used in Speaker2Chatbox too"
+    example_text: This is an example sentence. Actual display may vary, including font and line breaks.
+    error_message: "Cannot use the terms '[message]' and '[translation]'."
+
 
   # Note: Speaker2Chatbox localization is fine only in English. Do not translate it into other languages.
   # Speaker2Chatbox

@@ -905,7 +905,7 @@ class Config:
             "x_pos": "0",
             "y_pos": "0",
             "width": "870",
-            "height": "640",
+            "height": "654",
         }
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
