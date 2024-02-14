@@ -308,7 +308,7 @@ class Config:
     def SELECTED_TRANSCRIPTION_ENGINE(self, value):
         if isinstance(value, str):
             self._SELECTED_TRANSCRIPTION_ENGINE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
