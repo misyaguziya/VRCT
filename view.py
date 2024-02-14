@@ -103,6 +103,7 @@ class View():
             CALLBACK_UPDATE_SOFTWARE=None,
             CALLBACK_OPEN_FILEPATH_LOGS=None,
             CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
+            CALLBACK_OPEN_WEBPAGE_DEEPL_AUTH_KEY=self.openWebPage_DeepL_Auth_Key,
 
             CALLBACK_DELETE_MAIN_WINDOW=self.quitVRCT,
             CALLBACK_QUIT_VRCT=None,
@@ -295,6 +296,7 @@ class View():
             ),
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL_API"]),
+            VAR_OPEN_DEEPL_WEB_PAGE=StringVar(value=i18n.t( "config_window.deepl_auth_key.open_auth_key_webpage")),
 
 
             # Transcription Tab (Mic)
@@ -977,6 +979,10 @@ class View():
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
+
+    def openWebPage_DeepL_Auth_Key(self):
+        self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
+
 
 # Widget Control
     # Common

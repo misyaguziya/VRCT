@@ -67,6 +67,10 @@ class Config:
         return self._DOCUMENTS_URL
 
     @property
+    def DEEPL_AUTH_KEY_PAGE_URL(self):
+        return self._DEEPL_AUTH_KEY_PAGE_URL
+
+    @property
     def TRANSPARENCY_RANGE(self):
         return self._TRANSPARENCY_RANGE
 
@@ -819,6 +823,7 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
+        self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
         self._TRANSPARENCY_RANGE = (50, 100)
         self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
         self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
