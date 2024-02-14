@@ -5,7 +5,7 @@ from typing import Union
 from customtkinter import CTkFont, CTkFrame, CTkLabel, CTkEntry, CTkSlider, CTkSwitch, CTkCheckBox, CTkProgressBar, CTkImage, CTkRadioButton
 from CTkToolTip import *
 
-from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressFunction
+from vrct_gui.ui_utils import createButtonWithImage, getLatestWidth, createOptionMenuBox, getLatestHeight, bindButtonFunctionAndColor, bindEnterAndLeaveFunction, bindButtonReleaseFunction, bindButtonPressFunction, createLabelButton
 from vrct_gui import vrct_gui
 from utils import isEven, callFunctionIfCallable
 
@@ -614,6 +614,75 @@ class _SettingBoxGenerator():
 
         return setting_box_frame
 
+
+    def createSettingBoxEntry_AuthKey(self,
+            for_var_label_text, for_var_desc_text,
+            entry_attr_name,
+            entry_width,
+            entry_textvariable,
+            entry_bind__Any_KeyRelease,
+            entry_bind__FocusOut=None,
+            open_authkey_page_command=None,
+            open_authkey_text_variable=None,
+            image_file=None,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(entry_attr_name, for_var_label_text, for_var_desc_text)
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(0, weight=1)
+
+
+        def adjusted_command__for_entry_bind__Any_KeyRelease(e):
+            entry_bind__Any_KeyRelease(e.widget.get())
+
+        entry_widget = CTkEntry(
+            all_wrapper,
+            text_color=self.settings.ctm.SB__ENTRY_TEXT_COLOR,
+            fg_color=self.settings.ctm.SB__ENTRY_BG_COLOR,
+            border_color=self.settings.ctm.SB__ENTRY_BORDER_COLOR,
+            width=entry_width,
+            height=self.settings.uism.SB__PROGRESSBAR_X_SLIDER__ENTRY_HEIGHT,
+            textvariable=entry_textvariable,
+            font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.SB__ENTRY_FONT_SIZE, weight="normal"),
+        )
+        entry_widget.bind("<Any-KeyRelease>", adjusted_command__for_entry_bind__Any_KeyRelease)
+        setattr(self.config_window, entry_attr_name, entry_widget)
+
+
+        entry_widget.grid(row=0, column=SETTING_BOX_COLUMN, sticky="e")
+
+        if entry_bind__FocusOut is not None:
+            entry_widget.bind("<FocusOut>", entry_bind__FocusOut, "+")
+
+
+
+        (open_page_button, label_button_label_widget, label_button_img_widget) = createLabelButton(
+            parent_widget=all_wrapper,
+            label_button_bg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            label_button_hovered_bg_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            label_button_clicked_bg_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
+            label_button_ipadx=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IPADX,
+            label_button_ipady=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IPADY,
+            variable=open_authkey_text_variable,
+            font_family=self.settings.FONT_FAMILY,
+            font_size=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_LABEL_FONT_SIZE,
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+            label_button_clicked_command=open_authkey_page_command,
+
+            label_button_position="center",
+
+            image_file=image_file,
+            image_size=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IMG_SIZE,
+            label_button_padx_between_img=self.settings.uism.SB__AUTHKEY_WEBPAGE_PADX_BETWEEN_LABEL_AND_ICON,
+        )
+        open_page_button.grid(row=1, column=SETTING_BOX_COLUMN, pady=(self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_TOP_PADY,0))
+
+
+        return setting_box_frame
 
 
 

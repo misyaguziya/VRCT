@@ -324,6 +324,7 @@ def _lightTheme(base_color):
             REDO_ICON = getImageFileFromUiUtils("redo_icon_black.png"),
             SWAP_ICON = getImageFileFromUiUtils("swap_icon_black.png"),
             FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon_black.png"),
+            LINK_ICON = getImageFileFromUiUtils("link_icon_black.png"),
         ),
     )
 
