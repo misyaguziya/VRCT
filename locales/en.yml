@@ -195,7 +195,7 @@ config_window:
 
   whisper_weight_type:
     label: Select Whisper Model
-    desc: Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.
+    desc: "Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.\n※Larger models, especially those exceeding medium size, can be challenging to run even depending on the CPU's performance."
     model_template: "%{model_name} model (%{capacity})"
     recommended_model_template: "%{model_name} model (%{capacity}) (Recommended)"
 
@@ -238,13 +238,13 @@ config_window:
 
   received_message_format:
     label: Format of Received Messages
-    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message. \n※It will be used in Speaker2Chatbox too"
+    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message. \n※It will be used in Speaker2Chatbox too."
     example_text: This is an example sentence. Actual display may vary, including font and line breaks.
     error_message: "Cannot use the term '[message]'."
 
   received_message_format_with_t:
     label: Format of Received Messages (with Translation)
-    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\n※It will be used in Speaker2Chatbox too"
+    desc: "Used for XSOverlay notification receiving feature.\n[message] will be replaced with the message, and [translation] will be replaced with the translated message.\n※It will be used in Speaker2Chatbox too."
     example_text: This is an example sentence. Actual display may vary, including font and line breaks.
     error_message: "Cannot use the terms '[message]' and '[translation]'."
 
