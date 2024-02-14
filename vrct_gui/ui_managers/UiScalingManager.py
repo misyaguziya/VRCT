@@ -349,6 +349,13 @@ class UiScalingManager():
 
         self.config_window.SB__MESSAGE_FORMAT__ENTRIES_BOTTOM_PADY = (0, self._calculateUiSize(14))
 
+        self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_IPADX = self._calculateUiSize(12)
+        self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_IPADY = self._calculateUiSize(6)
+        self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_LABEL_FONT_SIZE = self._calculateUiSize(12)
+        self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_IMG_SIZE = self.dupTuple(self._calculateUiSize(12))
+        self.config_window.SB__AUTHKEY_WEBPAGE_PADX_BETWEEN_LABEL_AND_ICON = self._calculateUiSize(10)
+        self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_TOP_PADY = self._calculateUiSize(10)
+
 
         self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)
         self.config_window.SB__BUTTON_ICON_SIZE = self._calculateUiSize(24)

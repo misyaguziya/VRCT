@@ -168,7 +168,27 @@ def createButtonWithImage(parent_widget, button_image_size, button_ipadxy, butto
     return button_wrapper
 
 
-def createLabelButton(parent_widget, label_button_bg_color, label_button_hovered_bg_color, label_button_clicked_bg_color, label_button_ipadx, label_button_ipady, variable, font_family, font_size, text_color, label_button_clicked_command, label_button_position=None, label_button_padx_between_img=0, label_button_min_height=None, label_button_min_width=None):
+def createLabelButton(
+        parent_widget,
+        label_button_bg_color,
+        label_button_hovered_bg_color,
+        label_button_clicked_bg_color,
+        label_button_ipadx,
+        label_button_ipady,
+        variable,
+        font_family,
+        font_size,
+        text_color,
+        label_button_clicked_command,
+        label_button_position=None,
+        label_button_padx_between_img=0,
+        image_file=None,
+        image_size=None,
+        image_widget_attr_name=None,
+        label_button_min_height=None,
+        label_button_min_width=None,
+        setattr_widget=None,
+    ):
 
     label_button_box = CTkFrame(parent_widget, corner_radius=6, fg_color=label_button_bg_color, cursor="hand2")
 
@@ -181,7 +201,7 @@ def createLabelButton(parent_widget, label_button_bg_color, label_button_hovered
         label_button_box.grid_columnconfigure(0, minsize=label_button_min_width)
 
     label_button_label_wrapper = CTkFrame(label_button_box, corner_radius=0, fg_color=label_button_bg_color)
-    label_button_label_wrapper.grid(row=0, column=0, padx=label_button_ipadx, pady=label_button_ipady, sticky="ew")
+    label_button_label_wrapper.grid(row=0, column=0, padx=label_button_ipadx, pady=label_button_ipady)
 
     LABEL_COLUMN=0
     if label_button_position == "center":
@@ -198,25 +218,46 @@ def createLabelButton(parent_widget, label_button_bg_color, label_button_hovered
     label_button_label_widget.grid(row=0, column=LABEL_COLUMN, padx=(0, label_button_padx_between_img))
 
 
-    bindEnterAndLeaveColor([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_hovered_bg_color, label_button_bg_color)
-    bindButtonPressColor([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_bg_color, label_button_hovered_bg_color)
+    register_widgets = [label_button_label_wrapper, label_button_box, label_button_label_widget]
+    if image_file is not None:
+        label_button_label_wrapper.grid_columnconfigure((0,3), weight=1)
+        label_button_img_widget = CTkLabel(
+            label_button_label_wrapper,
+            text=None,
+            corner_radius=0,
+            height=0,
+            image=CTkImage(image_file, size=image_size)
+        )
+
+        if image_widget_attr_name is not None:
+            setattr(setattr_widget, image_widget_attr_name, label_button_img_widget)
+
+        label_button_img_widget.grid(row=0, column=LABEL_COLUMN+1)
+        register_widgets.append(label_button_img_widget)
 
 
+    bindEnterAndLeaveColor(register_widgets, label_button_hovered_bg_color, label_button_bg_color)
+    bindButtonPressColor(register_widgets, label_button_clicked_bg_color, label_button_hovered_bg_color)
 
-    bindButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_command)
+
 
     def bindEventFromWidgets():
-        bindButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget], label_button_clicked_command)
-    bindEventFromWidgets()
+        bindButtonReleaseFunction(register_widgets, label_button_clicked_command)
 
     def unbindEventFromWidgets():
-        unbindEnterLEaveButtonPressButtonReleaseFunction([label_button_label_wrapper, label_button_box, label_button_label_widget])
+        unbindEnterLEaveButtonPressButtonReleaseFunction(register_widgets)
+
+    bindEventFromWidgets()
 
     label_button_box.unbindFunction = unbindEventFromWidgets
     label_button_box.bindFunction = bindEventFromWidgets
 
+    if image_file is not None:
+        return (label_button_box, label_button_label_widget, label_button_img_widget)
+    else:
+        return (label_button_box, label_button_label_widget)
 
-    return (label_button_box, label_button_label_widget)
+
 
 
 
