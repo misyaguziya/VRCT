@@ -330,6 +330,7 @@ def _darkTheme(base_color):
             REDO_ICON = getImageFileFromUiUtils("redo_icon_white.png"),
             SWAP_ICON = getImageFileFromUiUtils("swap_icon_white.png"),
             FOLDER_OPEN_ICON = getImageFileFromUiUtils("folder_open_icon_white.png"),
+            LINK_ICON = getImageFileFromUiUtils("link_icon_white.png"),
         ),
     )
 
