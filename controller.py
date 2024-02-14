@@ -808,6 +808,7 @@ def callbackSetUserWhisperFeature(value):
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     else:
         view.closeWhisperWeightTypeWidget()
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     view.showRestartButtonIfRequired()
 
