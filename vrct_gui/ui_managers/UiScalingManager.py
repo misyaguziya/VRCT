@@ -11,7 +11,7 @@ class UiScalingManager():
         self.config_window = SimpleNamespace()
         self.selectable_language_window = SimpleNamespace()
         self.main_window_cover = SimpleNamespace()
-        self.error_message_window = SimpleNamespace()
+        self.notification_message_window = SimpleNamespace()
         self.confirmation_modal = SimpleNamespace()
         self.dropdown_menu_window = SimpleNamespace()
 

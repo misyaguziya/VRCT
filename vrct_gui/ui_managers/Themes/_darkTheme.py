@@ -294,6 +294,7 @@ def _darkTheme(base_color):
             # Error Message Window for Config Window
             # The color code [#bb4448] is a mixture of [#a9555c] and [#cc3333] (for a redder shade).
             SB__ERROR_MESSAGE_BG_COLOR = "#bb4448",
+            SB__SUCCESS_MESSAGE_BG_COLOR = "#368777",
             SB__ERROR_MESSAGE_TEXT_COLOR = "#fff",
         ),
 

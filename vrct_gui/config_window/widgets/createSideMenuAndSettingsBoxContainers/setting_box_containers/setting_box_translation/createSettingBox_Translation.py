@@ -47,6 +47,7 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
         entry_attr_name="sb__entry_deepl_auth_key",
         entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
         entry_bind__Any_KeyRelease=lambda value: deeplAuthKeyCallback(value),
+        entry_bind__FocusOut=view_variable.CALLBACK_FOCUS_OUT_DEEPL_AUTH_KEY,
         entry_textvariable=view_variable.VAR_DEEPL_AUTH_KEY,
         open_authkey_page_command=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_DEEPL_AUTH_KEY),
         open_authkey_text_variable=view_variable.VAR_OPEN_DEEPL_WEB_PAGE,
