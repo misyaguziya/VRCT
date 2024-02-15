@@ -964,9 +964,8 @@ def createMainWindow(splash):
     model.addKeywords()
 
     # check Software Updated
-    if config.ENABLE_SPEAKER2CHATBOX is False:
-        if model.checkSoftwareUpdated() is True:
-            view.showUpdateAvailableButton()
+    if model.checkSoftwareUpdated() is True:
+        view.showUpdateAvailableButton()
 
     # init logger
     if config.ENABLE_LOGGER is True:
