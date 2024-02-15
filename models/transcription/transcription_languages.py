@@ -1,177 +1,438 @@
 transcription_lang = {
     "Afrikaans":{
-        "South Africa":"af-ZA",
+        "South Africa":{
+            "Google": "af-ZA",
+            "Whisper": "af",
+        },
     },
     "Arabic":{
-        "Algeria":"ar-DZ",
-        "Bahrain":"ar-BH",
-        "Egypt":"ar-EG",
-        "Israel":"ar-IL",
-        "Iraq":"ar-IQ",
-        "Jordan":"ar-JO",
-        "Kuwait":"ar-KW",
-        "Lebanon":"ar-LB",
-        "Morocco":"ar-MA",
-        "Oman":"ar-OM",
-        "State of Palestine":"ar-PS",
-        "Qatar":"ar-QA",
-        "Saudi Arabia":"ar-SA",
-        "Tunisia":"ar-TN",
-        "United Arab Emirates":"ar-AE",
+        "Algeria":{
+            "Google": "ar-DZ",
+            "Whisper": "ar",
+        },
+        "Bahrain":{
+            "Google": "ar-BH",
+            "Whisper": "ar",
+        },
+        "Egypt":{
+            "Google": "ar-EG",
+            "Whisper": "ar",
+        },
+        "Israel":{
+            "Google": "ar-IL",
+            "Whisper": "ar",
+        },
+        "Iraq":{
+            "Google": "ar-IQ",
+            "Whisper": "ar",
+        },
+        "Jordan":{
+            "Google": "ar-JO",
+            "Whisper": "ar",
+        },
+        "Kuwait":{
+            "Google": "ar-KW",
+            "Whisper": "ar",
+        },
+        "Lebanon":{
+            "Google": "ar-LB",
+            "Whisper": "ar",
+        },
+        "Morocco":{
+            "Google": "ar-MA",
+            "Whisper": "ar",
+        },
+        "Oman":{
+            "Google": "ar-OM",
+            "Whisper": "ar",
+        },
+        "State of Palestine":{
+            "Google": "ar-PS",
+            "Whisper": "ar",
+        },
+        "Qatar":{
+            "Google": "ar-QA",
+            "Whisper": "ar",
+        },
+        "Saudi Arabia":{
+            "Google": "ar-SA",
+            "Whisper": "ar",
+        },
+        "Tunisia":{
+            "Google": "ar-TN",
+            "Whisper": "ar",
+        },
+        "United Arab Emirates":{
+            "Google": "ar-AE",
+            "Whisper": "ar",
+        },
     },
     "Basque":{
-        "Spain":"eu-ES",
+        "Spain":{
+            "Google": "eu-ES",
+            "Whisper": "eu",
+        },
     },
     "Bulgarian":{
-        "Bulgaria":"bg-BG",
+        "Bulgaria":{
+            "Google": "bg-BG",
+            "Whisper": "bg",
+        },
     },
     "Catalan":{
-        "Spain":"ca-ES",
+        "Spain":{
+            "Google": "ca-ES",
+            "Whisper": "ca",
+        },
     },
     "Chinese":{
-        "Mandarin (Simplified, China)":"cmn-Hans-CN",
-        "Mandarin (Simplified, Hong Kong)":"cmn-Hans-HK",
-        "Mandarin (Traditional, Taiwan)":"cmn-Hant-TW",
-        "Cantonese (Traditional Hong Kong)":"yue-Hant-HK",
+        "Mandarin (Simplified, China)":{
+            "Google": "cmn-Hans-CN",
+            "Whisper": "zh",
+        },
+        "Mandarin (Simplified, Hong Kong)":{
+            "Google": "cmn-Hans-HK",
+            "Whisper": "zh",
+        },
+        "Mandarin (Traditional, Taiwan)":{
+            "Google": "cmn-Hant-TW",
+            "Whisper": "zh",
+        },
+        "Cantonese (Traditional Hong Kong)":{
+            "Google": "yue-Hant-HK",
+            "Whisper": "yue",
+        },
     },
     "Croatian":{
-        "Croatia":"hr-HR",
+        "Croatia":{
+            "Google": "hr-HR",
+            "Whisper": "hr",
+        },
     },
     "Czech":{
-        "Czech Republic":"cs-CZ",
+        "Czech Republic":{
+            "Google": "cs-CZ",
+            "Whisper": "cs",
+        },
     },
     "Danish":{
-        "Denmark":"da-DK",
+        "Denmark":{
+            "Google": "da-DK",
+            "Whisper": "da",
+        },
     },
     "Dutch":{
-        "Netherlands":"nl-NL",
+        "Netherlands":{
+            "Google": "nl-NL",
+            "Whisper": "nl",
+        },
     },
     "English": {
-        "United States":"en-US",
-        "United Kingdom":"en-GB",
-        "Australia":"en-AU",
-        "Canada":"en-CA",
-        "India":"en-IN",
-        "Ireland":"en-IE",
-        "New Zealand":"en-NZ",
-        "Philippines":"en-PH",
-        "South Africa":"en-ZA",
+        "United States":{
+            "Google": "en-US",
+            "Whisper": "en",
+        },
+        "United Kingdom":{
+            "Google": "en-GB",
+            "Whisper": "en",
+        },
+        "Australia":{
+            "Google": "en-AU",
+            "Whisper": "en",
+        },
+        "Canada":{
+            "Google": "en-CA",
+            "Whisper": "en",
+        },
+        "India":{
+            "Google": "en-IN",
+            "Whisper": "en",
+        },
+        "Ireland":{
+            "Google": "en-IE",
+            "Whisper": "en",
+        },
+        "New Zealand":{
+            "Google": "en-NZ",
+            "Whisper": "en",
+        },
+        "Philippines":{
+            "Google": "en-PH",
+            "Whisper": "en",
+        },
+        "South Africa":{
+            "Google": "en-ZA",
+            "Whisper": "en",
+        },
     },
     "Filipino":{
-        "Philippines":"fil-PH",
+        "Philippines":{
+            "Google": "fil-PH",
+            "Whisper": "tl",
+        },
     },
     "Finnish":{
-        "Finland":"fi-FI",
+        "Finland":{
+            "Google": "fi-FI",
+            "Whisper": "fi",
+        },
     },
     "French":{
-        "France":"fr-FR",
+        "France":{
+            "Google": "fr-FR",
+            "Whisper": "fr",
+        },
     },
     "Galician":{
-        "Spain":"gl-ES",
+        "Spain":{
+            "Google": "gl-ES",
+            "Whisper": "gl",
+        },
     },
     "German":{
-        "Germany":"de-DE",
+        "Germany":{
+            "Google": "de-DE",
+            "Whisper": "de",
+        },
     },
     "Greek":{
-        "Greece":"el-GR",
+        "Greece":{
+            "Google": "el-GR",
+            "Whisper": "el",
+        },
     },
     "Hebrew":{
-        "Israel":"he-IL",
+        "Israel":{
+            "Google": "he-IL",
+            "Whisper": "he",
+        },
     },
     "Hindi": {
-        "India":"hi-IN",
+        "India":{
+            "Google": "hi-IN",
+            "Whisper": "hi",
+        },
     },
     "Hungarian":{
-        "Hungary":"hu-HU",
+        "Hungary":{
+            "Google": "hu-HU",
+            "Whisper": "hu",
+        },
     },
     "Indonesian":{
-        "Indonesia":"id-ID",
+        "Indonesia":{
+            "Google": "id-ID",
+            "Whisper": "id",
+        },
     },
     "Icelandic":{
-        "Iceland":"is-IS",
+        "Iceland":{
+            "Google": "is-IS",
+            "Whisper": "is",
+        },
     },
     "Italian":{
-        "Italy":"it-IT",
-        "Switzerland":"it-CH",
+        "Italy":{
+            "Google": "it-IT",
+            "Whisper": "it",
+        },
+        "Switzerland":{
+            "Google": "it-CH",
+            "Whisper": "it",
+        },
     },
     "Japanese":{
-        "Japan":"ja-JP",
+        "Japan":{
+            "Google": "ja-JP",
+            "Whisper": "ja",
+        },
     },
     "Korean":{
-        "South Korea":"ko-KR",
+        "South Korea":{
+            "Google": "ko-KR",
+            "Whisper": "ko",
+        },
     },
     "Lithuanian":{
-        "Lithuania":"lt-LT",
+        "Lithuania":{
+            "Google": "lt-LT",
+            "Whisper": "lt",
+        },
     },
     "Malay":{
-        "Malaysia":"ms-MY",
+        "Malaysia":{
+            "Google": "ms-MY",
+            "Whisper": "ms",
+        },
     },
     "Norwegian":{
-        "Norway":"nb-NO",
+        "Norway":{
+            "Google": "nb-NO",
+            "Whisper": "no",
+        },
     },
     "Persian":{
-        "Iran":"fa-IR",
+        "Iran":{
+            "Google": "fa-IR",
+            "Whisper": "fa",
+        },
     },
     "Polish":{
-        "Poland":"pl-PL",
+        "Poland":{
+            "Google": "pl-PL",
+            "Whisper": "pl",
+        },
     },
     "Portuguese":{
-        "Brazil":"pt-BR",
-        "Portugal":"pt-PT",
+        "Brazil":{
+            "Google": "pt-BR",
+            "Whisper": "pt",
+        },
+        "Portugal":{
+            "Google": "pt-PT",
+            "Whisper": "pt",
+        },
     },
     "Romanian":{
-        "Romania":"ro-RO",
+        "Romania":{
+            "Google": "ro-RO",
+            "Whisper": "ro",
+        },
     },
     "Russian":{
-        "Russia":"ru-RU",
+        "Russia":{
+            "Google": "ru-RU",
+            "Whisper": "ru",
+        },
     },
     "Serbian":{
-        "Serbia":"sr-RS",
+        "Serbia":{
+            "Google": "sr-RS",
+            "Whisper": "sr",
+        },
     },
     "Slovak":{
-        "Slovakia":"sk-SK",
+        "Slovakia":{
+            "Google": "sk-SK",
+            "Whisper": "sk",
+        },
     },
     "Slovenian":{
-        "Slovenia":"sl-SI",
+        "Slovenia":{
+            "Google": "sl-SI",
+            "Whisper": "sl",
+        },
     },
     "Spanish":{
-        "Argentina":"es-AR",
-        "Bolivia":"es-BO",
-        "Chile":"es-CL",
-        "Colombia":"es-CO",
-        "Costa Rica":"es-CR",
-        "Dominican Republic":"es-DO",
-        "Ecuador":"es-EC",
-        "El Salvador":"es-SV",
-        "Guatemala":"es-GT",
-        "Honduras":"es-HN",
-        "Mexico":"es-MX",
-        "Nicaragua":"es-NI",
-        "Panama":"es-PA",
-        "Paraguay":"es-PY",
-        "Peru":"es-PE",
-        "Puerto Rico":"es-PR",
-        "Spain":"es-ES",
-        "Uruguay":"es-UY",
-        "United States":"es-US",
-        "Venezuela":"es-VE",
+        "Argentina":{
+            "Google": "es-AR",
+            "Whisper": "es",
+        },
+        "Bolivia":{
+            "Google": "es-BO",
+            "Whisper": "es",
+        },
+        "Chile":{
+            "Google": "es-CL",
+            "Whisper": "es",
+        },
+        "Colombia":{
+            "Google": "es-CO",
+            "Whisper": "es",
+        },
+        "Costa Rica":{
+            "Google": "es-CR",
+            "Whisper": "es",
+        },
+        "Dominican Republic":{
+            "Google": "es-DO",
+            "Whisper": "es",
+        },
+        "Ecuador":{
+            "Google": "es-EC",
+            "Whisper": "es",
+        },
+        "El Salvador":{
+            "Google": "es-SV",
+            "Whisper": "es",
+        },
+        "Guatemala":{
+            "Google": "es-GT",
+            "Whisper": "es",
+        },
+        "Honduras":{
+            "Google": "es-HN",
+            "Whisper": "es",
+        },
+        "Mexico":{
+            "Google": "es-MX",
+            "Whisper": "es",
+        },
+        "Nicaragua":{
+            "Google": "es-NI",
+            "Whisper": "es",
+        },
+        "Panama":{
+            "Google": "es-PA",
+            "Whisper": "es",
+        },
+        "Paraguay":{
+            "Google": "es-PY",
+            "Whisper": "es",
+        },
+        "Peru":{
+            "Google": "es-PE",
+            "Whisper": "es",
+        },
+        "Puerto Rico":{
+            "Google": "es-PR",
+            "Whisper": "es",
+        },
+        "Spain":{
+            "Google": "es-ES",
+            "Whisper": "es",
+        },
+        "Uruguay":{
+            "Google": "es-UY",
+            "Whisper": "es",
+        },
+        "United States":{
+            "Google": "es-US",
+            "Whisper": "es",
+        },
+        "Venezuela":{
+            "Google": "es-VE",
+            "Whisper": "es",
+        },
     },
     "Swedish":{
-        "Sweden":"sv-SE",
+        "Sweden":{
+            "Google": "sv-SE",
+            "Whisper": "sv",
+        },
     },
     "Thai":{
-        "Thailand":"th-TH",
+        "Thailand":{
+            "Google": "th-TH",
+            "Whisper": "th",
+        },
     },
     "Turkish":{
-        "Turkey":"tr-TR",
+        "Turkey":{
+            "Google": "tr-TR",
+            "Whisper": "tr",
+        },
     },
     "Ukrainian":{
-        "Ukraine":"uk-UA",
+        "Ukraine":{
+            "Google": "uk-UA",
+            "Whisper": "uk",
+        },
     },
     "Vietnamese":{
-        "Vietnam":"vi-VN",
-    },
-    "Zulu":{
-        "South Africa":"zu-ZA"
+        "Vietnam":{
+            "Google": "vi-VN",
+            "Whisper": "vi",
+        },
     },
 }

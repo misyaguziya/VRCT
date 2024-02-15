@@ -29,6 +29,7 @@ class View():
             font_family=config.FONT_FAMILY,
             ui_language=config.UI_LANGUAGE,
             is_reset_button_displayed_for_translation=config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
+            is_reset_button_displayed_for_whisper=config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
         )
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
@@ -36,7 +37,7 @@ class View():
         else:
             VERSION_TEXT=i18n.t("config_window.version", version=config.VERSION) + " (Speaker2Chatbox)"
 
-        self.TEXT_TRANSLATOR_CTRANSLATE2 = i18n.t("main_window.translator") + ": " + i18n.t("main_window.translator_ctranslate2")
+        self.TEXT_TRANSLATOR_CTRANSLATE2=i18n.t("main_window.translator") + ": " + i18n.t("main_window.translator_ctranslate2")
 
         self.settings = SimpleNamespace()
         theme = get_appearance_mode() if config.APPEARANCE_THEME == "System" else config.APPEARANCE_THEME
@@ -102,6 +103,7 @@ class View():
             CALLBACK_UPDATE_SOFTWARE=None,
             CALLBACK_OPEN_FILEPATH_LOGS=None,
             CALLBACK_OPEN_FILEPATH_CONFIG_FILE=None,
+            CALLBACK_OPEN_WEBPAGE_DEEPL_AUTH_KEY=self.openWebPage_DeepL_Auth_Key,
 
             CALLBACK_DELETE_MAIN_WINDOW=self.quitVRCT,
             CALLBACK_QUIT_VRCT=None,
@@ -157,7 +159,7 @@ class View():
             CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=None,
 
             VAR_LABEL_YOUR_LANGUAGE=StringVar(value=i18n.t("main_window.your_language")),
-            VAR_YOUR_LANGUAGE = StringVar(value=f"{config.SOURCE_LANGUAGE}\n({config.SOURCE_COUNTRY})"),
+            VAR_YOUR_LANGUAGE=StringVar(value=f"{config.SOURCE_LANGUAGE}\n({config.SOURCE_COUNTRY})"),
             CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_YOUR_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_YOUR_LANGUAGE=None,
@@ -168,13 +170,13 @@ class View():
             CALLBACK_LEAVED_SWAP_LANGUAGES_BUTTON=self._leavedSwapLanguagesButton,
 
             VAR_LABEL_TARGET_LANGUAGE=StringVar(value=i18n.t("main_window.target_language")),
-            VAR_TARGET_LANGUAGE = StringVar(value=f"{config.TARGET_LANGUAGE}\n({config.TARGET_COUNTRY})"),
+            VAR_TARGET_LANGUAGE=StringVar(value=f"{config.TARGET_LANGUAGE}\n({config.TARGET_COUNTRY})"),
             CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=None,
             IS_OPENED_SELECTABLE_TARGET_LANGUAGE_WINDOW=False,
             CALLBACK_SELECTED_TARGET_LANGUAGE=None,
 
-            VAR_SELECTED_TRANSLATION_ENGINE = StringVar(value="Translator: INIT"),
-            CALLBACK_SELECTED_TRANSLATION_ENGINE = None,
+            VAR_SELECTED_TRANSLATION_ENGINE=StringVar(value="Translator: INIT"),
+            CALLBACK_SELECTED_TRANSLATION_ENGINE=None,
 
             VAR_LABEL_TEXTBOX_ALL=StringVar(value=i18n.t("main_window.textbox_tab_all")),
             VAR_LABEL_TEXTBOX_SENT=StringVar(value=i18n.t("main_window.textbox_tab_sent")),
@@ -184,6 +186,8 @@ class View():
             VAR_UPDATE_AVAILABLE=StringVar(value=i18n.t("main_window.update_available")),
 
 
+            CALLBACK_MESSAGE_BOX_BIND_KEYSYM__UP=None,
+            CALLBACK_MESSAGE_BOX_BIND_KEYSYM__DOWN=None,
             # Main Window Cover
             VAR_LABEL_MAIN_WINDOW_COVER_MESSAGE=StringVar(value=""),
 
@@ -211,6 +215,7 @@ class View():
             VAR_SIDE_MENU_LABEL_TRANSCRIPTION=StringVar(value=i18n.t("config_window.side_menu_labels.transcription")),
             VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
             VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
+            VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
@@ -280,7 +285,7 @@ class View():
             VAR_DESC_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.ctranslate2_weight_type.desc")),
             DICT_CTRANSLATE2_WEIGHT_TYPE=self.getSelectableCtranslate2WeightTypeDict(),
             CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=None,
-            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]),
+            VAR_CTRANSLATE2_WEIGHT_TYPE=StringVar(value=self.getSelectableCtranslate2WeightTypeDict()[config.CTRANSLATE2_WEIGHT_TYPE]),
 
             VAR_LABEL_DEEPL_AUTH_KEY=StringVar(value=i18n.t( "config_window.deepl_auth_key.label")),
             VAR_DESC_DEEPL_AUTH_KEY=StringVar(
@@ -291,6 +296,7 @@ class View():
             ),
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL_API"]),
+            VAR_OPEN_DEEPL_WEB_PAGE=StringVar(value=i18n.t( "config_window.deepl_auth_key.open_auth_key_webpage")),
 
 
             # Transcription Tab (Mic)
@@ -379,6 +385,19 @@ class View():
             CALLBACK_SET_SPEAKER_MAX_PHRASES=None,
             VAR_SPEAKER_MAX_PHRASES=StringVar(value=config.INPUT_SPEAKER_MAX_PHRASES),
             CALLBACK_FOCUS_OUT_SPEAKER_MAX_PHRASES=self.callbackBindFocusOut_SpeakerMaxPhrases,
+
+
+            # Transcription Tab (Whisper Internal AI Model)
+            VAR_LABEL_USE_WHISPER_FEATURE=StringVar(value=i18n.t("config_window.use_whisper_feature.label")),
+            VAR_DESC_USE_WHISPER_FEATURE=StringVar(value=i18n.t("config_window.use_whisper_feature.desc")),
+            CALLBACK_SET_USE_WHISPER_FEATURE=None,
+            VAR_USE_WHISPER_FEATURE=BooleanVar(value=config.USE_WHISPER_FEATURE),
+
+            VAR_LABEL_WHISPER_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.whisper_weight_type.label")),
+            VAR_DESC_WHISPER_WEIGHT_TYPE=StringVar(value=i18n.t("config_window.whisper_weight_type.desc")),
+            DICT_WHISPER_WEIGHT_TYPE=self.getSelectableWhisperWeightTypeDict(),
+            CALLBACK_SET_WHISPER_WEIGHT_TYPE=None,
+            VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
 
 
             # Others Tab
@@ -527,23 +546,23 @@ class View():
 
 
         if main_window_registers is not None:
-            self.view_variable.CALLBACK_ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = main_window_registers.get("callback_enable_main_window_sidebar_compact_mode", None)
-            self.view_variable.CALLBACK_DISABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = main_window_registers.get("callback_disable_main_window_sidebar_compact_mode", None)
+            self.view_variable.CALLBACK_ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=main_window_registers.get("callback_enable_main_window_sidebar_compact_mode", None)
+            self.view_variable.CALLBACK_DISABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE=main_window_registers.get("callback_disable_main_window_sidebar_compact_mode", None)
 
 
-            self.view_variable.CALLBACK_TOGGLE_TRANSLATION = main_window_registers.get("callback_toggle_translation", None)
-            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND = main_window_registers.get("callback_toggle_transcription_send", None)
-            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE = main_window_registers.get("callback_toggle_transcription_receive", None)
-            self.view_variable.CALLBACK_TOGGLE_FOREGROUND = main_window_registers.get("callback_toggle_foreground", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSLATION=main_window_registers.get("callback_toggle_translation", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_SEND=main_window_registers.get("callback_toggle_transcription_send", None)
+            self.view_variable.CALLBACK_TOGGLE_TRANSCRIPTION_RECEIVE=main_window_registers.get("callback_toggle_transcription_receive", None)
+            self.view_variable.CALLBACK_TOGGLE_FOREGROUND=main_window_registers.get("callback_toggle_foreground", None)
 
-            self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE = main_window_registers.get("callback_your_language", None)
-            self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE = main_window_registers.get("callback_target_language", None)
+            self.view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE=main_window_registers.get("callback_your_language", None)
+            self.view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE=main_window_registers.get("callback_target_language", None)
             main_window_registers.get("values", None) and self.updateList_selectableLanguages(main_window_registers["values"])
-            self.view_variable.CALLBACK_SWAP_LANGUAGES = main_window_registers.get("callback_swap_languages", None)
+            self.view_variable.CALLBACK_SWAP_LANGUAGES=main_window_registers.get("callback_swap_languages", None)
 
-            self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB = main_window_registers.get("callback_selected_language_preset_tab", None)
+            self.view_variable.CALLBACK_SELECTED_LANGUAGE_PRESET_TAB=main_window_registers.get("callback_selected_language_preset_tab", None)
 
-            self.view_variable.CALLBACK_SELECTED_TRANSLATION_ENGINE = main_window_registers.get("callback_selected_translation_engine", None)
+            self.view_variable.CALLBACK_SELECTED_TRANSLATION_ENGINE=main_window_registers.get("callback_selected_translation_engine", None)
 
             def adjustedMessageBoxReturnFunction(_e):
                 if self.view_variable.IS_ENTRY_MESSAGE_BOX_DISABLED is True:
@@ -555,11 +574,15 @@ class View():
                 main_window_registers.get("message_box_bind_Return")()
                 vrct_gui.entry_message_box.focus()
 
-            entry_message_box = getattr(vrct_gui, "entry_message_box")
+            entry_message_box=getattr(vrct_gui, "entry_message_box")
             entry_message_box.bind("<Shift-Return>", lambda _e: None) # This is to prevent message sending on Shift + Enter key press and just add a new line.
             entry_message_box.bind("<Return>", adjustedMessageBoxReturnFunction)
             entry_message_box.bind("<Any-KeyPress>", main_window_registers.get("message_box_bind_Any_KeyPress"))
-            self.view_variable.CALLBACK_CLICKED_SEND_MESSAGE_BUTTON = pressedSendMessageButtonFunction
+            self.view_variable.CALLBACK_CLICKED_SEND_MESSAGE_BUTTON=pressedSendMessageButtonFunction
+
+
+            self.view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__UP=main_window_registers.get("message_box_bind_Up_KeyPress")
+            self.view_variable.CALLBACK_MESSAGE_BOX_BIND_KEYSYM__DOWN=main_window_registers.get("message_box_bind_Down_KeyPress")
 
 
             entry_message_box.bind("<FocusIn>", main_window_registers.get("message_box_bind_FocusIn"))
@@ -569,8 +592,8 @@ class View():
         self.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
         vrct_gui._setDefaultActiveLanguagePresetTab(tab_no=config.SELECTED_TAB_NO)
 
-        self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_YourLanguage
-        self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW = self.openSelectableLanguagesWindow_TargetLanguage
+        self.view_variable.CALLBACK_OPEN_SELECTABLE_YOUR_LANGUAGE_WINDOW=self.openSelectableLanguagesWindow_YourLanguage
+        self.view_variable.CALLBACK_OPEN_SELECTABLE_TARGET_LANGUAGE_WINDOW=self.openSelectableLanguagesWindow_TargetLanguage
 
 
         # Config Window
@@ -579,74 +602,79 @@ class View():
 
         if config_window_registers is not None:
             # Compact Mode Switch
-            self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE = config_window_registers.get("callback_disable_config_window_compact_mode", None)
-            self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE = config_window_registers.get("callback_enable_config_window_compact_mode", None)
+            self.view_variable.CALLBACK_ENABLE_CONFIG_WINDOW_COMPACT_MODE=config_window_registers.get("callback_disable_config_window_compact_mode", None)
+            self.view_variable.CALLBACK_DISABLE_CONFIG_WINDOW_COMPACT_MODE=config_window_registers.get("callback_enable_config_window_compact_mode", None)
 
 
             # Appearance Tab
-            self.view_variable.CALLBACK_SET_TRANSPARENCY = config_window_registers.get("callback_set_transparency", None)
+            self.view_variable.CALLBACK_SET_TRANSPARENCY=config_window_registers.get("callback_set_transparency", None)
 
-            self.view_variable.CALLBACK_SET_APPEARANCE = config_window_registers.get("callback_set_appearance", None)
-            self.view_variable.CALLBACK_SET_UI_SCALING = config_window_registers.get("callback_set_ui_scaling", None)
-            self.view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING = config_window_registers.get("callback_set_textbox_ui_scaling", None)
-            self.view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO = config_window_registers.get("callback_set_message_box_ratio", None)
-            self.view_variable.CALLBACK_SET_FONT_FAMILY = config_window_registers.get("callback_set_font_family", None)
-            self.view_variable.CALLBACK_SET_UI_LANGUAGE = config_window_registers.get("callback_set_ui_language", None)
-            self.view_variable.CALLBACK_SET_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = config_window_registers.get("callback_set_enable_restore_main_window_geometry", None)
+            self.view_variable.CALLBACK_SET_APPEARANCE=config_window_registers.get("callback_set_appearance", None)
+            self.view_variable.CALLBACK_SET_UI_SCALING=config_window_registers.get("callback_set_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_TEXTBOX_UI_SCALING=config_window_registers.get("callback_set_textbox_ui_scaling", None)
+            self.view_variable.CALLBACK_SET_MESSAGE_BOX_RATIO=config_window_registers.get("callback_set_message_box_ratio", None)
+            self.view_variable.CALLBACK_SET_FONT_FAMILY=config_window_registers.get("callback_set_font_family", None)
+            self.view_variable.CALLBACK_SET_UI_LANGUAGE=config_window_registers.get("callback_set_ui_language", None)
+            self.view_variable.CALLBACK_SET_ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY=config_window_registers.get("callback_set_enable_restore_main_window_geometry", None)
 
 
             # Translation Tab
-            self.view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE = config_window_registers.get("callback_set_use_translation_feature", None)
-            self.view_variable.CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE = config_window_registers.get("callback_set_ctranslate2_weight_type", None)
-            self.view_variable.CALLBACK_SET_DEEPL_AUTH_KEY = config_window_registers.get("callback_set_deepl_auth_key", None)
+            self.view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE=config_window_registers.get("callback_set_use_translation_feature", None)
+            self.view_variable.CALLBACK_SET_CTRANSLATE2_WEIGHT_TYPE=config_window_registers.get("callback_set_ctranslate2_weight_type", None)
+            self.view_variable.CALLBACK_SET_DEEPL_AUTH_KEY=config_window_registers.get("callback_set_deepl_auth_key", None)
 
             # Transcription Tab (Mic)
-            self.view_variable.CALLBACK_SET_MIC_HOST = config_window_registers.get("callback_set_mic_host", None)
+            self.view_variable.CALLBACK_SET_MIC_HOST=config_window_registers.get("callback_set_mic_host", None)
             config_window_registers.get("list_mic_host", None) and self.updateList_MicHost(config_window_registers["list_mic_host"])
 
-            self.view_variable.CALLBACK_SET_MIC_DEVICE = config_window_registers.get("callback_set_mic_device", None)
+            self.view_variable.CALLBACK_SET_MIC_DEVICE=config_window_registers.get("callback_set_mic_device", None)
             config_window_registers.get("list_mic_device", None) and self.updateList_MicDevice(config_window_registers["list_mic_device"])
 
-            self.view_variable.CALLBACK_SET_MIC_ENERGY_THRESHOLD = config_window_registers.get("callback_set_mic_energy_threshold", None)
-            self.view_variable.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD = config_window_registers.get("callback_set_mic_dynamic_energy_threshold", None)
-            self.view_variable.CALLBACK_CHECK_MIC_THRESHOLD = config_window_registers.get("callback_check_mic_threshold", None)
-            self.view_variable.CALLBACK_SET_MIC_RECORD_TIMEOUT = config_window_registers.get("callback_set_mic_record_timeout", None)
-            self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT = config_window_registers.get("callback_set_mic_phrase_timeout", None)
-            self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES = config_window_registers.get("callback_set_mic_max_phrases", None)
-            self.view_variable.CALLBACK_SET_MIC_WORD_FILTER = config_window_registers.get("callback_set_mic_word_filter", None)
-            self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER = config_window_registers.get("callback_delete_mic_word_filter", None)
+            self.view_variable.CALLBACK_SET_MIC_ENERGY_THRESHOLD=config_window_registers.get("callback_set_mic_energy_threshold", None)
+            self.view_variable.CALLBACK_SET_MIC_DYNAMIC_ENERGY_THRESHOLD=config_window_registers.get("callback_set_mic_dynamic_energy_threshold", None)
+            self.view_variable.CALLBACK_CHECK_MIC_THRESHOLD=config_window_registers.get("callback_check_mic_threshold", None)
+            self.view_variable.CALLBACK_SET_MIC_RECORD_TIMEOUT=config_window_registers.get("callback_set_mic_record_timeout", None)
+            self.view_variable.CALLBACK_SET_MIC_PHRASE_TIMEOUT=config_window_registers.get("callback_set_mic_phrase_timeout", None)
+            self.view_variable.CALLBACK_SET_MIC_MAX_PHRASES=config_window_registers.get("callback_set_mic_max_phrases", None)
+            self.view_variable.CALLBACK_SET_MIC_WORD_FILTER=config_window_registers.get("callback_set_mic_word_filter", None)
+            self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER=config_window_registers.get("callback_delete_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
-            self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_energy_threshold", None)
-            self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = config_window_registers.get("callback_set_speaker_dynamic_energy_threshold", None)
-            self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD = config_window_registers.get("callback_check_speaker_threshold", None)
-            self.view_variable.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT = config_window_registers.get("callback_set_speaker_record_timeout", None)
-            self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT = config_window_registers.get("callback_set_speaker_phrase_timeout", None)
-            self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES = config_window_registers.get("callback_set_speaker_max_phrases", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_energy_threshold", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_dynamic_energy_threshold", None)
+            self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD=config_window_registers.get("callback_check_speaker_threshold", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_RECORD_TIMEOUT=config_window_registers.get("callback_set_speaker_record_timeout", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_PHRASE_TIMEOUT=config_window_registers.get("callback_set_speaker_phrase_timeout", None)
+            self.view_variable.CALLBACK_SET_SPEAKER_MAX_PHRASES=config_window_registers.get("callback_set_speaker_max_phrases", None)
+
+            # Transcription Tab (Internal AI Model)
+            self.view_variable.CALLBACK_SET_USE_WHISPER_FEATURE=config_window_registers.get("callback_set_use_whisper_feature", None)
+            self.view_variable.CALLBACK_SET_WHISPER_WEIGHT_TYPE=config_window_registers.get("callback_set_whisper_weight_type", None)
+
 
             # Others Tab
-            self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX = config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
-            self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = config_window_registers.get("callback_set_send_only_translated_messages", None)
-            self.view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE = config_window_registers.get("callback_set_send_message_button_type", None)
-            self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY = config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
-            self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS =  config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
+            self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=config_window_registers.get("callback_set_send_only_translated_messages", None)
+            self.view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE=config_window_registers.get("callback_set_send_message_button_type", None)
+            self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
+            self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
-            self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
 
-            self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT = config_window_registers.get("callback_set_send_message_format", None)
-            self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT_WITH_T = config_window_registers.get("callback_set_send_message_format_with_t", None)
-            self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT = config_window_registers.get("callback_set_received_message_format", None)
-            self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT_WITH_T = config_window_registers.get("callback_set_received_message_format_with_t", None)
+            self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT=config_window_registers.get("callback_set_send_message_format", None)
+            self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT_WITH_T=config_window_registers.get("callback_set_send_message_format_with_t", None)
+            self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT=config_window_registers.get("callback_set_received_message_format", None)
+            self.view_variable.CALLBACK_SET_RECEIVED_MESSAGE_FORMAT_WITH_T=config_window_registers.get("callback_set_received_message_format_with_t", None)
 
             # Speaker2Chatbox----------------
-            self.view_variable.CALLBACK_SET_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = config_window_registers.get("callback_set_enable_send_received_message_to_vrc", None)
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC=config_window_registers.get("callback_set_enable_send_received_message_to_vrc", None)
             # Speaker2Chatbox----------------
 
 
 
             # Advanced Settings Tab
-            self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS = config_window_registers.get("callback_set_osc_ip_address", None)
-            self.view_variable.CALLBACK_SET_OSC_PORT = config_window_registers.get("callback_set_osc_port", None)
+            self.view_variable.CALLBACK_SET_OSC_IP_ADDRESS=config_window_registers.get("callback_set_osc_ip_address", None)
+            self.view_variable.CALLBACK_SET_OSC_PORT=config_window_registers.get("callback_set_osc_port", None)
 
         # The initial processing after registration.
         if config.IS_CONFIG_WINDOW_COMPACT_MODE is True:
@@ -677,6 +705,11 @@ class View():
                 ]
             )
             self.replaceMicThresholdCheckButton_Disabled()
+
+        if config.USE_WHISPER_FEATURE is True:
+            self.openWhisperWeightTypeWidget()
+        else:
+            self.closeWhisperWeightTypeWidget()
 
         if config.ENABLE_SPEAKER2CHATBOX is False:
             vrct_gui._changeConfigWindowWidgetsStatus(
@@ -882,8 +915,8 @@ class View():
     @staticmethod
     def getSelectableCtranslate2WeightTypeDict():
         return {
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
-            config._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Small"]: i18n.t("config_window.ctranslate2_weight_type.small", capacity="418MB"),
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT["Large"]: i18n.t("config_window.ctranslate2_weight_type.large", capacity="1.2GB"),
         }
 
     def useTranslationFeatureProcess(self, state:str):
@@ -919,6 +952,24 @@ class View():
         vrct_gui.update()
         vrct_gui.config_window.lift()
 
+    @staticmethod
+    def getSelectableWhisperWeightTypeDict():
+        def callI18n(model_name, capacity, is_recommended=False):
+            if is_recommended is True:
+                return i18n.t("config_window.whisper_weight_type.recommended_model_template", model_name=model_name, capacity=capacity)
+            else:
+                return i18n.t("config_window.whisper_weight_type.model_template", model_name=model_name, capacity=capacity)
+
+        DICT_DATA = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
+        return {
+            DICT_DATA["tiny"]: callI18n("tiny", "74.5MB"),
+            DICT_DATA["base"]: callI18n("base", "141MB", True),
+            DICT_DATA["small"]: callI18n("small", "463MB"),
+            DICT_DATA["medium"]: callI18n("medium", "1.42GB"),
+            DICT_DATA["large-v1"]: callI18n("large-v1", "2.87GB"),
+            DICT_DATA["large-v2"]: callI18n("large-v2", "2.87GB"),
+            DICT_DATA["large-v3"]: callI18n("large-v3", "2.87GB"),
+        }
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
@@ -928,6 +979,10 @@ class View():
     def openWebPage_VrctDocuments(self):
         self.openWebPage(config.DOCUMENTS_URL)
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.opened_web_page_vrct_documents"))
+
+    def openWebPage_DeepL_Auth_Key(self):
+        self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
+
 
 # Widget Control
     # Common
@@ -1014,7 +1069,8 @@ class View():
             self.restart_required_configs_pre_data.ui_scaling == config.UI_SCALING and
             self.restart_required_configs_pre_data.font_family == config.FONT_FAMILY and
             self.restart_required_configs_pre_data.ui_language == config.UI_LANGUAGE and
-            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_translation == config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION and
+            self.restart_required_configs_pre_data.is_reset_button_displayed_for_whisper == config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
         )
 
         if locale is None:
@@ -1069,7 +1125,7 @@ class View():
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(self.getSelectableCtranslate2WeightTypeDict()[selected_weight_type])
 
     def setLatestCTranslate2WeightType(self):
-        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.WEIGHT_TYPE]
+        selected_weight_type = self.getSelectableCtranslate2WeightTypeDict()[config.CTRANSLATE2_WEIGHT_TYPE]
         self.view_variable.VAR_CTRANSLATE2_WEIGHT_TYPE.set(selected_weight_type)
 
 
@@ -1080,6 +1136,23 @@ class View():
     def closeCtranslate2WeightTypeWidget(self):
         vrct_gui.config_window.sb__use_translation_feature.grid(pady=(0,1))
         vrct_gui.config_window.sb__ctranslate2_weight_type.grid_remove()
+
+
+    def openWhisperWeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_whisper_feature.grid()
+        vrct_gui.config_window.sb__whisper_weight_type.grid()
+
+    def closeWhisperWeightTypeWidget(self):
+        vrct_gui.config_window.sb__use_whisper_feature.grid()
+        vrct_gui.config_window.sb__whisper_weight_type.grid_remove()
+
+
+    def updateSelectedWhisperWeightType(self, selected_weight_type:str):
+        self.view_variable.VAR_WHISPER_WEIGHT_TYPE.set(self.getSelectableWhisperWeightTypeDict()[selected_weight_type])
+
+    def setLatestCTranslate2WeightType(self):
+        selected_weight_type = self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]
+        self.view_variable.VAR_WHISPER_WEIGHT_TYPE.set(selected_weight_type)
 
 
     def openMicEnergyThresholdWidget(self):
@@ -1637,6 +1710,13 @@ class View():
     def clearMessageBox(self):
         self._clearTextBox(vrct_gui.entry_message_box)
 
+    @staticmethod
+    def insertMessageBox(text):
+        vrct_gui.entry_message_box.insert("end", text)
+
+    def replaceMessageBox(self, text):
+        self.clearMessageBox()
+        self.insertMessageBox(text)
 
 
 

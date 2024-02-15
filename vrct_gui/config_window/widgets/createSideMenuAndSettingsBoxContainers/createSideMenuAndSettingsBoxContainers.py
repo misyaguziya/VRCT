@@ -7,7 +7,7 @@ from ._createSettingBoxContainer import _createSettingBoxContainer
 
 
 from .setting_box_containers.setting_box_appearance import createSettingBox_Appearance
-from .setting_box_containers.setting_box_transcription import createSettingBox_Mic, createSettingBox_Speaker
+from .setting_box_containers.setting_box_transcription import createSettingBox_Mic, createSettingBox_Speaker, createSettingBox_InternalModel
 from .setting_box_containers.setting_box_others import createSettingBox_Others, createSettingBox_Others_SendMessageFormats, createSettingBox_Others_ReceivedMessageFormats, createSettingBox_Others_Additional
 from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
 from .setting_box_containers.setting_box_translation import createSettingBox_Translation
@@ -93,6 +93,10 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                     {
                         "var_section_title": view_variable.VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER,
                         "setting_box": createSettingBox_Speaker
+                    },
+                    {
+                        "var_section_title": view_variable.VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL,
+                        "setting_box": createSettingBox_InternalModel
                     },
                 ]
             },
