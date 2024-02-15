@@ -6,7 +6,7 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
     createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
-    createSettingBoxEntry = sbg.createSettingBoxEntry
+    createSettingBoxEntry_AuthKey = sbg.createSettingBoxEntry_AuthKey
 
     def switchUseTranslationFeatureCallback(switch_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_USE_TRANSLATION_FEATURE, switch_widget.get())
@@ -41,13 +41,16 @@ def createSettingBox_Translation(setting_box_wrapper, config_window, settings, v
     row+=1
 
 
-    config_window.sb__deepl_auth_key = createSettingBoxEntry(
+    config_window.sb__deepl_auth_key = createSettingBoxEntry_AuthKey(
         for_var_label_text=view_variable.VAR_LABEL_DEEPL_AUTH_KEY,
         for_var_desc_text=view_variable.VAR_DESC_DEEPL_AUTH_KEY,
         entry_attr_name="sb__entry_deepl_auth_key",
         entry_width=settings.uism.RESPONSIVE_UI_SIZE_INT_300,
         entry_bind__Any_KeyRelease=lambda value: deeplAuthKeyCallback(value),
         entry_textvariable=view_variable.VAR_DEEPL_AUTH_KEY,
+        open_authkey_page_command=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_DEEPL_AUTH_KEY),
+        open_authkey_text_variable=view_variable.VAR_OPEN_DEEPL_WEB_PAGE,
+        image_file=settings.image_file.LINK_ICON
     )
     config_window.sb__deepl_auth_key.grid(row=row, pady=0)
     row+=1

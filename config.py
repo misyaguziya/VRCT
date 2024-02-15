@@ -39,12 +39,8 @@ class Config:
         return self._VERSION
 
     @property
-    def ENABLE_SPEAKER2CHATBOX(self):
-        return self._ENABLE_SPEAKER2CHATBOX
-
-    @property
-    def ENABLE_SPEAKER2CHATBOX(self):
-        return self._ENABLE_SPEAKER2CHATBOX
+    def ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION(self):
+        return self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION
 
     @property
     def PATH_LOCAL(self):
@@ -69,6 +65,10 @@ class Config:
     @property
     def DOCUMENTS_URL(self):
         return self._DOCUMENTS_URL
+
+    @property
+    def DEEPL_AUTH_KEY_PAGE_URL(self):
+        return self._DEEPL_AUTH_KEY_PAGE_URL
 
     @property
     def TRANSPARENCY_RANGE(self):
@@ -99,6 +99,10 @@ class Config:
         return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
 
     @property
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self):
+        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
+
+    @property
     def MAX_MIC_ENERGY_THRESHOLD(self):
         return self._MAX_MIC_ENERGY_THRESHOLD
 
@@ -107,6 +111,15 @@ class Config:
         return self._MAX_SPEAKER_ENERGY_THRESHOLD
 
     # Read Write
+    @property
+    def ENABLE_SPEAKER2CHATBOX(self):
+        return self._ENABLE_SPEAKER2CHATBOX
+
+    @ENABLE_SPEAKER2CHATBOX.setter
+    def ENABLE_SPEAKER2CHATBOX(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_SPEAKER2CHATBOX = value
+
     @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
@@ -198,6 +211,24 @@ class Config:
             self._CHOICE_OUTPUT_TRANSLATOR = value
 
     @property
+    def SENT_MESSAGES_LOG(self):
+        return self._SENT_MESSAGES_LOG
+
+    @SENT_MESSAGES_LOG.setter
+    def SENT_MESSAGES_LOG(self, value):
+        if isinstance(value, list):
+            self._SENT_MESSAGES_LOG = value
+
+    @property
+    def CURRENT_SENT_MESSAGES_LOG_INDEX(self):
+        return self._CURRENT_SENT_MESSAGES_LOG_INDEX
+
+    @CURRENT_SENT_MESSAGES_LOG_INDEX.setter
+    def CURRENT_SENT_MESSAGES_LOG_INDEX(self, value):
+        if isinstance(value, int):
+            self._CURRENT_SENT_MESSAGES_LOG_INDEX = value
+
+    @property
     def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self):
         return self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
 
@@ -205,6 +236,15 @@ class Config:
     def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self, value):
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = value
+
+    @property
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self):
+        return self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
+
+    @IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER.setter
+    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self, value):
+        if isinstance(value, bool):
+            self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
 
     # Save Json Data
     ## Main Window
@@ -262,6 +302,17 @@ class Config:
         if isinstance(value, dict):
             self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
+    def SELECTED_TRANSCRIPTION_ENGINE(self):
+        return self._SELECTED_TRANSCRIPTION_ENGINE
+
+    @SELECTED_TRANSCRIPTION_ENGINE.setter
+    def SELECTED_TRANSCRIPTION_ENGINE(self, value):
+        if isinstance(value, str):
+            self._SELECTED_TRANSCRIPTION_ENGINE = value
+            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
@@ -569,15 +620,37 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('WEIGHT_TYPE')
-    def WEIGHT_TYPE(self):
-        return self._WEIGHT_TYPE
+    @json_serializable('USE_WHISPER_FEATURE')
+    def USE_WHISPER_FEATURE(self):
+        return self._USE_WHISPER_FEATURE
 
-    @WEIGHT_TYPE.setter
-    def WEIGHT_TYPE(self, value):
+    @USE_WHISPER_FEATURE.setter
+    def USE_WHISPER_FEATURE(self, value):
+        if isinstance(value, bool):
+            self._USE_WHISPER_FEATURE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
+    def CTRANSLATE2_WEIGHT_TYPE(self):
+        return self._CTRANSLATE2_WEIGHT_TYPE
+
+    @CTRANSLATE2_WEIGHT_TYPE.setter
+    def CTRANSLATE2_WEIGHT_TYPE(self, value):
         # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT:
         if isinstance(value, str):
-            self._WEIGHT_TYPE = value
+            self._CTRANSLATE2_WEIGHT_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('WHISPER_WEIGHT_TYPE')
+    def WHISPER_WEIGHT_TYPE(self):
+        return self._WHISPER_WEIGHT_TYPE
+
+    @WHISPER_WEIGHT_TYPE.setter
+    def WHISPER_WEIGHT_TYPE(self, value):
+        if isinstance(value, str):
+            self._WHISPER_WEIGHT_TYPE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -687,9 +760,18 @@ class Config:
             self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-
-
     # Speaker2Chatbox------------------
+    @property
+    @json_serializable('ENABLE_SPEAKER2CHATBOX_PASS')
+    def ENABLE_SPEAKER2CHATBOX_PASS(self):
+        return self._ENABLE_SPEAKER2CHATBOX_PASS
+
+    @ENABLE_SPEAKER2CHATBOX_PASS.setter
+    def ENABLE_SPEAKER2CHATBOX_PASS(self, value):
+        if isinstance(value, str):
+            self._ENABLE_SPEAKER2CHATBOX_PASS = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     @property
     @json_serializable('ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC')
     def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self):
@@ -731,8 +813,9 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.1.1"
+        self._VERSION = "2.2.0"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
+        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "123456789"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
@@ -740,6 +823,7 @@ class Config:
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
+        self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
         self._TRANSPARENCY_RANGE = (50, 100)
         self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
         self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
@@ -756,6 +840,18 @@ class Config:
             "Small": "Small",
             "Large": "Large",
         }
+
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
+            # {Save json str}: {i18n_placeholder} pairs
+            "tiny": "tiny",
+            "base": "base",
+            "small": "small",
+            "medium": "medium",
+            "large-v1": "large-v1",
+            "large-v2": "large-v2",
+            "large-v3": "large-v3",
+        }
+
         self._MAX_MIC_ENERGY_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
@@ -770,7 +866,10 @@ class Config:
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
+        self._SENT_MESSAGES_LOG = []
+        self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+        self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
 
         # Save Json Data
         ## Main Window
@@ -795,6 +894,7 @@ class Config:
             "2":"English\n(United States)",
             "3":"English\n(United States)",
         }
+        self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
@@ -810,7 +910,7 @@ class Config:
             "x_pos": "0",
             "y_pos": "0",
             "width": "870",
-            "height": "640",
+            "height": "654",
         }
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
@@ -831,7 +931,9 @@ class Config:
             "DeepL_API": None,
         }
         self._USE_TRANSLATION_FEATURE = True
-        self._WEIGHT_TYPE = "Small"
+        self._CTRANSLATE2_WEIGHT_TYPE = "Small"
+        self._USE_WHISPER_FEATURE = False
+        self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
@@ -842,6 +944,7 @@ class Config:
         self._ENABLE_NOTICE_XSOVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
+        self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
         self._ENABLE_LOGGER = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
@@ -855,6 +958,11 @@ class Config:
                 if key == "MESSAGE_FORMAT":
                     old_message_format = config[key]
                 setattr(self, key, config[key])
+
+                if key == "ENABLE_SPEAKER2CHATBOX_PASS":
+                    if self.ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
+                        self.ENABLE_SPEAKER2CHATBOX = True
+
             if old_message_format is not None:
                 setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
 

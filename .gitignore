@@ -6,7 +6,7 @@ VRCT.spec
 *.pyc
 logs/
 .venv/
-weight/
+weights/
 .vscode
 error.log
 *.exe

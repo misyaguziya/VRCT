@@ -1,6 +1,7 @@
 from speech_recognition import Recognizer, Microphone
 from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
+from queue import Queue
 
 class BaseRecorder:
     def __init__(self, source, energy_threshold, dynamic_energy_threshold, record_timeout):
@@ -78,7 +79,7 @@ class SelectedMicEnergyRecorder(BaseEnergyRecorder):
         super().__init__(source=source)
         # self.adjustForNoise()
 
-class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
+class SelectedSpeakerEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
 
         source = Microphone(speaker=True,
@@ -87,4 +88,54 @@ class SelectedSpeakeEnergyRecorder(BaseEnergyRecorder):
             channels=device["maxInputChannels"]
         )
         super().__init__(source=source)
+        # self.adjustForNoise()
+
+class BaseEnergyAndAudioRecorder:
+    def __init__(self, source, energy_threshold, dynamic_energy_threshold, record_timeout):
+        self.recorder = Recognizer()
+        self.recorder.energy_threshold = energy_threshold
+        self.recorder.dynamic_energy_threshold = dynamic_energy_threshold
+        self.record_timeout = record_timeout
+        self.stop = None
+
+        if source is None:
+            raise ValueError("audio source can't be None")
+
+        self.source = source
+
+    def adjustForNoise(self):
+        with self.source:
+            self.recorder.adjust_for_ambient_noise(self.source)
+
+    def recordIntoQueue(self, audio_queue, energy_queue):
+        def audioRecordCallback(_, audio):
+            audio_queue.put((audio.get_raw_data(), datetime.now()))
+
+        def energyRecordCallback(energy):
+            energy_queue.put(energy)
+
+        if isinstance(energy_queue, Queue):
+            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout, callback_energy=energyRecordCallback)
+        else:
+            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout)
+
+class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
+    def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
+        source=Microphone(
+            device_index=device['index'],
+            sample_rate=int(device["defaultSampleRate"]),
+        )
+        super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
+        # self.adjustForNoise()
+
+class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
+    def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
+
+        source = Microphone(speaker=True,
+            device_index= device["index"],
+            sample_rate=int(device["defaultSampleRate"]),
+            chunk_size=get_sample_size(paInt16),
+            channels=device["maxInputChannels"]
+        )
+        super().__init__(source=source, energy_threshold=energy_threshold, dynamic_energy_threshold=dynamic_energy_threshold, record_timeout=record_timeout)
         # self.adjustForNoise()

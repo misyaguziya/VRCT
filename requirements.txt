@@ -8,6 +8,10 @@ pyyaml == 6.0.1
 python-i18n == 0.3.9
 CTkToolTip == 0.8
 pyinstaller==6.2.0
-transformers[torch]
+transformers[torch]==4.37.2
 sentencepiece==0.1.99
-ctranslate2==3.21.0
+ctranslate2==3.24.0
+faster-whisper==0.10.0
+translators @ git+https://github.com/misyaguziya/translators@5.8.9
+SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.2
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.2

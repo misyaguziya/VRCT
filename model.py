@@ -1,3 +1,4 @@
+import gc
 import tempfile
 from zipfile import ZipFile
 from subprocess import Popen
@@ -17,13 +18,14 @@ from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
-from models.transcription.transcription_recorder import SelectedMicRecorder, SelectedSpeakerRecorder
-from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakeEnergyRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
+from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.utils import checkCTranslate2Weight
+from models.translation.translation_utils import checkCTranslate2Weight
+from models.transcription.transcription_whisper import checkWhisperWeight
 from config import config
 
 class threadFnc(Thread):
@@ -64,15 +66,19 @@ class Model:
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
-        if config.USE_TRANSLATION_FEATURE is True:
-            self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
         self.keyword_processor = KeywordProcessor()
 
     def checkCTranslatorCTranslate2ModelWeight(self):
-        return checkCTranslate2Weight(config.PATH_LOCAL, config.WEIGHT_TYPE)
+        return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
 
     def changeTranslatorCTranslate2Model(self):
-        self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.WEIGHT_TYPE)
+        self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
+
+    def clearTranslatorCTranslate2Model(self):
+        self.translator.clearCTranslate2Model()
+
+    def checkTranscriptionWhisperModelWeight(self):
+        return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
@@ -317,44 +323,72 @@ class Model:
             return
 
         mic_audio_queue = Queue()
+        # mic_energy_queue = Queue()
         device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.mic_audio_recorder = SelectedMicRecorder(
+        self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
             device=device,
             energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue)
-        mic_transcriber = AudioTranscriber(
+        # self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, mic_energy_queue)
+        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, None)
+        self.mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
-            message = mic_transcriber.getTranscript()
+            self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+            message = self.mic_transcriber.getTranscript()
             try:
                 fnc(message)
             except Exception:
                 pass
 
-        self.mic_print_transcript = threadFnc(sendMicTranscript)
+        def endMicTranscript():
+            mic_audio_queue.queue.clear()
+            # mic_energy_queue.queue.clear()
+            del self.mic_transcriber
+            gc.collect()
+
+        # def sendMicEnergy():
+        #     if mic_energy_queue.empty() is False:
+        #         energy = mic_energy_queue.get()
+        #         # print("mic energy:", energy)
+        #         try:
+        #             fnc(energy)
+        #         except Exception:
+        #             pass
+        #     sleep(0.01)
+
+        self.mic_print_transcript = threadFnc(sendMicTranscript, end_fnc=endMicTranscript)
         self.mic_print_transcript.daemon = True
         self.mic_print_transcript.start()
+
+        # self.mic_get_energy = threadFnc(sendMicEnergy)
+        # self.mic_get_energy.daemon = True
+        # self.mic_get_energy.start()
 
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
             self.mic_print_transcript = None
-        if isinstance(self.mic_audio_recorder, SelectedMicRecorder):
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
+        # if isinstance(self.mic_get_energy, threadFnc):
+        #     self.mic_get_energy.stop()
+        #     self.mic_get_energy = None
 
     def startCheckMicEnergy(self, fnc, end_fnc, error_fnc=None):
         if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
@@ -399,43 +433,71 @@ class Model:
             return
 
         speaker_audio_queue = Queue()
+        # speaker_energy_queue = Queue()
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
-        self.speaker_audio_recorder = SelectedSpeakerRecorder(
+        self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
             energy_threshold=config.INPUT_SPEAKER_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue)
-        speaker_transcriber = AudioTranscriber(
+        # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue ,None)
+        self.speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
             phrase_timeout=phase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
+            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+            root=config.PATH_LOCAL,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-            message = speaker_transcriber.getTranscript()
+            self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+            message = self.speaker_transcriber.getTranscript()
             try:
                 fnc(message)
             except Exception:
                 pass
 
-        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript)
+        def endSpeakerTranscript():
+            speaker_audio_queue.queue.clear()
+            # speaker_energy_queue.queue.clear()
+            del self.speaker_transcriber
+            gc.collect()
+
+        # def sendSpeakerEnergy():
+        #     if speaker_energy_queue.empty() is False:
+        #         energy = speaker_energy_queue.get()
+        #         # print("speaker energy:", energy)
+        #         try:
+        #             fnc(energy)
+        #         except Exception:
+        #             pass
+        #     sleep(0.01)
+
+        self.speaker_print_transcript = threadFnc(sendSpeakerTranscript, end_fnc=endSpeakerTranscript)
         self.speaker_print_transcript.daemon = True
         self.speaker_print_transcript.start()
+
+        # self.speaker_get_energy = threadFnc(sendSpeakerEnergy)
+        # self.speaker_get_energy.daemon = True
+        # self.speaker_get_energy.start()
 
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript = None
-        if isinstance(self.speaker_audio_recorder, SelectedSpeakerRecorder):
+        if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
             self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
+        # if isinstance(self.speaker_get_energy, threadFnc):
+        #     self.speaker_get_energy.stop()
+        #     self.speaker_get_energy = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
         speaker_device = getDefaultOutputDevice()
@@ -456,7 +518,7 @@ class Model:
             sleep(0.01)
 
         speaker_energy_queue = Queue()
-        self.speaker_energy_recorder = SelectedSpeakeEnergyRecorder(speaker_device)
+        self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
         self.speaker_energy_plot_progressbar.daemon = True
@@ -466,7 +528,7 @@ class Model:
         if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
-        if isinstance(self.speaker_energy_recorder, SelectedSpeakeEnergyRecorder):
+        if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
