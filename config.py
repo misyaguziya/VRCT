@@ -290,13 +290,13 @@ class Config:
     @SELECTED_TAB_YOUR_LANGUAGES.setter
     def SELECTED_TAB_YOUR_LANGUAGES(self, value):
         if isinstance(value, dict):
-            try:
-                for k, v in value.items():
-                    if k not in list(transcription_lang.keys()) or v not in list(transcription_lang[k].keys()):
-                        raise ValueError
-                self._SELECTED_TAB_YOUR_LANGUAGES = value
-            except ValueError:
-                pass
+            value_old = self.SELECTED_TAB_YOUR_LANGUAGES
+            for k, v in value.items():
+                lang, country = v.split("\n")
+                country = country[1:-1]
+                if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                    value[k] = value_old[k]
+            self._SELECTED_TAB_YOUR_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -307,13 +307,13 @@ class Config:
     @SELECTED_TAB_TARGET_LANGUAGES.setter
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
         if isinstance(value, dict):
-            try:
-                for k, v in value.items():
-                    if k not in list(transcription_lang.keys()) or v not in list(transcription_lang[k].keys()):
-                        raise ValueError
-                self._SELECTED_TAB_TARGET_LANGUAGES = value
-            except ValueError:
-                pass
+            value_old = self.SELECTED_TAB_TARGET_LANGUAGES
+            for k, v in value.items():
+                lang, country = v.split("\n")
+                country = country[1:-1]
+                if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                    value[k] = value_old[k]
+            self._SELECTED_TAB_TARGET_LANGUAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
