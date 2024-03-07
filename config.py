@@ -289,15 +289,17 @@ class Config:
 
     @SELECTED_TAB_YOUR_LANGUAGES.setter
     def SELECTED_TAB_YOUR_LANGUAGES(self, value):
-        if isinstance(value, dict):
-            value_old = self.SELECTED_TAB_YOUR_LANGUAGES
-            for k, v in value.items():
-                lang, country = v.split("\n")
-                country = country[1:-1]
-                if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
-                    value[k] = value_old[k]
-            self._SELECTED_TAB_YOUR_LANGUAGES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        try:
+            if isinstance(value, dict):
+                value_old = self.SELECTED_TAB_YOUR_LANGUAGES
+                for k, v in value.items():
+                    lang, country = list(v.items())[0]
+                    if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                        value[k] = value_old[k]
+                self._SELECTED_TAB_YOUR_LANGUAGES = value
+        except Exception:
+            pass
+        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TAB_TARGET_LANGUAGES')
@@ -306,15 +308,17 @@ class Config:
 
     @SELECTED_TAB_TARGET_LANGUAGES.setter
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
-        if isinstance(value, dict):
-            value_old = self.SELECTED_TAB_TARGET_LANGUAGES
-            for k, v in value.items():
-                lang, country = v.split("\n")
-                country = country[1:-1]
-                if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
-                    value[k] = value_old[k]
-            self._SELECTED_TAB_TARGET_LANGUAGES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        try:
+            if isinstance(value, dict):
+                value_old = self.SELECTED_TAB_TARGET_LANGUAGES
+                for k, v in value.items():
+                    lang, country = list(v.items())[0]
+                    if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                        value[k] = value_old[k]
+                self._SELECTED_TAB_TARGET_LANGUAGES = value
+        except Exception:
+            pass
+        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
@@ -898,14 +902,14 @@ class Config:
             "3":"CTranslate2",
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
-            "1":"Japanese\n(Japan)",
-            "2":"Japanese\n(Japan)",
-            "3":"Japanese\n(Japan)",
+            "1":{"Japanese":"Japan"},
+            "2":{"Japanese":"Japan"},
+            "3":{"Japanese":"Japan"},
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
-            "1":"English\n(United States)",
-            "2":"English\n(United States)",
-            "3":"English\n(United States)",
+            "1":{"English":"United States"},
+            "2":{"English":"United States"},
+            "3":{"English":"United States"},
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False

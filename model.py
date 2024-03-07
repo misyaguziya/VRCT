@@ -120,13 +120,6 @@ class Model:
                 langs.append(f"{lang}\n({country})")
         return sorted(langs)
 
-    @staticmethod
-    def getLanguageAndCountry(select):
-        parts = select.split("\n")
-        language = parts[0]
-        country = parts[1][1:-1]
-        return language, country
-
     def findTranslationEngines(self, source_lang, target_lang):
         compatible_engines = []
         for engine in list(translation_lang.keys()):

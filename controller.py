@@ -292,11 +292,11 @@ def initSetTranslateEngine():
 
 def initSetLanguageAndCountry():
     select = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     select = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
 
@@ -316,7 +316,7 @@ def setYourLanguageAndCountry(select):
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
     updateTranslationEngineAndEngineList()
@@ -326,7 +326,7 @@ def setTargetLanguageAndCountry(select):
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     updateTranslationEngineAndEngineList()
@@ -355,13 +355,13 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
 
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.SOURCE_LANGUAGE = language
     config.SOURCE_COUNTRY = country
 
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     select = languages[config.SELECTED_TAB_NO]
-    language, country = model.getLanguageAndCountry(select)
+    language, country = list(select.items())[0]
     config.TARGET_LANGUAGE = language
     config.TARGET_COUNTRY = country
     view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
