@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import font
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
@@ -289,7 +290,13 @@ class Config:
     @SELECTED_TAB_YOUR_LANGUAGES.setter
     def SELECTED_TAB_YOUR_LANGUAGES(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TAB_YOUR_LANGUAGES = value
+            try:
+                for k, v in value.items():
+                    if k not in list(transcription_lang.keys()) or v not in list(transcription_lang[k].keys()):
+                        raise ValueError
+                self._SELECTED_TAB_YOUR_LANGUAGES = value
+            except ValueError:
+                pass
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -300,7 +307,13 @@ class Config:
     @SELECTED_TAB_TARGET_LANGUAGES.setter
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TAB_TARGET_LANGUAGES = value
+            try:
+                for k, v in value.items():
+                    if k not in list(transcription_lang.keys()) or v not in list(transcription_lang[k].keys()):
+                        raise ValueError
+                self._SELECTED_TAB_TARGET_LANGUAGES = value
+            except ValueError:
+                pass
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
