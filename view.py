@@ -1508,8 +1508,10 @@ class View():
 
 # Update GuiVariable (view_variable)
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
-        self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
-        self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
+        your_language, your_country = list(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no].items())[0]
+        self.view_variable.VAR_YOUR_LANGUAGE.set(f"{your_language}\n({your_country})")
+        target_language, target_country = list(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no].items())[0]
+        self.view_variable.VAR_TARGET_LANGUAGE.set(f"{target_language}\n({target_country})")
 
 
     def updateList_selectableLanguages(self, new_selectable_language_list:list):
@@ -1651,11 +1653,11 @@ class View():
 
 
     def printToTextbox_selectedYourLanguages(self, selected_your_language):
-        your_language = selected_your_language.replace("\n", " ")
+        your_language = ' '.join(f'{k} {v}' for k, v in selected_your_language.items())
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
 
     def printToTextbox_selectedTargetLanguages(self, selected_target_language):
-        target_language = selected_target_language.replace("\n", " ")
+        target_language = ' '.join(f'{k} {v}' for k, v in selected_target_language.items())
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
 
     def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
