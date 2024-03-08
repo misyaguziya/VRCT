@@ -293,8 +293,10 @@ class Config:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_YOUR_LANGUAGES
                 for k, v in value.items():
-                    lang, country = list(v.items())[0]
-                    if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                    data = list(v.items())[0]
+                    language = data["language"]
+                    country =  data["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                         value[k] = value_old[k]
                 self._SELECTED_TAB_YOUR_LANGUAGES = value
         except Exception:
@@ -312,8 +314,10 @@ class Config:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_TARGET_LANGUAGES
                 for k, v in value.items():
-                    lang, country = list(v.items())[0]
-                    if lang not in list(transcription_lang.keys()) or country not in list(transcription_lang[lang].keys()):
+                    data = list(v.items())[0]
+                    language = data["language"]
+                    country =  data["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                         value[k] = value_old[k]
                 self._SELECTED_TAB_TARGET_LANGUAGES = value
         except Exception:
@@ -902,14 +906,32 @@ class Config:
             "3":"CTranslate2",
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
-            "1":{"Japanese":"Japan"},
-            "2":{"Japanese":"Japan"},
-            "3":{"Japanese":"Japan"},
+            "1":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
+            "2":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
+            "3":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
-            "1":{"English":"United States"},
-            "2":{"English":"United States"},
-            "3":{"English":"United States"},
+            "1":{
+                "language":"English",
+                "country":"United States"
+            },
+            "2":{
+                "language":"English",
+                "country":"United States"
+            },
+            "3":{
+                "language":"English",
+                "country":"United States"
+            },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
