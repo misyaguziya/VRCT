@@ -49,9 +49,14 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def callbackSelectableLanguages(self, value, _e):
-        language, country = value.split("\n")
-        country = country[1:-1]
-        callback_value = {language: country}
+        language, country = value.split(" (")
+        country = country[:-1]
+        callback_value = {
+            "language" : language,
+            "country" : country,
+        }
+        set_value = f"{language}\n({country})"
+
         if self.selectable_language_window_type == "your_language":
             callback = self._view_variable.CALLBACK_SELECTED_YOUR_LANGUAGE
             target_variable = self._view_variable.VAR_YOUR_LANGUAGE
@@ -59,7 +64,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
             callback = self._view_variable.CALLBACK_SELECTED_TARGET_LANGUAGE
             target_variable = self._view_variable.VAR_TARGET_LANGUAGE
 
-        target_variable.set(value)
+        target_variable.set(set_value)
         callFunctionIfCallable(callback, callback_value)
         self.vrct_gui._closeSelectableLanguagesWindow()
 

@@ -106,19 +106,24 @@ class Model:
 
     def getListLanguageAndCountry(self):
         transcription_langs = list(transcription_lang.keys())
-        tl_keys = translation_lang.keys()
         translation_langs = []
-        for tl_key in tl_keys:
+        for tl_key in translation_lang.keys():
             for lang in translation_lang[tl_key]["source"]:
                 translation_langs.append(lang)
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
-        langs = []
-        for lang in supported_langs:
-            for country in transcription_lang[lang]:
-                langs.append(f"{lang}\n({country})")
-        return sorted(langs)
+        languages = []
+        for language in supported_langs:
+            for country in transcription_lang[language]:
+                languages.append(
+                    {
+                        "language" : language,
+                        "country" : country,
+                    }
+                )
+        languages = sorted(languages, key=lambda x: x['language'])
+        return languages
 
     def findTranslationEngines(self, source_lang, target_lang):
         compatible_engines = []
