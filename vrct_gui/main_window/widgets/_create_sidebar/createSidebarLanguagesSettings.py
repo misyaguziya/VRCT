@@ -356,7 +356,6 @@ def createSidebarLanguagesSettings(settings, main_window, view_variable):
         command=adjustedCommand,
         wrapper_widget=main_window,
         attach_widget=main_window.sls__box_translation_optionmenu_wrapper,
-        dropdown_menu_min_width=settings.uism.SIDEBAR_MIN_WIDTH,
     )
 
     (sls__selected_translation_engine_box, label_button_label_widget) = createLabelButton(
