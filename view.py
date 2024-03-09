@@ -1659,13 +1659,13 @@ class View():
     def printToTextbox_selectedYourLanguages(self, selected_your_language):
         language = selected_your_language["language"]
         country = selected_your_language["country"]
-        your_language = f"{language} {country}"
+        your_language = f"{language} ({country})"
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
 
     def printToTextbox_selectedTargetLanguages(self, selected_target_language):
         language = selected_target_language["language"]
         country = selected_target_language["country"]
-        target_language = f"{language} {country}"
+        target_language = f"{language} ({country})"
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
 
     def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
