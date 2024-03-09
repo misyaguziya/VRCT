@@ -293,9 +293,8 @@ class Config:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_YOUR_LANGUAGES
                 for k, v in value.items():
-                    data = list(v.items())[0]
-                    language = data["language"]
-                    country =  data["country"]
+                    language = v["language"]
+                    country = v["country"]
                     if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                         value[k] = value_old[k]
                 self._SELECTED_TAB_YOUR_LANGUAGES = value
@@ -314,9 +313,8 @@ class Config:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_TARGET_LANGUAGES
                 for k, v in value.items():
-                    data = list(v.items())[0]
-                    language = data["language"]
-                    country =  data["country"]
+                    language = v["language"]
+                    country = v["country"]
                     if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                         value[k] = value_old[k]
                 self._SELECTED_TAB_TARGET_LANGUAGES = value
