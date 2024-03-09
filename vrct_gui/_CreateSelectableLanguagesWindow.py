@@ -49,8 +49,8 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
     def callbackSelectableLanguages(self, value, _e):
-        language, country = value.split(" (")
-        country = country[:-1]
+        language = value["language"]
+        country = value["country"]
         callback_value = {
             "language" : language,
             "country" : country,
@@ -143,7 +143,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
         max_row+=1
         row=0
         column=0
-        for selectable_language_name in self._view_variable.LIST_SELECTABLE_LANGUAGES:
+        for selectable_language_dict in self._view_variable.LIST_SELECTABLE_LANGUAGES:
 
             self.wrapper = CTkFrame(self.container, corner_radius=0, fg_color=self.settings.ctm.LANGUAGE_BUTTON_BG_COLOR, width=0, height=0, cursor="hand2")
             self.wrapper.grid(row=row, column=column, sticky="nsew")
@@ -152,10 +152,9 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
             self.wrapper.grid_rowconfigure((0,2), weight=1)
-            selectable_language_name_for_text = selectable_language_name.replace("\n", " ")
             label_widget = CTkLabel(
                 self.wrapper,
-                text=selectable_language_name_for_text,
+                text=f"{selectable_language_dict['language']} ({selectable_language_dict['country']})",
                 height=0,
                 corner_radius=0,
                 font=CTkFont(family=self.settings.FONT_FAMILY, size=self.settings.uism.VALUES_TEXT_FONT_SIZE, weight="normal"),
@@ -172,7 +171,7 @@ class _CreateSelectableLanguagesWindow(CTkToplevel):
 
 
 
-            callback = partial(self.callbackSelectableLanguages, selectable_language_name)
+            callback = partial(self.callbackSelectableLanguages, selectable_language_dict)
             bindButtonReleaseFunction([self.wrapper, label_widget], callback)
 
             if row == max_row:

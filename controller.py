@@ -993,7 +993,7 @@ def createMainWindow(splash):
 
             "callback_your_language": setYourLanguageAndCountry,
             "callback_target_language": setTargetLanguageAndCountry,
-            "values": [f"{v['language']} ({v['country']})" for v in model.getListLanguageAndCountry()],
+            "values": model.getListLanguageAndCountry(),
             "callback_swap_languages": swapYourLanguageAndTargetLanguage,
 
             "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
