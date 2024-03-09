@@ -130,6 +130,8 @@ config_window:
     label: DeepL Auth Key
     desc: Please select %{translator} on the main screen with DeepL_API when using. ※Some languages may not be supported.
     open_auth_key_webpage: Open DeepL Account Webpage
+    auth_key_success: Auth key update completed.
+    auth_key_error: Auth Key is incorrect or Usage limit reached.
 
   mic_host:
     label: Mic Host/Driver

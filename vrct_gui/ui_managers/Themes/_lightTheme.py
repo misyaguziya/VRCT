@@ -288,6 +288,7 @@ def _lightTheme(base_color):
             # Error Message Window for Config Window
             # Check DarkTheme's this part. Based on the color bb4448, used to source, and pick up the number 600 by the generator (https://m2.material.io/design/color/the-color-system.html#tools-for-picking-colors)
             SB__ERROR_MESSAGE_BG_COLOR = "#cd4c4f",
+            SB__SUCCESS_MESSAGE_BG_COLOR = "#cd4c4f",
             SB__ERROR_MESSAGE_TEXT_COLOR = "#fff",
         ),
 

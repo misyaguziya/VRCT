@@ -546,14 +546,17 @@ def callbackSetCtranslate2WeightType(value):
 
 def callbackSetDeeplAuthKey(value):
     print("callbackSetDeeplAuthKey", str(value))
+    view.clearNotificationMessage()
     if len(value) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
         if result is True:
             key = value
             view.printToTextbox_AuthenticationSuccess()
+            view.showSuccessMessage_DeeplAuthKey()
         else:
             key = None
             view.printToTextbox_AuthenticationError()
+            view.showErrorMessage_DeeplAuthKey()
         auth_keys = config.AUTH_KEYS
         auth_keys["DeepL_API"] = key
         config.AUTH_KEYS = auth_keys
@@ -590,7 +593,7 @@ def callbackSetMicEnergyThreshold(value):
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_MIC_ENERGY_THRESHOLD = value
             view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
         else:
@@ -627,7 +630,7 @@ def callbackSetMicRecordTimeout(value):
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_MIC_PHRASE_TIMEOUT:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_MIC_RECORD_TIMEOUT = value
             view.setGuiVariable_MicRecordTimeout(config.INPUT_MIC_RECORD_TIMEOUT)
         else:
@@ -642,7 +645,7 @@ def callbackSetMicPhraseTimeout(value):
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_MIC_RECORD_TIMEOUT:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_MIC_PHRASE_TIMEOUT = value
             view.setGuiVariable_MicPhraseTimeout(config.INPUT_MIC_PHRASE_TIMEOUT)
         else:
@@ -657,7 +660,7 @@ def callbackSetMicMaxPhrases(value):
     try:
         value = int(value)
         if 0 <= value:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_MIC_MAX_PHRASES = value
             view.setGuiVariable_MicMaxPhrases(config.INPUT_MIC_MAX_PHRASES)
         else:
@@ -708,7 +711,7 @@ def callbackSetSpeakerEnergyThreshold(value):
     try:
         value = int(value)
         if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_SPEAKER_ENERGY_THRESHOLD = value
             view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
         else:
@@ -750,7 +753,7 @@ def callbackSetSpeakerRecordTimeout(value):
     try:
         value = int(value)
         if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_SPEAKER_RECORD_TIMEOUT = value
             view.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
         else:
@@ -765,7 +768,7 @@ def callbackSetSpeakerPhraseTimeout(value):
     try:
         value = int(value)
         if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_SPEAKER_PHRASE_TIMEOUT = value
             view.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
         else:
@@ -780,7 +783,7 @@ def callbackSetSpeakerMaxPhrases(value):
     try:
         value = int(value)
         if 0 <= value:
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             config.INPUT_SPEAKER_MAX_PHRASES = value
             view.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
         else:
@@ -854,7 +857,7 @@ def callbackSetSendMessageFormat(value):
     print("callbackSetSendMessageFormat", value)
     if isUniqueStrings(["[message]"], value) is True:
         config.SEND_MESSAGE_FORMAT = value
-        view.clearErrorMessage()
+        view.clearNotificationMessage()
         view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
     else:
         view.showErrorMessage_SendMessageFormat()
@@ -865,7 +868,7 @@ def callbackSetSendMessageFormatWithT(value):
     if len(value) > 0:
         if isUniqueStrings(["[message]", "[translation]"], value) is True:
             config.SEND_MESSAGE_FORMAT_WITH_T = value
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
         else:
             view.showErrorMessage_SendMessageFormatWithT()
@@ -876,7 +879,7 @@ def callbackSetReceivedMessageFormat(value):
     print("callbackSetReceivedMessageFormat", value)
     if isUniqueStrings(["[message]"], value) is True:
         config.RECEIVED_MESSAGE_FORMAT = value
-        view.clearErrorMessage()
+        view.clearNotificationMessage()
         view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
     else:
         view.showErrorMessage_ReceivedMessageFormat()
@@ -887,7 +890,7 @@ def callbackSetReceivedMessageFormatWithT(value):
     if len(value) > 0:
         if isUniqueStrings(["[message]", "[translation]"], value) is True:
             config.RECEIVED_MESSAGE_FORMAT_WITH_T = value
-            view.clearErrorMessage()
+            view.clearNotificationMessage()
             view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
         else:
             view.showErrorMessage_ReceivedMessageFormatWithT()
