@@ -80,8 +80,8 @@ class View():
             **common_args
         )
 
-        self.settings.error_message_window = SimpleNamespace(
-            uism=all_uism.error_message_window,
+        self.settings.notification_message_window = SimpleNamespace(
+            uism=all_uism.notification_message_window,
             **common_args
         )
 
@@ -297,6 +297,8 @@ class View():
             CALLBACK_SET_DEEPL_AUTH_KEY=None,
             VAR_DEEPL_AUTH_KEY=StringVar(value=config.AUTH_KEYS["DeepL_API"]),
             VAR_OPEN_DEEPL_WEB_PAGE=StringVar(value=i18n.t( "config_window.deepl_auth_key.open_auth_key_webpage")),
+            CALLBACK_FOCUS_OUT_DEEPL_AUTH_KEY=self.callbackBindFocusOut_DeeplAuthKey,
+
 
 
             # Transcription Tab (Mic)
@@ -997,8 +999,8 @@ class View():
     def _clearTextBox(entry_widget):
         entry_widget.delete("1.0", "end")
 
-    def clearErrorMessage(self):
-        vrct_gui._clearErrorMessage()
+    def clearNotificationMessage(self):
+        vrct_gui._clearNotificationMessage()
 
 
     @staticmethod
@@ -1508,8 +1510,14 @@ class View():
 
 # Update GuiVariable (view_variable)
     def updateGuiVariableByPresetTabNo(self, tab_no:str):
-        self.view_variable.VAR_YOUR_LANGUAGE.set(config.SELECTED_TAB_YOUR_LANGUAGES[tab_no])
-        self.view_variable.VAR_TARGET_LANGUAGE.set(config.SELECTED_TAB_TARGET_LANGUAGES[tab_no])
+        select = config.SELECTED_TAB_YOUR_LANGUAGES[tab_no]
+        your_language = select["language"]
+        your_country = select["country"]
+        self.view_variable.VAR_YOUR_LANGUAGE.set(f"{your_language}\n({your_country})")
+        select = config.SELECTED_TAB_TARGET_LANGUAGES[tab_no]
+        target_language = select["language"]
+        target_country = select["country"]
+        self.view_variable.VAR_TARGET_LANGUAGE.set(f"{target_language}\n({target_country})")
 
 
     def updateList_selectableLanguages(self, new_selectable_language_list:list):
@@ -1651,11 +1659,15 @@ class View():
 
 
     def printToTextbox_selectedYourLanguages(self, selected_your_language):
-        your_language = selected_your_language.replace("\n", " ")
+        language = selected_your_language["language"]
+        country = selected_your_language["country"]
+        your_language = f"{language} ({country})"
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_your_language", your_language=your_language))
 
     def printToTextbox_selectedTargetLanguages(self, selected_target_language):
-        target_language = selected_target_language.replace("\n", " ")
+        language = selected_target_language["language"]
+        country = selected_target_language["country"]
+        target_language = f"{language} ({country})"
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.selected_target_language", target_language=target_language))
 
     def printToTextbox_changedLanguagePresetTab(self, tab_no:str):
@@ -1721,60 +1733,74 @@ class View():
 
 
 # Callback Bind FocusOut
+    def callbackBindFocusOut_DeeplAuthKey(self, _e=None):
+        self.clearNotificationMessage()
+
     def callbackBindFocusOut_MicEnergyThreshold(self, _e=None):
         self.setLatestConfigVariable("MicEnergyThreshold")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_SpeakerEnergyThreshold(self, _e=None):
         self.setLatestConfigVariable("SpeakerEnergyThreshold")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
 
     def callbackBindFocusOut_MicRecordTimeout(self, _e=None):
         self.setLatestConfigVariable("MicRecordTimeout")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_MicPhraseTimeout(self, _e=None):
         self.setLatestConfigVariable("MicPhraseTimeout")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_MicMaxPhrases(self, _e=None):
         self.setLatestConfigVariable("MicMaxPhrases")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
 
     def callbackBindFocusOut_SpeakerRecordTimeout(self, _e=None):
         self.setLatestConfigVariable("SpeakerRecordTimeout")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_SpeakerPhraseTimeout(self, _e=None):
         self.setLatestConfigVariable("SpeakerPhraseTimeout")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_SpeakerMaxPhrases(self, _e=None):
         self.setLatestConfigVariable("SpeakerMaxPhrases")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
 
     def callbackBindFocusOut_SendMessageFormat(self, _e=None):
         self.setLatestConfigVariable("SendMessageFormat")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_SendMessageFormatWithT(self, _e=None):
         self.setLatestConfigVariable("SendMessageFormatWithT")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_ReceivedMessageFormat(self, _e=None):
         self.setLatestConfigVariable("ReceivedMessageFormat")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
     def callbackBindFocusOut_ReceivedMessageFormatWithT(self, _e=None):
         self.setLatestConfigVariable("ReceivedMessageFormatWithT")
-        self.clearErrorMessage()
+        self.clearNotificationMessage()
 
 
 
-# Show Error Message (Config Window)
+# Show Notification Message (Config Window)
+    def showSuccessMessage_DeeplAuthKey(self):
+        self._showSuccessMessage(
+            vrct_gui.config_window.sb__entry_deepl_auth_key,
+            i18n.t("config_window.deepl_auth_key.auth_key_success")
+        )
+    def showErrorMessage_DeeplAuthKey(self):
+        self._showErrorMessage(
+            vrct_gui.config_window.sb__entry_deepl_auth_key,
+            i18n.t("config_window.deepl_auth_key.auth_key_error")
+        )
+
     def showErrorMessage_MicEnergyThreshold(self):
         self._showErrorMessage(
             vrct_gui.config_window.sb__progressbar_x_slider__entry_mic_energy_threshold,
@@ -1880,6 +1906,10 @@ class View():
     @staticmethod
     def _makeInvalidValueErrorMessage(error_message):
         return i18n.t("config_window.common_error_message.invalid_value") + "\n" + error_message
+
+    def _showSuccessMessage(self, target_widget, message):
+        self.view_variable.VAR_ERROR_MESSAGE.set(message)
+        vrct_gui._showSuccessMessage(target_widget=target_widget)
 
     def _showErrorMessage(self, target_widget, message):
         self.view_variable.VAR_ERROR_MESSAGE.set(message)

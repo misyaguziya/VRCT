@@ -7,6 +7,7 @@ import tkinter as tk
 from tkinter import font
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
 
 json_serializable_vars = {}
@@ -288,9 +289,18 @@ class Config:
 
     @SELECTED_TAB_YOUR_LANGUAGES.setter
     def SELECTED_TAB_YOUR_LANGUAGES(self, value):
-        if isinstance(value, dict):
-            self._SELECTED_TAB_YOUR_LANGUAGES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        try:
+            if isinstance(value, dict):
+                value_old = self.SELECTED_TAB_YOUR_LANGUAGES
+                for k, v in value.items():
+                    language = v["language"]
+                    country = v["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                        value[k] = value_old[k]
+                self._SELECTED_TAB_YOUR_LANGUAGES = value
+        except Exception:
+            pass
+        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TAB_TARGET_LANGUAGES')
@@ -299,9 +309,18 @@ class Config:
 
     @SELECTED_TAB_TARGET_LANGUAGES.setter
     def SELECTED_TAB_TARGET_LANGUAGES(self, value):
-        if isinstance(value, dict):
-            self._SELECTED_TAB_TARGET_LANGUAGES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        try:
+            if isinstance(value, dict):
+                value_old = self.SELECTED_TAB_TARGET_LANGUAGES
+                for k, v in value.items():
+                    language = v["language"]
+                    country = v["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                        value[k] = value_old[k]
+                self._SELECTED_TAB_TARGET_LANGUAGES = value
+        except Exception:
+            pass
+        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
@@ -813,7 +832,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.0"
+        self._VERSION = "2.2.1"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "123456789"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
@@ -885,14 +904,32 @@ class Config:
             "3":"CTranslate2",
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
-            "1":"Japanese\n(Japan)",
-            "2":"Japanese\n(Japan)",
-            "3":"Japanese\n(Japan)",
+            "1":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
+            "2":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
+            "3":{
+                "language":"Japanese",
+                "country":"Japan"
+            },
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
-            "1":"English\n(United States)",
-            "2":"English\n(United States)",
-            "3":"English\n(United States)",
+            "1":{
+                "language":"English",
+                "country":"United States"
+            },
+            "2":{
+                "language":"English",
+                "country":"United States"
+            },
+            "3":{
+                "language":"English",
+                "country":"United States"
+            },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
