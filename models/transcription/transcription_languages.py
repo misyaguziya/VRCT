@@ -85,20 +85,22 @@ transcription_lang = {
             "Whisper": "ca",
         },
     },
-    "Chinese":{
-        "Mandarin (Simplified, China)":{
+    "Chinese Simplified":{
+        "China":{
             "Google": "cmn-Hans-CN",
             "Whisper": "zh",
         },
-        "Mandarin (Simplified, Hong Kong)":{
+        "Hong Kong":{
             "Google": "cmn-Hans-HK",
             "Whisper": "zh",
         },
-        "Mandarin (Traditional, Taiwan)":{
+    },
+    "Chinese Traditional":{
+        "Taiwan":{
             "Google": "cmn-Hant-TW",
             "Whisper": "zh",
         },
-        "Cantonese (Traditional Hong Kong)":{
+        "Hong Kong":{
             "Google": "yue-Hant-HK",
             "Whisper": "yue",
         },

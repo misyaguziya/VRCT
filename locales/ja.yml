@@ -28,7 +28,7 @@ main_window:
     disabled_foreground: 最前面への固定を解除しました。
 
     auth_key_success: 認証キーの更新が完了しました。
-    auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています.
+    auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています。
 
     no_mic_device_detected_error: マイクデバイスが検出されませんでした。
     no_speaker_device_detected_error: スピーカーデバイスが検出されませんでした。
@@ -129,6 +129,8 @@ config_window:
     label: DeepL 認証キー
     desc: "使用の際は、メイン画面にある %{translator} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
     open_auth_key_webpage: DeepLアカウントページを開く
+    auth_key_success: 認証キーの更新が完了しました。
+    auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています。
 
   mic_host:
     label: マイク（ホスト/ドライバー）
