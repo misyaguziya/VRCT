@@ -5,7 +5,7 @@ from .ui_utils import getLatestWidth, getLatestHeight
 from utils import isEven
 
 
-class _CreateErrorWindow(CTkToplevel):
+class _CreateNotificationWindow(CTkToplevel):
     def __init__(
             self,
             settings,
@@ -16,7 +16,8 @@ class _CreateErrorWindow(CTkToplevel):
             message_ipady,
             message_font_size,
 
-            message_bg_color,
+            error_message_bg_color,
+            success_message_bg_color,
             message_text_color,
         ):
 
@@ -34,7 +35,8 @@ class _CreateErrorWindow(CTkToplevel):
         self.message_ipady = message_ipady
         self.message_font_size = message_font_size
 
-        self.message_bg_color = message_bg_color
+        self.error_message_bg_color = error_message_bg_color
+        self.success_message_bg_color = success_message_bg_color
         self.message_text_color = message_text_color
 
 
@@ -51,20 +53,16 @@ class _CreateErrorWindow(CTkToplevel):
         self.wm_attributes("-alpha", 0)
         self.wm_attributes("-toolwindow", True)
 
-        self.configure(fg_color=self.message_bg_color)
-
-
-
 
         self.grid_rowconfigure(0,weight=1)
         self.grid_columnconfigure(0,weight=1)
 
-        self.error_message_container = CTkFrame(self, corner_radius=0, fg_color=self.message_bg_color, width=0, height=0)
-        self.error_message_container.grid(row=0, column=0, sticky="nsew")
+        self.notification_message_container = CTkFrame(self, corner_radius=0, width=0, height=0)
+        self.notification_message_container.grid(row=0, column=0, sticky="nsew")
 
 
-        self.error_message_container_label_wrapper = CTkLabel(
-            self.error_message_container,
+        self.notification_message_container_label_wrapper = CTkLabel(
+            self.notification_message_container,
             # text=message,
             textvariable=self._view_variable.VAR_ERROR_MESSAGE,
             height=0,
@@ -74,12 +72,19 @@ class _CreateErrorWindow(CTkToplevel):
             justify="left",
             text_color=self.message_text_color,
         )
-        self.error_message_container_label_wrapper.grid(row=0, column=0, padx=self.message_ipadx, pady=self.message_ipady, sticky="nsew")
+        self.notification_message_container_label_wrapper.grid(row=0, column=0, padx=self.message_ipadx, pady=self.message_ipady, sticky="nsew")
 
 
 
 
-    def show(self, target_widget):
+    def show(self, target_widget, message_type):
+        if message_type == "Error":
+            self.notification_message_container.configure(fg_color=self.error_message_bg_color)
+        elif message_type == "Success":
+            self.notification_message_container.configure(fg_color=self.success_message_bg_color)
+        else:
+            raise ValueError("message_type is not selected")
+
         if self.hide is False:
             return
 
@@ -92,22 +97,23 @@ class _CreateErrorWindow(CTkToplevel):
 
         self.hide = False
 
-        label_width = getLatestWidth(self.error_message_container_label_wrapper)
-        label_height = getLatestHeight(self.error_message_container_label_wrapper)
+        label_width = getLatestWidth(self.notification_message_container_label_wrapper)
+        label_height = getLatestHeight(self.notification_message_container_label_wrapper)
 
         # for fixing 1px bug
         if isEven(label_width) is False:
-            self.error_message_container_label_wrapper.grid(padx=(self.message_ipadx[0], self.message_ipadx[1]-1))
+            self.notification_message_container_label_wrapper.grid(padx=(self.message_ipadx[0], self.message_ipadx[1]-1))
         else:
-            self.error_message_container_label_wrapper.grid(padx=self.message_ipadx)
+            self.notification_message_container_label_wrapper.grid(padx=self.message_ipadx)
 
         # for fixing 1px bug
         if isEven(label_height) is False:
-            self.error_message_container_label_wrapper.grid(pady=(self.message_ipady[0], self.message_ipady[1]-1))
+            self.notification_message_container_label_wrapper.grid(pady=(self.message_ipady[0], self.message_ipady[1]-1))
         else:
-            self.error_message_container_label_wrapper.grid(pady=self.message_ipady)
+            self.notification_message_container_label_wrapper.grid(pady=self.message_ipady)
 
 
+        # First show animation
         for i in range(0,101,20):
             if not self.winfo_exists():
                 break
@@ -117,12 +123,14 @@ class _CreateErrorWindow(CTkToplevel):
 
         sleep(0.1)
 
-        for i in range(0,91,10):
-            if not self.winfo_exists():
-                break
-            self.attributes("-alpha", i/100)
-            self.update()
-            sleep(1/80)
+        # Blink animation
+        if message_type == "Error":
+            for i in range(0,91,10):
+                if not self.winfo_exists():
+                    break
+                self.attributes("-alpha", i/100)
+                self.update()
+                sleep(1/80)
 
 
     def _withdraw(self, e=None):

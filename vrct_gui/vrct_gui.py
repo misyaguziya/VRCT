@@ -3,7 +3,7 @@ from customtkinter import CTk, CTkImage
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
 from ._CreateWindowCover import _CreateWindowCover
-from ._CreateErrorWindow import _CreateErrorWindow
+from ._CreateNotificationWindow import _CreateNotificationWindow
 from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
 from ._changeMainWindowWidgetsStatus import _changeMainWindowWidgetsStatus
 from ._changeConfigWindowWidgetsStatus import _changeConfigWindowWidgetsStatus
@@ -140,8 +140,8 @@ class VRCT_GUI(CTk):
             view_variable=self._view_variable
         )
 
-        self.error_message_window = _CreateErrorWindow(
-            settings=self.settings.error_message_window,
+        self.notification_message_window = _CreateNotificationWindow(
+            settings=self.settings.notification_message_window,
             view_variable=self._view_variable,
             wrapper_widget=self.config_window.main_bg_container,
 
@@ -149,7 +149,8 @@ class VRCT_GUI(CTk):
             message_ipady=self.settings.config_window.uism.SB__ERROR_MESSAGE_IPADY,
             message_font_size=self.settings.config_window.uism.SB__ERROR_MESSAGE_FONT_SIZE,
 
-            message_bg_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_BG_COLOR,
+            error_message_bg_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_BG_COLOR,
+            success_message_bg_color=self.settings.config_window.ctm.SB__SUCCESS_MESSAGE_BG_COLOR,
             message_text_color=self.settings.config_window.ctm.SB__ERROR_MESSAGE_TEXT_COLOR,
         )
 
@@ -298,11 +299,14 @@ class VRCT_GUI(CTk):
 
 
     def _showErrorMessage(self, target_widget):
-        self.error_message_window.show(target_widget=target_widget)
+        self.notification_message_window.show(target_widget=target_widget, message_type="Error")
 
-    def _clearErrorMessage(self):
+    def _showSuccessMessage(self, target_widget):
+        self.notification_message_window.show(target_widget=target_widget, message_type="Success")
+
+    def _clearNotificationMessage(self):
         try:
-            self.error_message_window._withdraw()
+            self.notification_message_window._withdraw()
         except Exception:
             pass
 
