@@ -63,6 +63,8 @@ settings = {
     "Normalised icon Y position": -0.41,
     "Icon plane depth": 1,
     "Normalised icon width": 1,
+    "Fade time": 5,
+    "Fade interval": 2,
 }
 
 def mat34Id():
@@ -73,7 +75,7 @@ def mat34Id():
     return arr
 
 class UIElement:
-    def __init__(self, overlayRoot, key, name, pos, img, flip = False) -> None:
+    def __init__(self, overlayRoot, key, name, pos, flip = False) -> None:
         """
         pos is a 2-tuple representing (x, y) normalised position of the overlay on the screen
         """
@@ -84,12 +86,7 @@ class UIElement:
 
         self.handle = self.overlay.createOverlay(self.overlayKey, self.overlayName)
 
-        # configure overlay appearance
-        width, height = img.size
-        img = img.tobytes()
-        img = (ctypes.c_char * len(img)).from_buffer_copy(img)
-
-        self.setImage(img, width, height) # blank image for default
+        self.setImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0))) # blank image for default
         self.setColour(settings['Colour'])
         self.setTransparency(settings['Transparency'])
         self.overlay.setOverlayWidthInMeters(
@@ -101,7 +98,11 @@ class UIElement:
 
         self.overlay.showOverlay(self.handle)
 
-    def setImage(self, img, width, height):
+    def setImage(self, img):
+        # configure overlay appearance
+        width, height = img.size
+        img = img.tobytes()
+        img = (ctypes.c_char * len(img)).from_buffer_copy(img)
         self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
 
     def setColour(self, col):
@@ -131,41 +132,108 @@ class UIElement:
         )
 
 class UIManager:
-    def __init__(self, img) -> None:
+    def __init__(self):
         self.overlay = openvr.IVROverlay()
 
-        self.UI = UIElement(
+        self.overlayUI = UIElement(
             self.overlay,
             "VRCT",
             "Receive UI Element",
             (settings['Normalised icon X position'], settings['Normalised icon Y position']),
-            img,
         )
+        self.lastUpdate = time.monotonic()
 
-async def mainLoop(uiMan):
-    time.sleep(10)
+    def update(self):
+        currTime = time.monotonic()
+        if settings['Fade interval'] != 0:
+            self.evaluateTransparencyFade(self.overlayUI, self.lastUpdate, currTime)
 
-async def init_main(img):
-    uiMan = UIManager(img)
-    await mainLoop(uiMan)
+    def uiUpdate(self, img):
+        self.overlayUI.setImage(img)
+        self.overlayUI.setTransparency(settings['Transparency'])
+        self.lastUpdate = time.monotonic()
+
+    def evaluateTransparencyFade(self, ui, lastUpdate, currentTime):
+        if (currentTime - lastUpdate) > settings['Fade time']:
+            timeThroughInterval = currentTime - lastUpdate - settings['Fade time']
+            fadeRatio = 1 - timeThroughInterval / settings['Fade interval']
+            if fadeRatio < 0:
+                fadeRatio = 0
+
+            ui.setTransparency(fadeRatio * settings['Transparency'])
 
 class Overlay:
     def __init__(self):
-        openvr.init(openvr.VRApplication_Overlay)
+        self.initFlag = False
 
-    def plot_overlay(message, your_language="Japanese", translation=None, target_language=None):
-        img = create_overlay_image(message, your_language, translation, target_language)
-        UIManager(img)
+    def checkHMD(self):
+        return openvr.isHmdPresent()
+
+    def checkRuntime(self):
+        return openvr.isRuntimeInstalled()
+
+    def init(self):
+        try:
+            openvr.init(openvr.VRApplication_Overlay)
+            self.initFlag = True
+        except Exception as e:
+            print("Could not initialise OpenVR")
+
+    async def mainLoop(self):
+        while True:
+            startTime = time.monotonic()
+            self.uiMan.update()
+
+            sleepTime = (1 / 60) - (time.monotonic() - startTime)
+            if sleepTime > 0:
+                await asyncio.sleep(sleepTime)
+
+    async def init_main(self):
+        self.uiMan = UIManager()
+        await self.mainLoop()
+
+    def startOverlay(self):
+        asyncio.run(self.init_main())
 
 if __name__ == '__main__':
-    message = "Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見 Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見 Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見"
-    translation = "Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見 Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見 Hello,World!Goodbye こんにちは、世界！さようなら안녕하세요, 세계!안녕 你好世界！再见 你好世界！再見"
-    your_language = "Japanese"
-    target_language = "Chinese Simplified"
-    # font_family = "NotoSansJP-Regular"
-    # img = create_text_image(message, font_family)
+    from threading import Thread, Event
+    class threadFnc(Thread):
+        def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
+            super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
+            self.fnc = fnc
+            self.end_fnc = end_fnc
+            self._stop = Event()
+        def stop(self):
+            self._stop.set()
+        def stopped(self):
+            return self._stop.is_set()
+        def run(self):
+            while True:
+                if self.stopped():
+                    if callable(self.end_fnc):
+                        self.end_fnc()
+                    return
+                self.fnc(*self._args, **self._kwargs)
 
-    # openvr.init(openvr.VRApplication_Overlay)
-    # asyncio.run(init_main(img))
-    o = Overlay()
-    o.plot_overlay(message, your_language, translation, target_language)
+    overlay = Overlay()
+
+    if overlay.initFlag is False:
+        overlay.init()
+    if overlay.initFlag is True:
+        t = threadFnc(overlay.startOverlay)
+        t.start()
+
+    img = create_overlay_image("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    if overlay.initFlag is True:
+        overlay.uiMan.uiUpdate(img)
+    time.sleep(10)
+
+    img = create_overlay_image("こんにちは、世界！さようなら", "Japanese", "안녕하세요, 세계!안녕", "Korean")
+    if overlay.initFlag is True:
+        overlay.uiMan.uiUpdate(img)
+    time.sleep(10)
+
+    img = create_overlay_image("こんにちは、世界！さようなら", "Japanese", "你好世界！再见", "Chinese Simplified")
+    if overlay.initFlag is True:
+        overlay.uiMan.uiUpdate(img)
+    time.sleep(10)

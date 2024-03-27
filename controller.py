@@ -146,6 +146,11 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
+            if model.th_overlay is None:
+                model.startOverlay()
+            overlay_image = model.createOverlayImage(message, translation)
+            model.setOverlayImage(overlay_image)
+
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
                 # send OSC message
