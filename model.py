@@ -26,7 +26,9 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
 from models.transcription.transcription_whisper import checkWhisperWeight
-from models.overlay.overlay import create_overlay_image, Overlay
+from models.overlay.overlay import Overlay
+from models.overlay.overlay_image import OverlayImage
+
 from config import config
 
 class threadFnc(Thread):
@@ -69,6 +71,7 @@ class Model:
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.overlay = Overlay()
+        self.overlay_image = OverlayImage()
         self.th_overlay = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
@@ -536,10 +539,15 @@ class Model:
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
 
-    def createOverlayImage(self, message, translation):
+    def createOverlayImageShort(self, message, translation):
         your_language = config.TARGET_LANGUAGE
         target_language = config.SOURCE_LANGUAGE
-        return create_overlay_image(message, your_language, translation, target_language)
+        return self.overlay_image.create_overlay_image_short(message, your_language, translation, target_language)
+
+    def createOverlayImageLong(self, message_type, message, translation):
+        your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
+        target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
+        return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def setOverlayImage(self, img):
         if self.overlay.initFlag is True:

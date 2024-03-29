@@ -94,6 +94,12 @@ def sendMicMessage(message):
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
+            # if config.ENABLE_NOTICE_OVERLAY is True:
+            #     overlay_image = model.createOverlayImageShort(message, translation)
+            #     model.setOverlayImage(overlay_image)
+            #     overlay_image = model.createOverlayImageLong("send", message, translation)
+            #     model.setOverlayImage(overlay_image)
+
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
     view.setMainWindowAllWidgetsStatusToNormal()
@@ -148,8 +154,12 @@ def receiveSpeakerMessage(message):
 
             if model.th_overlay is None:
                 model.startOverlay()
-            overlay_image = model.createOverlayImage(message, translation)
-            model.setOverlayImage(overlay_image)
+
+            if config.ENABLE_NOTICE_OVERLAY is True:
+                overlay_image = model.createOverlayImageShort(message, translation)
+                model.setOverlayImage(overlay_image)
+                # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                # model.setOverlayImage(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -157,7 +167,7 @@ def receiveSpeakerMessage(message):
                 if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = messageFormatter("RECEIVED", translation, message)
                     model.oscSendMessage(osc_message)
-                # ------------Speaker2Chatbox------------
+            # ------------Speaker2Chatbox------------
 
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
@@ -225,6 +235,12 @@ def sendChatMessage(message):
             else:
                 osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
+
+        # if config.ENABLE_NOTICE_OVERLAY is True:
+        #     overlay_image = model.createOverlayImageShort(message, translation)
+        #     model.setOverlayImage(overlay_image)
+        #     overlay_image = model.createOverlayImageLong("send", message, translation)
+        #     model.setOverlayImage(overlay_image)
 
         # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)

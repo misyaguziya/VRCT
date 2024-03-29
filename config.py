@@ -717,6 +717,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_NOTICE_OVERLAY')
+    def ENABLE_NOTICE_OVERLAY(self):
+        return self._ENABLE_NOTICE_OVERLAY
+
+    @ENABLE_NOTICE_OVERLAY.setter
+    def ENABLE_NOTICE_OVERLAY(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_NOTICE_OVERLAY = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
     def ENABLE_SEND_MESSAGE_TO_VRC(self):
         return self._ENABLE_SEND_MESSAGE_TO_VRC
@@ -979,6 +990,7 @@ class Config:
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._ENABLE_NOTICE_XSOVERLAY = False
+        self._ENABLE_NOTICE_OVERLAY = False
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
