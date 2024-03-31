@@ -8,7 +8,7 @@ import hashlib
 
 ctranslate2_weights = {
     "Small": { # M2M-100 418M-parameter model
-        "url": "https://bit.ly/33fM1AO",
+        "url": "https://github.com/misyaguziya/VRCT-weights/releases/download/v1.0/m2m100_418m.zip",
         "directory_name": "m2m100_418m",
         "tokenizer": "facebook/m2m100_418M",
         "hash": {
@@ -18,7 +18,7 @@ ctranslate2_weights = {
         }
     },
     "Large": { # M2M-100 1.2B-parameter model
-        "url": "https://bit.ly/3GYiaed",
+        "url": "https://github.com/misyaguziya/VRCT-weights/releases/download/v1.0/m2m100_12b.zip",
         "directory_name": "m2m100_12b",
         "tokenizer": "facebook/m2m100_1.2b",
         "hash": {
