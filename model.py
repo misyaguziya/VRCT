@@ -427,7 +427,6 @@ class Model:
 
         speaker_audio_queue = Queue()
         # speaker_energy_queue = Queue()
-        print([device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE])
         speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
