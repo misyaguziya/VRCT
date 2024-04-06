@@ -200,8 +200,7 @@ class View():
 
 
             # Config Window
-            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_about_vrct",
-            # ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
+            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
             VAR_VERSION=StringVar(value=VERSION_TEXT),
