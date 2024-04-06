@@ -163,6 +163,6 @@ class _PrintToTextbox():
             case "RECEIVED":
                 target_textbox = self.vrct_gui.textbox_received
             case (_):
-                raise  ValueError(f"No matching case for target_type: {target_type}")
+                raise ValueError(f"No matching case for target_type: {target_type}")
 
         return target_textbox

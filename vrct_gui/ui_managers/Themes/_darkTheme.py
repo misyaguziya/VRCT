@@ -296,6 +296,16 @@ def _darkTheme(base_color):
             SB__ERROR_MESSAGE_BG_COLOR = "#bb4448",
             SB__SUCCESS_MESSAGE_BG_COLOR = "#368777",
             SB__ERROR_MESSAGE_TEXT_COLOR = "#fff",
+
+
+
+            # About VRCT
+            ABOUT_VRCT_BG = base_color.DARK_950_COLOR,
+            ABOUT_VRCT_DEV_BG = base_color.DARK_888_COLOR,
+            ABOUT_VRCT_BUTTON_HOVERED_BG_COLOR = base_color.DARK_900_COLOR,
+            ABOUT_VRCT_BUTTON_CLICKED_BG_COLOR = base_color.DARK_925_COLOR,
+
+            ABOUT_VRCT_TELL_US_BUTTON_BORDER_COLOR = base_color.DARK_888_COLOR,
         ),
 
 
