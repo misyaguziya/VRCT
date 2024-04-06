@@ -41,9 +41,9 @@ class ConfigWindow(CTkToplevel):
             self.side_menu_bg_container.grid_columnconfigure(0, weight=0, minsize=l_width+1)
 
         # for fixing 1px bug
-        self.side_menu_bg_container.grid_rowconfigure(2, weight=1)
-        sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(self.side_menu_bg_container, corner_radius=0, width=0, height=0)
-        sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=3, column=0, sticky="sew")
+        # self.side_menu_bg_container.grid_rowconfigure(2, weight=1)
+        # sls__box_optionmenu_wrapper_fix_1px_bug = CTkFrame(self.side_menu_bg_container, corner_radius=0, width=0, height=0)
+        # sls__box_optionmenu_wrapper_fix_1px_bug.grid(row=3, column=0, sticky="sew")
 
         # for fixing 1px bug
         l_width = getLatestWidth(self.side_menu_bg_container)

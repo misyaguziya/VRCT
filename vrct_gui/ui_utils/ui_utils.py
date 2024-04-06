@@ -1,6 +1,7 @@
 from os import path as os_path
 from PIL.Image import open as Image_open, LANCZOS
-from time import sleep
+from time import sleep, time
+import math
 
 from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
@@ -10,8 +11,17 @@ def getImagePath(file_name):
 
 def getImageFileFromUiUtils(file_name):
     # root\img\file_name
-    img = Image_open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", file_name))
-    return img
+    return Image_open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", file_name))
+
+def getImageFileFromUiUtils_AboutVrct(file_name, directly_type:str=None):
+    # root\img\about_vrct\file_name or directly_name...
+    directly_path = ["img", "about_vrct"]
+    if directly_type == "showcased_worlds":
+        directly_path.append("showcased_worlds")
+    elif directly_type == "vrct_posters":
+        directly_path.append("vrct_posters")
+
+    return Image_open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), *directly_path, file_name))
 
 def openImageKeepAspectRatio(image_file, desired_width):
     wpercent = (desired_width/float(image_file.size[0]))
@@ -54,12 +64,12 @@ def getLongestText_Dict(text_dict:dict):
     return longest_text
 
 def calculateUiSize(default_size, scaling_float, is_allowed_odd:bool=False, is_zero_allowed:bool=False):
-        size = int(default_size * scaling_float)
-        size += 1 if not is_allowed_odd and size % 2 != 0 else 0
-        if size <= 0:
-            size = 0 if is_zero_allowed else 1
+    size = int(default_size * scaling_float)
+    size += 1 if not is_allowed_odd and size % 2 != 0 else 0
+    if size <= 0:
+        size = 0 if is_zero_allowed else 1
 
-        return size
+    return size
 
 def bindEnterAndLeaveColor(target_widgets, enter_color, leave_color):
     for target_widget in target_widgets:
@@ -373,3 +383,28 @@ def fadeInAnimation(root_widget, steps:int=10, interval:float=0.1, max_alpha:flo
         sleep(interval)
         num += step_size
     root_widget.attributes("-alpha", max_alpha)
+
+
+def rotateImage(image, angle, to_expand=False):
+    rotated_image = image.rotate(angle, expand=to_expand)
+    return rotated_image
+
+def animateRotation(tk_root, img_frame, img, img_width, img_height, start_angle:int, goal_angle:int, duration=0.5, to_expand:bool=False):
+    start_time = time()
+    while True:
+        elapsed_time = time() - start_time
+        progress = min(elapsed_time / duration, 1.0)
+        eased_progress = 1 - math.pow(1 - progress, 4)
+
+        angle = start_angle + (goal_angle - start_angle) * eased_progress
+        angle = -angle
+
+        rotated_img = rotateImage(img, angle, to_expand)
+        img_frame.configure(image=CTkImage(rotated_img, size=(img_width, img_height)))
+
+        tk_root.update()
+
+        if elapsed_time >= duration:
+            break
+
+        sleep(0.01)
