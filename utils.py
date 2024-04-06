@@ -1,3 +1,4 @@
+import random
 from typing import Union
 from os import path as os_path, rename as os_rename
 from PIL.Image import open as Image_open
@@ -56,3 +57,11 @@ def renameWeightFolder(path):
     weight_path = os_path.join(path, "weight")
     if os_path.exists(weight_path):
         os_rename(weight_path, os_path.join(path, "weights"))
+
+def splitListRandomly(lst, split_count):
+    random.shuffle(lst)
+    split_lists = []
+    for i in range(0, len(lst), split_count):
+        sub_list = lst[i:i+split_count]
+        split_lists.append(sub_list)
+    return split_lists

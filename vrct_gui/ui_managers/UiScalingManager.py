@@ -6,6 +6,7 @@ class UiScalingManager():
     def __init__(self, scaling_percentage):
         scaling_float = int(scaling_percentage.replace("%", "")) / 100
         self.SCALING_FLOAT = max(scaling_float, 0.4)
+
         self.common = SimpleNamespace()
         self.main = SimpleNamespace()
         self.config_window = SimpleNamespace()
@@ -222,7 +223,8 @@ class UiScalingManager():
 
 
         # Side menu
-        self.config_window.SIDE_MENU_TOP_PADY = self._calculateUiSize(54)
+        self.config_window.SIDE_MENU_TOP_PADY = (self._calculateUiSize(54), self._calculateUiSize(60))
+        self.config_window.SIDE_MENU_LABELS_SEPARATE_MIN_HEIGHT = self._calculateUiSize(40)
         self.config_window.SIDE_MENU_LABELS_IPADX = self._calculateUiSize(20)
         self.config_window.SIDE_MENU_LABELS_IPADY = self._calculateUiSize(8)
         self.config_window.SIDE_MENU_LABELS_FONT_SIZE = self._calculateUiSize(18)
@@ -237,7 +239,10 @@ class UiScalingManager():
 
         # Setting Box
         self.config_window.MAIN_AREA_MIN_WIDTH = self._calculateUiSize(720)
-        self.config_window.SB__TOP_PADY = (self._calculateUiSize(60))
+
+        self.config_window.ABOUT_VRCT_SB__TOP_PADY = self._calculateUiSize(42) # Exception
+        self.config_window.SB__TOP_PADY = self._calculateUiSize(60)
+
         self.config_window.SB__IPADX = self._calculateUiSize(20)
         self.config_window.SB__IPADY = self._calculateUiSize(12)
         self.config_window.SB__BOTTOM_MARGIN = (0, self._calculateUiSize(60))
