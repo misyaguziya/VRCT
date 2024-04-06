@@ -6,7 +6,7 @@ import webbrowser
 import i18n
 
 from customtkinter import StringVar, IntVar, BooleanVar, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
+from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager, AboutVrctManager
 from vrct_gui import vrct_gui
 from utils import callFunctionIfCallable, intToPctStr
 
@@ -62,9 +62,11 @@ class View():
             **common_args
         )
 
+        about_vrct = AboutVrctManager(config.UI_SCALING, config.UI_LANGUAGE, all_ctm.config_window)
         self.settings.config_window = SimpleNamespace(
             ctm=all_ctm.config_window,
             uism=all_uism.config_window,
+            about_vrct=about_vrct,
             **common_args
         )
 
@@ -198,7 +200,8 @@ class View():
 
 
             # Config Window
-            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
+            ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_about_vrct",
+            # ACTIVE_SETTING_BOX_TAB_ATTR_NAME="side_menu_tab_appearance",
             CALLBACK_SELECTED_SETTING_BOX_TAB=None,
             VAR_ERROR_MESSAGE=StringVar(value=""),
             VAR_VERSION=StringVar(value=VERSION_TEXT),
@@ -218,6 +221,9 @@ class View():
             VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
+
+            VAR_SIDE_MENU_LABEL_ABOUT_VRCT=StringVar(value="About VRCT"),
+            # VAR_SIDE_MENU_LABEL_ABOUT_VRCT=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
             VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
 
@@ -521,6 +527,14 @@ class View():
 
             VAR_LABEL_OPEN_CONFIG_FILEPATH=StringVar(value=i18n.t("config_window.open_config_filepath.label")),
             VAR_DESC_OPEN_CONFIG_FILEPATH=None,
+
+
+            # About VRCT Tab
+            CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT=self.openWebPage_AboutVrct,
+            CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=None,
+            CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=None,
+            CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=None,
+            CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM=0,
         )
 
 
@@ -985,6 +999,53 @@ class View():
     def openWebPage_DeepL_Auth_Key(self):
         self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
 
+    def openWebPage_AboutVrct(self, target_type:str):
+        url = ""
+        match (target_type):
+            case ("X_MISYA"):
+                url = "https://twitter.com/misya_ai"
+            case ("GITHUB_MISYA"):
+                url = "https://github.com/misyaguziya"
+
+            case ("X_SHIINA"):
+                url = "https://twitter.com/Shiina_12siy"
+
+            case ("X_DONE_SAN"):
+                url = "https://twitter.com/done_vrc"
+
+            case ("X_IYA"):
+                url = "https://twitter.com/IYAA_HHHH"
+
+            case ("X_RERA"):
+                url = "https://twitter.com/rerassi"
+            case ("GITHUB_RERA"):
+                url = "https://github.com/soumt-r"
+
+            case ("X_POPOSUKE"):
+                url = "https://twitter.com/sig_popo"
+
+            case ("X_KUMAGUMA"):
+                url = "https://twitter.com/K_kumaguma_A"
+
+
+            case ("BOOTH"):
+                url = "https://misyaguziya.booth.pm/items/5155325"
+            case ("VRCT_DOCUMENTS"):
+                url = config.DOCUMENTS_URL
+            case ("VRCT_GITHUB"):
+                url = "https://github.com/misyaguziya/VRCT"
+            case ("CONTACT_US"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform"
+            case ("SUPPORTER_REGISTRATION"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSepLzdEOTJQFVHdOOxAA0dix3zCmnNBlmH4XWon5FldXkIiqw/viewform"
+
+            case "TEMP":
+                print("here is still under construction.")
+                return
+            case (_):
+                raise ValueError(f"No matching case for target_type: {target_type}")
+
+        self.openWebPage(url)
 
 # Widget Control
     # Common
