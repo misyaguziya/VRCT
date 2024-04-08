@@ -45,6 +45,8 @@ def getOutputDevices():
 
         if len(devices) == 0:
             devices = [{"name": "NoDevice"}]
+        else:
+            devices = [dict(t) for t in {tuple(d.items()) for d in devices}]
     return devices
 
 def getDefaultOutputDevice():
