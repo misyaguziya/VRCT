@@ -363,6 +363,13 @@ class View():
 
 
             # Transcription Tab (Speaker)
+            VAR_LABEL_SPEAKER_DEVICE=StringVar(value=i18n.t("config_window.speaker_device.label")),
+            VAR_DESC_SPEAKER_DEVICE=None,
+            LIST_SPEAKER_DEVICE=[],
+            CALLBACK_SET_SPEAKER_DEVICE=None,
+            VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
+
+
             VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
@@ -655,6 +662,9 @@ class View():
             self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER=config_window_registers.get("callback_delete_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
+            self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window_registers.get("callback_set_speaker_device", None)
+            config_window_registers.get("list_speaker_device", None) and self.updateList_SpeakerDevice(config_window_registers["list_speaker_device"])
+
             self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_energy_threshold", None)
             self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_dynamic_energy_threshold", None)
             self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD=config_window_registers.get("callback_check_speaker_threshold", None)
@@ -720,6 +730,16 @@ class View():
                 ]
             )
             self.replaceMicThresholdCheckButton_Disabled()
+
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_speaker_device",
+                ]
+            )
+            self.replaceSpeakerThresholdCheckButton_Disabled()
 
         if config.USE_WHISPER_FEATURE is True:
             self.openWhisperWeightTypeWidget()
@@ -1270,7 +1290,10 @@ class View():
 
 
     def initSpeakerThresholdCheckButton(self):
-        self.replaceSpeakerThresholdCheckButton_Passive()
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+        else:
+            self.replaceSpeakerThresholdCheckButton_Passive()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
@@ -1327,6 +1350,13 @@ class View():
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
+
+    def updateList_SpeakerDevice(self, new_speaker_device_list:list):
+        self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_speaker_device",
+            dropdown_menu_values=new_speaker_device_list,
+        )
 
     def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
         self.updateProgressBar(

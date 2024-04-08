@@ -43,6 +43,12 @@ def _changeConfigWindowWidgetsStatus(config_window, settings, view_variable, sta
                     disableLabelsWidgets(target_widget)
                     disableOptionmenuWidget(target_widget)
 
+            case "sb__optionmenu_speaker_device":
+                if status == "disabled":
+                    target_widget = config_window.sb__widgets["sb__optionmenu_speaker_device"]
+                    disableLabelsWidgets(target_widget)
+                    disableOptionmenuWidget(target_widget)
+
             case "sb__optionmenu_appearance_theme":
                 if status == "disabled":
                     target_widget = config_window.sb__widgets["sb__optionmenu_appearance_theme"]
