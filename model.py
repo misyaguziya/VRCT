@@ -342,9 +342,9 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
-            message = self.mic_transcriber.getTranscript()
             try:
+                self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                message = self.mic_transcriber.getTranscript()
                 fnc(message)
             except Exception:
                 pass
@@ -378,7 +378,7 @@ class Model:
             self.mic_print_transcript.stop()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.stop()
+            self.mic_audio_recorder.stop(wait_for_stop=False)
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
         #     self.mic_get_energy.stop()
@@ -414,7 +414,7 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar = None
         if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.stop()
+            self.mic_energy_recorder.stop(wait_for_stop=False)
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
@@ -451,9 +451,9 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-            message = self.speaker_transcriber.getTranscript()
             try:
+                self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                message = self.speaker_transcriber.getTranscript()
                 fnc(message)
             except Exception:
                 pass
@@ -487,7 +487,7 @@ class Model:
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop()
+            self.speaker_audio_recorder.stop(wait_for_stop=False)
             self.speaker_audio_recorder = None
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
@@ -523,7 +523,7 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.stop()
+            self.speaker_energy_recorder.stop(wait_for_stop=False)
             self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
