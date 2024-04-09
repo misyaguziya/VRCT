@@ -309,7 +309,9 @@ class Model:
         return [device["name"] for device in getOutputDevices()]
 
     def startMicTranscript(self, fnc, error_fnc=None):
-        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+        if len(choice_mic_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -318,7 +320,7 @@ class Model:
 
         mic_audio_queue = Queue()
         # mic_energy_queue = Queue()
-        mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
@@ -385,7 +387,9 @@ class Model:
         #     self.mic_get_energy = None
 
     def startCheckMicEnergy(self, fnc, end_fnc, error_fnc=None):
-        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+        if len(choice_mic_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -402,7 +406,7 @@ class Model:
             sleep(0.01)
 
         mic_energy_queue = Queue()
-        mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        mic_device = choice_mic_device[0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
         self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy, end_fnc=end_fnc)
@@ -418,7 +422,9 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+        speaker_device_list = getOutputDevices()
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        if len(choice_speaker_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -427,7 +433,7 @@ class Model:
 
         speaker_audio_queue = Queue()
         # speaker_energy_queue = Queue()
-        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        speaker_device = choice_speaker_device[0]
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
@@ -494,7 +500,9 @@ class Model:
         #     self.speaker_get_energy = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
-        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+        speaker_device_list = getOutputDevices()
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        if len(choice_speaker_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -511,7 +519,7 @@ class Model:
             sleep(0.01)
 
         speaker_energy_queue = Queue()
-        speaker_device = [device for device in getOutputDevices() if device["name"] == config.CHOICE_SPEAKER_DEVICE][0]
+        speaker_device = choice_speaker_device[0]
         self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
