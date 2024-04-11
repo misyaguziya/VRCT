@@ -172,7 +172,7 @@ if __name__ == '__main__':
         t.start()
 
     time.sleep(1)
-    img = overlay_image.create_overlay_image_short("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    img = overlay_image.create_overlay_image_short("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
     if overlay.initFlag is True:
         overlay.uiMan.uiUpdate(img)
     time.sleep(10)
