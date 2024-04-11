@@ -49,7 +49,7 @@ main_window:
   cover_message: 設定画面が閉じられるまで、一時的に機能を停止しています。
 
   confirmation_message:
-    update_software: "新しいバージョンをダウンロードして再起動します。\n少し時間がかかるかもしれません。今すぐ行いますか？"
+    update_software: "新しいバージョンをダウンロードしてアプリを再起動します。\n少し時間がかかります。今すぐ行いますか？"
     deny_update_software: 後でする
     accept_update_software: アップデートして再起動
     updating: アップデート中...
