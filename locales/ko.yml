@@ -79,6 +79,7 @@ config_window:
     transcription: 음성인식
     transcription_mic: 마이크
     transcription_speaker: 스피커
+    # transcription_internal_model:
     others: 기타
     others_send_message_formats: 메시지 형식 (전송)
     others_received_message_formats: 메시지 형식 (수신)
@@ -127,10 +128,13 @@ config_window:
 
   deepl_auth_key:
     label: DeepL 인증키
+    # desc:
+    # open_auth_key_webpage:
+    # auth_key_success:
+    # auth_key_error:
 
   mic_host:
     label: 마이크 호스트/드라이버
-    # desc:
 
   mic_device:
     label: 마이크 장치
@@ -164,6 +168,9 @@ config_window:
     count_desc: "현재 등록되어 있는 단어 수: %{count}"
 
 
+  speaker_device:
+    label: 스피커 장치
+
   speaker_dynamic_energy_threshold:
     label_for_automatic: "음성 입력 최소 볼륨 (현재 설정: 자동)"
     desc_for_automatic: "스피커의 입력 감도를 자동으로 조절합니다."
@@ -187,6 +194,15 @@ config_window:
     desc: 식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다.
     error_message: 0 이상의 숫자만 설정할 수 있습니다.
 
+  # use_whisper_feature:
+  #   label:
+  #   desc:
+
+  # whisper_weight_type:
+    # label:
+    # desc:
+    # model_template:
+    # recommended_model_template:
 
   auto_clear_the_message_box:
     label: 챗박스 자동 삭제
