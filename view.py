@@ -1564,7 +1564,10 @@ class View():
         vrct_gui.confirmation_modal.hide_buttons()
         vrct_gui.update()
         vrct_gui.confirmation_modal.update()
-        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+        # vrct_gui.confirmation_modal.grab_set() #Tmp
+        def func(progress):
+            vrct_gui.confirmation_modal.updateDownloadProgress(progress=progress)
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE, func)
 
 
 

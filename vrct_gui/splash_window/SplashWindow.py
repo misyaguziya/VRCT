@@ -2,7 +2,7 @@ import math
 import time
 
 from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar, CTkFrame
-from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation
+from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation, generateGradientColor
 
 class SplashWindow(CTkToplevel):
     def __init__(self):
@@ -200,25 +200,6 @@ class SplashWindow(CTkToplevel):
         rotated_image = image.rotate(angle, expand=True)
         return rotated_image
 
-        # This making gradient color process was made by ChatGPT.
-    def generateGradientColor(self, value):
-        # 0の時の色と1の時の色を指定
-        color_start = [242, 242, 242]  # RGB values for #f2f2f2
-        color_end = [72, 164, 149]    # RGB values for #48a495
-
-        # 補完色を計算
-        interpolated_color = [
-            int(start + (end - start) * value) for start, end in zip(color_start, color_end)
-        ]
-
-        # RGB値を0から255の範囲にクリップ
-        interpolated_color = [max(0, min(255, val)) for val in interpolated_color]
-
-        # RGBを16進数に変換
-        hex_color = "#{:02x}{:02x}{:02x}".format(*interpolated_color)
-
-        return hex_color
-
 
     def updateDownloadProgress(self, progress:float):
         if self.is_showed_weight_download_progressbar is False:
@@ -232,7 +213,11 @@ class SplashWindow(CTkToplevel):
             self.is_showed_weight_download_progressbar = True
             self.update()
 
-        progress_color = self.generateGradientColor(progress)
+        progress_color = generateGradientColor(
+            value=progress,
+            color_start=[242, 242, 242], # RGB values for #f2f2f2
+            color_end=[72, 164, 149], # RGB values for #48a495
+        )
         self.weight_download_progressbar_widget.configure(progress_color=progress_color)
         self.weight_download_progressbar_widget.set(progress)
         self.update_idletasks()
