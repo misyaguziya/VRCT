@@ -8,9 +8,9 @@ from utils import getKeyByValue, isUniqueStrings, strPctToInt
 import argparse
 
 # Common
-def callbackUpdateSoftware():
+def callbackUpdateSoftware(fnc=None):
     setMainWindowGeometry()
-    model.updateSoftware()
+    model.updateSoftware(restart=True, fnc=fnc)
 
 def callbackRestartSoftware():
     setMainWindowGeometry()
