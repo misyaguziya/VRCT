@@ -71,6 +71,22 @@ def calculateUiSize(default_size, scaling_float, is_allowed_odd:bool=False, is_z
 
     return size
 
+# This making gradient color process was made by ChatGPT.
+def generateGradientColor(value, color_start, color_end):
+    # 補完色を計算
+    interpolated_color = [
+        int(start + (end - start) * value) for start, end in zip(color_start, color_end)
+    ]
+
+    # RGB値を0から255の範囲にクリップ
+    interpolated_color = [max(0, min(255, val)) for val in interpolated_color]
+
+    # RGBを16進数に変換
+    hex_color = "#{:02x}{:02x}{:02x}".format(*interpolated_color)
+
+    return hex_color
+
+
 def bindEnterAndLeaveColor(target_widgets, enter_color, leave_color):
     for target_widget in target_widgets:
         target_widget.bind("<Enter>", lambda e, widgets=target_widgets: [w.configure(fg_color=enter_color) for w in widgets], "+")
