@@ -171,8 +171,8 @@ class OverlayImage:
             case "default":
                 pass
             case "sakura":
-                overlay_tl = Image.open(os_path.join(os_path.dirname(__file__), "img", "overlay_tl_sakura.png"))
-                overlay_br = Image.open(os_path.join(os_path.dirname(__file__), "img", "overlay_br_sakura.png"))
+                overlay_tl = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "overlay_tl_sakura.png"))
+                overlay_br = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "overlay_br_sakura.png"))
                 alpha = overlay_tl.getchannel("A")
                 alpha = alpha.point(lambda x: x * 0.1)
                 overlay_tl.putalpha(alpha)
@@ -187,7 +187,7 @@ class OverlayImage:
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "fonts", f"{font_family}.ttf"), font_size)
+        font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf"), font_size)
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
         character_line_num = int((base_width) // character_width) - 12
