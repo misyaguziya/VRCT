@@ -247,6 +247,15 @@ class Config:
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
 
+    @property
+    def IS_EASTER_EGG_ENABLED(self):
+        return self._IS_EASTER_EGG_ENABLED
+
+    @IS_EASTER_EGG_ENABLED.setter
+    def IS_EASTER_EGG_ENABLED(self, value):
+        if isinstance(value, bool):
+            self._IS_EASTER_EGG_ENABLED = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -736,7 +745,7 @@ class Config:
     def OVERLAY_UI_TYPE(self, value):
         if isinstance(value, str):
             self._OVERLAY_UI_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
@@ -911,6 +920,7 @@ class Config:
         self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+        self._IS_EASTER_EGG_ENABLED = False
 
         # Save Json Data
         ## Main Window
