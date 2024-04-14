@@ -1,8 +1,15 @@
+import psutil
 import ctypes
 import time
 import asyncio
 import openvr
 from PIL import Image
+
+def check_steamvr_running():
+    for proc in psutil.process_iter():
+        if "vrserver" in proc.name().lower() or "vrcompositor" in proc.name().lower():
+            return True
+    return False
 
 # This code is based on the following source:
 # [GOpy](https://github.com/MeroFune/GOpy)
@@ -120,8 +127,9 @@ class Overlay:
 
     def init(self):
         try:
-            openvr.init(openvr.VRApplication_Overlay)
-            self.initFlag = True
+            if check_steamvr_running() is True:
+                openvr.init(openvr.VRApplication_Overlay)
+                self.initFlag = True
         except Exception as e:
             print("Could not initialise OpenVR")
 
