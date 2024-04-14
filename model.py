@@ -293,12 +293,12 @@ class Model:
                 copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
                 command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
                 Popen(command, cwd=current_directory)
-            except Exception as e:
+            except Exception:
                 import traceback
                 with open('error.log', 'a') as f:
                     traceback.print_exc(file=f)
                 webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
-        th_update_software = threadFnc(updateSoftwareTask)
+        th_update_software = Thread(target=updateSoftwareTask)
         th_update_software.daemon = True
         th_update_software.start()
 
