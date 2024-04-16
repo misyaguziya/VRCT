@@ -831,6 +831,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_MUTE_DETECT')
+    def ENABLE_MUTE_DETECT(self):
+        return self._ENABLE_MUTE_DETECT
+
+    @ENABLE_MUTE_DETECT.setter
+    def ENABLE_MUTE_DETECT(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_MUTE_DETECT = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('IS_CONFIG_WINDOW_COMPACT_MODE')
     def IS_CONFIG_WINDOW_COMPACT_MODE(self):
         return self._IS_CONFIG_WINDOW_COMPACT_MODE
@@ -995,6 +1006,7 @@ class Config:
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
         self._ENABLE_LOGGER = False
+        self._ENABLE_MUTE_DETECT = False
         self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
     def load_config(self):
