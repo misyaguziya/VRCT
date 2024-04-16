@@ -26,6 +26,9 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
 from models.transcription.transcription_whisper import checkWhisperWeight
+from models.overlay.overlay import Overlay
+from models.overlay.overlay_image import OverlayImage
+
 from config import config
 
 class threadFnc(Thread):
@@ -37,7 +40,7 @@ class threadFnc(Thread):
     def stop(self):
         self._stop.set()
     def stopped(self):
-        return self._stop.isSet()
+        return self._stop.is_set()
     def run(self):
         while True:
             if self.stopped():
@@ -67,6 +70,9 @@ class Model:
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
+        self.overlay = Overlay()
+        self.overlay_image = OverlayImage()
+        self.th_overlay = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -536,5 +542,33 @@ class Model:
 
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
+
+    def createOverlayImageShort(self, message, translation):
+        your_language = config.TARGET_LANGUAGE
+        target_language = config.SOURCE_LANGUAGE
+        ui_type = config.OVERLAY_UI_TYPE
+        return self.overlay_image.create_overlay_image_short(message, your_language, translation, target_language, ui_type)
+
+    def createOverlayImageLong(self, message_type, message, translation):
+        your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
+        target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
+        return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
+
+    def setOverlayImage(self, img):
+        if self.overlay.initFlag is True:
+            self.overlay.uiMan.uiUpdate(img)
+
+    def startOverlay(self):
+        if self.overlay.initFlag is False:
+            self.overlay.init()
+        if self.overlay.initFlag is True:
+            self.th_overlay = threadFnc(self.overlay.startOverlay)
+            self.th_overlay.daemon = True
+            self.th_overlay.start()
+
+    def stopOverlay(self):
+        if isinstance(self.th_overlay, threadFnc):
+            self.th_overlay.stop()
+            self.th_overlay = None
 
 model = Model()
