@@ -209,39 +209,42 @@ class Model:
     def oscSendMessage(message):
         sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
-    def checkOSCStarted(self, fnc):
-        self.is_valid_osc = False
-        def checkOscReceive(address, osc_arguments):
-            if self.is_valid_osc is False:
-                self.is_valid_osc = True
+    # def checkOSCStarted(self, fnc):
+    #     self.is_valid_osc = False
+    #     def checkOscReceive(address, osc_arguments):
+    #         if self.is_valid_osc is False:
+    #             self.is_valid_osc = True
 
-        self.listening_server = receiveOscParameters(checkOscReceive)
-        def oscListener():
-            self.listening_server.serve_forever()
+    #     self.listening_server = receiveOscParameters(checkOscReceive)
+    #     def oscListener():
+    #         self.listening_server.serve_forever()
 
-        def sendTestActionLoop():
-            for _ in range(10):
-                sendTestAction()
-                if self.is_valid_osc is True:
-                    break
-                sleep(0.1)
-            self.listening_server.shutdown()
+    #     def sendTestActionLoop():
+    #         for _ in range(10):
+    #             sendTestAction()
+    #             if self.is_valid_osc is True:
+    #                 break
+    #             sleep(0.1)
+    #         self.listening_server.shutdown()
 
-        # start receive osc
-        th_receive_osc_parameters = Thread(target=oscListener)
-        th_receive_osc_parameters.daemon = True
-        th_receive_osc_parameters.start()
+    #     # start receive osc
+    #     th_receive_osc_parameters = Thread(target=oscListener)
+    #     th_receive_osc_parameters.daemon = True
+    #     th_receive_osc_parameters.start()
 
-        # check osc started
-        th_send_osc_test_action = Thread(target=sendTestActionLoop)
-        th_send_osc_test_action.daemon = True
-        th_send_osc_test_action.start()
+    #     # check osc started
+    #     th_send_osc_test_action = Thread(target=sendTestActionLoop)
+    #     th_send_osc_test_action.daemon = True
+    #     th_send_osc_test_action.start()
 
-        th_receive_osc_parameters.join()
-        th_send_osc_test_action.join()
+    #     th_receive_osc_parameters.join()
+    #     th_send_osc_test_action.join()
 
-        if self.is_valid_osc is False:
-            fnc()
+    #     if self.is_valid_osc is False:
+    #         fnc()
+
+    def startReceiveOSC(self, fnc):
+        self.listening_server = receiveOscParameters(fnc)
 
     @staticmethod
     def checkSoftwareUpdated():
