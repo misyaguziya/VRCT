@@ -74,6 +74,8 @@ def sendMicMessage(message):
         if model.checkKeywords(message):
             view.printToTextbox_DetectedByWordFilter(detected_message=message)
             return
+        elif model.detectRepeatSendMessage(message):
+            return
         elif config.ENABLE_TRANSLATION is False:
             pass
         else:
@@ -145,7 +147,9 @@ def stopThreadingTranscriptionSendMessageOnOpenConfigWindow():
 def receiveSpeakerMessage(message):
     if len(message) > 0:
         translation = ""
-        if config.ENABLE_TRANSLATION is False:
+        if model.detectRepeatReceiveMessage(message):
+            return
+        elif config.ENABLE_TRANSLATION is False:
             pass
         else:
             translation, success = model.getOutputTranslate(message)
