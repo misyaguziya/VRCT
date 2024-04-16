@@ -68,6 +68,8 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
+        self.previous_send_message = ""
+        self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.overlay = Overlay()
@@ -202,6 +204,20 @@ class Model:
 
     def checkKeywords(self, message):
         return len(self.keyword_processor.extract_keywords(message)) != 0
+
+    def detectRepeatSendMessage(self, message):
+        repeat_flag = False
+        if self.previous_send_message == message:
+            repeat_flag = True
+        self.previous_send_message = message
+        return repeat_flag
+
+    def detectRepeatReceiveMessage(self, message):
+        repeat_flag = False
+        if self.previous_receive_message == message:
+            repeat_flag = True
+        self.previous_receive_message = message
+        return repeat_flag
 
     @staticmethod
     def oscStartSendTyping():
