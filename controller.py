@@ -909,20 +909,30 @@ def callbackSetEnableSendReceivedMessageToVrc(value):
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
 # ---------------------Speaker2Chatbox---------------------
 
-
 def createDictOSCReceiveParameters():
     osc_parameter_prefix = "/avatar/parameters/"
     param_MuteSelf = "MuteSelf"
     param_Voice = "Voice"
 
-    def change_handler_muteself(address, osc_arguments):
-        config.VRCHAT_MUTESELF = osc_arguments
+    def change_handler_mute(address, osc_arguments):
+        if config.ENABLE_MUTE_DETECT is True:
+            if osc_arguments is True and change_handler_mute.status_mute is False:
+                model.stopPutQueueMicAudio()
+                change_handler_mute.status_mute = True
+            elif osc_arguments is False and change_handler_mute.status_mute is True:
+                model.startPutQueueMicAudio()
+                change_handler_mute.status_mute = False
 
     def change_handler_voice(address, osc_arguments):
-        config.VRCHAT_MUTESELF = False
+        if config.ENABLE_MUTE_DETECT is True:
+            if change_handler_mute.status_mute is True:
+                model.startPutQueueMicAudio()
+                change_handler_mute.status_mute = False
+
+    change_handler_mute.status_mute = False
 
     dict_filter_and_target = {
-        osc_parameter_prefix + param_MuteSelf: change_handler_muteself,
+        osc_parameter_prefix + param_MuteSelf: change_handler_mute,
         osc_parameter_prefix + param_Voice: change_handler_voice,
     }
     return dict_filter_and_target
@@ -993,8 +1003,8 @@ def createMainWindow(splash):
     if config.ENABLE_LOGGER is True:
         model.startLogger()
 
-    # init OSC
-    model.startReceiveOSC(createDictOSCReceiveParameters())
+    # init OSC receive
+    model.startReceiveOSC()
 
     splash.toProgress(3) # Last one.
 

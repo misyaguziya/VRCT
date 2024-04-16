@@ -1,5 +1,5 @@
 from time import sleep
-import threading
+from threading import Thread
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
@@ -55,13 +55,13 @@ def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="
     osc_dispatcher = dispatcher.Dispatcher()
     for filter, target in dict_filter_and_target.items():
         osc_dispatcher.map(filter, target)
-
     osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
-    threading.Thread(target=osc_udp_server.serve_forever, daemon = True).start()
 
     osc_client = OSCQueryService(title, http_port, osc_port)
     for filter, target in dict_filter_and_target.items():
         osc_client.advertise_endpoint(filter)
+
+    osc_udp_server.serve_forever()
 
 if __name__ == "__main__":
     osc_parameter_prefix = "/avatar/parameters/"
