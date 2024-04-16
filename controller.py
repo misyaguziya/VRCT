@@ -27,6 +27,11 @@ def callbackFilepathConfigFile():
 def callbackQuitVrct():
     setMainWindowGeometry()
 
+def callbackEnableEasterEgg():
+    config.IS_EASTER_EGG_ENABLED = True
+    config.OVERLAY_UI_TYPE = "sakura"
+    view.printToTextbox_enableEasterEgg()
+
 def setMainWindowGeometry():
     PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
     NEW_SCALING_INT = strPctToInt(config.UI_SCALING)
@@ -94,6 +99,12 @@ def sendMicMessage(message):
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
+            # if config.ENABLE_NOTICE_OVERLAY is True:
+            #     overlay_image = model.createOverlayImageShort(message, translation)
+            #     model.setOverlayImage(overlay_image)
+            #     overlay_image = model.createOverlayImageLong("send", message, translation)
+            #     model.setOverlayImage(overlay_image)
+
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
     view.setMainWindowAllWidgetsStatusToNormal()
@@ -146,13 +157,22 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
+            if model.th_overlay is None:
+                model.startOverlay()
+
+            if config.ENABLE_NOTICE_OVERLAY is True:
+                overlay_image = model.createOverlayImageShort(message, translation)
+                model.setOverlayImage(overlay_image)
+                # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                # model.setOverlayImage(overlay_image)
+
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
                 # send OSC message
                 if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = messageFormatter("RECEIVED", translation, message)
                     model.oscSendMessage(osc_message)
-                # ------------Speaker2Chatbox------------
+            # ------------Speaker2Chatbox------------
 
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
@@ -220,6 +240,12 @@ def sendChatMessage(message):
             else:
                 osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
+
+        # if config.ENABLE_NOTICE_OVERLAY is True:
+        #     overlay_image = model.createOverlayImageShort(message, translation)
+        #     model.setOverlayImage(overlay_image)
+        #     overlay_image = model.createOverlayImageLong("send", message, translation)
+        #     model.setOverlayImage(overlay_image)
 
         # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)
@@ -980,6 +1006,8 @@ def createMainWindow(splash):
     # set UI and callback
     view.register(
         common_registers={
+            "callback_enable_easter_egg": callbackEnableEasterEgg,
+
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
             "callback_filepath_logs": callbackFilepathLogs,
