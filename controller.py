@@ -910,6 +910,24 @@ def callbackSetEnableSendReceivedMessageToVrc(value):
 # ---------------------Speaker2Chatbox---------------------
 
 
+def createDictOSCReceiveParameters():
+    osc_parameter_prefix = "/avatar/parameters/"
+    param_MuteSelf = "MuteSelf"
+    param_Voice = "Voice"
+
+    def change_handler_muteself(address, osc_arguments):
+        config.VRCHAT_MUTESELF = osc_arguments
+
+    def change_handler_voice(address, osc_arguments):
+        config.VRCHAT_MUTESELF = False
+
+    dict_filter_and_target = {
+        osc_parameter_prefix + param_MuteSelf: change_handler_muteself,
+        osc_parameter_prefix + param_Voice: change_handler_voice,
+    }
+    return dict_filter_and_target
+
+
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
     if value == "":
@@ -974,6 +992,9 @@ def createMainWindow(splash):
     # init logger
     if config.ENABLE_LOGGER is True:
         model.startLogger()
+
+    # init OSC
+    model.startReceiveOSC(createDictOSCReceiveParameters())
 
     splash.toProgress(3) # Last one.
 
