@@ -277,7 +277,7 @@ class Model:
                             file.write(chunk)
                             total_chunk += len(chunk)
                             if isinstance(func, Callable):
-                                func(total_chunk/file_size)
+                                func(progress=total_chunk/file_size, progress_type="downloading")
                             print(f"downloaded {total_chunk}/{file_size}")
 
                     with ZipFile(os_path.join(tmp_path, filename)) as zf:
@@ -287,7 +287,7 @@ class Model:
                             extracted_files += 1
                             zf.extract(file_info, os_path.join(current_directory, tmp_directory_name))
                             if isinstance(func, Callable):
-                                func(extracted_files / total_files)
+                                func(progress=extracted_files/total_files, progress_type="extracting")
                             print(f"extracted {extracted_files}/{total_files}")
 
                 copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
