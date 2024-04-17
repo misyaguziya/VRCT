@@ -563,7 +563,7 @@ class Model:
         your_language = config.TARGET_LANGUAGE
         target_language = config.SOURCE_LANGUAGE
         ui_type = config.OVERLAY_UI_TYPE
-        return self.overlay_image.create_overlay_image_short(message, your_language, translation, target_language, ui_type)
+        return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
 
     def createOverlayImageLong(self, message_type, message, translation):
         your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
