@@ -26,14 +26,14 @@ class OverlayImage:
         self.log_data = []
 
     @staticmethod
-    def concatenate_images_vertically(img1: Image, img2: Image) -> Image:
+    def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
         dst = Image.new('RGBA', (img1.width, img1.height + img2.height))
         dst.paste(img1, (0, 0))
         dst.paste(img2, (0, img1.height))
         return dst
 
     @staticmethod
-    def add_image_margin(image: Image, top: int, right: int, bottom: int, left: int, color: Tuple[int, int, int, int]) -> Image:
+    def addImageMargin(image: Image, top: int, right: int, bottom: int, left: int, color: Tuple[int, int, int, int]) -> Image:
         width, height = image.size
         new_width = width + right + left
         new_height = height + top + bottom
@@ -101,10 +101,10 @@ class OverlayImage:
     #     if len(translation) > 0 and target_language is not None:
     #         img = self.create_textimage(message_type, "small", message, your_language)
     #         translation_img = self.create_textimage(message_type, "large",translation, target_language)
-    #         img = self.concatenate_images_vertically(img, translation_img)
+    #         img = self.concatenateImagesVertically(img, translation_img)
     #     else:
     #         img = self.create_textimage(message_type, "large", message, your_language)
-    #     return self.concatenate_images_vertically(message_type_img, img)
+    #     return self.concatenateImagesVertically(message_type_img, img)
 
     # def create_overlay_image_long(self, message_type, message, your_language, translation="", target_language=None):
     #     if len(self.log_data) > 10:
@@ -132,8 +132,8 @@ class OverlayImage:
 
     #     img = imgs[0]
     #     for i in imgs[1:]:
-    #         img = self.concatenate_images_vertically(img, i)
-    #     img = self.add_image_margin(img, 0, 20, 0, 20, (0, 0, 0, 0))
+    #         img = self.concatenateImagesVertically(img, i)
+    #     img = self.addImageMargin(img, 0, 20, 0, 20, (0, 0, 0, 0))
 
     #     width, height = img.size
     #     background = Image.new("RGBA", (width, height), (0, 0, 0, 0))
@@ -142,14 +142,14 @@ class OverlayImage:
     #     img = Image.alpha_composite(background, img)
     #     return img
 
-    def get_ui_size(self):
+    def getUiSize(self):
         return {
             "width": 960,
             "height": 23,
             "font_size": 23,
         }
 
-    def get_ui_colors(self, ui_type):
+    def getUiColors(self, ui_type):
         match ui_type:
             case "default":
                 background_color = (41, 42, 45, 127)
@@ -165,7 +165,7 @@ class OverlayImage:
             "text_color": text_color
         }
 
-    def create_decoration_image(self, ui_type, image_size):
+    def createDecorationImage(self, ui_type, image_size):
         decoration_image = Image.new("RGBA", image_size, (0, 0, 0, 0))
         match ui_type:
             case "default":
@@ -183,7 +183,7 @@ class OverlayImage:
                 decoration_image.paste(overlay_br, (image_size[0]-overlay_br.size[0]-7, image_size[1]-overlay_br.size[1]-7))
         return decoration_image
 
-    def create_textbox_short(self, text, language, text_color, base_width, base_height, font_size):
+    def createTextboxShort(self, text, language, text_color, base_width, base_height, font_size):
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
@@ -202,27 +202,27 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor="mm", stroke_width=0, font=font, align="center")
         return img
 
-    def create_overlay_image_short(self, message, your_language, translation="", target_language=None, ui_type="default"):
-        ui_size = self.get_ui_size()
+    def createOverlayImageShort(self, message, your_language, translation="", target_language=None, ui_type="default"):
+        ui_size = self.getUiSize()
         height = ui_size["height"]
         width = ui_size["width"]
         font_size = ui_size["font_size"]
 
-        ui_colors = self.get_ui_colors(ui_type)
+        ui_colors = self.getUiColors(ui_type)
         text_color = ui_colors["text_color"]
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        img = self.create_textbox_short(message, your_language, text_color, width, height, font_size)
+        img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
         if len(translation) > 0 and target_language is not None:
-            translation_img = self.create_textbox_short(translation, target_language, text_color, width, height, font_size)
-            img = self.concatenate_images_vertically(img, translation_img)
+            translation_img = self.createTextboxShort(translation, target_language, text_color, width, height, font_size)
+            img = self.concatenateImagesVertically(img, translation_img)
 
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), img.size], radius=30, fill=background_color, outline=background_outline_color, width=5)
 
-        decoration_image = self.create_decoration_image(ui_type, img.size)
+        decoration_image = self.createDecorationImage(ui_type, img.size)
         background = Image.alpha_composite(background, decoration_image)
         img = Image.alpha_composite(background, img)
         return img

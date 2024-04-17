@@ -180,17 +180,17 @@ if __name__ == '__main__':
         t.start()
 
     time.sleep(1)
-    img = overlay_image.create_overlay_image_short("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
+    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
     if overlay.initFlag is True:
         overlay.uiMan.uiUpdate(img)
     time.sleep(10)
 
-    img = overlay_image.create_overlay_image_short("こんにちは、世界！さようなら", "Japanese", "안녕하세요, 세계!안녕", "Korean")
+    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "안녕하세요, 세계!안녕", "Korean")
     if overlay.initFlag is True:
         overlay.uiMan.uiUpdate(img)
     time.sleep(10)
 
-    img = overlay_image.create_overlay_image_short("こんにちは、世界！さようなら", "Japanese", "你好世界！再见", "Chinese Simplified")
+    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "你好世界！再见", "Chinese Simplified")
     if overlay.initFlag is True:
         overlay.uiMan.uiUpdate(img)
     time.sleep(10)
