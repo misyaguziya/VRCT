@@ -81,6 +81,7 @@ config_window:
     transcription_mic: Mic
     transcription_speaker: Speaker
     transcription_internal_model: Transcription Model
+    vr: VR
     others: Others
     others_send_message_formats: Message Formats (Send)
     others_received_message_formats: Message Formats (XSOverlay & Speaker2Chatbox)
@@ -204,6 +205,11 @@ config_window:
     desc: "Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.\n※Larger models, especially those exceeding medium size, can be challenging to run even depending on the CPU's performance."
     model_template: "%{model_name} model (%{capacity})"
     recommended_model_template: "%{model_name} model (%{capacity}) (Recommended)"
+
+
+  enable_overlay_ui:
+    label: OpenVR
+    # desc:
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box

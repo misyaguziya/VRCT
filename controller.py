@@ -858,6 +858,11 @@ def callbackSetWhisperWeightType(value):
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     view.showRestartButtonIfRequired()
 
+# VR Tab
+def callbackSetEnableOverlayUi(value):
+    print("callbackSetEnableOverlayUi", value)
+    config.ENABLE_NOTICE_OVERLAY = value
+
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
     print("callbackSetEnableAutoClearMessageBox", value)
@@ -1097,6 +1102,9 @@ def createMainWindow(splash):
             # Transcription Tab (Internal AI Model)
             "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
             "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
+
+            # VR Tab
+            "callback_set_enable_overlay_ui": callbackSetEnableOverlayUi,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
