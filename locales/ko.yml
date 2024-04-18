@@ -32,7 +32,7 @@ main_window:
 
     no_mic_device_detected_error: 마이크 디바이스를 찾지 못했습니다.
     no_speaker_device_detected_error: 스피커 디바이스를 찾지 못했습니다.
-    translation_engine_limit_error: 번역 엔진을 자동으로 변경했습니다. 대상 번역 엔진에 대한 요청이 너무 많아 일시적으로 접근이 제한되었습니다. 해당 번역 엔진을 사용하려면 잠시 기다린 후 VRCT를 재부팅하여 다시 시도해 보시기 바랍니다
+    translation_engine_limit_error: 번역 엔진을 자동으로 변경했습니다. 대상 번역 엔진에 대한 요청이 너무 많아 일시적으로 접근이 제한되었습니다. 해당 번역 엔진을 사용하려면 잠시 기다린 후 VRCT를 재시작하여 다시 시도해 보시기 바랍니다
 
     detected_by_word_filter: 단어 필터에 등록된 단어 %{detected_message}(이)가 감지되어 전송하지 않았습니다.
 
@@ -49,14 +49,14 @@ main_window:
   cover_message: 설정 화면이 닫힐 때까지 일시적으로 기능을 정지하고 있습니다.
 
   confirmation_message:
-    update_software: "새 버전을 다운로드하고 재부팅합니다. \n 조금 시간이 걸릴 수 있습니다. 지금 시작할까요?"
+    update_software: "새 버전을 다운로드하고 재시작합니다. \n 조금 시간이 걸립니다. 지금 시작할까요?"
     deny_update_software: 나중에 하기
-    accept_update_software: 업데이트 및 재부팅
+    accept_update_software: 업데이트 및 재시작
     updating: 업데이트 중...
 
     detected_over_ui_size: "현재 UI 크기: %{current_ui_size}\nVRCT의 창 크기가 사용자의 디스플레이 크기보다 클 수 있습니다. \n* 디스플레이 크기에 따라 여러 번 재설정해야 할 수도 있습니다."
     deny_adjust_ui_size: "지금 상태를 유지"
-    accept_adjust_ui_size: "작게 줄이고 재부팅"
+    accept_adjust_ui_size: "작게 줄이고 재시작"
 
 
 selectable_language_window:
@@ -69,7 +69,7 @@ config_window:
   config_title: 설정
   compact_mode: 컴팩트 모드
   version: 버전 %{version}
-  restart_message: 재부팅하여 변경 사항을 적용합니다.
+  restart_message: 재시작하여 변경 사항을 적용합니다.
   common_error_message:
     invalid_value: 유효하지 않은 값입니다.
 
