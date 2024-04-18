@@ -5,13 +5,14 @@ from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar, CTkFr
 from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation, generateGradientColor, getImagePath
 
 class UpdatingWindow(CTkToplevel):
-    def __init__(self):
+    def __init__(self, vrct_gui):
         super().__init__()
         self.withdraw()
         self.overrideredirect(True)
         self.configure(fg_color="#292a2d")
         self.title("Updating...")
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
+        self.protocol("WM_DELETE_WINDOW", vrct_gui._quitVRCT)
         # self.wm_attributes("-toolwindow", True)
         self.is_showed_downloading_process = False
         self.is_showed_unpackaging_process = False

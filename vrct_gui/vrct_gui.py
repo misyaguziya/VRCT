@@ -175,7 +175,7 @@ class VRCT_GUI(CTk):
             init_scaling=(self._view_variable.VAR_TEXTBOX_UI_SCALING.get()/100)
         )
 
-        self.updating_window = UpdatingWindow()
+        self.updating_window = UpdatingWindow(vrct_gui=self)
 
 
 
