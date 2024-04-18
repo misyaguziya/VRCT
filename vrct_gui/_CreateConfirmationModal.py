@@ -1,6 +1,6 @@
-from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont
+from customtkinter import CTkToplevel, CTkFrame, CTkLabel, CTkFont, CTkProgressBar
 
-from .ui_utils import fadeInAnimation, setGeometryToCenterOfTheWidget, bindButtonFunctionAndColor
+from .ui_utils import fadeInAnimation, setGeometryToCenterOfTheWidget, bindButtonFunctionAndColor, generateGradientColor
 
 from utils import callFunctionIfCallable
 
@@ -13,6 +13,7 @@ class _CreateConfirmationModal(CTkToplevel):
         self.settings = settings
         self._view_variable = view_variable
 
+        self.is_showed_progressbar = False
 
         self.title("")
         self.overrideredirect(True)
@@ -67,6 +68,18 @@ class _CreateConfirmationModal(CTkToplevel):
 
         self.modal_buttons_wrapper = CTkFrame(self.modal_buttons_container, corner_radius=0, fg_color=self.settings.ctm.BG_COLOR)
         self.modal_buttons_wrapper.grid(row=1, column=0, sticky="ew")
+
+
+        # Progress bar
+        self.progressbar_widget = CTkProgressBar(
+            self.modal_contents_wrapper,
+            height=8,
+            corner_radius=0,
+            fg_color="black",
+            # fg_color="#4b4c4f",
+            progress_color="gray",
+        )
+        self.progressbar_widget.set(0)
 
 
         if modal_type == "information":
@@ -236,6 +249,22 @@ class _CreateConfirmationModal(CTkToplevel):
         if str(e.widget) != ".!_createconfirmationmodal":
             return
         callFunctionIfCallable(self._view_variable.CALLBACK_HIDE_CONFIRMATION_MODAL)
+
+
+    def updateDownloadProgress(self, progress:float):
+        if self.is_showed_progressbar is False:
+            self.progressbar_widget.place(relwidth=0.9, relx=0.5, rely=0.84, anchor="s")
+            self.is_showed_progressbar = True
+            self.update()
+
+        progress_color = generateGradientColor(
+            value=progress,
+            color_start=[242, 242, 242], # RGB values for #f2f2f2
+            color_end=[72, 164, 149], # RGB values for #48a495
+        )
+        self.progressbar_widget.configure(progress_color=progress_color)
+        self.progressbar_widget.set(progress)
+        self.update_idletasks()
 
     def _grab_set(self):
         self.grab_set()

@@ -2,6 +2,8 @@ from customtkinter import CTk, CTkImage
 
 from  ._CreateSelectableLanguagesWindow import _CreateSelectableLanguagesWindow
 
+from .updating_window import UpdatingWindow
+
 from ._CreateWindowCover import _CreateWindowCover
 from ._CreateNotificationWindow import _CreateNotificationWindow
 from ._CreateDropdownMenuWindow import _CreateDropdownMenuWindow
@@ -172,6 +174,8 @@ class VRCT_GUI(CTk):
             settings=self.settings.main,
             init_scaling=(self._view_variable.VAR_TEXTBOX_UI_SCALING.get()/100)
         )
+
+        self.updating_window = UpdatingWindow(vrct_gui=self)
 
 
 
