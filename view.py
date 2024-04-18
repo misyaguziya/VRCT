@@ -220,6 +220,7 @@ class View():
             VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
             VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
             VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
+            VAR_SIDE_MENU_LABEL_VR=StringVar(value=i18n.t("config_window.side_menu_labels.vr")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
@@ -414,6 +415,14 @@ class View():
             DICT_WHISPER_WEIGHT_TYPE=self.getSelectableWhisperWeightTypeDict(),
             CALLBACK_SET_WHISPER_WEIGHT_TYPE=None,
             VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
+
+
+            # VR Tab
+            VAR_LABEL_ENABLE_OVERLAY_UI=StringVar(value=i18n.t("config_window.enable_overlay_ui.label")),
+            VAR_DESC_ENABLE_OVERLAY_UI=None,
+            # VAR_DESC_ENABLE_OVERLAY_UI=StringVar(value=i18n.t("config_window.enable_overlay_ui.desc")),
+            CALLBACK_SET_ENABLE_OVERLAY_UI=None,
+            VAR_ENABLE_OVERLAY_UI=BooleanVar(value=config.ENABLE_NOTICE_OVERLAY),
 
 
             # Others Tab
@@ -680,6 +689,8 @@ class View():
             self.view_variable.CALLBACK_SET_USE_WHISPER_FEATURE=config_window_registers.get("callback_set_use_whisper_feature", None)
             self.view_variable.CALLBACK_SET_WHISPER_WEIGHT_TYPE=config_window_registers.get("callback_set_whisper_weight_type", None)
 
+            # VR Tab
+            self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_UI=config_window_registers.get("callback_set_enable_overlay_ui", None)
 
             # Others Tab
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
