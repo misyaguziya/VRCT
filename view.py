@@ -796,6 +796,8 @@ class View():
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
 
+        # vrct_gui.updating_window.showUpdatingWindow()
+
 # Send Message Format
     def setSendMessageFormat_EntryWidgets(self, message_format:str):
         result = self.extractMessageFormat(message_format)
@@ -1587,7 +1589,14 @@ class View():
         vrct_gui.confirmation_modal.hide_buttons()
         vrct_gui.update()
         vrct_gui.confirmation_modal.update()
-        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+
+        self._hideConfirmationModal()
+        vrct_gui.withdraw()
+        vrct_gui.updating_window.showUpdatingWindow()
+
+        def func(**kwargs):
+            vrct_gui.updating_window.updateDownloadProgress(**kwargs)
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE, func)
 
 
 
