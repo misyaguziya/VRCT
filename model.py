@@ -565,14 +565,14 @@ class Model:
         ui_type = config.OVERLAY_UI_TYPE
         return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
 
-    def createOverlayImageLong(self, message_type, message, translation):
-        your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
-        target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
-        return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
+    # def createOverlayImageLong(self, message_type, message, translation):
+    #     your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
+    #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
+    #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def setOverlayImage(self, img):
         if self.overlay.initFlag is True:
-            self.overlay.uiMan.uiUpdate(img)
+            self.overlay.uiManager.uiUpdate(img)
 
     def startOverlay(self):
         if self.overlay.initFlag is False:

@@ -152,12 +152,12 @@ class OverlayImage:
     def getUiColors(self, ui_type):
         match ui_type:
             case "default":
-                background_color = (41, 42, 45, 127)
-                background_outline_color = (41, 42, 45, 127)
+                background_color = (41, 42, 45, 240)
+                background_outline_color = (41, 42, 45, 240)
                 text_color = (223, 223, 223)
             case "sakura":
-                background_color = (225, 40, 30, 20)
-                background_outline_color = (255, 255, 255, 50)
+                background_color = (225, 40, 30, 80)
+                background_outline_color = (255, 255, 255, 200)
                 text_color = (223, 223, 223)
         return {
             "background_color": background_color,
@@ -171,16 +171,23 @@ class OverlayImage:
             case "default":
                 pass
             case "sakura":
+                margin = 7
+                alpha_ratio = 0.4
                 overlay_tl = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "overlay_tl_sakura.png"))
                 overlay_br = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "overlay_br_sakura.png"))
+                if overlay_tl.size[1] > image_size[1]:
+                    overlay_tl = overlay_tl.resize((image_size[1]-margin, image_size[1]-margin))
+                if overlay_br.size[1] > image_size[1]:
+                    overlay_br = overlay_br.resize((image_size[1]-margin, image_size[1]-margin))
+
                 alpha = overlay_tl.getchannel("A")
-                alpha = alpha.point(lambda x: x * 0.1)
+                alpha = alpha.point(lambda x: x * alpha_ratio)
                 overlay_tl.putalpha(alpha)
                 alpha = overlay_br.getchannel("A")
-                alpha = alpha.point(lambda x: x * 0.1)
+                alpha = alpha.point(lambda x: x * alpha_ratio)
                 overlay_br.putalpha(alpha)
-                decoration_image.paste(overlay_tl, (7, 7))
-                decoration_image.paste(overlay_br, (image_size[0]-overlay_br.size[0]-7, image_size[1]-overlay_br.size[1]-7))
+                decoration_image.paste(overlay_tl, (margin, margin))
+                decoration_image.paste(overlay_br, (image_size[0]-overlay_br.size[0]-margin, image_size[1]-overlay_br.size[1]-margin))
         return decoration_image
 
     def createTextboxShort(self, text, language, text_color, base_width, base_height, font_size):
