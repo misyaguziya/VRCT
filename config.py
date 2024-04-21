@@ -876,7 +876,7 @@ class Config:
         # Read Only
         self._VERSION = "2.2.2"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
-        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "123456789"
+        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
