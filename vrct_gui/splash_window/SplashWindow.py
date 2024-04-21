@@ -2,7 +2,7 @@ import math
 import time
 
 from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar, CTkFrame
-from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation, generateGradientColor
+from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, getImagePath, setGeometryToCenterOfScreen, fadeInAnimation, generateGradientColor
 
 class SplashWindow(CTkToplevel):
     def __init__(self):
@@ -10,8 +10,9 @@ class SplashWindow(CTkToplevel):
         self.withdraw()
         self.overrideredirect(True)
         self.configure(fg_color="#292a2d")
-        self.title("SplashWindow")
-        self.wm_attributes("-toolwindow", True)
+        self.title("Starting Up...")
+        self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
+        # self.wm_attributes("-toolwindow", True)
 
         self.is_showed_weight_download_progressbar = False
 
