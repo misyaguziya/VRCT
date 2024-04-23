@@ -587,4 +587,9 @@ class Model:
             self.th_overlay.stop()
             self.th_overlay = None
 
+    def updateOverlayPosition(self):
+        pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+        if self.overlay.initFlag is True:
+            self.overlay.uiManager.posUpdate(pos)
+
 model = Model()

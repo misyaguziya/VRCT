@@ -12,6 +12,7 @@ from ._PrintToTextbox import _PrintToTextbox
 
 from .main_window import createMainWindowWidgets
 from .config_window import ConfigWindow
+from .quick_settings_window import QuickSettingsWindow
 from .ui_utils import setDefaultActiveTab, setGeometryToCenterOfScreen, fadeInAnimation
 
 from utils import callFunctionIfCallable
@@ -127,6 +128,13 @@ class VRCT_GUI(CTk):
             settings=self.settings.config_window,
             view_variable=self._view_variable
         )
+
+        self.quick_settings_window = QuickSettingsWindow(
+            vrct_gui=self,
+            settings=self.settings.config_window,
+            view_variable=self._view_variable
+        )
+        # self.quick_settings_window.show()
 
         self.selectable_languages_window = _CreateSelectableLanguagesWindow(
             vrct_gui=self,
