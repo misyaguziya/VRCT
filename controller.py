@@ -101,7 +101,7 @@ def sendMicMessage(message):
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
-            # if config.ENABLE_NOTICE_OVERLAY is True:
+            # if config.ENABLE_OVERLAY_SMALL_LOG is True:
             #     overlay_image = model.createOverlayImageShort(message, translation)
             #     model.setOverlayImage(overlay_image)
             #     overlay_image = model.createOverlayImageLong("send", message, translation)
@@ -164,7 +164,7 @@ def receiveSpeakerMessage(message):
             if model.th_overlay is None:
                 model.startOverlay()
 
-            if config.ENABLE_NOTICE_OVERLAY is True:
+            if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 overlay_image = model.createOverlayImageShort(message, translation)
                 model.setOverlayImage(overlay_image)
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
@@ -245,7 +245,7 @@ def sendChatMessage(message):
                 osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
 
-        # if config.ENABLE_NOTICE_OVERLAY is True:
+        # if config.ENABLE_OVERLAY_SMALL_LOG is True:
         #     overlay_image = model.createOverlayImageShort(message, translation)
         #     model.setOverlayImage(overlay_image)
         #     overlay_image = model.createOverlayImageLong("send", message, translation)
@@ -859,9 +859,42 @@ def callbackSetWhisperWeightType(value):
     view.showRestartButtonIfRequired()
 
 # VR Tab
-def callbackSetEnableOverlayUi(value):
-    print("callbackSetEnableOverlayUi", value)
-    config.ENABLE_NOTICE_OVERLAY = value
+def callbackSetOverlaySettings(value, set_type:str):
+    print("callbackSetOverlaySettings", value, set_type)
+    pre_settings = config.OVERLAY_SETTINGS
+    pre_settings[set_type] = value
+    config.OVERLAY_SETTINGS = pre_settings
+    match (set_type):
+        case "opacity":
+            pass
+            # update?
+        case "ui_scaling":
+            pass
+            # update?
+
+def callbackSetEnableOverlaySmallLog(value):
+    print("callbackSetEnableOverlaySmallLog", value)
+    config.ENABLE_OVERLAY_SMALL_LOG = value
+
+def callbackSetOverlaySmallLogSettings(value, set_type:str):
+    print("callbackSetOverlaySmallLogSettings", value, set_type)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings[set_type] = value
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    match (set_type):
+        case "x_pos":
+            model.updateOverlayPosition()
+        case "y_pos":
+            model.updateOverlayPosition()
+        case "depth":
+            pass
+            # update?
+        case "display_duration":
+            pass
+            # update?
+        case "fadeout_duration":
+            pass
+            # update?
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -1104,7 +1137,9 @@ def createMainWindow(splash):
             "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
 
             # VR Tab
-            "callback_set_enable_overlay_ui": callbackSetEnableOverlayUi,
+            "callback_set_overlay_settings": callbackSetOverlaySettings,
+            "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
+            "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,

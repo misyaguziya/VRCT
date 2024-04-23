@@ -34,6 +34,9 @@ def generatePercentageStringsList(start:int, end:int, step:int):
 def intToPctStr(value:int):
     return f"{value}%"
 
+def floatToPctStr(value:float):
+    return f"{int(value*100)}%"
+
 def strPctToInt(value:str):
     return int(value.replace("%", ""))
 

@@ -207,7 +207,7 @@ config_window:
     recommended_model_template: "%{model_name} model (%{capacity}) (Recommended)"
 
 
-  enable_overlay_ui:
+  enable_overlay_small_log:
     label: OpenVR
     # desc:
 
