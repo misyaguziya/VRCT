@@ -18,9 +18,8 @@ class OverlayImage:
         "Chinese Traditional": "NotoSansTC-Regular",
     }
 
-    def __init__(self, opacity, ui_scaling):
+    def __init__(self, opacity):
         self.opacity = int(opacity*255)
-        self.ui_scaling = ui_scaling
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
@@ -142,14 +141,11 @@ class OverlayImage:
     def setOpacity(self, opacity):
         self.opacity = int(opacity*255)
 
-    def setUiScaling(self, ui_scaling):
-        self.ui_scaling = ui_scaling
-
     def getUiSize(self):
         return {
-            "width": int(960*self.ui_scaling),
-            "height": int(23*self.ui_scaling),
-            "font_size": int(23*self.ui_scaling),
+            "width": 960,
+            "height": 23,
+            "font_size": 23,
         }
 
     def getUiColors(self, ui_type):
