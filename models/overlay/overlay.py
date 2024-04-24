@@ -59,7 +59,7 @@ class UIElement:
     def setTransparency(self, a):
         self.overlay.setOverlayAlpha(self.handle, a)
 
-    def setPosition(self, pos):
+    def updatePosition(self, pos):
         """
         pos is a 2-tuple representing normalized (x, y)
         """
@@ -75,6 +75,13 @@ class UIElement:
             openvr.k_unTrackedDeviceIndex_Hmd,
             self.transform
         )
+
+    def setPosition(self, pos):
+        self.settings["Normalized_icon_X_position"] = pos[0]
+        self.settings["Normalized_icon_Y_position"] = pos[1]
+
+    def setDepth(self, depth):
+        self.settings["Icon_plane_depth"] = depth
 
 class UIManager:
     def __init__(self, overlay_key, overlay_name, settings):
@@ -93,8 +100,11 @@ class UIManager:
         if self.settings['Fade_interval'] != 0:
             self.evaluateTransparencyFade(self.overlayUI, self.lastUpdate, currTime)
 
-    def uiUpdate(self, img):
+    def setImage(self, img):
         self.overlayUI.setImage(img)
+
+    def uiUpdate(self, img):
+        self.setImage(img)
         self.overlayUI.setTransparency(self.settings['Transparency'])
         self.lastUpdate = time.monotonic()
 
@@ -107,21 +117,33 @@ class UIManager:
 
             ui.setTransparency(fadeRatio * self.settings['Transparency'])
 
-    def posUpdate(self, pos):
+    def posUpdate(self):
+        self.overlayUI.updatePosition()
+
+    def setPosition(self, pos):
         self.overlayUI.setPosition(pos)
 
+    def setDepth(self, depth):
+        self.overlayUI.setDepth(depth)
+
+    def setFadeTime(self, fade_time):
+        self.settings["Fade_time"] = fade_time
+
+    def setFadeInterval(self, fade_interval):
+        self.settings["Fade_interval"] = fade_interval
+
 class Overlay:
-    def __init__(self):
+    def __init__(self, x, y , depth, fade_time, fade_interval):
         self.initFlag = False
         settings = {
             "Color": [1, 1, 1],
             "Transparency": 1,
-            "Normalized_icon_X_position": 0.0,
-            "Normalized_icon_Y_position": -0.41,
-            "Icon_plane_depth": 1,
+            "Normalized_icon_X_position": x,
+            "Normalized_icon_Y_position": y,
+            "Icon_plane_depth": depth,
             "Normalized_icon_width": 1,
-            "Fade_time": 5,
-            "Fade_interval": 2,
+            "Fade_time": fade_time,
+            "Fade_interval": fade_interval,
         }
         self.settings = settings
 

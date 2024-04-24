@@ -4,10 +4,6 @@ from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
 
 class OverlayImage:
-    WIDTH = 1920//2
-    HEIGHT = 46//2
-    FONT_SIZE_SHORT = HEIGHT
-
     # TEXT_COLOR_LARGE = (223, 223, 223)
     # TEXT_COLOR_SMALL = (190, 190, 190)
     # TEXT_COLOR_SEND = (70, 161, 146)
@@ -22,8 +18,9 @@ class OverlayImage:
         "Chinese Traditional": "NotoSansTC-Regular",
     }
 
-    def __init__(self):
-        self.log_data = []
+    def __init__(self, opacity, ui_scaling):
+        self.opacity = int(opacity*255)
+        self.ui_scaling = ui_scaling
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
@@ -142,23 +139,29 @@ class OverlayImage:
     #     img = Image.alpha_composite(background, img)
     #     return img
 
+    def setOpacity(self, opacity):
+        self.opacity = int(opacity*255)
+
+    def setUiScaling(self, ui_scaling):
+        self.ui_scaling = ui_scaling
+
     def getUiSize(self):
         return {
-            "width": 960,
-            "height": 23,
-            "font_size": 23,
+            "width": int(960*self.ui_scaling),
+            "height": int(23*self.ui_scaling),
+            "font_size": int(23*self.ui_scaling),
         }
 
     def getUiColors(self, ui_type):
         match ui_type:
             case "default":
-                background_color = (41, 42, 45, 240)
-                background_outline_color = (41, 42, 45, 240)
-                text_color = (223, 223, 223)
+                background_color = (41, 42, 45, self.opacity)
+                background_outline_color = (41, 42, 45, self.opacity)
+                text_color = (223, 223, 223, self.opacity)
             case "sakura":
-                background_color = (225, 40, 30, 80)
-                background_outline_color = (255, 255, 255, 200)
-                text_color = (223, 223, 223)
+                background_color = (225, 40, 30, self.opacity)
+                background_outline_color = (255, 255, 255, self.opacity)
+                text_color = (223, 223, 223, self.opacity)
         return {
             "background_color": background_color,
             "background_outline_color": background_outline_color,

@@ -103,9 +103,9 @@ def sendMicMessage(message):
 
             # if config.ENABLE_OVERLAY_SMALL_LOG is True:
             #     overlay_image = model.createOverlayImageShort(message, translation)
-            #     model.setOverlayImage(overlay_image)
+            #     model.updateOverlay(overlay_image)
             #     overlay_image = model.createOverlayImageLong("send", message, translation)
-            #     model.setOverlayImage(overlay_image)
+            #     model.updateOverlay(overlay_image)
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
@@ -166,9 +166,9 @@ def receiveSpeakerMessage(message):
 
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 overlay_image = model.createOverlayImageShort(message, translation)
-                model.setOverlayImage(overlay_image)
+                model.updateOverlay(overlay_image)
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                # model.setOverlayImage(overlay_image)
+                # model.updateOverlay(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -247,9 +247,9 @@ def sendChatMessage(message):
 
         # if config.ENABLE_OVERLAY_SMALL_LOG is True:
         #     overlay_image = model.createOverlayImageShort(message, translation)
-        #     model.setOverlayImage(overlay_image)
+        #     model.updateOverlay(overlay_image)
         #     overlay_image = model.createOverlayImageLong("send", message, translation)
-        #     model.setOverlayImage(overlay_image)
+        #     model.updateOverlay(overlay_image)
 
         # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)
@@ -866,11 +866,9 @@ def callbackSetOverlaySettings(value, set_type:str):
     config.OVERLAY_SETTINGS = pre_settings
     match (set_type):
         case "opacity":
-            pass
-            # update?
+            model.updateOverlayImageOpacity()
         case "ui_scaling":
-            pass
-            # update?
+            model.updateOverlayImageUiScaling()
 
 def callbackSetEnableOverlaySmallLog(value):
     print("callbackSetEnableOverlaySmallLog", value)
@@ -887,14 +885,11 @@ def callbackSetOverlaySmallLogSettings(value, set_type:str):
         case "y_pos":
             model.updateOverlayPosition()
         case "depth":
-            pass
-            # update?
+            model.updateOverlayPosition()
         case "display_duration":
-            pass
-            # update?
+            model.updateOverlayTimes()
         case "fadeout_duration":
-            pass
-            # update?
+            model.updateOverlayTimes()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
