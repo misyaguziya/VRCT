@@ -495,14 +495,14 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
 
     # For change the image, register to config_window
-    config_window.poster_image_frame__iya_vrct_poster_ja = settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_ja.png", directly_type="vrct_posters")
-    config_window.poster_image_frame__iya_vrct_poster_en = settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_en.png", directly_type="vrct_posters")
-    config_window.poster_image_frame__iya_vrct_poster_cn = settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_cn.png", directly_type="vrct_posters")
-
     config_window.poster_image_frame_dict = {
-        "iya_vrct_poster_ja": config_window.poster_image_frame__iya_vrct_poster_ja,
-        "iya_vrct_poster_en": config_window.poster_image_frame__iya_vrct_poster_en,
-        "iya_vrct_poster_cn": config_window.poster_image_frame__iya_vrct_poster_cn,
+        "iya_vrct_poster_ja": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_ja.png", directly_type="vrct_posters"),
+        "iya_vrct_poster_en": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_en.png", directly_type="vrct_posters"),
+        "iya_vrct_poster_cn": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_cn.png", directly_type="vrct_posters"),
+        "iya_vrct_poster_ko": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_ko.png", directly_type="vrct_posters"),
+        "iya_vrct_manga_ja": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_ja.png", directly_type="vrct_posters"),
+        "iya_vrct_manga_en": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_en.png", directly_type="vrct_posters"),
+        "iya_vrct_manga_ko": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_ko.png", directly_type="vrct_posters"),
     }
     def vrctPostersGridRemove():
         for poster_frame in config_window.poster_image_frame_dict.values():
@@ -512,7 +512,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     def gridVrctPoster_Ja():
         vrctPostersGridRemove()
         config_window.poster_image_frame_dict["iya_vrct_poster_ja"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Cn
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_Ko
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_En
 
     def gridVrctPoster_En():
@@ -525,7 +525,35 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         vrctPostersGridRemove()
         config_window.poster_image_frame_dict["iya_vrct_poster_cn"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_En
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_Ko
+
+    def gridVrctPoster_Ko():
+        vrctPostersGridRemove()
+        config_window.poster_image_frame_dict["iya_vrct_poster_ko"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Cn
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_Ja
+
+
+    def gridVrctManga_Ja():
+        vrctPostersGridRemove()
+        config_window.poster_image_frame_dict["iya_vrct_manga_ja"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Ko
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_En
+
+    def gridVrctManga_En():
+        vrctPostersGridRemove()
+        config_window.poster_image_frame_dict["iya_vrct_manga_en"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_Ja
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_Ko
+
+    def gridVrctManga_Ko():
+        vrctPostersGridRemove()
+        config_window.poster_image_frame_dict["iya_vrct_manga_ko"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_En
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_Ja
+
+
+
 
     gridVrctPoster_Ja()
 
