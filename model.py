@@ -587,10 +587,6 @@ class Model:
     #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
-    def setOverlayImage(self, img):
-        if self.overlay.initFlag is True:
-            self.overlay.uiManager.setImage(img)
-
     def updateOverlay(self, img):
         if self.overlay.initFlag is True:
             self.overlay.uiManager.uiUpdate(img)

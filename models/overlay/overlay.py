@@ -29,7 +29,6 @@ class UIElement:
         self.overlayKey = key
         self.overlayName = name
         self.settings = settings
-        pos = (self.settings['Normalized_icon_X_position'], self.settings['Normalized_icon_Y_position'])
         self.handle = self.overlay.createOverlay(self.overlayKey, self.overlayName)
 
         self.setImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0))) # blank image for default
@@ -40,7 +39,7 @@ class UIElement:
             self.settings['Normalized_icon_width'] * self.settings['Icon_plane_depth']
         )
 
-        self.setPosition(pos)
+        self.updatePosition()
         self.overlay.showOverlay(self.handle)
 
     def setImage(self, img):
