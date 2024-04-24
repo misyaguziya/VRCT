@@ -59,15 +59,12 @@ class UIElement:
     def setTransparency(self, a):
         self.overlay.setOverlayAlpha(self.handle, a)
 
-    def updatePosition(self, pos):
-        """
-        pos is a 2-tuple representing normalized (x, y)
-        """
+    def updatePosition(self):
         self.transform = mat34Id() # no rotation required for HMD attachment
 
         # assign position
-        self.transform[0][3] = pos[0] * self.settings['Icon_plane_depth']
-        self.transform[1][3] = pos[1] * self.settings['Icon_plane_depth']
+        self.transform[0][3] = self.settings["Normalized_icon_X_position"] * self.settings['Icon_plane_depth']
+        self.transform[1][3] = self.settings["Normalized_icon_Y_position"] * self.settings['Icon_plane_depth']
         self.transform[2][3] = - self.settings['Icon_plane_depth']
 
         self.overlay.setOverlayTransformTrackedDeviceRelative(
@@ -77,6 +74,9 @@ class UIElement:
         )
 
     def setPosition(self, pos):
+        """
+        pos is a 2-tuple representing normalized (x, y)
+        """
         self.settings["Normalized_icon_X_position"] = pos[0]
         self.settings["Normalized_icon_Y_position"] = pos[1]
 
