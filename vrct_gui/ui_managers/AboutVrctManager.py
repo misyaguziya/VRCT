@@ -56,7 +56,7 @@ class AboutVrctManager():
         self.uism.SPECIAL_THANKS_MESSAGE_AND_YOU_BOTTOM_PADY = self._calculateUiSize(8)
 
         self.uism.POSTER_SHOWCASE_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(6)
-        self.uism.POSTER_SHOWCASE_POSTER_IMAGES_BOTTOM_PADY = self._calculateUiSize(18)
+        self.uism.POSTER_SHOWCASE_POSTER_IMAGES_BOTTOM_PADY = self._calculateUiSize(6)
         self.uism.POSTER_SHOWCASE_WORLD_ITEM_BOTTOM_PADY = self._calculateUiSize(4)
         self.uism.POSTER_SHOWCASE_WORLD_ITEM_IPADX = self._calculateUiSize(12)
         self.uism.POSTER_SHOWCASE_WORLD_ITEM_IPADY = self._calculateUiSize(4)
