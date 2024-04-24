@@ -78,10 +78,10 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
             config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
             config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
+            config.OVERLAY_SETTINGS["ui_scaling"],
         )
         self.overlay_image = OverlayImage(
             config.OVERLAY_SETTINGS["opacity"],
-            config.OVERLAY_SETTINGS["ui_scaling"],
         )
         self.pre_overlay_message = None
         self.th_overlay = None
@@ -637,14 +637,6 @@ class Model:
     def updateOverlayImageUiScaling(self):
         if self.overlay.initFlag is True:
             ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-            self.overlay_image.setUiScaling(ui_scaling)
-            if self.pre_overlay_message is not None:
-                img = self.overlay_image.createOverlayImageShort(
-                    self.pre_overlay_message["message"],
-                    self.pre_overlay_message["your_language"],
-                    self.pre_overlay_message["translation"],
-                    self.pre_overlay_message["target_language"],
-                    self.pre_overlay_message["ui_type"]
-                )
-                self.overlay.uiManager.setImage(img)
+            self.overlay.uiManager.setUiScaling(ui_scaling)
+
 model = Model()

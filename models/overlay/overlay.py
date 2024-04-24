@@ -36,7 +36,7 @@ class UIElement:
         self.setTransparency(self.settings['Transparency'])
         self.overlay.setOverlayWidthInMeters(
             self.handle,
-            self.settings['Normalized_icon_width'] * self.settings['Icon_plane_depth']
+            self.settings['Ui_scaling']
         )
 
         self.updatePosition()
@@ -81,6 +81,12 @@ class UIElement:
 
     def setDepth(self, depth):
         self.settings["Icon_plane_depth"] = depth
+
+    def setUiScaling(self, ui_scaling):
+        self.overlay.setOverlayWidthInMeters(
+            self.handle,
+            ui_scaling,
+        )
 
 class UIManager:
     def __init__(self, overlay_key, overlay_name, settings):
@@ -131,8 +137,11 @@ class UIManager:
     def setFadeInterval(self, fade_interval):
         self.settings["Fade_interval"] = fade_interval
 
+    def setUiScaling(self, ui_scaling):
+        self.overlayUI.setUiScaling(ui_scaling)
+
 class Overlay:
-    def __init__(self, x, y , depth, fade_time, fade_interval):
+    def __init__(self, x, y , depth, fade_time, fade_interval, ui_scaling):
         self.initFlag = False
         settings = {
             "Color": [1, 1, 1],
@@ -143,6 +152,7 @@ class Overlay:
             "Normalized_icon_width": 1,
             "Fade_time": fade_time,
             "Fade_interval": fade_interval,
+            "Ui_scaling": ui_scaling,
         }
         self.settings = settings
 
