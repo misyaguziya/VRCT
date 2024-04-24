@@ -533,6 +533,13 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
 
 
+    poster_images_authors_wrapper = CTkFrame(poster_container, fg_color=ABOUT_VRCT_BG, corner_radius=0, width=0, height=0)
+    poster_images_authors_wrapper.grid(column=0, row=1, padx=0, pady=0, sticky="nsew")
+
+    config_window.poster_images_authors = settings.about_vrct.embedImageCTkLabel(poster_images_authors_wrapper, settings.about_vrct.image_file.POSTER_IMAGES_AUTHOR)
+    config_window.poster_images_authors_m = settings.about_vrct.embedImageCTkLabel(poster_images_authors_wrapper, settings.about_vrct.image_file.POSTER_IMAGES_AUTHOR_M)
+
+
 
     def toPrevPagePosterImage():
         current_function_index = view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM
@@ -542,6 +549,13 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         current_function_index = (current_function_index - 1) % len(poster_frame_list)
         poster_frame_list[current_function_index].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM = current_function_index
+
+        if poster_image_frame_settings_list[current_function_index]["poster_type"] == "poster":
+            config_window.poster_images_authors_m.grid_remove()
+            config_window.poster_images_authors.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
+        elif poster_image_frame_settings_list[current_function_index]["poster_type"] == "manga":
+            config_window.poster_images_authors.grid_remove()
+            config_window.poster_images_authors_m.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
 
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
@@ -558,6 +572,14 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         poster_frame_list[current_function_index].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM = current_function_index
 
+        if poster_image_frame_settings_list[current_function_index]["poster_type"] == "poster":
+            config_window.poster_images_authors_m.grid_remove()
+            config_window.poster_images_authors.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
+        elif poster_image_frame_settings_list[current_function_index]["poster_type"] == "manga":
+            config_window.poster_images_authors.grid_remove()
+            config_window.poster_images_authors_m.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
+
+
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
 
@@ -567,6 +589,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
     view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
 
+    config_window.poster_images_authors.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
 
     poster_frame_list[0].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
 
@@ -587,11 +610,10 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     )
 
 
-    poster_images_authors_wrapper = CTkFrame(poster_container, fg_color=ABOUT_VRCT_BG, corner_radius=0, width=0, height=0)
-    poster_images_authors_wrapper.grid(column=0, row=1, padx=0, pady=0, sticky="nsew")
 
-    poster_images_authors = settings.about_vrct.embedImageCTkLabel(poster_images_authors_wrapper, "poster_images_authors.png")
-    poster_images_authors.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
+
+
+
 
 
     poster_tell_us_message = createTellUsButton(
