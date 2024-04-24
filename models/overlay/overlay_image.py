@@ -18,8 +18,8 @@ class OverlayImage:
         "Chinese Traditional": "NotoSansTC-Regular",
     }
 
-    def __init__(self, opacity):
-        self.opacity = int(opacity*255)
+    def __init__(self):
+        pass
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
@@ -138,9 +138,6 @@ class OverlayImage:
     #     img = Image.alpha_composite(background, img)
     #     return img
 
-    def setOpacity(self, opacity):
-        self.opacity = int(opacity*255)
-
     def getUiSize(self):
         return {
             "width": 960,
@@ -151,13 +148,13 @@ class OverlayImage:
     def getUiColors(self, ui_type):
         match ui_type:
             case "default":
-                background_color = (41, 42, 45, self.opacity)
-                background_outline_color = (41, 42, 45, self.opacity)
-                text_color = (223, 223, 223, self.opacity)
+                background_color = (41, 42, 45)
+                background_outline_color = (41, 42, 45)
+                text_color = (223, 223, 223)
             case "sakura":
-                background_color = (225, 40, 30, self.opacity)
-                background_outline_color = (255, 255, 255, self.opacity)
-                text_color = (223, 223, 223, self.opacity)
+                background_color = (225, 40, 30)
+                background_outline_color = (255, 255, 255)
+                text_color = (223, 223, 223)
         return {
             "background_color": background_color,
             "background_outline_color": background_outline_color,

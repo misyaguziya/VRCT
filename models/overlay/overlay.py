@@ -105,11 +105,8 @@ class UIManager:
         if self.settings['Fade_interval'] != 0:
             self.evaluateTransparencyFade(self.overlayUI, self.lastUpdate, currTime)
 
-    def setImage(self, img):
-        self.overlayUI.setImage(img)
-
     def uiUpdate(self, img):
-        self.setImage(img)
+        self.overlayUI.setImage(img)
         self.overlayUI.setTransparency(self.settings['Transparency'])
         self.lastUpdate = time.monotonic()
 
@@ -140,16 +137,18 @@ class UIManager:
     def setUiScaling(self, ui_scaling):
         self.overlayUI.setUiScaling(ui_scaling)
 
+    def setTransparency(self, transparency):
+        self.settings["Transparency"] = transparency
+
 class Overlay:
-    def __init__(self, x, y , depth, fade_time, fade_interval, ui_scaling):
-        self.initFlag = False
+    def __init__(self, x, y , depth, fade_time, fade_interval, transparency, ui_scaling):
+        self.initialized = False
         settings = {
             "Color": [1, 1, 1],
-            "Transparency": 1,
+            "Transparency": transparency,
             "Normalized_icon_X_position": x,
             "Normalized_icon_Y_position": y,
             "Icon_plane_depth": depth,
-            "Normalized_icon_width": 1,
             "Fade_time": fade_time,
             "Fade_interval": fade_interval,
             "Ui_scaling": ui_scaling,
@@ -160,7 +159,7 @@ class Overlay:
         try:
             if checkSteamvrRunning() is True:
                 openvr.init(openvr.VRApplication_Overlay)
-                self.initFlag = True
+                self.initialized = True
         except Exception as e:
             print("Could not initialise OpenVR")
 
@@ -204,25 +203,25 @@ if __name__ == '__main__':
     overlay = Overlay()
     overlay_image = OverlayImage()
 
-    if overlay.initFlag is False:
+    if overlay.initialized is False:
         overlay.init()
-    if overlay.initFlag is True:
+    if overlay.initialized is True:
         t = threadFnc(overlay.startOverlay)
         t.start()
 
     time.sleep(1)
     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
     # img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", ui_type="sakura")
-    if overlay.initFlag is True:
+    if overlay.initialized is True:
         overlay.uiManager.uiUpdate(img)
     time.sleep(10)
 
     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "안녕하세요, 세계!안녕", "Korean")
-    if overlay.initFlag is True:
+    if overlay.initialized is True:
         overlay.uiManager.uiUpdate(img)
     time.sleep(10)
 
     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "你好世界！再见", "Chinese Simplified")
-    if overlay.initFlag is True:
+    if overlay.initialized is True:
         overlay.uiManager.uiUpdate(img)
     time.sleep(10)

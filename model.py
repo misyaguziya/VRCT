@@ -78,11 +78,10 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
             config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
             config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
+            config.OVERLAY_SETTINGS["opacity"],
             config.OVERLAY_SETTINGS["ui_scaling"],
         )
-        self.overlay_image = OverlayImage(
-            config.OVERLAY_SETTINGS["opacity"],
-        )
+        self.overlay_image = OverlayImage()
         self.pre_overlay_message = None
         self.th_overlay = None
 
@@ -588,13 +587,13 @@ class Model:
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def updateOverlay(self, img):
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             self.overlay.uiManager.uiUpdate(img)
 
     def startOverlay(self):
-        if self.overlay.initFlag is False:
+        if self.overlay.initialized is False:
             self.overlay.init()
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             self.th_overlay = threadFnc(self.overlay.startOverlay)
             self.th_overlay.daemon = True
             self.th_overlay.start()
@@ -605,7 +604,7 @@ class Model:
             self.th_overlay = None
 
     def updateOverlayPosition(self):
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
             self.overlay.uiManager.setPosition(pos)
             depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
@@ -613,7 +612,7 @@ class Model:
             self.overlay.uiManager.posUpdate()
 
     def updateOverlayTimes(self):
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
             self.overlay.uiManager.setFadeTime(display_duration)
             fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
@@ -621,21 +620,13 @@ class Model:
             self.overlay.uiManager.update()
 
     def updateOverlayImageOpacity(self):
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             opacity = config.OVERLAY_SETTINGS["opacity"]
-            self.overlay_image.setOpacity(opacity)
-            if self.pre_overlay_message is not None:
-                img = self.overlay_image.createOverlayImageShort(
-                    self.pre_overlay_message["message"],
-                    self.pre_overlay_message["your_language"],
-                    self.pre_overlay_message["translation"],
-                    self.pre_overlay_message["target_language"],
-                    self.pre_overlay_message["ui_type"]
-                )
-                self.overlay.uiManager.setImage(img)
+            self.overlay.uiManager.setTransparency(opacity)
+            self.overlay.uiManager.update()
 
     def updateOverlayImageUiScaling(self):
-        if self.overlay.initFlag is True:
+        if self.overlay.initialized is True:
             ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
             self.overlay.uiManager.setUiScaling(ui_scaling)
 
