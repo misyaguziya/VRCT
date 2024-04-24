@@ -72,8 +72,18 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
-        self.overlay = Overlay()
-        self.overlay_image = OverlayImage()
+        self.overlay = Overlay(
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
+        )
+        self.overlay_image = OverlayImage(
+            config.OVERLAY_SETTINGS["opacity"],
+            config.OVERLAY_SETTINGS["ui_scaling"],
+        )
+        self.pre_overlay_message = None
         self.th_overlay = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
@@ -563,6 +573,13 @@ class Model:
         your_language = config.TARGET_LANGUAGE
         target_language = config.SOURCE_LANGUAGE
         ui_type = config.OVERLAY_UI_TYPE
+        self.pre_overlay_message = {
+            "message" : message,
+            "your_language" : your_language,
+            "translation" : translation,
+            "target_language" : target_language,
+            "ui_type" : ui_type,
+        }
         return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
 
     # def createOverlayImageLong(self, message_type, message, translation):
@@ -571,6 +588,10 @@ class Model:
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def setOverlayImage(self, img):
+        if self.overlay.initFlag is True:
+            self.overlay.uiManager.setImage(img)
+
+    def updateOverlay(self, img):
         if self.overlay.initFlag is True:
             self.overlay.uiManager.uiUpdate(img)
 
@@ -588,8 +609,46 @@ class Model:
             self.th_overlay = None
 
     def updateOverlayPosition(self):
-        pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
         if self.overlay.initFlag is True:
-            self.overlay.uiManager.posUpdate(pos)
+            pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+            self.overlay.uiManager.setPosition(pos)
+            depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
+            self.overlay.uiManager.setDepth(depth)
+            self.overlay.uiManager.posUpdate()
 
+    def updateOverlayTimes(self):
+        if self.overlay.initFlag is True:
+            display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
+            self.overlay.uiManager.setFadeTime(display_duration)
+            fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
+            self.overlay.uiManager.setFadeInterval(fadeout_duration)
+            self.overlay.uiManager.update()
+
+    def updateOverlayImageOpacity(self):
+        if self.overlay.initFlag is True:
+            opacity = config.OVERLAY_SETTINGS["opacity"]
+            self.overlay_image.setOpacity(opacity)
+            if self.pre_overlay_message is not None:
+                img = self.overlay_image.createOverlayImageShort(
+                    self.pre_overlay_message["message"],
+                    self.pre_overlay_message["your_language"],
+                    self.pre_overlay_message["translation"],
+                    self.pre_overlay_message["target_language"],
+                    self.pre_overlay_message["ui_type"]
+                )
+                self.overlay.uiManager.setImage(img)
+
+    def updateOverlayImageUiScaling(self):
+        if self.overlay.initFlag is True:
+            ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
+            self.overlay_image.setUiScaling(ui_scaling)
+            if self.pre_overlay_message is not None:
+                img = self.overlay_image.createOverlayImageShort(
+                    self.pre_overlay_message["message"],
+                    self.pre_overlay_message["your_language"],
+                    self.pre_overlay_message["translation"],
+                    self.pre_overlay_message["target_language"],
+                    self.pre_overlay_message["ui_type"]
+                )
+                self.overlay.uiManager.setImage(img)
 model = Model()
