@@ -494,68 +494,84 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     )
 
 
-    # For change the image, register to config_window
-    config_window.poster_image_frame_dict = {
-        "iya_vrct_poster_ja": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_ja.png", directly_type="vrct_posters"),
-        "iya_vrct_poster_en": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_en.png", directly_type="vrct_posters"),
-        "iya_vrct_poster_cn": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_cn.png", directly_type="vrct_posters"),
-        "iya_vrct_poster_ko": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_poster_ko.png", directly_type="vrct_posters"),
-        "iya_vrct_manga_ja": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_ja.png", directly_type="vrct_posters"),
-        "iya_vrct_manga_en": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_en.png", directly_type="vrct_posters"),
-        "iya_vrct_manga_ko": settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, "iya_vrct_manga_ko.png", directly_type="vrct_posters"),
-    }
-    def vrctPostersGridRemove():
-        for poster_frame in config_window.poster_image_frame_dict.values():
-            poster_frame.grid_remove()
+    poster_image_frame_settings_list = [
+        {
+            "file_name": "iya_vrct_poster_ja.png",
+            "poster_type": "poster",
+        },
+        {
+            "file_name": "iya_vrct_poster_en.png",
+            "poster_type": "poster",
+        },
+        {
+            "file_name": "iya_vrct_poster_cn.png",
+            "poster_type": "poster",
+        },
+        {
+            "file_name": "iya_vrct_poster_ko.png",
+            "poster_type": "poster",
+        },
+        {
+            "file_name": "iya_vrct_manga_ja.png",
+            "poster_type": "manga",
+        },
+        {
+            "file_name": "iya_vrct_manga_en.png",
+            "poster_type": "manga",
+        },
+        {
+            "file_name": "iya_vrct_manga_ko.png",
+            "poster_type": "manga",
+        },
+    ]
 
-
-    def gridVrctPoster_Ja():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_poster_ja"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_Ko
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_En
-
-    def gridVrctPoster_En():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_poster_en"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Ja
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_Cn
-
-    def gridVrctPoster_Cn():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_poster_cn"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_En
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_Ko
-
-    def gridVrctPoster_Ko():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_poster_ko"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Cn
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_Ja
-
-
-    def gridVrctManga_Ja():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_manga_ja"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctPoster_Ko
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_En
-
-    def gridVrctManga_En():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_manga_en"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_Ja
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctManga_Ko
-
-    def gridVrctManga_Ko():
-        vrctPostersGridRemove()
-        config_window.poster_image_frame_dict["iya_vrct_manga_ko"].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=gridVrctManga_En
-        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=gridVrctPoster_Ja
+    poster_frame_list = []
+    for poster_frame_settings in poster_image_frame_settings_list:
+        poster_frame = settings.about_vrct.embedImageCTkLabel(poster_images_wrapper, poster_frame_settings["file_name"], directly_type="vrct_posters")
+        poster_frame_list.append(poster_frame)
 
 
 
 
-    gridVrctPoster_Ja()
+
+    def toPrevPagePosterImage():
+        current_function_index = view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=None
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=None
+        poster_frame_list[current_function_index].grid_remove()
+        current_function_index = (current_function_index - 1) % len(poster_frame_list)
+        poster_frame_list[current_function_index].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM = current_function_index
+
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
+
+
+
+
+    def toNextPagePosterImage():
+        current_function_index = view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=None
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=None
+        poster_frame_list[current_function_index].grid_remove()
+        current_function_index = (current_function_index + 1) % len(poster_frame_list)
+        poster_frame_list[current_function_index].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM = current_function_index
+
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
+        view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
+
+
+
+    # Initialize
+    view_variable.CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=toPrevPagePosterImage
+    view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=toNextPagePosterImage
+
+
+    poster_frame_list[0].grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
+
+
+
 
     poster_image_arrow_right = settings.about_vrct.embedImageButtonCTkLabel(poster_images_wrapper, "arrow_right.png", lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON))
     poster_image_arrow_right.grid(column=2, row=0, padx=0, pady=0, sticky="nsew")
