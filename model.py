@@ -623,7 +623,6 @@ class Model:
         if self.overlay.initialized is True:
             opacity = config.OVERLAY_SETTINGS["opacity"]
             self.overlay.uiManager.setTransparency(opacity)
-            self.overlay.uiManager.update()
 
     def updateOverlayImageUiScaling(self):
         if self.overlay.initialized is True:
