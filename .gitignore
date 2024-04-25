@@ -11,3 +11,4 @@ weights/
 .vscode
 error.log
 *.exe
+*.ipynb

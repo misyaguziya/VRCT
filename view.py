@@ -5,10 +5,10 @@ from tkinter import font as tk_font
 import webbrowser
 import i18n
 
-from customtkinter import StringVar, IntVar, BooleanVar, get_appearance_mode
+from customtkinter import StringVar, IntVar, DoubleVar, BooleanVar, get_appearance_mode
 from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager, AboutVrctManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, intToPctStr
+from utils import callFunctionIfCallable, intToPctStr, floatToPctStr
 
 from config import config
 
@@ -138,6 +138,65 @@ class View():
 
 
 
+
+            # VR Settings
+            VAR_VR_SETTINGS=StringVar(value="VR Settings"),
+            CALLBACK_SET_CALLBACK_OPEN_VR_SETTINGS_WINDOW=self._openVrSettingsWindow,
+
+
+            VAR_LABEL_OVERLAY_OPACITY=StringVar(value="Opacity"),
+            SLIDER_RANGE_OVERLAY_OPACITY=(0.1, 1.0),
+            NUMBER_OF_STEPS_OVERLAY_OPACITY=18,
+            VAR_OVERLAY_OPACITY=DoubleVar(value=config.OVERLAY_SETTINGS["opacity"]),
+            VAR_CURRENT_VALUE_OVERLAY_OPACITY=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["opacity"])),
+
+            VAR_LABEL_OVERLAY_UI_SCALING=StringVar(value="Ui Scaling"),
+            SLIDER_RANGE_OVERLAY_UI_SCALING=(0.4, 2.0),
+            NUMBER_OF_STEPS_OVERLAY_UI_SCALING=16,
+            VAR_OVERLAY_UI_SCALING=DoubleVar(value=config.OVERLAY_SETTINGS["ui_scaling"]),
+            VAR_CURRENT_VALUE_OVERLAY_UI_SCALING=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"])),
+
+
+
+            CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value="X_position"),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
+            VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value="Y_position"),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.5, 0.5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=100,
+            VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value="Depth"),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0.5, 1.5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=100,
+            VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value="Display Duration"),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=(1, 60),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DISPLAY_DURATION=59,
+            VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)"),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value="Fadeout Duration"),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=(0, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_FADEOUT_DURATION=5,
+            VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)"),
+
+
+
+
+
+
+
+
             # Main Window
             # Sidebar
             # Sidebar Compact Mode
@@ -220,6 +279,7 @@ class View():
             VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
             VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
             VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
+            VAR_SIDE_MENU_LABEL_VR=StringVar(value=i18n.t("config_window.side_menu_labels.vr")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
@@ -414,6 +474,14 @@ class View():
             DICT_WHISPER_WEIGHT_TYPE=self.getSelectableWhisperWeightTypeDict(),
             CALLBACK_SET_WHISPER_WEIGHT_TYPE=None,
             VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
+
+
+            # VR Tab
+            VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.label")),
+            VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=None,
+            # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.desc")),
+            CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=None,
+            VAR_ENABLE_OVERLAY_SMALL_LOG=BooleanVar(value=config.ENABLE_OVERLAY_SMALL_LOG),
 
 
             # Others Tab
@@ -679,6 +747,14 @@ class View():
             # Transcription Tab (Internal AI Model)
             self.view_variable.CALLBACK_SET_USE_WHISPER_FEATURE=config_window_registers.get("callback_set_use_whisper_feature", None)
             self.view_variable.CALLBACK_SET_WHISPER_WEIGHT_TYPE=config_window_registers.get("callback_set_whisper_weight_type", None)
+
+            # VR Tab
+            # VR Tab (Quick Settings)
+            self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
+
+            self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
+            # VR Tab (Quick Settings)
+            self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
 
 
             # Others Tab
@@ -1610,6 +1686,9 @@ class View():
         callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
         self._closeMicWordFilterList()
         vrct_gui._closeConfigWindow()
+
+    def _openVrSettingsWindow(self):
+        vrct_gui.quick_settings_window.show()
 
 # Window Control (Main Window Cover)
     def _openTheCoverOfMainWindow(self):

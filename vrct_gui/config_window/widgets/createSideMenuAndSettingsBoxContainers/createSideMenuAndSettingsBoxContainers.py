@@ -11,6 +11,7 @@ from .setting_box_containers.setting_box_transcription import createSettingBox_M
 from .setting_box_containers.setting_box_others import createSettingBox_Others, createSettingBox_Others_SendMessageFormats, createSettingBox_Others_ReceivedMessageFormats, createSettingBox_Others_Additional
 from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
 from .setting_box_containers.setting_box_translation import createSettingBox_Translation
+from .setting_box_containers.setting_box_vr import createSettingBox_Vr
 
 from .setting_box_containers.setting_box_about_vrct import createSettingBox_AboutVrct
 
@@ -100,6 +101,21 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                         "var_section_title": view_variable.VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL,
                         "setting_box": createSettingBox_InternalModel
                     },
+                ]
+            },
+        },
+        {
+            "side_menu_tab_attr_name": "side_menu_tab_vr",
+            "label_attr_name": "label_vr",
+            "selected_mark_attr_name": "selected_mark_vr",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
+            "setting_box_container_settings": {
+                "setting_box_container_attr_name": "setting_box_container_vr",
+                "setting_boxes": [
+                    {
+                        "var_section_title": None,
+                        "setting_box": createSettingBox_Vr
+                    }
                 ]
             },
         },
