@@ -98,6 +98,7 @@ class UIManager:
             overlay_name,
             self.settings,
         )
+        self.fadeRatio = 1
         self.lastUpdate = time.monotonic()
 
     def update(self):
@@ -113,11 +114,11 @@ class UIManager:
     def evaluateTransparencyFade(self, lastUpdate, currentTime):
         if (currentTime - lastUpdate) > self.settings['Fade_time']:
             timeThroughInterval = currentTime - lastUpdate - self.settings['Fade_time']
-            fadeRatio = 1 - timeThroughInterval / self.settings['Fade_interval']
-            if fadeRatio < 0:
-                fadeRatio = 0
+            self.fadeRatio = 1 - timeThroughInterval / self.settings['Fade_interval']
+            if self.fadeRatio < 0:
+                self.fadeRatio = 0
 
-            self.overlayUI.setTransparency(fadeRatio * self.settings['Transparency'])
+            self.overlayUI.setTransparency(self.fadeRatio * self.settings['Transparency'])
 
     def posUpdate(self):
         self.overlayUI.updatePosition()
@@ -139,6 +140,7 @@ class UIManager:
 
     def setTransparency(self, transparency):
         self.settings["Transparency"] = transparency
+        self.overlayUI.setTransparency(self.fadeRatio * self.settings['Transparency'])
 
 class Overlay:
     def __init__(self, x, y , depth, fade_time, fade_interval, transparency, ui_scaling):
