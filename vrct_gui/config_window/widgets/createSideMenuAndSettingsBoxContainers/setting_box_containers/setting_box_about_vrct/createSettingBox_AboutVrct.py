@@ -1,8 +1,9 @@
 from types import SimpleNamespace
 from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
-from utils import callFunctionIfCallable, splitListRandomly
+from utils import callFunctionIfCallable, splitList
 from ......ui_utils import bindButtonFunctionAndColor, animateRotation, bindEnterAndLeaveFunction
+from .about_vrct_store import poster_showcase_worlds_settings
 
 def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, view_variable):
     setting_box_wrapper.grid_columnconfigure(0, weight=1, minsize=settings.uism.MAIN_AREA_MIN_WIDTH)
@@ -49,9 +50,10 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
             each_button = settings.about_vrct.embedImageButtonCTkLabel(
                 parent_frame=parent_frame,
                 image_file_name=each_setting["image_file_name"],
-                callback=each_setting["callback"],
+                callback=each_setting.get("callback", None),
                 directly_type=directly_type,
                 corner_radius=corner_radius,
+                no_bind=each_setting.get("no_bind", False),
             )
             each_button.grid(column=0, row=button_row, padx=0, pady=(0, bottom_pady), sticky="nsew")
             each_button.img_label.grid(padx=ipadx, pady=ipady, sticky="nsew")
@@ -293,74 +295,25 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     poster_showcase_worlds.grid_columnconfigure(0, weight=1)
 
 
-    poster_showcase_worlds_settings = [
-        {
-            "image_file_name": "ehon_no_heikousekai_jimusho.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "ikoiba.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "ippaidou.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "japanese_culture_osenbeito.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-                {
-            "image_file_name": "kimodameshi.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "kokekkopiyopiyo.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "kuroinu_work_room.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "language_exchange_tervern.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-                {
-            "image_file_name": "nihongokurabu.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "parallel_collar.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "re_yatuha_room.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "silakan_datang_ke_rumahku.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "study_japanese_world_japanichijou.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "uj_club.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "usanezumi_shrine2.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-        {
-            "image_file_name": "yuttari_eikaiwa.png",
-            "callback": lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP")
-        },
-    ]
 
-    result = splitListRandomly(poster_showcase_worlds_settings, 8)
+    compounded_poster_showcase_worlds_list = []
+    for each_author_settings in poster_showcase_worlds_settings:
+        for data in each_author_settings["data"]:
+            if data["x_post_num"] is None:
+                append_settings = {
+                    "image_file_name": data["image_file_name"],
+                    "no_bind": True,
+                }
+            else:
+                x_post_num = data["x_post_num"]
+                callback = lambda _e,arg=x_post_num: view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT("X_SHIINA_POSTER_SHOWCASE_POST", arg)
+                append_settings = {
+                    "image_file_name": data["image_file_name"],
+                    "callback": callback,
+                }
+            compounded_poster_showcase_worlds_list.append(append_settings)
+
+    result = splitList(compounded_poster_showcase_worlds_list, 8)
     poster_showcase_worlds_frame_list = []
     for split_poster_showcase_worlds_settings in result:
         poster_showcase_worlds_frame = CTkFrame(poster_showcase_worlds_wrapper, fg_color=ABOUT_VRCT_BG, corner_radius=0, width=0, height=0)
@@ -381,16 +334,24 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
     pagination_button_settings = settings.about_vrct.image_file.POSTER_SHOWCASE_WORLD_PAGINATION_BUTTON
 
-    def toNextPagePosterShowcase(current_function_index):
+    def toNextPagePosterShowcase():
+        current_function_index = view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM
         view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=None
         poster_showcase_worlds_frame_list[current_function_index].grid_remove()
+        pre_function_index = current_function_index
         current_function_index = (current_function_index + 1) % len(poster_showcase_worlds_frame_list)
         poster_showcase_worlds_frame_list[current_function_index].grid(column=0, row=0, padx=0, pady=(0,about_vrct_uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY), sticky="nsew")
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM = current_function_index
 
         start_angle = 0
-        goal_angle = 180
-        if current_function_index == 0:
+        goal_angle = 90
+        if pre_function_index == 0:
+            start_angle = 0
+            goal_angle = 90
+        elif pre_function_index == 1:
+            start_angle = 90
+            goal_angle = 180
+        elif pre_function_index == 2:
             start_angle = 180
             goal_angle = 360
 
@@ -411,7 +372,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=toNextPagePosterShowcase
 
 
-    poster_showcase_worlds_frame_list[0].grid(column=0, row=0, padx=0, pady=(0,about_vrct_uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY), sticky="nsew")
+    poster_showcase_worlds_frame_list[view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM].grid(column=0, row=0, padx=0, pady=(0,about_vrct_uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY), sticky="nsew")
 
     poster_showcase_worlds_wrapper.grid_rowconfigure(1, weight=1)
 
@@ -423,7 +384,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     config_window.poster_showcase_pagination_button = settings.about_vrct.embedImageButtonCTkLabel(
         parent_frame=poster_showcase_pagination_button_wrapper,
         image_file_name="poster_showcase_pagination_button.png",
-        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST, view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM),
+        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST),
         hovered_color="transparent",
         clicked_color="transparent",
     )
@@ -434,11 +395,11 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     poster_showcase_pagination_button_chato = settings.about_vrct.embedImageButtonCTkLabel(
         parent_frame=poster_showcase_pagination_button_wrapper,
         image_file_name="poster_showcase_pagination_button_chato.png",
-        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST, view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM),
+        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST),
         hovered_color="transparent",
         clicked_color="transparent",
     )
-    poster_showcase_pagination_button_chato.place(relx=0.5, rely=0.5, anchor="center")
+    poster_showcase_pagination_button_chato.place(relx=0.502, rely=0.51, anchor="center")
 
     pagination_button_chato_settings = settings.about_vrct.image_file.POSTER_SHOWCASE_WORLD_PAGINATION_BUTTON_CHATO
 
