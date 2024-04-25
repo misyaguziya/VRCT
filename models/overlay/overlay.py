@@ -103,21 +103,21 @@ class UIManager:
     def update(self):
         currTime = time.monotonic()
         if self.settings['Fade_interval'] != 0:
-            self.evaluateTransparencyFade(self.overlayUI, self.lastUpdate, currTime)
+            self.evaluateTransparencyFade(self.lastUpdate, currTime)
 
     def uiUpdate(self, img):
         self.overlayUI.setImage(img)
         self.overlayUI.setTransparency(self.settings['Transparency'])
         self.lastUpdate = time.monotonic()
 
-    def evaluateTransparencyFade(self, ui, lastUpdate, currentTime):
+    def evaluateTransparencyFade(self, lastUpdate, currentTime):
         if (currentTime - lastUpdate) > self.settings['Fade_time']:
             timeThroughInterval = currentTime - lastUpdate - self.settings['Fade_time']
             fadeRatio = 1 - timeThroughInterval / self.settings['Fade_interval']
             if fadeRatio < 0:
                 fadeRatio = 0
 
-            ui.setTransparency(fadeRatio * self.settings['Transparency'])
+            self.overlayUI.setTransparency(fadeRatio * self.settings['Transparency'])
 
     def posUpdate(self):
         self.overlayUI.updatePosition()
