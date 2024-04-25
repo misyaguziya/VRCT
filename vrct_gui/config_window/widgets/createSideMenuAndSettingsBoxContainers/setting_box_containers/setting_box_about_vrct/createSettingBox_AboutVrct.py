@@ -385,7 +385,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     poster_showcase_worlds_wrapper.grid_rowconfigure(1, weight=1)
 
     poster_showcase_pagination_button_wrapper = CTkFrame(poster_showcase_worlds_wrapper, fg_color=ABOUT_VRCT_BG, corner_radius=0, width=0, height=0)
-    poster_showcase_pagination_button_wrapper.grid(column=0, row=2, padx=0, pady=0, sticky="nsew")
+    poster_showcase_pagination_button_wrapper.grid(column=0, row=2, padx=0, pady=(0, about_vrct_uism.POSTER_SHOWCASE_WORLD_PAGINATION_BUTTON_BOTTOM_PADY), sticky="nsew")
 
 
     poster_showcase_pagination_button_wrapper.grid_columnconfigure((0,2), weight=1)
