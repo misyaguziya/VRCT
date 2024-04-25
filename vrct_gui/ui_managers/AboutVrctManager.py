@@ -62,6 +62,7 @@ class AboutVrctManager():
         self.uism.POSTER_SHOWCASE_WORLD_ITEM_IPADY = self._calculateUiSize(4)
         self.uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY = self._calculateUiSize(4)
         self.uism.POSTER_SHOWCASE_WORLD_CORNER_RADIUS = self._calculateUiSize(4)
+        self.uism.POSTER_SHOWCASE_WORLD_PAGINATION_BUTTON_BOTTOM_PADY = self._calculateUiSize(18)
         self.uism.POSTER_TELL_US_MESSAGE_TOP_PADY = self._calculateUiSize(20)
         self.uism.POSTER_CHANGE_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
 

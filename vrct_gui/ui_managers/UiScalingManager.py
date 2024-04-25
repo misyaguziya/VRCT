@@ -223,7 +223,7 @@ class UiScalingManager():
 
 
         # Side menu
-        self.config_window.SIDE_MENU_TOP_PADY = (self._calculateUiSize(54), self._calculateUiSize(60))
+        self.config_window.SIDE_MENU_PADY = (self._calculateUiSize(54), self._calculateUiSize(72))
         self.config_window.SIDE_MENU_LABELS_SEPARATE_MIN_HEIGHT = self._calculateUiSize(40)
         self.config_window.SIDE_MENU_LABELS_IPADX = self._calculateUiSize(20)
         self.config_window.SIDE_MENU_LABELS_IPADY = self._calculateUiSize(8)
