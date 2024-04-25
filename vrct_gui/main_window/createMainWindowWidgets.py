@@ -47,6 +47,60 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
     # Main Top Bar Container - Right Side
     # start from 3
     main_topbar_column=3
+
+    # VR Settings Button
+    vrct_gui.vr_settings_container = CTkFrame(
+        vrct_gui.main_topbar_container,
+        corner_radius=settings.uism.UPDATE_AVAILABLE_BUTTON_CORNER_RADIUS,
+        fg_color=settings.ctm.MAIN_BG_COLOR,
+        cursor="hand2",
+    )
+    vrct_gui.vr_settings_container.grid(row=0, column=main_topbar_column, padx=settings.uism.UPDATE_AVAILABLE_BUTTON_PADX, pady=settings.uism.TOP_BAR_BUTTON_PADY, sticky="nsw")
+    # vrct_gui.vr_settings_container.grid_remove()
+
+
+    vrct_gui.vr_settings_container.grid_rowconfigure((0,2), weight=1)
+
+    vrct_gui.vr_settings_icon = CTkLabel(
+        vrct_gui.vr_settings_container,
+        text=None,
+        corner_radius=0,
+        height=0,
+        image=CTkImage(settings.image_file.CONFIGURATION_ICON, size=settings.uism.UPDATE_AVAILABLE_BUTTON_SIZE)
+    )
+    vrct_gui.vr_settings_icon.grid(row=1, column=0, padx=(settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX, settings.uism.UPDATE_AVAILABLE_PADX_BETWEEN_LABEL_AND_ICON), pady=0)
+
+
+    vrct_gui.vr_settings_label = CTkLabel(
+        vrct_gui.vr_settings_container,
+        textvariable=view_variable.VAR_VR_SETTINGS,
+        height=0,
+        corner_radius=0,
+        font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.UPDATE_AVAILABLE_BUTTON_FONT_SIZE, weight="normal"),
+        anchor="e",
+        text_color="#fff",
+        # text_color=settings.ctm.UPDATE_AVAILABLE_BUTTON_TEXT_COLOR,
+    )
+    # This "right padx +1" is for fixing a bug that sticks out from the frame. I don't know why that happens...
+    vrct_gui.vr_settings_label.grid(row=1, column=1, padx=(0,settings.uism.UPDATE_AVAILABLE_BUTTON_IPADX+1), pady=0)
+
+
+    bindButtonFunctionAndColor(
+        target_widgets=[
+            vrct_gui.vr_settings_container,
+            vrct_gui.vr_settings_label,
+            vrct_gui.vr_settings_icon,
+        ],
+        enter_color=settings.ctm.TOP_BAR_BUTTON_HOVERED_BG_COLOR,
+        leave_color=settings.ctm.TOP_BAR_BUTTON_BG_COLOR,
+        clicked_color=settings.ctm.TOP_BAR_BUTTON_CLICKED_BG_COLOR,
+        buttonReleasedFunction=lambda e: callFunctionIfCallable(view_variable.CALLBACK_SET_CALLBACK_OPEN_VR_SETTINGS_WINDOW),
+    )
+
+
+
+
+    main_topbar_column+=1
     # Update Available Button
     vrct_gui.update_available_container = CTkFrame(
         vrct_gui.main_topbar_container,
