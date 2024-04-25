@@ -124,7 +124,7 @@ class AboutVrctManager():
         return size
 
 
-    def embedImageCTkLabel(self, parent_frame, image_file_name, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str="transparent", anchor:str="w"):
+    def embedImageCTkLabel(self, parent_frame, image_file_name, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str="transparent", anchor:str="w", rotate_angle:int=0):
 
         img = getImageFileFromUiUtils_AboutVrct(image_file_name, directly_type)
 
@@ -146,12 +146,12 @@ class AboutVrctManager():
             height=image_height,
             fg_color=fg_color,
             anchor=anchor,
-            image=CTkImage((img), size=(image_width, image_height))
+            image=CTkImage((img).rotate(rotate_angle), size=(image_width, image_height))
         )
 
         return img_label
 
-    def embedImageButtonCTkLabel(self, parent_frame, image_file_name, callback, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str=None, hovered_color:str=None, clicked_color:str=None, anchor:str="w", corner_radius:int=0, no_bind:bool=False):
+    def embedImageButtonCTkLabel(self, parent_frame, image_file_name, callback, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str=None, hovered_color:str=None, clicked_color:str=None, anchor:str="w", corner_radius:int=0, no_bind:bool=False, rotate_angle:int=0):
 
         fg_color = self.ctm.ABOUT_VRCT_BG if fg_color is None else fg_color
 
@@ -162,7 +162,7 @@ class AboutVrctManager():
 
         img_label_frame = CTkFrame(parent_frame, fg_color=fg_color, corner_radius=corner_radius, width=0, height=0)
 
-        img_label = self.embedImageCTkLabel(img_label_frame, image_file_name, image_scaling, directly_type, fg_color, anchor)
+        img_label = self.embedImageCTkLabel(img_label_frame, image_file_name, image_scaling, directly_type, fg_color, anchor, rotate_angle)
 
         if no_bind is False:
             img_label_frame.configure(cursor="hand2")
