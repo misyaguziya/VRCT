@@ -151,7 +151,7 @@ class AboutVrctManager():
 
         return img_label
 
-    def embedImageButtonCTkLabel(self, parent_frame, image_file_name, callback, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str=None, hovered_color:str=None, clicked_color:str=None, anchor:str="w", corner_radius:int=0):
+    def embedImageButtonCTkLabel(self, parent_frame, image_file_name, callback, image_scaling=IMAGE_STANDARD_SCALING, directly_type:str=None, fg_color:str=None, hovered_color:str=None, clicked_color:str=None, anchor:str="w", corner_radius:int=0, no_bind:bool=False):
 
         fg_color = self.ctm.ABOUT_VRCT_BG if fg_color is None else fg_color
 
@@ -164,16 +164,17 @@ class AboutVrctManager():
 
         img_label = self.embedImageCTkLabel(img_label_frame, image_file_name, image_scaling, directly_type, fg_color, anchor)
 
-        img_label_frame.configure(cursor="hand2")
-        img_label.configure(cursor="hand2")
-        img_label._canvas.configure(cursor="hand2")
-        bindButtonFunctionAndColor(
-            target_widgets=[img_label_frame, img_label],
-            enter_color=hovered_color,
-            leave_color=fg_color,
-            clicked_color=clicked_color,
-            buttonReleasedFunction=callback,
-        )
+        if no_bind is False:
+            img_label_frame.configure(cursor="hand2")
+            img_label.configure(cursor="hand2")
+            img_label._canvas.configure(cursor="hand2")
+            bindButtonFunctionAndColor(
+                target_widgets=[img_label_frame, img_label],
+                enter_color=hovered_color,
+                leave_color=fg_color,
+                clicked_color=clicked_color,
+                buttonReleasedFunction=callback,
+            )
 
         img_label.grid()
         img_label_frame.img_label = img_label

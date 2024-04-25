@@ -1046,7 +1046,7 @@ class View():
     def openWebPage_DeepL_Auth_Key(self):
         self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
 
-    def openWebPage_AboutVrct(self, target_type:str):
+    def openWebPage_AboutVrct(self, target_type:str, arg):
         url = ""
         match (target_type):
             case ("X_MISYA"):
@@ -1085,6 +1085,11 @@ class View():
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform"
             case ("SUPPORTER_REGISTRATION"):
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSepLzdEOTJQFVHdOOxAA0dix3zCmnNBlmH4XWon5FldXkIiqw/viewform"
+
+
+            case ("X_SHIINA_POSTER_SHOWCASE_POST"):
+                url = "https://twitter.com/Shiina_12siy/status/" + arg
+
 
             case "TEMP":
                 print("here is still under construction.")
