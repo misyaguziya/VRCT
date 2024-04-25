@@ -1,3 +1,4 @@
+from random import randint
 from types import SimpleNamespace
 from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
 
@@ -334,6 +335,20 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
     pagination_button_settings = settings.about_vrct.image_file.POSTER_SHOWCASE_WORLD_PAGINATION_BUTTON
 
+    def defineAngles(index):
+        start_angle = 0
+        goal_angle = 90
+        if index == 0:
+            start_angle = 0
+            goal_angle = 90
+        elif index == 1:
+            start_angle = 90
+            goal_angle = 180
+        elif index == 2:
+            start_angle = 180
+            goal_angle = 360
+        return(start_angle, goal_angle)
+
     def toNextPagePosterShowcase():
         current_function_index = view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM
         view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=None
@@ -343,17 +358,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         poster_showcase_worlds_frame_list[current_function_index].grid(column=0, row=0, padx=0, pady=(0,about_vrct_uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY), sticky="nsew")
         view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM = current_function_index
 
-        start_angle = 0
-        goal_angle = 90
-        if pre_function_index == 0:
-            start_angle = 0
-            goal_angle = 90
-        elif pre_function_index == 1:
-            start_angle = 90
-            goal_angle = 180
-        elif pre_function_index == 2:
-            start_angle = 180
-            goal_angle = 360
+        start_angle, goal_angle = defineAngles(pre_function_index)
 
         animateRotation(
             tk_root=config_window,
@@ -371,6 +376,9 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     # Initialize
     view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=toNextPagePosterShowcase
 
+    view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM = randint(0, len(poster_showcase_worlds_frame_list)-1)
+
+    start_angle, _goal_angle = defineAngles(view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM)
 
     poster_showcase_worlds_frame_list[view_variable.CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM].grid(column=0, row=0, padx=0, pady=(0,about_vrct_uism.POSTER_SHOWCASE_WORLD_BOTTOM_PADY), sticky="nsew")
 
@@ -387,6 +395,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST),
         hovered_color="transparent",
         clicked_color="transparent",
+        rotate_angle=-start_angle # for clockwise angle, put negative "-"
     )
     config_window.poster_showcase_pagination_button.grid(column=1, row=0, padx=0, pady=0, sticky="nsew")
 
