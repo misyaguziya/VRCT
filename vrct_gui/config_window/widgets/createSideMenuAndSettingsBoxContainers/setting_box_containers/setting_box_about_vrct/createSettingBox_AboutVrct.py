@@ -589,7 +589,7 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     poster_tell_us_message = createTellUsButton(
         parent_frame=poster_showcase_contents_wrapper,
         image_file_name=settings.about_vrct.image_file.POSTER_TELL_US_MESSAGE,
-        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "TEMP"),
+        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "POSTER_CONTACT_US"),
     )
     poster_tell_us_message.grid(column=0, row=1, columnspan=2, padx=0, pady=(about_vrct_uism.POSTER_TELL_US_MESSAGE_TOP_PADY,0), sticky="nse")
 

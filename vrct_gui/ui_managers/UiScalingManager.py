@@ -192,6 +192,16 @@ class UiScalingManager():
         # Dropdown Menu Window
         self.dropdown_menu_window.MARGIN_WIDTH = self._calculateUiSize(16)
 
+
+
+        # Quick Settings Box
+        self.config_window.QSB__IPADX = self._calculateUiSize(20)
+        self.config_window.QSB__IPADY = (self._calculateUiSize(14), self._calculateUiSize(8))
+        self.config_window.QSB__LABEL_BOTTOM_PADY = self._calculateUiSize(6)
+        self.config_window.QSB__RESTORE_DEFAULT_SETTINGS_BUTTON_PADY = (self._calculateUiSize(40),0)
+
+
+
         # Config Window
         self.config_window.DEFAULT_WIDTH = self._calculateUiSize(1080)
         self.config_window.DEFAULT_HEIGHT = self._calculateUiSize(680)
@@ -360,6 +370,8 @@ class UiScalingManager():
         self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_IMG_SIZE = self.dupTuple(self._calculateUiSize(12))
         self.config_window.SB__AUTHKEY_WEBPAGE_PADX_BETWEEN_LABEL_AND_ICON = self._calculateUiSize(10)
         self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_TOP_PADY = self._calculateUiSize(10)
+
+        self.config_window.SB__OPEN_OVERLAY_SETTINGS_WINDOW = self._calculateUiSize(28)
 
 
         self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)

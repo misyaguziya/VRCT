@@ -217,7 +217,7 @@ config_window:
     show_and_disable_enter_key: 표시 (Enter 키 전송 비활성화)
 
   notice_xsoverlay:
-    label: XSOverlay에서 알림 수신 기능 활성화 (VR 전용)
+    label: XSOverlay에서 알림 수신 기능 활성화
     desc: 수신된 메시지를 XSOverlay의 기능을 통해 알림으로 받아볼 수 있습니다.
 
   auto_export_message_logs:
