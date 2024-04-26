@@ -196,7 +196,7 @@ class UiScalingManager():
 
         # Quick Settings Box
         self.config_window.QSB__IPADX = self._calculateUiSize(20)
-        self.config_window.QSB__IPADY = (self._calculateUiSize(12), self._calculateUiSize(8))
+        self.config_window.QSB__IPADY = (self._calculateUiSize(14), self._calculateUiSize(8))
         self.config_window.QSB__LABEL_BOTTOM_PADY = self._calculateUiSize(6)
         self.config_window.QSB__RESTORE_DEFAULT_SETTINGS_BUTTON_PADY = (self._calculateUiSize(40),0)
 
