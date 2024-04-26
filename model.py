@@ -608,16 +608,13 @@ class Model:
 
     def startOverlay(self):
         if self.overlay.initialized is False:
+            print("self.overlay.init()")
             self.overlay.init()
+
         if self.overlay.initialized is True:
-            self.th_overlay = threadFnc(self.overlay.startOverlay)
+            self.th_overlay = Thread(target=self.overlay.startOverlay)
             self.th_overlay.daemon = True
             self.th_overlay.start()
-
-    def stopOverlay(self):
-        if isinstance(self.th_overlay, threadFnc):
-            self.th_overlay.stop()
-            self.th_overlay = None
 
     def updateOverlayPosition(self):
         if self.overlay.initialized is True:

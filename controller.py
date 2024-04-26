@@ -161,7 +161,7 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
-            if model.th_overlay is None:
+            if model.overlay.initialized is False:
                 model.startOverlay()
 
             if config.ENABLE_OVERLAY_SMALL_LOG is True:

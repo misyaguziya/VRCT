@@ -7,7 +7,7 @@ from PIL import Image
 
 def checkSteamvrRunning():
     for proc in psutil.process_iter():
-        if "vrserver" in proc.name().lower() or "vrcompositor" in proc.name().lower():
+        if "vrserver.exe" == proc.name().lower():
             return True
     return False
 
@@ -156,17 +156,19 @@ class Overlay:
             "Ui_scaling": ui_scaling,
         }
         self.settings = settings
+        self.system = None
 
     def init(self):
         try:
             if checkSteamvrRunning() is True:
-                openvr.init(openvr.VRApplication_Overlay)
+                self.system = openvr.init(openvr.VRApplication_Background)
                 self.initialized = True
         except Exception as e:
             print("Could not initialise OpenVR")
+            print(e)
 
     async def mainLoop(self):
-        while True:
+        while self.checkActive() is True:
             startTime = time.monotonic()
             self.uiManager.update()
 
@@ -175,11 +177,31 @@ class Overlay:
                 await asyncio.sleep(sleepTime)
 
     async def initMain(self):
-        self.uiManager = UIManager("Overlay_Speaker2log", "SOverlay_Speaker2log_UI", self.settings)
-        await self.mainLoop()
+        if self.initialized is True:
+            self.uiManager = UIManager("Overlay_Speaker2log", "SOverlay_Speaker2log_UI", self.settings)
+            await self.mainLoop()
 
     def startOverlay(self):
         asyncio.run(self.initMain())
+
+    def shutdown(self):
+        self.system = None
+        self.initialized = False
+        openvr.shutdown()
+
+    def checkActive(self):
+        try:
+            if self.system is not None and self.initialized is True:
+                new_event = openvr.VREvent_t()
+                while self.system.pollNextEvent(new_event):
+                    if new_event.eventType == openvr.VREvent_Quit:
+                        self.shutdown()
+                        return False
+            return True
+        except Exception as e:
+            print("Could not check SteamVR running")
+            print(e)
+            return False
 
 if __name__ == '__main__':
     from overlay_image import OverlayImage
