@@ -73,7 +73,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
 
     vrct_gui.overlay_settings_label = CTkLabel(
         vrct_gui.overlay_settings_container,
-        textvariable=view_variable.VAR_VR_SETTINGS,
+        textvariable=view_variable.VAR_OVERLAY_SETTINGS,
         height=0,
         corner_radius=0,
         font=CTkFont(family=settings.FONT_FAMILY, size=settings.uism.UPDATE_AVAILABLE_BUTTON_FONT_SIZE, weight="normal"),
@@ -94,7 +94,7 @@ def createMainWindowWidgets(vrct_gui, settings, view_variable):
         enter_color=settings.ctm.TOP_BAR_BUTTON_HOVERED_BG_COLOR,
         leave_color=settings.ctm.TOP_BAR_BUTTON_BG_COLOR,
         clicked_color=settings.ctm.TOP_BAR_BUTTON_CLICKED_BG_COLOR,
-        buttonReleasedFunction=lambda e: callFunctionIfCallable(view_variable.CALLBACK_SET_CALLBACK_OPEN_VR_SETTINGS_WINDOW),
+        buttonReleasedFunction=lambda e: callFunctionIfCallable(view_variable.CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW),
     )
 
 

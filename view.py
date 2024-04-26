@@ -140,8 +140,10 @@ class View():
 
 
             # Overlay Settings
-            VAR_VR_SETTINGS=StringVar(value="Overlay Settings"),
-            CALLBACK_SET_CALLBACK_OPEN_VR_SETTINGS_WINDOW=self._openVrSettingsWindow,
+            VAR_OVERLAY_SETTINGS=StringVar(value="Overlay Settings"),
+            CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW=self._openVrSettingsWindow,
+            VAR_TO_DEFAULT_OVERLAY_SETTINGS=StringVar(value=i18n.t("overlay_settings.restore_default_settings")),
+            CALLBACK_SET_TO_DEFAULT_OVERLAY_SETTINGS=self._toDefaultOverlaySettings,
 
 
             VAR_LABEL_OVERLAY_OPACITY=StringVar(value="Opacity"),
@@ -167,8 +169,8 @@ class View():
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value="Y_position"),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.5, 0.5),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=100,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.8, 0.8),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
             VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
 
@@ -1110,6 +1112,34 @@ class View():
             DICT_DATA["large-v3"]: callI18n("large-v3", "2.87GB"),
         }
 
+
+    def _toDefaultOverlaySettings(self):
+        INIT_OVERLAY_SETTINGS = {
+            "opacity": 1.0,
+            "ui_scaling": 1.0,
+        }
+        INIT_OVERLAY_SMALL_LOG_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": -0.41,
+            "depth": 1.0,
+            "display_duration": 5,
+            "fadeout_duration": 2,
+        }
+        for key in INIT_OVERLAY_SETTINGS.keys():
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS,  INIT_OVERLAY_SETTINGS[key], key)
+
+        for key in INIT_OVERLAY_SMALL_LOG_SETTINGS.keys():
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS,  INIT_OVERLAY_SMALL_LOG_SETTINGS[key], key)
+
+        self.setLatestConfigVariable("OverlayOpacity")
+        self.setLatestConfigVariable("OverlayUiScaling")
+
+        self.setLatestConfigVariable("OverlaySmallLogXPos")
+        self.setLatestConfigVariable("OverlaySmallLogYPos")
+        self.setLatestConfigVariable("OverlaySmallLogDepth")
+        self.setLatestConfigVariable("OverlaySmallLogDisplayDuration")
+        self.setLatestConfigVariable("OverlaySmallLogFadeoutDuration")
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -1826,6 +1856,37 @@ class View():
                 self.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
             case "ReceivedMessageFormatWithT":
                 self.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
+
+
+
+            case "OverlayOpacity":
+                self.view_variable.VAR_OVERLAY_OPACITY.set(config.OVERLAY_SETTINGS["opacity"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_OPACITY.set(floatToPctStr(config.OVERLAY_SETTINGS["opacity"]))
+
+            case "OverlayUiScaling":
+                self.view_variable.VAR_OVERLAY_UI_SCALING.set(config.OVERLAY_SETTINGS["ui_scaling"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_UI_SCALING.set(floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"]))
+
+
+            case "OverlaySmallLogXPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_X_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"])
+
+            case "OverlaySmallLogYPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+
+            case "OverlaySmallLogDepth":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+
+            case "OverlaySmallLogDisplayDuration":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)")
+
+            case "OverlaySmallLogFadeoutDuration":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION.set(f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)")
 
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")

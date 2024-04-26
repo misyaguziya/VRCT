@@ -65,6 +65,10 @@ selectable_language_window:
   go_back_button: 戻る
 
 
+overlay_settings:
+  restore_default_settings: 初期値に戻す
+
+
 config_window:
   config_title: 設定
   compact_mode: コンパクトモード

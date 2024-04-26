@@ -23,18 +23,18 @@ class _CreateQuickSettingBox():
     def _createSettingBoxFrame(self, for_var_label_text=None, for_var_current_value=None):
         setting_box_frame = CTkFrame(self.parent_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
 
-        setting_box_frame.grid(row=0, column=0, sticky="ew")
+        setting_box_frame.grid(row=0, column=0, pady=(0,1), sticky="ew")
         setting_box_frame.grid_columnconfigure(0, weight=1)
 
 
         setting_box_frame_wrapper = CTkFrame(setting_box_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.SB__IPADX, pady=self.settings.uism.SB__IPADY, sticky="nsew")
+        setting_box_frame_wrapper.grid(row=0, column=0, padx=self.settings.uism.QSB__IPADX, pady=self.settings.uism.QSB__IPADY, sticky="nsew")
         setting_box_frame_wrapper.grid_columnconfigure(0, weight=1)
 
 
         # Labels
         setting_box_labels_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
-        setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=0, sticky="nsew")
+        setting_box_labels_frame.grid(row=0, column=0, padx=0, pady=(0,self.settings.uism.QSB__LABEL_BOTTOM_PADY), sticky="nsew")
 
         setting_box_labels_frame.grid_rowconfigure((0,2), weight=1)
         setting_box_labels_frame.grid_columnconfigure(1, weight=1)
