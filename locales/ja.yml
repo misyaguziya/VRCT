@@ -65,6 +65,17 @@ selectable_language_window:
   go_back_button: 戻る
 
 
+overlay_settings:
+  restore_default_settings: 初期値に戻す
+  opacity: 透明度
+  ui_scaling: サイズ
+  x_position: X軸（左右）
+  y_position: Y軸（上下）
+  depth: Z軸（前後）
+  display_duration: 表示時間
+  fadeout_duration: フェードアウト時間
+
+
 config_window:
   config_title: 設定
   compact_mode: コンパクトモード
@@ -204,6 +215,13 @@ config_window:
     recommended_model_template: "%{model_name} モデル (%{capacity}) (推奨)"
 
 
+  enable_overlay_small_log:
+    label: Overlay機能を有効
+    # desc:
+    open_overlay_settings: Overlay詳細設定を開く
+
+
+
   auto_clear_the_message_box:
     label: 送信後はチャットボックスを空にする
 
@@ -217,7 +235,7 @@ config_window:
     show_and_disable_enter_key: 表示し、エンターキーでの送信を無効
 
   notice_xsoverlay:
-    label: XSOverlayでの通知受け取り機能を有効 (VR限定)
+    label: XSOverlayでの通知受け取り機能を有効
     desc: 文字起こし (受信) されたメッセージをXSOverlayの機能を使って通知として受け取れます。
 
   auto_export_message_logs:

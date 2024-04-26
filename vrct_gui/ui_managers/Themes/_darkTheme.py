@@ -110,6 +110,7 @@ def _darkTheme(base_color):
             TOP_BAR_BUTTON_BG_COLOR = base_color.DARK_888_COLOR,
             TOP_BAR_BUTTON_HOVERED_BG_COLOR = base_color.DARK_850_COLOR,
             TOP_BAR_BUTTON_CLICKED_BG_COLOR = base_color.DARK_900_COLOR,
+            TOP_BAR_BUTTON_TEXT_COLOR = base_color.DARK_BASIC_TEXT_COLOR,
 
             UPDATE_AVAILABLE_BUTTON_BG_COLOR = base_color.DARK_888_COLOR,
             UPDATE_AVAILABLE_BUTTON_HOVERED_BG_COLOR = base_color.DARK_850_COLOR,
