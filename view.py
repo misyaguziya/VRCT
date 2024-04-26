@@ -1046,7 +1046,7 @@ class View():
     def openWebPage_DeepL_Auth_Key(self):
         self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
 
-    def openWebPage_AboutVrct(self, target_type:str, arg):
+    def openWebPage_AboutVrct(self, target_type:str, arg=None):
         url = ""
         match (target_type):
             case ("X_MISYA"):
@@ -1088,6 +1088,9 @@ class View():
 
 
             case ("X_SHIINA_POSTER_SHOWCASE_POST"):
+                if arg is None:
+                    print("arg that received is None. it mus be something number")
+                    return
                 url = "https://twitter.com/Shiina_12siy/status/" + arg
 
 
