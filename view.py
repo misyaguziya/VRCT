@@ -139,8 +139,8 @@ class View():
 
 
 
-            # VR Settings
-            VAR_VR_SETTINGS=StringVar(value="VR Settings"),
+            # Overlay Settings
+            VAR_VR_SETTINGS=StringVar(value="Overlay Settings"),
             CALLBACK_SET_CALLBACK_OPEN_VR_SETTINGS_WINDOW=self._openVrSettingsWindow,
 
 

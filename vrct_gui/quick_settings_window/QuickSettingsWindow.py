@@ -9,18 +9,15 @@ class QuickSettingsWindow(CTkToplevel):
     def __init__(self, vrct_gui, settings, view_variable):
         super().__init__()
         self.withdraw()
-        # self.overrideredirect(True)
         self.configure(fg_color="#292a2d")
-        self.title("Quick Settings")
-        # self.wm_attributes("-toolwindow", True)
+        self.title("Overlay Settings")
         self.protocol("WM_DELETE_WINDOW", self.withdraw)
         self.after(200, lambda: self.iconbitmap(getImagePath("vrct_logo_mark_black.ico")))
 
 
         self.settings = settings
 
-        BG_HEIGHT= 220
-        BG_WIDTH= 450
+
         BG_HEX_COLOR = "#292a2d"
 
         self.grid_columnconfigure(0, weight=1, minsize=400)
@@ -32,6 +29,7 @@ class QuickSettingsWindow(CTkToplevel):
 
         cqsb = _CreateQuickSettingBox(self.qsw_background, vrct_gui, settings, view_variable)
         createSettingBoxSlider = cqsb.createSettingBoxSlider
+        createSettingBoxSwitch = cqsb.createSettingBoxSwitch
 
 
 
@@ -39,6 +37,19 @@ class QuickSettingsWindow(CTkToplevel):
 
         # Overlay General Settings
         row=0
+        def switchCallback(switch_widget):
+            callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG, switch_widget.get())
+
+        self.qsb__enable_overlay_small_log = createSettingBoxSwitch(
+            for_var_label_text=view_variable.VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG,
+            switch_attr_name="qsb__enable_overlay_small_log_switch",
+            command=lambda: switchCallback(vrct_gui.qsb__enable_overlay_small_log_switch),
+            variable=view_variable.VAR_ENABLE_OVERLAY_SMALL_LOG,
+        )
+        self.qsb__enable_overlay_small_log.grid(row=row)
+
+
+        row+=1
         def sliderCallback(e):
             value = round(e,2)
             callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SETTINGS, value, "opacity")
@@ -75,9 +86,23 @@ class QuickSettingsWindow(CTkToplevel):
 
 
 
+        # Overlay Small Log Settings
+
+        # row+=1
+        # def switchCallback(switch_widget):
+        #     callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG, switch_widget.get())
+
+        # self.qsb__enable_overlay_small_log = createSettingBoxSwitch(
+        #     for_var_label_text=view_variable.VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG,
+        #     switch_attr_name="qsb__enable_overlay_small_log_switch",
+        #     command=lambda: switchCallback(vrct_gui.qsb__enable_overlay_small_log_switch),
+        #     variable=view_variable.VAR_ENABLE_OVERLAY_SMALL_LOG,
+        # )
+        # self.qsb__enable_overlay_small_log.grid(row=row)
+
+
 
         row+=1
-        # Overlay Small Log Settings
         def sliderCallback(e):
             value = round(e,2)
             callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "x_pos")
