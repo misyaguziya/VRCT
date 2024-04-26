@@ -371,6 +371,8 @@ class UiScalingManager():
         self.config_window.SB__AUTHKEY_WEBPAGE_PADX_BETWEEN_LABEL_AND_ICON = self._calculateUiSize(10)
         self.config_window.SB__AUTHKEY_WEBPAGE_BUTTON_TOP_PADY = self._calculateUiSize(10)
 
+        self.config_window.SB__OPEN_OVERLAY_SETTINGS_WINDOW = self._calculateUiSize(28)
+
 
         self.config_window.SB__BUTTON_IPADXY = self._calculateUiSize(16)
         self.config_window.SB__BUTTON_ICON_SIZE = self._calculateUiSize(24)

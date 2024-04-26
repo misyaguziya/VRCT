@@ -217,6 +217,9 @@ config_window:
 
   enable_overlay_small_log:
     label: Overlay機能を有効
+    # desc:
+    open_overlay_settings: Overlay詳細設定を開く
+
 
 
   auto_clear_the_message_box:
@@ -232,7 +235,7 @@ config_window:
     show_and_disable_enter_key: 表示し、エンターキーでの送信を無効
 
   notice_xsoverlay:
-    label: XSOverlayでの通知受け取り機能を有効 (VR限定)
+    label: XSOverlayでの通知受け取り機能を有効
     desc: 文字起こし (受信) されたメッセージをXSOverlayの機能を使って通知として受け取れます。
 
   auto_export_message_logs:

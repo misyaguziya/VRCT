@@ -221,6 +221,7 @@ config_window:
   enable_overlay_small_log:
     label: Enable Overlay
     # desc:
+    open_overlay_settings: Open Overlay Customized Settings
 
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
@@ -235,7 +236,7 @@ config_window:
     show_and_disable_enter_key: Show and disable to send when pressed enter key
 
   notice_xsoverlay:
-    label: Notification XSOverlay (VR Only)
+    label: Notification XSOverlay
     desc: Notify received messages by using XSOverlay's notification feature.
 
   auto_export_message_logs:
