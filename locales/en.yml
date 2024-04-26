@@ -66,6 +66,10 @@ selectable_language_window:
   go_back_button: Go Back
 
 
+overlay_settings:
+  restore_default_settings: Restore Default Settings
+
+
 config_window:
   config_title: Settings
   compact_mode: Compact Mode
