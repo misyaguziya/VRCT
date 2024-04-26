@@ -607,8 +607,11 @@ class View():
 
             # About VRCT Tab
             CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT=self.openWebPage_AboutVrct,
+
             CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=None,
             CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=None,
+            CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM=0,
+
             CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=None,
             CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM=0,
         )
@@ -1119,7 +1122,7 @@ class View():
     def openWebPage_DeepL_Auth_Key(self):
         self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
 
-    def openWebPage_AboutVrct(self, target_type:str):
+    def openWebPage_AboutVrct(self, target_type:str, arg=None):
         url = ""
         match (target_type):
             case ("X_MISYA"):
@@ -1158,6 +1161,14 @@ class View():
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform"
             case ("SUPPORTER_REGISTRATION"):
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSepLzdEOTJQFVHdOOxAA0dix3zCmnNBlmH4XWon5FldXkIiqw/viewform"
+
+
+            case ("X_SHIINA_POSTER_SHOWCASE_POST"):
+                if arg is None:
+                    print("arg that received is None. it mus be something number")
+                    return
+                url = "https://twitter.com/Shiina_12siy/status/" + arg
+
 
             case "TEMP":
                 print("here is still under construction.")

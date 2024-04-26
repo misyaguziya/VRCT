@@ -61,8 +61,10 @@ def renameWeightFolder(path):
     if os_path.exists(weight_path):
         os_rename(weight_path, os_path.join(path, "weights"))
 
-def splitListRandomly(lst, split_count):
-    random.shuffle(lst)
+def splitList(lst:list, split_count:int, to_shuffle:bool=False):
+    if to_shuffle is True:
+        random.shuffle(lst)
+
     split_lists = []
     for i in range(0, len(lst), split_count):
         sub_list = lst[i:i+split_count]
