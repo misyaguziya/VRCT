@@ -18,9 +18,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkboxSendMessageButtonTypeCallback():
         callFunctionIfCallable(view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE, view_variable.VAR_SEND_MESSAGE_BUTTON_TYPE.get())
 
-    def checkboxNoticeXsoverlayCallback(checkbox_box_widget):
-        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY, checkbox_box_widget.get())
-
     def checkboxAutoExportMessageLogsCallback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS, checkbox_box_widget.get())
 
@@ -61,16 +58,6 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         radiobutton_keys_values=view_variable.KEYS_VALUES_SEND_MESSAGE_BUTTON_TYPE,
     )
     config_window.sb__send_message_button_type.grid(row=row)
-    row+=1
-
-    config_window.sb__notice_xsoverlay = createSettingBoxCheckbox(
-        for_var_label_text=view_variable.VAR_LABEL_ENABLE_NOTICE_XSOVERLAY,
-        for_var_desc_text=view_variable.VAR_DESC_ENABLE_NOTICE_XSOVERLAY,
-        checkbox_attr_name="sb__checkbox_notice_xsoverlay",
-        command=lambda: checkboxNoticeXsoverlayCallback(config_window.sb__checkbox_notice_xsoverlay),
-        variable=view_variable.VAR_ENABLE_NOTICE_XSOVERLAY,
-    )
-    config_window.sb__notice_xsoverlay.grid(row=row)
     row+=1
 
 

@@ -233,10 +233,6 @@ class QuickSettingsWindow(CTkToplevel):
             label_button_clicked_command=toDefaultOverlaySettingsCallback,
 
             label_button_position="center",
-
-            # image_file=image_file,
-            image_size=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IMG_SIZE,
-            label_button_padx_between_img=self.settings.uism.SB__AUTHKEY_WEBPAGE_PADX_BETWEEN_LABEL_AND_ICON,
         )
         restore_default_settings_button.grid(row=0, column=0, pady=self.settings.uism.QSB__RESTORE_DEFAULT_SETTINGS_BUTTON_PADY)
 

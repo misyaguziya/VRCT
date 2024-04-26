@@ -484,6 +484,7 @@ class View():
             # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.desc")),
             CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=None,
             VAR_ENABLE_OVERLAY_SMALL_LOG=BooleanVar(value=config.ENABLE_OVERLAY_SMALL_LOG),
+            VAR_OPEN_OVERLAY_SETTINGS_BUTTON=StringVar(value=i18n.t("config_window.enable_overlay_small_log.open_overlay_settings")),
 
 
             # Others Tab
