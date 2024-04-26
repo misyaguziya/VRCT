@@ -7,7 +7,7 @@ from PIL import Image
 
 def checkSteamvrRunning():
     for proc in psutil.process_iter():
-        if "vrserver" in proc.name().lower() or "vrcompositor" in proc.name().lower():
+        if "vrserver.exe" == proc.name().lower():
             return True
     return False
 
