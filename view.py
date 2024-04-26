@@ -1159,8 +1159,12 @@ class View():
                 url = "https://github.com/misyaguziya/VRCT"
             case ("CONTACT_US"):
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform"
+
             case ("SUPPORTER_REGISTRATION"):
                 url = "https://docs.google.com/forms/d/e/1FAIpQLSepLzdEOTJQFVHdOOxAA0dix3zCmnNBlmH4XWon5FldXkIiqw/viewform"
+
+            case ("POSTER_CONTACT_US"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLScwt19eX4Lkj_4w9J5H_3a-bkzXs6rkOc0B-0ZTVVfHKyiU7g/viewform"
 
 
             case ("X_SHIINA_POSTER_SHOWCASE_POST"):
