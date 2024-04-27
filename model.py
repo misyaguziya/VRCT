@@ -608,7 +608,6 @@ class Model:
 
     def startOverlay(self):
         if self.overlay.initialized is False:
-            print("self.overlay.init()")
             self.overlay.init()
 
         if self.overlay.initialized is True:
