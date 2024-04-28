@@ -905,7 +905,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.2"
+        self._VERSION = "2.2.3"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
@@ -1066,7 +1066,7 @@ class Config:
         #     "display_duration": 5,
         #     "fadeout_duration": 2,
         # }
-        self._OVERLAY_UI_TYPE = "default"
+        # self._OVERLAY_UI_TYPE = "default"
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
