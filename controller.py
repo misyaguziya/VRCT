@@ -27,10 +27,10 @@ def callbackFilepathConfigFile():
 def callbackQuitVrct():
     setMainWindowGeometry()
 
-def callbackEnableEasterEgg():
-    config.IS_EASTER_EGG_ENABLED = True
-    config.OVERLAY_UI_TYPE = "sakura"
-    view.printToTextbox_enableEasterEgg()
+# def callbackEnableEasterEgg():
+#     config.IS_EASTER_EGG_ENABLED = True
+#     config.OVERLAY_UI_TYPE = "sakura"
+#     view.printToTextbox_enableEasterEgg()
 
 def setMainWindowGeometry():
     PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
@@ -1049,7 +1049,7 @@ def createMainWindow(splash):
     # set UI and callback
     view.register(
         common_registers={
-            "callback_enable_easter_egg": callbackEnableEasterEgg,
+            # "callback_enable_easter_egg": callbackEnableEasterEgg,
 
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
