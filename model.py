@@ -427,7 +427,7 @@ class Model:
             self.mic_print_transcript.stop()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.stop(wait_for_stop=False)
+            self.mic_audio_recorder.stop(wait_for_stop=True)
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
         #     self.mic_get_energy.stop()
@@ -465,7 +465,7 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar = None
         if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.stop(wait_for_stop=False)
+            self.mic_energy_recorder.stop(wait_for_stop=True)
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
@@ -540,7 +540,7 @@ class Model:
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop(wait_for_stop=False)
+            self.speaker_audio_recorder.stop(wait_for_stop=True)
             self.speaker_audio_recorder = None
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
@@ -578,7 +578,7 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.stop(wait_for_stop=False)
+            self.speaker_energy_recorder.stop(wait_for_stop=True)
             self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
