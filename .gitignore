@@ -1,3 +1,4 @@
+tmp/
 build/
 dist/
 /config.json
@@ -10,3 +11,4 @@ weights/
 .vscode
 error.log
 *.exe
+*.ipynb

@@ -998,6 +998,72 @@ class _SettingBoxGenerator():
 
 
 
+    def createSettingBox_Overlay(self,
+            for_var_label_text, for_var_desc_text,
+            switch_attr_name,
+            variable,
+            command,
+            for_var_button_label,
+            label_button_clicked_command,
+        ):
+
+        (setting_box_frame, setting_box_item_frame) = self._createSettingBoxFrame(switch_attr_name, for_var_label_text, for_var_desc_text)
+
+
+        all_wrapper = CTkFrame(setting_box_item_frame, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR, width=0, height=0)
+        all_wrapper.grid(row=1, column=0, sticky="ew")
+
+        all_wrapper.grid_columnconfigure(1, weight=1)
+
+
+
+
+        switch_widget = CTkSwitch(
+            all_wrapper,
+            text=None,
+            height=0,
+            width=0,
+            corner_radius=int(self.settings.uism.SB__SWITCH_BOX_HEIGHT/2),
+            border_width=0,
+            switch_height=self.settings.uism.SB__SWITCH_BOX_HEIGHT,
+            switch_width=self.settings.uism.SB__SWITCH_BOX_WIDTH,
+            onvalue=True,
+            offvalue=False,
+            variable=variable,
+            command=command,
+            fg_color=self.settings.ctm.SB__SWITCH_BOX_BG_COLOR,
+            progress_color=self.settings.ctm.SB__SWITCH_BOX_ACTIVE_BG_COLOR,
+            button_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_COLOR,
+            button_hover_color=self.settings.ctm.SB__SWITCH_BOX_BUTTON_HOVERED_COLOR,
+        )
+        setattr(self.config_window, switch_attr_name, switch_widget)
+
+        self.config_window.sb__widgets[switch_attr_name].switch_box = switch_widget
+
+        switch_widget.grid(row=0, pady=20, column=SETTING_BOX_COLUMN)
+
+
+        (open_page_button, label_button_label_widget) = createLabelButton(
+            parent_widget=all_wrapper,
+            label_button_bg_color=self.settings.ctm.SB__BUTTON_COLOR,
+            label_button_hovered_bg_color=self.settings.ctm.SB__BUTTON_HOVERED_COLOR,
+            label_button_clicked_bg_color=self.settings.ctm.SB__BUTTON_CLICKED_COLOR,
+            label_button_ipadx=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IPADX,
+            label_button_ipady=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_IPADY,
+            variable=for_var_button_label,
+            font_family=self.settings.FONT_FAMILY,
+            font_size=self.settings.uism.SB__AUTHKEY_WEBPAGE_BUTTON_LABEL_FONT_SIZE,
+            text_color=self.settings.ctm.LABELS_TEXT_COLOR,
+            label_button_clicked_command=label_button_clicked_command,
+
+            label_button_position="center",
+        )
+        open_page_button.grid(row=1, column=SETTING_BOX_COLUMN, pady=(self.settings.uism.SB__OPEN_OVERLAY_SETTINGS_WINDOW,0))
+
+
+        return setting_box_frame
+
+
     def createSettingBoxButtonWithImage(
             self,
             for_var_label_text, for_var_desc_text,

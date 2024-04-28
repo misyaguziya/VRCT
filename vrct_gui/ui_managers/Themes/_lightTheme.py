@@ -110,6 +110,7 @@ def _lightTheme(base_color):
             TOP_BAR_BUTTON_BG_COLOR = base_color.LIGHT_175_COLOR,
             TOP_BAR_BUTTON_HOVERED_BG_COLOR = base_color.LIGHT_300_COLOR,
             TOP_BAR_BUTTON_CLICKED_BG_COLOR = base_color.LIGHT_350_COLOR,
+            TOP_BAR_BUTTON_TEXT_COLOR = base_color.LIGHT_BASIC_TEXT_COLOR,
 
             UPDATE_AVAILABLE_BUTTON_TEXT_COLOR = base_color.PRIMARY_400_COLOR,
         ),

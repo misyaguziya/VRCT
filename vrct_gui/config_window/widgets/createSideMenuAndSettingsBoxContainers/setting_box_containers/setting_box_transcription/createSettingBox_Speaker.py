@@ -4,6 +4,7 @@ from .._SettingBoxGenerator import _SettingBoxGenerator
 
 def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_variable):
     sbg = _SettingBoxGenerator(setting_box_wrapper, config_window, settings, view_variable)
+    createSettingBoxDropdownMenu = sbg.createSettingBoxDropdownMenu
     createSettingBoxSwitch = sbg.createSettingBoxSwitch
     createSettingBoxProgressbarXSlider = sbg.createSettingBoxProgressbarXSlider
     createSettingBoxEntry = sbg.createSettingBoxEntry
@@ -12,6 +13,9 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
     def checkboxInputSpeakerThresholdCheckCallback(is_turned_on):
         callFunctionIfCallable(view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD, is_turned_on)
 
+
+    def optionmenuInputSpeakerDeviceCallback(value):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_SPEAKER_DEVICE, value)
 
     def sliderInputSpeakerEnergyThresholdCallback(value):
         callFunctionIfCallable(view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD, value)
@@ -32,6 +36,17 @@ def createSettingBox_Speaker(setting_box_wrapper, config_window, settings, view_
 
 
     row=0
+    config_window.sb__speaker_device = createSettingBoxDropdownMenu(
+        for_var_label_text=view_variable.VAR_LABEL_SPEAKER_DEVICE,
+        for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DEVICE,
+        optionmenu_attr_name="sb__optionmenu_speaker_device",
+        dropdown_menu_values=view_variable.LIST_SPEAKER_DEVICE,
+        command=lambda value: optionmenuInputSpeakerDeviceCallback(value),
+        variable=view_variable.VAR_SPEAKER_DEVICE,
+    )
+    config_window.sb__speaker_device.grid(row=row)
+    row+=1
+
     config_window.sb__speaker_dynamic_energy_threshold = createSettingBoxSwitch(
         for_var_label_text=view_variable.VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
         for_var_desc_text=view_variable.VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD,

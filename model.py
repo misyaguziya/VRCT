@@ -16,7 +16,7 @@ import webbrowser
 from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import getInputDevices, getDefaultOutputDevice
+from models.transcription.transcription_utils import getInputDevices, getOutputDevices
 from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
@@ -26,6 +26,9 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
 from models.transcription.transcription_whisper import checkWhisperWeight
+# from models.overlay.overlay import Overlay
+# from models.overlay.overlay_image import OverlayImage
+
 from config import config
 
 class threadFnc(Thread):
@@ -37,7 +40,7 @@ class threadFnc(Thread):
     def stop(self):
         self._stop.set()
     def stopped(self):
-        return self._stop.isSet()
+        return self._stop.is_set()
     def run(self):
         while True:
             if self.stopped():
@@ -65,8 +68,22 @@ class Model:
         self.speaker_audio_recorder = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
+        self.previous_send_message = ""
+        self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
+        # self.overlay = Overlay(
+        #     config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+        #     config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+        #     config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
+        #     config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
+        #     config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
+        #     config.OVERLAY_SETTINGS["opacity"],
+        #     config.OVERLAY_SETTINGS["ui_scaling"],
+        # )
+        # self.overlay_image = OverlayImage()
+        # self.pre_overlay_message = None
+        # self.th_overlay = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -197,6 +214,20 @@ class Model:
     def checkKeywords(self, message):
         return len(self.keyword_processor.extract_keywords(message)) != 0
 
+    def detectRepeatSendMessage(self, message):
+        repeat_flag = False
+        if self.previous_send_message == message:
+            repeat_flag = True
+        self.previous_send_message = message
+        return repeat_flag
+
+    def detectRepeatReceiveMessage(self, message):
+        repeat_flag = False
+        if self.previous_receive_message == message:
+            repeat_flag = True
+        self.previous_receive_message = message
+        return repeat_flag
+
     @staticmethod
     def oscStartSendTyping():
         sendTyping(True, config.OSC_IP_ADDRESS, config.OSC_PORT)
@@ -256,35 +287,51 @@ class Model:
 
     @staticmethod
     def updateSoftware(restart:bool=True, func=None):
-        filename = 'VRCT.zip'
-        program_name = 'VRCT.exe'
-        folder_name = '_internal'
-        tmp_directory_name = 'tmp'
-        batch_name = 'update.bat'
-        current_directory = config.PATH_LOCAL
+        def updateSoftwareTask():
+            filename = 'VRCT.zip'
+            program_name = 'VRCT.exe'
+            folder_name = '_internal'
+            tmp_directory_name = 'tmp'
+            batch_name = 'update.bat'
+            current_directory = config.PATH_LOCAL
 
-        try:
-            res = requests_get(config.GITHUB_URL)
-            assets = res.json()['assets']
-            url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
-            with tempfile.TemporaryDirectory() as tmp_path:
-                res = requests_get(url, stream=True)
-                file_size = int(res.headers.get('content-length', 0))
-                total_chunk = 0
-                with open(os_path.join(tmp_path, filename), 'wb') as file:
-                    for chunk in res.iter_content(chunk_size=1024*5):
-                        file.write(chunk)
-                        if isinstance(func, Callable):
+            try:
+                res = requests_get(config.GITHUB_URL)
+                assets = res.json()['assets']
+                url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
+                with tempfile.TemporaryDirectory() as tmp_path:
+                    res = requests_get(url, stream=True)
+                    file_size = int(res.headers.get('content-length', 0))
+                    total_chunk = 0
+                    with open(os_path.join(tmp_path, filename), 'wb') as file:
+                        for chunk in res.iter_content(chunk_size=1024*5):
+                            file.write(chunk)
                             total_chunk += len(chunk)
-                            func(total_chunk/file_size)
+                            if isinstance(func, Callable):
+                                func(progress=total_chunk/file_size, progress_type="downloading")
+                            print(f"downloaded {total_chunk}/{file_size}")
 
-                with ZipFile(os_path.join(tmp_path, filename)) as zf:
-                    zf.extractall(os_path.join(current_directory, tmp_directory_name))
-            copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
-            command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
-            Popen(command, cwd=current_directory)
-        except Exception:
-            webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
+                    with ZipFile(os_path.join(tmp_path, filename)) as zf:
+                        total_files = len(zf.infolist())
+                        extracted_files = 0
+                        for file_info in zf.infolist():
+                            extracted_files += 1
+                            zf.extract(file_info, os_path.join(current_directory, tmp_directory_name))
+                            if isinstance(func, Callable):
+                                func(progress=extracted_files/total_files, progress_type="extracting")
+                            print(f"extracted {extracted_files}/{total_files}")
+
+                copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
+                command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
+                Popen(command, cwd=current_directory)
+            except Exception:
+                import traceback
+                with open('error.log', 'a') as f:
+                    traceback.print_exc(file=f)
+                webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
+        th_update_software = Thread(target=updateSoftwareTask)
+        th_update_software.daemon = True
+        th_update_software.start()
 
     @staticmethod
     def reStartSoftware():
@@ -305,15 +352,13 @@ class Model:
         return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]]
 
     @staticmethod
-    def getInputDefaultDevice():
-        return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]][0]
-
-    @staticmethod
-    def getOutputDefaultDevice():
-        return getDefaultOutputDevice()["name"]
+    def getListOutputDevice():
+        return [device["name"] for device in getOutputDevices()]
 
     def startMicTranscript(self, fnc, error_fnc=None):
-        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+        if len(choice_mic_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -322,14 +367,14 @@ class Model:
 
         mic_audio_queue = Queue()
         # mic_energy_queue = Queue()
-        device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
             record_timeout = phase_timeout
 
         self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
-            device=device,
+            device=mic_device,
             energy_threshold=config.INPUT_MIC_ENERGY_THRESHOLD,
             dynamic_energy_threshold=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
@@ -346,9 +391,9 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendMicTranscript():
-            self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
-            message = self.mic_transcriber.getTranscript()
             try:
+                self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                message = self.mic_transcriber.getTranscript()
                 fnc(message)
             except Exception:
                 pass
@@ -382,14 +427,16 @@ class Model:
             self.mic_print_transcript.stop()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.stop()
+            self.mic_audio_recorder.stop(wait_for_stop=True)
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
         #     self.mic_get_energy.stop()
         #     self.mic_get_energy = None
 
     def startCheckMicEnergy(self, fnc, end_fnc, error_fnc=None):
-        if config.CHOICE_MIC_HOST == "NoHost" or config.CHOICE_MIC_DEVICE == "NoDevice":
+        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+        if len(choice_mic_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -406,7 +453,7 @@ class Model:
             sleep(0.01)
 
         mic_energy_queue = Queue()
-        mic_device = [device for device in getInputDevices()[config.CHOICE_MIC_HOST] if device["name"] == config.CHOICE_MIC_DEVICE][0]
+        mic_device = choice_mic_device[0]
         self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
         self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
         self.mic_energy_plot_progressbar = threadFnc(sendMicEnergy, end_fnc=end_fnc)
@@ -418,12 +465,13 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar = None
         if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.stop()
+            self.mic_energy_recorder.stop(wait_for_stop=True)
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
-        speaker_device = getDefaultOutputDevice()
-        if speaker_device["name"] == "NoDevice":
+        speaker_device_list = getOutputDevices()
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        if len(choice_speaker_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -432,6 +480,7 @@ class Model:
 
         speaker_audio_queue = Queue()
         # speaker_energy_queue = Queue()
+        speaker_device = choice_speaker_device[0]
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
         phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
         if record_timeout > phase_timeout:
@@ -455,9 +504,9 @@ class Model:
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
         )
         def sendSpeakerTranscript():
-            self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-            message = self.speaker_transcriber.getTranscript()
             try:
+                self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                message = self.speaker_transcriber.getTranscript()
                 fnc(message)
             except Exception:
                 pass
@@ -491,15 +540,16 @@ class Model:
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop()
+            self.speaker_audio_recorder.stop(wait_for_stop=True)
             self.speaker_audio_recorder = None
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
 
     def startCheckSpeakerEnergy(self, fnc, end_fnc, error_fnc=None):
-        speaker_device = getDefaultOutputDevice()
-        if speaker_device["name"] == "NoDevice":
+        speaker_device_list = getOutputDevices()
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        if len(choice_speaker_device) == 0:
             try:
                 error_fnc()
             except Exception:
@@ -516,6 +566,7 @@ class Model:
             sleep(0.01)
 
         speaker_energy_queue = Queue()
+        speaker_device = choice_speaker_device[0]
         self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
         self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
         self.speaker_energy_plot_progressbar = threadFnc(sendSpeakerEnergy, end_fnc=end_fnc)
@@ -527,10 +578,71 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.stop()
+            self.speaker_energy_recorder.stop(wait_for_stop=True)
             self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
+
+    # def createOverlayImageShort(self, message, translation):
+    #     your_language = config.TARGET_LANGUAGE
+    #     target_language = config.SOURCE_LANGUAGE
+    #     ui_type = config.OVERLAY_UI_TYPE
+    #     self.pre_overlay_message = {
+    #         "message" : message,
+    #         "your_language" : your_language,
+    #         "translation" : translation,
+    #         "target_language" : target_language,
+    #         "ui_type" : ui_type,
+    #     }
+    #     return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
+
+    # def createOverlayImageLong(self, message_type, message, translation):
+    #     your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
+    #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
+    #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
+
+    # def clearOverlayImage(self):
+    #     if self.overlay.initialized is True:
+    #         self.overlay.uiManager.uiClear()
+
+    # def updateOverlay(self, img):
+    #     if self.overlay.initialized is True:
+    #         self.overlay.uiManager.uiUpdate(img)
+
+    # def startOverlay(self):
+    #     if self.overlay.initialized is False:
+    #         self.overlay.init()
+
+    #     if self.overlay.initialized is True and self.th_overlay is None:
+    #         self.th_overlay = Thread(target=self.overlay.startOverlay)
+    #         self.th_overlay.daemon = True
+    #         self.th_overlay.start()
+
+    # def updateOverlayPosition(self):
+    #     if self.overlay.initialized is True:
+    #         pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+    #         self.overlay.uiManager.setPosition(pos)
+    #         depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
+    #         self.overlay.uiManager.setDepth(depth)
+    #         self.overlay.uiManager.posUpdate()
+
+    # def updateOverlayTimes(self):
+    #     if self.overlay.initialized is True:
+    #         display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
+    #         self.overlay.uiManager.setFadeTime(display_duration)
+    #         fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
+    #         self.overlay.uiManager.setFadeInterval(fadeout_duration)
+    #         self.overlay.uiManager.update()
+
+    # def updateOverlayImageOpacity(self):
+    #     if self.overlay.initialized is True:
+    #         opacity = config.OVERLAY_SETTINGS["opacity"]
+    #         self.overlay.uiManager.setTransparency(opacity)
+
+    # def updateOverlayImageUiScaling(self):
+    #     if self.overlay.initialized is True:
+    #         ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
+    #         self.overlay.uiManager.setUiScaling(ui_scaling)
 
 model = Model()

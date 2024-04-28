@@ -5,10 +5,10 @@ from tkinter import font as tk_font
 import webbrowser
 import i18n
 
-from customtkinter import StringVar, IntVar, BooleanVar, get_appearance_mode
-from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager
+from customtkinter import StringVar, IntVar, DoubleVar, BooleanVar, get_appearance_mode
+from vrct_gui.ui_managers import ColorThemeManager, UiScalingManager, AboutVrctManager
 from vrct_gui import vrct_gui
-from utils import callFunctionIfCallable, intToPctStr
+from utils import callFunctionIfCallable, intToPctStr, floatToPctStr
 
 from config import config
 
@@ -62,9 +62,11 @@ class View():
             **common_args
         )
 
+        about_vrct = AboutVrctManager(config.UI_SCALING, config.UI_LANGUAGE, all_ctm.config_window)
         self.settings.config_window = SimpleNamespace(
             ctm=all_ctm.config_window,
             uism=all_uism.config_window,
+            about_vrct=about_vrct,
             **common_args
         )
 
@@ -99,6 +101,8 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Common
+            # CALLBACK_ENABLE_EASTER_EGG=None,
+
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
             CALLBACK_OPEN_FILEPATH_LOGS=None,
@@ -131,6 +135,67 @@ class View():
 
             # Open Update Confirmation Modal
             CALLBACK_CLICKED_UPDATE_AVAILABLE=self._showUpdateSoftwareConfirmationModal,
+
+
+
+
+            # Overlay Settings
+            # VAR_OVERLAY_SETTINGS=StringVar(value="Overlay Settings"),
+            # CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW=self._openVrSettingsWindow,
+            # VAR_TO_DEFAULT_OVERLAY_SETTINGS=StringVar(value=i18n.t("overlay_settings.restore_default_settings")),
+            # CALLBACK_SET_TO_DEFAULT_OVERLAY_SETTINGS=self._toDefaultOverlaySettings,
+
+
+            # VAR_LABEL_OVERLAY_OPACITY=StringVar(value=i18n.t("overlay_settings.opacity")),
+            # SLIDER_RANGE_OVERLAY_OPACITY=(0.1, 1.0),
+            # NUMBER_OF_STEPS_OVERLAY_OPACITY=18,
+            # VAR_OVERLAY_OPACITY=DoubleVar(value=config.OVERLAY_SETTINGS["opacity"]),
+            # VAR_CURRENT_VALUE_OVERLAY_OPACITY=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["opacity"])),
+
+            # VAR_LABEL_OVERLAY_UI_SCALING=StringVar(value=i18n.t("overlay_settings.ui_scaling")),
+            # SLIDER_RANGE_OVERLAY_UI_SCALING=(0.4, 2.0),
+            # NUMBER_OF_STEPS_OVERLAY_UI_SCALING=16,
+            # VAR_OVERLAY_UI_SCALING=DoubleVar(value=config.OVERLAY_SETTINGS["ui_scaling"]),
+            # VAR_CURRENT_VALUE_OVERLAY_UI_SCALING=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"])),
+
+
+
+            # # CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
+
+            # VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
+            # VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
+            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
+
+            # VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=i18n.t("overlay_settings.y_position")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.8, 0.8),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
+            # VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+
+            # VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=i18n.t("overlay_settings.depth")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0.5, 1.5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=100,
+            # VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+
+            # VAR_LABEL_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=i18n.t("overlay_settings.display_duration")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=(1, 60),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DISPLAY_DURATION=59,
+            # VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]),
+            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)"),
+
+            # VAR_LABEL_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=i18n.t("overlay_settings.fadeout_duration")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=(0, 5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_FADEOUT_DURATION=5,
+            # VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]),
+            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)"),
+
+
+
+
+
 
 
 
@@ -216,8 +281,12 @@ class View():
             VAR_SECOND_TITLE_TRANSCRIPTION_MIC=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_mic")),
             VAR_SECOND_TITLE_TRANSCRIPTION_SPEAKER=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_speaker")),
             VAR_SECOND_TITLE_TRANSCRIPTION_INTERNAL_MODEL=StringVar(value=i18n.t("config_window.side_menu_labels.transcription_internal_model")),
+            VAR_SIDE_MENU_LABEL_VR=StringVar(value=i18n.t("config_window.side_menu_labels.vr")),
             VAR_SIDE_MENU_LABEL_OTHERS=StringVar(value=i18n.t("config_window.side_menu_labels.others")),
             VAR_SIDE_MENU_LABEL_ADVANCED_SETTINGS=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
+
+            VAR_SIDE_MENU_LABEL_ABOUT_VRCT=StringVar(value="About VRCT"),
+            # VAR_SIDE_MENU_LABEL_ABOUT_VRCT=StringVar(value=i18n.t("config_window.side_menu_labels.advanced_settings")),
 
             VAR_CURRENT_ACTIVE_CONFIG_TITLE=StringVar(value=""),
 
@@ -358,6 +427,13 @@ class View():
 
 
             # Transcription Tab (Speaker)
+            VAR_LABEL_SPEAKER_DEVICE=StringVar(value=i18n.t("config_window.speaker_device.label")),
+            VAR_DESC_SPEAKER_DEVICE=None,
+            LIST_SPEAKER_DEVICE=[],
+            CALLBACK_SET_SPEAKER_DEVICE=None,
+            VAR_SPEAKER_DEVICE=StringVar(value=config.CHOICE_SPEAKER_DEVICE),
+
+
             VAR_LABEL_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             VAR_DESC_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=StringVar(value=""),
             CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=None,
@@ -400,6 +476,15 @@ class View():
             DICT_WHISPER_WEIGHT_TYPE=self.getSelectableWhisperWeightTypeDict(),
             CALLBACK_SET_WHISPER_WEIGHT_TYPE=None,
             VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
+
+
+            # # VR Tab
+            # VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.label")),
+            # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=None,
+            # # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.desc")),
+            # CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=None,
+            # VAR_ENABLE_OVERLAY_SMALL_LOG=BooleanVar(value=config.ENABLE_OVERLAY_SMALL_LOG),
+            # VAR_OPEN_OVERLAY_SETTINGS_BUTTON=StringVar(value=i18n.t("config_window.enable_overlay_small_log.open_overlay_settings")),
 
 
             # Others Tab
@@ -521,6 +606,17 @@ class View():
 
             VAR_LABEL_OPEN_CONFIG_FILEPATH=StringVar(value=i18n.t("config_window.open_config_filepath.label")),
             VAR_DESC_OPEN_CONFIG_FILEPATH=None,
+
+
+            # About VRCT Tab
+            CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT=self.openWebPage_AboutVrct,
+
+            CALLBACK_ABOUT_VRCT_POSTER_NEXT_BUTTON=None,
+            CALLBACK_ABOUT_VRCT_POSTER_PREV_BUTTON=None,
+            CALLBACK_ABOUT_VRCT_POSTER_IMAGE_CURRENT_PAGE_NUM=0,
+
+            CALLBACK_ABOUT_VRCT_CHANGE_POSTER_SHOWCASE_WORLD_LIST=None,
+            CALLBACK_ABOUT_VRCT_POSTER_SHOWCASE_CURRENT_PAGE_NUM=0,
         )
 
 
@@ -535,6 +631,8 @@ class View():
 
 
         if common_registers is not None:
+            # self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
+
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
             self.view_variable.CALLBACK_OPEN_FILEPATH_LOGS=common_registers.get("callback_filepath_logs", None)
@@ -642,6 +740,9 @@ class View():
             self.view_variable.CALLBACK_DELETE_MIC_WORD_FILTER=config_window_registers.get("callback_delete_mic_word_filter", None)
 
             # Transcription Tab (Speaker)
+            self.view_variable.CALLBACK_SET_SPEAKER_DEVICE = config_window_registers.get("callback_set_speaker_device", None)
+            config_window_registers.get("list_speaker_device", None) and self.updateList_SpeakerDevice(config_window_registers["list_speaker_device"])
+
             self.view_variable.CALLBACK_SET_SPEAKER_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_energy_threshold", None)
             self.view_variable.CALLBACK_SET_SPEAKER_DYNAMIC_ENERGY_THRESHOLD=config_window_registers.get("callback_set_speaker_dynamic_energy_threshold", None)
             self.view_variable.CALLBACK_CHECK_SPEAKER_THRESHOLD=config_window_registers.get("callback_check_speaker_threshold", None)
@@ -652,6 +753,14 @@ class View():
             # Transcription Tab (Internal AI Model)
             self.view_variable.CALLBACK_SET_USE_WHISPER_FEATURE=config_window_registers.get("callback_set_use_whisper_feature", None)
             self.view_variable.CALLBACK_SET_WHISPER_WEIGHT_TYPE=config_window_registers.get("callback_set_whisper_weight_type", None)
+
+            # VR Tab
+            # VR Tab (Quick Settings)
+            # self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
+
+            # self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
+            # # VR Tab (Quick Settings)
+            # self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
 
 
             # Others Tab
@@ -708,6 +817,16 @@ class View():
             )
             self.replaceMicThresholdCheckButton_Disabled()
 
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.view_variable.VAR_SPEAKER_DEVICE.set("No Speaker Device Detected")
+            vrct_gui._changeConfigWindowWidgetsStatus(
+                status="disabled",
+                target_names=[
+                    "sb__optionmenu_speaker_device",
+                ]
+            )
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+
         if config.USE_WHISPER_FEATURE is True:
             self.openWhisperWeightTypeWidget()
         else:
@@ -737,8 +856,29 @@ class View():
         self.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
         self.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
 
+
+        # Set Easter Egg
+        # self.count = 0
+        # def clickedCounter(_e):
+        #     if self.count < 2:
+        #         self.count+=1
+        #         print("Easter egg count:", self.count)
+        #     else:
+        #         print("Easter egg count:", self.count, "Easter egg has enabled.")
+        #         callFunctionIfCallable(self.view_variable.CALLBACK_ENABLE_EASTER_EGG)
+        #         print(config.OVERLAY_UI_TYPE)
+
+        # vrct_gui.sidebar_logo.bind(
+        #     "<ButtonRelease>",
+        #     clickedCounter,
+        #     "+"
+        # )
+
+
         # Insert sample conversation for testing.
         # self._insertSampleConversationToTextbox()
+
+        # vrct_gui.updating_window.showUpdatingWindow()
 
 # Send Message Format
     def setSendMessageFormat_EntryWidgets(self, message_format:str):
@@ -973,6 +1113,34 @@ class View():
             DICT_DATA["large-v3"]: callI18n("large-v3", "2.87GB"),
         }
 
+
+    # def _toDefaultOverlaySettings(self):
+    #     INIT_OVERLAY_SETTINGS = {
+    #         "opacity": 1.0,
+    #         "ui_scaling": 1.0,
+    #     }
+    #     INIT_OVERLAY_SMALL_LOG_SETTINGS = {
+    #         "x_pos": 0.0,
+    #         "y_pos": -0.41,
+    #         "depth": 1.0,
+    #         "display_duration": 5,
+    #         "fadeout_duration": 2,
+    #     }
+    #     for key in INIT_OVERLAY_SETTINGS.keys():
+    #         callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS,  INIT_OVERLAY_SETTINGS[key], key)
+
+    #     for key in INIT_OVERLAY_SMALL_LOG_SETTINGS.keys():
+    #         callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS,  INIT_OVERLAY_SMALL_LOG_SETTINGS[key], key)
+
+    #     self.setLatestConfigVariable("OverlayOpacity")
+    #     self.setLatestConfigVariable("OverlayUiScaling")
+
+    #     self.setLatestConfigVariable("OverlaySmallLogXPos")
+    #     self.setLatestConfigVariable("OverlaySmallLogYPos")
+    #     self.setLatestConfigVariable("OverlaySmallLogDepth")
+    #     self.setLatestConfigVariable("OverlaySmallLogDisplayDuration")
+    #     self.setLatestConfigVariable("OverlaySmallLogFadeoutDuration")
+
 # Open Webpage Functions
     def openWebPage_Booth(self):
         self.openWebPage(config.BOOTH_URL)
@@ -985,6 +1153,65 @@ class View():
     def openWebPage_DeepL_Auth_Key(self):
         self.openWebPage(config.DEEPL_AUTH_KEY_PAGE_URL)
 
+    def openWebPage_AboutVrct(self, target_type:str, arg=None):
+        url = ""
+        match (target_type):
+            case ("X_MISYA"):
+                url = "https://twitter.com/misya_ai"
+            case ("GITHUB_MISYA"):
+                url = "https://github.com/misyaguziya"
+
+            case ("X_SHIINA"):
+                url = "https://twitter.com/Shiina_12siy"
+
+            case ("X_DONE_SAN"):
+                url = "https://twitter.com/done_vrc"
+
+            case ("X_IYA"):
+                url = "https://twitter.com/IYAA_HHHH"
+
+            case ("X_RERA"):
+                url = "https://twitter.com/rerassi"
+            case ("GITHUB_RERA"):
+                url = "https://github.com/soumt-r"
+
+            case ("X_POPOSUKE"):
+                url = "https://twitter.com/sig_popo"
+
+            case ("X_KUMAGUMA"):
+                url = "https://twitter.com/K_kumaguma_A"
+
+
+            case ("BOOTH"):
+                url = "https://misyaguziya.booth.pm/items/5155325"
+            case ("VRCT_DOCUMENTS"):
+                url = config.DOCUMENTS_URL
+            case ("VRCT_GITHUB"):
+                url = "https://github.com/misyaguziya/VRCT"
+            case ("CONTACT_US"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform"
+
+            case ("SUPPORTER_REGISTRATION"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLSepLzdEOTJQFVHdOOxAA0dix3zCmnNBlmH4XWon5FldXkIiqw/viewform"
+
+            case ("POSTER_CONTACT_US"):
+                url = "https://docs.google.com/forms/d/e/1FAIpQLScwt19eX4Lkj_4w9J5H_3a-bkzXs6rkOc0B-0ZTVVfHKyiU7g/viewform"
+
+
+            case ("X_SHIINA_POSTER_SHOWCASE_POST"):
+                if arg is None:
+                    print("arg that received is None. it mus be something number")
+                    return
+                url = "https://twitter.com/Shiina_12siy/status/" + arg
+
+
+            case "TEMP":
+                print("here is still under construction.")
+                return
+            case (_):
+                raise ValueError(f"No matching case for target_type: {target_type}")
+
+        self.openWebPage(url)
 
 # Widget Control
     # Common
@@ -1210,7 +1437,10 @@ class View():
 
 
     def initSpeakerThresholdCheckButton(self):
-        self.replaceSpeakerThresholdCheckButton_Passive()
+        if config.CHOICE_SPEAKER_DEVICE == "NoDevice":
+            self.replaceSpeakerThresholdCheckButton_Disabled()
+        else:
+            self.replaceSpeakerThresholdCheckButton_Passive()
 
     @staticmethod
     def replaceSpeakerThresholdCheckButton_Active():
@@ -1267,6 +1497,13 @@ class View():
     def initProgressBar_MicEnergy():
         vrct_gui.config_window.sb__progressbar_x_slider__progressbar_mic_energy_threshold.set(0)
 
+
+    def updateList_SpeakerDevice(self, new_speaker_device_list:list):
+        self.view_variable.LIST_SPEAKER_DEVICE = new_speaker_device_list
+        vrct_gui.dropdown_menu_window.updateDropdownMenuValues(
+            dropdown_menu_widget_id="sb__optionmenu_speaker_device",
+            dropdown_menu_values=new_speaker_device_list,
+        )
 
     def updateSetProgressBar_SpeakerEnergy(self, new_speaker_energy):
         self.updateProgressBar(
@@ -1474,7 +1711,14 @@ class View():
         vrct_gui.confirmation_modal.hide_buttons()
         vrct_gui.update()
         vrct_gui.confirmation_modal.update()
-        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE)
+
+        self._hideConfirmationModal()
+        vrct_gui.withdraw()
+        vrct_gui.updating_window.showUpdatingWindow()
+
+        def func(**kwargs):
+            vrct_gui.updating_window.updateDownloadProgress(**kwargs)
+        callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE, func)
 
 
 
@@ -1488,6 +1732,9 @@ class View():
         callFunctionIfCallable(self.view_variable.CALLBACK_CLOSE_CONFIG_WINDOW)
         self._closeMicWordFilterList()
         vrct_gui._closeConfigWindow()
+
+    def _openVrSettingsWindow(self):
+        vrct_gui.quick_settings_window.show()
 
 # Window Control (Main Window Cover)
     def _openTheCoverOfMainWindow(self):
@@ -1611,11 +1858,45 @@ class View():
             case "ReceivedMessageFormatWithT":
                 self.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
 
+
+
+            case "OverlayOpacity":
+                self.view_variable.VAR_OVERLAY_OPACITY.set(config.OVERLAY_SETTINGS["opacity"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_OPACITY.set(floatToPctStr(config.OVERLAY_SETTINGS["opacity"]))
+
+            case "OverlayUiScaling":
+                self.view_variable.VAR_OVERLAY_UI_SCALING.set(config.OVERLAY_SETTINGS["ui_scaling"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_UI_SCALING.set(floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"]))
+
+
+            case "OverlaySmallLogXPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_X_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"])
+
+            case "OverlaySmallLogYPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+
+            case "OverlaySmallLogDepth":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+
+            case "OverlaySmallLogDisplayDuration":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)")
+
+            case "OverlaySmallLogFadeoutDuration":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION.set(f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)")
+
             case _:
                 raise ValueError(f"No matching case for target_name: {target_name}")
 
 
 # Print To Textbox.
+    # def printToTextbox_enableEasterEgg(self):
+    #     self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_easter_egg"))
+
     def printToTextbox_enableTranslation(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
     def printToTextbox_disableTranslation(self):
