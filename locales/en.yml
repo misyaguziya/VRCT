@@ -18,6 +18,7 @@ main_window:
   textbox_tab_system: System
 
   textbox_system_message:
+    enabled_easter_egg: Whoa! You caught us! There is something...like...easter-egg-ish function has enabled!
     enabled_translation: Translation feature is turned on.
     disabled_translation: Translation feature is turned off.
     enabled_voice2chatbox: Transcription from the microphone has started.
@@ -49,7 +50,7 @@ main_window:
   cover_message: The functionality is temporarily disabled until the settings window is closed.
 
   confirmation_message:
-    update_software: "Download new version and restart automatically.\nIt'll take a while. Do it now?"
+    update_software: "Download the new version and automatically restart the app.\nIt'll take a while. Do it now?"
     deny_update_software: Do it later
     accept_update_software: Update and Restart
     updating: Now updating...
@@ -63,6 +64,17 @@ selectable_language_window:
   title_your_language: Select Your Language
   title_target_language: Select Target Language
   go_back_button: Go Back
+
+
+overlay_settings:
+  restore_default_settings: Restore Default Settings
+  opacity: Opacity
+  ui_scaling: UI Scaling
+  x_position: X-axis (left-right)
+  y_position: Y-axis (up-down)
+  depth: Z-axis (front-back)
+  display_duration: Display duration
+  fadeout_duration: Fadeout duration
 
 
 config_window:
@@ -80,6 +92,7 @@ config_window:
     transcription_mic: Mic
     transcription_speaker: Speaker
     transcription_internal_model: Transcription Model
+    vr: VR
     others: Others
     others_send_message_formats: Message Formats (Send)
     others_received_message_formats: Message Formats (XSOverlay & Speaker2Chatbox)
@@ -168,6 +181,9 @@ config_window:
     count_desc: "Current registered word count: %{count}"
 
 
+  speaker_device:
+    label: Speaker Device
+
   speaker_dynamic_energy_threshold:
     label_for_automatic: "Speaker Energy Threshold (Current Setting: Automatic)"
     desc_for_automatic: "Automatically determine speaker input sensitivity."
@@ -201,6 +217,12 @@ config_window:
     model_template: "%{model_name} model (%{capacity})"
     recommended_model_template: "%{model_name} model (%{capacity}) (Recommended)"
 
+
+  enable_overlay_small_log:
+    label: Enable Overlay
+    # desc:
+    open_overlay_settings: Open Overlay Customized Settings
+
   auto_clear_the_message_box:
     label: Auto Clear The Message Box
 
@@ -214,7 +236,7 @@ config_window:
     show_and_disable_enter_key: Show and disable to send when pressed enter key
 
   notice_xsoverlay:
-    label: Notification XSOverlay (VR Only)
+    label: Notification XSOverlay
     desc: Notify received messages by using XSOverlay's notification feature.
 
   auto_export_message_logs:

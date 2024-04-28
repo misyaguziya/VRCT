@@ -11,6 +11,9 @@ from .setting_box_containers.setting_box_transcription import createSettingBox_M
 from .setting_box_containers.setting_box_others import createSettingBox_Others, createSettingBox_Others_SendMessageFormats, createSettingBox_Others_ReceivedMessageFormats, createSettingBox_Others_Additional
 from .setting_box_containers.setting_box_advanced_settings import createSettingBox_AdvancedSettings
 from .setting_box_containers.setting_box_translation import createSettingBox_Translation
+from .setting_box_containers.setting_box_vr import createSettingBox_Vr
+
+from .setting_box_containers.setting_box_about_vrct import createSettingBox_AboutVrct
 
 
 def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variable):
@@ -30,9 +33,9 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
     config_window.side_menu_bg_container = CTkFrame(config_window, corner_radius=0, fg_color=settings.ctm.SIDE_MENU_BG_COLOR, width=0, height=0)
     config_window.side_menu_bg_container.grid(row=1, column=0, sticky="nsew")
     config_window.side_menu_bg_container.grid_columnconfigure(0, weight=1)
-
+    config_window.side_menu_bg_container.grid_rowconfigure(0, weight=1)
     config_window.side_menu_container = CTkFrame(config_window.side_menu_bg_container, corner_radius=0, fg_color=settings.ctm.SIDE_MENU_LABELS_BG_FOR_FAKE_BORDER_COLOR, width=0, height=0)
-    config_window.side_menu_container.grid(row=0, column=0, padx=settings.uism.TOP_BAR_SIDE__TITLE_PADX, pady=(settings.uism.SIDE_MENU_TOP_PADY, 0), sticky="nsew")
+    config_window.side_menu_container.grid(row=0, column=0, padx=settings.uism.TOP_BAR_SIDE__TITLE_PADX, pady=settings.uism.SIDE_MENU_PADY, sticky="nsew")
 
 
 
@@ -101,6 +104,21 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 ]
             },
         },
+        # {
+        #     "side_menu_tab_attr_name": "side_menu_tab_vr",
+        #     "label_attr_name": "label_vr",
+        #     "selected_mark_attr_name": "selected_mark_vr",
+        #     "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
+        #     "setting_box_container_settings": {
+        #         "setting_box_container_attr_name": "setting_box_container_vr",
+        #         "setting_boxes": [
+        #             {
+        #                 "var_section_title": None,
+        #                 "setting_box": createSettingBox_Vr
+        #             }
+        #         ]
+        #     },
+        # },
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
@@ -128,12 +146,36 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 ]
             },
         },
+
+        # About VRCT. It is separated from the others.
+        {
+            "side_menu_tab_attr_name": "side_menu_tab_about_vrct",
+            "label_attr_name": "label_about_vrct",
+            "selected_mark_attr_name": "selected_mark_about_vrct",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_ABOUT_VRCT,
+            "setting_box_container_settings": {
+                "setting_box_container_attr_name": "setting_box_container_about_vrct",
+                "setting_boxes": [
+                    { "var_section_title": None, "setting_box": createSettingBox_AboutVrct,  "about_vrct": True },
+                ]
+            },
+        },
     ]
+    SEPARATE_ROW_COUNT=1 # It's just count the row and separate from below.
+    SEPARATE_ROW_NUMBER = len(side_menu_and_setting_box_containers_settings) - SEPARATE_ROW_COUNT
 
     all_side_menu_tab_attr_name = [item["side_menu_tab_attr_name"] for item in side_menu_and_setting_box_containers_settings]
 
     side_menu_row=0
     for sm_and_sbc_setting in side_menu_and_setting_box_containers_settings:
+
+        if side_menu_row == SEPARATE_ROW_NUMBER:
+            side_menu_separator = CTkFrame(config_window.side_menu_container, corner_radius=0, fg_color=settings.ctm.SIDE_MENU_LABELS_BG_COLOR, width=0, height=0)
+            config_window.side_menu_container.grid_rowconfigure(side_menu_row, weight=1, minsize=settings.uism.SIDE_MENU_LABELS_SEPARATE_MIN_HEIGHT)
+            side_menu_separator.grid(row=side_menu_row, column=0, sticky="nsew")
+            side_menu_row+=1
+
+
         _addConfigSideMenuItem(
             config_window=config_window,
             settings=settings,

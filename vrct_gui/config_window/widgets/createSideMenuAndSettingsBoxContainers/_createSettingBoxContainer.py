@@ -30,7 +30,13 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
     setting_box_row=0
     for setting_box_setting in setting_box_container_settings["setting_boxes"]:
         # Top-Padding that can be container the section title
-        setting_box_top_padding = CTkFrame(setting_box_container_widget, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=settings.uism.SB__TOP_PADY)
+        if setting_box_setting.get("about_vrct", False) is True:
+            setting_box_top_padding = CTkFrame(setting_box_container_widget, corner_radius=0, fg_color=settings.ctm.ABOUT_VRCT_BG, width=0, height=settings.uism.ABOUT_VRCT_SB__TOP_PADY)
+            setting_box_wrapper = CTkFrame(setting_box_container_widget, fg_color=settings.ctm.MAIN_BG_COLOR, corner_radius=0, width=0, height=0)
+        else:
+            setting_box_top_padding = CTkFrame(setting_box_container_widget, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=settings.uism.SB__TOP_PADY)
+            setting_box_wrapper = CTkFrame(setting_box_container_widget, fg_color=settings.ctm.SB__WRAPPER_BG_COLOR, corner_radius=0, width=0, height=0)
+
         setting_box_top_padding.grid(row=setting_box_row, column=0, sticky="ew", padx=0, pady=0)
         setting_box_top_padding.grid_columnconfigure(0, weight=1)
         setting_box_row+=1
@@ -47,7 +53,6 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
             setting_box_wrapper_section_title.place(relx=0, rely=0.4, anchor="nw")
 
 
-        setting_box_wrapper = CTkFrame(setting_box_container_widget, fg_color=settings.ctm.SB__WRAPPER_BG_COLOR, corner_radius=0, width=0, height=0)
         setting_box_wrapper.grid(row=setting_box_row, column=0, sticky="ew")
         setting_box_wrapper.grid_columnconfigure(0, weight=1)
         setting_box_row+=1

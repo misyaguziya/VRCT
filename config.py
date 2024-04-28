@@ -6,7 +6,7 @@ from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
 from models.translation.translation_languages import translation_lang
-from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice
+from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice, getOutputDevices, getDefaultOutputDevice
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
 
@@ -246,6 +246,15 @@ class Config:
     def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self, value):
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
+
+    @property
+    def IS_EASTER_EGG_ENABLED(self):
+        return self._IS_EASTER_EGG_ENABLED
+
+    @IS_EASTER_EGG_ENABLED.setter
+    def IS_EASTER_EGG_ENABLED(self, value):
+        if isinstance(value, bool):
+            self._IS_EASTER_EGG_ENABLED = value
 
     # Save Json Data
     ## Main Window
@@ -538,6 +547,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('CHOICE_SPEAKER_DEVICE')
+    def CHOICE_SPEAKER_DEVICE(self):
+        return self._CHOICE_SPEAKER_DEVICE
+
+    @CHOICE_SPEAKER_DEVICE.setter
+    def CHOICE_SPEAKER_DEVICE(self, value):
+        if value in [device["name"] for device in getOutputDevices()]:
+            self._CHOICE_SPEAKER_DEVICE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('INPUT_SPEAKER_ENERGY_THRESHOLD')
     def INPUT_SPEAKER_ENERGY_THRESHOLD(self):
         return self._INPUT_SPEAKER_ENERGY_THRESHOLD
@@ -716,6 +736,59 @@ class Config:
             self._ENABLE_NOTICE_XSOVERLAY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
+    # @property
+    # @json_serializable('OVERLAY_SETTINGS')
+    # def OVERLAY_SETTINGS(self):
+    #     return self._OVERLAY_SETTINGS
+
+    # @OVERLAY_SETTINGS.setter
+    # def OVERLAY_SETTINGS(self, value):
+    #     if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SETTINGS.keys()):
+    #         for key, value in value.items():
+    #             if isinstance(value, float):
+    #                 self._OVERLAY_SETTINGS[key] = value
+    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
+
+    # @property
+    # @json_serializable('ENABLE_OVERLAY_SMALL_LOG')
+    # def ENABLE_OVERLAY_SMALL_LOG(self):
+    #     return self._ENABLE_OVERLAY_SMALL_LOG
+
+    # @ENABLE_OVERLAY_SMALL_LOG.setter
+    # def ENABLE_OVERLAY_SMALL_LOG(self, value):
+    #     if isinstance(value, bool):
+    #         self._ENABLE_OVERLAY_SMALL_LOG = value
+    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    # @property
+    # @json_serializable('OVERLAY_SMALL_LOG_SETTINGS')
+    # def OVERLAY_SMALL_LOG_SETTINGS(self):
+    #     return self._OVERLAY_SMALL_LOG_SETTINGS
+
+    # @OVERLAY_SMALL_LOG_SETTINGS.setter
+    # def OVERLAY_SMALL_LOG_SETTINGS(self, value):
+    #     if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SMALL_LOG_SETTINGS.keys()):
+    #         for key, value in value.items():
+    #             match (key):
+    #                 case "x_pos" | "y_pos" | "depth":
+    #                     if isinstance(value, float):
+    #                         self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+    #                 case "display_duration" | "fadeout_duration":
+    #                     if isinstance(value, int):
+    #                         self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
+
+    # @property
+    # @json_serializable('OVERLAY_UI_TYPE')
+    # def OVERLAY_UI_TYPE(self):
+    #     return self._OVERLAY_UI_TYPE
+
+    # @OVERLAY_UI_TYPE.setter
+    # def OVERLAY_UI_TYPE(self, value):
+    #     if isinstance(value, str):
+    #         self._OVERLAY_UI_TYPE = value
+            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
     @property
     @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
     def ENABLE_SEND_MESSAGE_TO_VRC(self):
@@ -832,9 +905,9 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.2"
+        self._VERSION = "2.2.3"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
-        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "123456789"
+        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
@@ -889,6 +962,7 @@ class Config:
         self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+        self._IS_EASTER_EGG_ENABLED = False
 
         # Save Json Data
         ## Main Window
@@ -957,6 +1031,7 @@ class Config:
         self._INPUT_MIC_PHRASE_TIMEOUT = 3
         self._INPUT_MIC_MAX_PHRASES = 10
         self._INPUT_MIC_WORD_FILTER = []
+        self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
         self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
@@ -979,6 +1054,19 @@ class Config:
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._ENABLE_NOTICE_XSOVERLAY = False
+        # self._OVERLAY_SETTINGS = {
+        #     "opacity": 1.0,
+        #     "ui_scaling": 1.0,
+        # }
+        # self._ENABLE_OVERLAY_SMALL_LOG = False
+        # self._OVERLAY_SMALL_LOG_SETTINGS = {
+        #     "x_pos": 0.0,
+        #     "y_pos": -0.41,
+        #     "depth": 1.0,
+        #     "display_duration": 5,
+        #     "fadeout_duration": 2,
+        # }
+        # self._OVERLAY_UI_TYPE = "default"
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"

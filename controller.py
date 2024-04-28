@@ -8,9 +8,9 @@ from utils import getKeyByValue, isUniqueStrings, strPctToInt
 import argparse
 
 # Common
-def callbackUpdateSoftware():
+def callbackUpdateSoftware(func=None):
     setMainWindowGeometry()
-    model.updateSoftware()
+    model.updateSoftware(restart=True, func=func)
 
 def callbackRestartSoftware():
     setMainWindowGeometry()
@@ -26,6 +26,11 @@ def callbackFilepathConfigFile():
 
 def callbackQuitVrct():
     setMainWindowGeometry()
+
+# def callbackEnableEasterEgg():
+#     config.IS_EASTER_EGG_ENABLED = True
+#     config.OVERLAY_UI_TYPE = "sakura"
+#     view.printToTextbox_enableEasterEgg()
 
 def setMainWindowGeometry():
     PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
@@ -69,6 +74,8 @@ def sendMicMessage(message):
         if model.checkKeywords(message):
             view.printToTextbox_DetectedByWordFilter(detected_message=message)
             return
+        elif model.detectRepeatSendMessage(message):
+            return
         elif config.ENABLE_TRANSLATION is False:
             pass
         else:
@@ -93,6 +100,12 @@ def sendMicMessage(message):
                 if len(translation) > 0:
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
+
+            # if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            #     overlay_image = model.createOverlayImageShort(message, translation)
+            #     model.updateOverlay(overlay_image)
+            #     overlay_image = model.createOverlayImageLong("send", message, translation)
+            #     model.updateOverlay(overlay_image)
 
 def startTranscriptionSendMessage():
     model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
@@ -134,7 +147,9 @@ def stopThreadingTranscriptionSendMessageOnOpenConfigWindow():
 def receiveSpeakerMessage(message):
     if len(message) > 0:
         translation = ""
-        if config.ENABLE_TRANSLATION is False:
+        if model.detectRepeatReceiveMessage(message):
+            return
+        elif config.ENABLE_TRANSLATION is False:
             pass
         else:
             translation, success = model.getOutputTranslate(message)
@@ -146,13 +161,22 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
+            # if model.overlay.initialized is False:
+            #     model.startOverlay()
+            # else:
+            #     if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            #         overlay_image = model.createOverlayImageShort(message, translation)
+            #         model.updateOverlay(overlay_image)
+            #         # overlay_image = model.createOverlayImageLong("receive", message, translation)
+            #         # model.updateOverlay(overlay_image)
+
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
                 # send OSC message
                 if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = messageFormatter("RECEIVED", translation, message)
                     model.oscSendMessage(osc_message)
-                # ------------Speaker2Chatbox------------
+            # ------------Speaker2Chatbox------------
 
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
@@ -220,6 +244,12 @@ def sendChatMessage(message):
             else:
                 osc_message = messageFormatter("SEND", translation, message)
             model.oscSendMessage(osc_message)
+
+        # if config.ENABLE_OVERLAY_SMALL_LOG is True:
+        #     overlay_image = model.createOverlayImageShort(message, translation)
+        #     model.updateOverlay(overlay_image)
+        #     overlay_image = model.createOverlayImageLong("send", message, translation)
+        #     model.updateOverlay(overlay_image)
 
         # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)
@@ -704,6 +734,13 @@ def callbackDeleteMicWordFilter(value):
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
 
 # Transcription (Speaker)
+def callbackSetSpeakerDevice(value):
+    print("callbackSetSpeakerDevice", value)
+    config.CHOICE_SPEAKER_DEVICE = value
+
+    model.stopCheckSpeakerEnergy()
+    view.replaceSpeakerThresholdCheckButton_Passive()
+
 def callbackSetSpeakerEnergyThreshold(value):
     print("callbackSetSpeakerEnergyThreshold", value)
     if value == "":
@@ -820,6 +857,45 @@ def callbackSetWhisperWeightType(value):
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     view.showRestartButtonIfRequired()
+
+# # VR Tab
+# def callbackSetOverlaySettings(value, set_type:str):
+#     print("callbackSetOverlaySettings", value, set_type)
+#     pre_settings = config.OVERLAY_SETTINGS
+#     pre_settings[set_type] = value
+#     config.OVERLAY_SETTINGS = pre_settings
+#     match (set_type):
+#         case "opacity":
+#             model.updateOverlayImageOpacity()
+#         case "ui_scaling":
+#             model.updateOverlayImageUiScaling()
+
+# def callbackSetEnableOverlaySmallLog(value):
+#     print("callbackSetEnableOverlaySmallLog", value)
+#     config.ENABLE_OVERLAY_SMALL_LOG = value
+
+#     if config.ENABLE_OVERLAY_SMALL_LOG is True:
+#         pass
+#     else:
+#         if model.overlay.initialized is True:
+#             model.clearOverlayImage()
+
+# def callbackSetOverlaySmallLogSettings(value, set_type:str):
+#     print("callbackSetOverlaySmallLogSettings", value, set_type)
+#     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+#     pre_settings[set_type] = value
+#     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+#     match (set_type):
+#         case "x_pos":
+#             model.updateOverlayPosition()
+#         case "y_pos":
+#             model.updateOverlayPosition()
+#         case "depth":
+#             model.updateOverlayPosition()
+#         case "display_duration":
+#             model.updateOverlayTimes()
+#         case "fadeout_duration":
+#             model.updateOverlayTimes()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -973,6 +1049,8 @@ def createMainWindow(splash):
     # set UI and callback
     view.register(
         common_registers={
+            # "callback_enable_easter_egg": callbackEnableEasterEgg,
+
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
             "callback_filepath_logs": callbackFilepathLogs,
@@ -1046,6 +1124,8 @@ def createMainWindow(splash):
             "callback_delete_mic_word_filter": callbackDeleteMicWordFilter,
 
             # Transcription Tab (Speaker)
+            "callback_set_speaker_device": callbackSetSpeakerDevice,
+            "list_speaker_device": model.getListOutputDevice(),
             "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
             "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
             "callback_check_speaker_threshold": callbackCheckSpeakerThreshold,
@@ -1056,6 +1136,11 @@ def createMainWindow(splash):
             # Transcription Tab (Internal AI Model)
             "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
             "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
+
+            # # VR Tab
+            # "callback_set_overlay_settings": callbackSetOverlaySettings,
+            # "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
+            # "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
