@@ -602,6 +602,10 @@ class Model:
     #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
+    def clearOverlayImage(self):
+        if self.overlay.initialized is True:
+            self.overlay.uiManager.uiClear()
+
     def updateOverlay(self, img):
         if self.overlay.initialized is True:
             self.overlay.uiManager.uiUpdate(img)
@@ -610,7 +614,7 @@ class Model:
         if self.overlay.initialized is False:
             self.overlay.init()
 
-        if self.overlay.initialized is True:
+        if self.overlay.initialized is True and self.th_overlay is None:
             self.th_overlay = Thread(target=self.overlay.startOverlay)
             self.th_overlay.daemon = True
             self.th_overlay.start()

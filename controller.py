@@ -163,12 +163,12 @@ def receiveSpeakerMessage(message):
 
             if model.overlay.initialized is False:
                 model.startOverlay()
-
-            if config.ENABLE_OVERLAY_SMALL_LOG is True:
-                overlay_image = model.createOverlayImageShort(message, translation)
-                model.updateOverlay(overlay_image)
-                # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                # model.updateOverlay(overlay_image)
+            else:
+                if config.ENABLE_OVERLAY_SMALL_LOG is True:
+                    overlay_image = model.createOverlayImageShort(message, translation)
+                    model.updateOverlay(overlay_image)
+                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                    # model.updateOverlay(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -873,6 +873,12 @@ def callbackSetOverlaySettings(value, set_type:str):
 def callbackSetEnableOverlaySmallLog(value):
     print("callbackSetEnableOverlaySmallLog", value)
     config.ENABLE_OVERLAY_SMALL_LOG = value
+    
+    if config.ENABLE_OVERLAY_SMALL_LOG is True:
+        pass
+    else:
+        if model.overlay.initialized is True:
+            model.clearOverlayImage()
 
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)
