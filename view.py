@@ -101,7 +101,7 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Common
-            CALLBACK_ENABLE_EASTER_EGG=None,
+            # CALLBACK_ENABLE_EASTER_EGG=None,
 
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
@@ -160,7 +160,7 @@ class View():
 
 
 
-            CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
+            # CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
 
             VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
             SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
@@ -631,7 +631,7 @@ class View():
 
 
         if common_registers is not None:
-            self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
+            # self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
 
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
@@ -756,11 +756,11 @@ class View():
 
             # VR Tab
             # VR Tab (Quick Settings)
-            self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
+            # self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
 
-            self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
-            # VR Tab (Quick Settings)
-            self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
+            # self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
+            # # VR Tab (Quick Settings)
+            # self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
 
 
             # Others Tab
@@ -858,21 +858,21 @@ class View():
 
 
         # Set Easter Egg
-        self.count = 0
-        def clickedCounter(_e):
-            if self.count < 2:
-                self.count+=1
-                print("Easter egg count:", self.count)
-            else:
-                print("Easter egg count:", self.count, "Easter egg has enabled.")
-                callFunctionIfCallable(self.view_variable.CALLBACK_ENABLE_EASTER_EGG)
-                print(config.OVERLAY_UI_TYPE)
+        # self.count = 0
+        # def clickedCounter(_e):
+        #     if self.count < 2:
+        #         self.count+=1
+        #         print("Easter egg count:", self.count)
+        #     else:
+        #         print("Easter egg count:", self.count, "Easter egg has enabled.")
+        #         callFunctionIfCallable(self.view_variable.CALLBACK_ENABLE_EASTER_EGG)
+        #         print(config.OVERLAY_UI_TYPE)
 
-        vrct_gui.sidebar_logo.bind(
-            "<ButtonRelease>",
-            clickedCounter,
-            "+"
-        )
+        # vrct_gui.sidebar_logo.bind(
+        #     "<ButtonRelease>",
+        #     clickedCounter,
+        #     "+"
+        # )
 
 
         # Insert sample conversation for testing.
@@ -1894,8 +1894,8 @@ class View():
 
 
 # Print To Textbox.
-    def printToTextbox_enableEasterEgg(self):
-        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_easter_egg"))
+    # def printToTextbox_enableEasterEgg(self):
+    #     self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_easter_egg"))
 
     def printToTextbox_enableTranslation(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))
