@@ -106,6 +106,11 @@ class UIManager:
         if self.settings['Fade_interval'] != 0:
             self.evaluateTransparencyFade(self.lastUpdate, currTime)
 
+    def uiClear(self):
+        self.overlayUI.setImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+        self.overlayUI.setTransparency(self.settings['Transparency'])
+        self.lastUpdate = time.monotonic()
+
     def uiUpdate(self, img):
         self.overlayUI.setImage(img)
         self.overlayUI.setTransparency(self.settings['Transparency'])
