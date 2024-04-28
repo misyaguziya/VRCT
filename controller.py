@@ -161,14 +161,14 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
-            if model.overlay.initialized is False:
-                model.startOverlay()
-            else:
-                if config.ENABLE_OVERLAY_SMALL_LOG is True:
-                    overlay_image = model.createOverlayImageShort(message, translation)
-                    model.updateOverlay(overlay_image)
-                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                    # model.updateOverlay(overlay_image)
+            # if model.overlay.initialized is False:
+            #     model.startOverlay()
+            # else:
+            #     if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            #         overlay_image = model.createOverlayImageShort(message, translation)
+            #         model.updateOverlay(overlay_image)
+            #         # overlay_image = model.createOverlayImageLong("receive", message, translation)
+            #         # model.updateOverlay(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -858,44 +858,44 @@ def callbackSetWhisperWeightType(value):
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     view.showRestartButtonIfRequired()
 
-# VR Tab
-def callbackSetOverlaySettings(value, set_type:str):
-    print("callbackSetOverlaySettings", value, set_type)
-    pre_settings = config.OVERLAY_SETTINGS
-    pre_settings[set_type] = value
-    config.OVERLAY_SETTINGS = pre_settings
-    match (set_type):
-        case "opacity":
-            model.updateOverlayImageOpacity()
-        case "ui_scaling":
-            model.updateOverlayImageUiScaling()
+# # VR Tab
+# def callbackSetOverlaySettings(value, set_type:str):
+#     print("callbackSetOverlaySettings", value, set_type)
+#     pre_settings = config.OVERLAY_SETTINGS
+#     pre_settings[set_type] = value
+#     config.OVERLAY_SETTINGS = pre_settings
+#     match (set_type):
+#         case "opacity":
+#             model.updateOverlayImageOpacity()
+#         case "ui_scaling":
+#             model.updateOverlayImageUiScaling()
 
-def callbackSetEnableOverlaySmallLog(value):
-    print("callbackSetEnableOverlaySmallLog", value)
-    config.ENABLE_OVERLAY_SMALL_LOG = value
-    
-    if config.ENABLE_OVERLAY_SMALL_LOG is True:
-        pass
-    else:
-        if model.overlay.initialized is True:
-            model.clearOverlayImage()
+# def callbackSetEnableOverlaySmallLog(value):
+#     print("callbackSetEnableOverlaySmallLog", value)
+#     config.ENABLE_OVERLAY_SMALL_LOG = value
 
-def callbackSetOverlaySmallLogSettings(value, set_type:str):
-    print("callbackSetOverlaySmallLogSettings", value, set_type)
-    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
-    pre_settings[set_type] = value
-    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
-    match (set_type):
-        case "x_pos":
-            model.updateOverlayPosition()
-        case "y_pos":
-            model.updateOverlayPosition()
-        case "depth":
-            model.updateOverlayPosition()
-        case "display_duration":
-            model.updateOverlayTimes()
-        case "fadeout_duration":
-            model.updateOverlayTimes()
+#     if config.ENABLE_OVERLAY_SMALL_LOG is True:
+#         pass
+#     else:
+#         if model.overlay.initialized is True:
+#             model.clearOverlayImage()
+
+# def callbackSetOverlaySmallLogSettings(value, set_type:str):
+#     print("callbackSetOverlaySmallLogSettings", value, set_type)
+#     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+#     pre_settings[set_type] = value
+#     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+#     match (set_type):
+#         case "x_pos":
+#             model.updateOverlayPosition()
+#         case "y_pos":
+#             model.updateOverlayPosition()
+#         case "depth":
+#             model.updateOverlayPosition()
+#         case "display_duration":
+#             model.updateOverlayTimes()
+#         case "fadeout_duration":
+#             model.updateOverlayTimes()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -1137,10 +1137,10 @@ def createMainWindow(splash):
             "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
             "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
 
-            # VR Tab
-            "callback_set_overlay_settings": callbackSetOverlaySettings,
-            "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
-            "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
+            # # VR Tab
+            # "callback_set_overlay_settings": callbackSetOverlaySettings,
+            # "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
+            # "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
