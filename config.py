@@ -736,58 +736,58 @@ class Config:
             self._ENABLE_NOTICE_XSOVERLAY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # @property
-    # @json_serializable('OVERLAY_SETTINGS')
-    # def OVERLAY_SETTINGS(self):
-    #     return self._OVERLAY_SETTINGS
+    @property
+    @json_serializable('OVERLAY_SETTINGS')
+    def OVERLAY_SETTINGS(self):
+        return self._OVERLAY_SETTINGS
 
-    # @OVERLAY_SETTINGS.setter
-    # def OVERLAY_SETTINGS(self, value):
-    #     if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SETTINGS.keys()):
-    #         for key, value in value.items():
-    #             if isinstance(value, float):
-    #                 self._OVERLAY_SETTINGS[key] = value
-    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
+    @OVERLAY_SETTINGS.setter
+    def OVERLAY_SETTINGS(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SETTINGS.keys()):
+            for key, value in value.items():
+                if isinstance(value, float):
+                    self._OVERLAY_SETTINGS[key] = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
 
-    # @property
-    # @json_serializable('ENABLE_OVERLAY_SMALL_LOG')
-    # def ENABLE_OVERLAY_SMALL_LOG(self):
-    #     return self._ENABLE_OVERLAY_SMALL_LOG
+    @property
+    @json_serializable('ENABLE_OVERLAY_SMALL_LOG')
+    def ENABLE_OVERLAY_SMALL_LOG(self):
+        return self._ENABLE_OVERLAY_SMALL_LOG
 
-    # @ENABLE_OVERLAY_SMALL_LOG.setter
-    # def ENABLE_OVERLAY_SMALL_LOG(self, value):
-    #     if isinstance(value, bool):
-    #         self._ENABLE_OVERLAY_SMALL_LOG = value
-    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+    @ENABLE_OVERLAY_SMALL_LOG.setter
+    def ENABLE_OVERLAY_SMALL_LOG(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_OVERLAY_SMALL_LOG = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # @property
-    # @json_serializable('OVERLAY_SMALL_LOG_SETTINGS')
-    # def OVERLAY_SMALL_LOG_SETTINGS(self):
-    #     return self._OVERLAY_SMALL_LOG_SETTINGS
+    @property
+    @json_serializable('OVERLAY_SMALL_LOG_SETTINGS')
+    def OVERLAY_SMALL_LOG_SETTINGS(self):
+        return self._OVERLAY_SMALL_LOG_SETTINGS
 
-    # @OVERLAY_SMALL_LOG_SETTINGS.setter
-    # def OVERLAY_SMALL_LOG_SETTINGS(self, value):
-    #     if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SMALL_LOG_SETTINGS.keys()):
-    #         for key, value in value.items():
-    #             match (key):
-    #                 case "x_pos" | "y_pos" | "depth":
-    #                     if isinstance(value, float):
-    #                         self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
-    #                 case "display_duration" | "fadeout_duration":
-    #                     if isinstance(value, int):
-    #                         self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
-    #         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
+    @OVERLAY_SMALL_LOG_SETTINGS.setter
+    def OVERLAY_SMALL_LOG_SETTINGS(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SMALL_LOG_SETTINGS.keys()):
+            for key, value in value.items():
+                match (key):
+                    case "x_pos" | "y_pos" | "depth":
+                        if isinstance(value, float):
+                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+                    case "display_duration" | "fadeout_duration":
+                        if isinstance(value, int):
+                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
 
-    # @property
-    # @json_serializable('OVERLAY_UI_TYPE')
-    # def OVERLAY_UI_TYPE(self):
-    #     return self._OVERLAY_UI_TYPE
+    @property
+    @json_serializable('OVERLAY_UI_TYPE')
+    def OVERLAY_UI_TYPE(self):
+        return self._OVERLAY_UI_TYPE
 
-    # @OVERLAY_UI_TYPE.setter
-    # def OVERLAY_UI_TYPE(self, value):
-    #     if isinstance(value, str):
-    #         self._OVERLAY_UI_TYPE = value
-            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+    @OVERLAY_UI_TYPE.setter
+    def OVERLAY_UI_TYPE(self, value):
+        if isinstance(value, str):
+            self._OVERLAY_UI_TYPE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
@@ -1054,19 +1054,19 @@ class Config:
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._ENABLE_NOTICE_XSOVERLAY = False
-        # self._OVERLAY_SETTINGS = {
-        #     "opacity": 1.0,
-        #     "ui_scaling": 1.0,
-        # }
-        # self._ENABLE_OVERLAY_SMALL_LOG = False
-        # self._OVERLAY_SMALL_LOG_SETTINGS = {
-        #     "x_pos": 0.0,
-        #     "y_pos": -0.41,
-        #     "depth": 1.0,
-        #     "display_duration": 5,
-        #     "fadeout_duration": 2,
-        # }
-        # self._OVERLAY_UI_TYPE = "default"
+        self._OVERLAY_SETTINGS = {
+            "opacity": 1.0,
+            "ui_scaling": 1.0,
+        }
+        self._ENABLE_OVERLAY_SMALL_LOG = False
+        self._OVERLAY_SMALL_LOG_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": -0.41,
+            "depth": 1.0,
+            "display_duration": 5,
+            "fadeout_duration": 2,
+        }
+        self._OVERLAY_UI_TYPE = "default"
         self._ENABLE_SEND_MESSAGE_TO_VRC = True
         self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
