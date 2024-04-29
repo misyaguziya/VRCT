@@ -104,21 +104,21 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 ]
             },
         },
-        # {
-        #     "side_menu_tab_attr_name": "side_menu_tab_vr",
-        #     "label_attr_name": "label_vr",
-        #     "selected_mark_attr_name": "selected_mark_vr",
-        #     "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
-        #     "setting_box_container_settings": {
-        #         "setting_box_container_attr_name": "setting_box_container_vr",
-        #         "setting_boxes": [
-        #             {
-        #                 "var_section_title": None,
-        #                 "setting_box": createSettingBox_Vr
-        #             }
-        #         ]
-        #     },
-        # },
+        {
+            "side_menu_tab_attr_name": "side_menu_tab_vr",
+            "label_attr_name": "label_vr",
+            "selected_mark_attr_name": "selected_mark_vr",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
+            "setting_box_container_settings": {
+                "setting_box_container_attr_name": "setting_box_container_vr",
+                "setting_boxes": [
+                    {
+                        "var_section_title": None,
+                        "setting_box": createSettingBox_Vr
+                    }
+                ]
+            },
+        },
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
