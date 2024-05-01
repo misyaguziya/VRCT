@@ -224,6 +224,10 @@ config_window:
     label: Auto Export Message Logs
     desc: Automatically export the conversation messages as a text file.
 
+  vrc_mic_mute_sync:
+    label: VRChat Mic Mute Sync
+    desc: VRCT will not send the message to VRChat while VRChat's mic is muted.
+
   send_message_to_vrc:
     label: Send Message To VRChat
     desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.

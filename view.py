@@ -446,6 +446,12 @@ class View():
             VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=BooleanVar(value=config.ENABLE_LOGGER),
 
 
+            VAR_LABEL_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
+            VAR_DESC_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.desc")),
+            CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=None,
+            VAR_ENABLE_VRC_MIC_MUTE_SYNC=BooleanVar(value=config.ENABLE_MUTE_DETECT),
+
+
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
             VAR_DESC_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.desc")),
             CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=None,
@@ -684,6 +690,7 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
+            self.view_variable.CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=config_window_registers.get("callback_set_enable_vrc_mic_mute_sync", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
 
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT=config_window_registers.get("callback_set_send_message_format", None)

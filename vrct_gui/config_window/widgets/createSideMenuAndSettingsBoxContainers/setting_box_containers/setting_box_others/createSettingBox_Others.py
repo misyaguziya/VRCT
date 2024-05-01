@@ -27,6 +27,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def buttonAutoExportMessageLogsCallback():
         callFunctionIfCallable(view_variable.CALLBACK_OPEN_FILEPATH_LOGS)
 
+    def checkboxVrcMuteSyncCallback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC, checkbox_box_widget.get())
+
     def checkboxEnableSendMessageToVrcCallback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC, checkbox_box_widget.get())
 
@@ -83,6 +86,17 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         variable=view_variable.VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS,
     )
     config_window.sb__auto_export_message_logs.grid(row=row)
+    row+=1
+
+
+    config_window.sb__vrc_mic_mute_sync = createSettingBoxCheckbox(
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_VRC_MIC_MUTE_SYNC,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_VRC_MIC_MUTE_SYNC,
+        checkbox_attr_name="sb__checkbox_vrc_mic_mute_sync",
+        command=lambda: checkboxVrcMuteSyncCallback(config_window.sb__checkbox_vrc_mic_mute_sync),
+        variable=view_variable.VAR_ENABLE_VRC_MIC_MUTE_SYNC,
+    )
+    config_window.sb__vrc_mic_mute_sync.grid(row=row)
     row+=1
 
 
