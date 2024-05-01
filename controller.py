@@ -855,6 +855,10 @@ def callbackSetEnableAutoExportMessageLogs(value):
     else:
         model.stopLogger()
 
+def callbackSetEnableVrcMicMuteSync(value):
+    print("callbackSetEnableVrcMicMuteSync", value)
+    config.ENABLE_MUTE_DETECT = value
+
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
     config.ENABLE_SEND_MESSAGE_TO_VRC = value
@@ -1103,6 +1107,7 @@ def createMainWindow(splash):
             "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
+            "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
             # Others(Message Formats(Send)
             "callback_set_send_message_format": callbackSetSendMessageFormat,
