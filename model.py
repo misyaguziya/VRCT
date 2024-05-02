@@ -26,7 +26,7 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
 from models.transcription.transcription_whisper import checkWhisperWeight
-from models.overlay.overlay import Overlay
+from models.overlay.overlay_2 import Overlay
 from models.overlay.overlay_image import OverlayImage
 
 from config import config
@@ -603,46 +603,35 @@ class Model:
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def clearOverlayImage(self):
-        if self.overlay.initialized is True:
-            self.overlay.uiManager.uiClear()
+        self.overlay.clearImage()
 
     def updateOverlay(self, img):
-        if self.overlay.initialized is True:
-            self.overlay.uiManager.uiUpdate(img)
+        self.overlay.setImage(img)
 
     def startOverlay(self):
-        if self.overlay.initialized is False:
-            self.overlay.init()
-
-        if self.overlay.initialized is True and self.th_overlay is None:
-            self.th_overlay = Thread(target=self.overlay.startOverlay)
-            self.th_overlay.daemon = True
-            self.th_overlay.start()
+        self.overlay.startOverlay()
 
     def updateOverlayPosition(self):
-        if self.overlay.initialized is True:
-            pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
-            self.overlay.uiManager.setPosition(pos)
-            depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
-            self.overlay.uiManager.setDepth(depth)
-            self.overlay.uiManager.posUpdate()
+        pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
+        self.overlay.setPosition(pos)
+        depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
+        self.overlay.setDepth(depth)
 
     def updateOverlayTimes(self):
-        if self.overlay.initialized is True:
-            display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
-            self.overlay.uiManager.setFadeTime(display_duration)
-            fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
-            self.overlay.uiManager.setFadeInterval(fadeout_duration)
-            self.overlay.uiManager.update()
+        display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
+        self.overlay.setFadeTime(display_duration)
+        fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
+        self.overlay.setFadeInterval(fadeout_duration)
 
     def updateOverlayImageOpacity(self):
-        if self.overlay.initialized is True:
-            opacity = config.OVERLAY_SETTINGS["opacity"]
-            self.overlay.uiManager.setTransparency(opacity)
+        opacity = config.OVERLAY_SETTINGS["opacity"]
+        self.overlay.setTransparency(opacity)
 
     def updateOverlayImageUiScaling(self):
-        if self.overlay.initialized is True:
-            ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-            self.overlay.uiManager.setUiScaling(ui_scaling)
+        ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
+        self.overlay.setUiScaling(ui_scaling)
+
+    def shutdownOverlay(self):
+        self.overlay.shutdown()
 
 model = Model()
