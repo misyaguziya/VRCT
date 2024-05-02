@@ -449,7 +449,7 @@ class View():
             VAR_LABEL_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
             VAR_DESC_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.desc")),
             CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=None,
-            VAR_ENABLE_VRC_MIC_MUTE_SYNC=BooleanVar(value=config.ENABLE_MUTE_DETECT),
+            VAR_ENABLE_VRC_MIC_MUTE_SYNC=BooleanVar(value=config.ENABLE_VRC_MIC_MUTE_SYNC),
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),

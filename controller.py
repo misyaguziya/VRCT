@@ -857,7 +857,7 @@ def callbackSetEnableAutoExportMessageLogs(value):
 
 def callbackSetEnableVrcMicMuteSync(value):
     print("callbackSetEnableVrcMicMuteSync", value)
-    config.ENABLE_MUTE_DETECT = value
+    config.ENABLE_VRC_MIC_MUTE_SYNC = value
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
@@ -919,7 +919,7 @@ def createDictOSCReceiveParameters():
     param_Voice = "Voice"
 
     def change_handler_mute(address, osc_arguments):
-        if config.ENABLE_MUTE_DETECT is True:
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
             if osc_arguments is True and change_handler_mute.status_mute is False:
                 model.stopPutQueueMicAudio()
                 change_handler_mute.status_mute = True
@@ -928,7 +928,7 @@ def createDictOSCReceiveParameters():
                 change_handler_mute.status_mute = False
 
     def change_handler_voice(address, osc_arguments):
-        if config.ENABLE_MUTE_DETECT is True:
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
             if change_handler_mute.status_mute is True:
                 model.startPutQueueMicAudio()
                 change_handler_mute.status_mute = False

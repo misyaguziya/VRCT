@@ -230,7 +230,7 @@ class Model:
         param_Voice = "Voice"
 
         def change_handler_mute(address, osc_arguments):
-            if config.ENABLE_MUTE_DETECT is True:
+            if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
                 if osc_arguments is True and self.mute_status is False:
                     self.stopPutQueueMicAudio()
                     self.mute_status = True
@@ -239,7 +239,7 @@ class Model:
                     self.mute_status = False
 
         def change_handler_voice(address, osc_arguments):
-            if config.ENABLE_MUTE_DETECT is True:
+            if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
                 if self.mute_status is True:
                     self.startPutQueueMicAudio()
                     self.mute_status = False
