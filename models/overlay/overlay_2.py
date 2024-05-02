@@ -1,6 +1,6 @@
 import ctypes
 import psutil
-import asyncio
+from os import path as os_path
 import ctypes
 import time
 import openvr
@@ -68,7 +68,8 @@ class Overlay:
         self.image_queue.put(img)
 
     def updateImage(self):
-        img = self.image_queue.get()
+        _ = self.image_queue.get()
+        img = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "test_chatbox.png"))
         width, height = img.size
         img = img.tobytes()
         img = (ctypes.c_char * len(img)).from_buffer_copy(img)
@@ -171,7 +172,7 @@ class Overlay:
         while self.checkActive() is True:
             startTime = time.monotonic()
             self.update()
-            sleepTime = (1 / 60) - (time.monotonic() - startTime)
+            sleepTime = (1 / 16) - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
 
@@ -198,35 +199,22 @@ class Overlay:
         self.initialized = False
 
 if __name__ == '__main__':
-    import threading
     from overlay_image import OverlayImage
-
     overlay_image = OverlayImage()
-    overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
-    thread = threading.Thread(target=overlay.startOverlay)
-    thread.start()
 
-    for i in range(10):
-        print(f"time sleep {i}s")
-        time.sleep(1)
+    for i in range(100):
+        print(i)
+        overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
+        overlay.startOverlay()
+        # time.sleep(0.1)
 
-    # Example usage
-    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
-    overlay.setImage(img)
-    for i in range(10):
-        overlay.setPosition((i/10, i/10))
-        time.sleep(0.1)
+        # Example usage
+        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
+        overlay.setImage(img)
+        time.sleep(0.5)
 
-    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-    overlay.setImage(img)
+        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+        overlay.setImage(img)
+        time.sleep(0.5)
 
-    for i in range(10):
-        overlay.setPosition((i/10, i/10))
-        time.sleep(0.1)
-
-    time.sleep(10)
-
-    overlay.shutdown()
-    for i in range(10):
-        print(f"time sleep {i}s")
-        time.sleep(1)
+        overlay.shutdown()
