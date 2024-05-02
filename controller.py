@@ -164,8 +164,10 @@ def receiveSpeakerMessage(message):
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 if model.overlay.initialized is False:
                     model.startOverlay()
+                    print("model.startOverlay()")
                 overlay_image = model.createOverlayImageShort(message, translation)
                 model.updateOverlay(overlay_image)
+                print("model.updateOverlay(overlay_image)")
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
                 # model.updateOverlay(overlay_image)
 
