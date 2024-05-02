@@ -229,7 +229,7 @@ if __name__ == '__main__':
                     return
                 self.fnc(*self._args, **self._kwargs)
 
-    overlay = Overlay()
+    overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
     overlay_image = OverlayImage()
 
     if overlay.initialized is False:
