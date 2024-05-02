@@ -167,21 +167,18 @@ class Overlay:
         else:
             self.updateTransparency()
 
-    async def mainloop(self):
+    def mainloop(self):
         while self.checkActive() is True:
             startTime = time.monotonic()
             self.update()
             sleepTime = (1 / 60) - (time.monotonic() - startTime)
             if sleepTime > 0:
-                await asyncio.sleep(sleepTime)
-
-    async def initMain(self):
-        await self.mainloop()
+                time.sleep(sleepTime)
 
     def main(self):
         self.init()
         if self.initialized is True:
-            asyncio.run(self.initMain())
+            self.mainloop()
 
     def startOverlay(self):
         self.thread_overlay = Thread(target=self.main)
@@ -191,10 +188,13 @@ class Overlay:
     def shutdown(self):
         if self.thread_overlay is not None:
             ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(self.thread_overlay.ident), ctypes.py_object(SystemExit))
+            self.thread_overlay = None
         if self.overlay is not None:
             self.overlay.destroyOverlay(self.handle)
+            self.overlay = None
         if self.system is not None:
             openvr.shutdown()
+            self.system = None
         self.initialized = False
 
 if __name__ == '__main__':
