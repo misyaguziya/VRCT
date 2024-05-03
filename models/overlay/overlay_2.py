@@ -1,11 +1,11 @@
 import ctypes
 import psutil
-from os import path as os_path
+# from os import path as os_path
 import ctypes
 import time
 import openvr
 from PIL import Image
-from queue import Queue
+# from queue import Queue
 from threading import Thread
 
 def checkSteamvrRunning() -> bool:
@@ -38,7 +38,7 @@ class Overlay:
         self.system = None
         self.overlay = None
         self.handle = None
-        self.image_queue = Queue()
+        # self.image_queue = Queue()
         self.lastUpdate = time.monotonic()
         self.thread_overlay = None
 
@@ -49,8 +49,7 @@ class Overlay:
                 self.overlay = openvr.IVROverlay()
                 self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
 
-                self.setImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
-                self.updateImage()
+                self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
                 self.setColor(self.settings['Color'])
                 self.updateColor()
                 self.setTransparency(self.settings['Transparency'])
@@ -64,21 +63,23 @@ class Overlay:
         except Exception as e:
             print("Could not initialise OpenVR", e)
 
-    def setImage(self, img):
-        self.image_queue.put(img)
+    # def setImage(self, img):
+    #     self.image_queue.put(img)
 
-    def updateImage(self):
-        _ = self.image_queue.get()
-        img = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "test_chatbox.png"))
+    def updateImage(self, img):
+        # _ = self.image_queue.get()
+        # img = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "test_chatbox.png"))
         width, height = img.size
         img = img.tobytes()
         img = (ctypes.c_char * len(img)).from_buffer_copy(img)
         self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
+        self.updateTransparency()
+        self.lastUpdate = time.monotonic()
 
     def clearImage(self):
-        while self.image_queue.empty() is False:
-            self.image_queue.get()
-        self.setImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+        # while self.image_queue.empty() is False:
+        #     self.image_queue.get()
+        self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
 
     def setColor(self, col):
         """
@@ -154,13 +155,8 @@ class Overlay:
             self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings['Transparency'])
 
     def update(self):
-        if self.image_queue.empty() is False:
-            self.updateImage()
-            self.updateTransparency()
-            self.lastUpdate = time.monotonic()
-
-        self.updateUiScaling()
-        self.updatePosition()
+        # self.updateUiScaling()
+        # self.updatePosition()
 
         currTime = time.monotonic()
         if self.settings['Fade_interval'] != 0:
@@ -175,6 +171,7 @@ class Overlay:
             sleepTime = (1 / 16) - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
+        self.shutdown()
 
     def main(self):
         self.init()
@@ -210,11 +207,11 @@ if __name__ == '__main__':
 
         # Example usage
         img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
-        overlay.setImage(img)
+        overlay.updateImage(img)
         time.sleep(0.5)
 
         img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-        overlay.setImage(img)
+        overlay.updateImage(img)
         time.sleep(0.5)
 
         overlay.shutdown()

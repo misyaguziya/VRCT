@@ -606,7 +606,7 @@ class Model:
         self.overlay.clearImage()
 
     def updateOverlay(self, img):
-        self.overlay.setImage(img)
+        self.overlay.updateImage(img)
 
     def startOverlay(self):
         self.overlay.startOverlay()
