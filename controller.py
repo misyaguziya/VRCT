@@ -165,8 +165,8 @@ def receiveSpeakerMessage(message):
                 if model.overlay.initialized is False:
                     model.startOverlay()
                     print("model.startOverlay()")
-                overlay_image = model.createOverlayImageShort(message, translation)
-                model.updateOverlay(overlay_image)
+                # overlay_image = model.createOverlayImageShort(message, translation)
+                model.updateOverlay(1)
                 print("model.updateOverlay(overlay_image)")
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
                 # model.updateOverlay(overlay_image)
