@@ -162,11 +162,8 @@ def receiveSpeakerMessage(message):
                 model.notificationXSOverlay(xsoverlay_message)
 
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
-                if model.overlay.initialized is False:
-                    model.startOverlay()
-                    print("model.startOverlay()")
-                # overlay_image = model.createOverlayImageShort(message, translation)
-                model.updateOverlay(1)
+                overlay_image = model.createOverlayImageShort(message, translation)
+                model.updateOverlay(overlay_image)
                 print("model.updateOverlay(overlay_image)")
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
                 # model.updateOverlay(overlay_image)
@@ -192,7 +189,6 @@ def startTranscriptionReceiveMessage():
 
 def stopTranscriptionReceiveMessage():
     model.stopSpeakerTranscript()
-    model.shutdownOverlay()
     view.setMainWindowAllWidgetsStatusToNormal()
 
 def startThreadingTranscriptionReceiveMessage():
@@ -428,6 +424,14 @@ def callbackToggleTranscriptionReceive(is_turned_on):
     else:
         stopThreadingTranscriptionReceiveMessage()
         view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
+
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True and config.ENABLE_OVERLAY_SMALL_LOG is True:
+        if model.overlay.initialized is False:
+            model.startOverlay()
+            print("model.startOverlay()")
+    elif config.ENABLE_TRANSCRIPTION_RECEIVE is False:
+        model.shutdownOverlay()
+        print("model.shutdownOverlay()")
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
@@ -876,8 +880,13 @@ def callbackSetEnableOverlaySmallLog(value):
     print("callbackSetEnableOverlaySmallLog", value)
     config.ENABLE_OVERLAY_SMALL_LOG = value
 
-    if config.ENABLE_OVERLAY_SMALL_LOG is False:
-        model.clearOverlayImage()
+    if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        if model.overlay.initialized is False:
+            model.startOverlay()
+            print("model.startOverlay()")
+    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+        model.shutdownOverlay()
+        print("model.shutdownOverlay()")
 
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)
