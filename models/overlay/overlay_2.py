@@ -1,5 +1,6 @@
+import os
 import ctypes
-import psutil
+from psutil import process_iter
 # from os import path as os_path
 import ctypes
 import time
@@ -7,12 +8,6 @@ import openvr
 from PIL import Image
 # from queue import Queue
 from threading import Thread
-
-def checkSteamvrRunning() -> bool:
-    for proc in psutil.process_iter():
-        if "vrserver.exe" == proc.name().lower():
-            return True
-    return False
 
 def mat34Id():
     arr = openvr.HmdMatrix34_t()
@@ -44,22 +39,21 @@ class Overlay:
 
     def init(self):
         try:
-            if checkSteamvrRunning() is True:
-                self.system = openvr.init(openvr.VRApplication_Background)
-                self.overlay = openvr.IVROverlay()
-                self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
+            self.system = openvr.init(openvr.VRApplication_Background)
+            self.overlay = openvr.IVROverlay()
+            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
 
-                self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
-                self.setColor(self.settings['Color'])
-                self.updateColor()
-                self.setTransparency(self.settings['Transparency'])
-                self.updateTransparency()
-                self.setUiScaling(self.settings['Ui_scaling'])
-                self.updateUiScaling()
-                self.setPosition((self.settings["Normalized_icon_X_position"], self.settings["Normalized_icon_Y_position"]))
-                self.updatePosition()
-                self.overlay.showOverlay(self.handle)
-                self.initialized = True
+            self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+            self.setColor(self.settings['Color'])
+            self.updateColor()
+            self.setTransparency(self.settings['Transparency'])
+            self.updateTransparency()
+            self.setUiScaling(self.settings['Ui_scaling'])
+            self.updateUiScaling()
+            self.setPosition((self.settings["Normalized_icon_X_position"], self.settings["Normalized_icon_Y_position"]))
+            self.updatePosition()
+            self.overlay.showOverlay(self.handle)
+            self.initialized = True
         except Exception as e:
             print("Could not initialise OpenVR", e)
 
@@ -194,6 +188,11 @@ class Overlay:
             openvr.shutdown()
             self.system = None
         self.initialized = False
+
+    @staticmethod
+    def checkSteamvrRunning() -> bool:
+        _proc_name = "vrmonitor.exe" if os.name == 'nt' else "vrmonitor"
+        return _proc_name in (p.name() for p in process_iter())
 
 if __name__ == '__main__':
     from overlay_image import OverlayImage
