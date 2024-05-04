@@ -427,12 +427,11 @@ def callbackToggleTranscriptionReceive(is_turned_on):
         view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
 
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True and config.ENABLE_OVERLAY_SMALL_LOG is True:
-        if model.overlay.initialized is False:
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
             print("model.startOverlay()")
     elif config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-        model.shutdownOverlay()
-        print("model.shutdownOverlay()")
+        pass
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
@@ -882,12 +881,11 @@ def callbackSetEnableOverlaySmallLog(value):
     config.ENABLE_OVERLAY_SMALL_LOG = value
 
     if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        if model.overlay.initialized is False:
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
             print("model.startOverlay()")
     elif config.ENABLE_OVERLAY_SMALL_LOG is False:
-        model.shutdownOverlay()
-        print("model.shutdownOverlay()")
+        pass
 
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)
