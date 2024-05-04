@@ -203,7 +203,7 @@ if __name__ == '__main__':
         print(i)
         overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
         overlay.startOverlay()
-        # time.sleep(0.1)
+        time.sleep(1)
 
         # Example usage
         img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")

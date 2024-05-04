@@ -162,9 +162,10 @@ def receiveSpeakerMessage(message):
                 model.notificationXSOverlay(xsoverlay_message)
 
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
-                overlay_image = model.createOverlayImageShort(message, translation)
-                model.updateOverlay(overlay_image)
-                print("model.updateOverlay(overlay_image)")
+                if model.overlay.initialized is True:
+                    overlay_image = model.createOverlayImageShort(message, translation)
+                    model.updateOverlay(overlay_image)
+                    print("model.updateOverlay(overlay_image)")
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
                 # model.updateOverlay(overlay_image)
 
