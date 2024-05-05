@@ -9,7 +9,7 @@ from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 from requests import get as requests_get
 import webbrowser
 
@@ -33,7 +33,7 @@ from config import config
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
-        super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
+        super(threadFnc, self).__init__(daemon=daemon, target=fnc, *args, **kwargs)
         self.fnc = fnc
         self.end_fnc = end_fnc
         self.loop = True
