@@ -40,7 +40,7 @@ class AudioTranscriber:
 
     def transcribeAudioQueue(self, audio_queue, language, country):
         if audio_queue.empty():
-            time.sleep(0.1)
+            time.sleep(0.01)
             return False
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
