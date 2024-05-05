@@ -9,7 +9,7 @@ from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 from requests import get as requests_get
 import webbrowser
 
@@ -33,22 +33,20 @@ from config import config
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
-        super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
+        super(threadFnc, self).__init__(daemon=daemon, target=fnc, *args, **kwargs)
         self.fnc = fnc
         self.end_fnc = end_fnc
-        self._stop = Event()
-    def stop(self):
-        self._stop.set()
-    def stopped(self):
-        return self._stop.is_set()
-    def run(self):
-        while True:
-            if self.stopped():
-                if callable(self.end_fnc):
-                    self.end_fnc()
-                return
-            self.fnc(*self._args, **self._kwargs)
+        self.loop = True
 
+    def stop(self):
+        self.loop = False
+
+    def run(self):
+        while self.loop:
+            self.fnc(*self._args, **self._kwargs)
+        if callable(self.end_fnc):
+            self.end_fnc()
+        return
 class Model:
     _instance = None
 
@@ -392,9 +390,10 @@ class Model:
         )
         def sendMicTranscript():
             try:
-                self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
-                message = self.mic_transcriber.getTranscript()
-                fnc(message)
+                res = self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                if res:
+                    message = self.mic_transcriber.getTranscript()
+                    fnc(message)
             except Exception:
                 pass
 
@@ -425,9 +424,10 @@ class Model:
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
+            self.mic_print_transcript.join()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.stop(wait_for_stop=False, forced_stop=True)
+            self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
         #     self.mic_get_energy.stop()
@@ -465,7 +465,7 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar = None
         if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.stop(wait_for_stop=False, forced_stop=True)
+            self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
@@ -505,9 +505,10 @@ class Model:
         )
         def sendSpeakerTranscript():
             try:
-                self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-                message = self.speaker_transcriber.getTranscript()
-                fnc(message)
+                res = self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                if res:
+                    message = self.speaker_transcriber.getTranscript()
+                    fnc(message)
             except Exception:
                 pass
 
@@ -538,9 +539,10 @@ class Model:
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
+            self.speaker_print_transcript.join()
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop(wait_for_stop=False, forced_stop=True)
+            self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
@@ -578,7 +580,7 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.stop(wait_for_stop=False, forced_stop=True)
+            self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
