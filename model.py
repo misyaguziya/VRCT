@@ -396,9 +396,11 @@ class Model:
     def stopPutQueueMicAudio(self):
         if isinstance(self.mic_audio_queue, ConditionalQueue):
             self.mic_audio_queue.set_flag(False)
-            while not self.mic_audio_queue.empty():
-                self.mic_audio_queue.get()
-            # self.mic_energy_queue.set_flag(False)
+            # queueを空にする場合を考慮
+            if False:
+                while not self.mic_audio_queue.empty():
+                    self.mic_audio_queue.get()
+                # self.mic_energy_queue.set_flag(False)
 
     def changePutQueueMicAudio(self):
         if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
