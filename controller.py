@@ -858,6 +858,7 @@ def callbackSetEnableAutoExportMessageLogs(value):
 def callbackSetEnableVrcMicMuteSync(value):
     print("callbackSetEnableVrcMicMuteSync", value)
     config.ENABLE_VRC_MIC_MUTE_SYNC = value
+    model.changePutQueueMicAudio()
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)

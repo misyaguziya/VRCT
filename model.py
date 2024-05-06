@@ -223,25 +223,24 @@ class Model:
     def oscSendMessage(message):
         sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
+    @staticmethod
+    def getMuteSelfStatus():
+        return getOSCParameterValue(address="/avatar/parameters/MuteSelf")
+
     def startReceiveOSC(self):
         osc_parameter_prefix = "/avatar/parameters/"
         param_MuteSelf = "MuteSelf"
-        self.mute_status = getOSCParameterValue(address=osc_parameter_prefix + param_MuteSelf)
+        self.mute_status = self.getMuteSelfStatus()
 
         def change_handler_mute(address, osc_arguments):
-            if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-                if osc_arguments is True and self.mute_status is False:
+            if osc_arguments is True and self.mute_status is False:
+                self.mute_status = True
+                if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
                     self.stopPutQueueMicAudio()
-                    self.mute_status = True
-                elif osc_arguments is False and self.mute_status is True:
+            elif osc_arguments is False and self.mute_status is True:
+                self.mute_status = False
+                if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
                     self.startPutQueueMicAudio()
-                    self.mute_status = False
-
-        def change_handler_voice(address, osc_arguments):
-            if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-                if self.mute_status is True:
-                    self.startPutQueueMicAudio()
-                    self.mute_status = False
 
         dict_filter_and_target = {
             osc_parameter_prefix + param_MuteSelf: change_handler_mute,
@@ -328,8 +327,7 @@ class Model:
 
         self.mic_audio_queue = ConditionalQueue()
         # self.mic_energy_queue = ConditionalQueue()
-        if config.ENABLE_MUTE_DETECT is True and self.mute_status is True:
-            model.stopPutQueueMicAudio()
+        self.changePutQueueMicAudio()
 
         mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
@@ -401,6 +399,15 @@ class Model:
             while not self.mic_audio_queue.empty():
                 self.mic_audio_queue.get()
             # self.mic_energy_queue.set_flag(False)
+
+    def changePutQueueMicAudio(self):
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+            if self.mute_status is True:
+                self.stopPutQueueMicAudio()
+            else:
+                self.startPutQueueMicAudio()
+        else:
+            self.startPutQueueMicAudio()
 
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
