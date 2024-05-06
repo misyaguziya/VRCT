@@ -1,10 +1,10 @@
 from time import sleep
-from threading import Thread
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
 from pythonosc import osc_server
 from tinyoscquery.queryservice import OSCQueryService
+from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
 
 # send OSC message typing
@@ -48,6 +48,13 @@ def sendChangeVoice(ip_address="127.0.0.1", port=9000):
     sendInputVoice(flag=0, ip_address=ip_address, port=port)
     sleep(0.05)
 
+def getOSCParameterValue(address, server_name="VRChat-Client"):
+    browser = OSCQueryBrowser()
+    sleep(1)
+    service = browser.find_service_by_name(server_name)
+    oscq = OSCQueryClient(service)
+    mute_self_node = oscq.query_node(address)
+    return mute_self_node.value[0]
 
 def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="VRCT"):
     osc_port = get_open_udp_port()

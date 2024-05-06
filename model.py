@@ -17,7 +17,7 @@ from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices
-from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters
+from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
@@ -79,8 +79,7 @@ class Model:
         self.speaker_energy_plot_progressbar = None
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
-        self.mic_audio_queue = ConditionalQueue()
-        # self.mic_energy_queue = ConditionalQueue()
+        self.mic_audio_queue = None
         self.mute_status = False
 
     def checkCTranslatorCTranslate2ModelWeight(self):
@@ -227,7 +226,7 @@ class Model:
     def startReceiveOSC(self):
         osc_parameter_prefix = "/avatar/parameters/"
         param_MuteSelf = "MuteSelf"
-        param_Voice = "Voice"
+        self.mute_status = getOSCParameterValue(address=osc_parameter_prefix + param_MuteSelf)
 
         def change_handler_mute(address, osc_arguments):
             if config.ENABLE_MUTE_DETECT is True:
@@ -238,18 +237,11 @@ class Model:
                     self.startPutQueueMicAudio()
                     self.mute_status = False
 
-        def change_handler_voice(address, osc_arguments):
-            if config.ENABLE_MUTE_DETECT is True:
-                if self.mute_status is True:
-                    self.startPutQueueMicAudio()
-                    self.mute_status = False
-
         dict_filter_and_target = {
             osc_parameter_prefix + param_MuteSelf: change_handler_mute,
-            osc_parameter_prefix + param_Voice: change_handler_voice,
         }
 
-        th_osc_server = threadFnc(receiveOscParameters, args=(dict_filter_and_target,))
+        th_osc_server = Thread(target=receiveOscParameters, args=(dict_filter_and_target,))
         th_osc_server.daemon = True
         th_osc_server.start()
 
@@ -330,6 +322,9 @@ class Model:
 
         self.mic_audio_queue = ConditionalQueue()
         # self.mic_energy_queue = ConditionalQueue()
+        if config.ENABLE_MUTE_DETECT is True and self.mute_status is True:
+            model.stopPutQueueMicAudio()
+
         mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
@@ -388,16 +383,18 @@ class Model:
         # self.mic_get_energy.start()
 
     def startPutQueueMicAudio(self):
-        while not self.mic_audio_queue.empty():
-            self.mic_audio_queue.get()
-        self.mic_audio_queue.set_flag(True)
-        # self.mic_energy_queue.set_flag(True)
+        if isinstance(self.mic_audio_queue, ConditionalQueue):
+            while not self.mic_audio_queue.empty():
+                self.mic_audio_queue.get()
+            self.mic_audio_queue.set_flag(True)
+            # self.mic_energy_queue.set_flag(True)
 
     def stopPutQueueMicAudio(self):
-        self.mic_audio_queue.set_flag(False)
-        while not self.mic_audio_queue.empty():
-            self.mic_audio_queue.get()
-        # self.mic_energy_queue.set_flag(False)
+        if isinstance(self.mic_audio_queue, ConditionalQueue):
+            self.mic_audio_queue.set_flag(False)
+            while not self.mic_audio_queue.empty():
+                self.mic_audio_queue.get()
+            # self.mic_energy_queue.set_flag(False)
 
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
