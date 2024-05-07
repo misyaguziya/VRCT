@@ -486,7 +486,7 @@ class Model:
             record_timeout=record_timeout,
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
-        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue ,None)
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
         self.speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
