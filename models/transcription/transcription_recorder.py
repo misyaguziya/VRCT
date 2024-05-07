@@ -114,7 +114,11 @@ class BaseEnergyAndAudioRecorder:
         def energyRecordCallback(energy):
             energy_queue.put(energy)
 
-        self.stop, self.pause, self.resume = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout, callback_energy=energyRecordCallback)
+        self.stop, self.pause, self.resume = self.recorder.listen_energy_and_audio_in_background(
+            source=self.source,
+            callback=audioRecordCallback,
+            phrase_time_limit=self.record_timeout,
+            callback_energy=energyRecordCallback if energy_queue is not None else None)
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
     def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
