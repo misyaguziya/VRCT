@@ -165,7 +165,6 @@ def receiveSpeakerMessage(message):
                 if model.overlay.initialized is True:
                     overlay_image = model.createOverlayImageShort(message, translation)
                     model.updateOverlay(overlay_image)
-                    print("model.updateOverlay(overlay_image)")
                 # overlay_image = model.createOverlayImageLong("receive", message, translation)
                 # model.updateOverlay(overlay_image)
 
@@ -429,7 +428,6 @@ def callbackToggleTranscriptionReceive(is_turned_on):
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True and config.ENABLE_OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-            print("model.startOverlay()")
     elif config.ENABLE_TRANSCRIPTION_RECEIVE is False:
         pass
 
