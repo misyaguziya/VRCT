@@ -77,7 +77,8 @@ class Model:
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.mic_audio_queue = None
-        self.mute_status = False
+        self.mic_mute_status = None
+        self.mic_mute_status_check = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -224,20 +225,37 @@ class Model:
     def getMuteSelfStatus():
         return getOSCParameterValue(address="/avatar/parameters/MuteSelf")
 
+    def startCheckMuteSelfStatus(self):
+        def checkMuteSelfStatus():
+            if self.mic_mute_status is not None:
+                self.stopCheckMuteSelfStatus()
+
+            status = self.getMuteSelfStatus()
+            if status is not None:
+                self.mic_mute_status = status
+                self.stopCheckMuteSelfStatus()
+
+        if not isinstance(self.mic_mute_status_check, threadFnc):
+            self.mic_mute_status_check = threadFnc(checkMuteSelfStatus)
+            self.mic_mute_status_check.daemon = True
+            self.mic_mute_status_check.start()
+
+    def stopCheckMuteSelfStatus(self):
+        if isinstance(self.mic_mute_status_check, threadFnc):
+            self.mic_mute_status_check.stop()
+            self.mic_mute_status_check = None
+
     def startReceiveOSC(self):
         osc_parameter_prefix = "/avatar/parameters/"
         param_MuteSelf = "MuteSelf"
-        self.mute_status = self.getMuteSelfStatus()
 
         def change_handler_mute(address, osc_arguments):
-            if osc_arguments is True and self.mute_status is False:
-                self.mute_status = True
-                if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-                    self.stopPutQueueMicAudio()
-            elif osc_arguments is False and self.mute_status is True:
-                self.mute_status = False
-                if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-                    self.startPutQueueMicAudio()
+            if osc_arguments is True and self.mic_mute_status is False:
+                self.mic_mute_status = osc_arguments
+                self.changeMicTranscriptStatus()
+            elif osc_arguments is False and self.mic_mute_status is True:
+                self.mic_mute_status = osc_arguments
+                self.changeMicTranscriptStatus()
 
         dict_filter_and_target = {
             osc_parameter_prefix + param_MuteSelf: change_handler_mute,
@@ -324,7 +342,6 @@ class Model:
 
         self.mic_audio_queue = Queue()
         # self.mic_energy_queue = Queue()
-        self.changePutQueueMicAudio()
 
         mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
@@ -383,7 +400,9 @@ class Model:
         # self.mic_get_energy.daemon = True
         # self.mic_get_energy.start()
 
-    def startPutQueueMicAudio(self):
+        self.changeMicTranscriptStatus()
+
+    def resumeMicTranscript(self):
         # キューをクリア
         if isinstance(self.mic_audio_queue, Queue):
             while not self.mic_audio_queue.empty():
@@ -397,7 +416,7 @@ class Model:
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.resume()
 
-    def stopPutQueueMicAudio(self):
+    def pauseMicTranscript(self):
         # 文字起こしを一時停止
         # if isinstance(self.mic_print_transcript, threadFnc):
         #     self.mic_print_transcript.pause()
@@ -406,14 +425,16 @@ class Model:
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.pause()
 
-    def changePutQueueMicAudio(self):
+    def changeMicTranscriptStatus(self):
         if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-            if self.mute_status is True:
-                self.stopPutQueueMicAudio()
+            if self.mic_mute_status is True:
+                self.pauseMicTranscript()
+            elif self.mic_mute_status is False:
+                self.resumeMicTranscript()
             else:
-                self.startPutQueueMicAudio()
+                pass
         else:
-            self.startPutQueueMicAudio()
+            self.resumeMicTranscript()
 
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):

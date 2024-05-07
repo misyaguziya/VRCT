@@ -858,7 +858,11 @@ def callbackSetEnableAutoExportMessageLogs(value):
 def callbackSetEnableVrcMicMuteSync(value):
     print("callbackSetEnableVrcMicMuteSync", value)
     config.ENABLE_VRC_MIC_MUTE_SYNC = value
-    model.changePutQueueMicAudio()
+    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+        model.startCheckMuteSelfStatus()
+    else:
+        model.stopCheckMuteSelfStatus()
+
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
@@ -981,6 +985,8 @@ def createMainWindow(splash):
 
     # init OSC receive
     model.startReceiveOSC()
+    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+        model.startCheckMuteSelfStatus()
 
     splash.toProgress(3) # Last one.
 

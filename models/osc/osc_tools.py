@@ -49,12 +49,18 @@ def sendChangeVoice(ip_address="127.0.0.1", port=9000):
     sleep(0.05)
 
 def getOSCParameterValue(address, server_name="VRChat-Client"):
-    browser = OSCQueryBrowser()
-    sleep(1)
-    service = browser.find_service_by_name(server_name)
-    oscq = OSCQueryClient(service)
-    mute_self_node = oscq.query_node(address)
-    return mute_self_node.value[0]
+    value = None
+    try:
+        browser = OSCQueryBrowser()
+        sleep(1)
+        service = browser.find_service_by_name(server_name)
+        if service is not None:
+            oscq = OSCQueryClient(service)
+            mute_self_node = oscq.query_node(address)
+            value = mute_self_node.value[0]
+    except Exception:
+        pass
+    return value
 
 def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="VRCT"):
     osc_port = get_open_udp_port()
