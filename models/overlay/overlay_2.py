@@ -8,6 +8,7 @@ import openvr
 from PIL import Image
 # from queue import Queue
 from threading import Thread
+import OverlayImage
 
 def mat34Id():
     arr = openvr.HmdMatrix34_t()
@@ -17,25 +18,26 @@ def mat34Id():
     return arr
 
 class Overlay:
-    def __init__(self, x, y , depth, fade_time, fade_interval, transparency, ui_scaling):
+    def __init__(self, x, y , depth, fade_time, fade_interval, opacity, ui_scaling):
         self.initialized = False
         settings = {
-            "Color": [1, 1, 1],
-            "Transparency": transparency,
-            "Normalized_icon_X_position": x,
-            "Normalized_icon_Y_position": y,
-            "Icon_plane_depth": depth,
-            "Fade_time": fade_time,
-            "Fade_interval": fade_interval,
-            "Ui_scaling": ui_scaling,
+            "color": [1, 1, 1],
+            "opacity": opacity,
+            "x_pos": x,
+            "y_pos": y,
+            "depth": depth,
+            "fade_time": fade_time,
+            "fade_interval": fade_interval,
+            "ui_scaling": ui_scaling,
         }
         self.settings = settings
         self.system = None
         self.overlay = None
         self.handle = None
-        # self.image_queue = Queue()
         self.lastUpdate = time.monotonic()
         self.thread_overlay = None
+        self.fadeRatio = 1
+        self.loop = True
 
     def init(self):
         try:
@@ -44,76 +46,62 @@ class Overlay:
             self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
 
             self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
-            self.setColor(self.settings['Color'])
-            self.updateColor()
-            self.setTransparency(self.settings['Transparency'])
-            self.updateTransparency()
-            self.setUiScaling(self.settings['Ui_scaling'])
-            self.updateUiScaling()
-            self.setPosition((self.settings["Normalized_icon_X_position"], self.settings["Normalized_icon_Y_position"]))
-            self.updatePosition()
+            self.updateColor(self.settings["color"])
+            self.updateOpacity(self.settings["opacity"])
+            self.updateUiScaling(self.settings["Ui_scaling"])
+            self.updatePosition(
+                (self.settings["x_pos"], self.settings["y_pos"]),
+                self.settings["depth"]
+            )
             self.overlay.showOverlay(self.handle)
             self.initialized = True
         except Exception as e:
             print("Could not initialise OpenVR", e)
 
-    # def setImage(self, img):
-    #     self.image_queue.put(img)
-
     def updateImage(self, img):
-        # _ = self.image_queue.get()
-        # img = Image.open(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "img", "test_chatbox.png"))
         width, height = img.size
         img = img.tobytes()
         img = (ctypes.c_char * len(img)).from_buffer_copy(img)
         self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
-        self.updateTransparency()
+        self.updateOpacity(self.settings["opacity"])
         self.lastUpdate = time.monotonic()
 
     def clearImage(self):
-        # while self.image_queue.empty() is False:
-        #     self.image_queue.get()
         self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
 
-    def setColor(self, col):
+    def updateColor(self, col):
         """
         col is a 3-tuple representing (r, g, b)
         """
-        self.settings["Color"] = col
-
-    def updateColor(self):
-        r, g, b = self.settings["Color"]
+        self.settings["color"] = col
+        r, g, b = self.settings["color"]
         self.overlay.setOverlayColor(self.handle, r, g, b)
 
-    def setTransparency(self, transparency):
-        self.settings['Transparency'] = transparency
+    def updateOpacity(self, opacity, with_fade=False):
+        self.settings["opacity"] = opacity
+        self.overlay.setOverlayAlpha(
+            self.handle,
+            self.settings["opacity"] if with_fade is False else self.settings["opacity"] * self.fadeRatio)
 
-    def updateTransparency(self):
-        self.overlay.setOverlayAlpha(self.handle, self.settings['Transparency'])
+    def updateUiScaling(self, ui_scaling):
+        self.settings['ui_scaling'] = ui_scaling
+        self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
 
-    def setUiScaling(self, ui_scaling):
-        self.settings['Ui_scaling'] = ui_scaling
-
-    def updateUiScaling(self):
-        self.overlay.setOverlayWidthInMeters(self.handle, self.settings['Ui_scaling'])
-
-    def setPosition(self, pos):
+    def updatePosition(self, pos, depth):
         """
         pos is a 2-tuple representing normalized (x, y)
+        depth is a float representing the depth of the icon plane
         """
-        self.settings["Normalized_icon_X_position"] = pos[0]
-        self.settings["Normalized_icon_Y_position"] = pos[1]
+        self.settings["x_pos"] = pos[0]
+        self.settings["y_pos"] = pos[1]
+        self.settings["depth"] = depth
 
-    def setDepth(self, depth):
-        self.settings["Icon_plane_depth"] = depth
-
-    def updatePosition(self):
         self.transform = mat34Id() # no rotation required for HMD attachment
 
         # assign position
-        self.transform[0][3] = self.settings["Normalized_icon_X_position"] * self.settings['Icon_plane_depth']
-        self.transform[1][3] = self.settings["Normalized_icon_Y_position"] * self.settings['Icon_plane_depth']
-        self.transform[2][3] = - self.settings['Icon_plane_depth']
+        self.transform[0][3] = self.settings["x_pos"] * self.settings['depth']
+        self.transform[1][3] = self.settings["y_pos"] * self.settings['depth']
+        self.transform[2][3] = - self.settings['depth']
 
         self.overlay.setOverlayTransformTrackedDeviceRelative(
             self.handle,
@@ -121,11 +109,11 @@ class Overlay:
             self.transform
         )
 
-    def setFadeTime(self, fade_time):
-        self.settings['Fade_time'] = fade_time
+    def updateDisplayDuration(self, display_duration):
+        self.settings['display_duration'] = display_duration
 
-    def setFadeInterval(self, fade_interval):
-        self.settings['Fade_interval'] = fade_interval
+    def updateFadeoutDuration(self, fadeout_duration):
+        self.settings['fadeout_duration'] = fadeout_duration
 
     def checkActive(self):
         try:
@@ -140,32 +128,30 @@ class Overlay:
             print(e)
             return False
 
-    def evaluateTransparencyFade(self, lastUpdate, currentTime):
-        if (currentTime - lastUpdate) > self.settings['Fade_time']:
-            timeThroughInterval = currentTime - lastUpdate - self.settings['Fade_time']
-            self.fadeRatio = 1 - timeThroughInterval / self.settings['Fade_interval']
+    def evaluateOpacityFade(self, lastUpdate, currentTime):
+        if (currentTime - lastUpdate) > self.settings['display_duration']:
+            timeThroughInterval = currentTime - lastUpdate - self.settings['display_duration']
+            self.fadeRatio = 1 - timeThroughInterval / self.settings['fadeout_duration']
             if self.fadeRatio < 0:
                 self.fadeRatio = 0
-            self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings['Transparency'])
+            self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings['opacity'])
 
     def update(self):
-        # self.updateUiScaling()
-        # self.updatePosition()
-
         currTime = time.monotonic()
-        if self.settings['Fade_interval'] != 0:
-            self.evaluateTransparencyFade(self.lastUpdate, currTime)
+        if self.settings['fadeout_duration'] != 0:
+            self.evaluateOpacityFade(self.lastUpdate, currTime)
         else:
-            self.updateTransparency()
+            self.updateOpacity(self.settings["opacity"])
 
     def mainloop(self):
-        while self.checkActive() is True:
+        self.loop = True
+        while self.checkActive() is True and self.loop is True:
             startTime = time.monotonic()
             self.update()
             sleepTime = (1 / 16) - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
-        self.shutdown()
+        self.shutdownOverlay()
 
     def main(self):
         self.init()
@@ -177,9 +163,12 @@ class Overlay:
         self.thread_overlay.daemon = True
         self.thread_overlay.start()
 
-    def shutdown(self):
+    def setStopOverlay(self):
+        self.loop = False
+
+    def shutdownOverlay(self):
         if self.thread_overlay is not None:
-            ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(self.thread_overlay.ident), ctypes.py_object(SystemExit))
+            self.thread_overlay.join()
             self.thread_overlay = None
         if self.overlay is not None:
             self.overlay.destroyOverlay(self.handle)
