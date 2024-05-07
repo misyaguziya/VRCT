@@ -228,11 +228,13 @@ class Model:
     def startCheckMuteSelfStatus(self):
         def checkMuteSelfStatus():
             if self.mic_mute_status is not None:
+                self.changeMicTranscriptStatus()
                 self.stopCheckMuteSelfStatus()
 
             status = self.getMuteSelfStatus()
             if status is not None:
                 self.mic_mute_status = status
+                self.changeMicTranscriptStatus()
                 self.stopCheckMuteSelfStatus()
 
         if not isinstance(self.mic_mute_status_check, threadFnc):
