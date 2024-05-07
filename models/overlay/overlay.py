@@ -8,7 +8,6 @@ import openvr
 from PIL import Image
 # from queue import Queue
 from threading import Thread
-import OverlayImage
 
 def mat34Id():
     arr = openvr.HmdMatrix34_t()
@@ -18,7 +17,7 @@ def mat34Id():
     return arr
 
 class Overlay:
-    def __init__(self, x, y , depth, fade_time, fade_interval, opacity, ui_scaling):
+    def __init__(self, x, y , depth, display_duration, fadeout_duration, opacity, ui_scaling):
         self.initialized = False
         settings = {
             "color": [1, 1, 1],
@@ -26,8 +25,8 @@ class Overlay:
             "x_pos": x,
             "y_pos": y,
             "depth": depth,
-            "fade_time": fade_time,
-            "fade_interval": fade_interval,
+            "display_duration": display_duration,
+            "fadeout_duration": fadeout_duration,
             "ui_scaling": ui_scaling,
         }
         self.settings = settings
@@ -48,7 +47,7 @@ class Overlay:
             self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
             self.updateColor(self.settings["color"])
             self.updateOpacity(self.settings["opacity"])
-            self.updateUiScaling(self.settings["Ui_scaling"])
+            self.updateUiScaling(self.settings["ui_scaling"])
             self.updatePosition(
                 (self.settings["x_pos"], self.settings["y_pos"]),
                 self.settings["depth"]
@@ -79,9 +78,12 @@ class Overlay:
 
     def updateOpacity(self, opacity, with_fade=False):
         self.settings["opacity"] = opacity
-        self.overlay.setOverlayAlpha(
-            self.handle,
-            self.settings["opacity"] if with_fade is False else self.settings["opacity"] * self.fadeRatio)
+
+        if with_fade is True:
+            if self.fadeRatio > 0:
+                self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
+        else:
+            self.overlay.setOverlayAlpha(self.handle, self.settings["opacity"])
 
     def updateUiScaling(self, ui_scaling):
         self.settings['ui_scaling'] = ui_scaling
@@ -202,4 +204,4 @@ if __name__ == '__main__':
         overlay.updateImage(img)
         time.sleep(0.5)
 
-        overlay.shutdown()
+        overlay.setStopOverlay()
