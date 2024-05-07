@@ -613,25 +613,24 @@ class Model:
 
     def updateOverlayPosition(self):
         pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
-        self.overlay.setPosition(pos)
         depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
-        self.overlay.setDepth(depth)
+        self.overlay.updatePosition(pos, depth)
 
     def updateOverlayTimes(self):
         display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
-        self.overlay.setFadeTime(display_duration)
+        self.overlay.updateDisplayDuration(display_duration)
         fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
-        self.overlay.setFadeInterval(fadeout_duration)
+        self.overlay.updateFadeoutDuration(fadeout_duration)
 
     def updateOverlayImageOpacity(self):
         opacity = config.OVERLAY_SETTINGS["opacity"]
-        self.overlay.setTransparency(opacity)
+        self.overlay.updateOpacity(opacity, with_fade=True)
 
     def updateOverlayImageUiScaling(self):
         ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-        self.overlay.setUiScaling(ui_scaling)
+        self.overlay.updateUiScaling(ui_scaling)
 
-    def shutdownOverlay(self):
-        self.overlay.shutdown()
+    def stopOverlay(self):
+        self.overlay.setStopOverlay()
 
 model = Model()
