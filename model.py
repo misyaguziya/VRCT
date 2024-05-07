@@ -9,7 +9,7 @@ from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 from requests import get as requests_get
 import webbrowser
 
@@ -30,33 +30,30 @@ from config import config
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
-        super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
+        super(threadFnc, self).__init__(daemon=daemon, target=fnc, *args, **kwargs)
         self.fnc = fnc
         self.end_fnc = end_fnc
-        self._stop = Event()
+        self.loop = True
+        self._pause = False
+
     def stop(self):
-        self._stop.set()
-    def stopped(self):
-        return self._stop.isSet()
+        self.loop = False
+
+    def pause(self):
+        self._pause = True
+
+    def resume(self):
+        self._pause = False
+
     def run(self):
-        while True:
-            if self.stopped():
-                if callable(self.end_fnc):
-                    self.end_fnc()
-                return
+        while self.loop:
             self.fnc(*self._args, **self._kwargs)
+            while self._pause:
+                sleep(0.1)
 
-class ConditionalQueue(Queue):
-    def __init__(self, flag=True, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.flag = flag
-
-    def put(self, item, block=True, timeout=None):
-        if self.flag is True:
-            super().put(item, block, timeout)
-
-    def set_flag(self, value):
-        self.flag = value
+        if callable(self.end_fnc):
+            self.end_fnc()
+        return
 
 class Model:
     _instance = None
@@ -325,8 +322,8 @@ class Model:
                 pass
             return
 
-        self.mic_audio_queue = ConditionalQueue()
-        # self.mic_energy_queue = ConditionalQueue()
+        self.mic_audio_queue = Queue()
+        # self.mic_energy_queue = Queue()
         self.changePutQueueMicAudio()
 
         mic_device = choice_mic_device[0]
@@ -387,20 +384,27 @@ class Model:
         # self.mic_get_energy.start()
 
     def startPutQueueMicAudio(self):
-        if isinstance(self.mic_audio_queue, ConditionalQueue):
+        # キューをクリア
+        if isinstance(self.mic_audio_queue, Queue):
             while not self.mic_audio_queue.empty():
                 self.mic_audio_queue.get()
-            self.mic_audio_queue.set_flag(True)
-            # self.mic_energy_queue.set_flag(True)
+
+        # 文字起こしを再開
+        # if isinstance(self.mic_print_transcript, threadFnc):
+        #     self.mic_print_transcript.resume()
+
+        # 音声のレコードを再開
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
+            self.mic_audio_recorder.resume()
 
     def stopPutQueueMicAudio(self):
-        if isinstance(self.mic_audio_queue, ConditionalQueue):
-            self.mic_audio_queue.set_flag(False)
-            # queueを空にする場合を考慮
-            if False:
-                while not self.mic_audio_queue.empty():
-                    self.mic_audio_queue.get()
-                # self.mic_energy_queue.set_flag(False)
+        # 文字起こしを一時停止
+        # if isinstance(self.mic_print_transcript, threadFnc):
+        #     self.mic_print_transcript.pause()
+
+        # 音声のレコードを一時停止
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
+            self.mic_audio_recorder.pause()
 
     def changePutQueueMicAudio(self):
         if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
