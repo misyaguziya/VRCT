@@ -883,7 +883,6 @@ def callbackSetEnableOverlaySmallLog(value):
     if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-            print("model.startOverlay()")
     elif config.ENABLE_OVERLAY_SMALL_LOG is False:
         pass
 
