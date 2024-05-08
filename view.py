@@ -1301,18 +1301,18 @@ class View():
 
     def setStateVrcMicMuteSync(self, state:str):
         if state == "enabled":
-            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set("Enabled")
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_enabled"))
             vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
         elif state == "disabled":
-            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set("Disabled")
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_disabled"))
             vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
 
     def setStateOverlaySmallLog(self, state:str):
         if state == "enabled":
-            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set("Enabled")
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_enabled"))
             vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
         elif state == "disabled":
-            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set("Disabled")
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_disabled"))
             vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
 
 

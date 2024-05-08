@@ -46,6 +46,8 @@ main_window:
     opened_web_page_vrct_documents: "Opened VRCT Documents page in your web browser.\nFor any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the \"Contact Form,\" or via X (formerly Twitter)!"
 
   update_available: New version is here!
+  state_text_enabled: Enabled
+  state_text_disabled: Disabled
 
   cover_message: The functionality is temporarily disabled until the settings window is closed.
 
