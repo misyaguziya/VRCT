@@ -101,7 +101,7 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Common
-            # CALLBACK_ENABLE_EASTER_EGG=None,
+            CALLBACK_ENABLE_EASTER_EGG=None,
 
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
@@ -637,7 +637,7 @@ class View():
 
 
         if common_registers is not None:
-            # self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
+            self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
 
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
