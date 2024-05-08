@@ -140,10 +140,16 @@ class View():
 
 
             # Overlay Settings
-            VAR_OVERLAY_SETTINGS=StringVar(value="Overlay Settings"),
+            VAR_OVERLAY_SETTINGS=StringVar(value="Overlay (VR)"),
             CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW=self._openVrSettingsWindow,
             VAR_TO_DEFAULT_OVERLAY_SETTINGS=StringVar(value=i18n.t("overlay_settings.restore_default_settings")),
             CALLBACK_SET_TO_DEFAULT_OVERLAY_SETTINGS=self._toDefaultOverlaySettings,
+            VAR_OVERLAY_SMALL_LOG_STATE=StringVar(value=""),
+
+
+            CALLBACK_SET_OPEN_VRC_MIC_MUTE_SYNC_SETTINGS_WINDOW=self._openVrcMicMuteSyncSettingsWindow,
+            VAR_VRC_MIC_MUTE_SYNC_SETTINGS=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
+            VAR_VRC_MIC_MUTE_SYNC_STATE=StringVar(value=""),
 
 
             VAR_LABEL_OVERLAY_OPACITY=StringVar(value=i18n.t("overlay_settings.opacity")),
@@ -808,6 +814,18 @@ class View():
             self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
             self.useTranslationFeatureProcess("Disable")
 
+
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+            self.setStateVrcMicMuteSync("enabled")
+        elif config.ENABLE_VRC_MIC_MUTE_SYNC is False:
+            self.setStateVrcMicMuteSync("disabled")
+
+        if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            self.setStateOverlaySmallLog("enabled")
+        elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+            self.setStateOverlaySmallLog("disabled")
+
+
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
 
@@ -1281,6 +1299,26 @@ class View():
             dropdown_menu_values=translation_dict,
         )
 
+    def setStateVrcMicMuteSync(self, state:str):
+        if state == "enabled":
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_enabled"))
+            vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
+        elif state == "disabled":
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_disabled"))
+            vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
+
+        vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+    def setStateOverlaySmallLog(self, state:str):
+        if state == "enabled":
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_enabled"))
+            vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
+        elif state == "disabled":
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_disabled"))
+            vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
+
+        vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
 
     # Config Window
     def enableConfigWindowCompactMode(self):
@@ -1741,7 +1779,10 @@ class View():
         vrct_gui._closeConfigWindow()
 
     def _openVrSettingsWindow(self):
-        vrct_gui.quick_settings_window.show()
+        vrct_gui.quick_settings_window.show(target="overlay")
+
+    def _openVrcMicMuteSyncSettingsWindow(self):
+        vrct_gui.quick_settings_window.show(target="vrc_mic_mute_sync")
 
 # Window Control (Main Window Cover)
     def _openTheCoverOfMainWindow(self):
