@@ -31,28 +31,30 @@ class _PrintToTextbox():
         self.textbox_font_size__main_text_font = None
 
 
-        self.all_textbox_widgets = [self.vrct_gui.textbox_all, self.vrct_gui.textbox_system, self.vrct_gui.textbox_sent, self.vrct_gui.textbox_received]
+        # self.all_textbox_widgets = [self.vrct_gui.textbox_all, self.vrct_gui.textbox_system, self.vrct_gui.textbox_sent, self.vrct_gui.textbox_received]
+        self.all_textbox_widgets = [self.vrct_gui.textbox_all]
 
 
         self.setTagsSettings(self.init_scaling)
 
 
     def printToTextbox(self, target_type, original_message=None, translated_message=None, to_print_to_textbox_all:bool=True):
-        self._printEachTextbox(
-                target_textbox=self._getTargetTextboxWidget(target_type),
-                print_type=target_type,
-                original_message=original_message,
-                translated_message=translated_message,
-            )
+        # [Deprecated] Print to textbox to only all-tab. sent received system tabs are deprecated.
+        # self._printEachTextbox(
+        #         target_textbox=self._getTargetTextboxWidget(target_type),
+        #         print_type=target_type,
+        #         original_message=original_message,
+        #         translated_message=translated_message,
+        #     )
 
         # To automatically print the same log to the textbox_all widget as well.
-        if to_print_to_textbox_all is True:
-            self._printEachTextbox(
-                target_textbox=self._getTargetTextboxWidget("ALL"),
-                print_type=target_type,
-                original_message=original_message,
-                translated_message=translated_message,
-            )
+        # if to_print_to_textbox_all is True:
+        self._printEachTextbox(
+            target_textbox=self._getTargetTextboxWidget("ALL"),
+            print_type=target_type,
+            original_message=original_message,
+            translated_message=translated_message,
+        )
 
     def setTagsSettings(self, custom_font_size_scale:float=1.0):
         # Calculate Textbox's ui size by default size * textbox_ui_scale
@@ -156,12 +158,12 @@ class _PrintToTextbox():
         match (target_type):
             case "ALL":
                 target_textbox = self.vrct_gui.textbox_all
-            case "SYSTEM":
-                target_textbox = self.vrct_gui.textbox_system
-            case "SENT":
-                target_textbox = self.vrct_gui.textbox_sent
-            case "RECEIVED":
-                target_textbox = self.vrct_gui.textbox_received
+            # case "SYSTEM":
+            #     target_textbox = self.vrct_gui.textbox_system
+            # case "SENT":
+            #     target_textbox = self.vrct_gui.textbox_sent
+            # case "RECEIVED":
+            #     target_textbox = self.vrct_gui.textbox_received
             case (_):
                 raise ValueError(f"No matching case for target_type: {target_type}")
 
