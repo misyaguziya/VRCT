@@ -882,7 +882,8 @@ def callbackSetEnableOverlaySmallLog(value):
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
     elif config.ENABLE_OVERLAY_SMALL_LOG is False:
-        pass
+        model.clearOverlayImage()
+        model.shutdownOverlay()
 
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)

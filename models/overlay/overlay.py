@@ -1,12 +1,9 @@
 import os
 import ctypes
 from psutil import process_iter
-# from os import path as os_path
-import ctypes
 import time
 import openvr
 from PIL import Image
-# from queue import Queue
 from threading import Thread
 
 def mat34Id():
@@ -43,6 +40,8 @@ class Overlay:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
+            self.overlay.showOverlay(self.handle)
+            self.initialized = True
 
             self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
             self.updateColor(self.settings["color"])
@@ -52,42 +51,46 @@ class Overlay:
                 (self.settings["x_pos"], self.settings["y_pos"]),
                 self.settings["depth"]
             )
-            self.overlay.showOverlay(self.handle)
-            self.initialized = True
+
         except Exception as e:
             print("Could not initialise OpenVR", e)
 
     def updateImage(self, img):
-        width, height = img.size
-        img = img.tobytes()
-        img = (ctypes.c_char * len(img)).from_buffer_copy(img)
-        self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
-        self.updateOpacity(self.settings["opacity"])
-        self.lastUpdate = time.monotonic()
+        if self.initialized is True:
+            width, height = img.size
+            img = img.tobytes()
+            img = (ctypes.c_char * len(img)).from_buffer_copy(img)
+            self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
+            self.updateOpacity(self.settings["opacity"])
+            self.lastUpdate = time.monotonic()
 
     def clearImage(self):
-        self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+        if self.initialized is True:
+            self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
 
     def updateColor(self, col):
         """
         col is a 3-tuple representing (r, g, b)
         """
         self.settings["color"] = col
-        r, g, b = self.settings["color"]
-        self.overlay.setOverlayColor(self.handle, r, g, b)
+        if self.initialized is True:
+            r, g, b = self.settings["color"]
+            self.overlay.setOverlayColor(self.handle, r, g, b)
 
     def updateOpacity(self, opacity, with_fade=False):
         self.settings["opacity"] = opacity
 
-        if with_fade is True:
-            if self.fadeRatio > 0:
-                self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
-        else:
-            self.overlay.setOverlayAlpha(self.handle, self.settings["opacity"])
+        if self.initialized is True:
+            if with_fade is True:
+                if self.fadeRatio > 0:
+                    self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
+            else:
+                self.overlay.setOverlayAlpha(self.handle, self.settings["opacity"])
 
     def updateUiScaling(self, ui_scaling):
         self.settings['ui_scaling'] = ui_scaling
-        self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
+        if self.initialized is True:
+            self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
 
     def updatePosition(self, pos, depth):
         """
@@ -105,11 +108,12 @@ class Overlay:
         self.transform[1][3] = self.settings["y_pos"] * self.settings['depth']
         self.transform[2][3] = - self.settings['depth']
 
-        self.overlay.setOverlayTransformTrackedDeviceRelative(
-            self.handle,
-            openvr.k_unTrackedDeviceIndex_Hmd,
-            self.transform
-        )
+        if self.initialized is True:
+            self.overlay.setOverlayTransformTrackedDeviceRelative(
+                self.handle,
+                openvr.k_unTrackedDeviceIndex_Hmd,
+                self.transform
+            )
 
     def updateDisplayDuration(self, display_duration):
         self.settings['display_duration'] = display_duration
@@ -153,7 +157,6 @@ class Overlay:
             sleepTime = (1 / 16) - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
-        self.shutdownOverlay()
 
     def main(self):
         self.init()
@@ -165,17 +168,15 @@ class Overlay:
         self.thread_overlay.daemon = True
         self.thread_overlay.start()
 
-    def setStopOverlay(self):
-        self.loop = False
-
     def shutdownOverlay(self):
-        if self.thread_overlay is not None:
+        if isinstance(self.thread_overlay, Thread):
+            self.loop = False
             self.thread_overlay.join()
             self.thread_overlay = None
-        if self.overlay is not None:
+        if isinstance(self.overlay, openvr.IVROverlay) and isinstance(self.handle, int):
             self.overlay.destroyOverlay(self.handle)
             self.overlay = None
-        if self.system is not None:
+        if isinstance(self.system, openvr.IVRSystem):
             openvr.shutdown()
             self.system = None
         self.initialized = False
@@ -204,4 +205,4 @@ if __name__ == '__main__':
         overlay.updateImage(img)
         time.sleep(0.5)
 
-        overlay.setStopOverlay()
+        overlay.shutdownOverlay()

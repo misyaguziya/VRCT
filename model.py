@@ -697,7 +697,7 @@ class Model:
         ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
         self.overlay.updateUiScaling(ui_scaling)
 
-    def stopOverlay(self):
-        self.overlay.setStopOverlay()
+    def shutdownOverlay(self):
+        self.overlay.shutdownOverlay()
 
 model = Model()
