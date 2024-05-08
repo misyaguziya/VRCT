@@ -123,6 +123,13 @@ class UiScalingManager():
 
         self.main.TOP_BAR_BUTTON_PADY = (self._calculateUiSize(6),0)
 
+
+
+
+        self.main.QUICK_SETTINGS_BUTTON_FONT_SIZE = self._calculateUiSize(12)
+        self.main.QUICK_SETTINGS_BUTTON_STATE_FONT_SIZE = self._calculateUiSize(10)
+
+
         self.main.UPDATE_AVAILABLE_BUTTON_CORNER_RADIUS = self._calculateUiSize(6)
         self.main.UPDATE_AVAILABLE_BUTTON_SIZE = (self._calculateUiSize(18), self._calculateUiSize(18))
         self.main.UPDATE_AVAILABLE_BUTTON_FONT_SIZE = self._calculateUiSize(12)
