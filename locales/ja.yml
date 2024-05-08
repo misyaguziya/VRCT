@@ -245,8 +245,8 @@ config_window:
     desc: テキストファイルとしてログがlogsフォルダ内に保存されます。
 
   vrc_mic_mute_sync:
-  label: VRChatマイクミュート同期機能
-  desc: VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。
+    label: VRCマイクミュート同期
+    desc: "VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。\n※若干の遅延はあります。また、Push-To-Talkは非対応です。"
 
 
   send_message_to_vrc:

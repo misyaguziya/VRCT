@@ -148,7 +148,7 @@ class View():
 
 
             CALLBACK_SET_OPEN_VRC_MIC_MUTE_SYNC_SETTINGS_WINDOW=self._openVrcMicMuteSyncSettingsWindow,
-            VAR_VRC_MIC_MUTE_SYNC_SETTINGS=StringVar(value="VRC Mic Mute Sync"),
+            VAR_VRC_MIC_MUTE_SYNC_SETTINGS=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
             VAR_VRC_MIC_MUTE_SYNC_STATE=StringVar(value=""),
 
 
