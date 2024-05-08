@@ -140,9 +140,9 @@ class OverlayImage:
 
     def getUiSize(self):
         return {
-            "width": int(960),
-            "height": int(23),
-            "font_size": int(23),
+            "width": int(960*4),
+            "height": int(23*4),
+            "font_size": int(23*4),
         }
 
     def getUiColors(self, ui_type):
