@@ -58,6 +58,9 @@ def getOSCParameterValue(address, server_name="VRChat-Client"):
             oscq = OSCQueryClient(service)
             mute_self_node = oscq.query_node(address)
             value = mute_self_node.value[0]
+        browser.zc.close()
+        browser.browser.cancel()
+
     except Exception:
         pass
     return value
