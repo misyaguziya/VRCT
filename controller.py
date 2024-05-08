@@ -885,6 +885,11 @@ def callbackSetEnableOverlaySmallLog(value):
         model.clearOverlayImage()
         model.shutdownOverlay()
 
+    if config.ENABLE_OVERLAY_SMALL_LOG is True:
+        view.setStateOverlaySmallLog("enabled")
+    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+        view.setStateOverlaySmallLog("disabled")
+
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
@@ -934,8 +939,10 @@ def callbackSetEnableVrcMicMuteSync(value):
     config.ENABLE_VRC_MIC_MUTE_SYNC = value
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
+        view.setStateVrcMicMuteSync("enabled")
     else:
         model.stopCheckMuteSelfStatus()
+        view.setStateVrcMicMuteSync("disabled")
 
 
 def callbackSetEnableSendMessageToVrc(value):
