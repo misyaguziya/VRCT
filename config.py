@@ -787,7 +787,7 @@ class Config:
     def OVERLAY_UI_TYPE(self, value):
         if isinstance(value, str):
             self._OVERLAY_UI_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
