@@ -611,4 +611,4 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
 
     vrchat_disclaimer_label = settings.about_vrct.embedImageCTkLabel(vrchat_disclaimer_contents_wrapper, "vrchat_disclaimer.png")
-    vrchat_disclaimer_label.grid(column=0, row=0, padx=0, pady=(about_vrct_uism.VRCHAT_DISCLAIMER_SECTION_TOP_PADDING, 0), sticky="nsew")
+    vrchat_disclaimer_label.grid(column=0, row=0, padx=0, pady=about_vrct_uism.VRCHAT_DISCLAIMER_SECTION_PADY, sticky="nsew")
