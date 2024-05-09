@@ -61,10 +61,11 @@ def messageFormatter(format_type:str, translation, message):
     return osc_message
 
 def changeToCTranslate2Process():
-    config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-    config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-    updateTranslationEngineAndEngineList()
-    view.printToTextbox_TranslationEngineLimitError()
+    if config.CHOICE_INPUT_TRANSLATOR != "CTranslate2" or config.CHOICE_OUTPUT_TRANSLATOR != "CTranslate2":
+        config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+        config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+        updateTranslationEngineAndEngineList()
+        view.printToTextbox_TranslationEngineLimitError()
 
 # func transcription send message
 def sendMicMessage(message):
