@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
-from ..ui_utils import calculateUiSize, getImageFileFromUiUtils_AboutVrct, bindButtonReleaseFunction, createButtonWithImage, bindButtonFunctionAndColor
-from customtkinter import CTkFrame, CTkLabel, CTkImage, CTkFont
+from ..ui_utils import calculateUiSize, getImageFileFromUiUtils_AboutVrct, bindButtonFunctionAndColor
+from customtkinter import CTkFrame, CTkLabel, CTkImage
 
 IMAGE_STANDARD_SCALING = 2
 class AboutVrctManager():

@@ -1,6 +1,6 @@
 from utils import callFunctionIfCallable, floatToPctStr
 
-from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar, CTkFrame, CTkSlider
+from customtkinter import CTkToplevel, CTkFrame
 from ..ui_utils import getImagePath, setGeometryToCenterOfScreen, fadeInAnimation, createLabelButton
 
 from ._CreateQuickSettingBox import _CreateQuickSettingBox
@@ -22,11 +22,11 @@ class QuickSettingsWindow(CTkToplevel):
 
         self.qsw_background = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR)
         self.qsw_background.grid(row=0, column=0, pady=0, sticky="ew")
-        self.qsw_background.grid_columnconfigure(0, weight=1, minsize=400)
+        self.qsw_background.grid_columnconfigure(0, weight=1, minsize=self.settings.uism.QSB__MIN_WIDTH)
 
 
         self.qsw_background__overlay = CTkFrame(self.qsw_background, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR)
-        self.qsw_background__overlay.grid(row=0, column=0, pady=(0,18), sticky="ew")
+        self.qsw_background__overlay.grid(row=0, column=0, pady=self.settings.uism.QSB__BOX_PADY, sticky="ew")
         self.qsw_background__overlay.grid_columnconfigure(0, weight=1)
 
 
@@ -246,26 +246,15 @@ class QuickSettingsWindow(CTkToplevel):
 
 
 
-
-
-
-
-
-
-
-
         # VRChat mic mute sync
         self.qsw_background__vrc_mic_mute_sync = CTkFrame(self.qsw_background, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR)
-        self.qsw_background__vrc_mic_mute_sync.grid(row=0, column=0, pady=(0,18), sticky="ew")
+        self.qsw_background__vrc_mic_mute_sync.grid(row=0, column=0, pady=self.settings.uism.QSB__BOX_PADY, sticky="ew")
         self.qsw_background__vrc_mic_mute_sync.grid_columnconfigure(0, weight=1)
 
 
         self.qsw_setting_box__vrc_mic_mute_sync = CTkFrame(self.qsw_background__vrc_mic_mute_sync, corner_radius=0, fg_color=BG_HEX_COLOR)
         self.qsw_setting_box__vrc_mic_mute_sync.grid(row=0, column=0, sticky="ew")
         self.qsw_setting_box__vrc_mic_mute_sync.grid_columnconfigure(0, weight=1)
-
-
-
 
 
 
@@ -311,8 +300,6 @@ class QuickSettingsWindow(CTkToplevel):
 
         self.qsw_background.update()
         self.geometry("{}x{}".format(self.qsw_background.winfo_width(), self.qsw_background.winfo_height()))
-
-
 
         setGeometryToCenterOfScreen(root_widget=self)
         fadeInAnimation(self, steps=5, interval=0.02)

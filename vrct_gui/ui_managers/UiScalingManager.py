@@ -202,6 +202,8 @@ class UiScalingManager():
 
 
         # Quick Settings Box
+        self.config_window.QSB__MIN_WIDTH = self._calculateUiSize(400)
+        self.config_window.QSB__BOX_PADY = (0, self._calculateUiSize(18))
         self.config_window.QSB__IPADX = self._calculateUiSize(20)
         self.config_window.QSB__IPADY = (self._calculateUiSize(14), self._calculateUiSize(8))
         self.config_window.QSB__LABEL_BOTTOM_PADY = self._calculateUiSize(6)
