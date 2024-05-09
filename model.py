@@ -183,13 +183,17 @@ class Model:
         # 翻訳失敗時のフェールセーフ処理
         if translation is False:
             translation_success_flag = False
-            translation = self.translator.translate(
-                                translator_name="CTranslate2",
-                                source_language=source_language,
-                                target_language=target_language,
-                                target_country=target_country,
-                                message=message
-                        )
+            while True:
+                translation = self.translator.translate(
+                                    translator_name="CTranslate2",
+                                    source_language=source_language,
+                                    target_language=target_language,
+                                    target_country=target_country,
+                                    message=message
+                            )
+                if translation is not False:
+                    break
+                sleep(0.1)
         return translation, translation_success_flag
 
     def getOutputTranslate(self, message):
@@ -210,13 +214,17 @@ class Model:
         # 翻訳失敗時のフェールセーフ処理
         if translation is False:
             translation_success_flag = False
-            translation = self.translator.translate(
-                                translator_name="CTranslate2",
-                                source_language=source_language,
-                                target_language=target_language,
-                                target_country=target_country,
-                                message=message
-                        )
+            while True:
+                translation = self.translator.translate(
+                                    translator_name="CTranslate2",
+                                    source_language=source_language,
+                                    target_language=target_language,
+                                    target_country=target_country,
+                                    message=message
+                            )
+                if translation is not False:
+                    break
+                sleep(0.1)
         return translation, translation_success_flag
 
     def addKeywords(self):

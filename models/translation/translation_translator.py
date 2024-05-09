@@ -52,6 +52,18 @@ class Translator():
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
 
+    def translateCTranslate2(self, message, source_language, target_language):
+        try:
+            self.ctranslate2_tokenizer.src_lang = source_language
+            source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
+            target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+            results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
+            target = results[0].hypotheses[0][1:]
+            result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
+        except Exception:
+            result = False
+        return result
+
     @staticmethod
     def getLanguageCode(translator_name, target_country, source_language, target_language):
         match translator_name:
@@ -115,12 +127,11 @@ class Translator():
                         to_language=target_language,
                         )
                 case "CTranslate2":
-                    self.ctranslate2_tokenizer.src_lang = source_language
-                    source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
-                    target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
-                    results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
-                    target = results[0].hypotheses[0][1:]
-                    result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
+                    result = self.translateCTranslate2(
+                        message=message,
+                        source_language=source_language,
+                        target_language=target_language,
+                        )
         except Exception:
             import traceback
             with open('error.log', 'a') as f:
