@@ -14,6 +14,7 @@ class Translator():
         self.deepl_client = None
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
+        self.is_loaded_ctranslate2_model = False
 
     def authenticationDeepLAuthKey(self, authkey):
         result = True
@@ -44,24 +45,30 @@ class Translator():
             print("Error: changeCTranslate2Model()", e)
             tokenizer_path = os.path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        self.is_loaded_ctranslate2_model = True
 
-    def clearCTranslate2Model(self):
-        del self.ctranslate2_translator
-        del self.ctranslate2_tokenizer
-        gc.collect()
-        self.ctranslate2_translator = None
-        self.ctranslate2_tokenizer = None
+    def isLoadedCTranslate2Model(self):
+        return self.is_loaded_ctranslate2_model
+
+    # def clearCTranslate2Model(self):
+    #     del self.ctranslate2_translator
+    #     del self.ctranslate2_tokenizer
+    #     gc.collect()
+    #     self.ctranslate2_translator = None
+    #     self.ctranslate2_tokenizer = None
 
     def translateCTranslate2(self, message, source_language, target_language):
-        try:
-            self.ctranslate2_tokenizer.src_lang = source_language
-            source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
-            target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
-            results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
-            target = results[0].hypotheses[0][1:]
-            result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
-        except Exception:
-            result = False
+        result = False
+        if self.is_loaded_ctranslate2_model is True:
+            try:
+                self.ctranslate2_tokenizer.src_lang = source_language
+                source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
+                target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
+                target = results[0].hypotheses[0][1:]
+                result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
+            except Exception:
+                pass
         return result
 
     @staticmethod

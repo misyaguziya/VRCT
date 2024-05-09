@@ -103,8 +103,11 @@ class Model:
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
 
-    def clearTranslatorCTranslate2Model(self):
-        self.translator.clearCTranslate2Model()
+    def isLoadedCTranslate2Model(self):
+        return self.translator.isLoadedCTranslate2Model()
+
+    # def clearTranslatorCTranslate2Model(self):
+    #     self.translator.clearCTranslate2Model()
 
     def checkTranscriptionWhisperModelWeight(self):
         return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
