@@ -17,7 +17,7 @@ class AboutVrctManager():
         self.uism.SECTION_BOTTOM_PADY = self._calculateUiSize(22)
         self.uism.PROJECT_LINKS_SECTION_BOTTOM_PADDING = self._calculateUiSize(18) # Exception pady
 
-        self.uism.VRCHAT_DISCLAIMER_SECTION_TOP_PADDING = self._calculateUiSize(80) # Exception pady
+        self.uism.VRCHAT_DISCLAIMER_SECTION_PADY = (self._calculateUiSize(80), self._calculateUiSize(20)) # Exception pady
 
         self.uism.THE_DEVELOPERS_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(8)
         self.uism.DEVS_CONTACTS_Y1 = self._calculateUiSize(118)

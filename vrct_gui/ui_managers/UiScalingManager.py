@@ -264,7 +264,7 @@ class UiScalingManager():
 
         self.config_window.SB__IPADX = self._calculateUiSize(20)
         self.config_window.SB__IPADY = self._calculateUiSize(12)
-        self.config_window.SB__BOTTOM_MARGIN = (0, self._calculateUiSize(60))
+        self.config_window.SB__BOTTOM_MARGIN = (0, self._calculateUiSize(120))
         self.config_window.SB__FAKE_BOTTOM_BORDER_SIZE = (0, self._calculateUiSize(1, is_allowed_odd=True))
 
         self.config_window.SB__SECTION_TITLE_FONT_SIZE = self._calculateUiSize(20)
