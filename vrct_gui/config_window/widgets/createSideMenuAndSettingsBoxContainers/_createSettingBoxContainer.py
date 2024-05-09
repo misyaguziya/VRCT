@@ -1,7 +1,7 @@
 from customtkinter import CTkFont, CTkFrame, CTkLabel
 
 
-def _createSettingBoxContainer(config_window, settings, view_variable, setting_box_container_settings):
+def _createSettingBoxContainer(config_window, settings, view_variable, setting_box_container_settings, bottom_margin):
 
 
     def createSectionTitle(container_widget, var_section_title):
@@ -22,7 +22,7 @@ def _createSettingBoxContainer(config_window, settings, view_variable, setting_b
     # Setting box container
     setting_box_container_widget = CTkFrame(config_window.main_setting_box_bg_wrapper, corner_radius=0, fg_color=settings.ctm.MAIN_BG_COLOR, width=0, height=0)
     setattr(config_window, setting_box_container_settings["setting_box_container_attr_name"], setting_box_container_widget)
-    setting_box_container_widget.grid(row=0, pady=settings.uism.SB__BOTTOM_MARGIN)
+    setting_box_container_widget.grid(row=0, pady=bottom_margin)
     setting_box_container_widget.grid_remove()
 
 
