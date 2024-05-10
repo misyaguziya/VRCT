@@ -163,6 +163,64 @@ class QuickSettingsWindow(CTkToplevel):
         self.qsb__overlay_small_log_settings_depth.grid(row=row)
 
 
+
+        row+=1
+        def overlaySmallLogSettingsXRotationSliderCallback(e):
+            value = round(e,2)
+            callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "x_rotation")
+            view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION.set(str(value))
+
+        self.qsb__overlay_small_log_settings_x_rotation = createSettingBoxSlider(
+            for_var_label_text=view_variable.VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION,
+            for_var_current_value=view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION,
+            slider_attr_name="qsb__overlay_small_log_settings_x_rotation_slider",
+            slider_range=view_variable.SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION,
+            slider_number_of_steps=view_variable.NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_ROTATION,
+            command=overlaySmallLogSettingsXRotationSliderCallback,
+            variable=view_variable.VAR_OVERLAY_SMALL_LOG_X_ROTATION,
+        )
+        self.qsb__overlay_small_log_settings_x_rotation.grid(row=row)
+
+
+
+        row+=1
+        def overlaySmallLogSettingsYRotationSliderCallback(e):
+            value = round(e,2)
+            callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "y_rotation")
+            view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION.set(str(value))
+
+        self.qsb__overlay_small_log_settings_y_rotation = createSettingBoxSlider(
+            for_var_label_text=view_variable.VAR_LABEL_OVERLAY_SMALL_LOG_Y_ROTATION,
+            for_var_current_value=view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION,
+            slider_attr_name="qsb__overlay_small_log_settings_y_rotation_slider",
+            slider_range=view_variable.SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_ROTATION,
+            slider_number_of_steps=view_variable.NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_ROTATION,
+            command=overlaySmallLogSettingsYRotationSliderCallback,
+            variable=view_variable.VAR_OVERLAY_SMALL_LOG_Y_ROTATION,
+        )
+        self.qsb__overlay_small_log_settings_y_rotation.grid(row=row)
+
+
+
+        row+=1
+        def overlaySmallLogSettingsZRotationSliderCallback(e):
+            value = round(e,2)
+            callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "z_rotation")
+            view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION.set(str(value))
+
+        self.qsb__overlay_small_log_settings_z_rotation = createSettingBoxSlider(
+            for_var_label_text=view_variable.VAR_LABEL_OVERLAY_SMALL_LOG_Z_ROTATION,
+            for_var_current_value=view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION,
+            slider_attr_name="qsb__overlay_small_log_settings_z_rotation_slider",
+            slider_range=view_variable.SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_ROTATION,
+            slider_number_of_steps=view_variable.NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_ROTATION,
+            command=overlaySmallLogSettingsZRotationSliderCallback,
+            variable=view_variable.VAR_OVERLAY_SMALL_LOG_Z_ROTATION,
+        )
+        self.qsb__overlay_small_log_settings_z_rotation.grid(row=row)
+
+
+
         row+=1
         def overlaySmallLogSettingsDisplayDurationSliderCallback(e):
             value = int(e)

@@ -903,6 +903,15 @@ def callbackSetOverlaySmallLogSettings(value, set_type:str):
             model.updateOverlayPosition()
         case "depth":
             model.updateOverlayPosition()
+        case "x_rotation":
+            pass
+            # update rotation
+        case "y_rotation":
+            pass
+            # update rotation
+        case "z_rotation":
+            pass
+            # update rotation
         case "display_duration":
             model.updateOverlayTimes()
         case "fadeout_duration":

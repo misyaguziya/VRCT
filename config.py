@@ -770,7 +770,7 @@ class Config:
         if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SMALL_LOG_SETTINGS.keys()):
             for key, value in value.items():
                 match (key):
-                    case "x_pos" | "y_pos" | "depth":
+                    case "x_pos" | "y_pos" | "depth" | "x_rotation" | "y_rotation" | "z_rotation":
                         if isinstance(value, float):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
                     case "display_duration" | "fadeout_duration":
@@ -1074,6 +1074,9 @@ class Config:
             "x_pos": 0.0,
             "y_pos": -0.41,
             "depth": 1.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
             "display_duration": 5,
             "fadeout_duration": 2,
         }
