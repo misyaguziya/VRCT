@@ -1,9 +1,5 @@
 from typing import Union
-
-from utils import callFunctionIfCallable
-
-from customtkinter import CTkImage, CTkLabel, CTkToplevel, CTkProgressBar, CTkFrame, CTkSlider, CTkFont, CTkSwitch
-from ..ui_utils import openImageKeepAspectRatio, getImageFileFromUiUtils, setGeometryToCenterOfScreen, fadeInAnimation
+from customtkinter import CTkLabel, CTkFrame, CTkSlider, CTkFont, CTkSwitch
 
 class _CreateQuickSettingBox():
     def __init__(self, parent_frame, vrct_gui, settings, view_variable):
@@ -11,13 +7,6 @@ class _CreateQuickSettingBox():
         self.vrct_gui = vrct_gui
         self.settings = settings
         self.parent_frame = parent_frame
-
-
-
-
-
-
-
 
 
     def _createSettingBoxFrame(self, for_var_label_text=None, for_var_current_value=None):
@@ -63,10 +52,6 @@ class _CreateQuickSettingBox():
 
 
 
-
-
-
-
         # Items
         setting_box_item_frame = CTkFrame(setting_box_frame_wrapper, corner_radius=0, width=0, height=0, fg_color=self.settings.ctm.SB__BG_COLOR)
         setting_box_item_frame.grid(row=1, column=0, padx=0, sticky="nsew")
@@ -75,16 +60,6 @@ class _CreateQuickSettingBox():
         setting_box_item_frame.grid_columnconfigure(1, weight=1)
 
         return (setting_box_frame, setting_box_item_frame)
-
-
-
-
-
-
-
-
-
-
 
 
 
