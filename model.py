@@ -106,9 +106,6 @@ class Model:
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
 
-    # def clearTranslatorCTranslate2Model(self):
-    #     self.translator.clearCTranslate2Model()
-
     def checkTranscriptionWhisperModelWeight(self):
         return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
 
@@ -168,67 +165,62 @@ class Model:
                 compatible_engines.remove('DeepL_API')
         return compatible_engines
 
+    def getTranslate(self, translator_name, source_language, target_language, target_country, message):
+        success_flag = False
+        translation = self.translator.translate(
+                        translator_name=translator_name,
+                        source_language=source_language,
+                        target_language=target_language,
+                        target_country=target_country,
+                        message=message
+                )
+
+        # 翻訳失敗時のフェールセーフ処理
+        if translation is True:
+            success_flag = True
+        else:
+            while True:
+                translation = self.translator.translate(
+                                    translator_name="CTranslate2",
+                                    source_language=source_language,
+                                    target_language=target_language,
+                                    target_country=target_country,
+                                    message=message
+                            )
+                if translation is not False:
+                    break
+                sleep(0.1)
+        return translation, success_flag
+
     def getInputTranslate(self, message):
-        translation_success_flag = True
         translator_name=config.CHOICE_INPUT_TRANSLATOR
         source_language=config.SOURCE_LANGUAGE
         target_language=config.TARGET_LANGUAGE
         target_country = config.TARGET_COUNTRY
 
-        translation = self.translator.translate(
-                        translator_name=translator_name,
-                        source_language=source_language,
-                        target_language=target_language,
-                        target_country=target_country,
-                        message=message
-                )
-
-        # 翻訳失敗時のフェールセーフ処理
-        if translation is False:
-            translation_success_flag = False
-            while True:
-                translation = self.translator.translate(
-                                    translator_name="CTranslate2",
-                                    source_language=source_language,
-                                    target_language=target_language,
-                                    target_country=target_country,
-                                    message=message
-                            )
-                if translation is not False:
-                    break
-                sleep(0.1)
-        return translation, translation_success_flag
+        translation, success_flag = self.getTranslate(
+            translator_name,
+            source_language,
+            target_language,
+            target_country,
+            message
+            )
+        return translation, success_flag
 
     def getOutputTranslate(self, message):
-        translation_success_flag = True
         translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
         target_country=config.SOURCE_COUNTRY
 
-        translation = self.translator.translate(
-                        translator_name=translator_name,
-                        source_language=source_language,
-                        target_language=target_language,
-                        target_country=target_country,
-                        message=message
-                )
-
-        # 翻訳失敗時のフェールセーフ処理
-        if translation is False:
-            translation_success_flag = False
-            while True:
-                translation = self.translator.translate(
-                                    translator_name="CTranslate2",
-                                    source_language=source_language,
-                                    target_language=target_language,
-                                    target_country=target_country,
-                                    message=message
-                            )
-                if translation is not False:
-                    break
-                sleep(0.1)
-        return translation, translation_success_flag
+        translation, success_flag = self.getTranslate(
+            translator_name,
+            source_language,
+            target_language,
+            target_country,
+            message
+            )
+        return translation, success_flag
 
     def addKeywords(self):
         for f in config.INPUT_MIC_WORD_FILTER:

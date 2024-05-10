@@ -1,4 +1,3 @@
-import gc
 import os
 from deepl import Translator as deepl_Translator
 from translators import translate_text as other_web_Translator
@@ -27,6 +26,7 @@ class Translator():
         return result
 
     def changeCTranslate2Model(self, path, model_type):
+        self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
         weight_path = os.path.join(path, "weights", "ctranslate2", directory_name)
@@ -49,13 +49,6 @@ class Translator():
 
     def isLoadedCTranslate2Model(self):
         return self.is_loaded_ctranslate2_model
-
-    # def clearCTranslate2Model(self):
-    #     del self.ctranslate2_translator
-    #     del self.ctranslate2_tokenizer
-    #     gc.collect()
-    #     self.ctranslate2_translator = None
-    #     self.ctranslate2_tokenizer = None
 
     def translateCTranslate2(self, message, source_language, target_language):
         result = False

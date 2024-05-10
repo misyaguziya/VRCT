@@ -404,7 +404,6 @@ def callbackToggleTranslation(is_turned_on):
             model.changeTranslatorCTranslate2Model()
         view.printToTextbox_enableTranslation()
     else:
-        # model.clearTranslatorCTranslate2Model()
         view.printToTextbox_disableTranslation()
 
 def callbackToggleTranscriptionSend(is_turned_on):
