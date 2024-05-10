@@ -582,7 +582,7 @@ def callbackSetCtranslate2WeightType(value):
 def callbackSetDeeplAuthKey(value):
     print("callbackSetDeeplAuthKey", str(value))
     view.clearNotificationMessage()
-    if len(value) == 39:
+    if len(value) == 36 or len(value) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
         if result is True:
             key = value
