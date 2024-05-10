@@ -61,10 +61,11 @@ def messageFormatter(format_type:str, translation, message):
     return osc_message
 
 def changeToCTranslate2Process():
-    config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-    config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-    updateTranslationEngineAndEngineList()
-    view.printToTextbox_TranslationEngineLimitError()
+    if config.CHOICE_INPUT_TRANSLATOR != "CTranslate2" or config.CHOICE_OUTPUT_TRANSLATOR != "CTranslate2":
+        config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+        config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+        updateTranslationEngineAndEngineList()
+        view.printToTextbox_TranslationEngineLimitError()
 
 # func transcription send message
 def sendMicMessage(message):
@@ -399,10 +400,10 @@ def callbackSelectedTranslationEngine(selected_translation_engine):
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
     if config.ENABLE_TRANSLATION is True:
-        model.changeTranslatorCTranslate2Model()
+        if model.isLoadedCTranslate2Model() is False:
+            model.changeTranslatorCTranslate2Model()
         view.printToTextbox_enableTranslation()
     else:
-        model.clearTranslatorCTranslate2Model()
         view.printToTextbox_disableTranslation()
 
 def callbackToggleTranscriptionSend(is_turned_on):
