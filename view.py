@@ -169,19 +169,19 @@ class View():
             CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
 
             VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-2, 2),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
             VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=i18n.t("overlay_settings.y_position")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.8, 0.8),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-2, 2),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
             VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=i18n.t("overlay_settings.depth")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0.5, 1.5),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0, 2),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=100,
             VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
