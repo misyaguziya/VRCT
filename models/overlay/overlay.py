@@ -5,16 +5,19 @@ import time
 import openvr
 from PIL import Image
 from threading import Thread
+import numpy as np
+import quaternion
 
 def mat34Id():
     arr = openvr.HmdMatrix34_t()
-    arr[0][0] = 1
-    arr[1][1] = 1
-    arr[2][2] = 1
+    # arr[0][0] = 1
+    # arr[1][1] = 1
+    # arr[2][2] = 1
+    # print(arr)
     return arr
 
 class Overlay:
-    def __init__(self, x, y , depth, display_duration, fadeout_duration, opacity, ui_scaling):
+    def __init__(self, x, y , depth, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
         self.initialized = False
         settings = {
             "color": [1, 1, 1],
@@ -22,6 +25,9 @@ class Overlay:
             "x_pos": x,
             "y_pos": y,
             "depth": depth,
+            "x_rotation": x_rotation,
+            "y_rotation": y_rotation,
+            "z_rotation": z_rotation,
             "display_duration": display_duration,
             "fadeout_duration": fadeout_duration,
             "ui_scaling": ui_scaling,
@@ -39,6 +45,7 @@ class Overlay:
         try:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
+            self.overlay_system = openvr.IVRSystem()
             self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
             self.overlay.showOverlay(self.handle)
             self.initialized = True
@@ -49,7 +56,10 @@ class Overlay:
             self.updateUiScaling(self.settings["ui_scaling"])
             self.updatePosition(
                 (self.settings["x_pos"], self.settings["y_pos"]),
-                self.settings["depth"]
+                self.settings["depth"],
+                self.settings["x_rotation"],
+                self.settings["y_rotation"],
+                self.settings["z_rotation"],
             )
 
         except Exception as e:
@@ -92,26 +102,39 @@ class Overlay:
         if self.initialized is True:
             self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
 
-    def updatePosition(self, pos, depth):
+    def updatePosition(self, pos, depth, x_rotation, y_rotation, z_rotation):
         """
         pos is a 2-tuple representing normalized (x, y)
         depth is a float representing the depth of the icon plane
+        x_rotation, y_rotation, z_rotation are floats representing the rotation of the icon plane
         """
         self.settings["x_pos"] = pos[0]
         self.settings["y_pos"] = pos[1]
         self.settings["depth"] = depth
+        self.settings["x_rotation"] = x_rotation
+        self.settings["y_rotation"] = y_rotation
+        self.settings["z_rotation"] = z_rotation
 
         self.transform = mat34Id() # no rotation required for HMD attachment
+
+        # assign rotation
+        rot = np.quaternion(1, self.settings["x_rotation"], self.settings["y_rotation"], self.settings["z_rotation"])
+        rot = quaternion.as_rotation_matrix(rot)
+        # self.transform[:3, :3] = rot
+        for i in range(3):
+            for j in range(3):
+                self.transform[i][j] = rot[i][j]
 
         # assign position
         self.transform[0][3] = self.settings["x_pos"] * self.settings['depth']
         self.transform[1][3] = self.settings["y_pos"] * self.settings['depth']
         self.transform[2][3] = - self.settings['depth']
 
+        leftControllerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
         if self.initialized is True:
             self.overlay.setOverlayTransformTrackedDeviceRelative(
                 self.handle,
-                openvr.k_unTrackedDeviceIndex_Hmd,
+                leftControllerIndex, #openvr.k_unTrackedDeviceIndex_Hmd,
                 self.transform
             )
 
@@ -190,19 +213,28 @@ if __name__ == '__main__':
     from overlay_image import OverlayImage
     overlay_image = OverlayImage()
 
-    for i in range(100):
-        print(i)
-        overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
-        overlay.startOverlay()
-        time.sleep(1)
+    overlay = Overlay(0, 0, 1, 1, 0, 1, 1)
+    overlay.startOverlay()
+    time.sleep(1)
 
-        # Example usage
-        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
-        overlay.updateImage(img)
-        time.sleep(0.5)
+    # Example usage
+    img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img)
+    time.sleep(100000)
+    
+    # for i in range(100):
+    #     print(i)
+    #     overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
+    #     overlay.startOverlay()
+    #     time.sleep(1)
 
-        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-        overlay.updateImage(img)
-        time.sleep(0.5)
+    #     # Example usage
+    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
+    #     overlay.updateImage(img)
+    #     time.sleep(0.5)
 
-        overlay.shutdownOverlay()
+    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    #    overlay.updateImage(img)
+    #    time.sleep(0.5)
+
+    #    overlay.shutdownOverlay()
