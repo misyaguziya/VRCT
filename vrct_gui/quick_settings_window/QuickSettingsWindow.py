@@ -19,6 +19,7 @@ class QuickSettingsWindow(CTkToplevel):
         self.configure(fg_color=self.settings.ctm.SB__BG_COLOR)
 
         BG_HEX_COLOR = "#292a2d"
+        self.grid_columnconfigure(0, weight=1)
 
         self.qsw_background = CTkFrame(self, corner_radius=0, fg_color=self.settings.ctm.SB__BG_COLOR)
         self.qsw_background.grid(row=0, column=0, pady=0, sticky="ew")
