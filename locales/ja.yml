@@ -74,6 +74,9 @@ overlay_settings:
   x_position: X軸（左右）
   y_position: Y軸（上下）
   depth: Z軸（前後）
+  x_rotation: X軸の回転
+  y_rotation: Y軸の回転
+  z_rotation: Z軸の回転
   display_duration: 表示時間
   fadeout_duration: フェードアウト時間
 

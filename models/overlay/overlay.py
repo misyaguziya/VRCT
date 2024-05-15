@@ -1,20 +1,68 @@
 import os
 import ctypes
-from psutil import process_iter
 import time
-import openvr
-from PIL import Image
+from psutil import process_iter
 from threading import Thread
+import openvr
+import numpy as np
+from PIL import Image
+try:
+    from . import overlay_utils as utils
+except ImportError:
+    import overlay_utils as utils
 
-def mat34Id():
+def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
-    arr[0][0] = 1
-    arr[1][1] = 1
-    arr[2][2] = 1
+    for i in range(3):
+        for j in range(4):
+            arr[i][j] = array[i][j]
+    return arr
+
+def getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation):
+    arr = np.zeros((3, 4))
+    rot = utils.euler_to_rotation_matrix((x_rotation, y_rotation, z_rotation))
+
+    for i in range(3):
+        for j in range(3):
+            arr[i][j] = rot[i][j]
+
+    arr[0][3] = x_pos * depth
+    arr[1][3] = y_pos * depth
+    arr[2][3] = - depth
+    return arr
+
+def getHMDBaseMatrix():
+    x_pos = 0.0
+    y_pos = -0.4
+    depth = 1.0
+    x_rotation = 0.0
+    y_rotation = 0.0
+    z_rotation = 0.0
+    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    return arr
+
+def getLeftHandBaseMatrix():
+    x_pos = 0.0
+    y_pos = -0.06
+    depth = -0.14
+    x_rotation = -62.0
+    y_rotation = 154.0
+    z_rotation = 71.0
+    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    return arr
+
+def getRightHandBaseMatrix():
+    x_pos = 0.0
+    y_pos = -0.06
+    depth = -0.14
+    x_rotation = -62.0
+    y_rotation = -154.0
+    z_rotation = -71.0
+    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
     return arr
 
 class Overlay:
-    def __init__(self, x, y , depth, display_duration, fadeout_duration, opacity, ui_scaling):
+    def __init__(self, x, y , depth, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
         self.initialized = False
         settings = {
             "color": [1, 1, 1],
@@ -22,6 +70,9 @@ class Overlay:
             "x_pos": x,
             "y_pos": y,
             "depth": depth,
+            "x_rotation": x_rotation,
+            "y_rotation": y_rotation,
+            "z_rotation": z_rotation,
             "display_duration": display_duration,
             "fadeout_duration": fadeout_duration,
             "ui_scaling": ui_scaling,
@@ -39,6 +90,7 @@ class Overlay:
         try:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
+            self.overlay_system = openvr.IVRSystem()
             self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
             self.overlay.showOverlay(self.handle)
             self.initialized = True
@@ -49,7 +101,10 @@ class Overlay:
             self.updateUiScaling(self.settings["ui_scaling"])
             self.updatePosition(
                 (self.settings["x_pos"], self.settings["y_pos"]),
-                self.settings["depth"]
+                self.settings["depth"],
+                self.settings["x_rotation"],
+                self.settings["y_rotation"],
+                self.settings["z_rotation"],
             )
 
         except Exception as e:
@@ -92,26 +147,43 @@ class Overlay:
         if self.initialized is True:
             self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
 
-    def updatePosition(self, pos, depth):
+    def updatePosition(self, pos, depth, x_rotation, y_rotation, z_rotation, tracker="HMD"):
         """
         pos is a 2-tuple representing normalized (x, y)
         depth is a float representing the depth of the icon plane
+        x_rotation, y_rotation, z_rotation are floats representing the rotation of the icon plane
         """
+
         self.settings["x_pos"] = pos[0]
         self.settings["y_pos"] = pos[1]
         self.settings["depth"] = depth
+        self.settings["x_rotation"] = x_rotation
+        self.settings["y_rotation"] = y_rotation
+        self.settings["z_rotation"] = z_rotation
 
-        self.transform = mat34Id() # no rotation required for HMD attachment
+        match tracker:
+            case "HMD":
+                base_matrix = getHMDBaseMatrix()
+                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
+            case "LeftHand":
+                base_matrix = getLeftHandBaseMatrix()
+                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
+            case "RightHand":
+                base_matrix = getRightHandBaseMatrix()
+                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+            case _:
+                base_matrix = getHMDBaseMatrix()
+                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
 
-        # assign position
-        self.transform[0][3] = self.settings["x_pos"] * self.settings['depth']
-        self.transform[1][3] = self.settings["y_pos"] * self.settings['depth']
-        self.transform[2][3] = - self.settings['depth']
+        translation = (self.settings["x_pos"], self.settings["y_pos"], - self.settings['depth'])
+        rotation = (self.settings["x_rotation"], self.settings["y_rotation"], self.settings["z_rotation"])
+        transform = utils.transform_matrix(base_matrix, translation, rotation)
+        self.transform = mat34Id(transform)
 
         if self.initialized is True:
             self.overlay.setOverlayTransformTrackedDeviceRelative(
                 self.handle,
-                openvr.k_unTrackedDeviceIndex_Hmd,
+                trackerIndex,
                 self.transform
             )
 
@@ -187,22 +259,45 @@ class Overlay:
         return _proc_name in (p.name() for p in process_iter())
 
 if __name__ == '__main__':
-    from overlay_image import OverlayImage
-    overlay_image = OverlayImage()
+    # from overlay_image import OverlayImage
+    # overlay_image = OverlayImage()
 
-    for i in range(100):
-        print(i)
-        overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
-        overlay.startOverlay()
-        time.sleep(1)
+    # overlay = Overlay(0, 0, 1, 1, 0, 1, 1)
+    # overlay.startOverlay()
+    # time.sleep(1)
 
-        # Example usage
-        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
-        overlay.updateImage(img)
-        time.sleep(0.5)
+    # # Example usage
+    # img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    # overlay.updateImage(img)
+    # time.sleep(100000)
+    
+    # for i in range(100):
+    #     print(i)
+    #     overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
+    #     overlay.startOverlay()
+    #     time.sleep(1)
 
-        img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-        overlay.updateImage(img)
-        time.sleep(0.5)
+    #     # Example usage
+    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
+    #     overlay.updateImage(img)
+    #     time.sleep(0.5)
 
-        overlay.shutdownOverlay()
+    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    #    overlay.updateImage(img)
+    #    time.sleep(0.5)
+
+    #    overlay.shutdownOverlay()
+
+    x_pos = 0
+    y_pos = 0
+    depth = 0
+    x_rotation = 0
+    y_rotation = 0
+    z_rotation = 0
+
+    base_matrix = getLeftHandBaseMatrix()
+    translation = (x_pos * depth, y_pos * depth, depth)
+    rotation = (x_rotation, y_rotation, z_rotation)
+    transform = utils.transform_matrix(base_matrix, translation, rotation)
+    transform = mat34Id(transform)
+    print(transform)
