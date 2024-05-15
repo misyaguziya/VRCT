@@ -186,19 +186,19 @@ class View():
             VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
 
-            VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value="x_rotation"),
+            VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=i18n.t("overlay_settings.x_rotation")),
             SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION=(-180, 180),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_X_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
 
-            VAR_LABEL_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value="y_rotation"),
+            VAR_LABEL_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value=i18n.t("overlay_settings.y_rotation")),
             SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_ROTATION=(-180, 180),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_Y_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
 
-            VAR_LABEL_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value="z_rotation"),
+            VAR_LABEL_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value=i18n.t("overlay_settings.z_rotation")),
             SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_ROTATION=(-180, 180),
             NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_Z_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]),
@@ -1167,6 +1167,9 @@ class View():
             "x_pos": 0.0,
             "y_pos": 0.0,
             "depth": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
             "display_duration": 5,
             "fadeout_duration": 2,
         }
@@ -1182,6 +1185,9 @@ class View():
         self.setLatestConfigVariable("OverlaySmallLogXPos")
         self.setLatestConfigVariable("OverlaySmallLogYPos")
         self.setLatestConfigVariable("OverlaySmallLogDepth")
+        self.setLatestConfigVariable("OverlaySmallLogXRotation")
+        self.setLatestConfigVariable("OverlaySmallLogYRotation")
+        self.setLatestConfigVariable("OverlaySmallLogZRotation")
         self.setLatestConfigVariable("OverlaySmallLogDisplayDuration")
         self.setLatestConfigVariable("OverlaySmallLogFadeoutDuration")
 
@@ -1947,6 +1953,18 @@ class View():
             case "OverlaySmallLogDepth":
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
                 self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+
+            case "OverlaySmallLogXRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_X_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"])
+
+            case "OverlaySmallLogYRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"])
+
+            case "OverlaySmallLogZRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Z_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"])
 
             case "OverlaySmallLogDisplayDuration":
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
