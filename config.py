@@ -1072,8 +1072,8 @@ class Config:
         self._ENABLE_OVERLAY_SMALL_LOG = False
         self._OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
-            "y_pos": -0.41,
-            "depth": 1.0,
+            "y_pos": 0.0,
+            "depth": 0.0,
             "x_rotation": 0.0,
             "y_rotation": 0.0,
             "z_rotation": 0.0,
