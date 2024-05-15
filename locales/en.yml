@@ -75,6 +75,9 @@ overlay_settings:
   x_position: X-axis (left-right)
   y_position: Y-axis (up-down)
   depth: Z-axis (front-back)
+  x_rotation: X-axis rotation
+  y_rotation: Y-axis rotation
+  z_rotation: Z-axis rotation
   display_duration: Display duration
   fadeout_duration: Fadeout duration
 
