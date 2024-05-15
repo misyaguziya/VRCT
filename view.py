@@ -169,38 +169,38 @@ class View():
             CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
 
             VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-2, 2),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-5, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=1000,
             VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=i18n.t("overlay_settings.y_position")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-2, 2),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-5, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=1000,
             VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=i18n.t("overlay_settings.depth")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0, 2),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=100,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(-5, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=1000,
             VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value="x_rotation"),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION=(-1, 1),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_ROTATION=200,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_X_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value="y_rotation"),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_ROTATION=(-1, 1),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_ROTATION=200,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_Y_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value="z_rotation"),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_ROTATION=(-1, 1),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_ROTATION=200,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_ROTATION=360,
             VAR_OVERLAY_SMALL_LOG_Z_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]),
 
@@ -1165,8 +1165,8 @@ class View():
         }
         INIT_OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
-            "y_pos": -0.41,
-            "depth": 1.0,
+            "y_pos": 0.0,
+            "depth": 0.0,
             "display_duration": 5,
             "fadeout_duration": 2,
         }
