@@ -38,7 +38,6 @@ def getHMDBaseMatrix():
     x_rotation = 0.0
     y_rotation = 0.0
     z_rotation = 0.0
-
     arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
     return arr
 
@@ -49,7 +48,16 @@ def getLeftHandBaseMatrix():
     x_rotation = -62.0
     y_rotation = 154.0
     z_rotation = 71.0
+    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    return arr
 
+def getRightHandBaseMatrix():
+    x_pos = 0.0
+    y_pos = -0.06
+    depth = -0.14
+    x_rotation = -62.0
+    y_rotation = -154.0
+    z_rotation = -71.0
     arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
     return arr
 
@@ -139,7 +147,7 @@ class Overlay:
         if self.initialized is True:
             self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
 
-    def updatePosition(self, pos, depth, x_rotation, y_rotation, z_rotation):
+    def updatePosition(self, pos, depth, x_rotation, y_rotation, z_rotation, tracker="HMD"):
         """
         pos is a 2-tuple representing normalized (x, y)
         depth is a float representing the depth of the icon plane
@@ -153,20 +161,29 @@ class Overlay:
         self.settings["y_rotation"] = y_rotation
         self.settings["z_rotation"] = z_rotation
 
-        base_matrix = getHMDBaseMatrix()
-        # base_matrix = getLeftHandBaseMatrix()
+        match tracker:
+            case "HMD":
+                base_matrix = getHMDBaseMatrix()
+                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
+            case "LeftHand":
+                base_matrix = getLeftHandBaseMatrix()
+                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
+            case "RightHand":
+                base_matrix = getRightHandBaseMatrix()
+                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+            case _:
+                base_matrix = getHMDBaseMatrix()
+                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
+
         translation = (self.settings["x_pos"], self.settings["y_pos"], - self.settings['depth'])
         rotation = (self.settings["x_rotation"], self.settings["y_rotation"], self.settings["z_rotation"])
         transform = utils.transform_matrix(base_matrix, translation, rotation)
         self.transform = mat34Id(transform)
 
-        hmdIndex = openvr.k_unTrackedDeviceIndex_Hmd
-        # leftControllerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
-        # rightControllerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
         if self.initialized is True:
             self.overlay.setOverlayTransformTrackedDeviceRelative(
                 self.handle,
-                hmdIndex,
+                trackerIndex,
                 self.transform
             )
 
