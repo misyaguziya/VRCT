@@ -897,7 +897,7 @@ def callbackSetOverlaySmallLogSettings(value, set_type:str):
     pre_settings[set_type] = value
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
     match (set_type):
-        case "x_pos" | "y_pos" | "depth" | "x_rotation" | "y_rotation" | "z_rotation":
+        case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
             model.updateOverlayPosition()
         case "display_duration" | "fadeout_duration":
             model.updateOverlayTimes()
