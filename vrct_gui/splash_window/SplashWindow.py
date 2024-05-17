@@ -221,7 +221,7 @@ class SplashWindow(CTkToplevel):
         )
         self.weight_download_progressbar_widget.configure(progress_color=progress_color)
         self.weight_download_progressbar_widget.set(progress)
-        self.update_idletasks()
+        self.update()
 
 
     def showSplash(self):
