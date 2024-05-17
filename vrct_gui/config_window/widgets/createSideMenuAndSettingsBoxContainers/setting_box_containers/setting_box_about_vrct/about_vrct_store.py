@@ -11,13 +11,13 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "miu_jepang",
         "data": [
-            { "image_file_name": "ippaidou.png", "x_post_num": None },
+            { "image_file_name": "ippaidou.png", "x_post_num": "1787801976354513319" },
             { "image_file_name": "nihongokurabu.png", "x_post_num": "1779004631936614893" },
             { "image_file_name": "language_exchange_tervern.png", "x_post_num": "1779749425923150317" },
-            { "image_file_name": "japanese_culture_osenbeito.png", "x_post_num": None },
-            { "image_file_name": "silakan_datang_ke_rumahku.png", "x_post_num": None },
+            { "image_file_name": "japanese_culture_osenbeito.png", "x_post_num": "1788522972409721137" },
+            { "image_file_name": "silakan_datang_ke_rumahku.png", "x_post_num": "1788522607631056941" },
             { "image_file_name": "uj_club.png", "x_post_num": "1780791654196388201" },
-            { "image_file_name": "sushi_stand_guruguru.png", "x_post_num": None },
+            { "image_file_name": "sushi_stand_guruguru.png", "x_post_num": "1788523302404952218" },
         ]
     },
 
@@ -84,7 +84,7 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "yolm",
         "data": [
-            { "image_file_name": "cafe_cian.png", "x_post_num": None },
+            { "image_file_name": "cafe_cian.png", "x_post_num": "1787802552907739504" },
         ]
     },
 
@@ -108,7 +108,7 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "1ban_meno",
         "data": [
-            { "image_file_name": "bar_asagao.png", "x_post_num": None },
+            { "image_file_name": "bar_asagao.png", "x_post_num": "1788523857642758370" },
         ]
     },
 
