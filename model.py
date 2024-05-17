@@ -84,10 +84,10 @@ class Model:
         self.overlay = Overlay(
             config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
-            0,
-            0,
-            0,
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
             config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
             config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
             config.OVERLAY_SETTINGS["opacity"],
@@ -685,12 +685,14 @@ class Model:
         self.overlay.startOverlay()
 
     def updateOverlayPosition(self):
-        pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
-        depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
-        x_rotation = config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]
-        y_rotation = config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]
-        z_rotation = config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]
-        self.overlay.updatePosition(pos, depth, x_rotation, y_rotation, z_rotation)
+        self.overlay.updatePosition(
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
+        )
 
     def updateOverlayTimes(self):
         display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]

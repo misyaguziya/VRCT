@@ -73,7 +73,7 @@ overlay_settings:
   ui_scaling: サイズ
   x_position: X軸（左右）
   y_position: Y軸（上下）
-  depth: Z軸（前後）
+  z_position: Z軸（前後）
   x_rotation: X軸の回転
   y_rotation: Y軸の回転
   z_rotation: Z軸の回転
