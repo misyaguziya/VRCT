@@ -18,7 +18,7 @@ def mat34Id(array):
             arr[i][j] = array[i][j]
     return arr
 
-def getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation):
+def getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation):
     arr = np.zeros((3, 4))
     rot = utils.euler_to_rotation_matrix((x_rotation, y_rotation, z_rotation))
 
@@ -26,50 +26,50 @@ def getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation):
         for j in range(3):
             arr[i][j] = rot[i][j]
 
-    arr[0][3] = x_pos * depth
-    arr[1][3] = y_pos * depth
-    arr[2][3] = - depth
+    arr[0][3] = x_pos * z_pos
+    arr[1][3] = y_pos * z_pos
+    arr[2][3] = - z_pos
     return arr
 
 def getHMDBaseMatrix():
     x_pos = 0.0
     y_pos = -0.4
-    depth = 1.0
+    z_pos = 1.0
     x_rotation = 0.0
     y_rotation = 0.0
     z_rotation = 0.0
-    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
 def getLeftHandBaseMatrix():
     x_pos = 0.0
     y_pos = -0.06
-    depth = -0.14
+    z_pos = -0.14
     x_rotation = -62.0
     y_rotation = 154.0
     z_rotation = 71.0
-    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
 def getRightHandBaseMatrix():
     x_pos = 0.0
     y_pos = -0.06
-    depth = -0.14
+    z_pos = -0.14
     x_rotation = -62.0
     y_rotation = -154.0
     z_rotation = -71.0
-    arr = getBaseMatrix(x_pos, y_pos, depth, x_rotation, y_rotation, z_rotation)
+    arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
 class Overlay:
-    def __init__(self, x, y , depth, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
+    def __init__(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
         self.initialized = False
         settings = {
             "color": [1, 1, 1],
             "opacity": opacity,
-            "x_pos": x,
-            "y_pos": y,
-            "depth": depth,
+            "x_pos": x_pos,
+            "y_pos": y_pos,
+            "z_pos": z_pos,
             "x_rotation": x_rotation,
             "y_rotation": y_rotation,
             "z_rotation": z_rotation,
@@ -100,8 +100,9 @@ class Overlay:
             self.updateOpacity(self.settings["opacity"])
             self.updateUiScaling(self.settings["ui_scaling"])
             self.updatePosition(
-                (self.settings["x_pos"], self.settings["y_pos"]),
-                self.settings["depth"],
+                self.settings["x_pos"],
+                self.settings["y_pos"],
+                self.settings["z_pos"],
                 self.settings["x_rotation"],
                 self.settings["y_rotation"],
                 self.settings["z_rotation"],
@@ -143,20 +144,20 @@ class Overlay:
                 self.overlay.setOverlayAlpha(self.handle, self.settings["opacity"])
 
     def updateUiScaling(self, ui_scaling):
-        self.settings['ui_scaling'] = ui_scaling
+        self.settings["ui_scaling"] = ui_scaling
         if self.initialized is True:
-            self.overlay.setOverlayWidthInMeters(self.handle, self.settings['ui_scaling'])
+            self.overlay.setOverlayWidthInMeters(self.handle, self.settings["ui_scaling"])
 
-    def updatePosition(self, pos, depth, x_rotation, y_rotation, z_rotation, tracker="HMD"):
+    def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker="HMD"):
         """
-        pos is a 2-tuple representing normalized (x, y)
-        depth is a float representing the depth of the icon plane
-        x_rotation, y_rotation, z_rotation are floats representing the rotation of the icon plane
+        x_pos, y_pos, z_pos are floats representing the position of overlay
+        x_rotation, y_rotation, z_rotation are floats representing the rotation of overlay
+        tracker is a string representing the tracker to use ("HMD", "LeftHand", "RightHand")
         """
 
-        self.settings["x_pos"] = pos[0]
-        self.settings["y_pos"] = pos[1]
-        self.settings["depth"] = depth
+        self.settings["x_pos"] = x_pos
+        self.settings["y_pos"] = y_pos
+        self.settings["z_pos"] = z_pos
         self.settings["x_rotation"] = x_rotation
         self.settings["y_rotation"] = y_rotation
         self.settings["z_rotation"] = z_rotation
@@ -175,7 +176,7 @@ class Overlay:
                 base_matrix = getHMDBaseMatrix()
                 trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
 
-        translation = (self.settings["x_pos"], self.settings["y_pos"], - self.settings['depth'])
+        translation = (self.settings["x_pos"], self.settings["y_pos"], - self.settings["z_pos"])
         rotation = (self.settings["x_rotation"], self.settings["y_rotation"], self.settings["z_rotation"])
         transform = utils.transform_matrix(base_matrix, translation, rotation)
         self.transform = mat34Id(transform)
@@ -188,10 +189,10 @@ class Overlay:
             )
 
     def updateDisplayDuration(self, display_duration):
-        self.settings['display_duration'] = display_duration
+        self.settings["display_duration"] = display_duration
 
     def updateFadeoutDuration(self, fadeout_duration):
-        self.settings['fadeout_duration'] = fadeout_duration
+        self.settings["fadeout_duration"] = fadeout_duration
 
     def checkActive(self):
         try:
@@ -207,16 +208,16 @@ class Overlay:
             return False
 
     def evaluateOpacityFade(self, lastUpdate, currentTime):
-        if (currentTime - lastUpdate) > self.settings['display_duration']:
-            timeThroughInterval = currentTime - lastUpdate - self.settings['display_duration']
-            self.fadeRatio = 1 - timeThroughInterval / self.settings['fadeout_duration']
+        if (currentTime - lastUpdate) > self.settings["display_duration"]:
+            timeThroughInterval = currentTime - lastUpdate - self.settings["display_duration"]
+            self.fadeRatio = 1 - timeThroughInterval / self.settings["fadeout_duration"]
             if self.fadeRatio < 0:
                 self.fadeRatio = 0
-            self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings['opacity'])
+            self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
 
     def update(self):
         currTime = time.monotonic()
-        if self.settings['fadeout_duration'] != 0:
+        if self.settings["fadeout_duration"] != 0:
             self.evaluateOpacityFade(self.lastUpdate, currTime)
         else:
             self.updateOpacity(self.settings["opacity"])
@@ -255,10 +256,10 @@ class Overlay:
 
     @staticmethod
     def checkSteamvrRunning() -> bool:
-        _proc_name = "vrmonitor.exe" if os.name == 'nt' else "vrmonitor"
+        _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
         return _proc_name in (p.name() for p in process_iter())
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # from overlay_image import OverlayImage
     # overlay_image = OverlayImage()
 
@@ -290,13 +291,13 @@ if __name__ == '__main__':
 
     x_pos = 0
     y_pos = 0
-    depth = 0
+    z_pos = 0
     x_rotation = 0
     y_rotation = 0
     z_rotation = 0
 
     base_matrix = getLeftHandBaseMatrix()
-    translation = (x_pos * depth, y_pos * depth, depth)
+    translation = (x_pos * z_pos, y_pos * z_pos, z_pos)
     rotation = (x_rotation, y_rotation, z_rotation)
     transform = utils.transform_matrix(base_matrix, translation, rotation)
     transform = mat34Id(transform)

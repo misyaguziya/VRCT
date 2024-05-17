@@ -147,21 +147,21 @@ class QuickSettingsWindow(CTkToplevel):
 
 
         row+=1
-        def overlaySmallLogSettingsDepthSliderCallback(e):
+        def overlaySmallLogSettingsZPosSliderCallback(e):
             value = round(e,2)
-            callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "depth")
-            view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(str(value))
+            callFunctionIfCallable(view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS, value, "z_pos")
+            view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS.set(str(value))
 
-        self.qsb__overlay_small_log_settings_depth = createSettingBoxSlider(
-            for_var_label_text=view_variable.VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH,
-            for_var_current_value=view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH,
-            slider_attr_name="qsb__overlay_small_log_settings_depth_slider",
-            slider_range=view_variable.SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH,
-            slider_number_of_steps=view_variable.NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH,
-            command=overlaySmallLogSettingsDepthSliderCallback,
-            variable=view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH,
+        self.qsb__overlay_small_log_settings_z_pos = createSettingBoxSlider(
+            for_var_label_text=view_variable.VAR_LABEL_OVERLAY_SMALL_LOG_Z_POS,
+            for_var_current_value=view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS,
+            slider_attr_name="qsb__overlay_small_log_settings_z_pos_slider",
+            slider_range=view_variable.SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_POS,
+            slider_number_of_steps=view_variable.NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_POS,
+            command=overlaySmallLogSettingsZPosSliderCallback,
+            variable=view_variable.VAR_OVERLAY_SMALL_LOG_Z_POS,
         )
-        self.qsb__overlay_small_log_settings_depth.grid(row=row)
+        self.qsb__overlay_small_log_settings_z_pos.grid(row=row)
 
 
 

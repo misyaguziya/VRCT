@@ -23,7 +23,7 @@ class OverlayImage:
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
-        dst = Image.new('RGBA', (img1.width, img1.height + img2.height))
+        dst = Image.new("RGBA", (img1.width, img1.height + img2.height))
         dst.paste(img1, (0, 0))
         dst.paste(img2, (0, img1.height))
         return dst

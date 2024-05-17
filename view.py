@@ -180,11 +180,11 @@ class View():
             VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
             VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
 
-            VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=i18n.t("overlay_settings.depth")),
-            SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(-5, 5),
-            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=10000,
-            VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
-            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+            VAR_LABEL_OVERLAY_SMALL_LOG_Z_POS=StringVar(value=i18n.t("overlay_settings.z_position")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_POS=(-5, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_POS=10000,
+            VAR_OVERLAY_SMALL_LOG_Z_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]),
 
             VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=i18n.t("overlay_settings.x_rotation")),
             SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION=(-180, 180),
@@ -1166,7 +1166,7 @@ class View():
         INIT_OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
             "y_pos": 0.0,
-            "depth": 0.0,
+            "z_pos": 0.0,
             "x_rotation": 0.0,
             "y_rotation": 0.0,
             "z_rotation": 0.0,
@@ -1184,7 +1184,7 @@ class View():
 
         self.setLatestConfigVariable("OverlaySmallLogXPos")
         self.setLatestConfigVariable("OverlaySmallLogYPos")
-        self.setLatestConfigVariable("OverlaySmallLogDepth")
+        self.setLatestConfigVariable("OverlaySmallLogZPos")
         self.setLatestConfigVariable("OverlaySmallLogXRotation")
         self.setLatestConfigVariable("OverlaySmallLogYRotation")
         self.setLatestConfigVariable("OverlaySmallLogZRotation")
@@ -1950,9 +1950,9 @@ class View():
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
                 self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
 
-            case "OverlaySmallLogDepth":
-                self.view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
-                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+            case "OverlaySmallLogZPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Z_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"])
 
             case "OverlaySmallLogXRotation":
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_X_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"])
