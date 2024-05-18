@@ -179,7 +179,7 @@ class Model:
                 )
 
         # 翻訳失敗時のフェールセーフ処理
-        if translation is True:
+        if isinstance(translation, str):
             success_flag = True
         else:
             while True:
