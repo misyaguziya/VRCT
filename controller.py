@@ -938,6 +938,7 @@ def callbackSetEnableVrcMicMuteSync(value):
     else:
         model.stopCheckMuteSelfStatus()
         view.setStateVrcMicMuteSync("disabled")
+    model.changeMicTranscriptStatus()
 
 
 def callbackSetEnableSendMessageToVrc(value):
