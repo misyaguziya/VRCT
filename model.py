@@ -179,7 +179,7 @@ class Model:
                 )
 
         # 翻訳失敗時のフェールセーフ処理
-        if translation is True:
+        if isinstance(translation, str):
             success_flag = True
         else:
             while True:
@@ -498,6 +498,7 @@ class Model:
             self.mic_print_transcript.join()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
+            self.mic_audio_recorder.resume()
             self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
