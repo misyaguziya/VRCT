@@ -9,7 +9,7 @@ from datetime import datetime
 from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 from requests import get as requests_get
 import webbrowser
 
@@ -17,7 +17,7 @@ from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices
-from models.osc.osc_tools import sendTyping, sendMessage, sendTestAction, receiveOscParameters
+from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
@@ -26,28 +26,37 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
 from models.transcription.transcription_whisper import checkWhisperWeight
-# from models.overlay.overlay import Overlay
-# from models.overlay.overlay_image import OverlayImage
+from models.overlay.overlay import Overlay
+from models.overlay.overlay_image import OverlayImage
 
 from config import config
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
-        super(threadFnc, self).__init__(daemon=daemon, *args, **kwargs)
+        super(threadFnc, self).__init__(daemon=daemon, target=fnc, *args, **kwargs)
         self.fnc = fnc
         self.end_fnc = end_fnc
-        self._stop = Event()
+        self.loop = True
+        self._pause = False
+
     def stop(self):
-        self._stop.set()
-    def stopped(self):
-        return self._stop.is_set()
+        self.loop = False
+
+    def pause(self):
+        self._pause = True
+
+    def resume(self):
+        self._pause = False
+
     def run(self):
-        while True:
-            if self.stopped():
-                if callable(self.end_fnc):
-                    self.end_fnc()
-                return
+        while self.loop:
             self.fnc(*self._args, **self._kwargs)
+            while self._pause:
+                sleep(0.1)
+
+        if callable(self.end_fnc):
+            self.end_fnc()
+        return
 
 class Model:
     _instance = None
@@ -72,18 +81,24 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
-        # self.overlay = Overlay(
-        #     config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
-        #     config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-        #     config.OVERLAY_SMALL_LOG_SETTINGS["depth"],
-        #     config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
-        #     config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
-        #     config.OVERLAY_SETTINGS["opacity"],
-        #     config.OVERLAY_SETTINGS["ui_scaling"],
-        # )
-        # self.overlay_image = OverlayImage()
-        # self.pre_overlay_message = None
-        # self.th_overlay = None
+        self.overlay = Overlay(
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
+            config.OVERLAY_SETTINGS["opacity"],
+            config.OVERLAY_SETTINGS["ui_scaling"],
+        )
+        self.overlay_image = OverlayImage()
+        self.pre_overlay_message = None
+        self.th_overlay = None
+        self.mic_audio_queue = None
+        self.mic_mute_status = None
+        self.mic_mute_status_check = None
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -91,8 +106,8 @@ class Model:
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
 
-    def clearTranslatorCTranslate2Model(self):
-        self.translator.clearCTranslate2Model()
+    def isLoadedCTranslate2Model(self):
+        return self.translator.isLoadedCTranslate2Model()
 
     def checkTranscriptionWhisperModelWeight(self):
         return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
@@ -153,59 +168,62 @@ class Model:
                 compatible_engines.remove('DeepL_API')
         return compatible_engines
 
+    def getTranslate(self, translator_name, source_language, target_language, target_country, message):
+        success_flag = False
+        translation = self.translator.translate(
+                        translator_name=translator_name,
+                        source_language=source_language,
+                        target_language=target_language,
+                        target_country=target_country,
+                        message=message
+                )
+
+        # 翻訳失敗時のフェールセーフ処理
+        if isinstance(translation, str):
+            success_flag = True
+        else:
+            while True:
+                translation = self.translator.translate(
+                                    translator_name="CTranslate2",
+                                    source_language=source_language,
+                                    target_language=target_language,
+                                    target_country=target_country,
+                                    message=message
+                            )
+                if translation is not False:
+                    break
+                sleep(0.1)
+        return translation, success_flag
+
     def getInputTranslate(self, message):
-        translation_success_flag = True
         translator_name=config.CHOICE_INPUT_TRANSLATOR
         source_language=config.SOURCE_LANGUAGE
         target_language=config.TARGET_LANGUAGE
         target_country = config.TARGET_COUNTRY
 
-        translation = self.translator.translate(
-                        translator_name=translator_name,
-                        source_language=source_language,
-                        target_language=target_language,
-                        target_country=target_country,
-                        message=message
-                )
-
-        # 翻訳失敗時のフェールセーフ処理
-        if translation is False:
-            translation_success_flag = False
-            translation = self.translator.translate(
-                                translator_name="CTranslate2",
-                                source_language=source_language,
-                                target_language=target_language,
-                                target_country=target_country,
-                                message=message
-                        )
-        return translation, translation_success_flag
+        translation, success_flag = self.getTranslate(
+            translator_name,
+            source_language,
+            target_language,
+            target_country,
+            message
+            )
+        return translation, success_flag
 
     def getOutputTranslate(self, message):
-        translation_success_flag = True
         translator_name=config.CHOICE_OUTPUT_TRANSLATOR
         source_language=config.TARGET_LANGUAGE
         target_language=config.SOURCE_LANGUAGE
         target_country=config.SOURCE_COUNTRY
 
-        translation = self.translator.translate(
-                        translator_name=translator_name,
-                        source_language=source_language,
-                        target_language=target_language,
-                        target_country=target_country,
-                        message=message
-                )
-
-        # 翻訳失敗時のフェールセーフ処理
-        if translation is False:
-            translation_success_flag = False
-            translation = self.translator.translate(
-                                translator_name="CTranslate2",
-                                source_language=source_language,
-                                target_language=target_language,
-                                target_country=target_country,
-                                message=message
-                        )
-        return translation, translation_success_flag
+        translation, success_flag = self.getTranslate(
+            translator_name,
+            source_language,
+            target_language,
+            target_country,
+            message
+            )
+        return translation, success_flag
 
     def addKeywords(self):
         for f in config.INPUT_MIC_WORD_FILTER:
@@ -240,39 +258,51 @@ class Model:
     def oscSendMessage(message):
         sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
 
-    def checkOSCStarted(self, fnc):
-        self.is_valid_osc = False
-        def checkOscReceive(address, osc_arguments):
-            if self.is_valid_osc is False:
-                self.is_valid_osc = True
+    @staticmethod
+    def getMuteSelfStatus():
+        return getOSCParameterValue(address="/avatar/parameters/MuteSelf")
 
-        self.listening_server = receiveOscParameters(checkOscReceive)
-        def oscListener():
-            self.listening_server.serve_forever()
+    def startCheckMuteSelfStatus(self):
+        def checkMuteSelfStatus():
+            if self.mic_mute_status is not None:
+                self.changeMicTranscriptStatus()
+                self.stopCheckMuteSelfStatus()
 
-        def sendTestActionLoop():
-            for _ in range(10):
-                sendTestAction()
-                if self.is_valid_osc is True:
-                    break
-                sleep(0.1)
-            self.listening_server.shutdown()
+            status = self.getMuteSelfStatus()
+            if status is not None:
+                self.mic_mute_status = status
+                self.changeMicTranscriptStatus()
+                self.stopCheckMuteSelfStatus()
 
-        # start receive osc
-        th_receive_osc_parameters = Thread(target=oscListener)
-        th_receive_osc_parameters.daemon = True
-        th_receive_osc_parameters.start()
+        if not isinstance(self.mic_mute_status_check, threadFnc):
+            self.mic_mute_status_check = threadFnc(checkMuteSelfStatus)
+            self.mic_mute_status_check.daemon = True
+            self.mic_mute_status_check.start()
 
-        # check osc started
-        th_send_osc_test_action = Thread(target=sendTestActionLoop)
-        th_send_osc_test_action.daemon = True
-        th_send_osc_test_action.start()
+    def stopCheckMuteSelfStatus(self):
+        if isinstance(self.mic_mute_status_check, threadFnc):
+            self.mic_mute_status_check.stop()
+            self.mic_mute_status_check = None
 
-        th_receive_osc_parameters.join()
-        th_send_osc_test_action.join()
+    def startReceiveOSC(self):
+        osc_parameter_prefix = "/avatar/parameters/"
+        param_MuteSelf = "MuteSelf"
 
-        if self.is_valid_osc is False:
-            fnc()
+        def change_handler_mute(address, osc_arguments):
+            if osc_arguments is True and self.mic_mute_status is False:
+                self.mic_mute_status = osc_arguments
+                self.changeMicTranscriptStatus()
+            elif osc_arguments is False and self.mic_mute_status is True:
+                self.mic_mute_status = osc_arguments
+                self.changeMicTranscriptStatus()
+
+        dict_filter_and_target = {
+            osc_parameter_prefix + param_MuteSelf: change_handler_mute,
+        }
+
+        th_osc_server = Thread(target=receiveOscParameters, args=(dict_filter_and_target,))
+        th_osc_server.daemon = True
+        th_osc_server.start()
 
     @staticmethod
     def checkSoftwareUpdated():
@@ -365,8 +395,9 @@ class Model:
                 pass
             return
 
-        mic_audio_queue = Queue()
-        # mic_energy_queue = Queue()
+        self.mic_audio_queue = Queue()
+        # self.mic_energy_queue = Queue()
+
         mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
         phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
@@ -379,8 +410,8 @@ class Model:
             dynamic_energy_threshold=config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD,
             record_timeout=record_timeout,
         )
-        # self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, mic_energy_queue)
-        self.mic_audio_recorder.recordIntoQueue(mic_audio_queue, None)
+        # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
+        self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
         self.mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
@@ -392,15 +423,18 @@ class Model:
         )
         def sendMicTranscript():
             try:
-                self.mic_transcriber.transcribeAudioQueue(mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
-                message = self.mic_transcriber.getTranscript()
-                fnc(message)
+                res = self.mic_transcriber.transcribeAudioQueue(self.mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                if res:
+                    message = self.mic_transcriber.getTranscript()
+                    fnc(message)
             except Exception:
                 pass
 
         def endMicTranscript():
-            mic_audio_queue.queue.clear()
-            # mic_energy_queue.queue.clear()
+            while not self.mic_audio_queue.empty():
+                self.mic_audio_queue.get()
+            # while not self.mic_energy_queue.empty():
+            #     self.mic_energy_queue.get()
             del self.mic_transcriber
             gc.collect()
 
@@ -422,12 +456,50 @@ class Model:
         # self.mic_get_energy.daemon = True
         # self.mic_get_energy.start()
 
+        self.changeMicTranscriptStatus()
+
+    def resumeMicTranscript(self):
+        # キューをクリア
+        if isinstance(self.mic_audio_queue, Queue):
+            while not self.mic_audio_queue.empty():
+                self.mic_audio_queue.get()
+
+        # 文字起こしを再開
+        # if isinstance(self.mic_print_transcript, threadFnc):
+        #     self.mic_print_transcript.resume()
+
+        # 音声のレコードを再開
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
+            self.mic_audio_recorder.resume()
+
+    def pauseMicTranscript(self):
+        # 文字起こしを一時停止
+        # if isinstance(self.mic_print_transcript, threadFnc):
+        #     self.mic_print_transcript.pause()
+
+        # 音声のレコードを一時停止
+        if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
+            self.mic_audio_recorder.pause()
+
+    def changeMicTranscriptStatus(self):
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+            if self.mic_mute_status is True:
+                self.pauseMicTranscript()
+            elif self.mic_mute_status is False:
+                self.resumeMicTranscript()
+            else:
+                pass
+        else:
+            self.resumeMicTranscript()
+
     def stopMicTranscript(self):
         if isinstance(self.mic_print_transcript, threadFnc):
             self.mic_print_transcript.stop()
+            self.mic_print_transcript.join()
             self.mic_print_transcript = None
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
-            self.mic_audio_recorder.stop(wait_for_stop=True)
+            self.mic_audio_recorder.resume()
+            self.mic_audio_recorder.stop()
             self.mic_audio_recorder = None
         # if isinstance(self.mic_get_energy, threadFnc):
         #     self.mic_get_energy.stop()
@@ -465,7 +537,7 @@ class Model:
             self.mic_energy_plot_progressbar.stop()
             self.mic_energy_plot_progressbar = None
         if isinstance(self.mic_energy_recorder, SelectedMicEnergyRecorder):
-            self.mic_energy_recorder.stop(wait_for_stop=True)
+            self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc, error_fnc=None):
@@ -493,7 +565,7 @@ class Model:
             record_timeout=record_timeout,
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
-        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue ,None)
+        self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
         self.speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
@@ -505,9 +577,10 @@ class Model:
         )
         def sendSpeakerTranscript():
             try:
-                self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
-                message = self.speaker_transcriber.getTranscript()
-                fnc(message)
+                res = self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                if res:
+                    message = self.speaker_transcriber.getTranscript()
+                    fnc(message)
             except Exception:
                 pass
 
@@ -538,9 +611,10 @@ class Model:
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
             self.speaker_print_transcript.stop()
+            self.speaker_print_transcript.join()
             self.speaker_print_transcript = None
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
-            self.speaker_audio_recorder.stop(wait_for_stop=True)
+            self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
@@ -578,71 +652,64 @@ class Model:
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar = None
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
-            self.speaker_energy_recorder.stop(wait_for_stop=True)
+            self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
     def notificationXSOverlay(self, message):
         xsoverlayForVRCT(content=f"{message}")
 
-    # def createOverlayImageShort(self, message, translation):
-    #     your_language = config.TARGET_LANGUAGE
-    #     target_language = config.SOURCE_LANGUAGE
-    #     ui_type = config.OVERLAY_UI_TYPE
-    #     self.pre_overlay_message = {
-    #         "message" : message,
-    #         "your_language" : your_language,
-    #         "translation" : translation,
-    #         "target_language" : target_language,
-    #         "ui_type" : ui_type,
-    #     }
-    #     return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
+    def createOverlayImageShort(self, message, translation):
+        your_language = config.TARGET_LANGUAGE
+        target_language = config.SOURCE_LANGUAGE
+        ui_type = config.OVERLAY_UI_TYPE
+        self.pre_overlay_message = {
+            "message" : message,
+            "your_language" : your_language,
+            "translation" : translation,
+            "target_language" : target_language,
+            "ui_type" : ui_type,
+        }
+        return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
 
     # def createOverlayImageLong(self, message_type, message, translation):
     #     your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
     #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
     #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
-    # def clearOverlayImage(self):
-    #     if self.overlay.initialized is True:
-    #         self.overlay.uiManager.uiClear()
+    def clearOverlayImage(self):
+        self.overlay.clearImage()
 
-    # def updateOverlay(self, img):
-    #     if self.overlay.initialized is True:
-    #         self.overlay.uiManager.uiUpdate(img)
+    def updateOverlay(self, img):
+        self.overlay.updateImage(img)
 
-    # def startOverlay(self):
-    #     if self.overlay.initialized is False:
-    #         self.overlay.init()
+    def startOverlay(self):
+        self.overlay.startOverlay()
 
-    #     if self.overlay.initialized is True and self.th_overlay is None:
-    #         self.th_overlay = Thread(target=self.overlay.startOverlay)
-    #         self.th_overlay.daemon = True
-    #         self.th_overlay.start()
+    def updateOverlayPosition(self):
+        self.overlay.updatePosition(
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
+        )
 
-    # def updateOverlayPosition(self):
-    #     if self.overlay.initialized is True:
-    #         pos = (config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"], config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
-    #         self.overlay.uiManager.setPosition(pos)
-    #         depth = config.OVERLAY_SMALL_LOG_SETTINGS["depth"]
-    #         self.overlay.uiManager.setDepth(depth)
-    #         self.overlay.uiManager.posUpdate()
+    def updateOverlayTimes(self):
+        display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
+        self.overlay.updateDisplayDuration(display_duration)
+        fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
+        self.overlay.updateFadeoutDuration(fadeout_duration)
 
-    # def updateOverlayTimes(self):
-    #     if self.overlay.initialized is True:
-    #         display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
-    #         self.overlay.uiManager.setFadeTime(display_duration)
-    #         fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
-    #         self.overlay.uiManager.setFadeInterval(fadeout_duration)
-    #         self.overlay.uiManager.update()
+    def updateOverlayImageOpacity(self):
+        opacity = config.OVERLAY_SETTINGS["opacity"]
+        self.overlay.updateOpacity(opacity, with_fade=True)
 
-    # def updateOverlayImageOpacity(self):
-    #     if self.overlay.initialized is True:
-    #         opacity = config.OVERLAY_SETTINGS["opacity"]
-    #         self.overlay.uiManager.setTransparency(opacity)
+    def updateOverlayImageUiScaling(self):
+        ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
+        self.overlay.updateUiScaling(ui_scaling)
 
-    # def updateOverlayImageUiScaling(self):
-    #     if self.overlay.initialized is True:
-    #         ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-    #         self.overlay.uiManager.setUiScaling(ui_scaling)
+    def shutdownOverlay(self):
+        self.overlay.shutdownOverlay()
 
 model = Model()

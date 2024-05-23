@@ -24,7 +24,7 @@ class BaseRecorder:
         def record_callback(_, audio):
             audio_queue.put((audio.get_raw_data(), datetime.now()))
 
-        self.stop = self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=self.record_timeout)
+        self.stop, self.pause, self.resume = self.recorder.listen_in_background(self.source, record_callback, phrase_time_limit=self.record_timeout)
 
 class SelectedMicRecorder(BaseRecorder):
     def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):
@@ -68,7 +68,7 @@ class BaseEnergyRecorder:
         def recordCallback(_, energy):
             energy_queue.put(energy)
 
-        self.stop = self.recorder.listen_energy_in_background(self.source, recordCallback)
+        self.stop, self.pause, self.resume = self.recorder.listen_energy_in_background(self.source, recordCallback)
 
 class SelectedMicEnergyRecorder(BaseEnergyRecorder):
     def __init__(self, device):
@@ -107,17 +107,18 @@ class BaseEnergyAndAudioRecorder:
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
 
-    def recordIntoQueue(self, audio_queue, energy_queue):
+    def recordIntoQueue(self, audio_queue, energy_queue=None):
         def audioRecordCallback(_, audio):
             audio_queue.put((audio.get_raw_data(), datetime.now()))
 
         def energyRecordCallback(energy):
             energy_queue.put(energy)
 
-        if isinstance(energy_queue, Queue):
-            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout, callback_energy=energyRecordCallback)
-        else:
-            self.stop = self.recorder.listen_energy_and_audio_in_background(self.source, audioRecordCallback, phrase_time_limit=self.record_timeout)
+        self.stop, self.pause, self.resume = self.recorder.listen_energy_and_audio_in_background(
+            source=self.source,
+            callback=audioRecordCallback,
+            phrase_time_limit=self.record_timeout,
+            callback_energy=energyRecordCallback if energy_queue is not None else None)
 
 class SelectedMicEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
     def __init__(self, device, energy_threshold, dynamic_energy_threshold, record_timeout):

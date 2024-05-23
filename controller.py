@@ -27,10 +27,10 @@ def callbackFilepathConfigFile():
 def callbackQuitVrct():
     setMainWindowGeometry()
 
-# def callbackEnableEasterEgg():
-#     config.IS_EASTER_EGG_ENABLED = True
-#     config.OVERLAY_UI_TYPE = "sakura"
-#     view.printToTextbox_enableEasterEgg()
+def callbackEnableEasterEgg():
+    config.IS_EASTER_EGG_ENABLED = True
+    config.OVERLAY_UI_TYPE = "sakura"
+    view.printToTextbox_enableEasterEgg()
 
 def setMainWindowGeometry():
     PRE_SCALING_INT = strPctToInt(view.getPreUiScaling())
@@ -61,10 +61,11 @@ def messageFormatter(format_type:str, translation, message):
     return osc_message
 
 def changeToCTranslate2Process():
-    config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-    config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-    updateTranslationEngineAndEngineList()
-    view.printToTextbox_TranslationEngineLimitError()
+    if config.CHOICE_INPUT_TRANSLATOR != "CTranslate2" or config.CHOICE_OUTPUT_TRANSLATOR != "CTranslate2":
+        config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
+        config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
+        updateTranslationEngineAndEngineList()
+        view.printToTextbox_TranslationEngineLimitError()
 
 # func transcription send message
 def sendMicMessage(message):
@@ -161,14 +162,12 @@ def receiveSpeakerMessage(message):
                 xsoverlay_message = messageFormatter("RECEIVED", translation, message)
                 model.notificationXSOverlay(xsoverlay_message)
 
-            # if model.overlay.initialized is False:
-            #     model.startOverlay()
-            # else:
-            #     if config.ENABLE_OVERLAY_SMALL_LOG is True:
-            #         overlay_image = model.createOverlayImageShort(message, translation)
-            #         model.updateOverlay(overlay_image)
-            #         # overlay_image = model.createOverlayImageLong("receive", message, translation)
-            #         # model.updateOverlay(overlay_image)
+            if config.ENABLE_OVERLAY_SMALL_LOG is True:
+                if model.overlay.initialized is True:
+                    overlay_image = model.createOverlayImageShort(message, translation)
+                    model.updateOverlay(overlay_image)
+                # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                # model.updateOverlay(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -401,10 +400,10 @@ def callbackSelectedTranslationEngine(selected_translation_engine):
 def callbackToggleTranslation(is_turned_on):
     config.ENABLE_TRANSLATION = is_turned_on
     if config.ENABLE_TRANSLATION is True:
-        model.changeTranslatorCTranslate2Model()
+        if model.isLoadedCTranslate2Model() is False:
+            model.changeTranslatorCTranslate2Model()
         view.printToTextbox_enableTranslation()
     else:
-        model.clearTranslatorCTranslate2Model()
         view.printToTextbox_disableTranslation()
 
 def callbackToggleTranscriptionSend(is_turned_on):
@@ -426,6 +425,12 @@ def callbackToggleTranscriptionReceive(is_turned_on):
     else:
         stopThreadingTranscriptionReceiveMessage()
         view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
+
+    if config.ENABLE_TRANSCRIPTION_RECEIVE is True and config.ENABLE_OVERLAY_SMALL_LOG is True:
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
+    elif config.ENABLE_TRANSCRIPTION_RECEIVE is False:
+        pass
 
 def callbackToggleForeground(is_turned_on):
     config.ENABLE_FOREGROUND = is_turned_on
@@ -577,7 +582,7 @@ def callbackSetCtranslate2WeightType(value):
 def callbackSetDeeplAuthKey(value):
     print("callbackSetDeeplAuthKey", str(value))
     view.clearNotificationMessage()
-    if len(value) == 39:
+    if len(value) == 36 or len(value) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
         if result is True:
             key = value
@@ -858,44 +863,44 @@ def callbackSetWhisperWeightType(value):
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     view.showRestartButtonIfRequired()
 
-# # VR Tab
-# def callbackSetOverlaySettings(value, set_type:str):
-#     print("callbackSetOverlaySettings", value, set_type)
-#     pre_settings = config.OVERLAY_SETTINGS
-#     pre_settings[set_type] = value
-#     config.OVERLAY_SETTINGS = pre_settings
-#     match (set_type):
-#         case "opacity":
-#             model.updateOverlayImageOpacity()
-#         case "ui_scaling":
-#             model.updateOverlayImageUiScaling()
+# VR Tab
+def callbackSetOverlaySettings(value, set_type:str):
+    print("callbackSetOverlaySettings", value, set_type)
+    pre_settings = config.OVERLAY_SETTINGS
+    pre_settings[set_type] = value
+    config.OVERLAY_SETTINGS = pre_settings
+    match (set_type):
+        case "opacity":
+            model.updateOverlayImageOpacity()
+        case "ui_scaling":
+            model.updateOverlayImageUiScaling()
 
-# def callbackSetEnableOverlaySmallLog(value):
-#     print("callbackSetEnableOverlaySmallLog", value)
-#     config.ENABLE_OVERLAY_SMALL_LOG = value
+def callbackSetEnableOverlaySmallLog(value):
+    print("callbackSetEnableOverlaySmallLog", value)
+    config.ENABLE_OVERLAY_SMALL_LOG = value
 
-#     if config.ENABLE_OVERLAY_SMALL_LOG is True:
-#         pass
-#     else:
-#         if model.overlay.initialized is True:
-#             model.clearOverlayImage()
+    if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
+    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+        model.clearOverlayImage()
+        model.shutdownOverlay()
 
-# def callbackSetOverlaySmallLogSettings(value, set_type:str):
-#     print("callbackSetOverlaySmallLogSettings", value, set_type)
-#     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
-#     pre_settings[set_type] = value
-#     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
-#     match (set_type):
-#         case "x_pos":
-#             model.updateOverlayPosition()
-#         case "y_pos":
-#             model.updateOverlayPosition()
-#         case "depth":
-#             model.updateOverlayPosition()
-#         case "display_duration":
-#             model.updateOverlayTimes()
-#         case "fadeout_duration":
-#             model.updateOverlayTimes()
+    if config.ENABLE_OVERLAY_SMALL_LOG is True:
+        view.setStateOverlaySmallLog("enabled")
+    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+        view.setStateOverlaySmallLog("disabled")
+
+def callbackSetOverlaySmallLogSettings(value, set_type:str):
+    print("callbackSetOverlaySmallLogSettings", value, set_type)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings[set_type] = value
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    match (set_type):
+        case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
+            model.updateOverlayPosition()
+        case "display_duration" | "fadeout_duration":
+            model.updateOverlayTimes()
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(value):
@@ -923,6 +928,18 @@ def callbackSetEnableAutoExportMessageLogs(value):
         model.startLogger()
     else:
         model.stopLogger()
+
+def callbackSetEnableVrcMicMuteSync(value):
+    print("callbackSetEnableVrcMicMuteSync", value)
+    config.ENABLE_VRC_MIC_MUTE_SYNC = value
+    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+        model.startCheckMuteSelfStatus()
+        view.setStateVrcMicMuteSync("enabled")
+    else:
+        model.stopCheckMuteSelfStatus()
+        view.setStateVrcMicMuteSync("disabled")
+    model.changeMicTranscriptStatus()
+
 
 def callbackSetEnableSendMessageToVrc(value):
     print("callbackSetEnableSendMessageToVrc", value)
@@ -977,7 +994,6 @@ def callbackSetEnableSendReceivedMessageToVrc(value):
     print("callbackSetEnableSendReceivedMessageToVrc", value)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
 # ---------------------Speaker2Chatbox---------------------
-
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(value):
@@ -1044,12 +1060,17 @@ def createMainWindow(splash):
     if config.ENABLE_LOGGER is True:
         model.startLogger()
 
+    # init OSC receive
+    model.startReceiveOSC()
+    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+        model.startCheckMuteSelfStatus()
+
     splash.toProgress(3) # Last one.
 
     # set UI and callback
     view.register(
         common_registers={
-            # "callback_enable_easter_egg": callbackEnableEasterEgg,
+            "callback_enable_easter_egg": callbackEnableEasterEgg,
 
             "callback_update_software": callbackUpdateSoftware,
             "callback_restart_software": callbackRestartSoftware,
@@ -1137,10 +1158,10 @@ def createMainWindow(splash):
             "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
             "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
 
-            # # VR Tab
-            # "callback_set_overlay_settings": callbackSetOverlaySettings,
-            # "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
-            # "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
+            # VR Tab
+            "callback_set_overlay_settings": callbackSetOverlaySettings,
+            "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
+            "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
 
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
@@ -1148,6 +1169,7 @@ def createMainWindow(splash):
             "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
             "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
+            "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
             # Others(Message Formats(Send)
             "callback_set_send_message_format": callbackSetSendMessageFormat,

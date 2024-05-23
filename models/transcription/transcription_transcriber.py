@@ -1,3 +1,4 @@
+import time
 from io import BytesIO
 from threading import Event
 import wave
@@ -38,6 +39,9 @@ class AudioTranscriber:
             self.transcription_engine = "Whisper"
 
     def transcribeAudioQueue(self, audio_queue, language, country):
+        if audio_queue.empty():
+            time.sleep(0.01)
+            return False
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
@@ -75,6 +79,7 @@ class AudioTranscriber:
 
         if text != '':
             self.updateTranscript(text)
+        return True
 
     def updateLastSampleAndPhraseStatus(self, data, time_spoken):
         source_info = self.audio_sources

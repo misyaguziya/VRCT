@@ -1,10 +1,10 @@
 from time import sleep
-import threading
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 from pythonosc import dispatcher
 from pythonosc import osc_server
 from tinyoscquery.queryservice import OSCQueryService
+from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
 
 # send OSC message typing
@@ -48,6 +48,22 @@ def sendChangeVoice(ip_address="127.0.0.1", port=9000):
     sendInputVoice(flag=0, ip_address=ip_address, port=port)
     sleep(0.05)
 
+def getOSCParameterValue(address, server_name="VRChat-Client"):
+    value = None
+    try:
+        browser = OSCQueryBrowser()
+        sleep(1)
+        service = browser.find_service_by_name(server_name)
+        if service is not None:
+            oscq = OSCQueryClient(service)
+            mute_self_node = oscq.query_node(address)
+            value = mute_self_node.value[0]
+        browser.zc.close()
+        browser.browser.cancel()
+
+    except Exception:
+        pass
+    return value
 
 def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="VRCT"):
     osc_port = get_open_udp_port()
@@ -55,13 +71,13 @@ def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="
     osc_dispatcher = dispatcher.Dispatcher()
     for filter, target in dict_filter_and_target.items():
         osc_dispatcher.map(filter, target)
-
     osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
-    threading.Thread(target=osc_udp_server.serve_forever, daemon = True).start()
 
     osc_client = OSCQueryService(title, http_port, osc_port)
     for filter, target in dict_filter_and_target.items():
         osc_client.advertise_endpoint(filter)
+
+    osc_udp_server.serve_forever()
 
 if __name__ == "__main__":
     osc_parameter_prefix = "/avatar/parameters/"
