@@ -52,7 +52,7 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
 
 
     config_window.main_setting_box_bg_wrapper = CTkFrame(config_window.main_setting_box_scrollable_container, corner_radius=0, width=0, height=0, fg_color=settings.ctm.MAIN_BG_COLOR)
-    config_window.main_setting_box_bg_wrapper.grid(row=0, column=0, pady=settings.uism.SB__BOTTOM_MARGIN, sticky="n")
+    config_window.main_setting_box_bg_wrapper.grid(row=0, column=0, pady=0, sticky="n")
 
 
 
@@ -104,21 +104,21 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
                 ]
             },
         },
-        # {
-        #     "side_menu_tab_attr_name": "side_menu_tab_vr",
-        #     "label_attr_name": "label_vr",
-        #     "selected_mark_attr_name": "selected_mark_vr",
-        #     "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
-        #     "setting_box_container_settings": {
-        #         "setting_box_container_attr_name": "setting_box_container_vr",
-        #         "setting_boxes": [
-        #             {
-        #                 "var_section_title": None,
-        #                 "setting_box": createSettingBox_Vr
-        #             }
-        #         ]
-        #     },
-        # },
+        {
+            "side_menu_tab_attr_name": "side_menu_tab_vr",
+            "label_attr_name": "label_vr",
+            "selected_mark_attr_name": "selected_mark_vr",
+            "textvariable": view_variable.VAR_SIDE_MENU_LABEL_VR,
+            "setting_box_container_settings": {
+                "setting_box_container_attr_name": "setting_box_container_vr",
+                "setting_boxes": [
+                    {
+                        "var_section_title": None,
+                        "setting_box": createSettingBox_Vr
+                    }
+                ]
+            },
+        },
         {
             "side_menu_tab_attr_name": "side_menu_tab_others",
             "label_attr_name": "label_others",
@@ -187,12 +187,13 @@ def createSideMenuAndSettingsBoxContainers(config_window, settings, view_variabl
         side_menu_row+=1
 
 
+        bottom_margin = 0 if sm_and_sbc_setting["setting_box_container_settings"]["setting_box_container_attr_name"] == "setting_box_container_about_vrct" else settings.uism.SB__BOTTOM_MARGIN
         _createSettingBoxContainer(
             config_window=config_window,
             settings=settings,
             view_variable=view_variable,
             setting_box_container_settings=sm_and_sbc_setting["setting_box_container_settings"],
-
+            bottom_margin=bottom_margin,
         )
 
 

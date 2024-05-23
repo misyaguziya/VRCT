@@ -101,7 +101,7 @@ class View():
 
         self.view_variable = SimpleNamespace(
             # Common
-            # CALLBACK_ENABLE_EASTER_EGG=None,
+            CALLBACK_ENABLE_EASTER_EGG=None,
 
             CALLBACK_RESTART_SOFTWARE=None,
             CALLBACK_UPDATE_SOFTWARE=None,
@@ -140,57 +140,88 @@ class View():
 
 
             # Overlay Settings
-            # VAR_OVERLAY_SETTINGS=StringVar(value="Overlay Settings"),
-            # CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW=self._openVrSettingsWindow,
-            # VAR_TO_DEFAULT_OVERLAY_SETTINGS=StringVar(value=i18n.t("overlay_settings.restore_default_settings")),
-            # CALLBACK_SET_TO_DEFAULT_OVERLAY_SETTINGS=self._toDefaultOverlaySettings,
+            VAR_OVERLAY_SETTINGS=StringVar(value="Overlay (VR)"),
+            CALLBACK_SET_OPEN_OVERLAY_SETTINGS_WINDOW=self._openVrSettingsWindow,
+            VAR_TO_DEFAULT_OVERLAY_SETTINGS=StringVar(value=i18n.t("overlay_settings.restore_default_settings")),
+            CALLBACK_SET_TO_DEFAULT_OVERLAY_SETTINGS=self._toDefaultOverlaySettings,
+            VAR_OVERLAY_SMALL_LOG_STATE=StringVar(value=""),
 
 
-            # VAR_LABEL_OVERLAY_OPACITY=StringVar(value=i18n.t("overlay_settings.opacity")),
-            # SLIDER_RANGE_OVERLAY_OPACITY=(0.1, 1.0),
-            # NUMBER_OF_STEPS_OVERLAY_OPACITY=18,
-            # VAR_OVERLAY_OPACITY=DoubleVar(value=config.OVERLAY_SETTINGS["opacity"]),
-            # VAR_CURRENT_VALUE_OVERLAY_OPACITY=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["opacity"])),
-
-            # VAR_LABEL_OVERLAY_UI_SCALING=StringVar(value=i18n.t("overlay_settings.ui_scaling")),
-            # SLIDER_RANGE_OVERLAY_UI_SCALING=(0.4, 2.0),
-            # NUMBER_OF_STEPS_OVERLAY_UI_SCALING=16,
-            # VAR_OVERLAY_UI_SCALING=DoubleVar(value=config.OVERLAY_SETTINGS["ui_scaling"]),
-            # VAR_CURRENT_VALUE_OVERLAY_UI_SCALING=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"])),
+            CALLBACK_SET_OPEN_VRC_MIC_MUTE_SYNC_SETTINGS_WINDOW=self._openVrcMicMuteSyncSettingsWindow,
+            VAR_VRC_MIC_MUTE_SYNC_SETTINGS=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
+            VAR_VRC_MIC_MUTE_SYNC_STATE=StringVar(value=""),
 
 
+            VAR_LABEL_OVERLAY_OPACITY=StringVar(value=i18n.t("overlay_settings.opacity")),
+            SLIDER_RANGE_OVERLAY_OPACITY=(0.1, 1.0),
+            NUMBER_OF_STEPS_OVERLAY_OPACITY=18,
+            VAR_OVERLAY_OPACITY=DoubleVar(value=config.OVERLAY_SETTINGS["opacity"]),
+            VAR_CURRENT_VALUE_OVERLAY_OPACITY=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["opacity"])),
 
-            # # CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
+            VAR_LABEL_OVERLAY_UI_SCALING=StringVar(value=i18n.t("overlay_settings.ui_scaling")),
+            SLIDER_RANGE_OVERLAY_UI_SCALING=(0.4, 2.0),
+            NUMBER_OF_STEPS_OVERLAY_UI_SCALING=16,
+            VAR_OVERLAY_UI_SCALING=DoubleVar(value=config.OVERLAY_SETTINGS["ui_scaling"]),
+            VAR_CURRENT_VALUE_OVERLAY_UI_SCALING=StringVar(value=floatToPctStr(config.OVERLAY_SETTINGS["ui_scaling"])),
 
-            # VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
-            # SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
-            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
-            # VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
-            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
 
-            # VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=i18n.t("overlay_settings.y_position")),
-            # SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.8, 0.8),
-            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
-            # VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
-            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
 
-            # VAR_LABEL_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=i18n.t("overlay_settings.depth")),
-            # SLIDER_RANGE_OVERLAY_SMALL_LOG_DEPTH=(0.5, 1.5),
-            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DEPTH=100,
-            # VAR_OVERLAY_SMALL_LOG_DEPTH=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
-            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["depth"]),
+            CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=None,
 
-            # VAR_LABEL_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=i18n.t("overlay_settings.display_duration")),
-            # SLIDER_RANGE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=(1, 60),
-            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DISPLAY_DURATION=59,
-            # VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]),
-            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)"),
+            VAR_LABEL_OVERLAY_SMALL_LOG_X_POS=StringVar(value=i18n.t("overlay_settings.x_position")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-5, 5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=10000,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_POS=(-0.5, 0.5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_POS=100,
+            VAR_OVERLAY_SMALL_LOG_X_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]),
 
-            # VAR_LABEL_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=i18n.t("overlay_settings.fadeout_duration")),
-            # SLIDER_RANGE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=(0, 5),
-            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_FADEOUT_DURATION=5,
-            # VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]),
-            # VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)"),
+            VAR_LABEL_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=i18n.t("overlay_settings.y_position")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-5, 5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=10000,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_POS=(-0.8, 0.8),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_POS=160,
+            VAR_OVERLAY_SMALL_LOG_Y_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_Z_POS=StringVar(value=i18n.t("overlay_settings.z_position")),
+            # SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_POS=(-5, 5),
+            # NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_POS=10000,
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_POS=(-0.5, 1.5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_POS=100,
+            VAR_OVERLAY_SMALL_LOG_Z_POS=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=i18n.t("overlay_settings.x_rotation")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_X_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_X_ROTATION=360,
+            VAR_OVERLAY_SMALL_LOG_X_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value=i18n.t("overlay_settings.y_rotation")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Y_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Y_ROTATION=360,
+            VAR_OVERLAY_SMALL_LOG_Y_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value=i18n.t("overlay_settings.z_rotation")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_Z_ROTATION=(-180, 180),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_Z_ROTATION=360,
+            VAR_OVERLAY_SMALL_LOG_Z_ROTATION=DoubleVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION=StringVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]),
+
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=i18n.t("overlay_settings.display_duration")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=(1, 60),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_DISPLAY_DURATION=59,
+            VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DISPLAY_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['display_duration']} second(s)"),
+
+            VAR_LABEL_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=i18n.t("overlay_settings.fadeout_duration")),
+            SLIDER_RANGE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=(0, 5),
+            NUMBER_OF_STEPS_OVERLAY_SMALL_LOG_FADEOUT_DURATION=5,
+            VAR_OVERLAY_SMALL_LOG_FADEOUT_DURATION=IntVar(value=config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]),
+            VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_FADEOUT_DURATION=StringVar(value=f"{config.OVERLAY_SMALL_LOG_SETTINGS['fadeout_duration']} second(s)"),
 
 
 
@@ -478,13 +509,13 @@ class View():
             VAR_WHISPER_WEIGHT_TYPE=StringVar(value=self.getSelectableWhisperWeightTypeDict()[config.WHISPER_WEIGHT_TYPE]),
 
 
-            # # VR Tab
-            # VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.label")),
-            # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=None,
-            # # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.desc")),
-            # CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=None,
-            # VAR_ENABLE_OVERLAY_SMALL_LOG=BooleanVar(value=config.ENABLE_OVERLAY_SMALL_LOG),
-            # VAR_OPEN_OVERLAY_SETTINGS_BUTTON=StringVar(value=i18n.t("config_window.enable_overlay_small_log.open_overlay_settings")),
+            # VR Tab
+            VAR_LABEL_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.label")),
+            VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=None,
+            # VAR_DESC_ENABLE_OVERLAY_SMALL_LOG=StringVar(value=i18n.t("config_window.enable_overlay_small_log.desc")),
+            CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=None,
+            VAR_ENABLE_OVERLAY_SMALL_LOG=BooleanVar(value=config.ENABLE_OVERLAY_SMALL_LOG),
+            VAR_OPEN_OVERLAY_SETTINGS_BUTTON=StringVar(value=i18n.t("config_window.enable_overlay_small_log.open_overlay_settings")),
 
 
             # Others Tab
@@ -517,6 +548,12 @@ class View():
             VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value=i18n.t("config_window.auto_export_message_logs.desc")),
             CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=None,
             VAR_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=BooleanVar(value=config.ENABLE_LOGGER),
+
+
+            VAR_LABEL_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.label")),
+            VAR_DESC_ENABLE_VRC_MIC_MUTE_SYNC=StringVar(value=i18n.t("config_window.vrc_mic_mute_sync.desc")),
+            CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=None,
+            VAR_ENABLE_VRC_MIC_MUTE_SYNC=BooleanVar(value=config.ENABLE_VRC_MIC_MUTE_SYNC),
 
 
             VAR_LABEL_ENABLE_SEND_MESSAGE_TO_VRC=StringVar(value=i18n.t("config_window.send_message_to_vrc.label")),
@@ -631,7 +668,7 @@ class View():
 
 
         if common_registers is not None:
-            # self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
+            self.view_variable.CALLBACK_ENABLE_EASTER_EGG=common_registers.get("callback_enable_easter_egg", None)
 
             self.view_variable.CALLBACK_UPDATE_SOFTWARE=common_registers.get("callback_update_software", None)
             self.view_variable.CALLBACK_RESTART_SOFTWARE=common_registers.get("callback_restart_software", None)
@@ -756,11 +793,11 @@ class View():
 
             # VR Tab
             # VR Tab (Quick Settings)
-            # self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
+            self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS=config_window_registers.get("callback_set_overlay_settings", None)
 
-            # self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
-            # # VR Tab (Quick Settings)
-            # self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
+            self.view_variable.CALLBACK_SET_ENABLE_OVERLAY_SMALL_LOG=config_window_registers.get("callback_set_enable_overlay_small_log", None)
+            # VR Tab (Quick Settings)
+            self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS=config_window_registers.get("callback_set_overlay_small_log_settings", None)
 
 
             # Others Tab
@@ -770,6 +807,7 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
+            self.view_variable.CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=config_window_registers.get("callback_set_enable_vrc_mic_mute_sync", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_MESSAGE_TO_VRC=config_window_registers.get("callback_set_enable_send_message_to_vrc", None)
 
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_FORMAT=config_window_registers.get("callback_set_send_message_format", None)
@@ -800,6 +838,18 @@ class View():
         else:
             self.view_variable.VAR_LABEL_BOTH_DIRECTION_SWAP_BUTTON.set(i18n.t("main_window.swap_button_label"))
             self.useTranslationFeatureProcess("Disable")
+
+
+        if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+            self.setStateVrcMicMuteSync("enabled")
+        elif config.ENABLE_VRC_MIC_MUTE_SYNC is False:
+            self.setStateVrcMicMuteSync("disabled")
+
+        if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            self.setStateOverlaySmallLog("enabled")
+        elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+            self.setStateOverlaySmallLog("disabled")
+
 
         if config.CHOICE_MIC_HOST == "NoHost":
             self.view_variable.VAR_MIC_HOST.set("No Mic Host Detected")
@@ -858,21 +908,21 @@ class View():
 
 
         # Set Easter Egg
-        # self.count = 0
-        # def clickedCounter(_e):
-        #     if self.count < 2:
-        #         self.count+=1
-        #         print("Easter egg count:", self.count)
-        #     else:
-        #         print("Easter egg count:", self.count, "Easter egg has enabled.")
-        #         callFunctionIfCallable(self.view_variable.CALLBACK_ENABLE_EASTER_EGG)
-        #         print(config.OVERLAY_UI_TYPE)
+        self.count = 0
+        def clickedCounter(_e):
+            if self.count < 2:
+                self.count+=1
+                print("Easter egg count:", self.count)
+            else:
+                print("Easter egg count:", self.count, "Easter egg has enabled.")
+                callFunctionIfCallable(self.view_variable.CALLBACK_ENABLE_EASTER_EGG)
+                print(config.OVERLAY_UI_TYPE)
 
-        # vrct_gui.sidebar_logo.bind(
-        #     "<ButtonRelease>",
-        #     clickedCounter,
-        #     "+"
-        # )
+        vrct_gui.sidebar_logo.bind(
+            "<ButtonRelease>",
+            clickedCounter,
+            "+"
+        )
 
 
         # Insert sample conversation for testing.
@@ -1114,32 +1164,38 @@ class View():
         }
 
 
-    # def _toDefaultOverlaySettings(self):
-    #     INIT_OVERLAY_SETTINGS = {
-    #         "opacity": 1.0,
-    #         "ui_scaling": 1.0,
-    #     }
-    #     INIT_OVERLAY_SMALL_LOG_SETTINGS = {
-    #         "x_pos": 0.0,
-    #         "y_pos": -0.41,
-    #         "depth": 1.0,
-    #         "display_duration": 5,
-    #         "fadeout_duration": 2,
-    #     }
-    #     for key in INIT_OVERLAY_SETTINGS.keys():
-    #         callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS,  INIT_OVERLAY_SETTINGS[key], key)
+    def _toDefaultOverlaySettings(self):
+        INIT_OVERLAY_SETTINGS = {
+            "opacity": 1.0,
+            "ui_scaling": 1.0,
+        }
+        INIT_OVERLAY_SMALL_LOG_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": 0.0,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 2,
+        }
+        for key in INIT_OVERLAY_SETTINGS.keys():
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SETTINGS,  INIT_OVERLAY_SETTINGS[key], key)
 
-    #     for key in INIT_OVERLAY_SMALL_LOG_SETTINGS.keys():
-    #         callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS,  INIT_OVERLAY_SMALL_LOG_SETTINGS[key], key)
+        for key in INIT_OVERLAY_SMALL_LOG_SETTINGS.keys():
+            callFunctionIfCallable(self.view_variable.CALLBACK_SET_OVERLAY_SMALL_LOG_SETTINGS,  INIT_OVERLAY_SMALL_LOG_SETTINGS[key], key)
 
-    #     self.setLatestConfigVariable("OverlayOpacity")
-    #     self.setLatestConfigVariable("OverlayUiScaling")
+        self.setLatestConfigVariable("OverlayOpacity")
+        self.setLatestConfigVariable("OverlayUiScaling")
 
-    #     self.setLatestConfigVariable("OverlaySmallLogXPos")
-    #     self.setLatestConfigVariable("OverlaySmallLogYPos")
-    #     self.setLatestConfigVariable("OverlaySmallLogDepth")
-    #     self.setLatestConfigVariable("OverlaySmallLogDisplayDuration")
-    #     self.setLatestConfigVariable("OverlaySmallLogFadeoutDuration")
+        self.setLatestConfigVariable("OverlaySmallLogXPos")
+        self.setLatestConfigVariable("OverlaySmallLogYPos")
+        self.setLatestConfigVariable("OverlaySmallLogZPos")
+        self.setLatestConfigVariable("OverlaySmallLogXRotation")
+        self.setLatestConfigVariable("OverlaySmallLogYRotation")
+        self.setLatestConfigVariable("OverlaySmallLogZRotation")
+        self.setLatestConfigVariable("OverlaySmallLogDisplayDuration")
+        self.setLatestConfigVariable("OverlaySmallLogFadeoutDuration")
 
 # Open Webpage Functions
     def openWebPage_Booth(self):
@@ -1273,6 +1329,26 @@ class View():
             dropdown_menu_widget_id="translation_engine_dropdown_menu",
             dropdown_menu_values=translation_dict,
         )
+
+    def setStateVrcMicMuteSync(self, state:str):
+        if state == "enabled":
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_enabled"))
+            vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
+        elif state == "disabled":
+            self.view_variable.VAR_VRC_MIC_MUTE_SYNC_STATE.set(i18n.t("main_window.state_text_disabled"))
+            vrct_gui.vrc_mic_mute_sync_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
+
+        vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
+
+    def setStateOverlaySmallLog(self, state:str):
+        if state == "enabled":
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_enabled"))
+            vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_ENABLED_COLOR)
+        elif state == "disabled":
+            self.view_variable.VAR_OVERLAY_SMALL_LOG_STATE.set(i18n.t("main_window.state_text_disabled"))
+            vrct_gui.overlay_settings_state_label.configure(text_color=self.settings.main.ctm.TOP_BAR_BUTTON_STATE_TEXT_DISABLED_COLOR)
+
+        vrct_gui.config_window.after(200, vrct_gui.config_window.lift)
 
 
     # Config Window
@@ -1734,7 +1810,10 @@ class View():
         vrct_gui._closeConfigWindow()
 
     def _openVrSettingsWindow(self):
-        vrct_gui.quick_settings_window.show()
+        vrct_gui.quick_settings_window.show(target="overlay")
+
+    def _openVrcMicMuteSyncSettingsWindow(self):
+        vrct_gui.quick_settings_window.show(target="vrc_mic_mute_sync")
 
 # Window Control (Main Window Cover)
     def _openTheCoverOfMainWindow(self):
@@ -1877,9 +1956,21 @@ class View():
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
                 self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"])
 
-            case "OverlaySmallLogDepth":
-                self.view_variable.VAR_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
-                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_DEPTH.set(config.OVERLAY_SMALL_LOG_SETTINGS["depth"])
+            case "OverlaySmallLogZPos":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Z_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_POS.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"])
+
+            case "OverlaySmallLogXRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_X_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_X_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"])
+
+            case "OverlaySmallLogYRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Y_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Y_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"])
+
+            case "OverlaySmallLogZRotation":
+                self.view_variable.VAR_OVERLAY_SMALL_LOG_Z_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"])
+                self.view_variable.VAR_CURRENT_VALUE_OVERLAY_SMALL_LOG_Z_ROTATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"])
 
             case "OverlaySmallLogDisplayDuration":
                 self.view_variable.VAR_OVERLAY_SMALL_LOG_DISPLAY_DURATION.set(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
@@ -1894,8 +1985,8 @@ class View():
 
 
 # Print To Textbox.
-    # def printToTextbox_enableEasterEgg(self):
-    #     self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_easter_egg"))
+    def printToTextbox_enableEasterEgg(self):
+        self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_easter_egg"))
 
     def printToTextbox_enableTranslation(self):
         self._printToTextbox_Info(i18n.t("main_window.textbox_system_message.enabled_translation"))

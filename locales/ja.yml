@@ -45,6 +45,8 @@ main_window:
     opened_web_page_vrct_documents: "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！"
 
   update_available: 新しいバージョンが出ました！
+  state_text_enabled: 有効
+  state_text_disabled: 無効
 
   cover_message: 設定画面が閉じられるまで、一時的に機能を停止しています。
 
@@ -71,7 +73,10 @@ overlay_settings:
   ui_scaling: サイズ
   x_position: X軸（左右）
   y_position: Y軸（上下）
-  depth: Z軸（前後）
+  z_position: Z軸（前後）
+  x_rotation: X軸の回転
+  y_rotation: Y軸の回転
+  z_rotation: Z軸の回転
   display_duration: 表示時間
   fadeout_duration: フェードアウト時間
 
@@ -241,6 +246,11 @@ config_window:
   auto_export_message_logs:
     label: 会話ログを自動的に保存する
     desc: テキストファイルとしてログがlogsフォルダ内に保存されます。
+
+  vrc_mic_mute_sync:
+    label: VRCマイクミュート同期
+    desc: "VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。\n※若干の遅延はあります。また、Push-To-Talkは非対応です。"
+
 
   send_message_to_vrc:
     label: VRChatにメッセージを送信する
