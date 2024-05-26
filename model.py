@@ -378,8 +378,12 @@ class Model:
         return [host for host in getInputDevices().keys()]
 
     @staticmethod
+    def getInputDefaultDevice():
+        return getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
+
+    @staticmethod
     def getListInputDevice():
-        return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]]
+        return [device["name"] for device in getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])]
 
     @staticmethod
     def getListOutputDevice():
