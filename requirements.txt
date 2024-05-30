@@ -13,6 +13,6 @@ sentencepiece==0.1.99
 ctranslate2==4.1.0
 faster-whisper==1.0.1
 openvr==1.26.701
-translators @ git+https://github.com/misyaguziya/translators@5.8.9
+translators @ git+https://github.com/misyaguziya/translators@5.9.2
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.2
