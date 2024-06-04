@@ -167,6 +167,12 @@ transcription_lang = {
             "Whisper": "en",
         },
     },
+    "Estonian":{
+        "Estonia":{
+            "Google": "et-EE",
+            "Whisper": "et",
+        },
+    },
     "Filipino":{
         "Philippines":{
             "Google": "fil-PH",
