@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
-| [English](./README.md) | [日本語](./README.jp.md) | **한국어** |
+| [English](./README.md) | [日本語](./README.ja.md) | **한국어** |
 
 <h3>
 VRCT는 음성인식 및 번역 기능을 통해 VRChat의 대화를 지원하는 소프트웨어입니다.
@@ -25,7 +25,7 @@ VRCT는 음성인식 및 번역 기능을 통해 VRChat의 대화를 지원하�
 
 # VRCT가 뭔가요？
 VRCT는 서로 다른 언어를 사용하는 사람들끼리 대화를 할 수 있도록 채팅이나 음성 번역을 통해 대화를 지원하는 소프트웨어에요.
-이 기능들은 VRChat 내에서 사용하도록 설계되었어요.  
+이 기능들은 VRChat 내에서 사용하도록 설계되었어요.
 ※ 지원 대상에서 제외되지만, 영화 감상 등 다른 용도로도 사용되고 있습니다.
 
 VRCT는 다음과 같이 당신의 대화를 도와드려요.
@@ -46,9 +46,9 @@ VRCT는 다음과 같이 당신의 대화를 도와드려요.
 <div align="left">
 
 # python으로 실행하고 싶은 경우
-1. 다음 버전의 python을 설치합니다.  
+1. 다음 버전의 python을 설치합니다.
     `python version 3.11.5`
-2. 패키지를 설치하고 main.py를 실행합니다.  
+2. 패키지를 설치하고 main.py를 실행합니다.
     ```bash
     ./install.bat
     python main.py
