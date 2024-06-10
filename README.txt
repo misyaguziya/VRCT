@@ -6,7 +6,7 @@ VRChatで使用されるChatBoxをOSC経由でメッセージを送信するツ�
 翻訳エンジンを使用してメッセージとその翻訳部分を同時に送信することができます。
 
 # 使用方法
-    ドキュメント(JP):https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4
+    ドキュメント(JA):https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4
 
 # お問い合わせ
     Googleフォーム:https://t.co/lSlo4brZwm
