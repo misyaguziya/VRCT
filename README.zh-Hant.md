@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
-| [English](./README.md) | [日本語](./README.jp.md) | [한국어](./README.kr.md) | **正體中文** |
+| [English](./README.md) | [日本語](./README.jp.md) | [한국어](./README.kr.md) | **繁體中文** |
 
 <h3>
 VRCT 是一個支援 VRChat 對話翻譯和紀錄的軟體。
@@ -45,9 +45,9 @@ VRCT 可以：
 <div align="left">
 
 # 原始碼啟動
-1. 安裝此版本的 Python。  
+1. 安裝此版本的 Python。
     `python version 3.11.5`
-2. 安裝 package 並啟動 main.py。  
+2. 安裝 package 並啟動 main.py。
     ```bash
     ./install.bat
     python main.py
