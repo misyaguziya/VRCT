@@ -50,6 +50,9 @@ class AboutVrctManager():
         self.uism.TELL_US_BUTTON_BORDER_WIDTH = self._calculateUiSize(1)
 
 
+        self.uism.LOCALIZATION_TITLE_BOTTOM_PADY = self._calculateUiSize(4)
+
+
         self.uism.SPECIAL_THANKS_SECTION_TITLE_BOTTOM_PADY = self._calculateUiSize(6)
         self.uism.SPECIAL_THANKS_MEMBERS_BOTTOM_PADY = self._calculateUiSize(4)
         self.uism.SPECIAL_THANKS_MESSAGE_BOTTOM_PADY = self._calculateUiSize(0)
