@@ -249,6 +249,21 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
 
 
+
+    section_row+=1
+    # Localization ----------------------------------
+    _localization, localization_contents_wrapper = createSectionContainer(
+        section_row=section_row,
+        section_title_image_file_name="localization_title.png",
+        section_bottom_padding=about_vrct_uism.SECTION_BOTTOM_PADY,
+        section_title_bottom_padding=about_vrct_uism.LOCALIZATION_TITLE_BOTTOM_PADY
+    )
+
+    localization_members = settings.about_vrct.embedImageCTkLabel(localization_contents_wrapper, "localization_members.png")
+    localization_members.grid(column=0, row=0, padx=0, pady=0, sticky="nsew")
+
+
+
     section_row+=1
     # Special Thanks & Supporters ----------------------------------
     _special_thanks, special_thanks_contents_wrapper = createSectionContainer(
