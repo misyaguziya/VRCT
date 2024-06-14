@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
-| [English](./README.md) | [日本語](./README.jp.md) | [한국어](./README.kr.md) | **繁體中文** |
+| [English](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md) | **繁體中文** |
 
 <h3>
 VRCT 是一個支援 VRChat 對話翻譯和紀錄的軟體。
