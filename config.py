@@ -547,6 +547,28 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('INPUT_MIC_AVG_LOGPROB')
+    def INPUT_MIC_AVG_LOGPROB(self):
+        return self._INPUT_MIC_AVG_LOGPROB
+
+    @INPUT_MIC_AVG_LOGPROB.setter
+    def INPUT_MIC_AVG_LOGPROB(self, value):
+        if isinstance(value, float) or isinstance(value, int):
+            self._INPUT_MIC_AVG_LOGPROB = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('INPUT_MIC_NO_SPEECH_PROB')
+    def INPUT_MIC_NO_SPEECH_PROB(self):
+        return self._INPUT_MIC_NO_SPEECH_PROB
+
+    @INPUT_MIC_NO_SPEECH_PROB.setter
+    def INPUT_MIC_NO_SPEECH_PROB(self, value):
+        if isinstance(value, float) or isinstance(value, int):
+            self._INPUT_MIC_NO_SPEECH_PROB = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('CHOICE_SPEAKER_DEVICE')
     def CHOICE_SPEAKER_DEVICE(self):
         return self._CHOICE_SPEAKER_DEVICE
@@ -610,6 +632,28 @@ class Config:
     def INPUT_SPEAKER_MAX_PHRASES(self, value):
         if isinstance(value, int):
             self._INPUT_SPEAKER_MAX_PHRASES = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('INPUT_SPEAKER_AVG_LOGPROB')
+    def INPUT_SPEAKER_AVG_LOGPROB(self):
+        return self._INPUT_SPEAKER_AVG_LOGPROB
+
+    @INPUT_SPEAKER_AVG_LOGPROB.setter
+    def INPUT_SPEAKER_AVG_LOGPROB(self, value):
+        if isinstance(value, float) or isinstance(value, int):
+            self._INPUT_SPEAKER_AVG_LOGPROB = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('INPUT_SPEAKER_NO_SPEECH_PROB')
+    def INPUT_SPEAKER_NO_SPEECH_PROB(self):
+        return self._INPUT_SPEAKER_NO_SPEECH_PROB
+
+    @INPUT_SPEAKER_NO_SPEECH_PROB.setter
+    def INPUT_SPEAKER_NO_SPEECH_PROB(self, value):
+        if isinstance(value, float) or isinstance(value, int):
+            self._INPUT_SPEAKER_NO_SPEECH_PROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1043,12 +1087,16 @@ class Config:
         self._INPUT_MIC_PHRASE_TIMEOUT = 3
         self._INPUT_MIC_MAX_PHRASES = 10
         self._INPUT_MIC_WORD_FILTER = []
+        self._INPUT_MIC_AVG_LOGPROB=-0.8
+        self._INPUT_MIC_NO_SPEECH_PROB=0.6
         self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
         self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
         self._INPUT_SPEAKER_PHRASE_TIMEOUT = 3
         self._INPUT_SPEAKER_MAX_PHRASES = 10
+        self._INPUT_SPEAKER_AVG_LOGPROB=-0.8
+        self._INPUT_SPEAKER_NO_SPEECH_PROB=0.6
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
