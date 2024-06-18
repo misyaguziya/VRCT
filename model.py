@@ -427,7 +427,13 @@ class Model:
         )
         def sendMicTranscript():
             try:
-                res = self.mic_transcriber.transcribeAudioQueue(self.mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                res = self.mic_transcriber.transcribeAudioQueue(
+                    self.mic_audio_queue,
+                    config.SOURCE_LANGUAGE,
+                    config.SOURCE_COUNTRY,
+                    config.INPUT_MIC_AVG_LOGPROB,
+                    config.INPUT_MIC_NO_SPEECH_PROB
+                )
                 if res:
                     message = self.mic_transcriber.getTranscript()
                     fnc(message)
@@ -581,7 +587,13 @@ class Model:
         )
         def sendSpeakerTranscript():
             try:
-                res = self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                res = self.speaker_transcriber.transcribeAudioQueue(
+                    speaker_audio_queue,
+                    config.TARGET_LANGUAGE,
+                    config.TARGET_COUNTRY,
+                    config.INPUT_SPEAKER_AVG_LOGPROB,
+                    config.INPUT_SPEAKER_NO_SPEECH_PROB
+                )
                 if res:
                     message = self.speaker_transcriber.getTranscript()
                     fnc(message)

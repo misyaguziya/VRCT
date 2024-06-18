@@ -38,7 +38,7 @@ class AudioTranscriber:
             self.whisper_model = getWhisperModel(root, whisper_weight_type)
             self.transcription_engine = "Whisper"
 
-    def transcribeAudioQueue(self, audio_queue, language, country):
+    def transcribeAudioQueue(self, audio_queue, language, country, avg_logprob=-0.8, no_speech_prob=0.6):
         if audio_queue.empty():
             time.sleep(0.01)
             return False
@@ -68,7 +68,7 @@ class AudioTranscriber:
                         vad_filter=False,
                         )
                     for s in segments:
-                        if s.avg_logprob < -0.8 or s.no_speech_prob > 0.6:
+                        if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
                             continue
                         text += s.text
 
