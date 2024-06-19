@@ -55,10 +55,8 @@ Page custom OptionPage2 OptionPageLeave2
 ; インターフェース 設定
 !define MUI_ABORTWARNING
 ; 変数
-Var Checkbox_InstallDocs
 Var Checkbox_InstallShortcut
 Var Dialog_Options
-Var InstallDocs
 Var InstallShortcut
 Var DropList_Language
 Var Set_Langage
@@ -72,7 +70,6 @@ Var subFont
 ; 初期化時コールバック
 Function .onInit
   ; オプション値を初期化します。
-  StrCpy $InstallDocs ${BST_CHECKED}
   StrCpy $InstallShortcut ${BST_CHECKED}
   StrCpy $DropList_Language "English"
   StrCpy $DownloadWeight ${BST_CHECKED}
@@ -91,16 +88,9 @@ Function OptionPage1
     Abort
   ${EndIf}
 
-  ${NSD_CreateCheckbox} 0 0u 100% 12u "ドキュメントをインストールする (Install documents)"
-  Pop $Checkbox_InstallDocs
-
-  ${NSD_CreateCheckbox} 0 13u 100% 12u "デスクトップにショートカットを作成 (Install shortcut on desktop)"
+  ${NSD_CreateCheckbox} 0 0u 100% 12u "デスクトップにショートカットを作成 (Install shortcut on desktop)"
   Pop $Checkbox_InstallShortcut
 
-  ${If} $InstallDocs == ${BST_CHECKED}
-    ; チェックが入力済の場合、チェックボックスにチェックを入れます。
-    ${NSD_Check} $Checkbox_InstallDocs
-  ${EndIf}
   ${If} $InstallShortcut == ${BST_CHECKED}
     ; チェックが入力済の場合、チェックボックスにチェックを入れます。
     ${NSD_Check} $Checkbox_InstallShortcut
@@ -110,7 +100,6 @@ FunctionEnd
 
 ; オプション ページ 1 退出コールバック
 Function OptionPageLeave1
-  ${NSD_GetState} $Checkbox_InstallDocs $InstallDocs
   ${NSD_GetState} $Checkbox_InstallShortcut $InstallShortcut
 FunctionEnd
 
@@ -195,18 +184,10 @@ Section
   ; インストールされるファイル
   File /r "..\dist\VRCT\"
 
-  ${If} $InstallDocs == ${BST_CHECKED}
-    ; ドキュメントをインストールする場合
-    ; 出力先を指定します。
-    SetOutPath "$INSTDIR\docs"
-    ; インストールされるファイル
-    File "..\README.txt"
-  ${EndIf}
-
   ; アンインストーラを出力
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-  ${If} $InstallDocs == ${BST_CHECKED}
+  ${If} $InstallShortcut == ${BST_CHECKED}
     ; デスクトップにショートカットを作成
     CreateShortCut "$DESKTOP\VRCT.lnk" "$INSTDIR\VRCT.exe"
   ${EndIf}
