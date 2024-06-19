@@ -99,7 +99,7 @@ class AudioTranscriber:
     def processSpeakerData(self):
         temp_file = BytesIO()
         with wave.open(temp_file, 'wb') as wf:
-            wf.setnchannels(self.audio_sources["channels"])
+            wf.setnchannels(2)
             wf.setsampwidth(get_sample_size(paInt16))
             wf.setframerate(self.audio_sources["sample_rate"])
             wf.writeframes(self.audio_sources["last_sample"])
