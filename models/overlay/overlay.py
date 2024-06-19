@@ -91,7 +91,7 @@ class Overlay:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
-            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
+            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "Overlay_Speaker2log_UI")
             self.overlay.showOverlay(self.handle)
             self.initialized = True
 
