@@ -10,6 +10,7 @@ from .transcription_whisper import getWhisperModel, checkWhisperWeight
 
 import torch
 import numpy as np
+from pydub import AudioSegment
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
@@ -104,6 +105,14 @@ class AudioTranscriber:
             wf.setframerate(self.audio_sources["sample_rate"])
             wf.writeframes(self.audio_sources["last_sample"])
         temp_file.seek(0)
+
+        if self.audio_sources["channels"] > 2:
+            audio = AudioSegment.from_file(temp_file, format="wav")
+            mono_audio = audio.set_channels(1)
+            temp_file = BytesIO()
+            mono_audio.export(temp_file, format="wav")
+            temp_file.seek(0)
+
         with AudioFile(temp_file) as source:
             audio = self.audio_recognizer.record(source)
         return audio
