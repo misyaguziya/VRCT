@@ -378,8 +378,12 @@ class Model:
         return [host for host in getInputDevices().keys()]
 
     @staticmethod
+    def getInputDefaultDevice():
+        return getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
+
+    @staticmethod
     def getListInputDevice():
-        return [device["name"] for device in getInputDevices()[config.CHOICE_MIC_HOST]]
+        return [device["name"] for device in getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])]
 
     @staticmethod
     def getListOutputDevice():
@@ -400,9 +404,9 @@ class Model:
 
         mic_device = choice_mic_device[0]
         record_timeout = config.INPUT_MIC_RECORD_TIMEOUT
-        phase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
-        if record_timeout > phase_timeout:
-            record_timeout = phase_timeout
+        phrase_timeout = config.INPUT_MIC_PHRASE_TIMEOUT
+        if record_timeout > phrase_timeout:
+            record_timeout = phrase_timeout
 
         self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
             device=mic_device,
@@ -415,7 +419,7 @@ class Model:
         self.mic_transcriber = AudioTranscriber(
             speaker=False,
             source=self.mic_audio_recorder.source,
-            phrase_timeout=phase_timeout,
+            phrase_timeout=phrase_timeout,
             max_phrases=config.INPUT_MIC_MAX_PHRASES,
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
@@ -423,7 +427,13 @@ class Model:
         )
         def sendMicTranscript():
             try:
-                res = self.mic_transcriber.transcribeAudioQueue(self.mic_audio_queue, config.SOURCE_LANGUAGE, config.SOURCE_COUNTRY)
+                res = self.mic_transcriber.transcribeAudioQueue(
+                    self.mic_audio_queue,
+                    config.SOURCE_LANGUAGE,
+                    config.SOURCE_COUNTRY,
+                    config.INPUT_MIC_AVG_LOGPROB,
+                    config.INPUT_MIC_NO_SPEECH_PROB
+                )
                 if res:
                     message = self.mic_transcriber.getTranscript()
                     fnc(message)
@@ -554,9 +564,9 @@ class Model:
         # speaker_energy_queue = Queue()
         speaker_device = choice_speaker_device[0]
         record_timeout = config.INPUT_SPEAKER_RECORD_TIMEOUT
-        phase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
-        if record_timeout > phase_timeout:
-            record_timeout = phase_timeout
+        phrase_timeout = config.INPUT_SPEAKER_PHRASE_TIMEOUT
+        if record_timeout > phrase_timeout:
+            record_timeout = phrase_timeout
 
         self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
@@ -569,7 +579,7 @@ class Model:
         self.speaker_transcriber = AudioTranscriber(
             speaker=True,
             source=self.speaker_audio_recorder.source,
-            phrase_timeout=phase_timeout,
+            phrase_timeout=phrase_timeout,
             max_phrases=config.INPUT_SPEAKER_MAX_PHRASES,
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
@@ -577,7 +587,13 @@ class Model:
         )
         def sendSpeakerTranscript():
             try:
-                res = self.speaker_transcriber.transcribeAudioQueue(speaker_audio_queue, config.TARGET_LANGUAGE, config.TARGET_COUNTRY)
+                res = self.speaker_transcriber.transcribeAudioQueue(
+                    speaker_audio_queue,
+                    config.TARGET_LANGUAGE,
+                    config.TARGET_COUNTRY,
+                    config.INPUT_SPEAKER_AVG_LOGPROB,
+                    config.INPUT_SPEAKER_NO_SPEECH_PROB
+                )
                 if res:
                     message = self.speaker_transcriber.getTranscript()
                     fnc(message)

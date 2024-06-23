@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 
-| **English** | [日本語](./README.jp.md) | [한국어](./README.kr.md) |
+| **English** | [日本語](./README.ja.md) | [한국어](./README.ko.md) | [繁體中文](./README.zh-Hant.md) |
 
 <h3>
 VRCT is software that supports VRChat conversations with translation and transcription.
@@ -24,8 +24,8 @@ Download from anywhere you like.
 Just download and run the exe.
 
 # What is VRCT?
-VRCT is software that supports conversations between people who speak different languages by providing chat or voice translation.  
-These features are designed for use within VRChat.  
+VRCT is software that supports conversations between people who speak different languages by providing chat or voice translation.
+These features are designed for use within VRChat.
 *Although not supported, it is also used for other purposes such as watching movies.
 
 VRCT supports your conversations with
@@ -35,7 +35,7 @@ VRCT supports your conversations with
 - 🔈 **Transcription of audio from Speaker**
 
 # Documents
-Initial setup, basic functions, and other features are also described.  
+Initial setup, basic functions, and other features are also described.
 - [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
 
 # How to Use (YouTube)
@@ -46,9 +46,9 @@ Initial setup, basic functions, and other features are also described.
 <div align="left">
 
 # If you want to run it in python
-1. Install the following version of python.  
+1. Install the following version of python.
     `python version 3.11.5`
-2. Install package and run main.py.  
+2. Install package and run main.py.
     ```bash
     ./install.bat
     python main.py
