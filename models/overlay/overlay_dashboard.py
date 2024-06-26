@@ -7,8 +7,8 @@ import imgui.integrations.opengl
 import openvr
 from OpenGL import GL
 
-window_width = 1200
-window_height = 800
+window_width = 1000
+window_height = 600
 FONT_SIZE_IN_PIXELS = 25
 
 # Thanks: GPT4
@@ -97,26 +97,151 @@ class OpenVROverlayRenderer(imgui.integrations.opengl.ProgrammablePipelineRender
         self.overlay.destroyOverlay(self.overlay_handle)
         dispose_texture_fbo(self.fbo, self.texture)
 
-# Design
-value_transparency = 100
-value_theme = 0
-value_ui_size = 0
-value_text_box_font_size = 100
-value_message_box_size = 1
-value_font_family = 0
-value_ui_language = 0
-value_remember_the_main_window_position = True
+class BasePage():
+    def __init__(self):
+        pass
+
+    def widgetTable(self, label, value):
+        value_name = f"value_{label.replace(' ', '_').lower()}"
+        imgui.table_next_row()
+        imgui.table_set_column_index(0)
+        imgui.text(label)
+        imgui.table_set_column_index(1)
+        available_width = imgui.get_content_region_available_width()
+        imgui.push_item_width(available_width)
+        if not hasattr(self, value_name):
+            setattr(self, value_name, value)
+        return value_name
+
+    def widgetTextbox(self, label, value):
+        value_name = self.widgetTable(label, value)
+        changed, value = imgui.input_text(f"##{label}", value)
+        if changed:
+            setattr(self, value_name, value)
+        return value_name
+
+    def widgetCheckbox(self, label, value):
+        value_name = self.widgetTable(label, value)
+        clicked, flags = imgui.checkbox(f"##{label}", getattr(self, value_name))
+        if clicked:
+            setattr(self, value_name, flags)
+
+    def widgetCombo(self, label, value, list):
+        value_name = self.widgetTable(label, value)
+        clicked, value = imgui.combo(
+            f"##{label}",
+            getattr(self, value_name),
+            list,
+        )
+        if clicked:
+            setattr(self, value_name, value)
+
+    def widgetSlider(self, label, value, min_value, max_value):
+        value_name = self.widgetTable(label, value)
+        changed, value = imgui.slider_float(
+            f"##{label}",
+            getattr(self, value_name),
+            min_value=min_value,
+            max_value=max_value,
+        )
+        if changed:
+            setattr(self, value_name, value)
+
+class DesignPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        with imgui.begin_table("DesignTable", 2):
+            self.widgetSlider("Transparency", 100, 0, 100)
+            self.widgetCombo("Theme", 0, ["Light", "Dark", "System"])
+            self.widgetCombo("UI Size", 0, [f"{s}%" for s in range(40, 210, 10)])
+            self.widgetSlider("Text Box Font Size", 100, 50, 200)
+            self.widgetSlider("Message Box Size", 1, 1, 99)
+            self.widgetCombo("Font Family", 0, ["Arial", "YuGothic UI", "HG"])
+            self.widgetCombo("UI Language", 0, ["English", "Japanese"])
+            self.widgetCheckbox("Remember The Main Window Position", True)
+
+class TranslationPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        with imgui.begin_table("DesignTable", 2):
+            self.widgetCheckbox("Use Translation Feature", True)
+            self.widgetCombo("Select Internal Translation Model", 0, ["Basic model (418MB)", "High accuracy model (1.2GB)"])
+            self.widgetTextbox("DeepL Auth Key", "")
+
+class TranscriptionPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        imgui.text("Mic")
+        with imgui.begin_table("TranscriptionTableMic", 2):
+            self.widgetCombo("Mic Host/Driver", 0, ["MME", "Windows DirectSound", "Windows WASAPI"])
+            self.widgetCombo("Mic Device", 0, ["1", "2", "3"])
+            self.widgetCheckbox("Mic Energy Threshold (Automatic)", True)
+            self.widgetSlider("Mic Energy Threshold", 300, 0, 2000)
+            self.widgetTextbox("Mic Record Timeout", "3")
+            self.widgetTextbox("Mic Phrase Timeout", "3")
+            self.widgetTextbox("Mic Max Words", "10")
+
+        imgui.separator()
+        imgui.text("Speaker")
+        with imgui.begin_table("TranscriptionTableSpeaker", 2):
+            self.widgetCombo("Speaker Device", 0, ["1", "2", "3"])
+            self.widgetCheckbox("Speaker Energy Threshold (Automatic)", True)
+            self.widgetSlider("Speaker Energy Threshold", 300, 0, 4000)
+            self.widgetTextbox("Speaker Record Timeout", "3")
+            self.widgetTextbox("Speaker Phrase Timeout", "3")
+            self.widgetTextbox("Speaker Max Words", "10")
+
+        imgui.separator()
+        imgui.text("Transcription Model")
+        with imgui.begin_table("TranscriptionTableModel", 2):
+            self.widgetCheckbox("Use Whisper Model As Transcription", False)
+            self.widgetCombo("Select Whisper Model", 0, ["tiny", "base", "small", "medium", "large"])
+
+class VRPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        with imgui.begin_table("VRTable", 2):
+            self.widgetCheckbox("Enable Overlay", True)
+            self.widgetCheckbox("Notification XSOverlay", False)
+
+class OtherPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        with imgui.begin_table("OtherTable", 2):
+            self.widgetCheckbox("Auto Clear The Message Box", True)
+            self.widgetCheckbox("Send Only Translated Messages", False)
+            self.widgetCombo("Send Message Button", 0, ["Hide (Use enter key to send)", "Show", "Show and disable to send when pressed enter key"])
+            self.widgetCheckbox("Auto Export Message Logs", False)
+            self.widgetCheckbox("VRC Mic Mute Sync", False)
+            self.widgetCheckbox("Send Message To VRChat", False)
+
+class AdvancedPage(BasePage):
+    def __init__(self):
+        pass
+
+    def show(self):
+        with imgui.begin_table("AdvancedTable", 2):
+            self.widgetTextbox("OSC IP Address", "127.0.0.1")
+            self.widgetTextbox("OSC Port", "9000")
+
+design_page = DesignPage()
+translation_page = TranslationPage()
+transcription_page = TranscriptionPage()
+vr_page = VRPage()
+other_page = OtherPage()
+advanced_page = AdvancedPage()
 
 def dashboardUI(font):
-    global value_transparency
-    global value_theme
-    global value_ui_size
-    global value_text_box_font_size
-    global value_message_box_size
-    global value_font_family
-    global value_ui_language
-    global value_remember_the_main_window_position
-
     imgui.new_frame()
     imgui.set_next_window_bg_alpha(1)
     imgui.set_next_window_position(0, 0)
@@ -125,132 +250,29 @@ def dashboardUI(font):
 
     with imgui.font(font):
         with imgui.begin_tab_bar("MainTabBar"):
-            with imgui.begin_tab_item("デザイン") as item:
+            # with imgui.begin_tab_item("Design") as item:
+            #     if item.selected:
+            #         design_page.show()
+
+            with imgui.begin_tab_item("Translation") as item:
                 if item.selected:
-                    with imgui.begin_table("DesignTable", 2):
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Transparency")
-                        imgui.table_set_column_index(1)
-                        changed, value = imgui.slider_float(
-                            "##Transparency",
-                            value_transparency,
-                            min_value=0,
-                            max_value=100,
-                        )
-                        if changed:
-                            value_transparency = value
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Theme")
-                        imgui.table_set_column_index(1)
-                        list_theme = ["Light", "Dark", "System"]
-                        clicked, value = imgui.combo(
-                            "##Theme",
-                            value_theme,
-                            list_theme,
-                        )
-                        if clicked:
-                            value_theme = value
-                            print("Selected", list_theme[value_theme])
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("UI Size")
-                        imgui.table_set_column_index(1)
-                        list_ui_size = [f"{s}%" for s in range(40, 210, 10)]
-                        clicked, value = imgui.combo(
-                            "##UI Size",
-                            value_ui_size,
-                            list_ui_size,
-                        )
-                        if clicked:
-                            value_ui_size = value
-                            print("Selected", list_ui_size[value_ui_size])
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Text Box Font Size")
-                        imgui.table_set_column_index(1)
-                        changed, value = imgui.slider_float(
-                            "##Text Box Font Size",
-                            value_text_box_font_size,
-                            min_value=50,
-                            max_value=200,
-                        )
-                        if changed:
-                            value_text_box_font_size = value
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Message Box Size")
-                        imgui.table_set_column_index(1)
-                        changed, value = imgui.slider_float(
-                            "##Message Box Size",
-                            value_message_box_size,
-                            min_value=1,
-                            max_value=99,
-                        )
-                        if changed:
-                            value_message_box_size = value
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Font Family")
-                        imgui.table_set_column_index(1)
-                        list_font_family = ["Arial", "YuGothic UI", "HG"]
-                        clicked, value = imgui.combo(
-                            "##Font Family",
-                            value_font_family,
-                            list_font_family,
-                        )
-                        if clicked:
-                            value_font_family = value
-                            print("Selected", list_font_family[value_font_family])
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("UI Language")
-                        imgui.table_set_column_index(1)
-                        list_ui_language = ["English", "Japanese"]
-                        clicked, value = imgui.combo(
-                            "##UI Language",
-                            value_ui_language,
-                            list_ui_language,
-                        )
-                        if clicked:
-                            value_ui_language = value
-                            print("Selected", list_ui_language[value_ui_language])
-
-                        imgui.table_next_row()
-                        imgui.table_set_column_index(0)
-                        imgui.text("Remember The Main Window Position")
-                        imgui.table_set_column_index(1)
-                        clicked, flags = imgui.checkbox("##Remember The Main Window Position", value_remember_the_main_window_position)
-                        if clicked:
-                            value_remember_the_main_window_position = flags
-                            print("Selected", value_remember_the_main_window_position)
-
-            with imgui.begin_tab_item("Translate") as item:
-                if item.selected:
-                    pass
+                    translation_page.show()
 
             with imgui.begin_tab_item("Transcription") as item:
                 if item.selected:
-                    pass
+                    transcription_page.show()
 
             with imgui.begin_tab_item("VR") as item:
                 if item.selected:
-                    pass
+                    vr_page.show()
 
             with imgui.begin_tab_item("Other") as item:
                 if item.selected:
-                    pass
+                    other_page.show()
 
             with imgui.begin_tab_item("Advanced") as item:
                 if item.selected:
-                    pass
+                    advanced_page.show()
     imgui.end()
 
 def fb_to_window_factor(window):
@@ -307,7 +329,7 @@ def main():
 
     # we have to create some window for make GL work
     glfw.window_hint(glfw.VISIBLE, glfw.FALSE)
-    window = glfw.create_window(16, 16, "", None, None)
+    window = glfw.create_window(window_width, window_height, "", None, None)
     if not window:
         glfw.terminate()
         return
@@ -328,6 +350,9 @@ def main():
     iconTexture = iconTexture.tobytes()
     iconTexture = (ctypes.c_char * len(iconTexture)).from_buffer_copy(iconTexture)
     overlay.setOverlayRaw(overlay_icon_handle, iconTexture, iconWidth, iconHeight, 4)
+
+    # init dashboard
+    overlay.setOverlayWidthInMeters(overlay_handle, 2.5)
 
     # imgui init
     imgui.create_context()
