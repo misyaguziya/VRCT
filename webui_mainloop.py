@@ -1,3 +1,6 @@
+import warnings
+warnings.simplefilter('ignore', RuntimeWarning)
+
 import sys
 import json
 import time
@@ -94,25 +97,33 @@ controller_mapping = {
     "/controller/list_mic_host": controller.getListInputHost,
     "/controller/list_mic_device": controller.getListInputDevice,
     "/controller/list_speaker_device": controller.getListOutputDevice,
-    "/controller/callback_update_software": controller.callbackUpdateSoftware,
-    "/controller/callback_restart_software": controller.callbackRestartSoftware,
+    # "/controller/callback_update_software": controller.callbackUpdateSoftware,
+    # "/controller/callback_restart_software": controller.callbackRestartSoftware,
     "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
     "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
     "/controller/callback_enable_main_window_sidebar_compact_mode": controller.callbackEnableMainWindowSidebarCompactMode,
     "/controller/callback_disable_main_window_sidebar_compact_mode": controller.callbackDisableMainWindowSidebarCompactMode,
-    "/controller/callback_toggle_translation": controller.callbackToggleTranslation,
-    "/controller/callback_toggle_transcription_send": controller.callbackToggleTranscriptionSend,
-    "/controller/callback_toggle_transcription_receive": controller.callbackToggleTranscriptionReceive,
-    "/controller/callback_toggle_foreground": controller.callbackToggleForeground,
-    "/controller/callback_your_language": controller.setYourLanguageAndCountry,
-    "/controller/callback_target_language": controller.setTargetLanguageAndCountry,
-    "/controller/callback_swap_languages": controller.swapYourLanguageAndTargetLanguage,
+    "/controller/callback_enable_translation": controller.callbackEnableTranslation,
+    "/controller/callback_disable_translation": controller.callbackDisableTranslation,
+    "/controller/callback_enable_transcription_send": controller.callbackEnableTranscriptionSend,
+    "/controller/callback_disable_transcription_send": controller.callbackDisableTranscriptionSend,
+    "/controller/callback_enable_transcription_receive": controller.callbackEnableTranscriptionReceive,
+    "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
+    "/controller/callback_enable_foreground": controller.callbackEnableForeground,
+    "/controller/callback_disable_foreground": controller.callbackDisableForeground,
+
+    "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
+    "/controller/set_target_language_and_country": controller.setTargetLanguageAndCountry,
+    "/controller/swap_your_language_and_target_language": controller.swapYourLanguageAndTargetLanguage,
+
     "/controller/callback_selected_language_preset_tab": controller.callbackSelectedLanguagePresetTab,
     "/controller/callback_selected_translation_engine": controller.callbackSelectedTranslationEngine,
+
     "/controller/callback_disable_config_window_compact_mode": controller.callbackEnableConfigWindowCompactMode,
     "/controller/callback_enable_config_window_compact_mode": controller.callbackDisableConfigWindowCompactMode,
+
     "/controller/callback_set_transparency": controller.callbackSetTransparency,
     "/controller/callback_set_appearance": controller.callbackSetAppearance,
     "/controller/callback_set_ui_scaling": controller.callbackSetUiScaling,
@@ -121,8 +132,10 @@ controller_mapping = {
     "/controller/callback_set_font_family": controller.callbackSetFontFamily,
     "/controller/callback_set_ui_language": controller.callbackSetUiLanguage,
     "/controller/callback_set_enable_restore_main_window_geometry": controller.callbackSetEnableRestoreMainWindowGeometry,
+
     "/controller/callback_set_use_translation_feature": controller.callbackSetUseTranslationFeature,
     "/controller/callback_set_ctranslate2_weight_type": controller.callbackSetCtranslate2WeightType,
+
     "/controller/callback_set_deepl_auth_key": controller.callbackSetDeeplAuthKey,
     "/controller/callback_set_mic_host": controller.callbackSetMicHost,
     "/controller/callback_set_mic_device": controller.callbackSetMicDevice,
@@ -185,8 +198,12 @@ def handle_controller_request(endpoint, method, data=None):
         response = handler()
         status = 200
     elif method == "POST":
-        response = handler(data)
-        status = 200
+        if data is None:
+            response = "Invalid data"
+            status = 400
+        else:
+            response = handler(data)
+            status = 200
     return response, status
 
 def main():
@@ -218,11 +235,23 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
-    try:
-        print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
-        while True:
-            main()
-    except Exception:
-        import traceback
-        with open('error.log', 'a') as f:
-            traceback.print_exc(file=f)
+    # try:
+    #     print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
+    #     while True:
+    #         main()
+    # except Exception:
+    #     import traceback
+    #     with open('error.log', 'a') as f:
+    #         traceback.print_exc(file=f)
+    method = "GET"
+    endpoint = "/controller/getListInputHost"
+    data = None
+    response_data, status = handle_controller_request(endpoint, method, data)
+    response = {
+        "method": method,
+        "status": status,
+        "endpoint": endpoint,
+        "data": response_data,
+    }
+    response = json.dumps(response)
+    print(response, flush=True)

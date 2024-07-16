@@ -17,12 +17,14 @@ def callbackRestartSoftware():
     model.reStartSoftware()
 
 def callbackFilepathLogs():
-    print("callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
+    print("[LOG]", "callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
+    return "Success", 200
 
 def callbackFilepathConfigFile():
-    print("callbackFilepathConfigFile", config.PATH_LOCAL.replace('/', '\\'))
+    print("[LOG]","callbackFilepathConfigFile", config.PATH_LOCAL.replace('/', '\\'))
     Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
+    return "Success", 200
 
 def callbackQuitVrct():
     setMainWindowGeometry()
@@ -310,8 +312,6 @@ def updateTranslationEngineAndEngineList():
         engine = engines[0]
     config.CHOICE_INPUT_TRANSLATOR = engine
     config.CHOICE_OUTPUT_TRANSLATOR = engine
-    view.updateSelectableTranslationEngineList(engines)
-    view.setGuiVariable_SelectedTranslationEngine(engine)
 
 def initSetTranslateEngine():
     engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
@@ -346,7 +346,7 @@ def setYourLanguageAndCountry(select):
     config.SOURCE_LANGUAGE = select["language"]
     config.SOURCE_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    view.printToTextbox_selectedYourLanguages(select)
+    return True
 
 def setTargetLanguageAndCountry(select):
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
@@ -355,20 +355,17 @@ def setTargetLanguageAndCountry(select):
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    view.printToTextbox_selectedTargetLanguages(select)
+    return True
 
 def swapYourLanguageAndTargetLanguage():
     your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
     setTargetLanguageAndCountry(your_language)
-    # Update Selected Languages for UI
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
-
+    return True
 
 def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.SELECTED_TAB_NO = selected_tab_no
-    view.updateGuiVariableByPresetTabNo(config.SELECTED_TAB_NO)
 
     engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
     engine = engines[config.SELECTED_TAB_NO]
@@ -387,83 +384,76 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     select = languages[config.SELECTED_TAB_NO]
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
-    view.printToTextbox_changedLanguagePresetTab(config.SELECTED_TAB_NO)
     updateTranslationEngineAndEngineList()
+    return True
 
 def callbackSelectedTranslationEngine(selected_translation_engine):
-    print("callbackSelectedTranslationEngine", selected_translation_engine)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
-    view.setGuiVariable_SelectedTranslationEngine(config.CHOICE_OUTPUT_TRANSLATOR)
+    return True
 
 # command func
-def callbackToggleTranslation(is_turned_on):
-    config.ENABLE_TRANSLATION = is_turned_on
-    if config.ENABLE_TRANSLATION is True:
-        if model.isLoadedCTranslate2Model() is False:
-            model.changeTranslatorCTranslate2Model()
-        view.printToTextbox_enableTranslation()
-    else:
-        view.printToTextbox_disableTranslation()
+def callbackEnableTranslation():
+    config.ENABLE_TRANSLATION = True
+    if model.isLoadedCTranslate2Model() is False:
+        model.changeTranslatorCTranslate2Model()
+    return True
 
-def callbackToggleTranscriptionSend(is_turned_on):
-    view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_SEND = is_turned_on
-    if config.ENABLE_TRANSCRIPTION_SEND is True:
-        startThreadingTranscriptionSendMessage()
-        view.changeTranscriptionDisplayStatus("MIC_ON")
-    else:
-        stopThreadingTranscriptionSendMessage()
-        view.changeTranscriptionDisplayStatus("MIC_OFF")
+def callbackDisableTranslation():
+    config.ENABLE_TRANSLATION = False
+    return True
 
-def callbackToggleTranscriptionReceive(is_turned_on):
-    view.setMainWindowAllWidgetsStatusToDisabled()
-    config.ENABLE_TRANSCRIPTION_RECEIVE = is_turned_on
-    if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        startThreadingTranscriptionReceiveMessage()
-        view.changeTranscriptionDisplayStatus("SPEAKER_ON")
-    else:
-        stopThreadingTranscriptionReceiveMessage()
-        view.changeTranscriptionDisplayStatus("SPEAKER_OFF")
+def callbackEnableTranscriptionSend():
+    config.ENABLE_TRANSCRIPTION_SEND = True
+    startThreadingTranscriptionSendMessage()
+    return True
 
-    if config.ENABLE_TRANSCRIPTION_RECEIVE is True and config.ENABLE_OVERLAY_SMALL_LOG is True:
+def callbackDisableTranscriptionSend():
+    config.ENABLE_TRANSCRIPTION_SEND = False
+    stopThreadingTranscriptionSendMessage()
+    return True
+
+def callbackEnableTranscriptionReceive():
+    config.ENABLE_TRANSCRIPTION_RECEIVE = True
+    startThreadingTranscriptionReceiveMessage()
+
+    if config.ENABLE_OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-    elif config.ENABLE_TRANSCRIPTION_RECEIVE is False:
-        pass
+    return True
 
-def callbackToggleForeground(is_turned_on):
-    config.ENABLE_FOREGROUND = is_turned_on
-    if config.ENABLE_FOREGROUND is True:
-        view.printToTextbox_enableForeground()
-        view.foregroundOn()
-    else:
-        view.printToTextbox_disableForeground()
-        view.foregroundOff()
+def callbackDisableTranscriptionReceive():
+    config.ENABLE_TRANSCRIPTION_RECEIVE = False
+    stopThreadingTranscriptionReceiveMessage()
+    return True
+
+def callbackEnableForeground():
+    config.ENABLE_FOREGROUND = True
+    return True
+
+def callbackDisableForeground():
+    config.ENABLE_FOREGROUND = False
+    return True
 
 def callbackEnableMainWindowSidebarCompactMode():
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-    view.enableMainWindowSidebarCompactMode()
+    return True
 
 def callbackDisableMainWindowSidebarCompactMode():
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-    view.disableMainWindowSidebarCompactMode()
+    return True
 
 # Config Window
 def callbackOpenConfigWindow():
-    view.setMainWindowAllWidgetsStatusToDisabled()
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
-    if config.ENABLE_FOREGROUND is True:
-        view.foregroundOff()
+    return True
 
 def callbackCloseConfigWindow():
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    view.initMicThresholdCheckButton()
-    view.initSpeakerThresholdCheckButton()
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         startThreadingTranscriptionSendMessageOnCloseConfigWindow()
@@ -471,79 +461,69 @@ def callbackCloseConfigWindow():
             sleep(2)
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
-    if config.ENABLE_FOREGROUND is True:
-        view.foregroundOn()
-    view.setMainWindowAllWidgetsStatusToNormal()
+    return True
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
-    view.initMicThresholdCheckButton()
     model.stopCheckSpeakerEnergy()
-    view.initSpeakerThresholdCheckButton()
-
-    view.enableConfigWindowCompactMode()
+    return True
 
 def callbackDisableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
-    view.initMicThresholdCheckButton()
     model.stopCheckSpeakerEnergy()
-    view.initSpeakerThresholdCheckButton()
-
-    view.disableConfigWindowCompactMode()
+    return True
 
 # Appearance Tab
 def callbackSetTransparency(value):
     print("callbackSetTransparency", int(value))
     config.TRANSPARENCY = int(value)
-    view.setMainWindowTransparency(config.TRANSPARENCY/100)
+    return True
 
 def callbackSetAppearance(value):
     print("callbackSetAppearance", value)
     config.APPEARANCE_THEME = value
-    view.showRestartButtonIfRequired()
+    return True
 
 def callbackSetUiScaling(value):
     print("callbackSetUiScaling", value)
     config.UI_SCALING = value
-    new_scaling_float = strPctToInt(value) / 100
-    print("callbackSetUiScaling_new_scaling_float", new_scaling_float)
-    view.showRestartButtonIfRequired()
+    return True
 
 def callbackSetTextboxUiScaling(value):
     print("callbackSetTextboxUiScaling", int(value))
     config.TEXTBOX_UI_SCALING = int(value)
-    view.setMainWindowTextboxUiSize(config.TEXTBOX_UI_SCALING/100)
+    return True
 
 def callbackSetMessageBoxRatio(value):
     print("callbackSetMessageBoxRatio", int(value))
     config.MESSAGE_BOX_RATIO = int(value)
-    view.setMainWindowMessageBoxRatio(config.MESSAGE_BOX_RATIO)
+    return True
 
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
-    view.showRestartButtonIfRequired()
+    return True
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
     value = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, value)
     print("callbackSetUiLanguage__after_getKeyByValue", value)
     config.UI_LANGUAGE = value
-    view.showRestartButtonIfRequired(locale=config.UI_LANGUAGE)
+    return True
 
 def callbackSetEnableRestoreMainWindowGeometry(value):
     print("callbackSetEnableRestoreMainWindowGeometry", value)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
+    return True
 
 # Translation Tab
 def callbackSetUseTranslationFeature(value):
     print("callbackSetUseTranslationFeature", value)
     config.USE_TRANSLATION_FEATURE = value
     if config.USE_TRANSLATION_FEATURE is True:
-        view.useTranslationFeatureProcess("Normal")
         if model.checkCTranslatorCTranslate2ModelWeight():
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
             def callback():
@@ -553,31 +533,23 @@ def callbackSetUseTranslationFeature(value):
             th_callback.start()
         else:
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-            view.useTranslationFeatureProcess("Restart")
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-        view.useTranslationFeatureProcess("Disable")
-    view.showRestartButtonIfRequired()
+    return True
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
     config.CTRANSLATE2_WEIGHT_TYPE = str(value)
-    view.updateSelectedCtranslate2WeightType(config.CTRANSLATE2_WEIGHT_TYPE)
-    view.setWidgetsStatus_changeWeightType_Pending()
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         def callback():
             model.changeTranslatorCTranslate2Model()
-            view.useTranslationFeatureProcess("Normal")
-            view.setWidgetsStatus_changeWeightType_Done()
         th_callback = Thread(target=callback)
         th_callback.daemon = True
         th_callback.start()
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-        view.useTranslationFeatureProcess("Restart")
-        view.setWidgetsStatus_changeWeightType_Done()
-    view.showRestartButtonIfRequired()
+    return True
 
 def callbackSetDeeplAuthKey(value):
     print("callbackSetDeeplAuthKey", str(value))
