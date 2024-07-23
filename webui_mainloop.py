@@ -137,6 +137,7 @@ controller_mapping = {
     "/controller/callback_set_ctranslate2_weight_type": controller.callbackSetCtranslate2WeightType,
 
     "/controller/callback_set_deepl_auth_key": controller.callbackSetDeeplAuthKey,
+    "/controller/callback_clear_deepl_auth_key": controller.callbackClearDeeplAuthKey,
     "/controller/callback_set_mic_host": controller.callbackSetMicHost,
     "/controller/callback_set_mic_device": controller.callbackSetMicDevice,
     "/controller/callback_set_mic_energy_threshold": controller.callbackSetMicEnergyThreshold,
@@ -175,36 +176,47 @@ controller_mapping = {
     "/controller/callback_set_osc_port": controller.callbackSetOscPort,
 }
 
-def handle_config_request(endpoint, method, data=None):
+action_mapping = {
+    "/controller/callback_enable_transcription_send": "/action/transcription_send_message",
+    "/controller/callback_disable_transcription_send": "/action/transcription_send_stopped",
+}
+
+def handleConfigRequest(endpoint):
     handler = config_mapping.get(endpoint)
     if handler is None:
         response = "Invalid endpoint"
         status = 404
-    elif method == "GET":
-        response = getattr(config, handler)
-        status = 200
-    elif method == "POST":
-        setattr(config, handler, data)
+    else:
         response = getattr(config, handler)
         status = 200
     return response, status
 
-def handle_controller_request(endpoint, method, data=None):
+def handleControllerRequest(endpoint, data=None):
     handler = controller_mapping.get(endpoint)
     if handler is None:
         response = "Invalid endpoint"
         status = 404
-    elif method == "GET":
-        response = handler()
-        status = 200
-    elif method == "POST":
-        if data is None:
-            response = "Invalid data"
-            status = 400
+    else:
+        action_endpoint = action_mapping.get(endpoint, None)
+        if action_endpoint is not None:
+            response = handler(data, Action(action_endpoint).transmit)
         else:
             response = handler(data)
-            status = 200
+        status = 200
     return response, status
+
+class Action:
+    def __init__(self, endpoint:str) -> None:
+        self.endpoint = endpoint
+
+    def transmit(self, data:dict) -> None:
+        response = {
+            "endpoint": self.endpoint,
+            "status": 200,
+            "data": data,
+        }
+        response = json.dumps(response)
+        print(response, flush=True)
 
 def main():
     received_data = sys.stdin.readline().strip()
@@ -212,19 +224,17 @@ def main():
 
     if received_data is True:
         endpoint = received_data.get("endpoint", None)
-        method = received_data.get("method", None)
         data = received_data.get("data", None)
 
         match endpoint.split("/")[1]:
             case "config":
-                response_data, status = handle_config_request(endpoint, method, data)
+                response_data, status = handleConfigRequest(endpoint, data)
             case "controller":
-                response_data, status = handle_controller_request(endpoint, method, data)
+                response_data, status = handleControllerRequest(endpoint, data)
             case _:
                 pass
 
         response = {
-            "method": method,
             "status": status,
             "endpoint": endpoint,
             "data": response_data,
@@ -235,20 +245,10 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
-    # try:
-    #     print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
-    #     while True:
-    #         main()
-    # except Exception:
-    #     import traceback
-    #     with open('error.log', 'a') as f:
-    #         traceback.print_exc(file=f)
-    method = "GET"
-    endpoint = "/controller/getListInputHost"
+    endpoint = "/controller/list_mic_host"
     data = None
-    response_data, status = handle_controller_request(endpoint, method, data)
+    response_data, status = handleControllerRequest(endpoint, data)
     response = {
-        "method": method,
         "status": status,
         "endpoint": endpoint,
         "data": response_data,
