@@ -1,3 +1,4 @@
+from typing import Callable
 from time import sleep
 from subprocess import Popen
 from threading import Thread
@@ -70,12 +71,12 @@ def changeToCTranslate2Process():
         view.printToTextbox_TranslationEngineLimitError()
 
 # func transcription send message
-def sendMicMessage(message):
+def sendMicMessage(message:str, action:Callable[[dict], None]) -> None:
     if len(message) > 0:
         addSentMessageLog(message)
         translation = ""
         if model.checkKeywords(message):
-            view.printToTextbox_DetectedByWordFilter(detected_message=message)
+            action({"status":"error", f"message":"Detected by word filter:{message}"})
             return
         elif model.detectRepeatSendMessage(message):
             return
@@ -97,8 +98,7 @@ def sendMicMessage(message):
                     osc_message = messageFormatter("SEND", translation, message)
                 model.oscSendMessage(osc_message)
 
-
-            view.printToTextbox_SentMessage(message, translation)
+            action({"status":"success", "message":message, "translation":translation})
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
                     translation = f" ({translation})"
@@ -110,23 +110,21 @@ def sendMicMessage(message):
             #     overlay_image = model.createOverlayImageLong("send", message, translation)
             #     model.updateOverlay(overlay_image)
 
-def startTranscriptionSendMessage():
-    model.startMicTranscript(sendMicMessage, view.printToTextbox_TranscriptionSendNoDeviceError)
-    view.setMainWindowAllWidgetsStatusToNormal()
+def startTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
+    model.startMicTranscript(sendMicMessage, action)
 
-def stopTranscriptionSendMessage():
+def stopTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     model.stopMicTranscript()
-    view.setMainWindowAllWidgetsStatusToNormal()
+    action({"status":"success", "message":"Stopped sending messages"})
 
-def startThreadingTranscriptionSendMessage():
-    view.printToTextbox_enableTranscriptionSend()
-    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage)
+def startThreadingTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
+    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage, args=(action,))
     th_startTranscriptionSendMessage.daemon = True
     th_startTranscriptionSendMessage.start()
 
-def stopThreadingTranscriptionSendMessage():
+def stopThreadingTranscriptionSendMessage(action:Callable[[dict], None]):
     view.printToTextbox_disableTranscriptionSend()
-    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage)
+    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage, args=(action,))
     th_stopTranscriptionSendMessage.daemon = True
     th_stopTranscriptionSendMessage.start()
 
@@ -339,32 +337,36 @@ def setTargetTranslateEngine(select):
     config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = engines
     config.CHOICE_OUTPUT_TRANSLATOR = select
 
-def setYourLanguageAndCountry(select):
+def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
+    print("setYourLanguageAndCountry", select)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
     config.SOURCE_LANGUAGE = select["language"]
     config.SOURCE_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return True
+    return {"status":"success"}
 
-def setTargetLanguageAndCountry(select):
+def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
+    print("setTargetLanguageAndCountry", select)
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return True
+    return {"status":"success"}
 
-def swapYourLanguageAndTargetLanguage():
+def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
+    print("swapYourLanguageAndTargetLanguage")
     your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
     setTargetLanguageAndCountry(your_language)
-    return True
+    return {"status":"success"}
 
-def callbackSelectedLanguagePresetTab(selected_tab_no):
+def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
+    print("callbackSelectedLanguagePresetTab", selected_tab_no)
     config.SELECTED_TAB_NO = selected_tab_no
 
     engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
@@ -385,33 +387,37 @@ def callbackSelectedLanguagePresetTab(selected_tab_no):
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return True
+    return {"status":"success"}
 
-def callbackSelectedTranslationEngine(selected_translation_engine):
+def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
+    print("callbackSelectedTranslationEngine", selected_translation_engine)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
-    return True
+    return {"status":"success"}
 
 # command func
-def callbackEnableTranslation():
+def callbackEnableTranslation(*args, **kwargs) -> dict:
+    print("callbackEnableTranslation")
     config.ENABLE_TRANSLATION = True
     if model.isLoadedCTranslate2Model() is False:
         model.changeTranslatorCTranslate2Model()
-    return True
+    return {"status":"success"}
 
-def callbackDisableTranslation():
+def callbackDisableTranslation(*args, **kwargs) -> dict:
+    print("callbackDisableTranslation")
     config.ENABLE_TRANSLATION = False
-    return True
+    return {"status":"success"}
 
-def callbackEnableTranscriptionSend():
+def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
+    print("callbackEnableTranscriptionSend")
     config.ENABLE_TRANSCRIPTION_SEND = True
-    startThreadingTranscriptionSendMessage()
-    return True
+    startThreadingTranscriptionSendMessage(action)
+    return {"status":"success"}
 
-def callbackDisableTranscriptionSend():
+def callbackDisableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     config.ENABLE_TRANSCRIPTION_SEND = False
-    stopThreadingTranscriptionSendMessage()
-    return True
+    stopThreadingTranscriptionSendMessage(action)
+    return {"status":"success"}
 
 def callbackEnableTranscriptionReceive():
     config.ENABLE_TRANSCRIPTION_RECEIVE = True
@@ -420,28 +426,28 @@ def callbackEnableTranscriptionReceive():
     if config.ENABLE_OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-    return True
+    return {"status":"success"}
 
 def callbackDisableTranscriptionReceive():
     config.ENABLE_TRANSCRIPTION_RECEIVE = False
     stopThreadingTranscriptionReceiveMessage()
-    return True
+    return {"status":"success"}
 
 def callbackEnableForeground():
     config.ENABLE_FOREGROUND = True
-    return True
+    return {"status":"success"}
 
 def callbackDisableForeground():
     config.ENABLE_FOREGROUND = False
-    return True
+    return {"status":"success"}
 
 def callbackEnableMainWindowSidebarCompactMode():
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-    return True
+    return {"status":"success"}
 
 def callbackDisableMainWindowSidebarCompactMode():
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-    return True
+    return {"status":"success"}
 
 # Config Window
 def callbackOpenConfigWindow():
@@ -449,7 +455,7 @@ def callbackOpenConfigWindow():
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
-    return True
+    return {"status":"success"}
 
 def callbackCloseConfigWindow():
     model.stopCheckMicEnergy()
@@ -461,63 +467,63 @@ def callbackCloseConfigWindow():
             sleep(2)
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
-    return True
+    return {"status":"success"}
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    return True
+    return {"status":"success"}
 
 def callbackDisableConfigWindowCompactMode():
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    return True
+    return {"status":"success"}
 
 # Appearance Tab
 def callbackSetTransparency(value):
     print("callbackSetTransparency", int(value))
     config.TRANSPARENCY = int(value)
-    return True
+    return {"status":"success"}
 
 def callbackSetAppearance(value):
     print("callbackSetAppearance", value)
     config.APPEARANCE_THEME = value
-    return True
+    return {"status":"success"}
 
 def callbackSetUiScaling(value):
     print("callbackSetUiScaling", value)
     config.UI_SCALING = value
-    return True
+    return {"status":"success"}
 
 def callbackSetTextboxUiScaling(value):
     print("callbackSetTextboxUiScaling", int(value))
     config.TEXTBOX_UI_SCALING = int(value)
-    return True
+    return {"status":"success"}
 
 def callbackSetMessageBoxRatio(value):
     print("callbackSetMessageBoxRatio", int(value))
     config.MESSAGE_BOX_RATIO = int(value)
-    return True
+    return {"status":"success"}
 
 def callbackSetFontFamily(value):
     print("callbackSetFontFamily", value)
     config.FONT_FAMILY = value
-    return True
+    return {"status":"success"}
 
 def callbackSetUiLanguage(value):
     print("callbackSetUiLanguage", value)
     value = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, value)
     print("callbackSetUiLanguage__after_getKeyByValue", value)
     config.UI_LANGUAGE = value
-    return True
+    return {"status":"success"}
 
 def callbackSetEnableRestoreMainWindowGeometry(value):
     print("callbackSetEnableRestoreMainWindowGeometry", value)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
-    return True
+    return {"status":"success"}
 
 # Translation Tab
 def callbackSetUseTranslationFeature(value):
@@ -535,7 +541,7 @@ def callbackSetUseTranslationFeature(value):
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-    return True
+    return {"status":"success"}
 
 def callbackSetCtranslate2WeightType(value):
     print("callbackSetCtranslate2WeightType", value)
@@ -549,29 +555,30 @@ def callbackSetCtranslate2WeightType(value):
         th_callback.start()
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-    return True
+    return {"status":"success"}
 
 def callbackSetDeeplAuthKey(value):
+    status = "error"
     print("callbackSetDeeplAuthKey", str(value))
-    view.clearNotificationMessage()
     if len(value) == 36 or len(value) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
         if result is True:
             key = value
-            view.printToTextbox_AuthenticationSuccess()
-            view.showSuccessMessage_DeeplAuthKey()
+            status = "success"
         else:
             key = None
-            view.printToTextbox_AuthenticationError()
-            view.showErrorMessage_DeeplAuthKey()
         auth_keys = config.AUTH_KEYS
         auth_keys["DeepL_API"] = key
         config.AUTH_KEYS = auth_keys
-    elif len(value) == 0:
-        auth_keys = config.AUTH_KEYS
-        auth_keys["DeepL_API"] = None
-        config.AUTH_KEYS = auth_keys
+        updateTranslationEngineAndEngineList()
+    return {"status":status}
+
+def callbackClearDeeplAuthKey():
+    auth_keys = config.AUTH_KEYS
+    auth_keys["DeepL_API"] = None
+    config.AUTH_KEYS = auth_keys
     updateTranslationEngineAndEngineList()
+    return {"status":"success"}
 
 # Transcription Tab
 # Transcription (Mic)
@@ -579,56 +586,41 @@ def callbackSetMicHost(value):
     print("callbackSetMicHost", value)
     config.CHOICE_MIC_HOST = value
     config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
-
-    view.updateSelected_MicDevice(config.CHOICE_MIC_DEVICE)
-    view.updateList_MicDevice(model.getListInputDevice())
-
     model.stopCheckMicEnergy()
-    view.replaceMicThresholdCheckButton_Passive()
+    return {"status":"success"}
 
 def callbackSetMicDevice(value):
     print("callbackSetMicDevice", value)
     config.CHOICE_MIC_DEVICE = value
-
     model.stopCheckMicEnergy()
-    view.replaceMicThresholdCheckButton_Passive()
+    return {"status":"success"}
 
 def callbackSetMicEnergyThreshold(value):
+    status = "error"
     print("callbackSetMicEnergyThreshold", value)
-    if value == "":
-        return
-    try:
-        value = int(value)
-        if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
-            view.clearNotificationMessage()
-            config.INPUT_MIC_ENERGY_THRESHOLD = value
-            view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
-        else:
-            raise ValueError()
-    except Exception:
-        view.showErrorMessage_MicEnergyThreshold()
+    value = int(value)
+    if 0 <= value <= config.MAX_MIC_ENERGY_THRESHOLD:
+        config.INPUT_MIC_ENERGY_THRESHOLD = value
+        status = "success"
+    return {"status":status}
 
 def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
-    if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
-        view.closeMicEnergyThresholdWidget()
-    else:
-        view.openMicEnergyThresholdWidget()
+    return {"status":"success"}
 
 def setProgressBarMicEnergy(energy):
-    view.updateSetProgressBar_MicEnergy(energy)
+    
 
-def callbackCheckMicThreshold(is_turned_on):
-    print("callbackCheckMicThreshold", is_turned_on)
-    if is_turned_on is True:
-        view.replaceMicThresholdCheckButton_Disabled()
-        model.startCheckMicEnergy(setProgressBarMicEnergy, view.initProgressBar_MicEnergy)
-        view.replaceMicThresholdCheckButton_Active()
-    else:
-        view.replaceMicThresholdCheckButton_Disabled()
-        model.stopCheckMicEnergy()
-        view.replaceMicThresholdCheckButton_Passive()
+def callbackEnableCheckMicThreshold():
+    print("callbackEnableCheckMicThreshold")
+    model.startCheckMicEnergy(setProgressBarMicEnergy)
+    return {"status":"success"}
+
+def callbackDisableCheckMicThreshold():
+    print("callbackDisableCheckMicThreshold")
+    model.stopCheckMicEnergy()
+    return {"status":"success"}
 
 def callbackSetMicRecordTimeout(value):
     print("callbackSetMicRecordTimeout", value)
