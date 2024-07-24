@@ -1,0 +1,18 @@
+.container {
+    height: var(--main_window_topbar_height);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    width: 12rem;
+    height: auto;
+    margin: auto;
+}
+
+.logo_chato {
+    width: 2rem;
+    height: auto;
+    margin: auto;
+}

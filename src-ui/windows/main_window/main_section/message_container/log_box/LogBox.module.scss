@@ -1,0 +1,13 @@
+.container {
+    height: 100%;
+    width: 100%;
+    flex: 1;
+    background-color: var(--dark_900_color);
+    overflow: auto;
+    border-radius: 0.8rem;
+    padding: 1rem;
+}
+
+.text {
+    overflow-wrap: break-word;
+}

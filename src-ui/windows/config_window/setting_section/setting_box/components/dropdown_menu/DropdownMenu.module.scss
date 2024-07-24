@@ -1,0 +1,64 @@
+@import "@scss_mixins";
+
+.container {
+    position: relative;
+}
+
+.dropdown_toggle_button {
+    position: relative;
+    background-color: var(--dark_925_color);
+    min-width: 20rem;
+    padding: 0.6rem 0.8rem;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+    &:active {
+        background-color: var(--dark_950_color);
+    }
+    &.is_loading {
+        pointer-events: none;
+    }
+}
+
+.dropdown_selected_text {
+    font-size: 1.4rem;
+}
+
+.dropdown_content_wrapper {
+    display: none;
+    position: absolute;
+    top: 100%; // Position it below the toggle button
+    left: 0;
+    width: 100%;
+    z-index: 1;
+    &.is_opened {
+        display: block;
+    }
+}
+
+.dropdown_content {
+    background-color: var(--dark_900_color);
+    border: 0.1rem solid var(--dark_600_color);
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.value_button {
+    background-color: var(--dark_875_color);
+    padding: 0.8rem;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.value_text {
+    font-size: 1.2rem;
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, right, 0);
+}

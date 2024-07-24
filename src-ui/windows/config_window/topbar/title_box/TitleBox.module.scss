@@ -1,0 +1,19 @@
+.container {
+    // flex: 0;
+    width: var(--config_window_sidebar_width);
+    height: 100%;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    padding-left: 2.6rem;
+    gap: 1.4rem;
+}
+
+.logo_chato {
+    width: 3.2rem;
+    padding-top: 0.6rem;
+}
+
+.title {
+    font-size: 2.2rem;
+}

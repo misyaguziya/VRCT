@@ -1,0 +1,274 @@
+{
+    "main_window": {
+        "translation": "翻訳",
+        "transcription_send": "音声認識（マイク）",
+        "transcription_receive": "音声認識（スピーカー）",
+        "foreground": "最前面表示",
+        "language_settings": "言語設定",
+        "your_language": "あなたの言語",
+        "translate_each_other_label": "双方向に翻訳",
+        "swap_button_label": "言語を入れ替え",
+        "target_language": "相手の言語",
+        "translator": "翻訳エンジン",
+        "translator_ctranslate2": "オフライン翻訳 (Default)",
+        "textbox_tab_all": "全て",
+        "textbox_tab_sent": "送信",
+        "textbox_tab_received": "受信",
+        "textbox_tab_system": "システム",
+        "textbox_system_message": {
+            "enabled_translation": "翻訳機能をONにしました。",
+            "disabled_translation": "翻訳機能をOFFしました。",
+            "enabled_voice2chatbox": "マイクからの音声入力、文字起こしを開始します。",
+            "disabled_voice2chatbox": "マイクからの音声入力、文字起こしを終了しました。",
+            "enabled_speaker2log": "スピーカーからの音声聞き取り、文字起こしを開始します。",
+            "disabled_speaker2log": "スピーカーからの音声聞き取り、文字起こしを終了しました。",
+            "enabled_foreground": "画面を常に最前面へ固定します。",
+            "disabled_foreground": "最前面への固定を解除しました。",
+            "auth_key_success": "認証キーの更新が完了しました。",
+            "auth_key_error": "認証キーが間違っているか、API使用制限が上限に達しています。",
+            "no_mic_device_detected_error": "マイクデバイスが検出されませんでした。",
+            "no_speaker_device_detected_error": "スピーカーデバイスが検出されませんでした。",
+            "translation_engine_limit_error": "翻訳エンジンを自動的に変更しました。対象翻訳エンジンへのリクエストが多すぎるため、一時的にアクセスが制限されています。同じ翻訳エンジンを使用したい場合はしばらく待ってから、VRCTの再起動をしてもう一度試してみてください。",
+            "detected_by_word_filter": "ワードフィルターに登録されている単語 %{detected_message} が検出されたため送信しませんでした。",
+            "selected_your_language": "「あなたの言語」 を %{your_language} に設定しました。",
+            "selected_target_language": "「相手の言語」 を %{target_language} に設定しました。",
+            "switched_language_preset_tab": "言語プリセット番号 %{tab_no} に切り替わりました。",
+            "latest_language_setting": "現在「あなたの言語」は %{your_language}、「相手の言語」は %{target_language} に設定されています。",
+            "opened_web_page_booth": "お使いのブラウザで、Boothのページを開きました。",
+            "opened_web_page_vrct_documents": "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！"
+        },
+        "update_available": "新しいバージョンが出ました！",
+        "state_text_enabled": "有効",
+        "state_text_disabled": "無効",
+        "cover_message": "設定画面が閉じられるまで、一時的に機能を停止しています。",
+        "confirmation_message": {
+            "update_software": "新しいバージョンをダウンロードしてアプリを再起動します。\n少し時間がかかります。今すぐ行いますか？",
+            "deny_update_software": "後でする",
+            "accept_update_software": "アップデートして再起動",
+            "updating": "アップデート中...",
+            "detected_over_ui_size": "現在のUI サイズ: %{current_ui_size}\nVRCTのウィンドウサイズが、お使いのディスプレイサイズより大きい可能性があります。\n※ディスプレイサイズによっては、何度か再設定が必要な場合があります。",
+            "deny_adjust_ui_size": "このサイズのままで良い",
+            "accept_adjust_ui_size": "小さく設定して再起動"
+        }
+    },
+    "selectable_language_window": {
+        "title_your_language": "あなたの言語",
+        "title_target_language": "相手の言語",
+        "go_back_button": "戻る"
+    },
+    "overlay_settings": {
+        "restore_default_settings": "初期値に戻す",
+        "opacity": "透明度",
+        "ui_scaling": "サイズ",
+        "x_position": "X軸（左右）",
+        "y_position": "Y軸（上下）",
+        "z_position": "Z軸（前後）",
+        "x_rotation": "X軸の回転",
+        "y_rotation": "Y軸の回転",
+        "z_rotation": "Z軸の回転",
+        "display_duration": "表示時間",
+        "fadeout_duration": "フェードアウト時間"
+    },
+    "config_window": {
+        "config_title": "設定",
+        "compact_mode": "コンパクトモード",
+        "version": "バージョン %{version}",
+        "restart_message": "再起動して変更を適用する。",
+        "common_error_message": {
+            "invalid_value": "無効な値です。"
+        },
+        "side_menu_labels": {
+            "appearance": "デザイン",
+            "translation": "翻訳",
+            "transcription": "音声認識",
+            "transcription_mic": "マイク",
+            "transcription_speaker": "スピーカー",
+            "transcription_internal_model": "音声認識モデル",
+            "others": "その他",
+            "others_send_message_formats": "メッセージフォーマット (送信)",
+            "others_received_message_formats": "メッセージフォーマット (XSOverlay & Speaker2Chatbox)",
+            "advanced_settings": "高度な設定"
+        },
+        "transparency": {
+            "label": "透明度",
+            "desc": "メイン画面の透明度を変更できます。"
+        },
+        "appearance_theme": {
+            "label": "外観テーマ",
+            "desc": "カラーテーマを変更できます。"
+        },
+        "ui_size": {
+            "label": "UIサイズ"
+        },
+        "textbox_ui_size": {
+            "label": "テキストボックス フォントサイズ",
+            "desc": "ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。"
+        },
+        "message_box_ratio": {
+            "label": "メッセージ入力欄のサイズ",
+            "desc": "メッセージ入力欄のサイズを変更できます。テキストボックスとの比率となっています。\n※厳密な計算はしていません。"
+        },
+        "font_family": {
+            "label": "使用フォント"
+        },
+        "ui_language": {
+            "label": "UIの言語 / UI Language"
+        },
+        "to_restore_main_window_geometry": {
+            "label": "メイン画面の位置を記憶する",
+            "desc": "起動時、前回の画面の位置とサイズを復元します。"
+        },
+        "use_translation_feature": {
+            "label": "翻訳機能を使用する",
+            "desc": "オフにしている間は、翻訳機能を使わない代わり、VRCTの起動が少し速くなります。\n翻訳機能を必要とせず、VRCTをチャット送信と文字起こしツールとしてのみ使用するユーザー用です。"
+        },
+        "ctranslate2_weight_type": {
+            "label": "オフライン翻訳のタイプ",
+            "desc": "翻訳エンジン（オフライン翻訳）で翻訳する際に、使用する翻訳モデルを選択できます。",
+            "small": "通常モデル (%{capacity})",
+            "large": "高精度モデル (%{capacity})"
+        },
+        "deepl_auth_key": {
+            "label": "DeepL 認証キー",
+            "desc": "使用の際は、メイン画面にある %{translator} をDeepL_APIに変更してください。\n※対応していない言語もあります。",
+            "open_auth_key_webpage": "DeepLアカウントページを開く",
+            "auth_key_success": "認証キーの更新が完了しました。",
+            "auth_key_error": "認証キーが間違っているか、API使用制限が上限に達しています。"
+        },
+        "mic_host": {
+            "label": "マイク（ホスト/ドライバー）"
+        },
+        "mic_device": {
+            "label": "マイク （デバイス）"
+        },
+        "mic_dynamic_energy_threshold": {
+            "label_for_automatic": "マイク入力感度の調整 (現在の設定: 自動)",
+            "desc_for_automatic": "マイクの入力感度を自動的に調節する。",
+            "label_for_manual": "マイク入力感度の調整 (現在の設定: 手動)",
+            "desc_for_manual": "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。",
+            "error_message": "0 から %{max} までの数値で設定できます。"
+        },
+        "mic_record_timeout": {
+            "label": "入力が終了したとみなす無音時間",
+            "desc": "無音を検出し、設定された秒数経過すると、音声入力が終了したとみなします。",
+            "error_message": "0 以上で 「%{mic_phrase_timeout_label}」より大きくすることはできません。"
+        },
+        "mic_phrase_timeout": {
+            "label": "一度に文字起こしする時間の長さ",
+            "desc": "設定された秒数ごとに文字起こし処理が行われます。",
+            "error_message": "0 以上で 「%{mic_record_timeout_label}」より小さくすることはできません。"
+        },
+        "mic_max_phrase": {
+            "label": "送信するまでに保持する単語数",
+            "desc": "文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をVRChatへ送信し、ログに表示します。",
+            "error_message": "0以上の数値を設定できます。"
+        },
+        "mic_word_filter": {
+            "label": "ワードフィルター",
+            "desc": "登録された単語を検出すると、その文章は送信されません。\n「,」カンマで区切ると、まとめて複数の単語を追加できます。\n※重複した単語は登録されません。",
+            "add_button_label": "追加",
+            "count_desc": "現在登録されている単語数: %{count}"
+        },
+        "speaker_device": {
+            "label": "スピーカー （デバイス）"
+        },
+        "speaker_dynamic_energy_threshold": {
+            "label_for_automatic": "スピーカー入力感度の調整 (現在の設定: 自動)",
+            "desc_for_automatic": "スピーカーの入力感度を自動的に調節する。",
+            "label_for_manual": "スピーカー入力感度の調整 (現在の設定: 手動)",
+            "desc_for_manual": "スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。",
+            "error_message": "0 から %{max} までの数値で設定できます。",
+            "no_device_error_message": "スピーカーデバイスが検出されませんでした。"
+        },
+        "speaker_record_timeout": {
+            "label": "入力が終了したとみなす無音時間",
+            "desc": "無音を検出し、設定された秒数経過すると、音声入力が終了したとみなします。",
+            "error_message": "0 以上で 「%{speaker_phrase_timeout_label}」より大きくすることはできません。"
+        },
+        "speaker_phrase_timeout": {
+            "label": "一度に文字起こしする時間の長さ",
+            "desc": "設定された秒数ごとに文字起こし処理が行われます。",
+            "error_message": "0 以上で 「%{speaker_record_timeout_label}」より小さくすることはできません。"
+        },
+        "speaker_max_phrase": {
+            "label": "ログとして表示するまでに保持する単語数",
+            "desc": "文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。",
+            "error_message": "0以上の数値を設定できます。"
+        },
+        "use_whisper_feature": {
+            "label": "音声認識にWhisperモデルを使用する",
+            "desc": "一部の言語では、音声認識の精度が向上するかもしれません。音声認識使用中、CPUの使用率が上がるので、お使いのPCスペックと相談してこの機能を使用してください。"
+        },
+        "whisper_weight_type": {
+            "label": "Whisperモデルのタイプ",
+            "desc": "基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。\n※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。",
+            "model_template": "%{model_name} モデル (%{capacity})",
+            "recommended_model_template": "%{model_name} モデル (%{capacity}) (推奨)"
+        },
+        "enable_overlay_small_log": {
+            "label": "Overlay機能を有効",
+            "open_overlay_settings": "Overlay詳細設定を開く"
+        },
+        "auto_clear_the_message_box": {
+            "label": "送信後はチャットボックスを空にする"
+        },
+        "send_only_translated_messages": {
+            "label": "翻訳後のメッセージのみ送信する"
+        },
+        "send_message_button_type": {
+            "label": "メッセージ送信ボタン",
+            "hide": "非表示 (エンターキーを使って送信)",
+            "show": "表示",
+            "show_and_disable_enter_key": "表示し、エンターキーでの送信を無効"
+        },
+        "notice_xsoverlay": {
+            "label": "XSOverlayでの通知受け取り機能を有効",
+            "desc": "文字起こし (受信) されたメッセージをXSOverlayの機能を使って通知として受け取れます。"
+        },
+        "auto_export_message_logs": {
+            "label": "会話ログを自動的に保存する",
+            "desc": "テキストファイルとしてログがlogsフォルダ内に保存されます。"
+        },
+        "vrc_mic_mute_sync": {
+            "label": "VRCマイクミュート同期",
+            "desc": "VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。\n※若干の遅延はあります。また、Push-To-Talkは非対応です。"
+        },
+        "send_message_to_vrc": {
+            "label": "VRChatにメッセージを送信する",
+            "desc": "サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。"
+        },
+        "send_message_format": {
+            "label": "送信するメッセージのフォーマット",
+            "desc": "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換されます。",
+            "example_text": "これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。",
+            "error_message": "[message]という文字は使えません。"
+        },
+        "send_message_format_with_t": {
+            "label": "送信するメッセージのフォーマット（翻訳付き）",
+            "desc": "VRChatで相手に実際に見えるフォーマットを変更できます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。",
+            "example_text": "これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。",
+            "error_message": "[message]と[translation]という文字は使えません。"
+        },
+        "received_message_format": {
+            "label": "受信するメッセージのフォーマット",
+            "desc": "XSOverlay通知受け取り機能で使用されます。\n[message]がメッセージに置換されます。\n※Speaker2Chatboxでの送信機能にも使われます。",
+            "example_text": "これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。",
+            "error_message": "[message]という文字は使えません。"
+        },
+        "received_message_format_with_t": {
+            "label": "受信するメッセージのフォーマット（翻訳付き）",
+            "desc": "XSOverlay通知受け取り機能で使用されます。\n[message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。\n※Speaker2Chatboxでの送信機能にも使われます。",
+            "example_text": "これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。",
+            "error_message": "[message]と[translation]という文字は使えません。"
+        },
+        "osc_ip_address": {
+            "label": "OSC IP Address"
+        },
+        "osc_port": {
+            "label": "OSC Port"
+        },
+        "open_config_filepath": {
+            "label": "設定ファイルを開く"
+        }
+    }
+}

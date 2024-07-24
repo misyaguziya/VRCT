@@ -1,0 +1,32 @@
+.container {
+    height: var(--main_window_topbar_height);
+    background-color: var(--dark_850_color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.title {
+    font-size: 2rem;
+    color: var(--dark_400_color);
+}
+
+.go_back_button_wrapper {
+    position: absolute;
+    left: 0;
+    background-color: var(--dark_800_color);
+    padding: 1.2rem;
+    cursor: pointer;
+    &:hover{
+        background-color: var(--dark_750_color);
+    }
+    &:active{
+        background-color: var(--dark_875_color);
+    }
+}
+
+.go_back_button_label {
+    font-size: 1.4rem;
+    color: var(--dark_400_color);
+}

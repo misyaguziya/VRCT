@@ -1,0 +1,252 @@
+{
+    "main_window": {
+        "translation": "번역",
+        "transcription_send": "음성인식 (마이크)",
+        "transcription_receive": "음성인식 (스피커)",
+        "foreground": "항상 위로",
+        "language_settings": "언어 설정",
+        "your_language": "당신의 언어",
+        "translate_each_other_label": "양방향으로 번역",
+        "swap_button_label": "언어 교체",
+        "target_language": "상대방의 언어",
+        "translator": "번역 엔진",
+        "translator_ctranslate2": "오프라인 번역 (기본값)",
+        "textbox_tab_all": "전체",
+        "textbox_tab_sent": "전송",
+        "textbox_tab_received": "수신",
+        "textbox_tab_system": "시스템",
+        "textbox_system_message": {
+            "enabled_translation": "번역 기능을 시작합니다.",
+            "disabled_translation": "번역 기능이 중지되었습니다.",
+            "enabled_voice2chatbox": "마이크에서의 음성인식을 시작합니다.",
+            "disabled_voice2chatbox": "마이크에서의 음성인식이 중지되었습니다.",
+            "enabled_speaker2log": "스피커에서의 음성인식을 시작합니다.",
+            "disabled_speaker2log": "스피커에서의 음성인식이 중지되었습니다.",
+            "enabled_foreground": "화면을 항상 위로 고정합니다.",
+            "disabled_foreground": "화면 고정이 해제되었습니다.",
+            "auth_key_success": "인증키 갱신이 완료되었습니다.",
+            "auth_key_error": "인증 키가 잘못되었거나 API 사용 제한이 상한선에 도달했습니다.",
+            "no_mic_device_detected_error": "마이크 디바이스를 찾지 못했습니다.",
+            "no_speaker_device_detected_error": "스피커 디바이스를 찾지 못했습니다.",
+            "translation_engine_limit_error": "번역 엔진을 자동으로 변경했습니다. 대상 번역 엔진에 대한 요청이 너무 많아 일시적으로 접근이 제한되었습니다. 해당 번역 엔진을 사용하려면 잠시 기다린 후 VRCT를 재시작하여 다시 시도해 보시기 바랍니다",
+            "detected_by_word_filter": "단어 필터에 등록된 단어 %{detected_message}(이)가 감지되어 전송하지 않았습니다.",
+            "selected_your_language": "'당신의 언어'가 %{your_language}(으)로 설정되었습니다.",
+            "selected_target_language": "'상대방의 언어'가 %{target_language}(으)로 설정되었습니다.",
+            "switched_language_preset_tab": "언어 프리셋 번호 %{tab_no}로 전환되었습니다.",
+            "latest_language_setting": "현재 '당신의 언어'는 %{your_language}, '상대방의 언어'는 %{target_language}(으)로 설정되어 있습니다.",
+            "opened_web_page_booth": "브라우저에서 Booth 페이지를 열었습니다.",
+            "opened_web_page_vrct_documents": "웹 브라우저에서 VRCT 문서 페이지가 열렸습니다.\n문제, 요청 또는 문의 사항이 있는 경우 문서 페이지 하단의 링크, '문의 양식' 또는 X(구 트위터)를 통해 언제든지 문의해 주세요!"
+        },
+        "update_available": "새로운 버전이 나왔습니다!",
+        "cover_message": "설정 화면이 닫힐 때까지 일시적으로 기능을 정지하고 있습니다.",
+        "confirmation_message": {
+            "update_software": "새 버전을 다운로드하고 재시작합니다. \n 조금 시간이 걸립니다. 지금 시작할까요?",
+            "deny_update_software": "나중에 하기",
+            "accept_update_software": "업데이트 및 재시작",
+            "updating": "업데이트 중...",
+            "detected_over_ui_size": "현재 UI 크기: %{current_ui_size}\nVRCT의 창 크기가 사용자의 디스플레이 크기보다 클 수 있습니다. \n* 디스플레이 크기에 따라 여러 번 재설정해야 할 수도 있습니다.",
+            "deny_adjust_ui_size": "지금 상태를 유지",
+            "accept_adjust_ui_size": "작게 줄이고 재시작"
+        }
+    },
+    "selectable_language_window": {
+        "title_your_language": "당신의 언어",
+        "title_target_language": "상대방의 언어",
+        "go_back_button": "돌아가기"
+    },
+    "config_window": {
+        "config_title": "설정",
+        "compact_mode": "컴팩트 모드",
+        "version": "버전 %{version}",
+        "restart_message": "재시작하여 변경 사항을 적용합니다.",
+        "common_error_message": {
+            "invalid_value": "유효하지 않은 값입니다."
+        },
+        "side_menu_labels": {
+            "appearance": "모양",
+            "translation": "번역",
+            "transcription": "음성인식",
+            "transcription_mic": "마이크",
+            "transcription_speaker": "스피커",
+            "transcription_internal_model": "내부 엔진",
+            "others": "기타",
+            "others_send_message_formats": "메시지 형식 (전송)",
+            "others_received_message_formats": "메시지 형식 (수신)",
+            "others_speaker2chatbox": "스피커->챗박스",
+            "advanced_settings": "고급 설정"
+        },
+        "transparency": {
+            "label": "투명도",
+            "desc": "메인 화면의 투명도를 변경합니다."
+        },
+        "appearance_theme": {
+            "label": "테마",
+            "desc": "색상 테마를 변경합니다."
+        },
+        "ui_size": {
+            "label": "UI 크기"
+        },
+        "textbox_ui_size": {
+            "label": "텍스트 박스 글자 크기",
+            "desc": "로그에 표시되는 글자 크기의 배율을 UI 크기에 따라 변경합니다."
+        },
+        "message_box_ratio": {
+            "label": "메시지 입력란 크기",
+            "desc": "메시지 입력란의 크기를 변경합니다. 텍스트 박스와의 비율로 설정되어 있습니다. \n* 정확한 계산은 하지 않았습니다."
+        },
+        "font_family": {
+            "label": "폰트"
+        },
+        "ui_language": {
+            "label": "UI 언어 / UI Language"
+        },
+        "to_restore_main_window_geometry": {
+            "label": "메인 화면 위치 기억",
+            "desc": "시작 시 이전 화면의 위치와 크기를 복원합니다."
+        },
+        "use_translation_feature": {
+            "label": "번역 기능 사용",
+            "desc": "번역 기능이 꺼져 있는 동안에는 번역을 하지 않는 대신 VRCT가 조금 더 빠르게 실행됩니다. \n 번역 기능이 필요하지 않고 VRCT를 채팅 전송 및 음성 인식 도구로만 사용하는 사용자를 위한 기능입니다."
+        },
+        "ctranslate2_weight_type": {
+            "label": "번역 모델",
+            "desc": "오프라인 번역 시의 번역 모델을 변경합니다.",
+            "small": "일반 모델 (%{capacity})",
+            "large": "정밀 모델 (%{capacity})"
+        },
+        "deepl_auth_key": {
+            "label": "DeepL 인증키",
+            "desc": "사용시 메인화면에 있는 %{translator}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다.",
+            "open_auth_key_webpage": "DeepL 계정 페이지 열기",
+            "auth_key_success": "인증키 갱신이 완료되었습니다.",
+            "auth_key_error": "인증키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
+        },
+        "mic_host": {
+            "label": "마이크 호스트/드라이버"
+        },
+        "mic_device": {
+            "label": "마이크 장치"
+        },
+        "mic_dynamic_energy_threshold": {
+            "label_for_automatic": "음성 입력 최소 볼륨 (현재 설정: 자동)",
+            "desc_for_automatic": "마이크의 입력 감도를 자동으로 조절합니다.",
+            "label_for_manual": "음성 입력 최소 볼륨 (현재 설정: 수동)",
+            "desc_for_manual": "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 마이크 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다.",
+            "error_message": "0에서 %{max}까지의 숫자로만 설정할 수 있습니다."
+        },
+        "mic_record_timeout": {
+            "label": "최대 무음 시간",
+            "desc": "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다.",
+            "error_message": "0 이상에서 '%{mic_phrase_timeout_label}'보다 클 수 없습니다."
+        },
+        "mic_phrase_timeout": {
+            "label": "최대 인식 시간",
+            "desc": "설정된 초 단위로 음성인식 처리가 이루어집니다.",
+            "error_message": "0 이상에서 '%{mic_record_timeout_label}'보다 작을 수 없습니다."
+        },
+        "mic_max_phrase": {
+            "label": "최대 입력 절(phrases) 수",
+            "desc": "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 VRChat으로 전송하고 로그에 표시합니다.",
+            "error_message": "0 이상의 숫자만 설정할 수 있습니다."
+        },
+        "mic_word_filter": {
+            "label": "단어 필터",
+            "desc": "등록된 단어가 감지되면 해당 문장은 전송되지 않습니다. \n ',' 쉼표로 구분하면 여러 단어를 추가할 수 있습니다. \n* 중복된 단어는 등록되지 않습니다.",
+            "add_button_label": "추가",
+            "count_desc": "현재 등록되어 있는 단어 수: %{count}"
+        },
+        "speaker_device": {
+            "label": "스피커 장치"
+        },
+        "speaker_dynamic_energy_threshold": {
+            "label_for_automatic": "음성 입력 최소 볼륨 (현재 설정: 자동)",
+            "desc_for_automatic": "스피커의 입력 감도를 자동으로 조절합니다.",
+            "label_for_manual": "음성 입력 최소 볼륨 (현재 설정: 수동)",
+            "desc_for_manual": "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 헤드폰 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다.",
+            "error_message": "0에서 %{max}까지의 숫자로만 설정할 수 있습니다.",
+            "no_device_error_message": "스피커 디바이스를 찾지 못했습니다."
+        },
+        "speaker_record_timeout": {
+            "label": "최대 무음 시간",
+            "desc": "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다.",
+            "error_message": "0 이상에서 '%{speaker_phrase_timeout_label}'보다 클 수 없습니다."
+        },
+        "speaker_phrase_timeout": {
+            "label": "최대 인식 시간",
+            "desc": "설정된 초 단위로 음성인식 처리가 이루어집니다.",
+            "error_message": "0 이상에서 '%{speaker_record_timeout_label}'보다 작을 수 없습니다."
+        },
+        "speaker_max_phrase": {
+            "label": "최대 입력 절(phrases) 수",
+            "desc": "식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다.",
+            "error_message": "0 이상의 숫자만 설정할 수 있습니다."
+        },
+        "use_whisper_feature": {
+            "label": "음성 인식에 Whisper 모델을 사용",
+            "desc": "일부 언어에서는 음성 인식의 정확도가 향상될 수 있어요. 음성 인식 중 CPU 사용률이 올라가기 때문에 사용하시는 PC의 사양을 고려하여 이 기능을 사용해주세요."
+        },
+        "whisper_weight_type": {
+            "label": "Whisper 모델 타입",
+            "desc": "기본적으로 용량이 많은 모델일수록 정밀도는 높지만, 음성 인식의 시간이 늘어나며 CPU 사용률도 늘어나요.각 모델의 설명은 문서를 참조해주세요.\n※특히 medium보다 용량이 큰 모델은 CPU의 성능에 따라서는 사용조차 어려울 수 있어요. ",
+            "model_template": "%{model_name} 모델 (%{capacity})",
+            "recommended_model_template": "%{model_name} 모델 (%{capacity}) (권장)"
+        },
+        "auto_clear_the_message_box": {
+            "label": "챗박스 자동 삭제"
+        },
+        "send_only_translated_messages": {
+            "label": "번역된 메시지만 전송"
+        },
+        "send_message_button_type": {
+            "label": "메시지 전송 버튼",
+            "hide": "숨김 (Enter 키를 사용하여 전송)",
+            "show": "표시",
+            "show_and_disable_enter_key": "표시 (Enter 키 전송 비활성화)"
+        },
+        "notice_xsoverlay": {
+            "label": "XSOverlay에서 알림 수신 기능 활성화",
+            "desc": "수신된 메시지를 XSOverlay의 기능을 통해 알림으로 받아볼 수 있습니다."
+        },
+        "auto_export_message_logs": {
+            "label": "대화 로그 자동 저장",
+            "desc": "logs 폴더에 텍스트 파일로 로그가 저장됩니다."
+        },
+        "send_message_to_vrc": {
+            "label": "VRChat에 메시지 전송",
+            "desc": "VRChat에 메시지를 보내지 않고 사용할 수 있는 방법이 있지만 지원되지 않습니다. VRChat에 메시지를 보내려면 이 기능을 활성화하세요."
+        },
+        "send_message_format": {
+            "label": "메시지 형식",
+            "desc": "메시지가 실제로 보이는 형식을 변경합니다. \n[message]가 메시지로 대체됩니다.",
+            "example_text": "이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.",
+            "error_message": "[message]라는 문자는 사용할 수 없습니다."
+        },
+        "send_message_format_with_t": {
+            "label": "메시지 형식 (번역 포함)",
+            "desc": "메시지가 실제로 보이는 형식을 변경합니다. \n[message]는 메시지로, [translation]은 번역된 메시지로 대체됩니다.\nXSOverlay의 알림에서도 사용됩니다.",
+            "example_text": "예문입니다. 글꼴, 줄 바꿈 등이 실제 표시와 다를 수 있습니다.",
+            "error_message": "[message]와 [translation]이라는 문자는 사용할 수 없습니다."
+        },
+        "received_message_format": {
+            "label": "메시지 형식",
+            "desc": "메시지가 실제로 보이는 형식을 변경합니다. \n[message]가 메시지로 대체됩니다.",
+            "example_text": "이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.",
+            "error_message": "[message]라는 문자는 사용할 수 없습니다."
+        },
+        "received_message_format_with_t": {
+            "label": "메시지 형식 (번역 포함)",
+            "desc": "메시지가 실제로 보이는 형식을 변경합니다. \n[message]는 메시지로, [translation]은 번역된 메시지로 대체됩니다.\nXSOverlay의 알림에서도 사용됩니다.",
+            "example_text": "이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.",
+            "error_message": "[message]와 [translation]이라는 문자는 사용할 수 없습니다."
+        },
+        "osc_ip_address": {
+            "label": "OSC IP 주소"
+        },
+        "osc_port": {
+            "label": "OSC 포트"
+        },
+        "open_config_filepath": {
+            "label": "설정 파일 열기"
+        }
+    }
+}

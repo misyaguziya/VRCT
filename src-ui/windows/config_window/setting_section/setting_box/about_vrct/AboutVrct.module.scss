@@ -1,0 +1,171 @@
+.container {
+    display: flex;
+    gap: 2.2rem;
+    flex-direction: column;
+    width: 72rem;
+    // background-color: gray;
+}
+
+.section_title {
+    height: 1.2rem;
+    object-fit: contain;
+    object-position: left;
+    &.the_developers {
+        margin-bottom: 0.8rem;
+    }
+    &.contributors {
+        margin-bottom: 0.8rem;
+    }
+    &.special_thanks {
+        margin-bottom: 0.6rem;
+    }
+    &.poster_showcase {
+        margin-bottom: 0.6rem;
+    }
+}
+
+.dev_section {
+    display: flex;
+    flex-direction: column;
+}
+.dev_section_wrapper {
+    display: flex;
+    justify-content: space-between;
+}
+.dev_card_wrapper {
+    width: 34.6rem;
+    position: relative;
+}
+.dev_card_img {
+    width: 100%;
+}
+
+@mixin dev_sns_styles($right) {
+    position: absolute;
+    right: $right;
+    bottom: 1.2rem;
+    width: 2.8rem;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color)
+    }
+}
+.dev_misya_x {
+    @include dev_sns_styles(6rem);
+}
+.dev_misya_github {
+    @include dev_sns_styles(3rem);
+}
+.dev_shiina_x {
+    @include dev_sns_styles(3rem);
+}
+
+
+.project_links_and_logo_section {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: center;
+    padding: 0 5.5rem;
+}
+.about_vrct_logo {
+    width: 20rem;
+    object-fit: contain;
+}
+.project_links_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    align-items: start;
+}
+
+.project_link {
+    height: 2.6rem;
+    padding: 0.4rem 1rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color)
+    }
+}
+
+.contributors_img_wrapper {
+    position: relative;
+}
+.contributors_img {
+    width: 100%;
+}
+
+@mixin contributors_sns_styles($top, $left) {
+    position: absolute;
+    left: $left;
+    top: $top;
+    width: 2.4rem;
+    padding: 0.4rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_825_color);
+    }
+    &:active {
+        background-color: var(--dark_888_color)
+    }
+}
+
+$first_line_top: 6.2rem;
+.contributors_done_san_x {
+    @include contributors_sns_styles($first_line_top, 2rem);
+}
+.contributors_iya_x {
+    @include contributors_sns_styles($first_line_top, 27.6rem);
+}
+.contributors_rera_x {
+    @include contributors_sns_styles($first_line_top, 52.2rem);
+}
+.contributors_rera_github {
+    @include contributors_sns_styles($first_line_top, 55rem);
+}
+
+$second_line_top: 16.6rem;
+.contributors_poposuke_x {
+    @include contributors_sns_styles($second_line_top, 14.8rem);
+}
+.contributors_kumaguma_x {
+    @include contributors_sns_styles($second_line_top, 40.8rem);
+}
+
+.localization_section {
+    display: flex;
+    flex-direction: column;
+}
+.localization_members_img {
+    width: 100%;
+}
+
+.special_thanks_section {
+    display: flex;
+    flex-direction: column;
+}
+.special_thanks_members_img {
+    width: 100%;
+    margin-bottom: 0.4rem;
+}
+.special_thanks_message_img {
+    width: 100%;
+}
+
+
+.poster_showcase_section {
+    display: flex;
+    flex-direction: column;
+}
+
+.vrchat_disclaimer {
+    width: 100%;
+    margin-top: 8rem;
+}

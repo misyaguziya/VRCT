@@ -1,0 +1,11 @@
+.container {
+    position: relative;
+    min-width: 23rem;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--dark_850_color);
+    &.is_compact_mode {
+        min-width: auto;
+    }
+}

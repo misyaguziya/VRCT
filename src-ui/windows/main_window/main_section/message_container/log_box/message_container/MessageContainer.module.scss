@@ -1,0 +1,70 @@
+@import "@scss_mixins";
+
+.container {
+    margin-bottom: 1rem;
+    width: 100%;
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        align-items: start;
+    }
+}
+
+.info_box {
+    position: relative;
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        flex-flow: row-reverse;
+        align-items: start;
+    }
+}
+
+.loader {
+    @include loader(0.8rem, 0.1rem, left, -1rem);
+}
+
+.time {
+    font-size: 1rem;
+    color: var(--dark_600_color);
+}
+
+.category {
+    font-size: 1rem;
+    &.sent_message {
+        color: var(--sent_400_color);
+    }
+    &.received_message {
+        align-items: start;
+        color: var(--received_300_color);
+    }
+}
+
+.message_box {
+    display: flex;
+    flex-direction: column;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        align-items: start;
+    }
+}
+
+.message_main {
+    color: var(--dark_basic_text_color);
+    font-size: 1.4rem;
+}
+
+.message_second {
+    color: var(--dark_450_color);
+    font-size: 1rem;
+}

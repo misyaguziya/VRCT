@@ -1,0 +1,27 @@
+.container {
+    position: relative;
+    width: 100%;
+}
+
+.translator_selector_button {
+    width: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.2rem;
+    margin: 0.4rem;
+    padding: 0.6rem 0;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_875_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.label {
+    font-size: 1.2rem;
+    color: var(--dark_basic_text_color);
+}

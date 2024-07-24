@@ -1,0 +1,35 @@
+{
+  "name": "tauri-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "setup-python": "install.bat",
+    "build-python": "pyinstaller -F src-python/test.py --distpath src-tauri/bin --clean -n test-x86_64-pc-windows-msvc",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^1",
+    "@typescript-eslint/eslint-plugin": "^7.11.0",
+    "@typescript-eslint/parser": "^7.11.0",
+    "clsx": "^2.1.1",
+    "eslint": "^8.57.0",
+    "eslint-plugin-react": "^7.34.2",
+    "i18next": "^23.11.5",
+    "jotai": "^2.8.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-i18next": "^14.1.2",
+    "react-resizable-layout": "^0.7.2"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.5.14",
+    "@vitejs/plugin-react": "^4.2.1",
+    "sass": "^1.77.4",
+    "vite": "^5.0.0",
+    "vite-plugin-svgr": "^4.2.0"
+  }
+}

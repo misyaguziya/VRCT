@@ -1,0 +1,23 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+}
+
+.help_and_info_button {
+    padding: 0.6rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.help_svg {
+    width: 2.4rem;
+    color: var(--dark_400_color);
+}

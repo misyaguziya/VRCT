@@ -1,0 +1,123 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 1rem;
+    justify-content: space-between;
+}
+$image_height: 2.8rem;
+$y_padding: 0.4rem;
+$image_height_gap: 0.4rem;
+.poster_showcase_world_container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: $image_height_gap;
+    height: calc( (($image_height + ($y_padding*2)) * 8) + ($image_height_gap * (8 - 1)) );
+}
+.poster_showcase_world_wrapper {
+    display: flex;
+    padding: $y_padding 0.6rem $y_padding 0.8rem;
+    border-radius: 0.4rem 0 0 0.4rem;
+    &.clickable {
+        cursor: pointer;
+        &:hover {
+            background-color: var(--dark_850_color);
+        }
+        &:active {
+            background-color: var(--dark_925_color);
+        }
+    }
+
+}
+.poster_showcase_world_img {
+    height: $image_height;
+}
+
+.pagination_container {
+    display: flex;
+    justify-content: space-between;
+    gap: 6%;
+    margin: 0 2.6rem;
+}
+
+$animation_duration: .15s;
+.pagination_box {
+    width: 100%;
+    cursor: pointer;
+    &:active .pagination_chato_img {
+        animation: tremble_animation $animation_duration ease-out;
+    }
+    &:active.is_active .pagination_chato_img {
+        transform: translate(-50%, -50%) rotate(-22deg);
+    }
+    &.is_active .pagination_chato_img {
+        top: 48%;
+        animation: rotate_animation $animation_duration ease-out;
+    }
+    &:hover {
+        & .pagination_chato_img {
+            top: 108%;
+        }
+        &.is_active .pagination_chato_img {
+            animation: tremble_animation $animation_duration ease-out;
+        }
+    }
+}
+
+.indicator_box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.indicator {
+    width: 100%;
+    height: 0.2rem;
+    background-color: var(--dark_800_color);
+    &.is_active {
+        background-color: var(--primary_400_color);
+    }
+}
+
+.pagination_num {
+    font-size: 1.8rem;
+    padding: 1rem;
+    color: var(--dark_600_color);
+    &.is_active {
+        color: var(--primary_300_color);
+    }
+}
+
+.chato_box {
+    position: relative;
+    width: 100%;
+    height: 6rem;
+    overflow: hidden;
+}
+
+.pagination_chato_img {
+    position: absolute;
+    top: 200%;
+    left: 51%;
+    transform: translate(-50%, -50%) rotate(22deg);
+    width: 2.8rem;
+    transition: top $animation_duration ease-out;
+}
+@keyframes rotate_animation {
+    0% {
+        transform: translate(-50%, -50%) rotate(22deg);
+    }
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg + 22deg);
+    }
+}
+
+@keyframes tremble_animation {
+    0% { left: 51%; }
+    25% { left: 55%; }
+    50% { left: 45%; }
+    75% { left: 48%; }
+    100% { left: 51%; }
+}
