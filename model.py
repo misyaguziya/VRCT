@@ -389,15 +389,11 @@ class Model:
     def getListOutputDevice():
         return [device["name"] for device in getOutputDevices()]
 
-    def startMicTranscript(self, fnc, error_fnc=None):
+    def startMicTranscript(self, fnc):
         mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
         choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
         if len(choice_mic_device) == 0:
-            try:
-                error_fnc()
-            except Exception:
-                pass
-            return
+            return False
 
         self.mic_audio_queue = Queue()
         # self.mic_energy_queue = Queue()

@@ -113,17 +113,13 @@ controller_mapping = {
     "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
     "/controller/callback_enable_foreground": controller.callbackEnableForeground,
     "/controller/callback_disable_foreground": controller.callbackDisableForeground,
-
     "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
     "/controller/set_target_language_and_country": controller.setTargetLanguageAndCountry,
     "/controller/swap_your_language_and_target_language": controller.swapYourLanguageAndTargetLanguage,
-
     "/controller/callback_selected_language_preset_tab": controller.callbackSelectedLanguagePresetTab,
     "/controller/callback_selected_translation_engine": controller.callbackSelectedTranslationEngine,
-
     "/controller/callback_disable_config_window_compact_mode": controller.callbackEnableConfigWindowCompactMode,
     "/controller/callback_enable_config_window_compact_mode": controller.callbackDisableConfigWindowCompactMode,
-
     "/controller/callback_set_transparency": controller.callbackSetTransparency,
     "/controller/callback_set_appearance": controller.callbackSetAppearance,
     "/controller/callback_set_ui_scaling": controller.callbackSetUiScaling,
@@ -132,22 +128,22 @@ controller_mapping = {
     "/controller/callback_set_font_family": controller.callbackSetFontFamily,
     "/controller/callback_set_ui_language": controller.callbackSetUiLanguage,
     "/controller/callback_set_enable_restore_main_window_geometry": controller.callbackSetEnableRestoreMainWindowGeometry,
-
     "/controller/callback_set_use_translation_feature": controller.callbackSetUseTranslationFeature,
     "/controller/callback_set_ctranslate2_weight_type": controller.callbackSetCtranslate2WeightType,
-
     "/controller/callback_set_deepl_auth_key": controller.callbackSetDeeplAuthKey,
     "/controller/callback_clear_deepl_auth_key": controller.callbackClearDeeplAuthKey,
     "/controller/callback_set_mic_host": controller.callbackSetMicHost,
     "/controller/callback_set_mic_device": controller.callbackSetMicDevice,
     "/controller/callback_set_mic_energy_threshold": controller.callbackSetMicEnergyThreshold,
     "/controller/callback_set_mic_dynamic_energy_threshold": controller.callbackSetMicDynamicEnergyThreshold,
-    "/controller/callback_check_mic_threshold": controller.callbackCheckMicThreshold,
+    "/controller/callback_enable_check_mic_threshold": controller.callbackEnableCheckMicThreshold,
+    "/controller/callback_disable_check_mic_threshold": controller.callbackDisableCheckMicThreshold,
     "/controller/callback_set_mic_record_timeout": controller.callbackSetMicRecordTimeout,
     "/controller/callback_set_mic_phrase_timeout": controller.callbackSetMicPhraseTimeout,
     "/controller/callback_set_mic_max_phrases": controller.callbackSetMicMaxPhrases,
     "/controller/callback_set_mic_word_filter": controller.callbackSetMicWordFilter,
     "/controller/callback_delete_mic_word_filter": controller.callbackDeleteMicWordFilter,
+
     "/controller/callback_set_speaker_device": controller.callbackSetSpeakerDevice,
     "/controller/callback_set_speaker_energy_threshold": controller.callbackSetSpeakerEnergyThreshold,
     "/controller/callback_set_speaker_dynamic_energy_threshold": controller.callbackSetSpeakerDynamicEnergyThreshold,
@@ -179,6 +175,9 @@ controller_mapping = {
 action_mapping = {
     "/controller/callback_enable_transcription_send": "/action/transcription_send_message",
     "/controller/callback_disable_transcription_send": "/action/transcription_send_stopped",
+    "/controller/callback_enable_transcription_receive": "/action/transcription_receive_message",
+    "/controller/callback_disable_transcription_receive": "/action/transcription_receive_stopped",
+    "/controller/callback_enable_check_mic_threshold": "/action/check_mic_threshold_energy",
 }
 
 def handleConfigRequest(endpoint):
