@@ -1,0 +1,277 @@
+{
+    "main_window": {
+        "translation": "翻譯",
+        "transcription_send": "麥克風轉文字",
+        "transcription_receive": "喇叭轉文字",
+        "foreground": "最上層顯示",
+        "language_settings": "語言設定",
+        "your_language": "你的語言",
+        "translate_each_other_label": "互相翻譯",
+        "swap_button_label": "交換語言",
+        "target_language": "目標語言",
+        "translator": "翻譯器",
+        "translator_ctranslate2": "離線翻譯（預設）",
+        "textbox_tab_all": "全部",
+        "textbox_tab_sent": "已發送",
+        "textbox_tab_received": "已接收",
+        "textbox_tab_system": "系統",
+        "textbox_system_message": {
+            "enabled_easter_egg": "你找到了彩蛋！看看你的 VR Overlay 有沒有什麼變化？",
+            "enabled_translation": "翻譯功能已啟用。",
+            "disabled_translation": "翻譯功能已停用。",
+            "enabled_voice2chatbox": "麥克風轉文字已啟用。",
+            "disabled_voice2chatbox": "麥克風轉文字已停用。",
+            "enabled_speaker2log": "喇叭轉文字已啟用。",
+            "disabled_speaker2log": "喇叭轉文字已停用。",
+            "enabled_foreground": "最上層顯示已啟用。",
+            "disabled_foreground": "最上層顯示已停用。",
+            "auth_key_success": "授權金鑰更新完成。",
+            "auth_key_error": "授權金鑰錯誤或已達使用上限。",
+            "no_mic_device_detected_error": "未偵測到麥克風。",
+            "no_speaker_device_detected_error": "未偵測到喇叭。",
+            "translation_engine_limit_error": "翻譯引擎已自動變更。由於請求太頻繁，已被這個翻譯引擎暫時受限。如果你想使用相同的翻譯引擎，請稍等片刻，重新啟動 VRCT 並重試。",
+            "detected_by_word_filter": "由於詞語過濾器的偵測，「%{detected_message}」未被發送。",
+            "selected_your_language": "「你的語言」已設為 %{your_language}。",
+            "selected_target_language": "「目標語言」已設為 %{target_language}。",
+            "switched_language_preset_tab": "已切換到第 %{tab_no} 個語言設定。",
+            "latest_language_setting": "目前「你的語言」設為 %{your_language}，「目標語言」設為 %{target_language}。",
+            "opened_web_page_booth": "已在瀏覽器中打開 Booth 頁面。",
+            "opened_web_page_vrct_documents": "已在瀏覽器中打開VRCT文件頁面。\n如有任何問題、請求或查詢，請通過文件頁面底部的連結、「聯絡表單」或 X (Twitter) 聯絡我們！"
+        },
+        "update_available": "有新版本可供使用！",
+        "state_text_enabled": "啟用",
+        "state_text_disabled": "停用",
+        "cover_message": "VRCT 功能在設定視窗關閉前暫時停用。",
+        "confirmation_message": {
+            "update_software": "下載新版本並自動更新 VRCT。\n會花一些時間，現在更新嗎？",
+            "deny_update_software": "稍後再說",
+            "accept_update_software": "更新",
+            "updating": "正在更新...",
+            "detected_over_ui_size": "介面大小：%{current_ui_size}\nVRCT 的視窗大小可能超過你的螢幕大小。",
+            "deny_adjust_ui_size": "保持目前大小",
+            "accept_adjust_ui_size": "縮小介面並重新啟動"
+        }
+    },
+    "selectable_language_window": {
+        "title_your_language": "選擇你的語言",
+        "title_target_language": "選擇目標語言",
+        "go_back_button": "返回"
+    },
+    "overlay_settings": {
+        "restore_default_settings": "恢復預設設定",
+        "opacity": "透明度",
+        "ui_scaling": "介面縮放",
+        "x_position": "X軸（左右）",
+        "y_position": "Y軸（上下）",
+        "z_position": "Z軸（前後）",
+        "x_rotation": "X軸旋轉",
+        "y_rotation": "Y軸旋轉",
+        "z_rotation": "Z軸旋轉",
+        "display_duration": "顯示持續時間",
+        "fadeout_duration": "淡出持續時間"
+    },
+    "config_window": {
+        "config_title": "設定",
+        "compact_mode": "精簡模式",
+        "version": "版本 %{version}",
+        "restart_message": "重新啟動以應用變更。",
+        "common_error_message": {
+            "invalid_value": "無效值。"
+        },
+        "side_menu_labels": {
+            "appearance": "外觀",
+            "translation": "翻譯",
+            "transcription": "轉錄",
+            "transcription_mic": "麥克風",
+            "transcription_speaker": "喇叭",
+            "transcription_internal_model": "轉錄模型",
+            "vr": "VR",
+            "others": "其他",
+            "others_send_message_formats": "訊息格式（發送）",
+            "others_received_message_formats": "訊息格式（XSOverlay & 喇叭轉文字）",
+            "others_speaker2chatbox": "喇叭轉文字",
+            "advanced_settings": "進階設定"
+        },
+        "transparency": {
+            "label": "透明度",
+            "desc": "變更主視窗的透明度。"
+        },
+        "appearance_theme": {
+            "label": "主題",
+            "desc": "變更配色主題。"
+        },
+        "ui_size": {
+            "label": "介面大小"
+        },
+        "textbox_ui_size": {
+            "label": "訊息框字體大小",
+            "desc": "你可以根據介面大小調整記錄中使用的字體大小。"
+        },
+        "message_box_ratio": {
+            "label": "訊息框大小",
+            "desc": "你可以依介面比例縮放輸入訊息框。\n*可能不準確。"
+        },
+        "font_family": {
+            "label": "字型"
+        },
+        "ui_language": {
+            "label": "介面語言"
+        },
+        "to_restore_main_window_geometry": {
+            "label": "記住主視窗位置",
+            "desc": "啟動時恢復上次視窗的位置和大小。"
+        },
+        "use_translation_feature": {
+            "label": "使用翻譯功能",
+            "desc": "當此功能關閉時，無法使用翻譯功能。但 VRCT 會啟動得更快。適合不需要翻譯功能、只使用VRCT作為聊天框和轉錄工具的使用者。"
+        },
+        "ctranslate2_weight_type": {
+            "label": "選擇離線翻譯模型",
+            "desc": "你可以選擇用於離線翻譯引擎的翻譯模型。",
+            "small": "基本模型（%{capacity}）",
+            "large": "高準確率模型（%{capacity}）"
+        },
+        "deepl_auth_key": {
+            "label": "DeepL 授權金鑰",
+            "desc": "使用 DeepL API 時請在主螢幕選擇 %{translator}。※可能不支援某些語言。",
+            "open_auth_key_webpage": "打開 DeepL 帳號頁面",
+            "auth_key_success": "授權金鑰更新完成。",
+            "auth_key_error": "授權金鑰錯誤或已達使用上限。"
+        },
+        "mic_host": {
+            "label": "麥克風 Host/Driver"
+        },
+        "mic_device": {
+            "label": "麥克風裝置"
+        },
+        "mic_dynamic_energy_threshold": {
+            "label_for_automatic": "麥克風能量閾值（當前設置：自動）",
+            "desc_for_automatic": "自動判定麥克風輸入靈敏度。",
+            "label_for_manual": "麥克風能量閾值（當前設置：手動）",
+            "desc_for_manual": "使用滑桿調整麥克風輸入靈敏度，你可以按下麥克風圖示來測試。",
+            "error_message": "可以設置 0 到 %{max} 之間的值。"
+        },
+        "mic_record_timeout": {
+            "label": "麥克風音訊 - 判定結束時間",
+            "desc": "麥克風未收到音訊後，結束一段話的判定時間（秒）。",
+            "error_message": "不能大於「%{mic_phrase_timeout_label}」，應為 0 或更高。"
+        },
+        "mic_phrase_timeout": {
+            "label": "麥克風音訊 - 紀錄間隔時間",
+            "desc": "每隔多久要紀錄一次音訊。",
+            "error_message": "不能小於「%{mic_record_timeout_label}」，應為 0 或更高。"
+        },
+        "mic_max_phrase": {
+            "label": "麥克風音訊 - 最大單詞數量",
+            "desc": "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。",
+            "error_message": "可以設置為 0 或更高的數值。"
+        },
+        "mic_word_filter": {
+            "label": "麥克風單詞過濾器",
+            "desc": "如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。\n*重複詞語會被忽略。",
+            "add_button_label": "新增",
+            "count_desc": "當前註冊詞語數量：%{count}"
+        },
+        "speaker_device": {
+            "label": "喇叭裝置"
+        },
+        "speaker_dynamic_energy_threshold": {
+            "label_for_automatic": "喇叭能量閾值（當前設置：自動）",
+            "desc_for_automatic": "自動確定喇叭輸入靈敏度。",
+            "label_for_manual": "喇叭能量閾值（當前設置：手動）",
+            "desc_for_manual": "使用滑桿調整喇叭輸入靈敏度，你可以按下喇叭圖示來測試。",
+            "error_message": "可以設置 0 到 %{max} 之間的值。",
+            "no_device_error_message": "未偵測到喇叭裝置。"
+        },
+        "speaker_record_timeout": {
+            "label": "喇叭音訊 - 判定結束時間",
+            "desc": "偵測到靜音並在指定秒數後認為喇叭輸入已結束。（秒）",
+            "error_message": "不能大於「%{speaker_phrase_timeout_label}」，應為 0 或更高。"
+        },
+        "speaker_phrase_timeout": {
+            "label": "喇叭音訊 - 紀錄間隔時間",
+            "desc": "以指定秒數間隔進行轉錄處理。",
+            "error_message": "不能小於「%{speaker_record_timeout_label}」，應為 0 或更高。"
+        },
+        "speaker_max_phrase": {
+            "label": "喇叭音訊 - 最大單詞數量",
+            "desc": "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。",
+            "error_message": "可以設置 0 或更高的數值。"
+        },
+        "use_whisper_feature": {
+            "label": "使用 Whisper 模型進行轉錄",
+            "desc": "在某些語言中，語音識別的準確性可能會提高。使用語音識別時，CPU使用率會增加，請根據你的PC規格考慮是否使用此功能。"
+        },
+        "whisper_weight_type": {
+            "label": "選擇 Whisper 模型",
+            "desc": "一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。\n※特別是超過中等大小的模型，根據CPU性能可能難以運行。",
+            "model_template": "%{model_name}模型（%{capacity}）",
+            "recommended_model_template": "%{model_name}模型（%{capacity}）（推薦）"
+        },
+        "enable_overlay_small_log": {
+            "label": "啟用 Overlay",
+            "open_overlay_settings": "打開 Overlay 自定義設定"
+        },
+        "auto_clear_the_message_box": {
+            "label": "自動清除 Chatbox"
+        },
+        "send_only_translated_messages": {
+            "label": "僅發送翻譯訊息"
+        },
+        "send_message_button_type": {
+            "label": "發送訊息按鈕",
+            "hide": "隱藏（使用 Enter 鍵發送）",
+            "show": "顯示",
+            "show_and_disable_enter_key": "顯示並停用 Enter 鍵發送"
+        },
+        "notice_xsoverlay": {
+            "label": "XSOverlay 通知",
+            "desc": "從 XSOverlay 的通知功能接收訊息。"
+        },
+        "auto_export_message_logs": {
+            "label": "自動匯出訊息記錄",
+            "desc": "自動將對話訊息匯出為文字文件。"
+        },
+        "vrc_mic_mute_sync": {
+            "label": "VRC 麥克風靜音同步",
+            "desc": "當 VRChat 的麥克風靜音時，VRCT 將不會向 VRChat 發送訊息。\n*存在一些延遲且不支援按鍵發話 (PTT)。"
+        },
+        "send_message_to_vrc": {
+            "label": "發送訊息到 VRChat",
+            "desc": "當你打算向 VRChat 發送訊息時啟用此功能。"
+        },
+        "send_message_format": {
+            "label": "發送的訊息格式",
+            "desc": "你可以設定要發送的訊息格式。\n[message] 將被替換為訊息。",
+            "example_text": "這是一個範例。字體、換行等可能與實際顯示不同。",
+            "error_message": "不能使用 [message] 。"
+        },
+        "send_message_format_with_t": {
+            "label": "發送的訊息格式（帶翻譯）",
+            "desc": "你可以設定要發送的訊息格式。\n[message] 將被替換為訊息，並且 [translation] 將被替換為翻譯訊息。",
+            "example_text": "這是一個範例。字體、換行等可能與實際顯示不同。",
+            "error_message": "不能使用 [message] 和 [translation] 。"
+        },
+        "received_message_format": {
+            "label": "接收的訊息格式",
+            "desc": "用於 XSOverlay 的通知接收功能。\n[message] 將被替換為訊息。\n※它也將用於喇叭轉文字功能。",
+            "example_text": "這是一個範例。字體、換行等可能與實際顯示不同。",
+            "error_message": "不能使用 [message] 。"
+        },
+        "received_message_format_with_t": {
+            "label": "接收的訊息格式（附翻譯）",
+            "desc": "用於 XSOverlay 的通知接收功能。\n[message] 將被替換為訊息，並且 [translation] 將被替換為翻譯訊息。\n※它也將用於喇叭轉文字功能。",
+            "example_text": "這是一個範例。字體、換行等可能與實際顯示不同。",
+            "error_message": "不能使用 [message] 和 [translation] 。"
+        },
+        "osc_ip_address": {
+            "label": "OSC IP 位址"
+        },
+        "osc_port": {
+            "label": "OSC 端口"
+        },
+        "open_config_filepath": {
+            "label": "打開設定文件"
+        }
+    }
+}

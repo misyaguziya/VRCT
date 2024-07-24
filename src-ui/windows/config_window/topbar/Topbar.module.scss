@@ -1,0 +1,12 @@
+.container {
+    width: 100%;
+    height: 0%;
+}
+
+.wrapper {
+    height: var(--config_window_topbar_height);
+    background-color: var(--dark_850_color);
+    display: flex;
+    justify-content: space-between;
+    flex-shrink: 0;
+}

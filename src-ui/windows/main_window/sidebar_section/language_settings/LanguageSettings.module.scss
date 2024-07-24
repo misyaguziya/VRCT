@@ -1,0 +1,21 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.title {
+    font-size: 1.4rem;
+    padding-top: 1rem;
+    padding-bottom: 0.8rem;
+    color: var(--dark_400_color);
+}
+
+.preset_container {
+    width: 100%;
+    padding-top: 0.8rem;
+    background-color: var(--dark_800_color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
