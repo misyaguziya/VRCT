@@ -21,20 +21,20 @@ export const SidebarSection = () => {
 
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import { useSelectedConfigTab } from "@store";
+import { useSelectedConfigTabId } from "@store";
 
 const Tab = (props) => {
     const { t } = useTranslation();
-    const { updateSelectedConfigTab, currentSelectedConfigTab } = useSelectedConfigTab();
+    const { updateSelectedConfigTabId, currentSelectedConfigTabId } = useSelectedConfigTabId();
     const onclickFunction = () => {
-        updateSelectedConfigTab(props.tab_id);
+        updateSelectedConfigTabId(props.tab_id);
     };
 
     const tab_container_class_names = clsx(styles["tab_container"], {
-        [styles["is_selected"]]: (currentSelectedConfigTab === props.tab_id) ? true : false
+        [styles["is_selected"]]: (currentSelectedConfigTabId === props.tab_id) ? true : false
     });
     const switch_indicator_class_names = clsx(styles["switch_indicator"], {
-        [styles["is_selected"]]: (currentSelectedConfigTab === props.tab_id) ? true : false
+        [styles["is_selected"]]: (currentSelectedConfigTabId === props.tab_id) ? true : false
     });
 
     return (

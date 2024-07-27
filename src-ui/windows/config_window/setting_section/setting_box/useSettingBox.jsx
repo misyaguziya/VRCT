@@ -1,14 +1,14 @@
 import styles from "./useSettingBox.module.scss";
 import { LabelComponent } from "./components/label_component/LabelComponent";
 import { DropdownMenu } from "./components/dropdown_menu/DropdownMenu";
-import { useOpenedDropdownMenu } from "@store";
+import { useIsOpenedDropdownMenu } from "@store";
 
 export const useSettingBox = () => {
-    const { updateOpenedDropdownMenu } = useOpenedDropdownMenu();
+    const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
 
     const DropdownMenuContainer = (props) => {
         const onMouseLeaveFunction = () => {
-            updateOpenedDropdownMenu("");
+            updateIsOpenedDropdownMenu("");
         };
 
         return (

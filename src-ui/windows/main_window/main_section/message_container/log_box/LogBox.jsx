@@ -1,11 +1,11 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "./LogBox.module.scss";
-import { useMessageLogs, store } from "@store";
+import { useMessageLogsStatus, store } from "@store";
 import { MessageContainer } from "./message_container/MessageContainer";
 import { scrollToBottom } from "@logics/scrollToBottom";
 
 export const LogBox = () => {
-    const { currentMessageLogs } = useMessageLogs();
+    const { currentMessageLogsStatus } = useMessageLogsStatus();
     const log_container_ref = useRef(null);
     const [is_scrolling, setIsScrolling] = useState(false);
 
@@ -14,7 +14,7 @@ export const LogBox = () => {
         if (!is_scrolling) {
             scrollToBottom(store.log_box_ref, true);
         }
-    }, [currentMessageLogs]);
+    }, [currentMessageLogsStatus]);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -39,7 +39,7 @@ export const LogBox = () => {
 
     return (
         <div id="log_container" className={styles.container} ref={log_container_ref}>
-            {currentMessageLogs.map(message_data => (
+            {currentMessageLogsStatus.map(message_data => (
                 <MessageContainer key={message_data.id} {...message_data} />
             ))}
         </div>

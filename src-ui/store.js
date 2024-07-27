@@ -4,7 +4,7 @@ import {
     useSetAtom
 } from "jotai";
 
-import { translator_list, generateTestData } from "@data";
+import { translator_list, test_device_list, generateTestData } from "@data";
 
 export const store = {
     backend_subprocess: null,
@@ -90,33 +90,31 @@ const createAsyncAtomWithHook = (initialValue, base_ame) => {
     return { atomInstance, useHook };
 };
 
-export const { atomInstance: uiLanguage, useHook: useUiLanguage } = createAtomWithHook("en", "UiLanguage");
-export const { atomInstance: State_Translation, useHook: useState_Translation } = createAsyncAtomWithHook(false, "State_Translation");
-export const { atomInstance: State_TranscriptionSend, useHook: useState_TranscriptionSend } = createAsyncAtomWithHook(false, "State_TranscriptionSend");
-export const { atomInstance: State_TranscriptionReceive, useHook: useState_TranscriptionReceive } = createAsyncAtomWithHook(false, "State_TranscriptionReceive");
-export const { atomInstance: State_Foreground, useHook: useState_Foreground } = createAsyncAtomWithHook(false, "State_Foreground");
+export const { atomInstance: Atom_UiLanguageStatus, useHook: useUiLanguageStatus } = createAtomWithHook("en", "UiLanguageStatus");
+export const { atomInstance: Atom_TranslationStatus, useHook: useTranslationStatus } = createAsyncAtomWithHook(false, "TranslationStatus");
+export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useTranscriptionSendStatus } = createAsyncAtomWithHook(false, "TranscriptionSendStatus");
+export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useTranscriptionReceiveStatus } = createAsyncAtomWithHook(false, "TranscriptionReceiveStatus");
+export const { atomInstance: Atom_ForegroundStatus, useHook: useForegroundStatus } = createAsyncAtomWithHook(false, "ForegroundStatus");
 
-export const { atomInstance: messageLogs, useHook: useMessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs");
-export const { atomInstance: isCompactMode, useHook: useIsCompactMode } = createAtomWithHook(false, "IsCompactMode");
-export const { atomInstance: isOpenedLanguageSelector, useHook: useIsOpenedLanguageSelector } = createAtomWithHook(
+export const { atomInstance: Atom_MessageLogsStatus, useHook: useMessageLogsStatus } = createAtomWithHook(generateTestData(20), "MessageLogsStatus");
+export const { atomInstance: Atom_MainWindowCompactModeStatus, useHook: useMainWindowCompactModeStatus } = createAtomWithHook(false, "MainWindowCompactModeStatus");
+export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useIsOpenedLanguageSelector } = createAtomWithHook(
     { your_language: false, target_language: false },
     "IsOpenedLanguageSelector"
 );
 
-export const { atomInstance: selectedTab, useHook: useSelectedTab } = createAtomWithHook(1, "SelectedTab");
-export const { atomInstance: isOpenedConfigWindow, useHook: useIsOpenedConfigWindow } = createAtomWithHook(false, "IsOpenedConfigWindow");
-export const { atomInstance: selectedConfigTab, useHook: useSelectedConfigTab } = createAtomWithHook("appearance", "SelectedConfigTab");
-export const { atomInstance: openedDropdownMenu, useHook: useOpenedDropdownMenu } = createAtomWithHook("", "OpenedDropdownMenu");
-export const { atomInstance: selectedMicDevice, useHook: useSelectedMicDevice } = createAsyncAtomWithHook("device b", "SelectedMicDevice");
+export const { atomInstance: Atom_SelectedPresetTabStatus, useHook: useSelectedPresetTabStatus } = createAtomWithHook(1, "SelectedPresetTabStatus");
+export const { atomInstance: Atom_IsOpenedConfigWindow, useHook: useIsOpenedConfigWindow } = createAtomWithHook(false, "IsOpenedConfigWindow");
+export const { atomInstance: Atom_SelectedConfigTabId, useHook: useSelectedConfigTabId } = createAtomWithHook("appearance", "SelectedConfigTabId");
+export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
 
-const test_list = {
-    a: "Device A",
-    "device b": "Device B",
-};
+export const { atomInstance: Atom_SelectedMicDeviceStatus, useHook: useSelectedMicDeviceStatus } = createAsyncAtomWithHook("device b", "SelectedMicDeviceStatus");
 
-export const { atomInstance: micDeviceList, useHook: useMicDeviceList } = createAtomWithHook(test_list, "MicDeviceList");
-export const { atomInstance: translatorList, useHook: useTranslatorList } = createAtomWithHook(translator_list, "TranslatorList");
-export const { atomInstance: selectedTranslator, useHook: useSelectedTranslator } = createAtomWithHook("CTranslate2", "SelectedTranslator");
-export const { atomInstance: openedTranslatorSelector, useHook: useOpenedTranslatorSelector } = createAtomWithHook(false, "OpenedTranslatorSelector");
-export const { atomInstance: vrctPosterIndex, useHook: useVrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
-export const { atomInstance: posterShowcaseWorldPageIndex, useHook: usePosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");
+export const { atomInstance: Atom_MicDeviceListStatus, useHook: useMicDeviceListStatus } = createAtomWithHook(test_device_list, "MicDeviceListStatus");
+
+export const { atomInstance: Atom_TranslatorListStatus, useHook: useTranslatorListStatus } = createAtomWithHook(translator_list, "TranslatorListStatus");
+export const { atomInstance: Atom_SelectedTranslatorIdStatus, useHook: useSelectedTranslatorIdStatus } = createAtomWithHook("CTranslate2", "SelectedTranslatorIdStatus");
+export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useIsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
+
+export const { atomInstance: Atom_VrctPosterIndex, useHook: useVrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
+export const { atomInstance: Atom_PosterShowcaseWorldPageIndex, useHook: usePosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");

@@ -1,10 +1,10 @@
 import styles from "./TranslatorSelector.module.scss";
 import { chunkArray } from "@utils/chunkArray";
 
-import { useTranslatorList, useSelectedTranslator, useOpenedTranslatorSelector } from "@store";
+import { useTranslatorListStatus, useSelectedTranslatorIdStatus, useIsOpenedTranslatorSelector } from "@store";
 export const TranslatorSelector = () => {
-    const { currentTranslatorList } = useTranslatorList();
-    const columns = chunkArray(currentTranslatorList, 2);
+    const { currentTranslatorListStatus } = useTranslatorListStatus();
+    const columns = chunkArray(currentTranslatorListStatus, 2);
 
     return (
         <div className={styles.container}>
@@ -28,18 +28,18 @@ export const TranslatorSelector = () => {
 
 import clsx from "clsx";
 const TranslatorBox = (props) => {
-    const { currentSelectedTranslator, updateSelectedTranslator} = useSelectedTranslator();
-    const { updateOpenedTranslatorSelector} = useOpenedTranslatorSelector();
+    const { currentSelectedTranslatorIdStatus, updateSelectedTranslatorIdStatus} = useSelectedTranslatorIdStatus();
+    const { updateIsOpenedTranslatorSelector} = useIsOpenedTranslatorSelector();
 
     const box_class_name = clsx(
         styles.box,
-        { [styles["is_selected"]]: (currentSelectedTranslator === props.translator_id) ? true : false },
+        { [styles["is_selected"]]: (currentSelectedTranslatorIdStatus === props.translator_id) ? true : false },
         { [styles["is_available"]]: (props.is_available === true) ? true : false }
     );
 
     const selectTranslator = () => {
-        updateSelectedTranslator(props.translator_id);
-        updateOpenedTranslatorSelector(false);
+        updateSelectedTranslatorIdStatus(props.translator_id);
+        updateIsOpenedTranslatorSelector(false);
     };
     return (
         <div className={box_class_name} onClick={selectTranslator}>
