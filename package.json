@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "setup-python": "install.bat",
-    "build-python": "pyinstaller -F src-python/test.py --distpath src-tauri/bin --clean -n test-x86_64-pc-windows-msvc",
+    "build-python": "pyinstaller -F src-python/webui_mainloop.py --add-data ./fonts;fonts/ --add-data ./batch;batch/ --add-data .venv/Lib/site-packages/zeroconf;zeroconf/ --add-data .venv/Lib/site-packages/openvr;openvr/ --distpath src-tauri/bin --exclude-module pandas --exclude-module matplotlib --exclude-module PyQt5 --clean -n test-x86_64-pc-windows-msvc",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
