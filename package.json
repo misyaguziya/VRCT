@@ -6,10 +6,15 @@
   "scripts": {
     "setup-python": "install.bat",
     "build-python": "pyinstaller -F src-python/webui_mainloop.py --add-data ./fonts;fonts/ --add-data ./batch;batch/ --add-data .venv/Lib/site-packages/zeroconf;zeroconf/ --add-data .venv/Lib/site-packages/openvr;openvr/ --distpath src-tauri/bin --exclude-module pandas --exclude-module matplotlib --exclude-module PyQt5 --clean -n test-x86_64-pc-windows-msvc",
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "tauri": "tauri"
+    "vite": "vite",
+    "vite-build": "vite build",
+    "vite-preview": "vite preview",
+    "tauri": "tauri",
+    "tauri-dev": "tauri dev",
+
+    "dev": "npm run build-python && npm run dev-ui",
+    "dev-ui": "npm-run-all --parallel vite tauri-dev",
+    "build": "npm run build-python && npm run vite-build && npm run tauri build"
   },
   "dependencies": {
     "@tauri-apps/api": "^1",
@@ -28,6 +33,7 @@
   "devDependencies": {
     "@tauri-apps/cli": "^1.5.14",
     "@vitejs/plugin-react": "^4.2.1",
+    "npm-run-all": "^4.1.5",
     "sass": "^1.77.4",
     "vite": "^5.0.0",
     "vite-plugin-svgr": "^4.2.0"
