@@ -1,6 +1,3 @@
-import "../../../locales/config.js";
-import "@utils/root.css";
-
 import styles from "./ConfigWindow.module.scss";
 
 import { Topbar } from "./topbar/Topbar";

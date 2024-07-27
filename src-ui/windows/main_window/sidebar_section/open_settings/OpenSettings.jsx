@@ -1,7 +1,7 @@
 import styles from "./OpenSettings.module.scss";
 import ConfigurationSvg from "@images/configuration.svg?react";
 
-import { useWindow } from "@utils/useWindow";
+import { useWindow } from "@logics/useWindow";
 
 export const OpenSettings = () => {
     const { createConfigWindow } = useWindow();
