@@ -222,35 +222,53 @@ def main():
     received_data = json.loads(received_data)
 
     if received_data is True:
-        endpoint = received_data.get("endpoint", None)
-        data = received_data.get("data", None)
-
-        match endpoint.split("/")[1]:
-            case "config":
-                response_data, status = handleConfigRequest(endpoint, data)
-            case "controller":
-                response_data, status = handleControllerRequest(endpoint, data)
-            case _:
-                pass
-
-        response = {
-            "status": status,
-            "endpoint": endpoint,
-            "data": response_data,
+        response_data = {
+            "status": "ok",
+            "id": received_data["id"],
+            "data": received_data["data"],
         }
-
-        response = json.dumps(response)
+        response = json.dumps(response_data)
         time.sleep(2)
         print(response, flush=True)
 
+        # endpoint = received_data.get("endpoint", None)
+        # data = received_data.get("data", None)
+
+        # match endpoint.split("/")[1]:
+        #     case "config":
+        #         response_data, status = handleConfigRequest(endpoint, data)
+        #     case "controller":
+        #         response_data, status = handleControllerRequest(endpoint, data)
+        #     case _:
+        #         pass
+
+        # response = {
+        #     "status": status,
+        #     "endpoint": endpoint,
+        #     "data": response_data,
+        # }
+
+        # response = json.dumps(response)
+        # time.sleep(2)
+        # print(response, flush=True)
+
 if __name__ == "__main__":
-    endpoint = "/controller/list_mic_host"
-    data = None
-    response_data, status = handleControllerRequest(endpoint, data)
-    response = {
-        "status": status,
-        "endpoint": endpoint,
-        "data": response_data,
-    }
-    response = json.dumps(response)
-    print(response, flush=True)
+    # endpoint = "/controller/list_mic_host"
+    # data = None
+    # response_data, status = handleControllerRequest(endpoint, data)
+    # response = {
+    #     "status": status,
+    #     "endpoint": endpoint,
+    #     "data": response_data,
+    # }
+    # response = json.dumps(response)
+    # print(response, flush=True)
+
+    try:
+        print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
+        while True:
+            main()
+    except Exception:
+        import traceback
+        with open('error.log', 'a') as f:
+            traceback.print_exc(file=f)
