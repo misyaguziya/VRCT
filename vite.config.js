@@ -37,10 +37,9 @@ export default defineConfig(async () => ({
 
             "@scss_mixins": path.resolve(__dirname, "src-ui/utils/mixins.scss"),
             "@store": path.resolve(__dirname, "src-ui/store.js"),
-            "@logic": path.resolve(__dirname, "src-ui/logic.js"),
             "@images": path.resolve(__dirname, "src-ui/assets"),
             "@utils": path.resolve(__dirname, "src-ui/utils"),
-            "@logics": path.resolve(__dirname, "src-ui/utils/logics"),
+            "@logics": path.resolve(__dirname, "src-ui/logics"),
         },
     },
 
