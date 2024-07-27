@@ -1,74 +1,74 @@
 import { getCurrent } from "@tauri-apps/api/window";
 
 import {
-    useState_Translation,
-    useState_TranscriptionSend,
-    useState_TranscriptionReceive,
-    useState_Foreground,
+    useTranslationStatus,
+    useTranscriptionSendStatus,
+    useTranscriptionReceiveStatus,
+    useForegroundStatus,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
 
 export const useMainFunction = () => {
     const {
-        currentState_Translation,
-        updateState_Translation,
-        asyncUpdateState_Translation,
-    } = useState_Translation();
+        currentTranslationStatus,
+        updateTranslationStatus,
+        asyncUpdateTranslationStatus,
+    } = useTranslationStatus();
     const {
-        currentState_TranscriptionSend,
-        updateState_TranscriptionSend,
-        asyncUpdateState_TranscriptionSend,
-    } = useState_TranscriptionSend();
+        currentTranscriptionSendStatus,
+        updateTranscriptionSendStatus,
+        asyncUpdateTranscriptionSendStatus,
+    } = useTranscriptionSendStatus();
     const {
-        currentState_TranscriptionReceive,
-        updateState_TranscriptionReceive,
-        asyncUpdateState_TranscriptionReceive,
-    } = useState_TranscriptionReceive();
+        currentTranscriptionReceiveStatus,
+        updateTranscriptionReceiveStatus,
+        asyncUpdateTranscriptionReceiveStatus,
+    } = useTranscriptionReceiveStatus();
     const {
-        currentState_Foreground,
-        updateState_Foreground,
-    } = useState_Foreground();
+        currentForegroundStatus,
+        updateForegroundStatus,
+    } = useForegroundStatus();
 
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const asyncPending = () => new Promise(() => {});
     return {
         toggleTranslation: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_translation", data: !currentState_Translation.data});
-            asyncUpdateState_Translation(asyncPending);
+            asyncStdoutToPython({id: "/controller/callback_toggle_translation", data: !currentTranslationStatus.data});
+            asyncUpdateTranslationStatus(asyncPending);
         },
-        currentState_Translation: currentState_Translation,
-        updateState_Translation: (payload) => {
-            updateState_Translation(payload.data);
+        currentTranslationStatus: currentTranslationStatus,
+        updateTranslationStatus: (payload) => {
+            updateTranslationStatus(payload.data);
         },
 
         toggleTranscriptionSend: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_send", data: !currentState_TranscriptionSend.data});
-            asyncUpdateState_TranscriptionSend(asyncPending);
+            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_send", data: !currentTranscriptionSendStatus.data});
+            asyncUpdateTranscriptionSendStatus(asyncPending);
         },
-        currentState_TranscriptionSend: currentState_TranscriptionSend,
-        updateState_TranscriptionSend: (payload) => {
-            updateState_TranscriptionSend(payload.data);
+        currentTranscriptionSendStatus: currentTranscriptionSendStatus,
+        updateTranscriptionSendStatus: (payload) => {
+            updateTranscriptionSendStatus(payload.data);
         },
 
         toggleTranscriptionReceive: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_receive", data: !currentState_TranscriptionReceive.data});
-            asyncUpdateState_TranscriptionReceive(asyncPending);
+            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_receive", data: !currentTranscriptionReceiveStatus.data});
+            asyncUpdateTranscriptionReceiveStatus(asyncPending);
         },
-        currentState_TranscriptionReceive: currentState_TranscriptionReceive,
-        updateState_TranscriptionReceive: (payload) => {
-            updateState_TranscriptionReceive(payload.data);
+        currentTranscriptionReceiveStatus: currentTranscriptionReceiveStatus,
+        updateTranscriptionReceiveStatus: (payload) => {
+            updateTranscriptionReceiveStatus(payload.data);
         },
 
         toggleForeground: () => {
             const main_window = getCurrent();
-            const is_foreground_enabled = !currentState_Foreground.data;
+            const is_foreground_enabled = !currentForegroundStatus.data;
             main_window.setAlwaysOnTop(is_foreground_enabled);
-            updateState_Foreground(is_foreground_enabled);
+            updateForegroundStatus(is_foreground_enabled);
 
         },
-        currentState_Foreground: currentState_Foreground,
+        currentForegroundStatus: currentForegroundStatus,
     };
 };
 

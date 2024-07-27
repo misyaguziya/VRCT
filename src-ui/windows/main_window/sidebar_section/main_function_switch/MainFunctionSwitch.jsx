@@ -5,7 +5,7 @@ import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import ForegroundSvg from "@images/foreground.svg?react";
-import { useIsCompactMode } from "@store";
+import { useMainWindowCompactModeStatus } from "@store";
 
 import { useMainFunction } from "@logics/useMainFunction";
 
@@ -13,10 +13,10 @@ export const MainFunctionSwitch = () => {
     const { t } = useTranslation();
 
     const {
-        toggleTranslation, currentState_Translation,
-        toggleTranscriptionSend, currentState_TranscriptionSend,
-        toggleTranscriptionReceive, currentState_TranscriptionReceive,
-        toggleForeground, currentState_Foreground,
+        toggleTranslation, currentTranslationStatus,
+        toggleTranscriptionSend, currentTranscriptionSendStatus,
+        toggleTranscriptionReceive, currentTranscriptionReceiveStatus,
+        toggleForeground, currentForegroundStatus,
     } = useMainFunction();
 
 
@@ -25,28 +25,28 @@ export const MainFunctionSwitch = () => {
             switch_id: "translation",
             label: t("main_window.translation"),
             SvgComponent: TranslationSvg,
-            currentState: currentState_Translation,
+            currentState: currentTranslationStatus,
             toggleFunction: toggleTranslation,
         },
         {
             switch_id: "transcription_send",
             label: t("main_window.transcription_send"),
             SvgComponent: MicSvg,
-            currentState: currentState_TranscriptionSend,
+            currentState: currentTranscriptionSendStatus,
             toggleFunction: toggleTranscriptionSend,
         },
         {
             switch_id: "transcription_receive",
             label: t("main_window.transcription_receive"),
             SvgComponent: HeadphonesSvg,
-            currentState: currentState_TranscriptionReceive,
+            currentState: currentTranscriptionReceiveStatus,
             toggleFunction: toggleTranscriptionReceive,
         },
         {
             switch_id: "foreground",
             label: t("main_window.foreground"),
             SvgComponent: ForegroundSvg,
-            currentState: currentState_Foreground,
+            currentState: currentForegroundStatus,
             toggleFunction: toggleForeground,
         },
     ];
@@ -74,10 +74,10 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
     const [is_hovered, setIsHovered] = useState(false);
     const [is_mouse_down, setIsMouseDown] = useState(false);
 
-    const { currentIsCompactMode } = useIsCompactMode();
+    const { currentMainWindowCompactModeStatus } = useMainWindowCompactModeStatus();
 
     const getClassNames = (baseClass) => clsx(baseClass, {
-        [styles.is_compact_mode]: currentIsCompactMode,
+        [styles.is_compact_mode]: currentMainWindowCompactModeStatus,
         [styles.is_active]: (currentState.data === true),
         [styles.is_loading]: (currentState.state === "loading"),
         [styles.is_hovered]: is_hovered,

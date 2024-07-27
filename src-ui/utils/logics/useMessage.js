@@ -1,11 +1,11 @@
 import {
-    useMessageLogs,
+    useMessageLogsStatus,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
 
 export const useMessage = () => {
-    const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useMessageLogs();
+    const { currentMessageLogsStatus, addMessageLogsStatus, updateMessageLogsStatus } = useMessageLogsStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     return {
@@ -17,7 +17,7 @@ export const useMessage = () => {
                 {hour12: false, hour: "2-digit", minute:"2-digit"},
             );
 
-            addMessageLogs({
+            addMessageLogsStatus({
                 id: uuid,
                 category: "sent",
                 status: "pending",
@@ -39,10 +39,10 @@ export const useMessage = () => {
                         return item;
                     });
                 };
-                updateMessageLogs(updateItemById(uuid));
+                updateMessageLogsStatus(updateItemById(uuid));
             }, 3000);
         },
-        currentMessageLogs: currentMessageLogs,
+        currentMessageLogsStatus: currentMessageLogsStatus,
     };
 };
 

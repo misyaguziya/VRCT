@@ -1,8 +1,8 @@
 import { useSettingBox } from "../useSettingBox";
-import { useSelectedMicDevice, useMicDeviceList } from "@store";
+import { useSelectedMicDeviceStatus, useMicDeviceListStatus } from "@store";
 export const Appearance = () => {
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useSelectedMicDevice();
-    const { currentMicDeviceList } = useMicDeviceList();
+    const { currentSelectedMicDeviceStatus, updateSelectedMicDeviceStatus } = useSelectedMicDeviceStatus();
+    const { currentMicDeviceListStatus } = useMicDeviceListStatus();
     const { DropdownMenuContainer } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -13,13 +13,13 @@ export const Appearance = () => {
                 }, 3000);
             });
         };
-        updateSelectedMicDevice(asyncFunction);
+        updateSelectedMicDeviceStatus(asyncFunction);
     };
 
     return (
         <>
             <DropdownMenuContainer dropdown_id="mic_host" label="Mic Host/Driver" desc="description" selected_id="b" list={{a: "A", b: "B", c: "C"}} />
-            <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
+            <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDeviceStatus.data} list={currentMicDeviceListStatus} selectFunction={selectFunction} state={currentSelectedMicDeviceStatus.state} />
         </>
     );
 };

@@ -2,20 +2,20 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./LanguageSettings.module.scss";
 
-import { PresetSelectTabs } from "./preset_select_tabs/PresetSelectTabs";
+import { PresetTabSelector } from "./preset_tab_selector/PresetTabSelector";
 import { LanguageSelectorOpenButton } from "./language_selector_open_button/LanguageSelectorOpenButton";
 import { LanguageSwapButton } from "./language_swap_button/LanguageSwapButton";
 import { TranslatorSelectorOpenButton } from "./translator_selector_open_button/TranslatorSelectorOpenButton";
-import { useOpenedTranslatorSelector } from "@store";
+import { useIsOpenedTranslatorSelector } from "@store";
 
 export const LanguageSettings = () => {
-    const { updateOpenedTranslatorSelector} = useOpenedTranslatorSelector();
-    const closeTranslatorSelector = () => updateOpenedTranslatorSelector(false);
+    const { updateIsOpenedTranslatorSelector} = useIsOpenedTranslatorSelector();
+    const closeTranslatorSelector = () => updateIsOpenedTranslatorSelector(false);
 
     return (
         <div className={styles.container} onMouseLeave={closeTranslatorSelector} >
             <p className={styles.title}>Language Settings</p>
-            <PresetSelectTabs />
+            <PresetTabSelector />
             <PresetContainer />
         </div>
     );
@@ -32,8 +32,8 @@ const PresetContainer = () => {
     const { updateIsOpenedLanguageSelector, currentIsOpenedLanguageSelector } = useIsOpenedLanguageSelector();
 
     const {
-        currentState_TranscriptionSend,
-        currentState_TranscriptionReceive,
+        currentTranscriptionSendStatus,
+        currentTranscriptionReceiveStatus,
     } = useMainFunction();
 
 
@@ -79,7 +79,7 @@ const PresetContainer = () => {
         is_opened: currentIsOpenedLanguageSelector.your_language,
         onClickFunction: () => handleLanguageSelectorClick("your_language"),
         TurnedOnSvgComponent: <MicSvg />,
-        is_turned_on: currentState_TranscriptionSend.data,
+        is_turned_on: currentTranscriptionSendStatus.data,
     };
 
     const target_language_settings = {
@@ -87,7 +87,7 @@ const PresetContainer = () => {
         is_opened: currentIsOpenedLanguageSelector.target_language,
         onClickFunction: () => handleLanguageSelectorClick("target_language"),
         TurnedOnSvgComponent: <HeadphonesSvg />,
-        is_turned_on: currentState_TranscriptionReceive.data,
+        is_turned_on: currentTranscriptionReceiveStatus.data,
     };
 
     return (

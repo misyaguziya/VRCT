@@ -2,19 +2,19 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
-import { useTranslatorList, useSelectedTranslator, useOpenedTranslatorSelector } from "@store";
+import { useTranslatorListStatus, useSelectedTranslatorIdStatus, useIsOpenedTranslatorSelector } from "@store";
 
 export const TranslatorSelectorOpenButton = () => {
     const { t } = useTranslation();
-    const { currentSelectedTranslator } = useSelectedTranslator();
-    const { currentTranslatorList } = useTranslatorList();
-    const currentTranslator = currentTranslatorList.find(
-        translator_data => translator_data.translator_key === currentSelectedTranslator
+    const { currentSelectedTranslatorIdStatus } = useSelectedTranslatorIdStatus();
+    const { currentTranslatorListStatus } = useTranslatorListStatus();
+    const currentTranslator = currentTranslatorListStatus.find(
+        translator_data => translator_data.translator_key === currentSelectedTranslatorIdStatus
     );
 
-    const { currentOpenedTranslatorSelector, updateOpenedTranslatorSelector} = useOpenedTranslatorSelector();
+    const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useIsOpenedTranslatorSelector();
 
-    const openTranslatorSelector = () => updateOpenedTranslatorSelector(!currentOpenedTranslatorSelector);
+    const openTranslatorSelector = () => updateIsOpenedTranslatorSelector(!currentIsOpenedTranslatorSelector);
 
     return (
         <div className={styles.container}>
@@ -22,7 +22,7 @@ export const TranslatorSelectorOpenButton = () => {
                 <p className={styles.label}>{t("main_window.translator")}</p>
                 <p className={styles.label}>{currentTranslator?.translator_name}</p>
             </div>
-            {currentOpenedTranslatorSelector && <TranslatorSelector />}
+            {currentIsOpenedTranslatorSelector && <TranslatorSelector />}
         </div>
     );
 };

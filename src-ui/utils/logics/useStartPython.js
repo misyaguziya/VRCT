@@ -5,15 +5,15 @@ import { useMainFunction } from "./useMainFunction";
 
 export const useStartPython = () => {
     const {
-        updateState_Translation,
-        updateState_TranscriptionSend,
-        updateState_TranscriptionReceive,
+        updateTranslationStatus,
+        updateTranscriptionSendStatus,
+        updateTranscriptionReceiveStatus,
     } = useMainFunction();
 
     const routes = {
-        "/controller/callback_toggle_translation": updateState_Translation,
-        "/controller/callback_toggle_transcription_send": updateState_TranscriptionSend,
-        "/controller/callback_toggle_transcription_receive": updateState_TranscriptionReceive,
+        "/controller/callback_toggle_translation": updateTranslationStatus,
+        "/controller/callback_toggle_transcription_send": updateTranscriptionSendStatus,
+        "/controller/callback_toggle_transcription_receive": updateTranscriptionReceiveStatus,
     };
 
     const receiveRoutes = (parsed_data) => {

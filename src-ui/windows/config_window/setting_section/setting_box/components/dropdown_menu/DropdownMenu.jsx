@@ -2,17 +2,17 @@ import styles from "./DropdownMenu.module.scss";
 
 import clsx from "clsx";
 
-import { useOpenedDropdownMenu } from "@store";
+import { useIsOpenedDropdownMenu } from "@store";
 
 export const DropdownMenu = (props) => {
 
-    const { updateOpenedDropdownMenu, currentOpenedDropdownMenu } = useOpenedDropdownMenu();
+    const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
     const openDropdownMenu = () => {
-        updateOpenedDropdownMenu(props.dropdown_id);
+        updateIsOpenedDropdownMenu(props.dropdown_id);
     };
 
     const selectValue = (key) => {
-        updateOpenedDropdownMenu("");
+        updateIsOpenedDropdownMenu("");
         props.selectFunction({
             dropdown_id: props.dropdown_id,
             selected_id: key,
@@ -20,7 +20,7 @@ export const DropdownMenu = (props) => {
     };
 
     const dropdown_content_wrapper_class_name = clsx(styles["dropdown_content_wrapper"], {
-        [styles["is_opened"]]: (currentOpenedDropdownMenu === props.dropdown_id) ? true : false
+        [styles["is_opened"]]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
     });
 
     const dropdown_toggle_button_class_name = clsx(styles["dropdown_toggle_button"], {

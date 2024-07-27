@@ -9,6 +9,11 @@ export const translator_list = [
     { translator_key: "CTranslate2", translator_name: `Internal\n(Default)`, is_available: true },
 ];
 
+export const test_device_list = {
+    a: "Device A",
+    "device b": "Device B",
+};
+
 
 export const generateTestData = (num) => {
     const testDataArray = [];
