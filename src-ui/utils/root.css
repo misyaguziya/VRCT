@@ -32,6 +32,9 @@ html, body {
 
 #root {
     height: 100%;
+
+    /* For controlling a whole window transparency */
+    opacity: 1;
 }
 
 /* SVG内のすべての要素にfillを適用 (colorの調整をcssでするため) */

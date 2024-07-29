@@ -15,25 +15,28 @@
       "window": {
         "create": true,
         "close": true,
-        "setAlwaysOnTop": true
-      },
-      "shell": {
+        "setAlwaysOnTop": true,
+        "setDecorations": true
+    },
+    "shell": {
         "all": false,
         "open": true,
         "sidecar": true,
         "scope": [
-          {
-            "name": "bin/test", "sidecar": true,"args": true
-          }
+            {
+                "name": "bin/test", "sidecar": true,"args": true
+            }
         ]
-      }
-    },
-    "windows": [
-      {
+    }
+},
+"windows": [
+    {
         "title": "VRCT",
         "width": 870,
-        "height": 654
-      }
+        "height": 654,
+        "transparent": true,
+        "decorations": false
+    }
     ],
     "security": {
       "csp": null
