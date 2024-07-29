@@ -8,7 +8,9 @@
     position: relative;
     background-color: var(--dark_925_color);
     min-width: 20rem;
-    padding: 0.6rem 0.8rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    border-radius: 0.4rem;
     &:hover {
         background-color: var(--dark_850_color);
     }
@@ -47,6 +49,7 @@
 .value_button {
     background-color: var(--dark_875_color);
     padding: 0.8rem;
+    cursor: pointer;
     &:hover {
         background-color: var(--dark_800_color);
     }
@@ -61,4 +64,15 @@
 
 .loader {
     @include loader(2rem, 0.2rem, right, 0);
+}
+
+.arrow_left_svg {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    width: 1.4rem;
+    &.is_opened {
+        transform: translate(-50%, -50%) rotate(90deg);
+    }
 }
