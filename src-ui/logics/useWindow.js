@@ -13,6 +13,7 @@ export const useWindow = () => {
                 center: true,
                 width: 1080,
                 height: 700,
+                title: "Settings"
             });
 
             config_window.once("tauri://created", function () {
