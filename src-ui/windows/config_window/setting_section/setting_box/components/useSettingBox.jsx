@@ -1,6 +1,6 @@
 import styles from "./useSettingBox.module.scss";
-import { LabelComponent } from "./components/label_component/LabelComponent";
-import { DropdownMenu } from "./components/dropdown_menu/DropdownMenu";
+import { LabelComponent } from "./label_component/LabelComponent";
+import { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 import { useIsOpenedDropdownMenu } from "@store";
 
 export const useSettingBox = () => {

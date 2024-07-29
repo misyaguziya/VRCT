@@ -1,4 +1,3 @@
-import styles from "./SettingBox.module.scss";
 import { useSelectedConfigTabId } from "@store";
 
 import { Appearance } from "./appearance/Appearance";
