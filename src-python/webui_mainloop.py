@@ -221,36 +221,48 @@ def main():
     received_data = sys.stdin.readline().strip()
     received_data = json.loads(received_data)
 
-    if received_data is True:
-        response_data = {
-            "status": "ok",
-            "id": received_data["id"],
-            "data": received_data["data"],
-        }
-        response = json.dumps(response_data)
-        time.sleep(2)
-        print(response, flush=True)
+    with open('process.log', 'a') as f:
+        f.write(f"received_data: {received_data}\n")
 
-        # endpoint = received_data.get("endpoint", None)
-        # data = received_data.get("data", None)
-
-        # match endpoint.split("/")[1]:
-        #     case "config":
-        #         response_data, status = handleConfigRequest(endpoint, data)
-        #     case "controller":
-        #         response_data, status = handleControllerRequest(endpoint, data)
-        #     case _:
-        #         pass
-
-        # response = {
-        #     "status": status,
-        #     "endpoint": endpoint,
-        #     "data": response_data,
+    if received_data:
+        # response_data = {
+        #     "status": 200,
+        #     "id": received_data["id"],
+        #     "data": received_data["data"],
         # }
-
-        # response = json.dumps(response)
+        # response = json.dumps(response_data)
         # time.sleep(2)
         # print(response, flush=True)
+
+        endpoint = received_data.get("endpoint", None)
+        data = received_data.get("data", None)
+
+        with open('process.log', 'a') as f:
+            f.write(f"received_data : endpoint: {endpoint}, data:{data}\n")
+
+        try:
+            match endpoint.split("/")[1]:
+                case "config":
+                    result_data, status = handleConfigRequest(endpoint, data)
+                case "controller":
+                    result_data, status = handleControllerRequest(endpoint, data)
+                case _:
+                    pass
+        except Exception as e:
+            result_data = str(e)
+            status = 500
+
+        response = {
+            "status": status,
+            "endpoint": endpoint,
+            "result": result_data,
+        }
+
+        response = json.dumps(response)
+        with open('process.log', 'a') as f:
+            f.write(f"response: {response}\n")
+
+        print(response, flush=True)
 
 if __name__ == "__main__":
     # endpoint = "/controller/list_mic_host"
