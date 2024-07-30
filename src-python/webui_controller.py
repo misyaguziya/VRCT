@@ -83,7 +83,7 @@ class MicMessage:
             addSentMessageLog(message)
             translation = ""
             if model.checkKeywords(message):
-                self.action({"status":"error", f"message":"Detected by word filter:{message}"})
+                self.action({"status":"error", "message":f"Detected by word filter:{message}"})
                 return
             elif model.detectRepeatSendMessage(message):
                 return
@@ -416,12 +416,12 @@ def callbackEnableTranslation(*args, **kwargs) -> dict:
     config.ENABLE_TRANSLATION = True
     if model.isLoadedCTranslate2Model() is False:
         model.changeTranslatorCTranslate2Model()
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSLATION}
 
 def callbackDisableTranslation(*args, **kwargs) -> dict:
     print("callbackDisableTranslation")
     config.ENABLE_TRANSLATION = False
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSLATION}
 
 def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     print("callbackEnableTranscriptionSend")
