@@ -6,6 +6,7 @@ export const Appearance = () => {
     const {
         DropdownMenuContainer,
         SliderContainer,
+        CheckboxContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -25,6 +26,7 @@ export const Appearance = () => {
             <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDeviceStatus.data} list={currentMicDeviceListStatus} selectFunction={selectFunction} state={currentSelectedMicDeviceStatus.state} />
 
             <SliderContainer label="Transparent" desc="description" min="0" max="3000"/>
+            <CheckboxContainer label="Transparent" desc="description" checkbox_id="checkbox_id_1"/>
         </>
     );
 };
