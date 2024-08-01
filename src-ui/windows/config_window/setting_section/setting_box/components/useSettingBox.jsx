@@ -2,6 +2,7 @@ import styles from "./useSettingBox.module.scss";
 import { LabelComponent } from "./label_component/LabelComponent";
 import { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 import { Slider } from "./slider/Slider";
+import { Checkbox } from "./checkbox/Checkbox";
 import { useIsOpenedDropdownMenu } from "@store";
 
 export const useSettingBox = () => {
@@ -29,8 +30,18 @@ export const useSettingBox = () => {
         );
     };
 
+    const CheckboxContainer = (props) => {
+        return (
+            <div className={styles.container}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <Checkbox {...props}/>
+            </div>
+        );
+    };
+
     return {
         DropdownMenuContainer,
         SliderContainer,
+        CheckboxContainer,
     };
 };
