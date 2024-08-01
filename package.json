@@ -11,12 +11,14 @@
     "vite-preview": "vite preview",
     "tauri": "tauri",
     "tauri-dev": "tauri dev",
-
     "dev": "npm run build-python && npm run dev-ui",
     "dev-ui": "npm-run-all --parallel vite tauri-dev",
     "build": "npm run build-python && npm run vite-build && npm run tauri build"
   },
   "dependencies": {
+    "@emotion/react": "^11.13.0",
+    "@emotion/styled": "^11.13.0",
+    "@mui/material": "^5.16.6",
     "@tauri-apps/api": "^1",
     "@typescript-eslint/eslint-plugin": "^7.11.0",
     "@typescript-eslint/parser": "^7.11.0",
