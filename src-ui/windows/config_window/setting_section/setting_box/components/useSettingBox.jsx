@@ -5,6 +5,7 @@ import { Slider } from "./slider/Slider";
 import { Checkbox } from "./checkbox/Checkbox";
 import { Switchbox } from "./switchbox/Switchbox";
 import { Entry } from "./entry/Entry";
+import { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 import { useIsOpenedDropdownMenu } from "@store";
 
 export const useSettingBox = () => {
@@ -59,11 +60,26 @@ export const useSettingBox = () => {
         );
     };
 
+    const ThresholdContainer = (props) => {
+        return (
+            <div className={styles.threshold_container}>
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent label={props.label} desc={props.desc} />
+                    <Switchbox {...props}/>
+                </div>
+                <div className={styles.threshold_section}>
+                    <ThresholdComponent {...props}/>
+                </div>
+            </div>
+        );
+    };
+
     return {
         DropdownMenuContainer,
         SliderContainer,
         CheckboxContainer,
         SwitchboxContainer,
         EntryContainer,
+        ThresholdContainer,
     };
 };
