@@ -8,6 +8,7 @@ export const Appearance = () => {
         SliderContainer,
         CheckboxContainer,
         SwitchboxContainer,
+        EntryContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -29,6 +30,8 @@ export const Appearance = () => {
             <SliderContainer label="Transparent" desc="description" min="0" max="3000"/>
             <CheckboxContainer label="Transparent" desc="description" checkbox_id="checkbox_id_1"/>
             <SwitchboxContainer label="Transparent" desc="description" switchbox_id="switchbox_id_1"/>
+
+            <EntryContainer label="Transparent" desc="description" switchbox_id="switchbox_id_1"/>
         </>
     );
 };

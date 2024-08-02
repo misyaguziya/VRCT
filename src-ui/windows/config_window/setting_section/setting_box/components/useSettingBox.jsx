@@ -4,6 +4,7 @@ import { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 import { Slider } from "./slider/Slider";
 import { Checkbox } from "./checkbox/Checkbox";
 import { Switchbox } from "./switchbox/Switchbox";
+import { Entry } from "./entry/Entry";
 import { useIsOpenedDropdownMenu } from "@store";
 
 export const useSettingBox = () => {
@@ -49,10 +50,20 @@ export const useSettingBox = () => {
         );
     };
 
+    const EntryContainer = (props) => {
+        return (
+            <div className={styles.container}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <Entry {...props}/>
+            </div>
+        );
+    };
+
     return {
         DropdownMenuContainer,
         SliderContainer,
         CheckboxContainer,
         SwitchboxContainer,
+        EntryContainer,
     };
 };
