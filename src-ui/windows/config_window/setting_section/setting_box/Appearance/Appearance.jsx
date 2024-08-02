@@ -9,6 +9,7 @@ export const Appearance = () => {
         CheckboxContainer,
         SwitchboxContainer,
         EntryContainer,
+        ThresholdContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -32,6 +33,8 @@ export const Appearance = () => {
             <SwitchboxContainer label="Transparent" desc="description" switchbox_id="switchbox_id_1"/>
 
             <EntryContainer label="Transparent" desc="description" switchbox_id="switchbox_id_1"/>
+
+            <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
         </>
     );
 };

@@ -1,0 +1,14 @@
+.button_button {
+    width: 100%;
+    background-color: var(--dark_800_color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 50%;
+}
+
+.button_svg {
+    width: 2.6rem;
+    color: var(--dark_350_color);
+}
