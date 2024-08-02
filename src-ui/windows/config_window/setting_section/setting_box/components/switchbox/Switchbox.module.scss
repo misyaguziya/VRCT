@@ -1,0 +1,25 @@
+@import "@scss_mixins";
+
+.switchbox_container {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    height: 2rem;
+}
+
+.switchbox_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    padding: 2rem;
+    height: 100%;
+}
+
+.toggle_control {
+    @include toggle_control_styles;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
