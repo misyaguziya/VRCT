@@ -82,6 +82,10 @@ $loading_label_color: var(--dark_500_color);
 
 .toggle_control {
     @include toggle_control_styles;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    width: 100%;
     &.is_compact_mode {
         display: none;
     }

@@ -29,7 +29,6 @@ $default_loader_line_width: 0.2rem !default;
         border-left: $loader_line_width solid transparent;
     }
 
-    // @keyframes
     @keyframes rotate_animation {
         0% {
             transform: translate($calc_translate, $calc_translate) rotate(0deg);
@@ -60,16 +59,12 @@ $toggle_control_size: $toggle_height - calc($toggle_gutter * 2);
     position: relative;
     height: 100%;
     width: auto;
-    padding-left: $toggle_width;
     .control {
-        position: absolute;
-        top: 0;
-        left: 0;
+        position: relative;
         height: $toggle_height;
         width: $toggle_width;
         border-radius: $toggle_radius;
         background-color: $toggle_background_color_off;
-        // transition: background-color $toggle_control_speed $toggle_control_ease;
         &:after {
             content: "";
             position: absolute;
@@ -100,8 +95,4 @@ $toggle_control_size: $toggle_height - calc($toggle_gutter * 2);
             }
         }
     }
-}
-
-.toggle_control {
-    @include toggle_control_styles;
 }
