@@ -1,4 +1,6 @@
 import styles from "./useSettingBox.module.scss";
+import { useIsOpenedDropdownMenu } from "@store";
+
 import { LabelComponent } from "./label_component/LabelComponent";
 import { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 import { Slider } from "./slider/Slider";
@@ -6,7 +8,7 @@ import { Checkbox } from "./checkbox/Checkbox";
 import { Switchbox } from "./switchbox/Switchbox";
 import { Entry } from "./entry/Entry";
 import { ThresholdComponent } from "./threshold_component/ThresholdComponent";
-import { useIsOpenedDropdownMenu } from "@store";
+import { RadioButton } from "./radio_button/RadioButton";
 
 export const useSettingBox = () => {
     const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
@@ -60,6 +62,15 @@ export const useSettingBox = () => {
         );
     };
 
+    const RadioButtonContainer = (props) => {
+        return (
+            <div className={styles.container}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <RadioButton {...props}/>
+            </div>
+        );
+    };
+
     const ThresholdContainer = (props) => {
         return (
             <div className={styles.threshold_container}>
@@ -81,5 +92,6 @@ export const useSettingBox = () => {
         SwitchboxContainer,
         EntryContainer,
         ThresholdContainer,
+        RadioButtonContainer,
     };
 };
