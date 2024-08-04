@@ -1,6 +1,9 @@
+import { useTranslation } from "react-i18next";
+
 import { useSettingBox } from "../components/useSettingBox";
 import { useSelectedMicDeviceStatus, useMicDeviceListStatus } from "@store";
 export const Appearance = () => {
+    const { t } = useTranslation();
     const { currentSelectedMicDeviceStatus, updateSelectedMicDeviceStatus } = useSelectedMicDeviceStatus();
     const { currentMicDeviceListStatus } = useMicDeviceListStatus();
     const {
@@ -40,7 +43,7 @@ export const Appearance = () => {
 
             <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
 
-            <DeeplAuthKeyContainer label="Transparent" desc="description"/>
+            <DeeplAuthKeyContainer label={t(`config_window.deepl_auth_key.label`)} desc={t(`config_window.deepl_auth_key.desc`)}/>
         </>
     );
 };
