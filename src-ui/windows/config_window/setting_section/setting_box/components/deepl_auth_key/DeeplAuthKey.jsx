@@ -1,20 +1,20 @@
 import styles from "./DeeplAuthKey.module.scss";
 import { useTranslation } from "react-i18next";
-
 import clsx from "clsx";
 import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_Entry";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export const DeeplAuthKey = () => {
     const { t } = useTranslation();
     const [is_editable, seIsEditable] = useState(false);
     const [input_value, seInputValue] = useState("");
+    const entryRef = useRef(null);
 
     const revealEditAuthKey = () => {
         seIsEditable(true);
+        entryRef.current.focus();
     };
-
 
     const onchangeEntryAuthKey = (e) => {
         seInputValue(e.target.value);
@@ -26,7 +26,7 @@ export const DeeplAuthKey = () => {
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry width="32rem" onChange={onchangeEntryAuthKey}/>
+                <_Entry ref={entryRef} width="32rem" onChange={onchangeEntryAuthKey}/>
                 <button className={styles.save_button} onClick={saveAuthKey}>Save</button>
                 {is_editable
                 ? null
@@ -39,6 +39,7 @@ export const DeeplAuthKey = () => {
         </div>
     );
 };
+
 
 export const OpenWebpage_DeeplAuthKey = () => {
     return (

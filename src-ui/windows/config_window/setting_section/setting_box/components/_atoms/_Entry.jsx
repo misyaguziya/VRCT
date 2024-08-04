@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import styles from "./_Entry.module.scss";
 
-export const _Entry = ({ width, onChange, initialValue = "" }) => {
+const _Entry = forwardRef(({ width, onChange, initialValue = "" }, ref) => {
     const [input_value, setInputValue] = useState(initialValue);
+    const inputRef = useRef();
 
     const onChangeFunction = (e) => {
         setInputValue(e.currentTarget.value);
@@ -11,6 +12,12 @@ export const _Entry = ({ width, onChange, initialValue = "" }) => {
         }
     };
 
+    useImperativeHandle(ref, () => ({
+        focus: () => {
+            inputRef.current.focus();
+        }
+    }));
+
     return (
         <div className={styles.entry_container}>
             <div
@@ -18,6 +25,7 @@ export const _Entry = ({ width, onChange, initialValue = "" }) => {
                 style={{ width }}
             >
                 <input
+                    ref={inputRef}
                     className={styles.entry_input_area}
                     value={input_value}
                     onChange={onChangeFunction}
@@ -25,4 +33,8 @@ export const _Entry = ({ width, onChange, initialValue = "" }) => {
             </div>
         </div>
     );
-};
+});
+
+_Entry.displayName = "_Entry";
+
+export { _Entry };
