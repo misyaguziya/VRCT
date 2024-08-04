@@ -9,6 +9,7 @@ import { Switchbox } from "./switchbox/Switchbox";
 import { Entry } from "./entry/Entry";
 import { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 import { RadioButton } from "./radio_button/RadioButton";
+import { DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
 
 export const useSettingBox = () => {
     const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
@@ -85,6 +86,15 @@ export const useSettingBox = () => {
         );
     };
 
+    const DeeplAuthKeyContainer = (props) => {
+        return (
+            <div className={styles.container}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <DeeplAuthKey {...props}/>
+            </div>
+        );
+    };
+
     return {
         DropdownMenuContainer,
         SliderContainer,
@@ -93,5 +103,6 @@ export const useSettingBox = () => {
         EntryContainer,
         ThresholdContainer,
         RadioButtonContainer,
+        DeeplAuthKeyContainer,
     };
 };

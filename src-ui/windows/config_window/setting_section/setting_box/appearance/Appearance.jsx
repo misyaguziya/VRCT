@@ -11,6 +11,7 @@ export const Appearance = () => {
         EntryContainer,
         ThresholdContainer,
         RadioButtonContainer,
+        DeeplAuthKeyContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -35,9 +36,11 @@ export const Appearance = () => {
 
             <RadioButtonContainer label="Transparent" desc="description" switchbox_id="radiobutton_id_1"/>
 
-            <EntryContainer label="Transparent" desc="description" switchbox_id="entry_id_1"/>
+            <EntryContainer width="20rem" label="Transparent" desc="description" switchbox_id="entry_id_1"/>
 
             <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
+
+            <DeeplAuthKeyContainer label="Transparent" desc="description"/>
         </>
     );
 };
