@@ -5,6 +5,9 @@
     align-items: center;
     background-color: var(--dark_888_color);
     padding: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .threshold_container {
@@ -27,4 +30,13 @@
 
 .threshold_section {
     width: 100%;
+}
+
+.deepl_auth_key_label_section {
+    max-width: 34rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.4rem;
 }
