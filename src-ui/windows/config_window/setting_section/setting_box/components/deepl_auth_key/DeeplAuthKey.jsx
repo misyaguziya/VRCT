@@ -44,7 +44,7 @@ export const DeeplAuthKey = () => {
 export const OpenWebpage_DeeplAuthKey = () => {
     return (
         <div className={styles.open_webpage_button_wrapper}>
-            <a className={styles.open_webpage_button} href="https://translate.google.com/?hl=ja&tab=TT&sl=en&tl=ja&op=translate" target="_blank" rel="noreferrer" >
+            <a className={styles.open_webpage_button} href="https://www.deepl.com/ja/your-account/keys" target="_blank" rel="noreferrer" >
                 <p className={styles.open_webpage_text}>Open DeepL Account Webpage</p>
                 <ExternalLink className={styles.external_link_svg} />
             </a>
