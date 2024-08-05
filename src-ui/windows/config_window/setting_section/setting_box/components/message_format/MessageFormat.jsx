@@ -8,7 +8,7 @@ export const MessageFormat = (props) => {
             <ExampleComponent {...props}/>
             <InputComponent {...props}/>
             {
-                props.with_t
+                props.with_t === true
                 ? <SwapButton/>
                 : null
             }
@@ -16,11 +16,22 @@ export const MessageFormat = (props) => {
     );
 };
 
+import { useUiLanguageStatus } from "@store";
+
 const ExampleComponent = (props) => {
     const { t } = useTranslation();
+    const { currentUiLanguageStatus } = useUiLanguageStatus();
 
     const createExampleMessage = () => {
-        return t("config_window.send_message_format.example_text");
+        const original_lang_message = t("config_window.send_message_format.example_text");
+
+        if (props.with_t === true) {
+            const translation_locale = currentUiLanguageStatus === "en" ? "ja" : "en";
+            const translated_lang_message = t("config_window.send_message_format.example_text", {lng: translation_locale});
+            return original_lang_message + translated_lang_message;
+        } else {
+            return original_lang_message;
+        }
     };
 
     return (
