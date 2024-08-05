@@ -8,6 +8,14 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 2rem;
+    &.flex_column {
+        flex-direction: column;
+    }
+}
+
+.label_only_section {
+    width: 100%;
 }
 
 .threshold_container {
@@ -39,4 +47,8 @@
     justify-content: space-between;
     align-items: center;
     gap: 1.4rem;
+}
+
+.message_format_section {
+    width: 100%;
 }

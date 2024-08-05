@@ -15,6 +15,7 @@ export const Appearance = () => {
         ThresholdContainer,
         RadioButtonContainer,
         DeeplAuthKeyContainer,
+        MessageFormatContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -44,6 +45,10 @@ export const Appearance = () => {
             <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
 
             <DeeplAuthKeyContainer label={t(`config_window.deepl_auth_key.label`)} desc={t(`config_window.deepl_auth_key.desc`)}/>
+
+            <MessageFormatContainer label={t(`config_window.send_message_format.label`)} desc={t(`config_window.send_message_format.desc`)}/>
+
+            <MessageFormatContainer label={t(`config_window.send_message_format_with_t.label`)} desc={t(`config_window.send_message_format_with_t.desc`)} with_t={true}/>
         </>
     );
 };
