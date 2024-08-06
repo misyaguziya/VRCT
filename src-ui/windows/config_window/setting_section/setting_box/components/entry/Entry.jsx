@@ -1,5 +1,5 @@
 import styles from "./Entry.module.scss";
-import { _Entry } from "../_atoms/_Entry";
+import { _Entry } from "../_atoms/_entry/_Entry";
 
 export const Entry = ({width}) => {
 
