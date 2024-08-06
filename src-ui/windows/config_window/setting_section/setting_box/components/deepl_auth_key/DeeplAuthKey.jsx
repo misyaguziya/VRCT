@@ -26,7 +26,7 @@ export const DeeplAuthKey = () => {
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry ref={entryRef} width="32rem" onChange={onchangeEntryAuthKey}/>
+                <_Entry ref={entryRef} width="30rem" onChange={onchangeEntryAuthKey}/>
                 <button className={styles.save_button} onClick={saveAuthKey}>Save</button>
                 {is_editable
                 ? null
