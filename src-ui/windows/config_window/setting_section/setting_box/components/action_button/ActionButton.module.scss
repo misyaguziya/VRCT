@@ -1,0 +1,14 @@
+.button_wrapper {
+    padding: 1.6rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_825_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.button_svg {
+    width: 2.4rem;
+}

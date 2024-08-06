@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import FolderOpenSvg from "@images/folder_open.svg?react";
 
 import { useSettingBox } from "../components/useSettingBox";
 import { useSelectedMicDeviceStatus, useMicDeviceListStatus } from "@store";
@@ -16,6 +17,7 @@ export const Appearance = () => {
         RadioButtonContainer,
         DeeplAuthKeyContainer,
         MessageFormatContainer,
+        ActionButtonContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -55,6 +57,8 @@ export const Appearance = () => {
             <MessageFormatContainer label={t(`config_window.send_message_format.label`)} desc={t(`config_window.send_message_format.desc`)} id="received"/>
 
             <MessageFormatContainer label={t(`config_window.send_message_format_with_t.label`)} desc={t(`config_window.send_message_format_with_t.desc`)} id="received_with_t"/>
+
+            <ActionButtonContainer label={t(`config_window.open_config_filepath.label`)} IconComponent={FolderOpenSvg} OnclickFunction={()=>{}}/>
 
         </>
     );

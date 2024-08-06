@@ -12,6 +12,7 @@ import { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 import { RadioButton } from "./radio_button/RadioButton";
 import { OpenWebpage_DeeplAuthKey, DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
 import { MessageFormat } from "./message_format/MessageFormat";
+import { ActionButton } from "./action_button/ActionButton";
 
 export const useSettingBox = () => {
     const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
@@ -114,6 +115,17 @@ export const useSettingBox = () => {
         );
     };
 
+
+    const ActionButtonContainer = (props) => {
+        return (
+            <div className={styles.container}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <ActionButton {...props}/>
+            </div>
+        );
+    };
+
+
     return {
         DropdownMenuContainer,
         SliderContainer,
@@ -124,5 +136,6 @@ export const useSettingBox = () => {
         RadioButtonContainer,
         DeeplAuthKeyContainer,
         MessageFormatContainer,
+        ActionButtonContainer,
     };
 };
