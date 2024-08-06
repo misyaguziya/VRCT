@@ -7,7 +7,7 @@ import {
     useReceivedMessageFormat,
     useReceivedMessageFormatWithT,
 } from "@store";
-import { _Entry } from "../_atoms/_Entry";
+import { _Entry } from "../_atoms/_entry/_Entry";
 import SwapImg from "@images/swap_icon.png";
 
 export const MessageFormat = (props) => {

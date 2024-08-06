@@ -2,7 +2,7 @@ import styles from "./DeeplAuthKey.module.scss";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import ExternalLink from "@images/external_link.svg?react";
-import { _Entry } from "../_atoms/_Entry";
+import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 
 export const DeeplAuthKey = () => {
