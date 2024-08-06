@@ -46,9 +46,16 @@ export const Appearance = () => {
 
             <DeeplAuthKeyContainer label={t(`config_window.deepl_auth_key.label`)} desc={t(`config_window.deepl_auth_key.desc`)}/>
 
-            <MessageFormatContainer label={t(`config_window.send_message_format.label`)} desc={t(`config_window.send_message_format.desc`)}/>
 
-            <MessageFormatContainer label={t(`config_window.send_message_format_with_t.label`)} desc={t(`config_window.send_message_format_with_t.desc`)} with_t={true}/>
+            <MessageFormatContainer label={t(`config_window.send_message_format.label`)} desc={t(`config_window.send_message_format.desc`)} id="send"/>
+
+            <MessageFormatContainer label={t(`config_window.send_message_format_with_t.label`)} desc={t(`config_window.send_message_format_with_t.desc`)} id="send_with_t"/>
+
+
+            <MessageFormatContainer label={t(`config_window.send_message_format.label`)} desc={t(`config_window.send_message_format.desc`)} id="received"/>
+
+            <MessageFormatContainer label={t(`config_window.send_message_format_with_t.label`)} desc={t(`config_window.send_message_format_with_t.desc`)} id="received_with_t"/>
+
         </>
     );
 };

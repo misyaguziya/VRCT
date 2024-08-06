@@ -112,6 +112,28 @@ export const { atomInstance: Atom_SelectedMicDeviceStatus, useHook: useSelectedM
 
 export const { atomInstance: Atom_MicDeviceListStatus, useHook: useMicDeviceListStatus } = createAtomWithHook(test_device_list, "MicDeviceListStatus");
 
+export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
+    before: "",
+    after: "",
+}, "SendMessageFormat");
+export const { atomInstance: Atom_SendMessageFormatWithT, useHook: useSendMessageFormatWithT } = createAtomWithHook({
+    before: "",
+    between: "",
+    after: "",
+    is_message_first: true,
+}, "SendMessageFormatWithT");
+export const { atomInstance: Atom_ReceivedMessageFormat, useHook: useReceivedMessageFormat } = createAtomWithHook({
+    before: "",
+    after: "",
+}, "ReceivedMessageFormat");
+export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useReceivedMessageFormatWithT } = createAtomWithHook({
+    before: "",
+    between: "",
+    after: "",
+    is_message_first: true,
+}, "ReceivedMessageFormatWithT");
+
+
 export const { atomInstance: Atom_TranslatorListStatus, useHook: useTranslatorListStatus } = createAtomWithHook(translator_list, "TranslatorListStatus");
 export const { atomInstance: Atom_SelectedTranslatorIdStatus, useHook: useSelectedTranslatorIdStatus } = createAtomWithHook("CTranslate2", "SelectedTranslatorIdStatus");
 export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useIsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
