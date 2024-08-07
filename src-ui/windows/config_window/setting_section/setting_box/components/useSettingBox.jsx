@@ -13,6 +13,7 @@ import { RadioButton } from "./radio_button/RadioButton";
 import { OpenWebpage_DeeplAuthKey, DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
 import { MessageFormat } from "./message_format/MessageFormat";
 import { ActionButton } from "./action_button/ActionButton";
+import { WordFilter } from "./word_filter/WordFilter";
 
 export const useSettingBox = () => {
     const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
@@ -126,6 +127,20 @@ export const useSettingBox = () => {
     };
 
 
+    const WordFilterContainer = (props) => {
+        return (
+            <div className={styles.threshold_container}>
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent label={props.label} desc={props.desc} />
+                    {/* <ActionButton {...props}/> */}
+                </div>
+                <div className={styles.threshold_section}>
+                    <WordFilter {...props}/>
+                </div>
+            </div>
+        );
+    };
+
     return {
         DropdownMenuContainer,
         SliderContainer,
@@ -136,6 +151,7 @@ export const useSettingBox = () => {
         RadioButtonContainer,
         DeeplAuthKeyContainer,
         MessageFormatContainer,
+        WordFilterContainer,
         ActionButtonContainer,
     };
 };
