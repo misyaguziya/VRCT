@@ -841,11 +841,10 @@ def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
     return response
 
 # Transcription (Internal AI Model)
-def callbackSetUserWhisperFeature(value):
-    print("callbackSetUserWhisperFeature", value)
-    config.USE_WHISPER_FEATURE = value
+def callbackSetUserWhisperFeature(data, *args, **kwargs) -> dict:
+    print("callbackSetUserWhisperFeature", data)
+    config.USE_WHISPER_FEATURE = data
     if config.USE_WHISPER_FEATURE is True:
-        # view.openWhisperWeightTypeWidget()
         if model.checkTranscriptionWhisperModelWeight() is True:
             config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
@@ -853,52 +852,66 @@ def callbackSetUserWhisperFeature(value):
             config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     else:
-        # view.closeWhisperWeightTypeWidget()
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-    # view.showRestartButtonIfRequired()
+    return {"status":"success",
+            "data":{
+                "feature":config.USE_WHISPER_FEATURE,
+                "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
+                },
+            }
 
-def callbackSetWhisperWeightType(value):
-    print("callbackSetWhisperWeightType", value)
-    config.WHISPER_WEIGHT_TYPE = str(value)
-    # view.updateSelectedWhisperWeightType(config.WHISPER_WEIGHT_TYPE)
+def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
+    print("callbackSetWhisperWeightType", data)
+    config.WHISPER_WEIGHT_TYPE = str(data)
     if model.checkTranscriptionWhisperModelWeight() is True:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-    # view.showRestartButtonIfRequired()
+    return {"status":"success",
+            "data":{
+                "weight_type":config.WHISPER_WEIGHT_TYPE,
+                "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
+            }
+        }
 
 # VR Tab
-def callbackSetOverlaySettings(value, set_type:str):
-    print("callbackSetOverlaySettings", value, set_type)
+def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySettingsOpacity", data)
     pre_settings = config.OVERLAY_SETTINGS
-    pre_settings[set_type] = value
+    pre_settings["opacity"] = data
     config.OVERLAY_SETTINGS = pre_settings
-    match (set_type):
-        case "opacity":
-            model.updateOverlayImageOpacity()
-        case "ui_scaling":
-            model.updateOverlayImageUiScaling()
+    model.updateOverlayImageOpacity()
+    return {"status":"success", "data":config.OVERLAY_SETTINGS["opacity"]}
 
-def callbackSetEnableOverlaySmallLog(value):
-    print("callbackSetEnableOverlaySmallLog", value)
-    config.ENABLE_OVERLAY_SMALL_LOG = value
+def callbackSetOverlaySettingsUiScaling(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySettingsUiScaling", data)
+    pre_settings = config.OVERLAY_SETTINGS
+    pre_settings["ui_scaling"] = data
+    config.OVERLAY_SETTINGS = pre_settings
+    model.updateOverlayImageUiScaling()
+    return {"status":"success", "data":config.OVERLAY_SETTINGS["ui_scaling"]}
+
+def callbackEnableOverlaySmallLog(data, *args, **kwargs) -> dict:
+    print("callbackEnableOverlaySmallLog", data)
+    config.ENABLE_OVERLAY_SMALL_LOG = data
 
     if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
+    return {"status":"success", "data":config.ENABLE_OVERLAY_SMALL_LOG}
+
+def callbackDisableOverlaySmallLog(data, *args, **kwargs) -> dict:
+    print("callbackDisableOverlaySmallLog", data)
+    config.ENABLE_OVERLAY_SMALL_LOG = data
+    if config.ENABLE_OVERLAY_SMALL_LOG is False:
         model.clearOverlayImage()
         model.shutdownOverlay()
-
-    if config.ENABLE_OVERLAY_SMALL_LOG is True:
-        # view.setStateOverlaySmallLog("enabled")
-        pass
-    elif config.ENABLE_OVERLAY_SMALL_LOG is False:
-        # view.setStateOverlaySmallLog("disabled")
-        pass
+    return {"status":"success", "data":config.ENABLE_OVERLAY_SMALL_LOG}
 
 def callbackSetOverlaySmallLogSettings(value, set_type:str):
     print("callbackSetOverlaySmallLogSettings", value, set_type)
@@ -911,116 +924,162 @@ def callbackSetOverlaySmallLogSettings(value, set_type:str):
         case "display_duration" | "fadeout_duration":
             model.updateOverlayTimes()
 
+def callbackSetOverlaySmallLogSettingsXPos(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsXPos", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["x_pos"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]}
+
+def callbackSetOverlaySmallLogSettingsYPos(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsYPos", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["y_pos"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]}
+
+def callbackSetOverlaySmallLogSettingsZPos(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsZPos", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["z_pos"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]}
+
+def callbackSetOverlaySmallLogSettingsXRotation(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsXRotation", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["x_rotation"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]}
+
+def callbackSetOverlaySmallLogSettingsYRotation(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsYRotation", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["y_rotation"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]}
+
+def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
+    print("callbackSetOverlaySmallLogSettingsZRotation", data)
+    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+    pre_settings["z_rotation"] = data
+    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
+    model.updateOverlayPosition()
+    return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]}
+
 # Others Tab
-def callbackSetEnableAutoClearMessageBox(value):
-    print("callbackSetEnableAutoClearMessageBox", value)
-    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
+def callbackSetEnableAutoClearMessageBox(data, *args, **kwargs) -> dict:
+    print("callbackSetEnableAutoClearMessageBox", data)
+    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = data
+    return {"status":"success", "data":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
 
-def callbackSetEnableSendOnlyTranslatedMessages(value):
-    print("callbackSetEnableSendOnlyTranslatedMessages", value)
-    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+def callbackSetEnableSendOnlyTranslatedMessages(data, *args, **kwargs) -> dict:
+    print("callbackSetEnableSendOnlyTranslatedMessages", data)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = data
+    return {"status":"success", "data":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
 
-def callbackSetSendMessageButtonType(value):
-    print("callbackSetSendMessageButtonType", value)
-    config.SEND_MESSAGE_BUTTON_TYPE = value
-    # view.changeMainWindowSendMessageButton(config.SEND_MESSAGE_BUTTON_TYPE)
+def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
+    print("callbackSetSendMessageButtonType", data)
+    config.SEND_MESSAGE_BUTTON_TYPE = data
+    return {"status":"success", "data":config.SEND_MESSAGE_BUTTON_TYPE}
 
-def callbackSetEnableNoticeXsoverlay(value):
-    print("callbackSetEnableNoticeXsoverlay", value)
-    config.ENABLE_NOTICE_XSOVERLAY = value
+def callbackEnableNoticeXsoverlay(*args, **kwargs) -> dict:
+    print("callbackEnableNoticeXsoverlay")
+    config.ENABLE_NOTICE_XSOVERLAY = True
+    return {"status":"success", "data":config.ENABLE_NOTICE_XSOVERLAY}
 
-def callbackSetEnableAutoExportMessageLogs(value):
-    print("callbackSetEnableAutoExportMessageLogs", value)
-    config.ENABLE_LOGGER = value
+def callbackDisableNoticeXsoverlay(*args, **kwargs) -> dict:
+    print("callbackDisableNoticeXsoverlay")
+    config.ENABLE_NOTICE_XSOVERLAY = False
+    return {"status":"success", "data":config.ENABLE_NOTICE_XSOVERLAY}
 
-    if config.ENABLE_LOGGER is True:
-        model.startLogger()
-    else:
-        model.stopLogger()
+def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
+    print("callbackEnableAutoExportMessageLogs")
+    config.ENABLE_LOGGER = True
+    model.startLogger()
 
-def callbackSetEnableVrcMicMuteSync(value):
-    print("callbackSetEnableVrcMicMuteSync", value)
-    config.ENABLE_VRC_MIC_MUTE_SYNC = value
-    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-        model.startCheckMuteSelfStatus()
-        # view.setStateVrcMicMuteSync("enabled")
-    else:
-        model.stopCheckMuteSelfStatus()
-        # view.setStateVrcMicMuteSync("disabled")
+def callbackDisableAutoExportMessageLogs(*args, **kwargs) -> dict:
+    print("callbackDisableAutoExportMessageLogs")
+    config.ENABLE_LOGGER = False
+    model.stopLogger()
+
+def callbackEnableVrcMicMuteSync(*args, **kwargs) -> dict:
+    print("callbackEnableVrcMicMuteSync")
+    config.ENABLE_VRC_MIC_MUTE_SYNC = True
+    model.startCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
 
+def callbackDisableVrcMicMuteSync(*args, **kwargs) -> dict:
+    print("callbackDisableVrcMicMuteSync")
+    config.ENABLE_VRC_MIC_MUTE_SYNC = False
+    model.stopCheckMuteSelfStatus()
+    model.changeMicTranscriptStatus()
 
-def callbackSetEnableSendMessageToVrc(value):
-    print("callbackSetEnableSendMessageToVrc", value)
-    config.ENABLE_SEND_MESSAGE_TO_VRC = value
+def callbackEnableSendMessageToVrc(*args, **kwargs) -> dict:
+    print("callbackEnableSendMessageToVrc")
+    config.ENABLE_SEND_MESSAGE_TO_VRC = True
+    return {"status":"success", "data":config.ENABLE_SEND_MESSAGE_TO_VRC}
+
+def callbackDisableSendMessageToVrc(*args, **kwargs) -> dict:
+    print("callbackSetEnableSendMessageToVrc")
+    config.ENABLE_SEND_MESSAGE_TO_VRC = False
+    return {"status":"success", "data":config.ENABLE_SEND_MESSAGE_TO_VRC}
 
 # Others (Message Formats(Send)
-def callbackSetSendMessageFormat(value):
-    print("callbackSetSendMessageFormat", value)
-    if isUniqueStrings(["[message]"], value) is True:
-        config.SEND_MESSAGE_FORMAT = value
-        # view.clearNotificationMessage()
-        # view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
-    else:
-        # view.showErrorMessage_SendMessageFormat()
-        # view.setSendMessageFormat_EntryWidgets(config.SEND_MESSAGE_FORMAT)
-        pass
+def callbackSetSendMessageFormat(data, *args, **kwargs) -> dict:
+    print("callbackSetSendMessageFormat", data)
+    if isUniqueStrings(["[message]"], data) is True:
+        config.SEND_MESSAGE_FORMAT = data
+    return {"status":"success", "data":config.SEND_MESSAGE_FORMAT}
 
-def callbackSetSendMessageFormatWithT(value):
-    print("callbackSetSendMessageFormatWithT", value)
-    if len(value) > 0:
-        if isUniqueStrings(["[message]", "[translation]"], value) is True:
-            config.SEND_MESSAGE_FORMAT_WITH_T = value
-            # view.clearNotificationMessage()
-            # view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
-        else:
-            # view.showErrorMessage_SendMessageFormatWithT()
-            # view.setSendMessageFormatWithT_EntryWidgets(config.SEND_MESSAGE_FORMAT_WITH_T)
-            pass
+def callbackSetSendMessageFormatWithT(data, *args, **kwargs) -> dict:
+    print("callbackSetSendMessageFormatWithT", data)
+    if len(data) > 0:
+        if isUniqueStrings(["[message]", "[translation]"], data) is True:
+            config.SEND_MESSAGE_FORMAT_WITH_T = data
+    return {"status":"success", "data":config.SEND_MESSAGE_FORMAT_WITH_T}
 
 # Others (Message Formats(Received)
-def callbackSetReceivedMessageFormat(value):
-    print("callbackSetReceivedMessageFormat", value)
-    if isUniqueStrings(["[message]"], value) is True:
-        config.RECEIVED_MESSAGE_FORMAT = value
-        # view.clearNotificationMessage()
-        # view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
-    else:
-        # view.showErrorMessage_ReceivedMessageFormat()
-        # view.setReceivedMessageFormat_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT)
-        pass
+def callbackSetReceivedMessageFormat(data, *args, **kwargs) -> dict:
+    print("callbackSetReceivedMessageFormat", data)
+    if isUniqueStrings(["[message]"], data) is True:
+        config.RECEIVED_MESSAGE_FORMAT = data
+    return {"status":"success", "data":config.RECEIVED_MESSAGE_FORMAT}
 
-def callbackSetReceivedMessageFormatWithT(value):
-    print("callbackSetReceivedMessageFormatWithT", value)
-    if len(value) > 0:
-        if isUniqueStrings(["[message]", "[translation]"], value) is True:
-            config.RECEIVED_MESSAGE_FORMAT_WITH_T = value
-            # view.clearNotificationMessage()
-            # view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
-        else:
-            # view.showErrorMessage_ReceivedMessageFormatWithT()
-            # view.setReceivedMessageFormatWithT_EntryWidgets(config.RECEIVED_MESSAGE_FORMAT_WITH_T)
-            pass
+def callbackSetReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
+    print("callbackSetReceivedMessageFormatWithT", data)
+    if len(data) > 0:
+        if isUniqueStrings(["[message]", "[translation]"], data) is True:
+            config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
+    return {"status":"success", "data":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
 
 # ---------------------Speaker2Chatbox---------------------
-def callbackSetEnableSendReceivedMessageToVrc(value):
-    print("callbackSetEnableSendReceivedMessageToVrc", value)
-    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+def callbackEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
+    print("callbackEnableSendReceivedMessageToVrc")
+    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = True
+    return {"status":"success", "data":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
+
+def callbackDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
+    print("callbackDisableSendReceivedMessageToVrc")
+    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
+    return {"status":"success", "data":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 # ---------------------Speaker2Chatbox---------------------
 
 # Advanced Settings Tab
-def callbackSetOscIpAddress(value):
-    if value == "":
-        return
-    print("callbackSetOscIpAddress", str(value))
-    config.OSC_IP_ADDRESS = str(value)
+def callbackSetOscIpAddress(data, *args, **kwargs) -> dict:
+    print("callbackSetOscIpAddress", str(data))
+    config.OSC_IP_ADDRESS = str(data)
+    return {"status":"success", "data":config.OSC_IP_ADDRESS}
 
-def callbackSetOscPort(value):
-    if value == "":
-        return
-    print("callbackSetOscPort", int(value))
-    config.OSC_PORT = int(value)
-
+def callbackSetOscPort(data, *args, **kwargs) -> dict:
+    print("callbackSetOscPort", int(data))
+    config.OSC_PORT = int(data)
+    return {"status":"success", "data":config.OSC_PORT}
 
 def getListLanguageAndCountry():
     return model.getListLanguageAndCountry()
