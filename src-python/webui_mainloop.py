@@ -166,15 +166,20 @@ controller_mapping = {
     "/controller/callback_set_enable_auto_clear_chatbox": controller.callbackSetEnableAutoClearMessageBox,
     "/controller/callback_set_send_only_translated_messages": controller.callbackSetEnableSendOnlyTranslatedMessages,
     "/controller/callback_set_send_message_button_type": controller.callbackSetSendMessageButtonType,
-    "/controller/callback_set_enable_notice_xsoverlay": controller.callbackSetEnableNoticeXsoverlay,
-    "/controller/callback_set_enable_auto_export_message_logs": controller.callbackSetEnableAutoExportMessageLogs,
-    "/controller/callback_set_enable_vrc_mic_mute_sync": controller.callbackSetEnableVrcMicMuteSync,
-    "/controller/callback_set_enable_send_message_to_vrc": controller.callbackSetEnableSendMessageToVrc,
+    "/controller/callback_enable_notice_xsoverlay": controller.callbackEnableNoticeXsoverlay,
+    "/controller/callback_disable_notice_xsoverlay": controller.callbackDisableNoticeXsoverlay,
+    "/controller/callback_enable_auto_export_message_logs": controller.callbackEnableAutoExportMessageLogs,
+    "/controller/callback_disable_auto_export_message_logs": controller.callbackDisableAutoExportMessageLogs,
+    "/controller/callback_enable_vrc_mic_mute_sync": controller.callbackEnableVrcMicMuteSync,
+    "/controller/callback_disable_vrc_mic_mute_sync": controller.callbackDisableVrcMicMuteSync,
+    "/controller/callback_enable_send_message_to_vrc": controller.callbackEnableSendMessageToVrc,
+    "/controller/callback_disable_send_message_to_vrc": controller.callbackDisableSendMessageToVrc,
     "/controller/callback_set_send_message_format": controller.callbackSetSendMessageFormat,
     "/controller/callback_set_send_message_format_with_t": controller.callbackSetSendMessageFormatWithT,
     "/controller/callback_set_received_message_format": controller.callbackSetReceivedMessageFormat,
     "/controller/callback_set_received_message_format_with_t": controller.callbackSetReceivedMessageFormatWithT,
-    "/controller/callback_set_enable_send_received_message_to_vrc": controller.callbackSetEnableSendReceivedMessageToVrc,
+    "/controller/callback_enable_send_received_message_to_vrc": controller.callbackEnableSendReceivedMessageToVrc,
+    "/controller/callback_disable_send_received_message_to_vrc": controller.callbackDisableSendReceivedMessageToVrc,
     "/controller/callback_set_osc_ip_address": controller.callbackSetOscIpAddress,
     "/controller/callback_set_osc_port": controller.callbackSetOscPort,
 }
@@ -285,6 +290,7 @@ if __name__ == "__main__":
     # print(response, flush=True)
 
     try:
+        controller.init()
         print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
         while True:
             main()

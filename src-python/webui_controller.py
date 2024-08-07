@@ -1093,27 +1093,7 @@ def getListInputDevice():
 def getListOutputDevice():
     return model.getListOutputDevice()
 
-
-def initSetConfigByExeArguments():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--ip")
-    parser.add_argument("--port")
-    args = parser.parse_args()
-    if args.ip is not None:
-        config.OSC_IP_ADDRESS = str(args.ip)
-        # view.setGuiVariable_OscIpAddress(config.OSC_IP_ADDRESS)
-    if args.port is not None:
-        config.OSC_PORT = int(args.port)
-        # view.setGuiVariable_OscPort(config.OSC_PORT)
-
-def createMainWindow(splash):
-    splash.toProgress(1)
-    # create GUI
-    # view.createGUI()
-    splash.toProgress(2)
-
-    # init config
-    initSetConfigByExeArguments()
+def init():
     initSetTranslateEngine()
     initSetLanguageAndCountry()
 
@@ -1123,7 +1103,6 @@ def createMainWindow(splash):
             auth_keys = config.AUTH_KEYS
             auth_keys["DeepL_API"] = None
             config.AUTH_KEYS = auth_keys
-            # view.printToTextbox_AuthenticationError()
 
     # set Translation Engine
     updateTranslationEngineAndEngineList()
@@ -1151,7 +1130,64 @@ def createMainWindow(splash):
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
 
-    splash.toProgress(3) # Last one.
+# def initSetConfigByExeArguments():
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--ip")
+#     parser.add_argument("--port")
+#     args = parser.parse_args()
+#     if args.ip is not None:
+#         config.OSC_IP_ADDRESS = str(args.ip)
+#         # view.setGuiVariable_OscIpAddress(config.OSC_IP_ADDRESS)
+#     if args.port is not None:
+#         config.OSC_PORT = int(args.port)
+#         # view.setGuiVariable_OscPort(config.OSC_PORT)
+
+# def createMainWindow(splash):
+#     splash.toProgress(1)
+#     # create GUI
+#     # view.createGUI()
+#     splash.toProgress(2)
+
+#     # init config
+#     initSetConfigByExeArguments()
+#     initSetTranslateEngine()
+#     initSetLanguageAndCountry()
+
+#     if config.AUTH_KEYS["DeepL_API"] is not None:
+#         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
+#             # error update Auth key
+#             auth_keys = config.AUTH_KEYS
+#             auth_keys["DeepL_API"] = None
+#             config.AUTH_KEYS = auth_keys
+#             # view.printToTextbox_AuthenticationError()
+
+#     # set Translation Engine
+#     updateTranslationEngineAndEngineList()
+
+#     # set Transcription Engine
+#     if config.USE_WHISPER_FEATURE is True:
+#         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+#     else:
+#         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+
+#     # set word filter
+#     model.addKeywords()
+
+#     # check Software Updated
+#     if model.checkSoftwareUpdated() is True:
+#         # view.showUpdateAvailableButton()
+#         pass
+
+#     # init logger
+#     if config.ENABLE_LOGGER is True:
+#         model.startLogger()
+
+#     # init OSC receive
+#     model.startReceiveOSC()
+#     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+#         model.startCheckMuteSelfStatus()
+
+#     splash.toProgress(3) # Last one.
 
     # set UI and callback
     # view.register(
