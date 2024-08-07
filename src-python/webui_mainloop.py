@@ -143,41 +143,54 @@ controller_mapping = {
     "/controller/callback_set_mic_max_phrases": controller.callbackSetMicMaxPhrases,
     "/controller/callback_set_mic_word_filter": controller.callbackSetMicWordFilter,
     "/controller/callback_delete_mic_word_filter": controller.callbackDeleteMicWordFilter,
-
     "/controller/callback_set_speaker_device": controller.callbackSetSpeakerDevice,
     "/controller/callback_set_speaker_energy_threshold": controller.callbackSetSpeakerEnergyThreshold,
     "/controller/callback_set_speaker_dynamic_energy_threshold": controller.callbackSetSpeakerDynamicEnergyThreshold,
-    "/controller/callback_check_speaker_threshold": controller.callbackCheckSpeakerThreshold,
+    "/controller/callback_enable_check_speaker_threshold": controller.callbackEnableCheckSpeakerThreshold,
+    "/controller/callback_disable_check_speaker_threshold": controller.callbackDisableCheckSpeakerThreshold,
     "/controller/callback_set_speaker_record_timeout": controller.callbackSetSpeakerRecordTimeout,
     "/controller/callback_set_speaker_phrase_timeout": controller.callbackSetSpeakerPhraseTimeout,
     "/controller/callback_set_speaker_max_phrases": controller.callbackSetSpeakerMaxPhrases,
     "/controller/callback_set_use_whisper_feature": controller.callbackSetUserWhisperFeature,
     "/controller/callback_set_whisper_weight_type": controller.callbackSetWhisperWeightType,
-    "/controller/callback_set_overlay_settings": controller.callbackSetOverlaySettings,
-    "/controller/callback_set_enable_overlay_small_log": controller.callbackSetEnableOverlaySmallLog,
-    "/controller/callback_set_overlay_small_log_settings": controller.callbackSetOverlaySmallLogSettings,
+    "/controller/callback_set_overlay_settings_opacity": controller.callbackSetOverlaySettingsOpacity,
+    "/controller/callback_set_overlay_settings_ui_scaling": controller.callbackSetOverlaySettingsUiScaling,
+    "/controller/callback_enable_overlay_small_log": controller.callbackEnableOverlaySmallLog,
+    "/controller/callback_disable_overlay_small_log": controller.callbackDisableOverlaySmallLog,
+    "/controller/callback_set_overlay_small_log_settings_x_pos": controller.callbackSetOverlaySmallLogSettingsXPos,
+    "/controller/callback_set_overlay_small_log_settings_y_pos": controller.callbackSetOverlaySmallLogSettingsYPos,
+    "/controller/callback_set_overlay_small_log_settings_z_pos": controller.callbackSetOverlaySmallLogSettingsZPos,
+    "/controller/callback_set_overlay_small_log_settings_x_rotation": controller.callbackSetOverlaySmallLogSettingsXRotation,
+    "/controller/callback_set_overlay_small_log_settings_y_rotation": controller.callbackSetOverlaySmallLogSettingsYRotation,
+    "/controller/callback_set_overlay_small_log_settings_z_rotation": controller.callbackSetOverlaySmallLogSettingsZRotation,
     "/controller/callback_set_enable_auto_clear_chatbox": controller.callbackSetEnableAutoClearMessageBox,
     "/controller/callback_set_send_only_translated_messages": controller.callbackSetEnableSendOnlyTranslatedMessages,
     "/controller/callback_set_send_message_button_type": controller.callbackSetSendMessageButtonType,
-    "/controller/callback_set_enable_notice_xsoverlay": controller.callbackSetEnableNoticeXsoverlay,
-    "/controller/callback_set_enable_auto_export_message_logs": controller.callbackSetEnableAutoExportMessageLogs,
-    "/controller/callback_set_enable_vrc_mic_mute_sync": controller.callbackSetEnableVrcMicMuteSync,
-    "/controller/callback_set_enable_send_message_to_vrc": controller.callbackSetEnableSendMessageToVrc,
+    "/controller/callback_enable_notice_xsoverlay": controller.callbackEnableNoticeXsoverlay,
+    "/controller/callback_disable_notice_xsoverlay": controller.callbackDisableNoticeXsoverlay,
+    "/controller/callback_enable_auto_export_message_logs": controller.callbackEnableAutoExportMessageLogs,
+    "/controller/callback_disable_auto_export_message_logs": controller.callbackDisableAutoExportMessageLogs,
+    "/controller/callback_enable_vrc_mic_mute_sync": controller.callbackEnableVrcMicMuteSync,
+    "/controller/callback_disable_vrc_mic_mute_sync": controller.callbackDisableVrcMicMuteSync,
+    "/controller/callback_enable_send_message_to_vrc": controller.callbackEnableSendMessageToVrc,
+    "/controller/callback_disable_send_message_to_vrc": controller.callbackDisableSendMessageToVrc,
     "/controller/callback_set_send_message_format": controller.callbackSetSendMessageFormat,
     "/controller/callback_set_send_message_format_with_t": controller.callbackSetSendMessageFormatWithT,
     "/controller/callback_set_received_message_format": controller.callbackSetReceivedMessageFormat,
     "/controller/callback_set_received_message_format_with_t": controller.callbackSetReceivedMessageFormatWithT,
-    "/controller/callback_set_enable_send_received_message_to_vrc": controller.callbackSetEnableSendReceivedMessageToVrc,
+    "/controller/callback_enable_send_received_message_to_vrc": controller.callbackEnableSendReceivedMessageToVrc,
+    "/controller/callback_disable_send_received_message_to_vrc": controller.callbackDisableSendReceivedMessageToVrc,
     "/controller/callback_set_osc_ip_address": controller.callbackSetOscIpAddress,
     "/controller/callback_set_osc_port": controller.callbackSetOscPort,
 }
 
 action_mapping = {
-    "/controller/callback_enable_transcription_send": "/action/transcription_send_message",
-    "/controller/callback_disable_transcription_send": "/action/transcription_send_stopped",
-    "/controller/callback_enable_transcription_receive": "/action/transcription_receive_message",
-    "/controller/callback_disable_transcription_receive": "/action/transcription_receive_stopped",
-    "/controller/callback_enable_check_mic_threshold": "/action/check_mic_threshold_energy",
+    "/controller/callback_close_config_window": {"mic":"/action/transcription_send_message", "speaker":"/action/transcription_receive_message"},
+    "/controller/callback_enable_transcription_send": {"mic":"/action/transcription_send_message"},
+    "/controller/callback_disable_transcription_send": {"mic":"/action/transcription_send_stopped"},
+    "/controller/callback_enable_transcription_receive": {"speaker":"/action/transcription_receive_message"},
+    "/controller/callback_disable_transcription_receive": {"speaker":"/action/transcription_receive_stopped"},
+    "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
 }
 
 def handleConfigRequest(endpoint):
@@ -205,12 +218,12 @@ def handleControllerRequest(endpoint, data=None):
     return response, status
 
 class Action:
-    def __init__(self, endpoint:str) -> None:
-        self.endpoint = endpoint
+    def __init__(self, endpoints:dict) -> None:
+        self.endpoints = endpoints
 
-    def transmit(self, data:dict) -> None:
+    def transmit(self, key:str, data:dict) -> None:
         response = {
-            "endpoint": self.endpoint,
+            "endpoint": self.endpoints[key],
             "status": 200,
             "data": data,
         }
@@ -221,36 +234,48 @@ def main():
     received_data = sys.stdin.readline().strip()
     received_data = json.loads(received_data)
 
-    if received_data is True:
-        response_data = {
-            "status": "ok",
-            "id": received_data["id"],
-            "data": received_data["data"],
-        }
-        response = json.dumps(response_data)
-        time.sleep(2)
-        print(response, flush=True)
+    with open('process.log', 'a') as f:
+        f.write(f"received_data: {received_data}\n")
 
-        # endpoint = received_data.get("endpoint", None)
-        # data = received_data.get("data", None)
-
-        # match endpoint.split("/")[1]:
-        #     case "config":
-        #         response_data, status = handleConfigRequest(endpoint, data)
-        #     case "controller":
-        #         response_data, status = handleControllerRequest(endpoint, data)
-        #     case _:
-        #         pass
-
-        # response = {
-        #     "status": status,
-        #     "endpoint": endpoint,
-        #     "data": response_data,
+    if received_data:
+        # response_data = {
+        #     "status": 200,
+        #     "id": received_data["id"],
+        #     "data": received_data["data"],
         # }
-
-        # response = json.dumps(response)
+        # response = json.dumps(response_data)
         # time.sleep(2)
         # print(response, flush=True)
+
+        endpoint = received_data.get("endpoint", None)
+        data = received_data.get("data", None)
+
+        with open('process.log', 'a') as f:
+            f.write(f"received_data : endpoint: {endpoint}, data:{data}\n")
+
+        try:
+            match endpoint.split("/")[1]:
+                case "config":
+                    result_data, status = handleConfigRequest(endpoint, data)
+                case "controller":
+                    result_data, status = handleControllerRequest(endpoint, data)
+                case _:
+                    pass
+        except Exception as e:
+            result_data = str(e)
+            status = 500
+
+        response = {
+            "status": status,
+            "endpoint": endpoint,
+            "result": result_data,
+        }
+
+        response = json.dumps(response)
+        with open('process.log', 'a') as f:
+            f.write(f"response: {response}\n")
+
+        print(response, flush=True)
 
 if __name__ == "__main__":
     # endpoint = "/controller/list_mic_host"
@@ -265,6 +290,7 @@ if __name__ == "__main__":
     # print(response, flush=True)
 
     try:
+        controller.init()
         print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
         while True:
             main()
