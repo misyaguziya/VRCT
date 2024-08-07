@@ -1,16 +1,18 @@
 import styles from "./WordFilter.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState } from "react";
-import { useWordFilterList } from "@store";
+import { useWordFilterList, useIsOpenedWordFilterList } from "@store";
 export const WordFilter = () => {
     const [input_value, setInputValue] = useState();
     const { currentWordFilterList, updateWordFilterList } = useWordFilterList();
+    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useIsOpenedWordFilterList();
 
     const onChangeEntry = (e) => {
         setInputValue(e.target.value);
     };
 
     const addWords = () => {
+        if (input_value === undefined) return;
         const input_value_array = input_value.split(",");
 
         let updated_list = [...currentWordFilterList];
@@ -32,6 +34,7 @@ export const WordFilter = () => {
         }
 
         updateWordFilterList(updated_list);
+        updateIsOpenedWordFilterList(true);
     };
 
 
@@ -54,6 +57,7 @@ export const WordFilter = () => {
 
     return (
         <div className={styles.container}>
+            { currentIsOpenedWordFilterList &&
             <div className={styles.list_section_wrapper}>
                 {
                     currentWordFilterList.map((item, index) => {
@@ -61,6 +65,7 @@ export const WordFilter = () => {
                     })
                 }
             </div>
+            }
             <div className={styles.entry_section_wrapper}>
                 <_Entry width="30rem" onChange={onChangeEntry}/>
                 <button className={styles.add_button} onClick={addWords}>Add</button>
@@ -98,6 +103,37 @@ const WordFilterItem = (props) => {
                     <DeleteSvg className={styles.delete_svg}/>
                 </button>
             }
+        </div>
+    );
+};
+
+import { useTranslation } from "react-i18next";
+
+import ArrowLeftSvg from "@images/arrow_left.svg?react";
+export const WordFilterListToggleComponent = (props) => {
+    const { t } = useTranslation();
+    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useIsOpenedWordFilterList();
+    const { currentWordFilterList } = useWordFilterList();
+
+
+    const svg_class_names = clsx(styles["arrow_left_svg"], {
+        [styles.to_down]: !currentIsOpenedWordFilterList,
+        [styles.to_up]: currentIsOpenedWordFilterList
+    });
+
+    const OnclickFunction = () => {
+        updateIsOpenedWordFilterList(!currentIsOpenedWordFilterList);
+    };
+
+    const word_filter_list_length = currentWordFilterList.filter(item => item.is_redoable === false).length;
+
+
+    return (
+        <div className={styles.toggle_button_container}>
+            <p className={styles.words_count_text}>{t("config_window.mic_word_filter.count_desc", {count: word_filter_list_length} )}</p>
+            <button className={styles.toggle_button_wrapper} onClick={OnclickFunction}>
+                <ArrowLeftSvg className={svg_class_names}/>
+            </button>
         </div>
     );
 };
