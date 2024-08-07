@@ -143,11 +143,11 @@ controller_mapping = {
     "/controller/callback_set_mic_max_phrases": controller.callbackSetMicMaxPhrases,
     "/controller/callback_set_mic_word_filter": controller.callbackSetMicWordFilter,
     "/controller/callback_delete_mic_word_filter": controller.callbackDeleteMicWordFilter,
-
     "/controller/callback_set_speaker_device": controller.callbackSetSpeakerDevice,
     "/controller/callback_set_speaker_energy_threshold": controller.callbackSetSpeakerEnergyThreshold,
     "/controller/callback_set_speaker_dynamic_energy_threshold": controller.callbackSetSpeakerDynamicEnergyThreshold,
-    "/controller/callback_check_speaker_threshold": controller.callbackCheckSpeakerThreshold,
+    "/controller/callback_enable_check_speaker_threshold": controller.callbackEnableCheckSpeakerThreshold,
+    "/controller/callback_disable_check_speaker_threshold": controller.callbackDisableCheckSpeakerThreshold,
     "/controller/callback_set_speaker_record_timeout": controller.callbackSetSpeakerRecordTimeout,
     "/controller/callback_set_speaker_phrase_timeout": controller.callbackSetSpeakerPhraseTimeout,
     "/controller/callback_set_speaker_max_phrases": controller.callbackSetSpeakerMaxPhrases,
@@ -173,11 +173,12 @@ controller_mapping = {
 }
 
 action_mapping = {
-    "/controller/callback_enable_transcription_send": "/action/transcription_send_message",
-    "/controller/callback_disable_transcription_send": "/action/transcription_send_stopped",
-    "/controller/callback_enable_transcription_receive": "/action/transcription_receive_message",
-    "/controller/callback_disable_transcription_receive": "/action/transcription_receive_stopped",
-    "/controller/callback_enable_check_mic_threshold": "/action/check_mic_threshold_energy",
+    "/controller/callback_close_config_window": {"mic":"/action/transcription_send_message", "speaker":"/action/transcription_receive_message"},
+    "/controller/callback_enable_transcription_send": {"mic":"/action/transcription_send_message"},
+    "/controller/callback_disable_transcription_send": {"mic":"/action/transcription_send_stopped"},
+    "/controller/callback_enable_transcription_receive": {"speaker":"/action/transcription_receive_message"},
+    "/controller/callback_disable_transcription_receive": {"speaker":"/action/transcription_receive_stopped"},
+    "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
 }
 
 def handleConfigRequest(endpoint):
@@ -205,12 +206,12 @@ def handleControllerRequest(endpoint, data=None):
     return response, status
 
 class Action:
-    def __init__(self, endpoint:str) -> None:
-        self.endpoint = endpoint
+    def __init__(self, endpoints:dict) -> None:
+        self.endpoints = endpoints
 
-    def transmit(self, data:dict) -> None:
+    def transmit(self, key:str, data:dict) -> None:
         response = {
-            "endpoint": self.endpoint,
+            "endpoint": self.endpoints[key],
             "status": 200,
             "data": data,
         }

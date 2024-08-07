@@ -83,7 +83,7 @@ class MicMessage:
             addSentMessageLog(message)
             translation = ""
             if model.checkKeywords(message):
-                self.action({"status":"error", "message":f"Detected by word filter:{message}"})
+                self.action("mic", {"status":"error", "message":f"Detected by word filter:{message}"})
                 return
             elif model.detectRepeatSendMessage(message):
                 return
@@ -105,7 +105,7 @@ class MicMessage:
                         osc_message = messageFormatter("SEND", translation, message)
                     model.oscSendMessage(osc_message)
 
-                self.action({"status":"success", "message":message, "translation":translation})
+                self.action("mic", {"status":"success", "message":message, "translation":translation})
                 if config.ENABLE_LOGGER is True:
                     if len(translation) > 0:
                         translation = f" ({translation})"
@@ -123,7 +123,7 @@ def startTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
 
 def stopTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     model.stopMicTranscript()
-    action({"status":"success", "message":"Stopped sending messages"})
+    action("mic", {"status":"success", "message":"Stopped sending messages"})
 
 def startThreadingTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage, args=(action,))
@@ -142,12 +142,12 @@ def startTranscriptionSendMessageOnCloseConfigWindow(action:Callable[[dict], Non
 def stopTranscriptionSendMessageOnOpenConfigWindow():
     model.stopMicTranscript()
 
-def startThreadingTranscriptionSendMessageOnCloseConfigWindow():
-    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessageOnCloseConfigWindow)
+def startThreadingTranscriptionSendMessageOnCloseConfigWindow(action:Callable[[dict], None]) -> None:
+    th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessageOnCloseConfigWindow, args=(action,))
     th_startTranscriptionSendMessage.daemon = True
     th_startTranscriptionSendMessage.start()
 
-def stopThreadingTranscriptionSendMessageOnOpenConfigWindow():
+def stopThreadingTranscriptionSendMessageOnOpenConfigWindow() -> None:
     th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessageOnOpenConfigWindow)
     th_stopTranscriptionSendMessage.daemon = True
     th_stopTranscriptionSendMessage.start()
@@ -159,7 +159,7 @@ class SpeakerMessage:
 
     def receive(self, message):
         if isinstance(message, bool) and message is False:
-            self.action({"status":"error", "message":"No mic device detected."})
+            self.action("speaker", {"status":"error", "message":"No mic device detected."})
         elif isinstance(message, str) and len(message) > 0:
             translation = ""
             if model.detectRepeatReceiveMessage(message):
@@ -192,7 +192,7 @@ class SpeakerMessage:
                 # ------------Speaker2Chatbox------------
 
                 # update textbox message log (Received)
-                self.action({"status":"success", "message":message, "translation":translation})
+                self.action("speaker",{"status":"success", "message":message, "translation":translation})
                 if config.ENABLE_LOGGER is True:
                     if len(translation) > 0:
                         translation = f" ({translation})"
@@ -223,8 +223,8 @@ def startTranscriptionReceiveMessageOnCloseConfigWindow(action:Callable[[dict], 
 def stopTranscriptionReceiveMessageOnOpenConfigWindow():
     model.stopSpeakerTranscript()
 
-def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow():
-    th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessageOnCloseConfigWindow)
+def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(action:Callable[[dict], None]) -> None:
+    th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessageOnCloseConfigWindow, args=(action,))
     th_startTranscriptionReceiveMessage.daemon = True
     th_startTranscriptionReceiveMessage.start()
 
@@ -360,7 +360,14 @@ def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     config.SOURCE_LANGUAGE = select["language"]
     config.SOURCE_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "your":{
+                    "language":config.SOURCE_LANGUAGE,
+                    "country":config.SOURCE_COUNTRY
+                }
+            }
+        }
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     print("setTargetLanguageAndCountry", select)
@@ -370,7 +377,14 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "target":{
+                    "language":config.TARGET_LANGUAGE,
+                    "country":config.TARGET_COUNTRY
+                },
+            }
+        }
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     print("swapYourLanguageAndTargetLanguage")
@@ -378,7 +392,17 @@ def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
     setTargetLanguageAndCountry(your_language)
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "your":{"language":config.SOURCE_LANGUAGE,
+                        "country":config.SOURCE_COUNTRY,
+                        },
+                "target":{
+                    "language":config.TARGET_LANGUAGE,
+                    "country":config.TARGET_COUNTRY,
+                    },
+                },
+            }
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
     print("callbackSelectedLanguagePresetTab", selected_tab_no)
@@ -402,13 +426,13 @@ def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> d
     config.TARGET_LANGUAGE = select["language"]
     config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":"success"}
+    return {"status":"success", "data":config.SELECTED_TAB_NO}
 
 def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
     print("callbackSelectedTranslationEngine", selected_translation_engine)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
-    return {"status":"success"}
+    return {"status":"success", "data":selected_translation_engine}
 
 # command func
 def callbackEnableTranslation(*args, **kwargs) -> dict:
@@ -427,12 +451,12 @@ def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     print("callbackEnableTranscriptionSend")
     config.ENABLE_TRANSCRIPTION_SEND = True
     startThreadingTranscriptionSendMessage(action)
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackDisableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     config.ENABLE_TRANSCRIPTION_SEND = False
     stopThreadingTranscriptionSendMessage(action)
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     config.ENABLE_TRANSCRIPTION_RECEIVE = True
@@ -441,109 +465,109 @@ def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     if config.ENABLE_OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackDisableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     config.ENABLE_TRANSCRIPTION_RECEIVE = False
     stopThreadingTranscriptionReceiveMessage(action)
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
-def callbackEnableForeground() -> None:
+def callbackEnableForeground(*args, **kwargs) -> dict:
     config.ENABLE_FOREGROUND = True
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_FOREGROUND}
 
-def callbackDisableForeground() -> None:
+def callbackDisableForeground(*args, **kwargs) -> dict:
     config.ENABLE_FOREGROUND = False
-    return {"status":"success"}
+    return {"status":"success", "data":config.ENABLE_FOREGROUND}
 
-def callbackEnableMainWindowSidebarCompactMode() -> None:
+def callbackEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-    return {"status":"success"}
+    return {"status":"success", "data":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
-def callbackDisableMainWindowSidebarCompactMode() -> None:
+def callbackDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-    return {"status":"success"}
+    return {"status":"success", "data":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 # Config Window
-def callbackOpenConfigWindow() -> dict:
+def callbackOpenConfigWindow(*args, **kwargs) -> dict:
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
     return {"status":"success"}
 
-def callbackCloseConfigWindow() -> dict:
+def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
 
     if config.ENABLE_TRANSCRIPTION_SEND is True:
-        startThreadingTranscriptionSendMessageOnCloseConfigWindow()
+        startThreadingTranscriptionSendMessageOnCloseConfigWindow(action)
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             sleep(2)
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-        startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
+        startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(action)
     return {"status":"success"}
 
 # Compact Mode Switch
-def callbackEnableConfigWindowCompactMode() -> dict:
+def callbackEnableConfigWindowCompactMode(*args, **kwargs) -> dict:
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    return {"status":"success"}
+    return {"status":"success", "data":config.IS_CONFIG_WINDOW_COMPACT_MODE}
 
-def callbackDisableConfigWindowCompactMode() -> dict:
+def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
-    return {"status":"success"}
+    return {"status":"success", "data":config.IS_CONFIG_WINDOW_COMPACT_MODE}
 
 # Appearance Tab
-def callbackSetTransparency(value) -> dict:
-    print("callbackSetTransparency", int(value))
-    config.TRANSPARENCY = int(value)
-    return {"status":"success"}
+def callbackSetTransparency(data, *args, **kwargs) -> dict:
+    print("callbackSetTransparency", int(data))
+    config.TRANSPARENCY = int(data)
+    return {"status":"success", "data":config.TRANSPARENCY}
 
-def callbackSetAppearance(value) -> dict:
-    print("callbackSetAppearance", value)
-    config.APPEARANCE_THEME = value
-    return {"status":"success"}
+def callbackSetAppearance(data, *args, **kwargs) -> dict:
+    print("callbackSetAppearance", data)
+    config.APPEARANCE_THEME = data
+    return {"status":"success", "data":config.APPEARANCE_THEME}
 
-def callbackSetUiScaling(value) -> dict:
-    print("callbackSetUiScaling", value)
-    config.UI_SCALING = value
-    return {"status":"success"}
+def callbackSetUiScaling(data, *args, **kwargs) -> dict:
+    print("callbackSetUiScaling", data)
+    config.UI_SCALING = data
+    return {"status":"success", "data":config.UI_SCALING}
 
-def callbackSetTextboxUiScaling(value) -> dict:
-    print("callbackSetTextboxUiScaling", int(value))
-    config.TEXTBOX_UI_SCALING = int(value)
-    return {"status":"success"}
+def callbackSetTextboxUiScaling(data, *args, **kwargs) -> dict:
+    print("callbackSetTextboxUiScaling", int(data))
+    config.TEXTBOX_UI_SCALING = int(data)
+    return {"status":"success", "data":config.TEXTBOX_UI_SCALING}
 
-def callbackSetMessageBoxRatio(value) -> dict:
-    print("callbackSetMessageBoxRatio", int(value))
-    config.MESSAGE_BOX_RATIO = int(value)
-    return {"status":"success"}
+def callbackSetMessageBoxRatio(data, *args, **kwargs) -> dict:
+    print("callbackSetMessageBoxRatio", int(data))
+    config.MESSAGE_BOX_RATIO = int(data)
+    return {"status":"success", "data":config.MESSAGE_BOX_RATIO}
 
-def callbackSetFontFamily(value) -> dict:
-    print("callbackSetFontFamily", value)
-    config.FONT_FAMILY = value
-    return {"status":"success"}
+def callbackSetFontFamily(data, *args, **kwargs) -> dict:
+    print("callbackSetFontFamily", data)
+    config.FONT_FAMILY = data
+    return {"status":"success", "data":config.FONT_FAMILY}
 
-def callbackSetUiLanguage(value) -> dict:
-    print("callbackSetUiLanguage", value)
-    value = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, value)
-    print("callbackSetUiLanguage__after_getKeyByValue", value)
-    config.UI_LANGUAGE = value
-    return {"status":"success"}
+def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
+    print("callbackSetUiLanguage", data)
+    data = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, data)
+    print("callbackSetUiLanguage__after_getKeyByValue", data)
+    config.UI_LANGUAGE = data
+    return {"status":"success", "data":config.UI_LANGUAGE}
 
-def callbackSetEnableRestoreMainWindowGeometry(value) -> dict:
-    print("callbackSetEnableRestoreMainWindowGeometry", value)
-    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
-    return {"status":"success"}
+def callbackSetEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
+    print("callbackSetEnableRestoreMainWindowGeometry", data)
+    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = data
+    return {"status":"success", "data":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
 
 # Translation Tab
-def callbackSetUseTranslationFeature(value) -> dict:
-    print("callbackSetUseTranslationFeature", value)
-    config.USE_TRANSLATION_FEATURE = value
+def callbackSetUseTranslationFeature(data, *args, **kwargs) -> dict:
+    print("callbackSetUseTranslationFeature", data)
+    config.USE_TRANSLATION_FEATURE = data
     if config.USE_TRANSLATION_FEATURE is True:
         if model.checkCTranslatorCTranslate2ModelWeight():
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -556,11 +580,16 @@ def callbackSetUseTranslationFeature(value) -> dict:
             config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "feature":config.USE_TRANSLATION_FEATURE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
+                },
+            }
 
-def callbackSetCtranslate2WeightType(value) -> dict:
-    print("callbackSetCtranslate2WeightType", value)
-    config.CTRANSLATE2_WEIGHT_TYPE = str(value)
+def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
+    print("callbackSetCtranslate2WeightType", data)
+    config.CTRANSLATE2_WEIGHT_TYPE = str(data)
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         def callback():
@@ -570,15 +599,20 @@ def callbackSetCtranslate2WeightType(value) -> dict:
         th_callback.start()
     else:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "feature":config.CTRANSLATE2_WEIGHT_TYPE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
+                },
+            }
 
-def callbackSetDeeplAuthKey(value) -> dict:
+def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
     status = "error"
-    print("callbackSetDeeplAuthKey", str(value))
-    if len(value) == 36 or len(value) == 39:
-        result = model.authenticationTranslatorDeepLAuthKey(auth_key=value)
+    print("callbackSetDeeplAuthKey", str(data))
+    if len(data) == 36 or len(data) == 39:
+        result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
         if result is True:
-            key = value
+            key = data
             status = "success"
         else:
             key = None
@@ -586,112 +620,121 @@ def callbackSetDeeplAuthKey(value) -> dict:
         auth_keys["DeepL_API"] = key
         config.AUTH_KEYS = auth_keys
         updateTranslationEngineAndEngineList()
-    return {"status":status}
+    return {"status":status, "data":config.AUTH_KEYS["DeepL_API"]}
 
-def callbackClearDeeplAuthKey() -> dict:
+def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
     auth_keys = config.AUTH_KEYS
     auth_keys["DeepL_API"] = None
     config.AUTH_KEYS = auth_keys
     updateTranslationEngineAndEngineList()
-    return {"status":"success"}
+    return {"status":"success", "data":config.AUTH_KEYS["DeepL_API"]}
 
 # Transcription Tab
 # Transcription (Mic)
-def callbackSetMicHost(value) -> dict:
-    print("callbackSetMicHost", value)
-    config.CHOICE_MIC_HOST = value
+def callbackSetMicHost(data, *args, **kwargs) -> dict:
+    print("callbackSetMicHost", data)
+    config.CHOICE_MIC_HOST = data
     config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
     model.stopCheckMicEnergy()
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "host":config.CHOICE_MIC_HOST,
+                "device":config.CHOICE_MIC_DEVICE,
+                },
+            }
 
-def callbackSetMicDevice(value) -> dict:
-    print("callbackSetMicDevice", value)
-    config.CHOICE_MIC_DEVICE = value
+def callbackSetMicDevice(data, *args, **kwargs) -> dict:
+    print("callbackSetMicDevice", data)
+    config.CHOICE_MIC_DEVICE = data
     model.stopCheckMicEnergy()
-    return {"status":"success"}
+    return {"status":"success",
+            "data":{
+                "host":config.CHOICE_MIC_HOST,
+                },
+            }
 
-def callbackSetMicEnergyThreshold(value) -> dict:
+def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     status = "error"
-    print("callbackSetMicEnergyThreshold", value)
-    value = int(value)
-    if 0 <= value <= config.MAX_MIC_ENERGY_THRESHOLD:
-        config.INPUT_MIC_ENERGY_THRESHOLD = value
+    print("callbackSetMicEnergyThreshold", data)
+    data = int(data)
+    if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
+        config.INPUT_MIC_ENERGY_THRESHOLD = data
         status = "success"
-    return {"status": status}
+    return {"status": status, "data": config.INPUT_MIC_ENERGY_THRESHOLD}
 
-def callbackSetMicDynamicEnergyThreshold(value) -> dict:
-    print("callbackSetMicDynamicEnergyThreshold", value)
-    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
-    return {"status":"success"}
+def callbackSetMicDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
+    print("callbackSetMicDynamicEnergyThreshold", data)
+    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = data
+    return {"status":"success", "data":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
-class ProgressBarMicEnergy:
+class ProgressBarEnergy:
     def __init__(self, action):
         self.action = action
 
     def set(self, energy) -> None:
-        self.action({"status":"success", "energy":energy})
+        self.action("energy", {"status":"success", "energy":energy})
 
 def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
     print("callbackEnableCheckMicThreshold")
-    progressbar_mic_energy = ProgressBarMicEnergy(action)
+    progressbar_mic_energy = ProgressBarEnergy(action)
     model.startCheckMicEnergy(progressbar_mic_energy.set)
     return {"status":"success"}
 
-def callbackDisableCheckMicThreshold() -> dict:
+def callbackDisableCheckMicThreshold(*args, **kwargs) -> dict:
     print("callbackDisableCheckMicThreshold")
     model.stopCheckMicEnergy()
     return {"status":"success"}
 
-def callbackSetMicRecordTimeout(value) -> dict:
-    print("callbackSetMicRecordTimeout", value)
-    response = {"status":"success"}
-    if value != "":
-        try:
-            value = int(value)
-            if 0 <= value <= config.INPUT_MIC_PHRASE_TIMEOUT:
-                config.INPUT_MIC_RECORD_TIMEOUT = value
-            else:
-                raise ValueError()
-        except Exception:
-            response = {"status":"error", "message":"Error Mic Record Timeout"}
+def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
+    print("callbackSetMicRecordTimeout", data)
+    try:
+        data = int(data)
+        if 0 <= data <= config.INPUT_MIC_PHRASE_TIMEOUT:
+            config.INPUT_MIC_RECORD_TIMEOUT = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Mic Record Timeout"}
+    else:
+        response = {"status":"success", "data":config.INPUT_MIC_RECORD_TIMEOUT}
     return response
 
-def callbackSetMicPhraseTimeout(value) -> dict:
-    print("callbackSetMicPhraseTimeout", value)
-    response = {"status":"success"}
-    if value != "":
-        try:
-            value = int(value)
-            if value >= config.INPUT_MIC_RECORD_TIMEOUT:
-                config.INPUT_MIC_PHRASE_TIMEOUT = value
-            else:
-                raise ValueError()
-        except Exception:
-            response = {"status":"error", "message":"Error Mic Phrase Timeout"}
+def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
+    print("callbackSetMicPhraseTimeout", data)
+    try:
+        data = int(data)
+        if data >= config.INPUT_MIC_RECORD_TIMEOUT:
+            config.INPUT_MIC_PHRASE_TIMEOUT = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Mic Phrase Timeout"}
+    else:
+        response = {"status":"success", "data":config.INPUT_MIC_PHRASE_TIMEOUT}
     return response
 
-def callbackSetMicMaxPhrases(value) -> dict:
-    print("callbackSetMicMaxPhrases", value)
-    response = {"status":"success"}
-    if value != "":
-        try:
-            value = int(value)
-            if 0 <= value:
-                config.INPUT_MIC_MAX_PHRASES = value
-            else:
-                raise ValueError()
-        except Exception:
-            response = {"status":"error", "message":"Error Mic Max Phrases"}
+def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
+    print("callbackSetMicMaxPhrases", data)
+    try:
+        data = int(data)
+        if 0 <= data:
+            config.INPUT_MIC_MAX_PHRASES = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Mic Max Phrases"}
+    else:
+        response = {"status":"success", "data":config.INPUT_MIC_MAX_PHRASES}
     return response
 
-def callbackSetMicWordFilter(values) -> dict:
-    print("callbackSetMicWordFilter", values)
-    values = str(values)
-    values = [w.strip() for w in values.split(",") if len(w.strip()) > 0]
+def callbackSetMicWordFilter(data, *args, **kwargs) -> dict:
+    print("callbackSetMicWordFilter", data)
+    data = str(data)
+    data = [w.strip() for w in data.split(",") if len(w.strip()) > 0]
     # Copy the list
     new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
     new_added_value = []
-    for value in values:
+    for value in data:
         if value in new_input_mic_word_filter_list:
             # If the value is already in the list, do nothing.
             pass
@@ -702,122 +745,100 @@ def callbackSetMicWordFilter(values) -> dict:
 
     model.resetKeywordProcessor()
     model.addKeywords()
-    return {"status":"success"}
+    return {"status":"success", "data":config.INPUT_MIC_WORD_FILTER}
 
-def callbackDeleteMicWordFilter(value) -> dict:
-    print("callbackDeleteMicWordFilter", value)
+def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
+    print("callbackDeleteMicWordFilter", data)
     try:
         new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
-        new_input_mic_word_filter_list.remove(str(value))
+        new_input_mic_word_filter_list.remove(str(data))
         config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
         model.resetKeywordProcessor()
         model.addKeywords()
     except Exception:
         print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
-    return {"status":"success"}
+    return {"status":"success", "data":config.INPUT_MIC_WORD_FILTER}
 
 # Transcription (Speaker)
-def callbackSetSpeakerDevice(value) -> dict:
-    print("callbackSetSpeakerDevice", value)
-    config.CHOICE_SPEAKER_DEVICE = value
+def callbackSetSpeakerDevice(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerDevice", data)
+    config.CHOICE_SPEAKER_DEVICE = data
+    model.stopCheckSpeakerEnergy()
+    return {"status":"success", "data":config.CHOICE_SPEAKER_DEVICE}
 
+def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerEnergyThreshold", data)
+    try:
+        data = int(data)
+        if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
+            # view.clearNotificationMessage()
+            config.INPUT_SPEAKER_ENERGY_THRESHOLD = data
+            # view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Set Speaker Energy Threshold"}
+    else:
+        response = {"status":"success", "data":config.INPUT_SPEAKER_ENERGY_THRESHOLD}
+    return response
+
+def callbackSetSpeakerDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerDynamicEnergyThreshold", data)
+    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = data
+    return {"status":"success", "data":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+
+def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
+    print("callbackEnableCheckSpeakerThreshold")
+    progressbar_speaker_energy = ProgressBarEnergy(action)
+    model.startCheckSpeakerEnergy(progressbar_speaker_energy.set)
+    return {"status":"success"}
+
+def callbackDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
+    print("callbackDisableCheckSpeakerThreshold")
     model.stopCheckSpeakerEnergy()
     return {"status":"success"}
 
-def callbackSetSpeakerEnergyThreshold(value) -> dict:
-    print("callbackSetSpeakerEnergyThreshold", value)
-    response = {"status":"success"}
-    if value != "":
-        try:
-            value = int(value)
-            if 0 <= value and value <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
-                # view.clearNotificationMessage()
-                config.INPUT_SPEAKER_ENERGY_THRESHOLD = value
-                # view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
-            else:
-                raise ValueError()
-        except Exception:
-            response = {"status":"error", "message":"Error Set Speaker Energy Threshold"}
+def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerRecordTimeout", data)
+    try:
+        data = int(data)
+        if 0 <= data <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
+            config.INPUT_SPEAKER_RECORD_TIMEOUT = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Speaker Record Timeout"}
+    else:
+        response = {"status":"success", "data":config.INPUT_SPEAKER_RECORD_TIMEOUT}
     return response
 
-def callbackSetSpeakerDynamicEnergyThreshold(value) -> dict:
-    print("callbackSetSpeakerDynamicEnergyThreshold", value)
-    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
-    if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
-        # view.closeSpeakerEnergyThresholdWidget()
-        pass
+def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerPhraseTimeout", data)
+    try:
+        data = int(data)
+        if 0 <= data and data >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
+            config.INPUT_SPEAKER_PHRASE_TIMEOUT = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Speaker Phrase Timeout"}
     else:
-        # view.openSpeakerEnergyThresholdWidget()
-        pass
-    return {"status":"success"}
+        response = {"status":"success", "data":config.INPUT_SPEAKER_PHRASE_TIMEOUT}
+    return response
 
-def setProgressBarSpeakerEnergy(energy):
-    # view.updateSetProgressBar_SpeakerEnergy(energy)
-    pass
-
-def callbackCheckSpeakerThreshold(is_turned_on):
-    print("callbackCheckSpeakerThreshold", is_turned_on)
-    if is_turned_on is True:
-        # view.replaceSpeakerThresholdCheckButton_Disabled()
-        model.startCheckSpeakerEnergy(
-            setProgressBarSpeakerEnergy,
-            # view.initProgressBar_SpeakerEnergy,
-            # view.showErrorMessage_CheckSpeakerThreshold_NoDevice
-        )
-
-        # view.replaceSpeakerThresholdCheckButton_Active()
+def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
+    print("callbackSetSpeakerMaxPhrases", data)
+    try:
+        data = int(data)
+        if 0 <= data:
+            config.INPUT_SPEAKER_MAX_PHRASES = data
+        else:
+            raise ValueError()
+    except Exception:
+        response = {"status":"error", "message":"Error Speaker Max Phrases"}
     else:
-        # view.replaceSpeakerThresholdCheckButton_Disabled()
-        model.stopCheckSpeakerEnergy()
-        # view.replaceSpeakerThresholdCheckButton_Passive()
-
-def callbackSetSpeakerRecordTimeout(value):
-    print("callbackSetSpeakerRecordTimeout", value)
-    if value == "":
-        return
-    try:
-        value = int(value)
-        if 0 <= value and value <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
-            # view.clearNotificationMessage()
-            config.INPUT_SPEAKER_RECORD_TIMEOUT = value
-            # view.setGuiVariable_SpeakerRecordTimeout(config.INPUT_SPEAKER_RECORD_TIMEOUT)
-        else:
-            raise ValueError()
-    except Exception:
-        # view.showErrorMessage_SpeakerRecordTimeout()
-        pass
-
-def callbackSetSpeakerPhraseTimeout(value):
-    print("callbackSetSpeakerPhraseTimeout", value)
-    if value == "":
-        return
-    try:
-        value = int(value)
-        if 0 <= value and value >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
-            # view.clearNotificationMessage()
-            config.INPUT_SPEAKER_PHRASE_TIMEOUT = value
-            # view.setGuiVariable_SpeakerPhraseTimeout(config.INPUT_SPEAKER_PHRASE_TIMEOUT)
-        else:
-            raise ValueError()
-    except Exception:
-        # view.showErrorMessage_SpeakerPhraseTimeout()
-        pass
-
-def callbackSetSpeakerMaxPhrases(value):
-    print("callbackSetSpeakerMaxPhrases", value)
-    if value == "":
-        return
-    try:
-        value = int(value)
-        if 0 <= value:
-            # view.clearNotificationMessage()
-            config.INPUT_SPEAKER_MAX_PHRASES = value
-            # view.setGuiVariable_SpeakerMaxPhrases(config.INPUT_SPEAKER_MAX_PHRASES)
-        else:
-            raise ValueError()
-    except Exception:
-        # view.showErrorMessage_SpeakerMaxPhrases()
-        pass
+        response = {"status":"success", "data":config.INPUT_SPEAKER_MAX_PHRASES}
+    return response
 
 # Transcription (Internal AI Model)
 def callbackSetUserWhisperFeature(value):
