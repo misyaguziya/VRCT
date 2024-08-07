@@ -30,11 +30,11 @@
             "no_mic_device_detected_error": "No mic device detected.",
             "no_speaker_device_detected_error": "No speaker device detected.",
             "translation_engine_limit_error": "It has automatically changed the translation engine. Access has been temporarily restricted due to an excessive number of requests to the translation engine. If you want to use the same translation engine, please wait for a while, restart VRCT, and try again.",
-            "detected_by_word_filter": "The word %{detected_message} has not been sent due to detection by the word filter.",
-            "selected_your_language": "\"Your Language\" has set to %{your_language}.",
-            "selected_target_language": "\"Target Language\" has set to %{target_language}.",
-            "switched_language_preset_tab": "Switched to Language Preset Tab No.%{tab_no}.\"",
-            "latest_language_setting": "Currently, \"Your Language\" is set to %{your_language}, and \"Target Language\" is set to %{target_language}.",
+            "detected_by_word_filter": "The word {{detected_message}} has not been sent due to detection by the word filter.",
+            "selected_your_language": "\"Your Language\" has set to {{your_language}}.",
+            "selected_target_language": "\"Target Language\" has set to {{target_language}}.",
+            "switched_language_preset_tab": "Switched to Language Preset Tab No.{{tab_no}}.\"",
+            "latest_language_setting": "Currently, \"Your Language\" is set to {{your_language}}, and \"Target Language\" is set to {{target_language}}.",
             "opened_web_page_booth": "Opened Booth page in your web browser.",
             "opened_web_page_vrct_documents": "Opened VRCT Documents page in your web browser.\nFor any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the \"Contact Form,\" or via X (formerly Twitter)!"
         },
@@ -48,7 +48,7 @@
             "deny_update_software": "Do it later",
             "accept_update_software": "Update and Restart",
             "updating": "Now updating...",
-            "detected_over_ui_size": "Current UI Size: %{current_ui_size}\nVRCT's window size may be larger than your display size.\n* Depending on your display size, you may need to adjust it multiple times.",
+            "detected_over_ui_size": "Current UI Size: {{current_ui_size}}\nVRCT's window size may be larger than your display size.\n* Depending on your display size, you may need to adjust it multiple times.",
             "deny_adjust_ui_size": "Keep it at this size",
             "accept_adjust_ui_size": "Set it smaller and restart"
         }
@@ -74,7 +74,7 @@
     "config_window": {
         "config_title": "Settings",
         "compact_mode": "Compact Mode",
-        "version": "version %{version}",
+        "version": "version {{version}}",
         "restart_message": "Apply changes with a restart.",
         "common_error_message": {
             "invalid_value": "Invalid value."
@@ -130,12 +130,12 @@
         "ctranslate2_weight_type": {
             "label": "Select Internal Translation Model",
             "desc": "You can choose the translation model to use for the internal translation engine.",
-            "small": "Basic model (%{capacity})",
-            "large": "High accuracy model (%{capacity})"
+            "small": "Basic model ({{capacity}})",
+            "large": "High accuracy model ({{capacity}})"
         },
         "deepl_auth_key": {
             "label": "DeepL Auth Key",
-            "desc": "Please select %{translator} on the main screen with DeepL_API when using. ※Some languages may not be supported.",
+            "desc": "Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported.",
             "open_auth_key_webpage": "Open DeepL Account Webpage",
             "auth_key_success": "Auth key update completed.",
             "auth_key_error": "Auth Key is incorrect or Usage limit reached."
@@ -151,17 +151,17 @@
             "desc_for_automatic": "Automatically determine microphone input sensitivity.",
             "label_for_manual": "Mic Energy Threshold (Current Setting: Manual)",
             "desc_for_manual": "Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume.",
-            "error_message": "You can set it with a value between 0 to %{max}."
+            "error_message": "You can set it with a value between 0 to {{max}}."
         },
         "mic_record_timeout": {
             "label": "Mic Record Timeout",
             "desc": "Detects silence and, when the specified number of seconds has passed, considers the mic input to have ended. (Second(s))",
-            "error_message": "It cannot be greater than '%{mic_phrase_timeout_label}' with a value of 0 or more."
+            "error_message": "It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more."
         },
         "mic_phrase_timeout": {
             "label": "Mic Phrase Timeout",
             "desc": "Transcription processing is performed at intervals of the specified number of seconds.",
-            "error_message": "It cannot be set lower than '%{mic_record_timeout_label}' with a value of 0 or more."
+            "error_message": "It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more."
         },
         "mic_max_phrase": {
             "label": "Mic Max Words",
@@ -172,7 +172,7 @@
             "label": "Mic Word Filter",
             "desc": "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a \",\" (comma). \n*Duplicate words will not be registered.",
             "add_button_label": "Add",
-            "count_desc": "Current registered word count: %{count}"
+            "count_desc": "Current registered word count: {{count}}"
         },
         "speaker_device": {
             "label": "Speaker Device"
@@ -182,18 +182,18 @@
             "desc_for_automatic": "Automatically determine speaker input sensitivity.",
             "label_for_manual": "Speaker Energy Threshold (Current Setting: Manual)",
             "desc_for_manual": "Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume.",
-            "error_message": "You can set it with a value between 0 to %{max}.",
+            "error_message": "You can set it with a value between 0 to {{max}}.",
             "no_device_error_message": "No speaker device detected."
         },
         "speaker_record_timeout": {
             "label": "Speaker Record Timeout",
             "desc": "Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))",
-            "error_message": "It cannot be greater than '%{speaker_phrase_timeout_label}' with a value of 0 or more."
+            "error_message": "It cannot be greater than '{{speaker_phrase_timeout_label}}' with a value of 0 or more."
         },
         "speaker_phrase_timeout": {
             "label": "Speaker Phrase Timeout",
             "desc": "Transcription processing is performed at intervals of the specified number of seconds.",
-            "error_message": "It cannot be set lower than '%{speaker_record_timeout_label}' with a value of 0 or more."
+            "error_message": "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
         },
         "speaker_max_phrase": {
             "label": "Speaker Max Words",
@@ -207,8 +207,8 @@
         "whisper_weight_type": {
             "label": "Select Whisper Model",
             "desc": "Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.\n※Larger models, especially those exceeding medium size, can be challenging to run even depending on the CPU's performance.",
-            "model_template": "%{model_name} model (%{capacity})",
-            "recommended_model_template": "%{model_name} model (%{capacity}) (Recommended)"
+            "model_template": "{{model_name}} model ({{capacity}})",
+            "recommended_model_template": "{{model_name}} model ({{capacity}}) (Recommended)"
         },
         "enable_overlay_small_log": {
             "label": "Enable Overlay",

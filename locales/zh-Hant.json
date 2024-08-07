@@ -30,11 +30,11 @@
             "no_mic_device_detected_error": "未偵測到麥克風。",
             "no_speaker_device_detected_error": "未偵測到喇叭。",
             "translation_engine_limit_error": "翻譯引擎已自動變更。由於請求太頻繁，已被這個翻譯引擎暫時受限。如果你想使用相同的翻譯引擎，請稍等片刻，重新啟動 VRCT 並重試。",
-            "detected_by_word_filter": "由於詞語過濾器的偵測，「%{detected_message}」未被發送。",
-            "selected_your_language": "「你的語言」已設為 %{your_language}。",
-            "selected_target_language": "「目標語言」已設為 %{target_language}。",
-            "switched_language_preset_tab": "已切換到第 %{tab_no} 個語言設定。",
-            "latest_language_setting": "目前「你的語言」設為 %{your_language}，「目標語言」設為 %{target_language}。",
+            "detected_by_word_filter": "由於詞語過濾器的偵測，「{{detected_message}}」未被發送。",
+            "selected_your_language": "「你的語言」已設為 {{your_language}}。",
+            "selected_target_language": "「目標語言」已設為 {{target_language}}。",
+            "switched_language_preset_tab": "已切換到第 {{tab_no}} 個語言設定。",
+            "latest_language_setting": "目前「你的語言」設為 {{your_language}}，「目標語言」設為 {{target_language}}。",
             "opened_web_page_booth": "已在瀏覽器中打開 Booth 頁面。",
             "opened_web_page_vrct_documents": "已在瀏覽器中打開VRCT文件頁面。\n如有任何問題、請求或查詢，請通過文件頁面底部的連結、「聯絡表單」或 X (Twitter) 聯絡我們！"
         },
@@ -47,7 +47,7 @@
             "deny_update_software": "稍後再說",
             "accept_update_software": "更新",
             "updating": "正在更新...",
-            "detected_over_ui_size": "介面大小：%{current_ui_size}\nVRCT 的視窗大小可能超過你的螢幕大小。",
+            "detected_over_ui_size": "介面大小：{{current_ui_size}}\nVRCT 的視窗大小可能超過你的螢幕大小。",
             "deny_adjust_ui_size": "保持目前大小",
             "accept_adjust_ui_size": "縮小介面並重新啟動"
         }
@@ -73,7 +73,7 @@
     "config_window": {
         "config_title": "設定",
         "compact_mode": "精簡模式",
-        "version": "版本 %{version}",
+        "version": "版本 {{version}}",
         "restart_message": "重新啟動以應用變更。",
         "common_error_message": {
             "invalid_value": "無效值。"
@@ -128,12 +128,12 @@
         "ctranslate2_weight_type": {
             "label": "選擇離線翻譯模型",
             "desc": "你可以選擇用於離線翻譯引擎的翻譯模型。",
-            "small": "基本模型（%{capacity}）",
-            "large": "高準確率模型（%{capacity}）"
+            "small": "基本模型（{{capacity}}）",
+            "large": "高準確率模型（{{capacity}}）"
         },
         "deepl_auth_key": {
             "label": "DeepL 授權金鑰",
-            "desc": "使用 DeepL API 時請在主螢幕選擇 %{translator}。※可能不支援某些語言。",
+            "desc": "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。",
             "open_auth_key_webpage": "打開 DeepL 帳號頁面",
             "auth_key_success": "授權金鑰更新完成。",
             "auth_key_error": "授權金鑰錯誤或已達使用上限。"
@@ -149,17 +149,17 @@
             "desc_for_automatic": "自動判定麥克風輸入靈敏度。",
             "label_for_manual": "麥克風能量閾值（當前設置：手動）",
             "desc_for_manual": "使用滑桿調整麥克風輸入靈敏度，你可以按下麥克風圖示來測試。",
-            "error_message": "可以設置 0 到 %{max} 之間的值。"
+            "error_message": "可以設置 0 到 {{max}} 之間的值。"
         },
         "mic_record_timeout": {
             "label": "麥克風音訊 - 判定結束時間",
             "desc": "麥克風未收到音訊後，結束一段話的判定時間（秒）。",
-            "error_message": "不能大於「%{mic_phrase_timeout_label}」，應為 0 或更高。"
+            "error_message": "不能大於「{{mic_phrase_timeout_label}}」，應為 0 或更高。"
         },
         "mic_phrase_timeout": {
             "label": "麥克風音訊 - 紀錄間隔時間",
             "desc": "每隔多久要紀錄一次音訊。",
-            "error_message": "不能小於「%{mic_record_timeout_label}」，應為 0 或更高。"
+            "error_message": "不能小於「{{mic_record_timeout_label}}」，應為 0 或更高。"
         },
         "mic_max_phrase": {
             "label": "麥克風音訊 - 最大單詞數量",
@@ -170,7 +170,7 @@
             "label": "麥克風單詞過濾器",
             "desc": "如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。\n*重複詞語會被忽略。",
             "add_button_label": "新增",
-            "count_desc": "當前註冊詞語數量：%{count}"
+            "count_desc": "當前註冊詞語數量：{{count}}"
         },
         "speaker_device": {
             "label": "喇叭裝置"
@@ -180,18 +180,18 @@
             "desc_for_automatic": "自動確定喇叭輸入靈敏度。",
             "label_for_manual": "喇叭能量閾值（當前設置：手動）",
             "desc_for_manual": "使用滑桿調整喇叭輸入靈敏度，你可以按下喇叭圖示來測試。",
-            "error_message": "可以設置 0 到 %{max} 之間的值。",
+            "error_message": "可以設置 0 到 {{max}} 之間的值。",
             "no_device_error_message": "未偵測到喇叭裝置。"
         },
         "speaker_record_timeout": {
             "label": "喇叭音訊 - 判定結束時間",
             "desc": "偵測到靜音並在指定秒數後認為喇叭輸入已結束。（秒）",
-            "error_message": "不能大於「%{speaker_phrase_timeout_label}」，應為 0 或更高。"
+            "error_message": "不能大於「{{speaker_phrase_timeout_label}}」，應為 0 或更高。"
         },
         "speaker_phrase_timeout": {
             "label": "喇叭音訊 - 紀錄間隔時間",
             "desc": "以指定秒數間隔進行轉錄處理。",
-            "error_message": "不能小於「%{speaker_record_timeout_label}」，應為 0 或更高。"
+            "error_message": "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
         },
         "speaker_max_phrase": {
             "label": "喇叭音訊 - 最大單詞數量",
@@ -205,8 +205,8 @@
         "whisper_weight_type": {
             "label": "選擇 Whisper 模型",
             "desc": "一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。\n※特別是超過中等大小的模型，根據CPU性能可能難以運行。",
-            "model_template": "%{model_name}模型（%{capacity}）",
-            "recommended_model_template": "%{model_name}模型（%{capacity}）（推薦）"
+            "model_template": "{{model_name}}模型（{{capacity}}）",
+            "recommended_model_template": "{{model_name}}模型（{{capacity}}）（推薦）"
         },
         "enable_overlay_small_log": {
             "label": "啟用 Overlay",
