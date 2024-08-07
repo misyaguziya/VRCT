@@ -89,3 +89,37 @@
         background-color: var(--primary_700_color);
     }
 }
+
+
+
+.toggle_button_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2rem;
+}
+
+.words_count_text {
+    font-size: 1.6rem;
+}
+
+.toggle_button_wrapper {
+    padding: 1.6rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_825_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.arrow_left_svg {
+    width: 2.4rem;
+    &.to_down {
+        transform: rotate(-90deg);
+    }
+    &.to_up {
+        transform: rotate(90deg);
+    }
+}

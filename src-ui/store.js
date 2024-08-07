@@ -138,6 +138,7 @@ export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useReceiv
     is_message_first: true,
 }, "ReceivedMessageFormatWithT");
 
+export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useIsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
 export const { atomInstance: Atom_WordFilterList, useHook: useWordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
 
 
