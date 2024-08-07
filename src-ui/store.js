@@ -4,7 +4,12 @@ import {
     useSetAtom
 } from "jotai";
 
-import { translator_list, test_device_list, generateTestData } from "@data";
+import {
+    translator_list,
+    test_device_list,
+    generateTestData,
+    word_filter_list,
+} from "@data";
 
 export const store = {
     backend_subprocess: null,
@@ -132,6 +137,8 @@ export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useReceiv
     after: "",
     is_message_first: true,
 }, "ReceivedMessageFormatWithT");
+
+export const { atomInstance: Atom_WordFilterList, useHook: useWordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
 
 
 export const { atomInstance: Atom_TranslatorListStatus, useHook: useTranslatorListStatus } = createAtomWithHook(translator_list, "TranslatorListStatus");
