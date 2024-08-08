@@ -312,7 +312,6 @@ class Model:
         new_version = response.json()["name"]
         if new_version != config.VERSION:
             update_flag = True
-        print("software version", "now:", config.VERSION, "new:", new_version)
         return update_flag
 
     @staticmethod

@@ -193,7 +193,7 @@ action_mapping = {
     "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
 }
 
-def handleConfigRequest(endpoint, _data):
+def handleConfigRequest(endpoint):
     handler = config_mapping.get(endpoint)
     if handler is None:
         response = "Invalid endpoint"
@@ -256,7 +256,7 @@ def main():
         try:
             match endpoint.split("/")[1]:
                 case "config":
-                    result_data, status = handleConfigRequest(endpoint, data)
+                    result_data, status = handleConfigRequest(endpoint)
                 case "controller":
                     result_data, status = handleControllerRequest(endpoint, data)
                 case _:
