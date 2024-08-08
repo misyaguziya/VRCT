@@ -193,7 +193,7 @@ action_mapping = {
     "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
 }
 
-def handleConfigRequest(endpoint):
+def handleConfigRequest(endpoint, _data):
     handler = config_mapping.get(endpoint)
     if handler is None:
         response = "Invalid endpoint"
