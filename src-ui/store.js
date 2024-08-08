@@ -95,6 +95,8 @@ const createAsyncAtomWithHook = (initialValue, base_ame) => {
     return { atomInstance, useHook };
 };
 
+export const { atomInstance: Atom_SoftwareVersion, useHook: useSoftwareVersion } = createAtomWithHook("-", "SoftwareVersion");
+
 export const { atomInstance: Atom_UiLanguageStatus, useHook: useUiLanguageStatus } = createAtomWithHook("en", "UiLanguageStatus");
 export const { atomInstance: Atom_TranslationStatus, useHook: useTranslationStatus } = createAsyncAtomWithHook(false, "TranslationStatus");
 export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useTranscriptionSendStatus } = createAsyncAtomWithHook(false, "TranscriptionSendStatus");
