@@ -1,3 +1,4 @@
+import json
 from typing import Callable, Union
 from time import sleep
 from subprocess import Popen
@@ -10,27 +11,31 @@ import argparse
 
 # Common
 def callbackUpdateSoftware(func=None):
+    print(json.dumps({"log": "callbackUpdateSoftware"}), flush=True)
     setMainWindowGeometry()
     model.updateSoftware(restart=True, func=func)
 
 def callbackRestartSoftware():
+    print(json.dumps({"log": "callbackRestartSoftware"}), flush=True)
     setMainWindowGeometry()
     model.reStartSoftware()
 
 def callbackFilepathLogs():
-    print("[LOG]", "callbackFilepathLogs", config.PATH_LOGS.replace('/', '\\'))
+    print(json.dumps({"log": "callbackFilepathLogs"}), flush=True)
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
     return "Success", 200
 
 def callbackFilepathConfigFile():
-    print("[LOG]","callbackFilepathConfigFile", config.PATH_LOCAL.replace('/', '\\'))
+    print(json.dumps({"log": "callbackFilepathConfigFile"}), flush=True)
     Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
     return "Success", 200
 
 def callbackQuitVrct():
+    print(json.dumps({"log": "callbackQuitVrct"}), flush=True)
     setMainWindowGeometry()
 
 def callbackEnableEasterEgg():
+    print(json.dumps({"log": "callbackEnableEasterEgg"}), flush=True)
     config.IS_EASTER_EGG_ENABLED = True
     config.OVERLAY_UI_TYPE = "sakura"
     # view.printToTextbox_enableEasterEgg()
@@ -353,7 +358,7 @@ def setTargetTranslateEngine(select):
     config.CHOICE_OUTPUT_TRANSLATOR = select
 
 def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
-    print("setYourLanguageAndCountry", select)
+    print(json.dumps({"log": "setYourLanguageAndCountry", "data":select}), flush=True)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
@@ -370,7 +375,7 @@ def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
         }
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
-    print("setTargetLanguageAndCountry", select)
+    print(json.dumps({"log": "setTargetLanguageAndCountry", "data":select}), flush=True)
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
@@ -387,7 +392,7 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
         }
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
-    print("swapYourLanguageAndTargetLanguage")
+    print(json.dumps({"log": "swapYourLanguageAndTargetLanguage"}), flush=True)
     your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
@@ -405,7 +410,7 @@ def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
             }
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
-    print("callbackSelectedLanguagePresetTab", selected_tab_no)
+    print(json.dumps({"log": "callbackSelectedLanguagePresetTab", "data":selected_tab_no}), flush=True)
     config.SELECTED_TAB_NO = selected_tab_no
 
     engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
@@ -429,36 +434,38 @@ def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> d
     return {"status":"success", "data":config.SELECTED_TAB_NO}
 
 def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
-    print("callbackSelectedTranslationEngine", selected_translation_engine)
+    print(json.dumps({"log": "callbackSelectedTranslationEngine", "data":selected_translation_engine}), flush=True)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
     return {"status":"success", "data":selected_translation_engine}
 
 # command func
 def callbackEnableTranslation(*args, **kwargs) -> dict:
-    print("callbackEnableTranslation")
+    print(json.dumps({"log": "callbackEnableTranslation"}), flush=True)
     config.ENABLE_TRANSLATION = True
     if model.isLoadedCTranslate2Model() is False:
         model.changeTranslatorCTranslate2Model()
     return {"status":"success", "data":config.ENABLE_TRANSLATION}
 
 def callbackDisableTranslation(*args, **kwargs) -> dict:
-    print("callbackDisableTranslation")
+    print(json.dumps({"log": "callbackDisableTranslation"}), flush=True)
     config.ENABLE_TRANSLATION = False
     return {"status":"success", "data":config.ENABLE_TRANSLATION}
 
 def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
-    print("callbackEnableTranscriptionSend")
+    print(json.dumps({"log": "callbackEnableTranscriptionSend"}), flush=True)
     config.ENABLE_TRANSCRIPTION_SEND = True
     startThreadingTranscriptionSendMessage(action)
     return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackDisableTranscriptionSend(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableTranscriptionSend"}), flush=True)
     config.ENABLE_TRANSCRIPTION_SEND = False
     stopThreadingTranscriptionSendMessage(action)
     return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableTranscriptionReceive"}), flush=True)
     config.ENABLE_TRANSCRIPTION_RECEIVE = True
     startThreadingTranscriptionReceiveMessage(action)
 
@@ -468,28 +475,34 @@ def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackDisableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableTranscriptionReceive"}), flush=True)
     config.ENABLE_TRANSCRIPTION_RECEIVE = False
     stopThreadingTranscriptionReceiveMessage(action)
     return {"status":"success", "data":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackEnableForeground(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableForeground"}), flush=True)
     config.ENABLE_FOREGROUND = True
     return {"status":"success", "data":config.ENABLE_FOREGROUND}
 
 def callbackDisableForeground(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableForeground"}), flush=True)
     config.ENABLE_FOREGROUND = False
     return {"status":"success", "data":config.ENABLE_FOREGROUND}
 
 def callbackEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableMainWindowSidebarCompactMode"}), flush=True)
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
     return {"status":"success", "data":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 def callbackDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableMainWindowSidebarCompactMode"}), flush=True)
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
     return {"status":"success", "data":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 # Config Window
 def callbackOpenConfigWindow(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackOpenConfigWindow"}), flush=True)
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -497,6 +510,7 @@ def callbackOpenConfigWindow(*args, **kwargs) -> dict:
     return {"status":"success"}
 
 def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackCloseConfigWindow"}), flush=True)
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
 
@@ -510,12 +524,14 @@ def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableConfigWindowCompactMode"}), flush=True)
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
     return {"status":"success", "data":config.IS_CONFIG_WINDOW_COMPACT_MODE}
 
 def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableConfigWindowCompactMode"}), flush=True)
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
@@ -523,50 +539,49 @@ def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
 
 # Appearance Tab
 def callbackSetTransparency(data, *args, **kwargs) -> dict:
-    print("callbackSetTransparency", int(data))
+    print(json.dumps({"log": "callbackSetTransparency", "data":data}), flush=True)
     config.TRANSPARENCY = int(data)
     return {"status":"success", "data":config.TRANSPARENCY}
 
 def callbackSetAppearance(data, *args, **kwargs) -> dict:
-    print("callbackSetAppearance", data)
+    print(json.dumps({"log": "callbackSetAppearance", "data":data}), flush=True)
     config.APPEARANCE_THEME = data
     return {"status":"success", "data":config.APPEARANCE_THEME}
 
 def callbackSetUiScaling(data, *args, **kwargs) -> dict:
-    print("callbackSetUiScaling", data)
+    print(json.dumps({"log": "callbackSetUiScaling", "data":data}), flush=True)
     config.UI_SCALING = data
     return {"status":"success", "data":config.UI_SCALING}
 
 def callbackSetTextboxUiScaling(data, *args, **kwargs) -> dict:
-    print("callbackSetTextboxUiScaling", int(data))
+    print(json.dumps({"log": "callbackSetTextboxUiScaling", "data":data}), flush=True)
     config.TEXTBOX_UI_SCALING = int(data)
     return {"status":"success", "data":config.TEXTBOX_UI_SCALING}
 
 def callbackSetMessageBoxRatio(data, *args, **kwargs) -> dict:
-    print("callbackSetMessageBoxRatio", int(data))
+    print(json.dumps({"log": "callbackSetMessageBoxRatio", "data":data}), flush=True)
     config.MESSAGE_BOX_RATIO = int(data)
     return {"status":"success", "data":config.MESSAGE_BOX_RATIO}
 
 def callbackSetFontFamily(data, *args, **kwargs) -> dict:
-    print("callbackSetFontFamily", data)
+    print(json.dumps({"log": "callbackSetFontFamily", "data":data}), flush=True)
     config.FONT_FAMILY = data
     return {"status":"success", "data":config.FONT_FAMILY}
 
 def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
-    print("callbackSetUiLanguage", data)
+    print(json.dumps({"log": "callbackSetUiLanguage", "data":data}), flush=True)
     data = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, data)
-    print("callbackSetUiLanguage__after_getKeyByValue", data)
     config.UI_LANGUAGE = data
     return {"status":"success", "data":config.UI_LANGUAGE}
 
 def callbackSetEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
-    print("callbackSetEnableRestoreMainWindowGeometry", data)
+    print(json.dumps({"log": "callbackSetEnableRestoreMainWindowGeometry", "data":data}), flush=True)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = data
     return {"status":"success", "data":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
 
 # Translation Tab
 def callbackSetUseTranslationFeature(data, *args, **kwargs) -> dict:
-    print("callbackSetUseTranslationFeature", data)
+    print(json.dumps({"log": "callbackSetUseTranslationFeature", "data":data}), flush=True)
     config.USE_TRANSLATION_FEATURE = data
     if config.USE_TRANSLATION_FEATURE is True:
         if model.checkCTranslatorCTranslate2ModelWeight():
@@ -588,7 +603,7 @@ def callbackSetUseTranslationFeature(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
-    print("callbackSetCtranslate2WeightType", data)
+    print(json.dumps({"log": "callbackSetCtranslate2WeightType", "data":data}), flush=True)
     config.CTRANSLATE2_WEIGHT_TYPE = str(data)
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -607,8 +622,8 @@ def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackSetDeeplAuthKey", "data":data}), flush=True)
     status = "error"
-    print("callbackSetDeeplAuthKey", str(data))
     if len(data) == 36 or len(data) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
         if result is True:
@@ -623,6 +638,7 @@ def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
     return {"status":status, "data":config.AUTH_KEYS["DeepL_API"]}
 
 def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackClearDeeplAuthKey"}), flush=True)
     auth_keys = config.AUTH_KEYS
     auth_keys["DeepL_API"] = None
     config.AUTH_KEYS = auth_keys
@@ -632,7 +648,7 @@ def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
 # Transcription Tab
 # Transcription (Mic)
 def callbackSetMicHost(data, *args, **kwargs) -> dict:
-    print("callbackSetMicHost", data)
+    print(json.dumps({"log": "callbackSetMicHost", "data":data}), flush=True)
     config.CHOICE_MIC_HOST = data
     config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
     model.stopCheckMicEnergy()
@@ -644,7 +660,7 @@ def callbackSetMicHost(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetMicDevice(data, *args, **kwargs) -> dict:
-    print("callbackSetMicDevice", data)
+    print(json.dumps({"log": "callbackSetMicDevice", "data":data}), flush=True)
     config.CHOICE_MIC_DEVICE = data
     model.stopCheckMicEnergy()
     return {"status":"success",
@@ -654,8 +670,8 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackSetMicEnergyThreshold", "data":data}), flush=True)
     status = "error"
-    print("callbackSetMicEnergyThreshold", data)
     data = int(data)
     if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
         config.INPUT_MIC_ENERGY_THRESHOLD = data
@@ -663,7 +679,7 @@ def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     return {"status": status, "data": config.INPUT_MIC_ENERGY_THRESHOLD}
 
 def callbackSetMicDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
-    print("callbackSetMicDynamicEnergyThreshold", data)
+    print(json.dumps({"log": "callbackSetMicDynamicEnergyThreshold", "data":data}), flush=True)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = data
     return {"status":"success", "data":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
@@ -675,18 +691,18 @@ class ProgressBarEnergy:
         self.action("energy", {"status":"success", "energy":energy})
 
 def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
-    print("callbackEnableCheckMicThreshold")
+    print(json.dumps({"log": "callbackEnableCheckMicThreshold"}), flush=True)
     progressbar_mic_energy = ProgressBarEnergy(action)
     model.startCheckMicEnergy(progressbar_mic_energy.set)
     return {"status":"success"}
 
 def callbackDisableCheckMicThreshold(*args, **kwargs) -> dict:
-    print("callbackDisableCheckMicThreshold")
+    print(json.dumps({"log": "callbackDisableCheckMicThreshold"}), flush=True)
     model.stopCheckMicEnergy()
     return {"status":"success"}
 
 def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
-    print("callbackSetMicRecordTimeout", data)
+    print(json.dumps({"log": "callbackSetMicRecordTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.INPUT_MIC_PHRASE_TIMEOUT:
@@ -700,7 +716,7 @@ def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
-    print("callbackSetMicPhraseTimeout", data)
+    print(json.dumps({"log": "callbackSetMicPhraseTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if data >= config.INPUT_MIC_RECORD_TIMEOUT:
@@ -714,7 +730,7 @@ def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
-    print("callbackSetMicMaxPhrases", data)
+    print(json.dumps({"log": "callbackSetMicMaxPhrases", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data:
@@ -728,7 +744,7 @@ def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicWordFilter(data, *args, **kwargs) -> dict:
-    print("callbackSetMicWordFilter", data)
+    print(json.dumps({"log": "callbackSetMicWordFilter", "data":data}), flush=True)
     data = str(data)
     data = [w.strip() for w in data.split(",") if len(w.strip()) > 0]
     # Copy the list
@@ -748,7 +764,7 @@ def callbackSetMicWordFilter(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.INPUT_MIC_WORD_FILTER}
 
 def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
-    print("callbackDeleteMicWordFilter", data)
+    print(json.dumps({"log": "callbackDeleteMicWordFilter", "data":data}), flush=True)
     try:
         new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
         new_input_mic_word_filter_list.remove(str(data))
@@ -761,13 +777,13 @@ def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
 
 # Transcription (Speaker)
 def callbackSetSpeakerDevice(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerDevice", data)
+    print(json.dumps({"log": "callbackSetSpeakerDevice", "data":data}), flush=True)
     config.CHOICE_SPEAKER_DEVICE = data
     model.stopCheckSpeakerEnergy()
     return {"status":"success", "data":config.CHOICE_SPEAKER_DEVICE}
 
 def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerEnergyThreshold", data)
+    print(json.dumps({"log": "callbackSetSpeakerEnergyThreshold", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
@@ -783,23 +799,23 @@ def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetSpeakerDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerDynamicEnergyThreshold", data)
+    print(json.dumps({"log": "callbackSetSpeakerDynamicEnergyThreshold", "data":data}), flush=True)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = data
     return {"status":"success", "data":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
 def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
-    print("callbackEnableCheckSpeakerThreshold")
+    print(json.dumps({"log": "callbackEnableCheckSpeakerThreshold"}), flush=True)
     progressbar_speaker_energy = ProgressBarEnergy(action)
     model.startCheckSpeakerEnergy(progressbar_speaker_energy.set)
     return {"status":"success"}
 
 def callbackDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
-    print("callbackDisableCheckSpeakerThreshold")
+    print(json.dumps({"log": "callbackDisableCheckSpeakerThreshold"}), flush=True)
     model.stopCheckSpeakerEnergy()
     return {"status":"success"}
 
 def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerRecordTimeout", data)
+    print(json.dumps({"log": "callbackSetSpeakerRecordTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
@@ -813,7 +829,7 @@ def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerPhraseTimeout", data)
+    print(json.dumps({"log": "callbackSetSpeakerPhraseTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data and data >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
@@ -827,7 +843,7 @@ def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
-    print("callbackSetSpeakerMaxPhrases", data)
+    print(json.dumps({"log": "callbackSetSpeakerMaxPhrases", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data:
@@ -842,7 +858,7 @@ def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
 
 # Transcription (Internal AI Model)
 def callbackSetUserWhisperFeature(data, *args, **kwargs) -> dict:
-    print("callbackSetUserWhisperFeature", data)
+    print(json.dumps({"log": "callbackSetUserWhisperFeature", "data":data}), flush=True)
     config.USE_WHISPER_FEATURE = data
     if config.USE_WHISPER_FEATURE is True:
         if model.checkTranscriptionWhisperModelWeight() is True:
@@ -863,7 +879,7 @@ def callbackSetUserWhisperFeature(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
-    print("callbackSetWhisperWeightType", data)
+    print(json.dumps({"log": "callbackSetWhisperWeightType", "data":data}), flush=True)
     config.WHISPER_WEIGHT_TYPE = str(data)
     if model.checkTranscriptionWhisperModelWeight() is True:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
@@ -881,7 +897,7 @@ def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
 
 # VR Tab
 def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySettingsOpacity", data)
+    print(json.dumps({"log": "callbackSetOverlaySettingsOpacity", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SETTINGS
     pre_settings["opacity"] = data
     config.OVERLAY_SETTINGS = pre_settings
@@ -889,43 +905,32 @@ def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SETTINGS["opacity"]}
 
 def callbackSetOverlaySettingsUiScaling(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySettingsUiScaling", data)
+    print(json.dumps({"log": "callbackSetOverlaySettingsUiScaling", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SETTINGS
     pre_settings["ui_scaling"] = data
     config.OVERLAY_SETTINGS = pre_settings
     model.updateOverlayImageUiScaling()
     return {"status":"success", "data":config.OVERLAY_SETTINGS["ui_scaling"]}
 
-def callbackEnableOverlaySmallLog(data, *args, **kwargs) -> dict:
-    print("callbackEnableOverlaySmallLog", data)
-    config.ENABLE_OVERLAY_SMALL_LOG = data
+def callbackEnableOverlaySmallLog(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableOverlaySmallLog"}), flush=True)
+    config.ENABLE_OVERLAY_SMALL_LOG = True
 
     if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
     return {"status":"success", "data":config.ENABLE_OVERLAY_SMALL_LOG}
 
-def callbackDisableOverlaySmallLog(data, *args, **kwargs) -> dict:
-    print("callbackDisableOverlaySmallLog", data)
-    config.ENABLE_OVERLAY_SMALL_LOG = data
+def callbackDisableOverlaySmallLog(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableOverlaySmallLog"}), flush=True)
+    config.ENABLE_OVERLAY_SMALL_LOG = False
     if config.ENABLE_OVERLAY_SMALL_LOG is False:
         model.clearOverlayImage()
         model.shutdownOverlay()
     return {"status":"success", "data":config.ENABLE_OVERLAY_SMALL_LOG}
 
-def callbackSetOverlaySmallLogSettings(value, set_type:str):
-    print("callbackSetOverlaySmallLogSettings", value, set_type)
-    pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
-    pre_settings[set_type] = value
-    config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
-    match (set_type):
-        case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
-            model.updateOverlayPosition()
-        case "display_duration" | "fadeout_duration":
-            model.updateOverlayTimes()
-
 def callbackSetOverlaySmallLogSettingsXPos(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsXPos", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsXPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["x_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -933,7 +938,7 @@ def callbackSetOverlaySmallLogSettingsXPos(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]}
 
 def callbackSetOverlaySmallLogSettingsYPos(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsYPos", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsYPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["y_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -941,7 +946,7 @@ def callbackSetOverlaySmallLogSettingsYPos(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]}
 
 def callbackSetOverlaySmallLogSettingsZPos(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsZPos", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsZPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["z_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -949,7 +954,7 @@ def callbackSetOverlaySmallLogSettingsZPos(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]}
 
 def callbackSetOverlaySmallLogSettingsXRotation(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsXRotation", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsXRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["x_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -957,7 +962,7 @@ def callbackSetOverlaySmallLogSettingsXRotation(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]}
 
 def callbackSetOverlaySmallLogSettingsYRotation(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsYRotation", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsYRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["y_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -965,7 +970,7 @@ def callbackSetOverlaySmallLogSettingsYRotation(data, *args, **kwargs) -> dict:
     return {"status":"success", "data":config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]}
 
 def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
-    print("callbackSetOverlaySmallLogSettingsZRotation", data)
+    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsZRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["z_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -974,71 +979,71 @@ def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
 
 # Others Tab
 def callbackSetEnableAutoClearMessageBox(data, *args, **kwargs) -> dict:
-    print("callbackSetEnableAutoClearMessageBox", data)
+    print(json.dumps({"log": "callbackSetEnableAutoClearMessageBox", "data":data}), flush=True)
     config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = data
     return {"status":"success", "data":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
 
 def callbackSetEnableSendOnlyTranslatedMessages(data, *args, **kwargs) -> dict:
-    print("callbackSetEnableSendOnlyTranslatedMessages", data)
+    print(json.dumps({"log": "callbackSetEnableSendOnlyTranslatedMessages", "data":data}), flush=True)
     config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = data
     return {"status":"success", "data":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
 
 def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
-    print("callbackSetSendMessageButtonType", data)
+    print(json.dumps({"log": "callbackSetSendMessageButtonType", "data":data}), flush=True)
     config.SEND_MESSAGE_BUTTON_TYPE = data
     return {"status":"success", "data":config.SEND_MESSAGE_BUTTON_TYPE}
 
 def callbackEnableNoticeXsoverlay(*args, **kwargs) -> dict:
-    print("callbackEnableNoticeXsoverlay")
+    print(json.dumps({"log": "callbackEnableNoticeXsoverlay"}), flush=True)
     config.ENABLE_NOTICE_XSOVERLAY = True
     return {"status":"success", "data":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackDisableNoticeXsoverlay(*args, **kwargs) -> dict:
-    print("callbackDisableNoticeXsoverlay")
+    print(json.dumps({"log": "callbackDisableNoticeXsoverlay"}), flush=True)
     config.ENABLE_NOTICE_XSOVERLAY = False
     return {"status":"success", "data":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
-    print("callbackEnableAutoExportMessageLogs")
+    print(json.dumps({"log": "callbackEnableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = True
     model.startLogger()
 
 def callbackDisableAutoExportMessageLogs(*args, **kwargs) -> dict:
-    print("callbackDisableAutoExportMessageLogs")
+    print(json.dumps({"log": "callbackDisableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = False
     model.stopLogger()
 
 def callbackEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-    print("callbackEnableVrcMicMuteSync")
+    print(json.dumps({"log": "callbackEnableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = True
     model.startCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
 
 def callbackDisableVrcMicMuteSync(*args, **kwargs) -> dict:
-    print("callbackDisableVrcMicMuteSync")
+    print(json.dumps({"log": "callbackDisableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = False
     model.stopCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
 
 def callbackEnableSendMessageToVrc(*args, **kwargs) -> dict:
-    print("callbackEnableSendMessageToVrc")
+    print(json.dumps({"log": "callbackEnableSendMessageToVrc"}), flush=True)
     config.ENABLE_SEND_MESSAGE_TO_VRC = True
     return {"status":"success", "data":config.ENABLE_SEND_MESSAGE_TO_VRC}
 
 def callbackDisableSendMessageToVrc(*args, **kwargs) -> dict:
-    print("callbackSetEnableSendMessageToVrc")
+    print(json.dumps({"log": "callbackSetEnableSendMessageToVrc"}), flush=True)
     config.ENABLE_SEND_MESSAGE_TO_VRC = False
     return {"status":"success", "data":config.ENABLE_SEND_MESSAGE_TO_VRC}
 
 # Others (Message Formats(Send)
 def callbackSetSendMessageFormat(data, *args, **kwargs) -> dict:
-    print("callbackSetSendMessageFormat", data)
+    print(json.dumps({"log": "callbackSetSendMessageFormat", "data": str(data)}), flush=True)
     if isUniqueStrings(["[message]"], data) is True:
         config.SEND_MESSAGE_FORMAT = data
     return {"status":"success", "data":config.SEND_MESSAGE_FORMAT}
 
 def callbackSetSendMessageFormatWithT(data, *args, **kwargs) -> dict:
-    print("callbackSetSendMessageFormatWithT", data)
+    print(json.dumps({"log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
     if len(data) > 0:
         if isUniqueStrings(["[message]", "[translation]"], data) is True:
             config.SEND_MESSAGE_FORMAT_WITH_T = data
@@ -1046,13 +1051,13 @@ def callbackSetSendMessageFormatWithT(data, *args, **kwargs) -> dict:
 
 # Others (Message Formats(Received)
 def callbackSetReceivedMessageFormat(data, *args, **kwargs) -> dict:
-    print("callbackSetReceivedMessageFormat", data)
+    print(json.dumps({"log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
     if isUniqueStrings(["[message]"], data) is True:
         config.RECEIVED_MESSAGE_FORMAT = data
     return {"status":"success", "data":config.RECEIVED_MESSAGE_FORMAT}
 
 def callbackSetReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
-    print("callbackSetReceivedMessageFormatWithT", data)
+    print(json.dumps({"log": "callbackSetReceivedMessageFormatWithT", "data": str(data)}), flush=True)
     if len(data) > 0:
         if isUniqueStrings(["[message]", "[translation]"], data) is True:
             config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
@@ -1060,24 +1065,24 @@ def callbackSetReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
 
 # ---------------------Speaker2Chatbox---------------------
 def callbackEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    print("callbackEnableSendReceivedMessageToVrc")
+    print(json.dumps({"log": "callbackEnableSendReceivedMessageToVrc"}), flush=True)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = True
     return {"status":"success", "data":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 
 def callbackDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    print("callbackDisableSendReceivedMessageToVrc")
+    print(json.dumps({"log": "callbackDisableSendReceivedMessageToVrc"}), flush=True)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
     return {"status":"success", "data":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 # ---------------------Speaker2Chatbox---------------------
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(data, *args, **kwargs) -> dict:
-    print("callbackSetOscIpAddress", str(data))
+    print(json.dumps({"log": "callbackSetOscIpAddress", "data": str(data)}), flush=True)
     config.OSC_IP_ADDRESS = str(data)
     return {"status":"success", "data":config.OSC_IP_ADDRESS}
 
 def callbackSetOscPort(data, *args, **kwargs) -> dict:
-    print("callbackSetOscPort", int(data))
+    print(json.dumps({"log": "callbackSetOscPort", "data": int(data)}), flush=True)
     config.OSC_PORT = int(data)
     return {"status":"success", "data":config.OSC_PORT}
 
@@ -1094,9 +1099,13 @@ def getListOutputDevice():
     return model.getListOutputDevice()
 
 def init():
+    print(json.dumps({"log": "Start Initialization"}), flush=True)
+    print(json.dumps({"log": "Start InitSetTranslateEngine"}), flush=True)
     initSetTranslateEngine()
+    print(json.dumps({"log": "Start Init LanguageAndCountry"}), flush=True)
     initSetLanguageAndCountry()
 
+    print(json.dumps({"log": "Start check DeepL API Key"}), flush=True)
     if config.AUTH_KEYS["DeepL_API"] is not None:
         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
             # error update Auth key
@@ -1105,210 +1114,32 @@ def init():
             config.AUTH_KEYS = auth_keys
 
     # set Translation Engine
+    print(json.dumps({"log": "Set Translation Engine"}), flush=True)
     updateTranslationEngineAndEngineList()
 
     # set Transcription Engine
+    print(json.dumps({"log": "Set Transcription Engine"}), flush=True)
     if config.USE_WHISPER_FEATURE is True:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
     else:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
 
     # set word filter
+    print(json.dumps({"log": "Set Word Filter"}), flush=True)
     model.addKeywords()
 
     # check Software Updated
+    print(json.dumps({"log": "Check Software Updated"}), flush=True)
     if model.checkSoftwareUpdated() is True:
-        # view.showUpdateAvailableButton()
         pass
 
     # init logger
+    print(json.dumps({"log": "Init Logger"}), flush=True)
     if config.ENABLE_LOGGER is True:
         model.startLogger()
 
     # init OSC receive
+    print(json.dumps({"log": "Init OSC Receive"}), flush=True)
     model.startReceiveOSC()
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
-
-# def initSetConfigByExeArguments():
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--ip")
-#     parser.add_argument("--port")
-#     args = parser.parse_args()
-#     if args.ip is not None:
-#         config.OSC_IP_ADDRESS = str(args.ip)
-#         # view.setGuiVariable_OscIpAddress(config.OSC_IP_ADDRESS)
-#     if args.port is not None:
-#         config.OSC_PORT = int(args.port)
-#         # view.setGuiVariable_OscPort(config.OSC_PORT)
-
-# def createMainWindow(splash):
-#     splash.toProgress(1)
-#     # create GUI
-#     # view.createGUI()
-#     splash.toProgress(2)
-
-#     # init config
-#     initSetConfigByExeArguments()
-#     initSetTranslateEngine()
-#     initSetLanguageAndCountry()
-
-#     if config.AUTH_KEYS["DeepL_API"] is not None:
-#         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
-#             # error update Auth key
-#             auth_keys = config.AUTH_KEYS
-#             auth_keys["DeepL_API"] = None
-#             config.AUTH_KEYS = auth_keys
-#             # view.printToTextbox_AuthenticationError()
-
-#     # set Translation Engine
-#     updateTranslationEngineAndEngineList()
-
-#     # set Transcription Engine
-#     if config.USE_WHISPER_FEATURE is True:
-#         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
-#     else:
-#         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-
-#     # set word filter
-#     model.addKeywords()
-
-#     # check Software Updated
-#     if model.checkSoftwareUpdated() is True:
-#         # view.showUpdateAvailableButton()
-#         pass
-
-#     # init logger
-#     if config.ENABLE_LOGGER is True:
-#         model.startLogger()
-
-#     # init OSC receive
-#     model.startReceiveOSC()
-#     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
-#         model.startCheckMuteSelfStatus()
-
-#     splash.toProgress(3) # Last one.
-
-    # set UI and callback
-    # view.register(
-    #     common_registers={
-    #         "callback_enable_easter_egg": callbackEnableEasterEgg,
-
-    #         "callback_update_software": callbackUpdateSoftware,
-    #         "callback_restart_software": callbackRestartSoftware,
-    #         "callback_filepath_logs": callbackFilepathLogs,
-    #         "callback_filepath_config_file": callbackFilepathConfigFile,
-    #         "callback_quit_vrct": callbackQuitVrct,
-    #     },
-
-    #     window_action_registers={
-    #         "callback_open_config_window": callbackOpenConfigWindow,
-    #         "callback_close_config_window": callbackCloseConfigWindow,
-    #     },
-
-    #     main_window_registers={
-    #         "callback_enable_main_window_sidebar_compact_mode": callbackEnableMainWindowSidebarCompactMode,
-    #         "callback_disable_main_window_sidebar_compact_mode": callbackDisableMainWindowSidebarCompactMode,
-
-    #         "callback_toggle_translation": callbackToggleTranslation,
-    #         "callback_toggle_transcription_send": callbackToggleTranscriptionSend,
-    #         "callback_toggle_transcription_receive": callbackToggleTranscriptionReceive,
-    #         "callback_toggle_foreground": callbackToggleForeground,
-
-    #         "callback_your_language": setYourLanguageAndCountry,
-    #         "callback_target_language": setTargetLanguageAndCountry,
-    #         "values": model.getListLanguageAndCountry(),
-    #         "callback_swap_languages": swapYourLanguageAndTargetLanguage,
-
-    #         "callback_selected_language_preset_tab": callbackSelectedLanguagePresetTab,
-
-    #         "callback_selected_translation_engine": callbackSelectedTranslationEngine,
-
-    #         "message_box_bind_Return": messageBoxPressKeyEnter,
-    #         "message_box_bind_Any_KeyPress": messageBoxPressKeyAny,
-    #         "message_box_bind_FocusIn": messageBoxFocusIn,
-    #         "message_box_bind_FocusOut": messageBoxFocusOut,
-    #         "message_box_bind_Up_KeyPress": messageBoxUpKeyPress,
-    #         "message_box_bind_Down_KeyPress": messageBoxDownKeyPress,
-    #     },
-
-    #     config_window_registers={
-    #         # Compact Mode Switch
-    #         "callback_disable_config_window_compact_mode": callbackEnableConfigWindowCompactMode,
-    #         "callback_enable_config_window_compact_mode": callbackDisableConfigWindowCompactMode,
-
-    #         # Appearance Tab
-    #         "callback_set_transparency": callbackSetTransparency,
-    #         "callback_set_appearance": callbackSetAppearance,
-    #         "callback_set_ui_scaling": callbackSetUiScaling,
-    #         "callback_set_textbox_ui_scaling": callbackSetTextboxUiScaling,
-    #         "callback_set_message_box_ratio": callbackSetMessageBoxRatio,
-    #         "callback_set_font_family": callbackSetFontFamily,
-    #         "callback_set_ui_language": callbackSetUiLanguage,
-    #         "callback_set_enable_restore_main_window_geometry": callbackSetEnableRestoreMainWindowGeometry,
-
-    #         # Translation Tab
-    #         "callback_set_use_translation_feature": callbackSetUseTranslationFeature,
-    #         "callback_set_ctranslate2_weight_type": callbackSetCtranslate2WeightType,
-    #         "callback_set_deepl_auth_key": callbackSetDeeplAuthKey,
-
-    #         # Transcription Tab (Mic)
-    #         "callback_set_mic_host": callbackSetMicHost,
-    #         "list_mic_host": model.getListInputHost(),
-    #         "callback_set_mic_device": callbackSetMicDevice,
-    #         "list_mic_device": model.getListInputDevice(),
-    #         "callback_set_mic_energy_threshold": callbackSetMicEnergyThreshold,
-    #         "callback_set_mic_dynamic_energy_threshold": callbackSetMicDynamicEnergyThreshold,
-    #         "callback_check_mic_threshold": callbackCheckMicThreshold,
-    #         "callback_set_mic_record_timeout": callbackSetMicRecordTimeout,
-    #         "callback_set_mic_phrase_timeout": callbackSetMicPhraseTimeout,
-    #         "callback_set_mic_max_phrases": callbackSetMicMaxPhrases,
-    #         "callback_set_mic_word_filter": callbackSetMicWordFilter,
-    #         "callback_delete_mic_word_filter": callbackDeleteMicWordFilter,
-
-    #         # Transcription Tab (Speaker)
-    #         "callback_set_speaker_device": callbackSetSpeakerDevice,
-    #         "list_speaker_device": model.getListOutputDevice(),
-    #         "callback_set_speaker_energy_threshold": callbackSetSpeakerEnergyThreshold,
-    #         "callback_set_speaker_dynamic_energy_threshold": callbackSetSpeakerDynamicEnergyThreshold,
-    #         "callback_check_speaker_threshold": callbackCheckSpeakerThreshold,
-    #         "callback_set_speaker_record_timeout": callbackSetSpeakerRecordTimeout,
-    #         "callback_set_speaker_phrase_timeout": callbackSetSpeakerPhraseTimeout,
-    #         "callback_set_speaker_max_phrases": callbackSetSpeakerMaxPhrases,
-
-    #         # Transcription Tab (Internal AI Model)
-    #         "callback_set_use_whisper_feature": callbackSetUserWhisperFeature,
-    #         "callback_set_whisper_weight_type": callbackSetWhisperWeightType,
-
-    #         # VR Tab
-    #         "callback_set_overlay_settings": callbackSetOverlaySettings,
-    #         "callback_set_enable_overlay_small_log": callbackSetEnableOverlaySmallLog,
-    #         "callback_set_overlay_small_log_settings": callbackSetOverlaySmallLogSettings,
-
-    #         # Others Tab
-    #         "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
-    #         "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
-    #         "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
-    #         "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
-    #         "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
-    #         "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,
-    #         "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
-    #         # Others(Message Formats(Send)
-    #         "callback_set_send_message_format": callbackSetSendMessageFormat,
-    #         "callback_set_send_message_format_with_t": callbackSetSendMessageFormatWithT,
-    #         # Others(Message Formats(Received)
-    #         "callback_set_received_message_format": callbackSetReceivedMessageFormat,
-    #         "callback_set_received_message_format_with_t": callbackSetReceivedMessageFormatWithT,
-
-    #         # Speaker2Chatbox----------------
-    #         "callback_set_enable_send_received_message_to_vrc": callbackSetEnableSendReceivedMessageToVrc,
-    #         # Speaker2Chatbox----------------
-
-    #         # Advanced Settings Tab
-    #         "callback_set_osc_ip_address": callbackSetOscIpAddress,
-    #         "callback_set_osc_port": callbackSetOscPort,
-    #     },
-    # )
-
-# def showMainWindow():
-#     view.startMainLoop()
