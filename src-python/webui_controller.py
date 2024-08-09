@@ -774,17 +774,27 @@ def callbackDisableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
-class ProgressBarEnergy:
+class ProgressBarMicEnergy:
     def __init__(self, action):
         self.action = action
 
     def set(self, energy) -> None:
-        self.action("energy", {"status":200, "result":energy})
+        self.action("mic", {"status":200, "result":energy})
+
+    def stopped(self) -> None:
+        self.action("stopped", {"status":200})
+
+    def error(self) -> None:
+        self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
 
 def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackEnableCheckMicThreshold"}), flush=True)
-    progressbar_mic_energy = ProgressBarEnergy(action)
-    model.startCheckMicEnergy(progressbar_mic_energy.set)
+    progressbar_mic_energy = ProgressBarMicEnergy(action)
+    model.startCheckMicEnergy(
+        progressbar_mic_energy.set,
+        progressbar_mic_energy.stopped,
+        progressbar_mic_energy.error
+    )
     return {"status":200}
 
 def callbackDisableCheckMicThreshold(*args, **kwargs) -> dict:
@@ -878,9 +888,7 @@ def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
     try:
         data = int(data)
         if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
-            # view.clearNotificationMessage()
             config.INPUT_SPEAKER_ENERGY_THRESHOLD = data
-            # view.setGuiVariable_SpeakerEnergyThreshold(config.INPUT_SPEAKER_ENERGY_THRESHOLD)
         else:
             raise ValueError()
     except Exception:
@@ -899,10 +907,27 @@ def callbackDisableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
+class ProgressBarSpeakerEnergy:
+    def __init__(self, action):
+        self.action = action
+
+    def set(self, energy) -> None:
+        self.action("speaker", {"status":200, "result":energy})
+
+    def stopped(self) -> None:
+        self.action("stopped", {"status":200})
+
+    def error(self) -> None:
+        self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+
 def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackEnableCheckSpeakerThreshold"}), flush=True)
-    progressbar_speaker_energy = ProgressBarEnergy(action)
-    model.startCheckSpeakerEnergy(progressbar_speaker_energy.set)
+    progressbar_speaker_energy = ProgressBarSpeakerEnergy(action)
+    model.startCheckSpeakerEnergy(
+        progressbar_speaker_energy.set,
+        progressbar_speaker_energy.stopped,
+        progressbar_speaker_energy.error
+    )
     return {"status":200}
 
 def callbackDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
@@ -1122,23 +1147,27 @@ def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackEnableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = True
     model.startLogger()
+    return {"status":200, "result":config.ENABLE_LOGGER}
 
 def callbackDisableAutoExportMessageLogs(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackDisableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = False
     model.stopLogger()
+    return {"status":200, "result":config.ENABLE_LOGGER}
 
 def callbackEnableVrcMicMuteSync(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackEnableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = True
     model.startCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
+    return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
 
 def callbackDisableVrcMicMuteSync(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackDisableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = False
     model.stopCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
+    return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
 
 def callbackEnableSendMessageToVrc(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackEnableSendMessageToVrc"}), flush=True)
@@ -1189,6 +1218,18 @@ def callbackDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
     return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 # ---------------------Speaker2Chatbox---------------------
+
+def callbackEnableLogger(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableLogger"}), flush=True)
+    config.ENABLE_LOGGER = True
+    model.startLogger()
+    return {"status":200, "result":config.ENABLE_LOGGER}
+
+def callbackDisableLogger(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableLogger"}), flush=True)
+    config.ENABLE_LOGGER = False
+    model.stopLogger()
+    return {"status":200, "result":config.ENABLE_LOGGER}
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(data, *args, **kwargs) -> dict:
