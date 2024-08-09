@@ -963,7 +963,10 @@ class Config:
         self._VERSION = "2.2.5"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
-        self._PATH_LOCAL = os_path.dirname(sys.executable)
+        if getattr(sys, 'frozen', False):
+            self._PATH_LOCAL = os_path.dirname(sys.executable)
+        else:
+            self._PATH_LOCAL = os_path.dirname(os_path.abspath(__file__))
         self._PATH_CONFIG = os_path.join(self._PATH_LOCAL, "config.json")
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)

@@ -101,6 +101,7 @@ controller_mapping = {
     # "/controller/callback_restart_software": controller.callbackRestartSoftware,
     "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
     "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
+    # "/controller/callback_enable_easter_egg": controller.callbackEnableEasterEgg,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
     "/controller/callback_enable_main_window_sidebar_compact_mode": controller.callbackEnableMainWindowSidebarCompactMode,
@@ -111,6 +112,7 @@ controller_mapping = {
     "/controller/callback_disable_transcription_send": controller.callbackDisableTranscriptionSend,
     "/controller/callback_enable_transcription_receive": controller.callbackEnableTranscriptionReceive,
     "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
+    "/controller/callback_messagebox_press_key_enter": controller.callbackMessageBoxPressKeyEnter,
     "/controller/callback_enable_foreground": controller.callbackEnableForeground,
     "/controller/callback_disable_foreground": controller.callbackDisableForeground,
     "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
@@ -127,15 +129,18 @@ controller_mapping = {
     "/controller/callback_set_message_box_ratio": controller.callbackSetMessageBoxRatio,
     "/controller/callback_set_font_family": controller.callbackSetFontFamily,
     "/controller/callback_set_ui_language": controller.callbackSetUiLanguage,
-    "/controller/callback_set_enable_restore_main_window_geometry": controller.callbackSetEnableRestoreMainWindowGeometry,
-    "/controller/callback_set_use_translation_feature": controller.callbackSetUseTranslationFeature,
+    "/controller/callback_enable_restore_main_window_geometry": controller.callbackEnableRestoreMainWindowGeometry,
+    "/controller/callback_disable_restore_main_window_geometry": controller.callbackDisableRestoreMainWindowGeometry,
+    "/controller/callback_enable_use_translation_feature": controller.callbackEnableUseTranslationFeature,
+    "/controller/callback_disable_use_translation_feature": controller.callbackDisableUseTranslationFeature,
     "/controller/callback_set_ctranslate2_weight_type": controller.callbackSetCtranslate2WeightType,
     "/controller/callback_set_deepl_auth_key": controller.callbackSetDeeplAuthKey,
     "/controller/callback_clear_deepl_auth_key": controller.callbackClearDeeplAuthKey,
     "/controller/callback_set_mic_host": controller.callbackSetMicHost,
     "/controller/callback_set_mic_device": controller.callbackSetMicDevice,
     "/controller/callback_set_mic_energy_threshold": controller.callbackSetMicEnergyThreshold,
-    "/controller/callback_set_mic_dynamic_energy_threshold": controller.callbackSetMicDynamicEnergyThreshold,
+    "/controller/callback_enable_mic_dynamic_energy_threshold": controller.callbackEnableMicDynamicEnergyThreshold,
+    "/controller/callback_disable_mic_dynamic_energy_threshold": controller.callbackDisableMicDynamicEnergyThreshold,
     "/controller/callback_enable_check_mic_threshold": controller.callbackEnableCheckMicThreshold,
     "/controller/callback_disable_check_mic_threshold": controller.callbackDisableCheckMicThreshold,
     "/controller/callback_set_mic_record_timeout": controller.callbackSetMicRecordTimeout,
@@ -145,13 +150,15 @@ controller_mapping = {
     "/controller/callback_delete_mic_word_filter": controller.callbackDeleteMicWordFilter,
     "/controller/callback_set_speaker_device": controller.callbackSetSpeakerDevice,
     "/controller/callback_set_speaker_energy_threshold": controller.callbackSetSpeakerEnergyThreshold,
-    "/controller/callback_set_speaker_dynamic_energy_threshold": controller.callbackSetSpeakerDynamicEnergyThreshold,
+    "/controller/callback_enable_speaker_dynamic_energy_threshold": controller.callbackEnableSpeakerDynamicEnergyThreshold,
+    "/controller/callback_disable_speaker_dynamic_energy_threshold": controller.callbackDisableSpeakerDynamicEnergyThreshold,
     "/controller/callback_enable_check_speaker_threshold": controller.callbackEnableCheckSpeakerThreshold,
     "/controller/callback_disable_check_speaker_threshold": controller.callbackDisableCheckSpeakerThreshold,
     "/controller/callback_set_speaker_record_timeout": controller.callbackSetSpeakerRecordTimeout,
     "/controller/callback_set_speaker_phrase_timeout": controller.callbackSetSpeakerPhraseTimeout,
     "/controller/callback_set_speaker_max_phrases": controller.callbackSetSpeakerMaxPhrases,
-    "/controller/callback_set_use_whisper_feature": controller.callbackSetUserWhisperFeature,
+    "/controller/callback_enable_use_whisper_feature": controller.callbackEnableUseWhisperFeature,
+    "/controller/callback_disable_use_whisper_feature": controller.callbackDisableUseWhisperFeature,
     "/controller/callback_set_whisper_weight_type": controller.callbackSetWhisperWeightType,
     "/controller/callback_set_overlay_settings_opacity": controller.callbackSetOverlaySettingsOpacity,
     "/controller/callback_set_overlay_settings_ui_scaling": controller.callbackSetOverlaySettingsUiScaling,
@@ -163,8 +170,10 @@ controller_mapping = {
     "/controller/callback_set_overlay_small_log_settings_x_rotation": controller.callbackSetOverlaySmallLogSettingsXRotation,
     "/controller/callback_set_overlay_small_log_settings_y_rotation": controller.callbackSetOverlaySmallLogSettingsYRotation,
     "/controller/callback_set_overlay_small_log_settings_z_rotation": controller.callbackSetOverlaySmallLogSettingsZRotation,
-    "/controller/callback_set_enable_auto_clear_chatbox": controller.callbackSetEnableAutoClearMessageBox,
-    "/controller/callback_set_send_only_translated_messages": controller.callbackSetEnableSendOnlyTranslatedMessages,
+    "/controller/callback_enable_auto_clear_chatbox": controller.callbackEnableAutoClearMessageBox,
+    "/controller/callback_disable_auto_clear_chatbox": controller.callbackDisableAutoClearMessageBox,
+    "/controller/callback_enable_send_only_translated_messages": controller.callbackEnableSendOnlyTranslatedMessages,
+    "/controller/callback_disable_send_only_translated_messages": controller.callbackDisableSendOnlyTranslatedMessages,
     "/controller/callback_set_send_message_button_type": controller.callbackSetSendMessageButtonType,
     "/controller/callback_enable_notice_xsoverlay": controller.callbackEnableNoticeXsoverlay,
     "/controller/callback_disable_notice_xsoverlay": controller.callbackDisableNoticeXsoverlay,
@@ -180,17 +189,54 @@ controller_mapping = {
     "/controller/callback_set_received_message_format_with_t": controller.callbackSetReceivedMessageFormatWithT,
     "/controller/callback_enable_send_received_message_to_vrc": controller.callbackEnableSendReceivedMessageToVrc,
     "/controller/callback_disable_send_received_message_to_vrc": controller.callbackDisableSendReceivedMessageToVrc,
+    "/controller/callback_enable_logger": controller.callbackEnableLogger,
+    "/controller/callback_disable_logger": controller.callbackDisableLogger,
     "/controller/callback_set_osc_ip_address": controller.callbackSetOscIpAddress,
     "/controller/callback_set_osc_port": controller.callbackSetOscPort,
 }
 
 action_mapping = {
-    "/controller/callback_close_config_window": {"mic":"/action/transcription_send_message", "speaker":"/action/transcription_receive_message"},
-    "/controller/callback_enable_transcription_send": {"mic":"/action/transcription_send_message"},
-    "/controller/callback_disable_transcription_send": {"mic":"/action/transcription_send_stopped"},
-    "/controller/callback_enable_transcription_receive": {"speaker":"/action/transcription_receive_message"},
-    "/controller/callback_disable_transcription_receive": {"speaker":"/action/transcription_receive_stopped"},
-    "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
+    "/controller/callback_update_software": {
+        "download":"/action/download_software",
+        "update":"/action/update_software"
+    },
+    "/controller/callback_close_config_window": {
+        "mic":"/action/transcription_send_mic_message",
+        "speaker":"/action/transcription_receive_speaker_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+        "word_filter":"/action/word_filter",
+    },
+    "/controller/callback_enable_transcription_send": {
+        "mic":"/action/transcription_send_mic_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+        "word_filter":"/action/word_filter",
+    },
+    "/controller/callback_disable_transcription_send": {
+        "mic":"/action/transcription_send_mic_message_stopped"
+    },
+    "/controller/callback_enable_transcription_receive": {
+        "speaker":"/action/transcription_receive_speaker_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+    },
+    "/controller/callback_disable_transcription_receive": {
+        "speaker":"/action/transcription_receive_speaker_message_stopped"
+    },
+    "/controller/callback_enable_check_mic_threshold": {
+        "mic":"/action/check_mic_threshold_energy",
+        "stopped":"/action/check_mic_threshold_energy_stopped",
+        "error_device":"/action/error_device",
+    },
+    "/controller/callback_enable_check_speaker_threshold": {
+        "speaker":"/action/check_speaker_threshold_energy",
+        "stopped":"/action/check_speaker_threshold_energy_stopped",
+        "error_device":"/action/error_device",
+    },
+    "/controller/callback_messagebox_press_key_enter": {
+        "error_translation_engine":"/action/error_translation_engine"
+    },
 }
 
 def handleConfigRequest(endpoint):
@@ -214,18 +260,21 @@ def handleControllerRequest(endpoint, data=None):
             response = handler(data, Action(action_endpoint).transmit)
         else:
             response = handler(data)
-        status = 200
-    return response, status
+        status = response.get("status", None)
+        result = response.get("result", None)
+    return result, status
 
 class Action:
     def __init__(self, endpoints:dict) -> None:
         self.endpoints = endpoints
 
     def transmit(self, key:str, data:dict) -> None:
+        status = data.get("status", None)
+        result = data.get("result", None)
         response = {
             "endpoint": self.endpoints[key],
-            "status": 200,
-            "data": data,
+            "status": status,
+            "result": result,
         }
         response = json.dumps(response)
         print(response, flush=True)
@@ -238,15 +287,6 @@ def main():
         f.write(f"received_data: {received_data}\n")
 
     if received_data:
-        # response_data = {
-        #     "status": 200,
-        #     "id": received_data["id"],
-        #     "data": received_data["data"],
-        # }
-        # response = json.dumps(response_data)
-        # time.sleep(2)
-        # print(response, flush=True)
-
         endpoint = received_data.get("endpoint", None)
         data = received_data.get("data", None)
 
@@ -278,23 +318,127 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
-    # endpoint = "/controller/list_mic_host"
-    # data = None
-    # response_data, status = handleControllerRequest(endpoint, data)
-    # response = {
-    #     "status": status,
-    #     "endpoint": endpoint,
-    #     "data": response_data,
-    # }
-    # response = json.dumps(response)
-    # print(response, flush=True)
-
-    try:
+    response_test = False
+    if response_test:
+        import time
         controller.init()
-        print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
-        while True:
-            main()
-    except Exception:
-        import traceback
-        with open('error.log', 'a') as f:
-            traceback.print_exc(file=f)
+
+        for endpoint, value in config_mapping.items():
+            response_data, status = handleConfigRequest(endpoint)
+            response = {
+                "status": status,
+                "endpoint": endpoint,
+                "result": response_data,
+            }
+            response = json.dumps(response)
+            print(response, flush=True)
+            time.sleep(0.1)
+
+        for endpoint, value in controller_mapping.items():
+            print("endpoint: ", endpoint)
+
+            match endpoint:
+                case  "/controller/callback_messagebox_press_key_enter":
+                    data = "テスト"
+                case "/controller/set_your_language_and_country":
+                    data = {"language": "English", "country": "Hong Kong"}
+                case "/controller/set_target_language_and_country":
+                    data = {"language": "Japanese", "country": "Japan"}
+                case "/controller/callback_set_transparency":
+                    data = 0.5
+                case "/controller/callback_set_appearance":
+                    data = "Dark"
+                case "/controller/callback_set_ui_scaling":
+                    data = 1.5
+                case "/controller/callback_set_textbox_ui_scaling":
+                    data = 1.5
+                case "/controller/callback_set_message_box_ratio":
+                    data = 0.5
+                case "/controller/callback_set_font_family":
+                    data = "Yu Gothic UI"
+                case "/controller/callback_set_ui_language":
+                    data = "ja"
+                case "/controller/callback_set_ctranslate2_weight_type":
+                    data = "Small"
+                case "/controller/callback_set_deepl_auth_key":
+                    data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
+                case "/controller/callback_set_mic_host":
+                    data = "MME"
+                case "/controller/callback_set_mic_device":
+                    data = "マイク (Realtek High Definition Audio)"
+                case "/controller/callback_set_mic_energy_threshold":
+                    data = 0.5
+                case "/controller/callback_set_mic_record_timeout":
+                    data = 5
+                case "/controller/callback_set_mic_phrase_timeout":
+                    data = 5
+                case "/controller/callback_set_mic_max_phrases":
+                    data = 5
+                case "/controller/callback_set_mic_word_filter":
+                    data = "test0, test1, test2"
+                case "/controller/callback_delete_mic_word_filter":
+                    data = "test1"
+                case "/controller/callback_set_speaker_device":
+                    data = "スピーカー (Realtek High Definition Audio)"
+                case "/controller/callback_set_speaker_energy_threshold":
+                    data = 0.5
+                case "/controller/callback_set_speaker_record_timeout":
+                    data = 5
+                case "/controller/callback_set_speaker_phrase_timeout":
+                    data = 5
+                case "/controller/callback_set_speaker_max_phrases":
+                    data = 5
+                case "/controller/callback_set_whisper_weight_type":
+                    data = "base"
+                case "/controller/callback_set_overlay_settings_opacity":
+                    data = 0.5
+                case "/controller/callback_set_overlay_settings_ui_scaling":
+                    data = 1.5
+                case "/controller/callback_set_overlay_small_log_settings_x_pos":
+                    data = 0
+                case "/controller/callback_set_overlay_small_log_settings_y_pos":
+                    data = 0
+                case "/controller/callback_set_overlay_small_log_settings_z_pos":
+                    data = 0
+                case "/controller/callback_set_overlay_small_log_settings_x_rotation":
+                    data = 0
+                case "/controller/callback_set_overlay_small_log_settings_y_rotation":
+                    data = 0
+                case "/controller/callback_set_overlay_small_log_settings_z_rotation":
+                    data = 0
+                case "/controller/callback_set_send_message_button_type":
+                    data = "show"
+                case "/controller/callback_set_send_message_format":
+                    data = "[message]"
+                case "/controller/callback_set_send_message_format_with_t":
+                    data = "[message]([translation])"
+                case "/controller/callback_set_received_message_format":
+                    data = "[message]"
+                case "/controller/callback_set_received_message_format_with_t":
+                    data = "[message]([translation])"
+                case "/controller/callback_set_osc_ip_address":
+                    data = "127.0.0.1"
+                case "/controller/callback_set_osc_port":
+                    data = 8000
+                case _:
+                    data = None
+
+            response_data, status = handleControllerRequest(endpoint, data)
+            response = {
+                "status": status,
+                "endpoint": endpoint,
+                "result": response_data,
+            }
+            response = json.dumps(response)
+            print(response, flush=True)
+            time.sleep(0.5)
+    else:
+        try:
+            controller.init()
+            print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
+            while True:
+                main()
+        except Exception:
+            import traceback
+            with open('error.log', 'a') as f:
+                traceback.print_exc(file=f)
