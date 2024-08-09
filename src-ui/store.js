@@ -13,7 +13,7 @@ import {
 
 export const store = {
     backend_subprocess: null,
-    config_window: null,
+    config_page: null,
     log_box_ref: null,
 };
 
@@ -104,14 +104,14 @@ export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useTransc
 export const { atomInstance: Atom_ForegroundStatus, useHook: useForegroundStatus } = createAsyncAtomWithHook(false, "ForegroundStatus");
 
 export const { atomInstance: Atom_MessageLogsStatus, useHook: useMessageLogsStatus } = createAtomWithHook(generateTestData(20), "MessageLogsStatus");
-export const { atomInstance: Atom_MainWindowCompactModeStatus, useHook: useMainWindowCompactModeStatus } = createAtomWithHook(false, "MainWindowCompactModeStatus");
+export const { atomInstance: Atom_MainPageCompactModeStatus, useHook: useMainPageCompactModeStatus } = createAtomWithHook(false, "MainPageCompactModeStatus");
 export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useIsOpenedLanguageSelector } = createAtomWithHook(
     { your_language: false, target_language: false },
     "IsOpenedLanguageSelector"
 );
 
 export const { atomInstance: Atom_SelectedPresetTabStatus, useHook: useSelectedPresetTabStatus } = createAtomWithHook(1, "SelectedPresetTabStatus");
-export const { atomInstance: Atom_IsOpenedConfigWindow, useHook: useIsOpenedConfigWindow } = createAtomWithHook(false, "IsOpenedConfigWindow");
+export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useIsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_SelectedConfigTabId, useHook: useSelectedConfigTabId } = createAtomWithHook("appearance", "SelectedConfigTabId");
 export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
 

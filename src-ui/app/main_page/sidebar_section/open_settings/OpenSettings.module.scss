@@ -1,0 +1,28 @@
+.container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: var(--dark_850_color);
+}
+
+.open_config_page_button {
+    width: auto;
+    margin: 1rem;
+    padding: 0.8rem 0;
+    display: flex;
+    justify-content: center;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_875_color);
+    }
+}
+
+.configuration_svg {
+    width: 2rem;
+    color: var(--dark_500_color);
+}

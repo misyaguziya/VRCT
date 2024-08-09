@@ -26,7 +26,6 @@ export default defineConfig(async () => ({
         rollupOptions: {
             input: {
                 main: path.resolve(__dirname, "index.html"),
-                second: path.resolve(__dirname, "./src-ui/windows/config_window/index.html"),
             },
         },
     },

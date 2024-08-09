@@ -62,9 +62,9 @@ export const useMainFunction = () => {
         },
 
         toggleForeground: () => {
-            const main_window = getCurrent();
+            const main_page = getCurrent();
             const is_foreground_enabled = !currentForegroundStatus.data;
-            main_window.setAlwaysOnTop(is_foreground_enabled);
+            main_page.setAlwaysOnTop(is_foreground_enabled);
             updateForegroundStatus(is_foreground_enabled);
 
         },

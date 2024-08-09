@@ -1,5 +1,5 @@
 {
-    "main_window": {
+    "main_page": {
         "translation": "翻訳",
         "transcription_send": "音声認識（マイク）",
         "transcription_receive": "音声認識（スピーカー）",
@@ -69,7 +69,7 @@
         "display_duration": "表示時間",
         "fadeout_duration": "フェードアウト時間"
     },
-    "config_window": {
+    "config_page": {
         "config_title": "設定",
         "compact_mode": "コンパクトモード",
         "version": "バージョン {{version}}",
@@ -114,7 +114,7 @@
         "ui_language": {
             "label": "UIの言語 / UI Language"
         },
-        "to_restore_main_window_geometry": {
+        "to_restore_main_page_geometry": {
             "label": "メイン画面の位置を記憶する",
             "desc": "起動時、前回の画面の位置とサイズを復元します。"
         },

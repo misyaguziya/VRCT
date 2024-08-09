@@ -1,5 +1,5 @@
 {
-    "main_window": {
+    "main_page": {
         "translation": "번역",
         "transcription_send": "음성인식 (마이크)",
         "transcription_receive": "음성인식 (스피커)",
@@ -54,7 +54,7 @@
         "title_target_language": "상대방의 언어",
         "go_back_button": "돌아가기"
     },
-    "config_window": {
+    "config_page": {
         "config_title": "설정",
         "compact_mode": "컴팩트 모드",
         "version": "버전 {{version}}",
@@ -100,7 +100,7 @@
         "ui_language": {
             "label": "UI 언어 / UI Language"
         },
-        "to_restore_main_window_geometry": {
+        "to_restore_main_page_geometry": {
             "label": "메인 화면 위치 기억",
             "desc": "시작 시 이전 화면의 위치와 크기를 복원합니다."
         },

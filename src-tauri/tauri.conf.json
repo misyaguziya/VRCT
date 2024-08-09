@@ -13,8 +13,6 @@
     "allowlist": {
       "all": false,
       "window": {
-        "create": true,
-        "close": true,
         "setAlwaysOnTop": true,
         "setDecorations": true
     },
