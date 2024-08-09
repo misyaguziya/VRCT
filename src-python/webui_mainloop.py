@@ -97,10 +97,11 @@ controller_mapping = {
     "/controller/list_mic_host": controller.getListInputHost,
     "/controller/list_mic_device": controller.getListInputDevice,
     "/controller/list_speaker_device": controller.getListOutputDevice,
-    # "/controller/callback_update_software": controller.callbackUpdateSoftware,
-    # "/controller/callback_restart_software": controller.callbackRestartSoftware,
+    "/controller/callback_update_software": controller.callbackUpdateSoftware,
+    "/controller/callback_restart_software": controller.callbackRestartSoftware,
     "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
     "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
+    # "/controller/callback_enable_easter_egg": controller.callbackEnableEasterEgg,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
     "/controller/callback_enable_main_window_sidebar_compact_mode": controller.callbackEnableMainWindowSidebarCompactMode,
@@ -111,6 +112,7 @@ controller_mapping = {
     "/controller/callback_disable_transcription_send": controller.callbackDisableTranscriptionSend,
     "/controller/callback_enable_transcription_receive": controller.callbackEnableTranscriptionReceive,
     "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
+    "/controller/callback_messagebox_press_key_enter": controller.callbackMessageBoxPressKeyEnter,
     "/controller/callback_enable_foreground": controller.callbackEnableForeground,
     "/controller/callback_disable_foreground": controller.callbackDisableForeground,
     "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
@@ -185,12 +187,40 @@ controller_mapping = {
 }
 
 action_mapping = {
-    "/controller/callback_close_config_window": {"mic":"/action/transcription_send_message", "speaker":"/action/transcription_receive_message"},
-    "/controller/callback_enable_transcription_send": {"mic":"/action/transcription_send_message"},
-    "/controller/callback_disable_transcription_send": {"mic":"/action/transcription_send_stopped"},
-    "/controller/callback_enable_transcription_receive": {"speaker":"/action/transcription_receive_message"},
-    "/controller/callback_disable_transcription_receive": {"speaker":"/action/transcription_receive_stopped"},
-    "/controller/callback_enable_check_mic_threshold": {"mic":"/action/check_mic_threshold_energy"},
+    "/controller/callback_update_software": {
+        "download":"/action/download_software",
+        "update":"/action/update_software"
+        },
+    "/controller/callback_close_config_window": {
+        "mic":"/action/transcription_send_mic_message",
+        "speaker":"/action/transcription_receive_speaker_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+        "word_filter":"/action/word_filter",
+        },
+    "/controller/callback_enable_transcription_send": {
+        "mic":"/action/transcription_send_mic_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+        "word_filter":"/action/word_filter",
+        },
+    "/controller/callback_disable_transcription_send": {
+        "mic":"/action/transcription_send_mic_message_stopped"
+        },
+    "/controller/callback_enable_transcription_receive": {
+        "speaker":"/action/transcription_receive_speaker_message",
+        "error_device":"/action/error_device",
+        "error_translation_engine":"/action/error_translation_engine",
+        },
+    "/controller/callback_disable_transcription_receive": {
+        "speaker":"/action/transcription_receive_speaker_message_stopped"
+        },
+    "/controller/callback_enable_check_mic_threshold": {
+        "mic":"/action/check_mic_threshold_energy"
+        },
+    "/controller/callback_messagebox_press_key_enter": {
+        "error_translation_engine":"/action/error_translation_engine"
+        },
 }
 
 def handleConfigRequest(endpoint):
@@ -214,18 +244,21 @@ def handleControllerRequest(endpoint, data=None):
             response = handler(data, Action(action_endpoint).transmit)
         else:
             response = handler(data)
-        status = 200
-    return response, status
+        status = response.get("status", None)
+        result = response.get("result", None)
+    return result, status
 
 class Action:
     def __init__(self, endpoints:dict) -> None:
         self.endpoints = endpoints
 
     def transmit(self, key:str, data:dict) -> None:
+        status = data.get("status", None)
+        result = data.get("result", None)
         response = {
             "endpoint": self.endpoints[key],
-            "status": 200,
-            "data": data,
+            "status": status,
+            "result": result,
         }
         response = json.dumps(response)
         print(response, flush=True)
@@ -291,7 +324,7 @@ if __name__ == "__main__":
 
     try:
         controller.init()
-        print(json.dumps({"init_key_from_py": "Initialization from Python."}), flush=True)
+        print(json.dumps({"log": "Initialization from Python."}), flush=True)
         while True:
             main()
     except Exception:
