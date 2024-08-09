@@ -13,10 +13,8 @@ export const useStartPython = () => {
                 parsed_data = JSON.parse(line);
                 receiveRoutes(parsed_data);
             } catch (error) {
-                console.log(error);
-                parsed_data = line;
+                console.log(error, line);
             }
-            console.log("from python:", parsed_data);
         });
         command.stderr.on("data", line => console.error("stderr:", line));
         const backend_subprocess = await command.spawn();
