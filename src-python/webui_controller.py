@@ -48,12 +48,12 @@ def callbackRestartSoftware(*args, **kwargs) -> dict:
     model.reStartSoftware()
     return {"status":200}
 
-def callbackFilepathLogs():
+def callbackFilepathLogs(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackFilepathLogs"}), flush=True)
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
     return {"status":200}
 
-def callbackFilepathConfigFile():
+def callbackFilepathConfigFile(*args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackFilepathConfigFile"}), flush=True)
     Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
     return {"status":200}
@@ -95,7 +95,7 @@ class MicMessage:
     def send(self, message: Union[str, bool]) -> None:
         if isinstance(message, bool) and message is False:
             self.action("error_device", {
-                "status":404,
+                "status":400,
                 "result": {
                     "message":"No mic device detected."
                     }
@@ -120,7 +120,7 @@ class MicMessage:
                 if success is False:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
-                        "status":404,
+                        "status":400,
                         "result": {
                             "message":"translation engine limit error"
                             }
@@ -203,7 +203,7 @@ class SpeakerMessage:
     def receive(self, message):
         if isinstance(message, bool) and message is False:
             self.action("error_device",{
-                "status":404,
+                "status":400,
                 "result": {
                     "message":"No mic device detected."
                     },
@@ -219,7 +219,7 @@ class SpeakerMessage:
                 if success is False:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
-                        "status":404,
+                        "status":400,
                         "result": {
                             "message":"translation engine limit error"
                             }
@@ -314,7 +314,7 @@ class ChatMessage:
                 if success is False:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
-                        "status":404,
+                        "status":400,
                         "result":{
                             "message":"translation engine limit error"
                             }
@@ -645,27 +645,42 @@ def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
     config.UI_LANGUAGE = data
     return {"status":200, "result":config.UI_LANGUAGE}
 
-def callbackSetEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetEnableRestoreMainWindowGeometry", "data":data}), flush=True)
-    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = data
+def callbackEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableRestoreMainWindowGeometry"}), flush=True)
+    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
+    return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
+
+def callbackDisableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableRestoreMainWindowGeometry"}), flush=True)
+    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
     return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
 
 # Translation Tab
-def callbackSetUseTranslationFeature(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetUseTranslationFeature", "data":data}), flush=True)
-    config.USE_TRANSLATION_FEATURE = data
-    if config.USE_TRANSLATION_FEATURE is True:
-        if model.checkCTranslatorCTranslate2ModelWeight():
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-        else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-    else:
+def callbackEnableUseTranslationFeature(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableTranslationFeature"}), flush=True)
+    config.USE_TRANSLATION_FEATURE = True
+
+    if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
+        def callback():
+            model.changeTranslatorCTranslate2Model()
+        th_callback = Thread(target=callback)
+        th_callback.daemon = True
+        th_callback.start()
+    else:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
+
+    return {"status":200,
+            "result":{
+                "feature":config.USE_TRANSLATION_FEATURE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
+                },
+            }
+
+def callbackDisableUseTranslationFeature(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableTranslationFeature"}), flush=True)
+    config.USE_TRANSLATION_FEATURE = False
+    config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
     return {"status":200,
             "result":{
                 "feature":config.USE_TRANSLATION_FEATURE,
@@ -694,7 +709,7 @@ def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
 
 def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackSetDeeplAuthKey", "data":data}), flush=True)
-    status = 404
+    status = 400
     if len(data) == 36 or len(data) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
         if result is True:
@@ -742,16 +757,21 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     print(json.dumps({"log": "callbackSetMicEnergyThreshold", "data":data}), flush=True)
-    status = 404
+    status = 400
     data = int(data)
     if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
         config.INPUT_MIC_ENERGY_THRESHOLD = data
         status = 200
     return {"status": status, "result": config.INPUT_MIC_ENERGY_THRESHOLD}
 
-def callbackSetMicDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicDynamicEnergyThreshold", "data":data}), flush=True)
-    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = data
+def callbackEnableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableMicDynamicEnergyThreshold"}), flush=True)
+    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
+    return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
+
+def callbackDisableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableMicDynamicEnergyThreshold"}), flush=True)
+    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
 class ProgressBarEnergy:
@@ -781,7 +801,7 @@ def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Mic Record Timeout"}}
+        response = {"status":400, "result":{"message":"Error Mic Record Timeout"}}
     else:
         response = {"status":200, "result":config.INPUT_MIC_RECORD_TIMEOUT}
     return response
@@ -795,7 +815,7 @@ def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Mic Phrase Timeout"}}
+        response = {"status":400, "result":{"message":"Error Mic Phrase Timeout"}}
     else:
         response = {"status":200, "result":config.INPUT_MIC_PHRASE_TIMEOUT}
     return response
@@ -809,7 +829,7 @@ def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Mic Max Phrases"}}
+        response = {"status":400, "result":{"message":"Error Mic Max Phrases"}}
     else:
         response = {"status":200, "result":config.INPUT_MIC_MAX_PHRASES}
     return response
@@ -864,14 +884,19 @@ def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Set Speaker Energy Threshold"}}
+        response = {"status":400, "result":{"message":"Error Set Speaker Energy Threshold"}}
     else:
         response = {"status":200, "result":config.INPUT_SPEAKER_ENERGY_THRESHOLD}
     return response
 
-def callbackSetSpeakerDynamicEnergyThreshold(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerDynamicEnergyThreshold", "data":data}), flush=True)
-    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = data
+def callbackEnableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableSpeakerDynamicEnergyThreshold"}), flush=True)
+    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
+    return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+
+def callbackDisableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableSpeakerDynamicEnergyThreshold"}), flush=True)
+    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
 def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
@@ -894,7 +919,7 @@ def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Speaker Record Timeout"}}
+        response = {"status":400, "result":{"message":"Error Speaker Record Timeout"}}
     else:
         response = {"status":200, "result":config.INPUT_SPEAKER_RECORD_TIMEOUT}
     return response
@@ -908,7 +933,7 @@ def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Speaker Phrase Timeout"}}
+        response = {"status":400, "result":{"message":"Error Speaker Phrase Timeout"}}
     else:
         response = {"status":200, "result":config.INPUT_SPEAKER_PHRASE_TIMEOUT}
     return response
@@ -922,25 +947,34 @@ def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
         else:
             raise ValueError()
     except Exception:
-        response = {"status":404, "result":{"message":"Error Speaker Max Phrases"}}
+        response = {"status":400, "result":{"message":"Error Speaker Max Phrases"}}
     else:
         response = {"status":200, "result":config.INPUT_SPEAKER_MAX_PHRASES}
     return response
 
 # Transcription (Internal AI Model)
-def callbackSetUserWhisperFeature(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetUserWhisperFeature", "data":data}), flush=True)
-    config.USE_WHISPER_FEATURE = data
-    if config.USE_WHISPER_FEATURE is True:
-        if model.checkTranscriptionWhisperModelWeight() is True:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
-        else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-    else:
+def callbackEnableUseWhisperFeature(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableUserWhisperFeature"}), flush=True)
+    config.USE_WHISPER_FEATURE = True
+    if model.checkTranscriptionWhisperModelWeight() is True:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+        config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+    else:
+        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+    return {"status":200,
+            "result":{
+                "feature":config.USE_WHISPER_FEATURE,
+                "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
+                "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
+                },
+            }
+
+def callbackDisableUseWhisperFeature(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableUserWhisperFeature"}), flush=True)
+    config.USE_WHISPER_FEATURE = False
+    config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
+    config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
     return {"status":200,
             "result":{
                 "feature":config.USE_WHISPER_FEATURE,
@@ -1049,14 +1083,24 @@ def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"]}
 
 # Others Tab
-def callbackSetEnableAutoClearMessageBox(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetEnableAutoClearMessageBox", "data":data}), flush=True)
-    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = data
+def callbackEnableAutoClearMessageBox(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableAutoClearMessageBox"}), flush=True)
+    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
     return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
 
-def callbackSetEnableSendOnlyTranslatedMessages(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetEnableSendOnlyTranslatedMessages", "data":data}), flush=True)
-    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = data
+def callbackDisableAutoClearMessageBox(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableAutoClearMessageBox"}), flush=True)
+    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
+    return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
+
+def callbackEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackEnableSendOnlyTranslatedMessages"}), flush=True)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = True
+    return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
+
+def callbackDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
+    print(json.dumps({"log": "callbackDisableSendOnlyTranslatedMessages"}), flush=True)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
     return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
 
 def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
@@ -1157,17 +1201,17 @@ def callbackSetOscPort(data, *args, **kwargs) -> dict:
     config.OSC_PORT = int(data)
     return {"status":200, "result":config.OSC_PORT}
 
-def getListLanguageAndCountry():
-    return model.getListLanguageAndCountry()
+def getListLanguageAndCountry(*args, **kwargs) -> dict:
+    return {"status":200, "result": model.getListLanguageAndCountry()}
 
-def getListInputHost():
-    return model.getListInputHost()
+def getListInputHost(*args, **kwargs) -> dict:
+    return {"status":200, "result": model.getListInputHost()}
 
-def getListInputDevice():
-    return model.getListInputDevice()
+def getListInputDevice(*args, **kwargs) -> dict:
+    return {"status":200, "result": model.getListInputDevice()}
 
-def getListOutputDevice():
-    return model.getListOutputDevice()
+def getListOutputDevice(*args, **kwargs) -> dict:
+    return {"status":200, "result": model.getListOutputDevice()}
 
 def init():
     print(json.dumps({"log": "Start Initialization"}), flush=True)
