@@ -99,8 +99,8 @@ controller_mapping = {
     "/controller/list_speaker_device": controller.getListOutputDevice,
     # "/controller/callback_update_software": controller.callbackUpdateSoftware,
     # "/controller/callback_restart_software": controller.callbackRestartSoftware,
-    # "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
-    # "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
+    "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
+    "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
     # "/controller/callback_enable_easter_egg": controller.callbackEnableEasterEgg,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
@@ -318,7 +318,7 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
-    response_test = True
+    response_test = False
     if response_test:
         import time
         controller.init()
@@ -435,7 +435,7 @@ if __name__ == "__main__":
     else:
         try:
             controller.init()
-            print(json.dumps({"log": "Initialization from Python."}), flush=True)
+            print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
             while True:
                 main()
         except Exception:

@@ -15,7 +15,7 @@ class DownloadProgressBar:
         self.action = action
 
     def set(self, progress) -> None:
-        print(json.dumps({"log": "Software Download Progress", "data":progress}), flush=True)
+        print(json.dumps({"status":348, "log": "Software Download Progress", "data":progress}), flush=True)
         self.action("download", {
             "status":200,
             "result":{
@@ -28,7 +28,7 @@ class UpdateProgressBar:
         self.action = action
 
     def set(self, progress) -> None:
-        print(json.dumps({"log": "Software Update Progress", "data":progress}), flush=True)
+        print(json.dumps({"status":348, "log": "Software Update Progress", "data":progress}), flush=True)
         self.action("update", {
             "status":200,
             "result":{
@@ -37,29 +37,29 @@ class UpdateProgressBar:
             })
 
 def callbackUpdateSoftware(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackUpdateSoftware"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackUpdateSoftware"}), flush=True)
     download = DownloadProgressBar(action)
     update = UpdateProgressBar(action)
     model.updateSoftware(restart=True, download=download.set, update=update.set)
     return {"status":200}
 
 def callbackRestartSoftware(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackRestartSoftware"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackRestartSoftware"}), flush=True)
     model.reStartSoftware()
     return {"status":200}
 
 def callbackFilepathLogs(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackFilepathLogs"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackFilepathLogs"}), flush=True)
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
     return {"status":200}
 
 def callbackFilepathConfigFile(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackFilepathConfigFile"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackFilepathConfigFile"}), flush=True)
     Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
     return {"status":200}
 
 # def callbackEnableEasterEgg():
-#     print(json.dumps({"log": "callbackEnableEasterEgg"}), flush=True)
+#     print(json.dumps({"status":348, "log": "callbackEnableEasterEgg"}), flush=True)
 #     config.IS_EASTER_EGG_ENABLED = True
 #     config.OVERLAY_UI_TYPE = "sakura"
 #     return {"status":200, "result":config.IS_EASTER_EGG_ENABLED}
@@ -429,7 +429,7 @@ def setTargetTranslateEngine(select):
     config.CHOICE_OUTPUT_TRANSLATOR = select
 
 def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "setYourLanguageAndCountry", "data":select}), flush=True)
+    print(json.dumps({"status":348, "log": "setYourLanguageAndCountry", "data":select}), flush=True)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
@@ -446,7 +446,7 @@ def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
         }
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "setTargetLanguageAndCountry", "data":select}), flush=True)
+    print(json.dumps({"status":348, "log": "setTargetLanguageAndCountry", "data":select}), flush=True)
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
@@ -463,7 +463,7 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
         }
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "swapYourLanguageAndTargetLanguage"}), flush=True)
+    print(json.dumps({"status":348, "log": "swapYourLanguageAndTargetLanguage"}), flush=True)
     your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
@@ -481,7 +481,7 @@ def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
             }
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSelectedLanguagePresetTab", "data":selected_tab_no}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSelectedLanguagePresetTab", "data":selected_tab_no}), flush=True)
     config.SELECTED_TAB_NO = selected_tab_no
 
     engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
@@ -505,38 +505,38 @@ def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> d
     return {"status":200, "result":config.SELECTED_TAB_NO}
 
 def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSelectedTranslationEngine", "data":selected_translation_engine}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSelectedTranslationEngine", "data":selected_translation_engine}), flush=True)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
     return {"status":200, "result":selected_translation_engine}
 
 # command func
 def callbackEnableTranslation(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableTranslation"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableTranslation"}), flush=True)
     config.ENABLE_TRANSLATION = True
     if model.isLoadedCTranslate2Model() is False:
         model.changeTranslatorCTranslate2Model()
     return {"status":200, "result":config.ENABLE_TRANSLATION}
 
 def callbackDisableTranslation(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableTranslation"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableTranslation"}), flush=True)
     config.ENABLE_TRANSLATION = False
     return {"status":200, "result":config.ENABLE_TRANSLATION}
 
 def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableTranscriptionSend"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableTranscriptionSend"}), flush=True)
     config.ENABLE_TRANSCRIPTION_SEND = True
     startThreadingTranscriptionSendMessage(action)
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackDisableTranscriptionSend(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableTranscriptionSend"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableTranscriptionSend"}), flush=True)
     config.ENABLE_TRANSCRIPTION_SEND = False
     stopThreadingTranscriptionSendMessage(action)
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableTranscriptionReceive"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableTranscriptionReceive"}), flush=True)
     config.ENABLE_TRANSCRIPTION_RECEIVE = True
     startThreadingTranscriptionReceiveMessage(action)
 
@@ -546,34 +546,34 @@ def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackDisableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableTranscriptionReceive"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableTranscriptionReceive"}), flush=True)
     config.ENABLE_TRANSCRIPTION_RECEIVE = False
     stopThreadingTranscriptionReceiveMessage(action)
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackEnableForeground(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableForeground"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableForeground"}), flush=True)
     config.ENABLE_FOREGROUND = True
     return {"status":200, "result":config.ENABLE_FOREGROUND}
 
 def callbackDisableForeground(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableForeground"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableForeground"}), flush=True)
     config.ENABLE_FOREGROUND = False
     return {"status":200, "result":config.ENABLE_FOREGROUND}
 
 def callbackEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableMainWindowSidebarCompactMode"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableMainWindowSidebarCompactMode"}), flush=True)
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
     return {"status":200, "result":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 def callbackDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableMainWindowSidebarCompactMode"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableMainWindowSidebarCompactMode"}), flush=True)
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
     return {"status":200, "result":config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 # Config Window
 def callbackOpenConfigWindow(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackOpenConfigWindow"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackOpenConfigWindow"}), flush=True)
     if config.ENABLE_TRANSCRIPTION_SEND is True:
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -581,7 +581,7 @@ def callbackOpenConfigWindow(*args, **kwargs) -> dict:
     return {"status":200}
 
 def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackCloseConfigWindow"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackCloseConfigWindow"}), flush=True)
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
 
@@ -595,14 +595,14 @@ def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableConfigWindowCompactMode"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableConfigWindowCompactMode"}), flush=True)
     config.IS_CONFIG_WINDOW_COMPACT_MODE = True
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
     return {"status":200, "result":config.IS_CONFIG_WINDOW_COMPACT_MODE}
 
 def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableConfigWindowCompactMode"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableConfigWindowCompactMode"}), flush=True)
     config.IS_CONFIG_WINDOW_COMPACT_MODE = False
     model.stopCheckMicEnergy()
     model.stopCheckSpeakerEnergy()
@@ -610,54 +610,54 @@ def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
 
 # Appearance Tab
 def callbackSetTransparency(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetTransparency", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetTransparency", "data":data}), flush=True)
     config.TRANSPARENCY = int(data)
     return {"status":200, "result":config.TRANSPARENCY}
 
 def callbackSetAppearance(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetAppearance", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetAppearance", "data":data}), flush=True)
     config.APPEARANCE_THEME = data
     return {"status":200, "result":config.APPEARANCE_THEME}
 
 def callbackSetUiScaling(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetUiScaling", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetUiScaling", "data":data}), flush=True)
     config.UI_SCALING = data
     return {"status":200, "result":config.UI_SCALING}
 
 def callbackSetTextboxUiScaling(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetTextboxUiScaling", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetTextboxUiScaling", "data":data}), flush=True)
     config.TEXTBOX_UI_SCALING = int(data)
     return {"status":200, "result":config.TEXTBOX_UI_SCALING}
 
 def callbackSetMessageBoxRatio(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMessageBoxRatio", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMessageBoxRatio", "data":data}), flush=True)
     config.MESSAGE_BOX_RATIO = int(data)
     return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
 def callbackSetFontFamily(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetFontFamily", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetFontFamily", "data":data}), flush=True)
     config.FONT_FAMILY = data
     return {"status":200, "result":config.FONT_FAMILY}
 
 def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetUiLanguage", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetUiLanguage", "data":data}), flush=True)
     data = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, data)
     config.UI_LANGUAGE = data
     return {"status":200, "result":config.UI_LANGUAGE}
 
 def callbackEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableRestoreMainWindowGeometry"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableRestoreMainWindowGeometry"}), flush=True)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
     return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
 
 def callbackDisableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableRestoreMainWindowGeometry"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableRestoreMainWindowGeometry"}), flush=True)
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
     return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
 
 # Translation Tab
 def callbackEnableUseTranslationFeature(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableTranslationFeature"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableTranslationFeature"}), flush=True)
     config.USE_TRANSLATION_FEATURE = True
 
     if model.checkCTranslatorCTranslate2ModelWeight():
@@ -678,7 +678,7 @@ def callbackEnableUseTranslationFeature(*args, **kwargs) -> dict:
             }
 
 def callbackDisableUseTranslationFeature(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableTranslationFeature"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableTranslationFeature"}), flush=True)
     config.USE_TRANSLATION_FEATURE = False
     config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
     return {"status":200,
@@ -689,7 +689,7 @@ def callbackDisableUseTranslationFeature(*args, **kwargs) -> dict:
             }
 
 def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetCtranslate2WeightType", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetCtranslate2WeightType", "data":data}), flush=True)
     config.CTRANSLATE2_WEIGHT_TYPE = str(data)
     if model.checkCTranslatorCTranslate2ModelWeight():
         config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -708,7 +708,7 @@ def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetDeeplAuthKey", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetDeeplAuthKey", "data":data}), flush=True)
     status = 400
     if len(data) == 36 or len(data) == 39:
         result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
@@ -724,7 +724,7 @@ def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
     return {"status":status, "result":config.AUTH_KEYS["DeepL_API"]}
 
 def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackClearDeeplAuthKey"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackClearDeeplAuthKey"}), flush=True)
     auth_keys = config.AUTH_KEYS
     auth_keys["DeepL_API"] = None
     config.AUTH_KEYS = auth_keys
@@ -734,7 +734,7 @@ def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
 # Transcription Tab
 # Transcription (Mic)
 def callbackSetMicHost(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicHost", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicHost", "data":data}), flush=True)
     config.CHOICE_MIC_HOST = data
     config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
     model.stopCheckMicEnergy()
@@ -746,7 +746,7 @@ def callbackSetMicHost(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetMicDevice(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicDevice", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicDevice", "data":data}), flush=True)
     config.CHOICE_MIC_DEVICE = data
     model.stopCheckMicEnergy()
     return {"status":200,
@@ -756,7 +756,7 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
             }
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicEnergyThreshold", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicEnergyThreshold", "data":data}), flush=True)
     status = 400
     data = int(data)
     if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
@@ -765,12 +765,12 @@ def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     return {"status": status, "result": config.INPUT_MIC_ENERGY_THRESHOLD}
 
 def callbackEnableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableMicDynamicEnergyThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableMicDynamicEnergyThreshold"}), flush=True)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
     return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
 def callbackDisableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableMicDynamicEnergyThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableMicDynamicEnergyThreshold"}), flush=True)
     config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
 
@@ -788,7 +788,7 @@ class ProgressBarMicEnergy:
         self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
 
 def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableCheckMicThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableCheckMicThreshold"}), flush=True)
     progressbar_mic_energy = ProgressBarMicEnergy(action)
     model.startCheckMicEnergy(
         progressbar_mic_energy.set,
@@ -798,12 +798,12 @@ def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
     return {"status":200}
 
 def callbackDisableCheckMicThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableCheckMicThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableCheckMicThreshold"}), flush=True)
     model.stopCheckMicEnergy()
     return {"status":200}
 
 def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicRecordTimeout", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicRecordTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.INPUT_MIC_PHRASE_TIMEOUT:
@@ -817,7 +817,7 @@ def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicPhraseTimeout", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicPhraseTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if data >= config.INPUT_MIC_RECORD_TIMEOUT:
@@ -831,7 +831,7 @@ def callbackSetMicPhraseTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicMaxPhrases", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicMaxPhrases", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data:
@@ -845,7 +845,7 @@ def callbackSetMicMaxPhrases(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetMicWordFilter(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetMicWordFilter", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetMicWordFilter", "data":data}), flush=True)
     data = str(data)
     data = [w.strip() for w in data.split(",") if len(w.strip()) > 0]
     # Copy the list
@@ -865,7 +865,7 @@ def callbackSetMicWordFilter(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
 
 def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDeleteMicWordFilter", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDeleteMicWordFilter", "data":data}), flush=True)
     try:
         new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
         new_input_mic_word_filter_list.remove(str(data))
@@ -878,13 +878,13 @@ def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
 
 # Transcription (Speaker)
 def callbackSetSpeakerDevice(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerDevice", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSpeakerDevice", "data":data}), flush=True)
     config.CHOICE_SPEAKER_DEVICE = data
     model.stopCheckSpeakerEnergy()
     return {"status":200, "result":config.CHOICE_SPEAKER_DEVICE}
 
 def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerEnergyThreshold", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSpeakerEnergyThreshold", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
@@ -898,12 +898,12 @@ def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
     return response
 
 def callbackEnableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableSpeakerDynamicEnergyThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableSpeakerDynamicEnergyThreshold"}), flush=True)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
     return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
 def callbackDisableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableSpeakerDynamicEnergyThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableSpeakerDynamicEnergyThreshold"}), flush=True)
     config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
     return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
@@ -921,7 +921,7 @@ class ProgressBarSpeakerEnergy:
         self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
 
 def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableCheckSpeakerThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableCheckSpeakerThreshold"}), flush=True)
     progressbar_speaker_energy = ProgressBarSpeakerEnergy(action)
     model.startCheckSpeakerEnergy(
         progressbar_speaker_energy.set,
@@ -931,12 +931,12 @@ def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
     return {"status":200}
 
 def callbackDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableCheckSpeakerThreshold"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableCheckSpeakerThreshold"}), flush=True)
     model.stopCheckSpeakerEnergy()
     return {"status":200}
 
 def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerRecordTimeout", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSpeakerRecordTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
@@ -950,7 +950,7 @@ def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerPhraseTimeout", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSpeakerPhraseTimeout", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data and data >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
@@ -964,7 +964,7 @@ def callbackSetSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
     return response
 
 def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSpeakerMaxPhrases", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSpeakerMaxPhrases", "data":data}), flush=True)
     try:
         data = int(data)
         if 0 <= data:
@@ -979,7 +979,7 @@ def callbackSetSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
 
 # Transcription (Internal AI Model)
 def callbackEnableUseWhisperFeature(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableUserWhisperFeature"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableUserWhisperFeature"}), flush=True)
     config.USE_WHISPER_FEATURE = True
     if model.checkTranscriptionWhisperModelWeight() is True:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
@@ -996,7 +996,7 @@ def callbackEnableUseWhisperFeature(*args, **kwargs) -> dict:
             }
 
 def callbackDisableUseWhisperFeature(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableUserWhisperFeature"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableUserWhisperFeature"}), flush=True)
     config.USE_WHISPER_FEATURE = False
     config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
     config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
@@ -1009,7 +1009,7 @@ def callbackDisableUseWhisperFeature(*args, **kwargs) -> dict:
             }
 
 def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetWhisperWeightType", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetWhisperWeightType", "data":data}), flush=True)
     config.WHISPER_WEIGHT_TYPE = str(data)
     if model.checkTranscriptionWhisperModelWeight() is True:
         config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
@@ -1027,7 +1027,7 @@ def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
 
 # VR Tab
 def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySettingsOpacity", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySettingsOpacity", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SETTINGS
     pre_settings["opacity"] = data
     config.OVERLAY_SETTINGS = pre_settings
@@ -1035,7 +1035,7 @@ def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SETTINGS["opacity"]}
 
 def callbackSetOverlaySettingsUiScaling(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySettingsUiScaling", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySettingsUiScaling", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SETTINGS
     pre_settings["ui_scaling"] = data
     config.OVERLAY_SETTINGS = pre_settings
@@ -1043,7 +1043,7 @@ def callbackSetOverlaySettingsUiScaling(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SETTINGS["ui_scaling"]}
 
 def callbackEnableOverlaySmallLog(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableOverlaySmallLog"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableOverlaySmallLog"}), flush=True)
     config.ENABLE_OVERLAY_SMALL_LOG = True
 
     if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -1052,7 +1052,7 @@ def callbackEnableOverlaySmallLog(*args, **kwargs) -> dict:
     return {"status":200, "result":config.ENABLE_OVERLAY_SMALL_LOG}
 
 def callbackDisableOverlaySmallLog(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableOverlaySmallLog"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableOverlaySmallLog"}), flush=True)
     config.ENABLE_OVERLAY_SMALL_LOG = False
     if config.ENABLE_OVERLAY_SMALL_LOG is False:
         model.clearOverlayImage()
@@ -1060,7 +1060,7 @@ def callbackDisableOverlaySmallLog(*args, **kwargs) -> dict:
     return {"status":200, "result":config.ENABLE_OVERLAY_SMALL_LOG}
 
 def callbackSetOverlaySmallLogSettingsXPos(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsXPos", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsXPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["x_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1068,7 +1068,7 @@ def callbackSetOverlaySmallLogSettingsXPos(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"]}
 
 def callbackSetOverlaySmallLogSettingsYPos(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsYPos", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsYPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["y_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1076,7 +1076,7 @@ def callbackSetOverlaySmallLogSettingsYPos(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"]}
 
 def callbackSetOverlaySmallLogSettingsZPos(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsZPos", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsZPos", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["z_pos"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1084,7 +1084,7 @@ def callbackSetOverlaySmallLogSettingsZPos(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"]}
 
 def callbackSetOverlaySmallLogSettingsXRotation(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsXRotation", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsXRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["x_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1092,7 +1092,7 @@ def callbackSetOverlaySmallLogSettingsXRotation(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"]}
 
 def callbackSetOverlaySmallLogSettingsYRotation(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsYRotation", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsYRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["y_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1100,7 +1100,7 @@ def callbackSetOverlaySmallLogSettingsYRotation(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"]}
 
 def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOverlaySmallLogSettingsZRotation", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOverlaySmallLogSettingsZRotation", "data":data}), flush=True)
     pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
     pre_settings["z_rotation"] = data
     config.OVERLAY_SMALL_LOG_SETTINGS = pre_settings
@@ -1109,85 +1109,85 @@ def callbackSetOverlaySmallLogSettingsZRotation(data, *args, **kwargs) -> dict:
 
 # Others Tab
 def callbackEnableAutoClearMessageBox(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableAutoClearMessageBox"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableAutoClearMessageBox"}), flush=True)
     config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
     return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
 
 def callbackDisableAutoClearMessageBox(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableAutoClearMessageBox"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableAutoClearMessageBox"}), flush=True)
     config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
     return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
 
 def callbackEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableSendOnlyTranslatedMessages"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableSendOnlyTranslatedMessages"}), flush=True)
     config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = True
     return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
 
 def callbackDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableSendOnlyTranslatedMessages"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableSendOnlyTranslatedMessages"}), flush=True)
     config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
     return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
 
 def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSendMessageButtonType", "data":data}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSendMessageButtonType", "data":data}), flush=True)
     config.SEND_MESSAGE_BUTTON_TYPE = data
     return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
 def callbackEnableNoticeXsoverlay(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableNoticeXsoverlay"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableNoticeXsoverlay"}), flush=True)
     config.ENABLE_NOTICE_XSOVERLAY = True
     return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackDisableNoticeXsoverlay(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableNoticeXsoverlay"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableNoticeXsoverlay"}), flush=True)
     config.ENABLE_NOTICE_XSOVERLAY = False
     return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableAutoExportMessageLogs"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = True
     model.startLogger()
     return {"status":200, "result":config.ENABLE_LOGGER}
 
 def callbackDisableAutoExportMessageLogs(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableAutoExportMessageLogs"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableAutoExportMessageLogs"}), flush=True)
     config.ENABLE_LOGGER = False
     model.stopLogger()
     return {"status":200, "result":config.ENABLE_LOGGER}
 
 def callbackEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableVrcMicMuteSync"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = True
     model.startCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
     return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
 
 def callbackDisableVrcMicMuteSync(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableVrcMicMuteSync"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableVrcMicMuteSync"}), flush=True)
     config.ENABLE_VRC_MIC_MUTE_SYNC = False
     model.stopCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
     return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
 
 def callbackEnableSendMessageToVrc(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableSendMessageToVrc"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableSendMessageToVrc"}), flush=True)
     config.ENABLE_SEND_MESSAGE_TO_VRC = True
     return {"status":200, "result":config.ENABLE_SEND_MESSAGE_TO_VRC}
 
 def callbackDisableSendMessageToVrc(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetEnableSendMessageToVrc"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetEnableSendMessageToVrc"}), flush=True)
     config.ENABLE_SEND_MESSAGE_TO_VRC = False
     return {"status":200, "result":config.ENABLE_SEND_MESSAGE_TO_VRC}
 
 # Others (Message Formats(Send)
 def callbackSetSendMessageFormat(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetSendMessageFormat", "data": str(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetSendMessageFormat", "data": str(data)}), flush=True)
     if isUniqueStrings(["[message]"], data) is True:
         config.SEND_MESSAGE_FORMAT = data
     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
 
 def callbackSetSendMessageFormatWithT(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
     if len(data) > 0:
         if isUniqueStrings(["[message]", "[translation]"], data) is True:
             config.SEND_MESSAGE_FORMAT_WITH_T = data
@@ -1195,13 +1195,13 @@ def callbackSetSendMessageFormatWithT(data, *args, **kwargs) -> dict:
 
 # Others (Message Formats(Received)
 def callbackSetReceivedMessageFormat(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetReceivedMessageFormat", "data": str(data)}), flush=True)
     if isUniqueStrings(["[message]"], data) is True:
         config.RECEIVED_MESSAGE_FORMAT = data
     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
 
 def callbackSetReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetReceivedMessageFormatWithT", "data": str(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetReceivedMessageFormatWithT", "data": str(data)}), flush=True)
     if len(data) > 0:
         if isUniqueStrings(["[message]", "[translation]"], data) is True:
             config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
@@ -1209,36 +1209,36 @@ def callbackSetReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
 
 # ---------------------Speaker2Chatbox---------------------
 def callbackEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableSendReceivedMessageToVrc"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableSendReceivedMessageToVrc"}), flush=True)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = True
     return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 
 def callbackDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableSendReceivedMessageToVrc"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableSendReceivedMessageToVrc"}), flush=True)
     config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
     return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
 # ---------------------Speaker2Chatbox---------------------
 
 def callbackEnableLogger(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackEnableLogger"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackEnableLogger"}), flush=True)
     config.ENABLE_LOGGER = True
     model.startLogger()
     return {"status":200, "result":config.ENABLE_LOGGER}
 
 def callbackDisableLogger(*args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackDisableLogger"}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackDisableLogger"}), flush=True)
     config.ENABLE_LOGGER = False
     model.stopLogger()
     return {"status":200, "result":config.ENABLE_LOGGER}
 
 # Advanced Settings Tab
 def callbackSetOscIpAddress(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOscIpAddress", "data": str(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOscIpAddress", "data": str(data)}), flush=True)
     config.OSC_IP_ADDRESS = str(data)
     return {"status":200, "result":config.OSC_IP_ADDRESS}
 
 def callbackSetOscPort(data, *args, **kwargs) -> dict:
-    print(json.dumps({"log": "callbackSetOscPort", "data": int(data)}), flush=True)
+    print(json.dumps({"status":348, "log": "callbackSetOscPort", "data": int(data)}), flush=True)
     config.OSC_PORT = int(data)
     return {"status":200, "result":config.OSC_PORT}
 
@@ -1255,13 +1255,13 @@ def getListOutputDevice(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListOutputDevice()}
 
 def init():
-    print(json.dumps({"log": "Start Initialization"}), flush=True)
-    print(json.dumps({"log": "Start InitSetTranslateEngine"}), flush=True)
+    print(json.dumps({"status":348, "log": "Start Initialization"}), flush=True)
+    print(json.dumps({"status":348, "log": "Start InitSetTranslateEngine"}), flush=True)
     initSetTranslateEngine()
-    print(json.dumps({"log": "Start Init LanguageAndCountry"}), flush=True)
+    print(json.dumps({"status":348, "log": "Start Init LanguageAndCountry"}), flush=True)
     initSetLanguageAndCountry()
 
-    print(json.dumps({"log": "Start check DeepL API Key"}), flush=True)
+    print(json.dumps({"status":348, "log": "Start check DeepL API Key"}), flush=True)
     if config.AUTH_KEYS["DeepL_API"] is not None:
         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
             # error update Auth key
@@ -1270,32 +1270,32 @@ def init():
             config.AUTH_KEYS = auth_keys
 
     # set Translation Engine
-    print(json.dumps({"log": "Set Translation Engine"}), flush=True)
+    print(json.dumps({"status":348, "log": "Set Translation Engine"}), flush=True)
     updateTranslationEngineAndEngineList()
 
     # set Transcription Engine
-    print(json.dumps({"log": "Set Transcription Engine"}), flush=True)
+    print(json.dumps({"status":348, "log": "Set Transcription Engine"}), flush=True)
     if config.USE_WHISPER_FEATURE is True:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
     else:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
 
     # set word filter
-    print(json.dumps({"log": "Set Word Filter"}), flush=True)
+    print(json.dumps({"status":348, "log": "Set Word Filter"}), flush=True)
     model.addKeywords()
 
     # check Software Updated
-    print(json.dumps({"log": "Check Software Updated"}), flush=True)
+    print(json.dumps({"status":348, "log": "Check Software Updated"}), flush=True)
     if model.checkSoftwareUpdated() is True:
         pass
 
     # init logger
-    print(json.dumps({"log": "Init Logger"}), flush=True)
+    print(json.dumps({"status":348, "log": "Init Logger"}), flush=True)
     if config.ENABLE_LOGGER is True:
         model.startLogger()
 
     # init OSC receive
-    print(json.dumps({"log": "Init OSC Receive"}), flush=True)
+    print(json.dumps({"status":348, "log": "Init OSC Receive"}), flush=True)
     model.startReceiveOSC()
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
