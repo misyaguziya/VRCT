@@ -315,7 +315,7 @@ class Model:
         return update_flag
 
     @staticmethod
-    def updateSoftware(restart:bool=True, func=None):
+    def updateSoftware(restart:bool=True, download=None, update=None):
         def updateSoftwareTask():
             filename = 'VRCT.zip'
             program_name = 'VRCT.exe'
@@ -336,8 +336,8 @@ class Model:
                         for chunk in res.iter_content(chunk_size=1024*5):
                             file.write(chunk)
                             total_chunk += len(chunk)
-                            if isinstance(func, Callable):
-                                func(progress=total_chunk/file_size, progress_type="downloading")
+                            if isinstance(download, Callable):
+                                download(total_chunk/file_size)
                             print(f"downloaded {total_chunk}/{file_size}")
 
                     with ZipFile(os_path.join(tmp_path, filename)) as zf:
@@ -346,8 +346,8 @@ class Model:
                         for file_info in zf.infolist():
                             extracted_files += 1
                             zf.extract(file_info, os_path.join(current_directory, tmp_directory_name))
-                            if isinstance(func, Callable):
-                                func(progress=extracted_files/total_files, progress_type="extracting")
+                            if isinstance(update, Callable):
+                                update(extracted_files/total_files)
                             print(f"extracted {extracted_files}/{total_files}")
 
                 copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
