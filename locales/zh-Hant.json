@@ -1,5 +1,5 @@
 {
-    "main_window": {
+    "main_page": {
         "translation": "翻譯",
         "transcription_send": "麥克風轉文字",
         "transcription_receive": "喇叭轉文字",
@@ -70,7 +70,7 @@
         "display_duration": "顯示持續時間",
         "fadeout_duration": "淡出持續時間"
     },
-    "config_window": {
+    "config_page": {
         "config_title": "設定",
         "compact_mode": "精簡模式",
         "version": "版本 {{version}}",
@@ -117,7 +117,7 @@
         "ui_language": {
             "label": "介面語言"
         },
-        "to_restore_main_window_geometry": {
+        "to_restore_main_page_geometry": {
             "label": "記住主視窗位置",
             "desc": "啟動時恢復上次視窗的位置和大小。"
         },

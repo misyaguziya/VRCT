@@ -1,5 +1,5 @@
 {
-    "main_window": {
+    "main_page": {
         "translation": "Translation",
         "transcription_send": "Voice2Chatbox",
         "transcription_receive": "Speaker2Log",
@@ -71,7 +71,7 @@
         "display_duration": "Display duration",
         "fadeout_duration": "Fadeout duration"
     },
-    "config_window": {
+    "config_page": {
         "config_title": "Settings",
         "compact_mode": "Compact Mode",
         "version": "version {{version}}",
@@ -119,7 +119,7 @@
         "ui_language": {
             "label": "UI Language"
         },
-        "to_restore_main_window_geometry": {
+        "to_restore_main_page_geometry": {
             "label": "Remember The Main Window Position",
             "desc": "Restore the position and size of the previous window upon startup."
         },

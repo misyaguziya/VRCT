@@ -1,0 +1,45 @@
+.container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: var(--dark_888_color);
+    position: relative;
+}
+
+.main_page_cover {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color:  (#000000cc);
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(0.8rem);
+    color: var(--dark_basic_text_color);
+}
+
+.cover_message {
+    font-size: 2rem;
+    font-weight: 300;
+}
+
+.close_settings_window_button {
+    font-size: 1.6rem;
+    font-weight: 300;
+    padding: 1rem 1.4rem;
+    border-radius: 0.4rem;
+    background-color: var(--dark_888_color);
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_825_color);
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+}

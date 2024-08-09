@@ -11,7 +11,7 @@ edition = "2021"
 tauri-build = { version = "1", features = [] }
 
 [dependencies]
-tauri = { version = "1", features = [ "window-set-decorations", "window-set-always-on-top", "window-create", "window-close", "shell-sidecar", "shell-open", "devtools"] }
+tauri = { version = "1", features = [ "window-set-decorations", "window-set-always-on-top", "shell-sidecar", "shell-open", "devtools"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
