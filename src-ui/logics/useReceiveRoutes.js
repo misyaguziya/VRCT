@@ -21,16 +21,21 @@ export const useReceiveRoutes = () => {
     };
 
     const receiveRoutes = (parsed_data) => {
-        if (parsed_data.status === 200) {
-            const route = routes[parsed_data.endpoint];
-            if (route) {
-                route({ data: parsed_data.result });
-            } else {
-                console.error(`Invalid path: ${parsed_data.endpoint}`);
-            }
-        } else {
-            console.log("Received data status is not '200'.", parsed_data);
+        switch (parsed_data.status) {
+            case 200:
+                const route = routes[parsed_data.endpoint];
+                (route) ? route({ data: parsed_data.result }) : console.error(`Invalid endpoint: ${parsed_data.endpoint}`);
+                break;
+
+            case 384:
+                console.log("from backend:", parsed_data);
+                break;
+
+            default:
+                console.log("Received data status does not match.", parsed_data);
+                break;
         }
+
     };
     return { receiveRoutes };
 };
