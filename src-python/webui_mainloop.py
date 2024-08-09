@@ -99,8 +99,8 @@ controller_mapping = {
     "/controller/list_speaker_device": controller.getListOutputDevice,
     # "/controller/callback_update_software": controller.callbackUpdateSoftware,
     # "/controller/callback_restart_software": controller.callbackRestartSoftware,
-    "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
-    "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
+    # "/controller/callback_filepath_logs": controller.callbackFilepathLogs,
+    # "/controller/callback_filepath_config_file": controller.callbackFilepathConfigFile,
     # "/controller/callback_enable_easter_egg": controller.callbackEnableEasterEgg,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
@@ -189,6 +189,8 @@ controller_mapping = {
     "/controller/callback_set_received_message_format_with_t": controller.callbackSetReceivedMessageFormatWithT,
     "/controller/callback_enable_send_received_message_to_vrc": controller.callbackEnableSendReceivedMessageToVrc,
     "/controller/callback_disable_send_received_message_to_vrc": controller.callbackDisableSendReceivedMessageToVrc,
+    "/controller/callback_enable_logger": controller.callbackEnableLogger,
+    "/controller/callback_disable_logger": controller.callbackDisableLogger,
     "/controller/callback_set_osc_ip_address": controller.callbackSetOscIpAddress,
     "/controller/callback_set_osc_port": controller.callbackSetOscPort,
 }
@@ -197,37 +199,44 @@ action_mapping = {
     "/controller/callback_update_software": {
         "download":"/action/download_software",
         "update":"/action/update_software"
-        },
+    },
     "/controller/callback_close_config_window": {
         "mic":"/action/transcription_send_mic_message",
         "speaker":"/action/transcription_receive_speaker_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
         "word_filter":"/action/word_filter",
-        },
+    },
     "/controller/callback_enable_transcription_send": {
         "mic":"/action/transcription_send_mic_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
         "word_filter":"/action/word_filter",
-        },
+    },
     "/controller/callback_disable_transcription_send": {
         "mic":"/action/transcription_send_mic_message_stopped"
-        },
+    },
     "/controller/callback_enable_transcription_receive": {
         "speaker":"/action/transcription_receive_speaker_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
-        },
+    },
     "/controller/callback_disable_transcription_receive": {
         "speaker":"/action/transcription_receive_speaker_message_stopped"
-        },
+    },
     "/controller/callback_enable_check_mic_threshold": {
-        "mic":"/action/check_mic_threshold_energy"
-        },
+        "mic":"/action/check_mic_threshold_energy",
+        "stopped":"/action/check_mic_threshold_energy_stopped",
+        "error_device":"/action/error_device",
+    },
+    "/controller/callback_enable_check_speaker_threshold": {
+        "speaker":"/action/check_speaker_threshold_energy",
+        "stopped":"/action/check_speaker_threshold_energy_stopped",
+        "error_device":"/action/error_device",
+    },
     "/controller/callback_messagebox_press_key_enter": {
         "error_translation_engine":"/action/error_translation_engine"
-        },
+    },
 }
 
 def handleConfigRequest(endpoint):
@@ -311,6 +320,9 @@ def main():
 if __name__ == "__main__":
     response_test = True
     if response_test:
+        import time
+        controller.init()
+
         for endpoint, value in config_mapping.items():
             response_data, status = handleConfigRequest(endpoint)
             response = {
@@ -320,6 +332,7 @@ if __name__ == "__main__":
             }
             response = json.dumps(response)
             print(response, flush=True)
+            time.sleep(0.1)
 
         for endpoint, value in controller_mapping.items():
             print("endpoint: ", endpoint)
@@ -348,7 +361,7 @@ if __name__ == "__main__":
                 case "/controller/callback_set_ctranslate2_weight_type":
                     data = "Small"
                 case "/controller/callback_set_deepl_auth_key":
-                    data = "35eb1ccf-e36e-6ed2-ccf7-b0463defd962:fx"
+                    data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
                 case "/controller/callback_set_mic_host":
                     data = "MME"
                 case "/controller/callback_set_mic_device":
@@ -375,8 +388,6 @@ if __name__ == "__main__":
                     data = 5
                 case "/controller/callback_set_speaker_max_phrases":
                     data = 5
-                case "/controller/callback_set_use_whisper_feature":
-                    data = True
                 case "/controller/callback_set_whisper_weight_type":
                     data = "base"
                 case "/controller/callback_set_overlay_settings_opacity":
@@ -420,6 +431,7 @@ if __name__ == "__main__":
             }
             response = json.dumps(response)
             print(response, flush=True)
+            time.sleep(0.5)
     else:
         try:
             controller.init()
