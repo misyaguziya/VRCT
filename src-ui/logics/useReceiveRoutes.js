@@ -27,7 +27,7 @@ export const useReceiveRoutes = () => {
                 (route) ? route({ data: parsed_data.result }) : console.error(`Invalid endpoint: ${parsed_data.endpoint}`);
                 break;
 
-            case 384:
+            case 348:
                 console.log("from backend:", parsed_data);
                 break;
 
