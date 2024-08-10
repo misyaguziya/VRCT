@@ -335,7 +335,7 @@ if __name__ == "__main__":
             time.sleep(0.1)
 
         for endpoint, value in controller_mapping.items():
-            print("endpoint: ", endpoint)
+            print(json.dumps({"status":348, "log": f"endpoint: {endpoint}"}))
 
             match endpoint:
                 case  "/controller/callback_messagebox_press_key_enter":
