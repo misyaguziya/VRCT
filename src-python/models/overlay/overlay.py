@@ -109,7 +109,8 @@ class Overlay:
             )
 
         except Exception as e:
-            print("Could not initialise OpenVR", e)
+            import json
+            print(json.dumps({"status":348, "log": f"error:Could not initialise OpenVR {e}"}), flush=True)
 
     def updateImage(self, img):
         if self.initialized is True:
@@ -203,8 +204,8 @@ class Overlay:
                         return False
             return True
         except Exception as e:
-            print("Could not check SteamVR running")
-            print(e)
+            import json
+            print(json.dumps({"status":348, "log": f"error:Could not check SteamVR running {e}"}), flush=True)
             return False
 
     def evaluateOpacityFade(self, lastUpdate, currentTime):

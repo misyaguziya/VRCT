@@ -83,4 +83,5 @@ def downloadCTranslate2Weight(root, weight_type="Small", func=None):
             with ZipFile(os_path.join(tmp_path, filename)) as zf:
                 zf.extractall(path)
     except Exception as e:
-            print("error:downloadCTranslate2Weight()", e)
+        import json
+        print(json.dumps({"status":348, "log": f"error:downloadCTranslate2Weight() {e}"}), flush=True)
