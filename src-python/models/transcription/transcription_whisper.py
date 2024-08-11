@@ -40,7 +40,8 @@ def downloadFile(url, path, func=None):
                     func(total_chunk/file_size)
 
     except Exception as e:
-            print("error:downloadFile()", e)
+        import json
+        print(json.dumps({"status":348, "log": f"error:downloadFile() {e}"}), flush=True)
 
 def checkWhisperWeight(root, weight_type):
     path = os_path.join(root, "weights", "whisper", weight_type)
@@ -67,7 +68,6 @@ def downloadWhisperWeight(root, weight_type, callbackFunc):
         return
 
     for filename in _FILENAMES:
-        print("Downloading", filename, "...")
         file_path = os_path.join(path, filename)
         url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
         downloadFile(url, file_path, func=callbackFunc)
