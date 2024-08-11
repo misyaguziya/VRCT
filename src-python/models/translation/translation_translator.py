@@ -42,7 +42,8 @@ class Translator():
         try:
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         except Exception as e:
-            print("Error: changeCTranslate2Model()", e)
+            import json
+            print(json.dumps({"status":348, "log": f"error:changeCTranslate2Model() {e}"}), flush=True)
             tokenizer_path = os.path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         self.is_loaded_ctranslate2_model = True
