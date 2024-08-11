@@ -134,6 +134,7 @@ controller_mapping = {
     "/controller/callback_enable_use_translation_feature": controller.callbackEnableUseTranslationFeature,
     "/controller/callback_disable_use_translation_feature": controller.callbackDisableUseTranslationFeature,
     "/controller/callback_set_ctranslate2_weight_type": controller.callbackSetCtranslate2WeightType,
+    "/controller/callback_download_ctranslate2_weight": controller.callbackDownloadCtranslate2Weight,
     "/controller/callback_set_deepl_auth_key": controller.callbackSetDeeplAuthKey,
     "/controller/callback_clear_deepl_auth_key": controller.callbackClearDeeplAuthKey,
     "/controller/callback_set_mic_host": controller.callbackSetMicHost,
@@ -160,6 +161,7 @@ controller_mapping = {
     "/controller/callback_enable_use_whisper_feature": controller.callbackEnableUseWhisperFeature,
     "/controller/callback_disable_use_whisper_feature": controller.callbackDisableUseWhisperFeature,
     "/controller/callback_set_whisper_weight_type": controller.callbackSetWhisperWeightType,
+    "/controller/callback_download_whisper_weight": controller.callbackDownloadWhisperWeight,
     "/controller/callback_set_overlay_settings_opacity": controller.callbackSetOverlaySettingsOpacity,
     "/controller/callback_set_overlay_settings_ui_scaling": controller.callbackSetOverlaySettingsUiScaling,
     "/controller/callback_enable_overlay_small_log": controller.callbackEnableOverlaySmallLog,
@@ -236,6 +238,12 @@ action_mapping = {
     },
     "/controller/callback_messagebox_press_key_enter": {
         "error_translation_engine":"/action/error_translation_engine"
+    },
+    "/controller/callback_download_ctranslate2_weight": {
+        "download":"/action/download_ctranslate2_weight"
+    },
+    "/controller/callback_download_whisper_weight": {
+        "download":"/action/download_whisper_weight"
     },
 }
 
@@ -318,127 +326,145 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
-    response_test = False
-    if response_test:
-        import time
-        controller.init()
+    process = "main"
+    match process:
+        case "main":
+            try:
+                controller.init()
+                print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
+                while True:
+                    main()
+            except Exception:
+                import traceback
+                with open('error.log', 'a') as f:
+                    traceback.print_exc(file=f)
 
-        for endpoint, value in config_mapping.items():
-            response_data, status = handleConfigRequest(endpoint)
-            response = {
-                "status": status,
-                "endpoint": endpoint,
-                "result": response_data,
-            }
-            response = json.dumps(response)
-            print(response, flush=True)
-            time.sleep(0.1)
-
-        for endpoint, value in controller_mapping.items():
-            print(json.dumps({"status":348, "log": f"endpoint: {endpoint}"}))
-
-            match endpoint:
-                case  "/controller/callback_messagebox_press_key_enter":
-                    data = "テスト"
-                case "/controller/set_your_language_and_country":
-                    data = {"language": "English", "country": "Hong Kong"}
-                case "/controller/set_target_language_and_country":
-                    data = {"language": "Japanese", "country": "Japan"}
-                case "/controller/callback_set_transparency":
-                    data = 0.5
-                case "/controller/callback_set_appearance":
-                    data = "Dark"
-                case "/controller/callback_set_ui_scaling":
-                    data = 1.5
-                case "/controller/callback_set_textbox_ui_scaling":
-                    data = 1.5
-                case "/controller/callback_set_message_box_ratio":
-                    data = 0.5
-                case "/controller/callback_set_font_family":
-                    data = "Yu Gothic UI"
-                case "/controller/callback_set_ui_language":
-                    data = "ja"
-                case "/controller/callback_set_ctranslate2_weight_type":
-                    data = "Small"
-                case "/controller/callback_set_deepl_auth_key":
-                    data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
-                case "/controller/callback_set_mic_host":
-                    data = "MME"
-                case "/controller/callback_set_mic_device":
-                    data = "マイク (Realtek High Definition Audio)"
-                case "/controller/callback_set_mic_energy_threshold":
-                    data = 0.5
-                case "/controller/callback_set_mic_record_timeout":
-                    data = 5
-                case "/controller/callback_set_mic_phrase_timeout":
-                    data = 5
-                case "/controller/callback_set_mic_max_phrases":
-                    data = 5
-                case "/controller/callback_set_mic_word_filter":
-                    data = "test0, test1, test2"
-                case "/controller/callback_delete_mic_word_filter":
-                    data = "test1"
-                case "/controller/callback_set_speaker_device":
-                    data = "スピーカー (Realtek High Definition Audio)"
-                case "/controller/callback_set_speaker_energy_threshold":
-                    data = 0.5
-                case "/controller/callback_set_speaker_record_timeout":
-                    data = 5
-                case "/controller/callback_set_speaker_phrase_timeout":
-                    data = 5
-                case "/controller/callback_set_speaker_max_phrases":
-                    data = 5
-                case "/controller/callback_set_whisper_weight_type":
-                    data = "base"
-                case "/controller/callback_set_overlay_settings_opacity":
-                    data = 0.5
-                case "/controller/callback_set_overlay_settings_ui_scaling":
-                    data = 1.5
-                case "/controller/callback_set_overlay_small_log_settings_x_pos":
-                    data = 0
-                case "/controller/callback_set_overlay_small_log_settings_y_pos":
-                    data = 0
-                case "/controller/callback_set_overlay_small_log_settings_z_pos":
-                    data = 0
-                case "/controller/callback_set_overlay_small_log_settings_x_rotation":
-                    data = 0
-                case "/controller/callback_set_overlay_small_log_settings_y_rotation":
-                    data = 0
-                case "/controller/callback_set_overlay_small_log_settings_z_rotation":
-                    data = 0
-                case "/controller/callback_set_send_message_button_type":
-                    data = "show"
-                case "/controller/callback_set_send_message_format":
-                    data = "[message]"
-                case "/controller/callback_set_send_message_format_with_t":
-                    data = "[message]([translation])"
-                case "/controller/callback_set_received_message_format":
-                    data = "[message]"
-                case "/controller/callback_set_received_message_format_with_t":
-                    data = "[message]([translation])"
-                case "/controller/callback_set_osc_ip_address":
-                    data = "127.0.0.1"
-                case "/controller/callback_set_osc_port":
-                    data = 8000
-                case _:
-                    data = None
-
-            response_data, status = handleControllerRequest(endpoint, data)
-            response = {
-                "status": status,
-                "endpoint": endpoint,
-                "result": response_data,
-            }
-            response = json.dumps(response)
-            print(response, flush=True)
-            time.sleep(0.5)
-    else:
-        try:
+        case "test":
             controller.init()
-            print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
-            while True:
-                main()
-        except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
+            response_data, status = handleControllerRequest("/controller/callback_download_ctranslate2_weight")
+            response = {
+                "status": status,
+                "endpoint": "/controller/callback_download_ctranslate2_weight",
+                "result": response_data,
+            }
+            response = json.dumps(response)
+            response_data, status = handleControllerRequest("/controller/callback_download_whisper_weight")
+            response = {
+                "status": status,
+                "endpoint": "/controller/callback_download_whisper_weight",
+                "result": response_data,
+            }
+            response = json.dumps(response)
+
+        case "test_all":
+            import time
+            controller.init()
+            for endpoint, value in config_mapping.items():
+                response_data, status = handleConfigRequest(endpoint)
+                response = {
+                    "status": status,
+                    "endpoint": endpoint,
+                    "result": response_data,
+                }
+                response = json.dumps(response)
+                print(response, flush=True)
+                time.sleep(0.1)
+
+            for endpoint, value in controller_mapping.items():
+                print(json.dumps({"status":348, "log": f"endpoint: {endpoint}"}))
+
+                match endpoint:
+                    case  "/controller/callback_messagebox_press_key_enter":
+                        data = "テスト"
+                    case "/controller/set_your_language_and_country":
+                        data = {"language": "English", "country": "Hong Kong"}
+                    case "/controller/set_target_language_and_country":
+                        data = {"language": "Japanese", "country": "Japan"}
+                    case "/controller/callback_set_transparency":
+                        data = 0.5
+                    case "/controller/callback_set_appearance":
+                        data = "Dark"
+                    case "/controller/callback_set_ui_scaling":
+                        data = 1.5
+                    case "/controller/callback_set_textbox_ui_scaling":
+                        data = 1.5
+                    case "/controller/callback_set_message_box_ratio":
+                        data = 0.5
+                    case "/controller/callback_set_font_family":
+                        data = "Yu Gothic UI"
+                    case "/controller/callback_set_ui_language":
+                        data = "ja"
+                    case "/controller/callback_set_ctranslate2_weight_type":
+                        data = "Small"
+                    case "/controller/callback_set_deepl_auth_key":
+                        data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
+                    case "/controller/callback_set_mic_host":
+                        data = "MME"
+                    case "/controller/callback_set_mic_device":
+                        data = "マイク (Realtek High Definition Audio)"
+                    case "/controller/callback_set_mic_energy_threshold":
+                        data = 0.5
+                    case "/controller/callback_set_mic_record_timeout":
+                        data = 5
+                    case "/controller/callback_set_mic_phrase_timeout":
+                        data = 5
+                    case "/controller/callback_set_mic_max_phrases":
+                        data = 5
+                    case "/controller/callback_set_mic_word_filter":
+                        data = "test0, test1, test2"
+                    case "/controller/callback_delete_mic_word_filter":
+                        data = "test1"
+                    case "/controller/callback_set_speaker_device":
+                        data = "スピーカー (Realtek High Definition Audio)"
+                    case "/controller/callback_set_speaker_energy_threshold":
+                        data = 0.5
+                    case "/controller/callback_set_speaker_record_timeout":
+                        data = 5
+                    case "/controller/callback_set_speaker_phrase_timeout":
+                        data = 5
+                    case "/controller/callback_set_speaker_max_phrases":
+                        data = 5
+                    case "/controller/callback_set_whisper_weight_type":
+                        data = "base"
+                    case "/controller/callback_set_overlay_settings_opacity":
+                        data = 0.5
+                    case "/controller/callback_set_overlay_settings_ui_scaling":
+                        data = 1.5
+                    case "/controller/callback_set_overlay_small_log_settings_x_pos":
+                        data = 0
+                    case "/controller/callback_set_overlay_small_log_settings_y_pos":
+                        data = 0
+                    case "/controller/callback_set_overlay_small_log_settings_z_pos":
+                        data = 0
+                    case "/controller/callback_set_overlay_small_log_settings_x_rotation":
+                        data = 0
+                    case "/controller/callback_set_overlay_small_log_settings_y_rotation":
+                        data = 0
+                    case "/controller/callback_set_overlay_small_log_settings_z_rotation":
+                        data = 0
+                    case "/controller/callback_set_send_message_button_type":
+                        data = "show"
+                    case "/controller/callback_set_send_message_format":
+                        data = "[message]"
+                    case "/controller/callback_set_send_message_format_with_t":
+                        data = "[message]([translation])"
+                    case "/controller/callback_set_received_message_format":
+                        data = "[message]"
+                    case "/controller/callback_set_received_message_format_with_t":
+                        data = "[message]([translation])"
+                    case "/controller/callback_set_osc_ip_address":
+                        data = "127.0.0.1"
+                    case "/controller/callback_set_osc_port":
+                        data = 8000
+                    case _:
+                        data = None
+
+                response_data, status = handleControllerRequest(endpoint, data)
+                response = {
+                    "status": status,
+                    "endpoint": endpoint,
+                    "result": response_data,
+                }
+                response = json.dumps(response)
+                print(response, flush=True)
+                time.sleep(0.5)
