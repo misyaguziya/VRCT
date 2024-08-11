@@ -65,6 +65,7 @@ def downloadWhisperWeight(root, weight_type, callbackFunc):
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
     if checkWhisperWeight(root, weight_type) is True:
+        callbackFunc(1)
         return
 
     for filename in _FILENAMES:

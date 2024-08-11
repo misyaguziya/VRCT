@@ -59,13 +59,14 @@ def checkCTranslate2Weight(path, weight_type="Small"):
         already_downloaded = True
     return already_downloaded
 
-def downloadCTranslate2Weight(root, weight_type="Small", func=None):
+def downloadCTranslate2Weight(root, weight_type="Small", callbackFunc=None):
     url = ctranslate2_weights[weight_type]["url"]
     filename = "weight.zip"
     path = os_path.join(root, "weights", "ctranslate2")
     os_makedirs(path, exist_ok=True)
 
     if checkCTranslate2Weight(path, weight_type):
+        callbackFunc(1)
         return
 
     try:
@@ -76,9 +77,9 @@ def downloadCTranslate2Weight(root, weight_type="Small", func=None):
             with open(os_path.join(tmp_path, filename), 'wb') as file:
                 for chunk in res.iter_content(chunk_size=1024*5):
                     file.write(chunk)
-                    if isinstance(func, Callable):
+                    if isinstance(callbackFunc, Callable):
                         total_chunk += len(chunk)
-                        func(total_chunk/file_size)
+                        callbackFunc(total_chunk/file_size)
 
             with ZipFile(os_path.join(tmp_path, filename)) as zf:
                 zf.extractall(path)
