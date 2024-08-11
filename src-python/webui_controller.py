@@ -10,7 +10,7 @@ from utils import getKeyByValue, isUniqueStrings, strPctToInt
 import argparse
 
 # Common
-class DownloadProgressBar:
+class DownloadSoftwareProgressBar:
     def __init__(self, action):
         self.action = action
 
@@ -23,7 +23,7 @@ class DownloadProgressBar:
                 }
             })
 
-class UpdateProgressBar:
+class UpdateSoftwareProgressBar:
     def __init__(self, action):
         self.action = action
 
@@ -38,8 +38,8 @@ class UpdateProgressBar:
 
 def callbackUpdateSoftware(data, action, *args, **kwargs) -> dict:
     print(json.dumps({"status":348, "log": "callbackUpdateSoftware"}), flush=True)
-    download = DownloadProgressBar(action)
-    update = UpdateProgressBar(action)
+    download = DownloadSoftwareProgressBar(action)
+    update = UpdateSoftwareProgressBar(action)
     model.updateSoftware(restart=True, download=download.set, update=update.set)
     return {"status":200}
 
@@ -707,6 +707,25 @@ def callbackSetCtranslate2WeightType(data, *args, **kwargs) -> dict:
                 },
             }
 
+class DownloadCTranslate2ProgressBar:
+    def __init__(self, action):
+        self.action = action
+
+    def set(self, progress) -> None:
+        print(json.dumps({"status":348, "log": "CTranslate2 Weight Download Progress", "data":progress}), flush=True)
+        self.action("download", {
+            "status":200,
+            "result":{
+                "progress":progress
+                }
+            })
+
+def callbackDownloadCtranslate2Weight(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"status":348, "log": "callbackDownloadCtranslate2Weight"}), flush=True)
+    download = DownloadCTranslate2ProgressBar(action)
+    model.downloadCTranslate2ModelWeight(download.set)
+    return {"status":200}
+
 def callbackSetDeeplAuthKey(data, *args, **kwargs) -> dict:
     print(json.dumps({"status":348, "log": "callbackSetDeeplAuthKey", "data":data}), flush=True)
     status = 400
@@ -873,7 +892,7 @@ def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
         model.resetKeywordProcessor()
         model.addKeywords()
     except Exception:
-        print("There was no the target word in config.INPUT_MIC_WORD_FILTER")
+        print(json.dumps({"status":348, "log": "callbackDeleteMicWordFilter There was no the target word in config.INPUT_MIC_WORD_FILTER"}), flush=True)
     return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
 
 # Transcription (Speaker)
@@ -1024,6 +1043,25 @@ def callbackSetWhisperWeightType(data, *args, **kwargs) -> dict:
                 "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
             }
         }
+
+class DownloadWhisperProgressBar:
+    def __init__(self, action):
+        self.action = action
+
+    def set(self, progress) -> None:
+        print(json.dumps({"status":348, "log": "Whisper Weight Download Progress", "data":progress}), flush=True)
+        self.action("download", {
+            "status":200,
+            "result":{
+                "progress":progress
+                }
+            })
+
+def callbackDownloadWhisperWeight(data, action, *args, **kwargs) -> dict:
+    print(json.dumps({"status":348, "log": "callbackDownloadWhisperWeight"}), flush=True)
+    download = DownloadCTranslate2ProgressBar(action)
+    model.downloadWhisperModelWeight(download.set)
+    return {"status":200}
 
 # VR Tab
 def callbackSetOverlaySettingsOpacity(data, *args, **kwargs) -> dict:
