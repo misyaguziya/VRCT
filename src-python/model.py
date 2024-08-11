@@ -24,8 +24,8 @@ from models.transcription.transcription_transcriber import AudioTranscriber
 from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.translation_utils import checkCTranslate2Weight
-from models.transcription.transcription_whisper import checkWhisperWeight
+from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight
+from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 
@@ -106,11 +106,17 @@ class Model:
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
 
+    def downloadCTranslate2ModelWeight(self, callback=None):
+        return downloadCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE, callback)
+
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
 
     def checkTranscriptionWhisperModelWeight(self):
         return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
+
+    def downloadWhisperModelWeight(self, callback=None):
+        return downloadWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE, callback)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
