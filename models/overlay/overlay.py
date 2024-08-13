@@ -91,7 +91,7 @@ class Overlay:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
-            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "SOverlay_Speaker2log_UI")
+            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "Overlay_Speaker2log_UI")
             self.overlay.showOverlay(self.handle)
             self.initialized = True
 
@@ -116,7 +116,16 @@ class Overlay:
             width, height = img.size
             img = img.tobytes()
             img = (ctypes.c_char * len(img)).from_buffer_copy(img)
-            self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
+
+            try:
+                self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
+            except Exception as e:
+                print("Could not update image", e)
+                self.initialized = False
+                self.reStartOverlay()
+                while self.initialized is False:
+                    time.sleep(0.1)
+                self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
             self.updateOpacity(self.settings["opacity"])
             self.lastUpdate = time.monotonic()
 
@@ -253,6 +262,10 @@ class Overlay:
             openvr.shutdown()
             self.system = None
         self.initialized = False
+
+    def reStartOverlay(self):
+        self.shutdownOverlay()
+        self.startOverlay()
 
     @staticmethod
     def checkSteamvrRunning() -> bool:
