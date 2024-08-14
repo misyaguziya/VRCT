@@ -26,26 +26,28 @@ export const PosterShowcaseWorldsContents = () => {
         <div className={styles.container}>
             <div className={styles.poster_showcase_world_container}>
                 {target_poster_showcase_world_images.map((poster, index) => {
-                    let content = (
+                    const class_names = clsx(styles.poster_showcase_world_wrapper, {
+                        [styles.clickable]: (poster.x_post_num !== null)
+                    });
+
+                    const content = (
                         <div className={styles.poster_showcase_world_img} >
                             <img style={ {height: "100%", width: "100%", "objectFit": "contain" }} src={poster.img} />
                         </div>
                     );
                     if (poster.x_post_num !== null) {
-                        content = (
-                            <a href={`https://twitter.com/Shiina_12siy/status/${poster.x_post_num}`} target="_blank" rel="noreferrer" >
+                        return (
+                            <a href={`https://x.com/Shiina_12siy/status/${poster.x_post_num}`} target="_blank" rel="noreferrer"  className={class_names} key={index}>
                                 {content}
                             </a>
                         );
+                    } else {
+                        return (
+                            <div className={class_names} key={index}>
+                                {content}
+                            </div>
+                        );
                     }
-                    const class_names = clsx(styles.poster_showcase_world_wrapper, {
-                        [styles.clickable]: (poster.x_post_num !== null)
-                    });
-                    return (
-                        <div className={class_names} key={index}>
-                            {content}
-                        </div>
-                    );
                 })}
             </div>
             <PosterShowcaseWorldsPagination page_length={chunked_poster_showcase_world_images.length}/>
