@@ -11,6 +11,8 @@ const poster_showcase_worlds_settings = [
     { image_file_name: "uj_club", x_post_num: "1780791654196388201" },
     { image_file_name: "sushi_stand_guruguru", x_post_num: "1788523302404952218" },
     { image_file_name: "sushi_guru_annex", x_post_num: null },
+    { image_file_name: "una_yosh", x_post_num: "1820329216598311065" },
+    { image_file_name: "cam", x_post_num: null },
 
     // poposuke_sig
     { image_file_name: "usanezumi_shrine2", x_post_num: "1781224020383506649" },
@@ -19,10 +21,11 @@ const poster_showcase_worlds_settings = [
     { image_file_name: "kuroinu_work_room", x_post_num: "1779750007564112146" },
 
     // いちや_ICHIYA
+    { image_file_name: "ehon_no_heikousekai", x_post_num: null },
     { image_file_name: "ehon_no_heikousekai_jimusho", x_post_num: "1780792306976850285" },
     { image_file_name: "ikoiba", x_post_num: "1782723006923780580" },
     { image_file_name: "kimodameshi", x_post_num: "1781224391692714133" },
-    { image_file_name: "parallel_collar", x_post_num: null },
+    { image_file_name: "parallel_collar", x_post_num: "1820693442105934068" },
 
     // HayaTikaze
     { image_file_name: "study_japanese_world_japanichijou", x_post_num: "1781539871829766550" },
@@ -34,7 +37,7 @@ const poster_showcase_worlds_settings = [
     { image_file_name: "re_yatuha_room", x_post_num: "1779830390435590196" },
 
     // chakamoto
-    { image_file_name: "chakachaka_multipurpose_room", x_post_num: null },
+    { image_file_name: "chakachaka_multipurpose_room", x_post_num: "1818107831289295065" },
 
     // MloYolM （よるむ）
     { image_file_name: "cafe_cian", x_post_num: "1787802552907739504" },
@@ -43,7 +46,7 @@ const poster_showcase_worlds_settings = [
     { image_file_name: "mamehinata_dogrun", x_post_num: "1782723423179100471" },
 
     // いんく（Eenkoo）
-    { image_file_name: "tyuuniti_kouryuukai", x_post_num: null },
+    { image_file_name: "tyuuniti_kouryuukai", x_post_num: "1818109101731422617" },
 
     // 1ban_meno
     { image_file_name: "bar_asagao", x_post_num: "1788523857642758370" },
@@ -55,9 +58,21 @@ const poster_showcase_worlds_settings = [
     { image_file_name: "stretch_club_starting_from_minus", x_post_num: null },
 
     // MiMi_Sorahana # VRC日韓交流会 (KRJPEX.1355)
-    { image_file_name: "kr_jp_exchange", x_post_num: null },
+    { image_file_name: "kr_jp_exchange", x_post_num: "1820328755950473668" },
 
     // Ein（アイン）
     { image_file_name: "smokerz_guild_v2", x_post_num: null },
+
+    // KokiM1018
+    { image_file_name: "poker_room_elysion", x_post_num: "1818880695344980208" },
+
+    // NEET ENGINEER
+    { image_file_name: "japan_street", x_post_num: "1818881593114861924" },
+
+    // RIKU_VR
+    { image_file_name: "celestial_blooms", x_post_num: "1820694531568001061" },
+
+    // ღKAEDEಇ
+    { image_file_name: "omoshiro_kotoba_asobi_game", x_post_num: null },
 ];
 export default poster_showcase_worlds_settings;
