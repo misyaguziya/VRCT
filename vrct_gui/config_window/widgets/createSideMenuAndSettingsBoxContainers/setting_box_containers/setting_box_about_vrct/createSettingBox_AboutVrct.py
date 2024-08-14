@@ -279,15 +279,15 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
     special_thanks_message = settings.about_vrct.embedImageCTkLabel(special_thanks_contents_wrapper, settings.about_vrct.image_file.SPECIAL_THANKS_MESSAGE)
     special_thanks_message.grid(column=0, row=1, padx=0, pady=(0,about_vrct_uism.SPECIAL_THANKS_MESSAGE_BOTTOM_PADY), sticky="nsew")
 
-    special_thanks_message_and_you = settings.about_vrct.embedImageCTkLabel(special_thanks_contents_wrapper, "special_thanks_message_and_you.png")
-    special_thanks_message_and_you.grid(column=0, row=2, padx=0, pady=(0,about_vrct_uism.SPECIAL_THANKS_MESSAGE_AND_YOU_BOTTOM_PADY), sticky="nsw")
+    # special_thanks_message_and_you = settings.about_vrct.embedImageCTkLabel(special_thanks_contents_wrapper, "special_thanks_message_and_you.png")
+    # special_thanks_message_and_you.grid(column=0, row=2, padx=0, pady=(0,about_vrct_uism.SPECIAL_THANKS_MESSAGE_AND_YOU_BOTTOM_PADY), sticky="nsw")
 
-    special_thanks_tell_us_message = createTellUsButton(
-        parent_frame=special_thanks_contents_wrapper,
-        image_file_name=settings.about_vrct.image_file.SPECIAL_THANKS_TELL_US_MESSAGE,
-        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "SUPPORTER_REGISTRATION"),
-    )
-    special_thanks_tell_us_message.grid(column=0, row=3)
+    # special_thanks_tell_us_message = createTellUsButton(
+    #     parent_frame=special_thanks_contents_wrapper,
+    #     image_file_name=settings.about_vrct.image_file.SPECIAL_THANKS_TELL_US_MESSAGE,
+    #     callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "SUPPORTER_REGISTRATION"),
+    # )
+    # special_thanks_tell_us_message.grid(column=0, row=3)
 
 
 

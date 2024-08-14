@@ -19,6 +19,8 @@ poster_showcase_worlds_settings = [
             { "image_file_name": "uj_club.png", "x_post_num": "1780791654196388201" },
             { "image_file_name": "sushi_stand_guruguru.png", "x_post_num": "1788523302404952218" },
             { "image_file_name": "sushi_guru_annex.png", "x_post_num": None },
+            { "image_file_name": "una_yosh.png", "x_post_num": "1820329216598311065" },
+            { "image_file_name": "cam.png", "x_post_num": None },
         ]
     },
 
@@ -42,10 +44,11 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "ichiya",
         "data": [
+            { "image_file_name": "ehon_no_heikousekai.png", "x_post_num": None },
             { "image_file_name": "ehon_no_heikousekai_jimusho.png", "x_post_num": "1780792306976850285" },
             { "image_file_name": "ikoiba.png", "x_post_num": "1782723006923780580" },
             { "image_file_name": "kimodameshi.png", "x_post_num": "1781224391692714133" },
-            { "image_file_name": "parallel_collar.png", "x_post_num": None },
+            { "image_file_name": "parallel_collar.png", "x_post_num": "1820693442105934068" },
         ]
     },
 
@@ -77,7 +80,7 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "chakamoto",
         "data": [
-            { "image_file_name": "chakachaka_multipurpose_room.png", "x_post_num": None },
+            { "image_file_name": "chakachaka_multipurpose_room.png", "x_post_num": "1818107831289295065" },
         ]
     },
 
@@ -101,7 +104,7 @@ poster_showcase_worlds_settings = [
     {
         "author_name": "eenkoo",
         "data": [
-            { "image_file_name": "tyuuniti_kouryuukai.png", "x_post_num": None },
+            { "image_file_name": "tyuuniti_kouryuukai.png", "x_post_num": "1818109101731422617" },
         ]
     },
 
@@ -132,9 +135,9 @@ poster_showcase_worlds_settings = [
 
     # MiMi_Sorahana # VRC日韓交流会 (KRJPEX.1355)
     {
-        "author_name": "tommie_500",
+        "author_name": "mimi_sorahana",
         "data": [
-            { "image_file_name": "kr_jp_exchange.png", "x_post_num": None },
+            { "image_file_name": "kr_jp_exchange.png", "x_post_num": "1820328755950473668" },
         ]
     },
 
@@ -143,6 +146,38 @@ poster_showcase_worlds_settings = [
         "author_name": "ein",
         "data": [
             { "image_file_name": "smokerz_guild_v2.png", "x_post_num": None },
+        ]
+    },
+
+    # KokiM1018
+    {
+        "author_name": "kokim1018",
+        "data": [
+            { "image_file_name": "poker_room_elysion.png", "x_post_num": "1818880695344980208" },
+        ]
+    },
+
+    # NEET ENGINEER
+    {
+        "author_name": "neet_engineer",
+        "data": [
+            { "image_file_name": "japan_street.png", "x_post_num": "1818881593114861924" },
+        ]
+    },
+
+    # RIKU_VR
+    {
+        "author_name": "riku_vr",
+        "data": [
+            { "image_file_name": "celestial_blooms.png", "x_post_num": "1820694531568001061" },
+        ]
+    },
+
+    # ღKAEDEಇ
+    {
+        "author_name": "kaede",
+        "data": [
+            { "image_file_name": "omoshiro_kotoba_asobi_game.png", "x_post_num": None },
         ]
     },
 ]
