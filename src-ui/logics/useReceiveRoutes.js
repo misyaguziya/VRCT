@@ -13,9 +13,12 @@ export const useReceiveRoutes = () => {
     } = useConfig();
 
     const routes = {
-        "/controller/callback_toggle_translation": updateTranslationStatus,
-        "/controller/callback_toggle_transcription_send": updateTranscriptionSendStatus,
-        "/controller/callback_toggle_transcription_receive": updateTranscriptionReceiveStatus,
+        "/controller/callback_enable_translation": updateTranslationStatus,
+        "/controller/callback_disable_translation": updateTranslationStatus,
+        "/controller/callback_enable_transcription_send": updateTranscriptionSendStatus,
+        "/controller/callback_disable_transcription_send": updateTranscriptionSendStatus,
+        "/controller/callback_enable_transcription_receive": updateTranscriptionReceiveStatus,
+        "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
 
         "/config/version": updateSoftwareVersion,
     };

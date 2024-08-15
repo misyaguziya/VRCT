@@ -35,7 +35,11 @@ export const useMainFunction = () => {
     const asyncPending = () => new Promise(() => {});
     return {
         toggleTranslation: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_translation", data: !currentTranslationStatus.data});
+            if (currentTranslationStatus.data) {
+                asyncStdoutToPython({endpoint: "/controller/callback_disable_translation"});
+            } else {
+                asyncStdoutToPython({endpoint: "/controller/callback_enable_translation"});
+            }
             asyncUpdateTranslationStatus(asyncPending);
         },
         currentTranslationStatus: currentTranslationStatus,
@@ -44,7 +48,11 @@ export const useMainFunction = () => {
         },
 
         toggleTranscriptionSend: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_send", data: !currentTranscriptionSendStatus.data});
+            if (currentTranscriptionSendStatus.data) {
+                asyncStdoutToPython({endpoint: "/controller/callback_disable_transcription_send"});
+            } else {
+                asyncStdoutToPython({endpoint: "/controller/callback_enable_transcription_send"});
+            }
             asyncUpdateTranscriptionSendStatus(asyncPending);
         },
         currentTranscriptionSendStatus: currentTranscriptionSendStatus,
@@ -53,7 +61,11 @@ export const useMainFunction = () => {
         },
 
         toggleTranscriptionReceive: () => {
-            asyncStdoutToPython({id: "/controller/callback_toggle_transcription_receive", data: !currentTranscriptionReceiveStatus.data});
+            if (currentTranscriptionReceiveStatus.data) {
+                asyncStdoutToPython({endpoint: "/controller/callback_disable_transcription_receive"});
+            } else {
+                asyncStdoutToPython({endpoint: "/controller/callback_enable_transcription_receive"});
+            }
             asyncUpdateTranscriptionReceiveStatus(asyncPending);
         },
         currentTranscriptionReceiveStatus: currentTranscriptionReceiveStatus,
