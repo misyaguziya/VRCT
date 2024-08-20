@@ -5,7 +5,7 @@ export const useStartPython = () => {
     const { receiveRoutes } = useReceiveRoutes();
 
     const asyncStartPython = async () => {
-        const command = Command.sidecar("bin/test");
+        const command = Command.sidecar("bin/backend");
         command.on("error", error => console.error(`error: "${error}"`));
         command.stdout.on("data", (line) => {
             let parsed_data = "";

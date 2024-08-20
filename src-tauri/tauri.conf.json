@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "vrct",
+    "productName": "VRCT",
     "version": "0.0.0"
   },
   "tauri": {
@@ -22,7 +22,7 @@
         "sidecar": true,
         "scope": [
             {
-                "name": "bin/test", "sidecar": true,"args": true
+                "name": "bin/backend", "sidecar": true,"args": true
             }
         ]
     }
@@ -51,7 +51,7 @@
         "icons/icon.ico"
       ],
       "externalBin": [
-        "bin/test"
+        "bin/backend"
       ]
     }
   }
