@@ -35,12 +35,12 @@ export const useMainFunction = () => {
     const asyncPending = () => new Promise(() => {});
     return {
         toggleTranslation: () => {
-            if (currentTranslationStatus.data) {
-                asyncStdoutToPython({endpoint: "/controller/callback_disable_translation"});
-            } else {
-                asyncStdoutToPython({endpoint: "/controller/callback_enable_translation"});
-            }
             asyncUpdateTranslationStatus(asyncPending);
+            if (currentTranslationStatus.data) {
+                asyncStdoutToPython("/controller/callback_disable_translation");
+            } else {
+                asyncStdoutToPython("/controller/callback_enable_translation");
+            }
         },
         currentTranslationStatus: currentTranslationStatus,
         updateTranslationStatus: (payload) => {
@@ -48,12 +48,12 @@ export const useMainFunction = () => {
         },
 
         toggleTranscriptionSend: () => {
-            if (currentTranscriptionSendStatus.data) {
-                asyncStdoutToPython({endpoint: "/controller/callback_disable_transcription_send"});
-            } else {
-                asyncStdoutToPython({endpoint: "/controller/callback_enable_transcription_send"});
-            }
             asyncUpdateTranscriptionSendStatus(asyncPending);
+            if (currentTranscriptionSendStatus.data) {
+                asyncStdoutToPython("/controller/callback_disable_transcription_send");
+            } else {
+                asyncStdoutToPython("/controller/callback_enable_transcription_send");
+            }
         },
         currentTranscriptionSendStatus: currentTranscriptionSendStatus,
         updateTranscriptionSendStatus: (payload) => {
@@ -61,12 +61,12 @@ export const useMainFunction = () => {
         },
 
         toggleTranscriptionReceive: () => {
-            if (currentTranscriptionReceiveStatus.data) {
-                asyncStdoutToPython({endpoint: "/controller/callback_disable_transcription_receive"});
-            } else {
-                asyncStdoutToPython({endpoint: "/controller/callback_enable_transcription_receive"});
-            }
             asyncUpdateTranscriptionReceiveStatus(asyncPending);
+            if (currentTranscriptionReceiveStatus.data) {
+                asyncStdoutToPython("/controller/callback_disable_transcription_receive");
+            } else {
+                asyncStdoutToPython("/controller/callback_enable_transcription_receive");
+            }
         },
         currentTranscriptionReceiveStatus: currentTranscriptionReceiveStatus,
         updateTranscriptionReceiveStatus: (payload) => {
