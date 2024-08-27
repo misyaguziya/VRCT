@@ -43,6 +43,24 @@ export const useMessage = () => {
             }, 3000);
         },
         currentMessageLogsStatus: currentMessageLogsStatus,
+
+        addMessageLogsStatus: (payload) => {
+            const data = payload.data;
+            const message_object = {
+                id: crypto.randomUUID(),
+                created_at: new Date().toLocaleTimeString(
+                    "ja-JP",
+                    {hour12: false, hour: "2-digit", minute:"2-digit"},
+                ),
+                category: "sent",
+                status: "ok",
+                messages : {
+                    original: data.message,
+                    translated: [],
+                },
+            };
+            addMessageLogsStatus(message_object);
+        },
     };
 };
 

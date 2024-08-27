@@ -1,5 +1,6 @@
 import { useMainFunction } from "./useMainFunction";
 import { useConfig } from "./useConfig";
+import { useMessage } from "./useMessage";
 
 export const useReceiveRoutes = () => {
     const {
@@ -7,6 +8,8 @@ export const useReceiveRoutes = () => {
         updateTranscriptionSendStatus,
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
+
+    const { addMessageLogsStatus } = useMessage();
 
     const {
         updateSoftwareVersion,
@@ -21,6 +24,8 @@ export const useReceiveRoutes = () => {
         "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
 
         "/config/version": updateSoftwareVersion,
+
+        "/action/transcription_send_mic_message": addMessageLogsStatus
     };
 
     const receiveRoutes = (parsed_data) => {
