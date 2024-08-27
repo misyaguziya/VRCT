@@ -2,15 +2,17 @@ pillow == 10.0.0
 PyAudioWPatch == 0.2.12.6
 python-osc == 1.8.3
 deepl == 1.15.0
-flashtext == 2.7
-pyyaml == 6.0.1
-pyinstaller==6.2.0
-transformers[torch]==4.37.2
+flashtext ==2.7
+pyinstaller==6.10.0
+numpy==1.26.4
+torch==2.2.2
+transformers==4.37.2
 sentencepiece==0.1.99
 ctranslate2==4.1.0
-faster-whisper==1.0.1
+faster-whisper==1.0.3
 openvr==1.26.701
 pydub==0.25.1
+psutil==5.9.8
 translators @ git+https://github.com/misyaguziya/translators@5.9.2
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.2
