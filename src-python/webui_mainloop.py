@@ -330,7 +330,9 @@ if __name__ == "__main__":
     match process:
         case "main":
             try:
+                print(json.dumps({"status":200, "endpoint": "/initialization/start", "result":True}), flush=True)
                 controller.init()
+                print(json.dumps({"status":200, "endpoint": "/initialization/completed", "result":True}), flush=True)
                 print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
                 while True:
                     main()
