@@ -13,7 +13,7 @@ export const useConfig = () => {
 
     return {
         getSoftwareVersion: () => {
-            asyncStdoutToPython({endpoint: "/config/version"});
+            asyncStdoutToPython("/config/version");
         },
         updateSoftwareVersion: (payload) => {
             updateSoftwareVersion(payload.data);
