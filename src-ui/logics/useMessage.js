@@ -12,16 +12,12 @@ export const useMessage = () => {
         sendMessage: (message) => {
             asyncStdoutToPython({id: "send_message", data: message});
             const uuid = crypto.randomUUID();
-            const date = new Date().toLocaleTimeString(
-                "ja-JP",
-                {hour12: false, hour: "2-digit", minute:"2-digit"},
-            );
 
             addMessageLogsStatus({
                 id: uuid,
                 category: "sent",
                 status: "pending",
-                created_at: date,
+                created_at: generateTimeData(),
                 messages: {
                     original: message,
                     translated: [
@@ -44,30 +40,36 @@ export const useMessage = () => {
         },
         currentMessageLogsStatus: currentMessageLogsStatus,
 
-        addMessageLogsStatus: (payload) => {
+        addSentMessageLog: (payload) => {
             const data = payload.data;
-            const message_object = {
-                id: crypto.randomUUID(),
-                created_at: new Date().toLocaleTimeString(
-                    "ja-JP",
-                    {hour12: false, hour: "2-digit", minute:"2-digit"},
-                ),
-                category: "sent",
-                status: "ok",
-                messages : {
-                    original: data.message,
-                    translated: [],
-                },
-            };
+            const message_object = generateMessageObject(data, "sent");
+            addMessageLogsStatus(message_object);
+        },
+        addReceivedMessageLog: (payload) => {
+            const data = payload.data;
+            const message_object = generateMessageObject(data, "received");
             addMessageLogsStatus(message_object);
         },
     };
 };
 
-// const asyncTestFunction = (...args) => {
-//     return new Promise((resolve) => {
-//         setTimeout(() => {
-//             resolve(...args);
-//         }, 3000);
-//     });
-// };
+const generateTimeData = () => {
+    const data = new Date().toLocaleTimeString(
+        "ja-JP",
+        {hour12: false, hour: "2-digit", minute: "2-digit"},
+    );
+    return data;
+};
+
+const generateMessageObject = (data, category) => {
+    return {
+        id: crypto.randomUUID(),
+        created_at: generateTimeData(),
+        category: category,
+        status: "ok",
+        messages: {
+            original: data.message,
+            translated: [],
+        },
+    };
+};
