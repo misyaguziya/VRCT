@@ -326,14 +326,18 @@ def main():
         print(response, flush=True)
 
 if __name__ == "__main__":
+    print(json.dumps({"status":200, "endpoint": "/initialization/start", "result":True}), flush=True)
+    controller.init({
+        "ctranslate2": action_mapping["/controller/callback_download_ctranslate2_weight"]["download"],
+        "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
+    })
+    print(json.dumps({"status":200, "endpoint": "/initialization/completed", "result":True}), flush=True)
+    print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
+
     process = "main"
     match process:
         case "main":
             try:
-                print(json.dumps({"status":200, "endpoint": "/initialization/start", "result":True}), flush=True)
-                controller.init()
-                print(json.dumps({"status":200, "endpoint": "/initialization/completed", "result":True}), flush=True)
-                print(json.dumps({"status":348, "log": "Initialization from Python."}), flush=True)
                 while True:
                     main()
             except Exception:
@@ -342,7 +346,6 @@ if __name__ == "__main__":
                     traceback.print_exc(file=f)
 
         case "test":
-            controller.init()
             response_data, status = handleControllerRequest("/controller/callback_download_ctranslate2_weight")
             response = {
                 "status": status,
@@ -360,7 +363,6 @@ if __name__ == "__main__":
 
         case "test_all":
             import time
-            controller.init()
             for endpoint, value in config_mapping.items():
                 response_data, status = handleConfigRequest(endpoint)
                 response = {
