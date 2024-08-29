@@ -10,8 +10,12 @@ export const useMessage = () => {
 
     return {
         sendMessage: (message) => {
-            asyncStdoutToPython({id: "send_message", data: message});
             const uuid = crypto.randomUUID();
+            const send_message_object = {
+                id: uuid,
+                message: message,
+            };
+            asyncStdoutToPython("/controller/callback_messagebox_press_key_enter", send_message_object);
 
             addMessageLogsStatus({
                 id: uuid,
@@ -20,26 +24,16 @@ export const useMessage = () => {
                 created_at: generateTimeData(),
                 messages: {
                     original: message,
-                    translated: [
-                        message,
-                    ],
+                    translated: [],
                 },
             });
-
-            setTimeout(() => {
-                const updateItemById = (id) => (prevItems) => {
-                    return prevItems.map(item => {
-                        if (item.id === id) {
-                            item.status = "ok";
-                        }
-                        return item;
-                    });
-                };
-                updateMessageLogsStatus(updateItemById(uuid));
-            }, 3000);
         },
         currentMessageLogsStatus: currentMessageLogsStatus,
 
+        updateSentMessageLog: (payload) => {
+            const data = payload.data;
+            updateMessageLogsStatus(updateItemById(data.id));
+        },
         addSentMessageLog: (payload) => {
             const data = payload.data;
             const message_object = generateMessageObject(data, "sent");
@@ -72,4 +66,14 @@ const generateMessageObject = (data, category) => {
             translated: [],
         },
     };
+};
+
+
+const updateItemById = (id) => (prev_items) => {
+    return prev_items.map(item => {
+        if (item.id === id) {
+            item.status = "ok";
+        }
+        return item;
+    });
 };
