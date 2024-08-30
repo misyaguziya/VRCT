@@ -303,7 +303,9 @@ class ChatMessage:
     def __init__(self, action:Callable[[dict], None]) -> None:
         self.action = action
 
-    def send(self, message):
+    def send(self, data):
+        id = data["id"]
+        message = data["message"]
         if len(message) > 0:
             addSentMessageLog(message)
             translation = ""
@@ -345,9 +347,9 @@ class ChatMessage:
 
         return {"status":200,
                 "result":{
+                    "id":id,
                     "message":message,
                     "translation":translation,
-                    "clear":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX
                     },
                 }
 
