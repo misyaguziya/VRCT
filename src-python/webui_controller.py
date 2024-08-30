@@ -1294,7 +1294,7 @@ def getListInputDevice(*args, **kwargs) -> dict:
 def getListOutputDevice(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListOutputDevice()}
 
-def init():
+def init(endpoints:dict, *args, **kwargs) -> None:
     print(json.dumps({"status":348, "log": "Start Initialization"}), flush=True)
     print(json.dumps({"status":348, "log": "Start InitSetTranslateEngine"}), flush=True)
     initSetTranslateEngine()
@@ -1313,12 +1313,38 @@ def init():
     print(json.dumps({"status":348, "log": "Set Translation Engine"}), flush=True)
     updateTranslationEngineAndEngineList()
 
+    # check Downloaded CTranslate2 Model Weight
+    print(json.dumps({"status":348, "log": "Check Downloaded CTranslate2 Model Weight"}), flush=True)
+    if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
+        def callback(progress):
+            print(json.dumps({
+                "endpoint":endpoints["ctranslate2"],
+                "status":200,
+                "result":{
+                    "progress":progress
+                    }
+            }), flush=True)
+        model.downloadCTranslate2ModelWeight(callback)
+
     # set Transcription Engine
     print(json.dumps({"status":348, "log": "Set Transcription Engine"}), flush=True)
     if config.USE_WHISPER_FEATURE is True:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
     else:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+
+    # check Downloaded Whisper Model Weight
+    print(json.dumps({"status":348, "log": "Check Downloaded Whisper Model Weight"}), flush=True)
+    if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
+        def callback(progress):
+            print(json.dumps({
+                "endpoint":endpoints["whisper"],
+                "status":200,
+                "result":{
+                    "progress":progress
+                    }
+            }), flush=True)
+        model.downloadWhisperModelWeight(callback)
 
     # set word filter
     print(json.dumps({"status":348, "log": "Set Word Filter"}), flush=True)
