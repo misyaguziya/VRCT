@@ -9,7 +9,11 @@ export const useReceiveRoutes = () => {
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
 
-    const { addSentMessageLog, addReceivedMessageLog } = useMessage();
+    const {
+        updateSentMessageLog,
+        addSentMessageLog,
+        addReceivedMessageLog,
+    } = useMessage();
 
     const {
         updateSoftwareVersion,
@@ -25,6 +29,7 @@ export const useReceiveRoutes = () => {
 
         "/config/version": updateSoftwareVersion,
 
+        "/controller/callback_messagebox_press_key_enter": updateSentMessageLog,
         "/action/transcription_send_mic_message": addSentMessageLog,
         "/action/transcription_receive_speaker_message": addReceivedMessageLog
     };

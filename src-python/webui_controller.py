@@ -5,11 +5,17 @@ from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
-# from view import view
-from utils import getKeyByValue, isUniqueStrings, strPctToInt
-import argparse
+from utils import getKeyByValue, isUniqueStrings
 
 # Common
+def encodeUtf8(data:str) -> dict:
+    data = {i: byte for i, byte in enumerate(data.encode('UTF-8'))}
+    return data
+
+def decodeUtf8(data:dict) -> str:
+    data = bytes(data.values()).decode("UTF-8")
+    return data
+
 class DownloadSoftwareProgressBar:
     def __init__(self, action):
         self.action = action
@@ -303,7 +309,9 @@ class ChatMessage:
     def __init__(self, action:Callable[[dict], None]) -> None:
         self.action = action
 
-    def send(self, message):
+    def send(self, data):
+        id = data["id"]
+        message = decodeUtf8(data["message"])
         if len(message) > 0:
             addSentMessageLog(message)
             translation = ""
@@ -343,11 +351,13 @@ class ChatMessage:
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
+        message = encodeUtf8(message)
+        translation = encodeUtf8(translation)
         return {"status":200,
                 "result":{
+                    "id":id,
                     "message":message,
                     "translation":translation,
-                    "clear":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX
                     },
                 }
 
@@ -1292,7 +1302,7 @@ def getListInputDevice(*args, **kwargs) -> dict:
 def getListOutputDevice(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListOutputDevice()}
 
-def init():
+def init(endpoints:dict, *args, **kwargs) -> None:
     print(json.dumps({"status":348, "log": "Start Initialization"}), flush=True)
     print(json.dumps({"status":348, "log": "Start InitSetTranslateEngine"}), flush=True)
     initSetTranslateEngine()
@@ -1311,12 +1321,38 @@ def init():
     print(json.dumps({"status":348, "log": "Set Translation Engine"}), flush=True)
     updateTranslationEngineAndEngineList()
 
+    # check Downloaded CTranslate2 Model Weight
+    print(json.dumps({"status":348, "log": "Check Downloaded CTranslate2 Model Weight"}), flush=True)
+    if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
+        def callback(progress):
+            print(json.dumps({
+                "endpoint":endpoints["ctranslate2"],
+                "status":200,
+                "result":{
+                    "progress":progress
+                    }
+            }), flush=True)
+        model.downloadCTranslate2ModelWeight(callback)
+
     # set Transcription Engine
     print(json.dumps({"status":348, "log": "Set Transcription Engine"}), flush=True)
     if config.USE_WHISPER_FEATURE is True:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
     else:
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+
+    # check Downloaded Whisper Model Weight
+    print(json.dumps({"status":348, "log": "Check Downloaded Whisper Model Weight"}), flush=True)
+    if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
+        def callback(progress):
+            print(json.dumps({
+                "endpoint":endpoints["whisper"],
+                "status":200,
+                "result":{
+                    "progress":progress
+                    }
+            }), flush=True)
+        model.downloadWhisperModelWeight(callback)
 
     # set word filter
     print(json.dumps({"status":348, "log": "Set Word Filter"}), flush=True)
@@ -1337,3 +1373,4 @@ def init():
     model.startReceiveOSC()
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
+    print(json.dumps({"status":348, "log": "End Initialization"}), flush=True)

@@ -83,11 +83,3 @@ export const useMainFunction = () => {
         currentForegroundStatus: currentForegroundStatus,
     };
 };
-
-const asyncTestFunction = (...args) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve(...args);
-        }, 3000);
-    });
-};
