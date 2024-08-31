@@ -5,11 +5,17 @@ from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
-# from view import view
-from utils import getKeyByValue, isUniqueStrings, strPctToInt
-import argparse
+from utils import getKeyByValue, isUniqueStrings
 
 # Common
+def encodeUtf8(data:str) -> dict:
+    data = {i: byte for i, byte in enumerate(data.encode('UTF-8'))}
+    return data
+
+def decodeUtf8(data:dict) -> str:
+    data = bytes(data.values()).decode("UTF-8")
+    return data
+
 class DownloadSoftwareProgressBar:
     def __init__(self, action):
         self.action = action
@@ -305,7 +311,7 @@ class ChatMessage:
 
     def send(self, data):
         id = data["id"]
-        message = data["message"]
+        message = decodeUtf8(data["message"])
         if len(message) > 0:
             addSentMessageLog(message)
             translation = ""
@@ -345,6 +351,8 @@ class ChatMessage:
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
+        message = encodeUtf8(message)
+        translation = encodeUtf8(translation)
         return {"status":200,
                 "result":{
                     "id":id,
@@ -1365,3 +1373,4 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     model.startReceiveOSC()
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
+    print(json.dumps({"status":348, "log": "End Initialization"}), flush=True)
