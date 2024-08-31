@@ -7,6 +7,9 @@ from .translation_utils import ctranslate2_weights
 import ctranslate2
 import transformers
 
+import warnings
+warnings.filterwarnings("ignore")
+
 # Translator
 class Translator():
     def __init__(self):
