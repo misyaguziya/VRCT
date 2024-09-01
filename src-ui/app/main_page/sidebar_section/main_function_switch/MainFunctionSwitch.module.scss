@@ -9,7 +9,7 @@
 .switch_container {
     position: relative;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
     padding: 1.6rem 1.4rem;
     background-color: var(--dark_825_color);
@@ -29,7 +29,6 @@
 }
 
 .label_wrapper {
-    width: 100%;
     display: flex;
     justify-content: left;
     align-items: center;
@@ -85,7 +84,6 @@ $loading_label_color: var(--dark_500_color);
     display: flex;
     justify-content: end;
     align-items: center;
-    width: 100%;
     &.is_compact_mode {
         display: none;
     }
