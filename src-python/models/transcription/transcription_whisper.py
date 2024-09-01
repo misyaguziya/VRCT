@@ -4,6 +4,8 @@ from typing import Callable
 import huggingface_hub
 from faster_whisper import WhisperModel
 import logging
+from utils import printLog
+
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
 
@@ -33,15 +35,14 @@ def downloadFile(url, path, func=None):
         file_size = int(res.headers.get('content-length', 0))
         total_chunk = 0
         with open(os_path.join(path), 'wb') as file:
-            for chunk in res.iter_content(chunk_size=1024*5):
+            for chunk in res.iter_content(chunk_size=1024*2000):
                 file.write(chunk)
                 if isinstance(func, Callable):
                     total_chunk += len(chunk)
                     func(total_chunk/file_size)
 
     except Exception as e:
-        import json
-        print(json.dumps({"status":348, "log": f"error:downloadFile() {e}"}), flush=True)
+        printLog("warning:downloadFile()", e)
 
 def checkWhisperWeight(root, weight_type):
     path = os_path.join(root, "weights", "whisper", weight_type)
