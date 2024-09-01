@@ -73,7 +73,6 @@ config_mapping = {
     "/config/enable_auto_clear_message_box": "ENABLE_AUTO_CLEAR_MESSAGE_BOX",
     "/config/enable_send_only_translated_messages": "ENABLE_SEND_ONLY_TRANSLATED_MESSAGES",
     "/config/send_message_button_type": "SEND_MESSAGE_BUTTON_TYPE",
-    "/config/enable_notice_xsoverlay": "ENABLE_NOTICE_XSOVERLAY",
     "/config/overlay_settings": "OVERLAY_SETTINGS",
     "/config/enable_overlay_small_log": "ENABLE_OVERLAY_SMALL_LOG",
     "/config/overlay_small_log_settings": "OVERLAY_SMALL_LOG_SETTINGS",

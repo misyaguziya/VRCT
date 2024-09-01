@@ -224,10 +224,6 @@ class SpeakerMessage:
                         })
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.ENABLE_NOTICE_XSOVERLAY is True:
-                    xsoverlay_message = messageFormatter("RECEIVED", translation, message)
-                    model.notificationXSOverlay(xsoverlay_message)
-
                 if config.ENABLE_OVERLAY_SMALL_LOG is True:
                     if model.overlay.initialized is True:
                         overlay_image = model.createOverlayImageShort(message, translation)
@@ -1172,16 +1168,6 @@ def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
     printLog("Set Send Message Button Type", data)
     config.SEND_MESSAGE_BUTTON_TYPE = data
     return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
-
-def callbackEnableNoticeXsoverlay(*args, **kwargs) -> dict:
-    printLog("Enable Notice Xsoverlay")
-    config.ENABLE_NOTICE_XSOVERLAY = True
-    return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
-
-def callbackDisableNoticeXsoverlay(*args, **kwargs) -> dict:
-    printLog("Disable Notice Xsoverlay")
-    config.ENABLE_NOTICE_XSOVERLAY = False
-    return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
     printLog("Enable Auto Export Message Logs")
