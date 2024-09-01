@@ -174,8 +174,6 @@ controller_mapping = {
     "/controller/callback_enable_send_only_translated_messages": controller.callbackEnableSendOnlyTranslatedMessages,
     "/controller/callback_disable_send_only_translated_messages": controller.callbackDisableSendOnlyTranslatedMessages,
     "/controller/callback_set_send_message_button_type": controller.callbackSetSendMessageButtonType,
-    "/controller/callback_enable_notice_xsoverlay": controller.callbackEnableNoticeXsoverlay,
-    "/controller/callback_disable_notice_xsoverlay": controller.callbackDisableNoticeXsoverlay,
     "/controller/callback_enable_auto_export_message_logs": controller.callbackEnableAutoExportMessageLogs,
     "/controller/callback_disable_auto_export_message_logs": controller.callbackDisableAutoExportMessageLogs,
     "/controller/callback_enable_vrc_mic_mute_sync": controller.callbackEnableVrcMicMuteSync,
