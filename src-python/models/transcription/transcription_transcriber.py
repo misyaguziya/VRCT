@@ -11,6 +11,8 @@ from .transcription_whisper import getWhisperModel, checkWhisperWeight
 import torch
 import numpy as np
 from pydub import AudioSegment
+import warnings
+warnings.simplefilter('ignore', RuntimeWarning)
 
 PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10

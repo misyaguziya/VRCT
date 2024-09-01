@@ -1,6 +1,3 @@
-import warnings
-warnings.simplefilter('ignore', RuntimeWarning)
-
 import sys
 import json
 import time
