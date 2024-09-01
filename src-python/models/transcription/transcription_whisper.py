@@ -1,12 +1,10 @@
 from os import path as os_path, makedirs as os_makedirs
-import sys
-sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
-from utils import printLog
 from requests import get as requests_get
 from typing import Callable
 import huggingface_hub
 from faster_whisper import WhisperModel
 import logging
+from utils import printLog
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
