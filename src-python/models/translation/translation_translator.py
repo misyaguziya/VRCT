@@ -1,4 +1,7 @@
-import os
+from os import path as os_path
+import sys
+sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
+from utils import printLog
 from deepl import Translator as deepl_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translation_lang
@@ -32,8 +35,8 @@ class Translator():
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
-        weight_path = os.path.join(path, "weights", "ctranslate2", directory_name)
-        tokenizer_path = os.path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
+        weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
+        tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
             device="cpu",
@@ -45,9 +48,8 @@ class Translator():
         try:
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         except Exception as e:
-            import json
-            print(json.dumps({"status":348, "log": f"error:changeCTranslate2Model() {e}"}), flush=True)
-            tokenizer_path = os.path.join("./weights", "ctranslate2", directory_name, "tokenizer")
+            printLog("error:changeCTranslate2Model()", e)
+            tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         self.is_loaded_ctranslate2_model = True
 

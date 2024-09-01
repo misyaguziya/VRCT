@@ -1,4 +1,7 @@
-import os
+from os import path as os_path
+import sys
+sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
+from utils import printLog
 import ctypes
 import time
 from psutil import process_iter
@@ -109,8 +112,7 @@ class Overlay:
             )
 
         except Exception as e:
-            import json
-            print(json.dumps({"status":348, "log": f"error:Could not initialise OpenVR {e}"}), flush=True)
+            printLog("error:Could not initialise OpenVR", e)
 
     def updateImage(self, img):
         if self.initialized is True:
@@ -204,8 +206,7 @@ class Overlay:
                         return False
             return True
         except Exception as e:
-            import json
-            print(json.dumps({"status":348, "log": f"error:Could not check SteamVR running {e}"}), flush=True)
+            printLog("error:Could not check SteamVR running", e)
             return False
 
     def evaluateOpacityFade(self, lastUpdate, currentTime):

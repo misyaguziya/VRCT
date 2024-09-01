@@ -2,6 +2,9 @@ import tempfile
 from zipfile import ZipFile
 from os import path as os_path
 from os import makedirs as os_makedirs
+import sys
+sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
+from utils import printLog
 from requests import get as requests_get
 from typing import Callable
 import hashlib
@@ -75,14 +78,14 @@ def downloadCTranslate2Weight(root, weight_type="Small", callbackFunc=None):
             file_size = int(res.headers.get('content-length', 0))
             total_chunk = 0
             with open(os_path.join(tmp_path, filename), 'wb') as file:
-                for chunk in res.iter_content(chunk_size=1024*5):
+                for chunk in res.iter_content(chunk_size=1024*2000):
                     file.write(chunk)
                     if isinstance(callbackFunc, Callable):
                         total_chunk += len(chunk)
                         callbackFunc(total_chunk/file_size)
+                    printLog(f"Downloading {filename}: {total_chunk/file_size:.0%}")
 
             with ZipFile(os_path.join(tmp_path, filename)) as zf:
                 zf.extractall(path)
     except Exception as e:
-        import json
-        print(json.dumps({"status":348, "log": f"error:downloadCTranslate2Weight() {e}"}), flush=True)
+        printLog("error:downloadCTranslate2Weight()", e)
