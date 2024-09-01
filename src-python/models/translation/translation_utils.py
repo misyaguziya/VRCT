@@ -2,12 +2,10 @@ import tempfile
 from zipfile import ZipFile
 from os import path as os_path
 from os import makedirs as os_makedirs
-import sys
-sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
-from utils import printLog
 from requests import get as requests_get
 from typing import Callable
 import hashlib
+from utils import printLog
 
 ctranslate2_weights = {
     "Small": { # M2M-100 418M-parameter model

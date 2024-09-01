@@ -1,7 +1,3 @@
-from os import path as os_path
-import sys
-sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
-from utils import printLog
 import ctypes
 import time
 from psutil import process_iter
@@ -13,6 +9,7 @@ try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
+from utils import printLog
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()

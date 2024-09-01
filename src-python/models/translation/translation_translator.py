@@ -1,7 +1,4 @@
 from os import path as os_path
-import sys
-sys.path.append(os_path.join(os_path.dirname(__file__), "..", ".."))
-from utils import printLog
 from deepl import Translator as deepl_Translator
 from translators import translate_text as other_web_Translator
 from .translation_languages import translation_lang
@@ -9,6 +6,7 @@ from .translation_utils import ctranslate2_weights
 
 import ctranslate2
 import transformers
+from utils import printLog
 
 import warnings
 warnings.filterwarnings("ignore")
