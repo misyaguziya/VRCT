@@ -1,18 +1,23 @@
 .container {
     width: 100%;
     height: 0%;
-    // position: sticky;
+    transition: transform 0.5s ease;
 }
 
+.show_config.container {
+    transform: translateY(0vh);
+}
+
+.show_main.container {
+    transform: translateY(100vh);
+}
+
+
 .wrapper {
-    // height: var(--config_page_topbar_height);
     background-color: var(--dark_850_color);
     cursor: pointer;
     height: 1rem;
     width: 100%;
-    // display: flex;
-    // justify-content: space-between;
-    // flex-shrink: 0;
     position: relative;
     transition: all 0.3s ease;
 

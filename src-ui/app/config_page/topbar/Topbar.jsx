@@ -1,3 +1,5 @@
+import clsx from "clsx";
+
 import styles from "./Topbar.module.scss";
 import { useIsOpenedConfigPage } from "@store";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
@@ -7,7 +9,7 @@ import { SectionTitleBox } from "./section_title_box/SectionTitleBox";
 import { CompactSwitchBox } from "./compact_switch_box/CompactSwitchBox";
 
 export const Topbar = () => {
-    const { updateIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { currentIsOpenedConfigPage, updateIsOpenedConfigPage } = useIsOpenedConfigPage();
     const closeConfigPage = () => {
         console.log("close");
         updateIsOpenedConfigPage(false);
@@ -15,7 +17,10 @@ export const Topbar = () => {
     };
 
     return (
-        <div className={styles.container}>
+        <div className={clsx(styles.container, {
+            [styles.show_config]: currentIsOpenedConfigPage,
+            [styles.show_main]: !currentIsOpenedConfigPage
+        })}>
             <div className={styles.wrapper} onClick={() => closeConfigPage()}>
                 <div className={styles.go_back_button}>
                     <ArrowLeftSvg className={styles.arrow_left_svg} />
