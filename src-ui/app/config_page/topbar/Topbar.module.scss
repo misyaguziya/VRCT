@@ -1,12 +1,66 @@
 .container {
     width: 100%;
     height: 0%;
+    // position: sticky;
 }
 
 .wrapper {
-    height: var(--config_page_topbar_height);
+    // height: var(--config_page_topbar_height);
     background-color: var(--dark_850_color);
-    display: flex;
-    justify-content: space-between;
-    flex-shrink: 0;
+    cursor: pointer;
+    height: 1rem;
+    width: 100%;
+    // display: flex;
+    // justify-content: space-between;
+    // flex-shrink: 0;
+    position: relative;
+    transition: all 0.3s ease;
+
+    &:hover {
+        height: 2rem;
+    }
+
+    &:hover .go_back_button {
+        top: -11rem;
+        transform: rotate(35deg);
+    }
+    &:hover .arrow_left_svg {
+        color: var(--dark_400_color);
+    }
+    &:hover .go_back_text {
+        color: var(--dark_400_color);
+        transform: rotate(-20deg);
+    }
+
+}
+
+.go_back_button {
+    height: 16rem;
+    width: 16rem;
+    border-radius: 1.2rem;
+    background-color: var(--dark_850_color);
+    position: absolute;
+    top: -12rem;
+    right: 10rem;
+    transform: rotate(30deg);
+    transition: all 0.3s ease;
+}
+
+.arrow_left_svg {
+    height: 3.2rem;
+    position: absolute;
+    right: 1rem;
+    bottom: 0.4rem;
+    color: var(--dark_600_color);
+    transform: rotate(-100deg);
+}
+
+.go_back_text {
+    color: var(--dark_650_color);
+    font-size: 1.6rem;
+    position: absolute;
+    bottom: 4.6rem;
+    right: -7rem;
+    transform: rotate(-30deg);
+    transition: all 0.3s ease;
 }
