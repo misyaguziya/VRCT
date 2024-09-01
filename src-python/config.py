@@ -770,17 +770,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_NOTICE_XSOVERLAY')
-    def ENABLE_NOTICE_XSOVERLAY(self):
-        return self._ENABLE_NOTICE_XSOVERLAY
-
-    @ENABLE_NOTICE_XSOVERLAY.setter
-    def ENABLE_NOTICE_XSOVERLAY(self, value):
-        if isinstance(value, bool):
-            self._ENABLE_NOTICE_XSOVERLAY = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('OVERLAY_SETTINGS')
     def OVERLAY_SETTINGS(self):
         return self._OVERLAY_SETTINGS
@@ -1116,7 +1105,6 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
-        self._ENABLE_NOTICE_XSOVERLAY = False
         self._OVERLAY_SETTINGS = {
             "opacity": 1.0,
             "ui_scaling": 1.0,
