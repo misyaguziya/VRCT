@@ -1,4 +1,3 @@
-import os
 import ctypes
 import time
 from psutil import process_iter
@@ -10,6 +9,7 @@ try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
+from utils import printLog
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
@@ -109,8 +109,7 @@ class Overlay:
             )
 
         except Exception as e:
-            import json
-            print(json.dumps({"status":348, "log": f"error:Could not initialise OpenVR {e}"}), flush=True)
+            printLog("error:Could not initialise OpenVR", e)
 
     def updateImage(self, img):
         if self.initialized is True:
@@ -204,8 +203,7 @@ class Overlay:
                         return False
             return True
         except Exception as e:
-            import json
-            print(json.dumps({"status":348, "log": f"error:Could not check SteamVR running {e}"}), flush=True)
+            printLog("error:Could not check SteamVR running", e)
             return False
 
     def evaluateOpacityFade(self, lastUpdate, currentTime):

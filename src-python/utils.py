@@ -1,3 +1,5 @@
+from typing import Any
+import json
 import random
 from typing import Union
 from os import path as os_path, rename as os_rename
@@ -70,3 +72,14 @@ def splitList(lst:list, split_count:int, to_shuffle:bool=False):
         sub_list = lst[i:i+split_count]
         split_lists.append(sub_list)
     return split_lists
+
+def encodeUtf8(data:str) -> dict:
+    data = {i: byte for i, byte in enumerate(data.encode('UTF-8'))}
+    return data
+
+def decodeUtf8(data:dict) -> str:
+    data = bytes(data.values()).decode("UTF-8")
+    return data
+
+def printLog(log:str, data:Any=None) -> None:
+    print(json.dumps({"status":348, "log":log, "data":str(data)}), flush=True)
