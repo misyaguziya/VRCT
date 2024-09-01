@@ -23,18 +23,19 @@
 
     &:hover {
         height: 2rem;
-    }
-
-    &:hover .go_back_button {
-        top: -11rem;
-        transform: rotate(35deg);
-    }
-    &:hover .arrow_left_svg {
-        color: var(--dark_400_color);
-    }
-    &:hover .go_back_text {
-        color: var(--dark_400_color);
-        transform: rotate(-20deg);
+        .go_back_button {
+            top: -12rem;
+            transform: rotate(35deg);
+        }
+        .arrow_left_svg {
+            color: var(--dark_400_color);
+        }
+        .go_back_text {
+            color: var(--dark_400_color);
+        }
+        .go_back_text_wrapper {
+            padding-top: 8.2rem;
+        }
     }
 
 }
@@ -45,14 +46,14 @@
     border-radius: 1.2rem;
     background-color: var(--dark_850_color);
     position: absolute;
-    top: -12rem;
+    top: -13.2rem;
     right: 10rem;
     transform: rotate(30deg);
     transition: all 0.3s ease;
 }
 
 .arrow_left_svg {
-    height: 3.2rem;
+    height: 2.8rem;
     position: absolute;
     right: 1rem;
     bottom: 0.4rem;
@@ -60,12 +61,19 @@
     transform: rotate(-100deg);
 }
 
+.go_back_text_wrapper {
+    position: absolute;
+    top: -4.6rem;
+    right: 0rem;
+    padding-top: 7.2rem;
+    padding-bottom: 1rem;
+    width: 15.2rem;
+    transition: all 0.3s ease;
+}
+
 .go_back_text {
     color: var(--dark_650_color);
     font-size: 1.6rem;
-    position: absolute;
-    bottom: 4.6rem;
-    right: -7rem;
-    transform: rotate(-30deg);
+    padding-left: 4rem;
     transition: all 0.3s ease;
 }

@@ -11,7 +11,6 @@ import { CompactSwitchBox } from "./compact_switch_box/CompactSwitchBox";
 export const Topbar = () => {
     const { currentIsOpenedConfigPage, updateIsOpenedConfigPage } = useIsOpenedConfigPage();
     const closeConfigPage = () => {
-        console.log("close");
         updateIsOpenedConfigPage(false);
 
     };
@@ -24,6 +23,8 @@ export const Topbar = () => {
             <div className={styles.wrapper} onClick={() => closeConfigPage()}>
                 <div className={styles.go_back_button}>
                     <ArrowLeftSvg className={styles.arrow_left_svg} />
+                </div>
+                <div className={styles.go_back_text_wrapper}>
                     <p className={styles.go_back_text}>Go Back</p>
                 </div>
 
