@@ -4,7 +4,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 5.8rem 0rem 5.8rem 2.8rem;
+    padding: 0rem 0rem 5.8rem 1.6rem;
     max-height: 60rem;
 }
 
@@ -23,7 +23,7 @@
     justify-content: left;
     align-items: center;
     color: var(--dark_basic_text_color);
-    padding: 0.8rem 0 0.8rem 1.8rem;
+    padding: 0.8rem 0 0.8rem 1.2rem;
     cursor: pointer;
     &:hover {
         background-color: var(--dark_800_color);
@@ -55,7 +55,7 @@
 }
 
 .tab_text {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
 }
 
 .separated_tabs_wrapper {
