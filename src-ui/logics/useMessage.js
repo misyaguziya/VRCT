@@ -16,7 +16,7 @@ export const useMessage = () => {
                 id: uuid,
                 message: encoder.encode(message),
             };
-            asyncStdoutToPython("/controller/callback_messagebox_press_key_enter", send_message_object);
+            asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
 
             addMessageLogsStatus({
                 id: uuid,
