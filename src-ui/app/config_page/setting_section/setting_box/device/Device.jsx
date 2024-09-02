@@ -9,6 +9,8 @@ import {
     useMicDeviceList,
 } from "@store";
 
+import { useConfig } from "@logics/useConfig";
+
 export const Device = () => {
     const { t } = useTranslation();
     const {
@@ -17,20 +19,25 @@ export const Device = () => {
     } = useSettingBox();
 
 
-    const { currentMicHostList, updateMicHostList } = useMicHostList();
-    const { currentSelectedMicHost, updateSelectedMicHost } = useSelectedMicHost();
+    const { currentMicHostList } = useMicHostList();
+    const { currentSelectedMicHost } = useSelectedMicHost();
 
     const { currentMicDeviceList } = useMicDeviceList();
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useSelectedMicDevice();
+    const { currentSelectedMicDevice } = useSelectedMicDevice();
+
+    const {
+        setSelectedMicHost,
+        setSelectedMicDevice,
+    } = useConfig();
 
     const selectFunction = (selected_data) => {
         switch (selected_data.dropdown_id) {
             case "mic_host":
-
+                setSelectedMicHost(selected_data.selected_id);
                 break;
 
             case "mic_device":
-
+                setSelectedMicDevice(selected_data.selected_id);
                 break;
 
             default:

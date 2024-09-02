@@ -32,6 +32,9 @@ export const useConfig = () => {
         updateSelectedMicHost: (payload) => {
             updateSelectedMicHost(payload.data);
         },
+        setSelectedMicHost: (selected_mic_host) => {
+            asyncStdoutToPython("/controller/callback_set_mic_host", selected_mic_host);
+        },
 
         getMicDeviceList: () => asyncStdoutToPython("/controller/list_mic_device"),
         updateMicDeviceList: (payload) => {
@@ -40,6 +43,14 @@ export const useConfig = () => {
         getSelectedMicDevice: () => asyncStdoutToPython("/config/choice_mic_device"),
         updateSelectedMicDevice: (payload) => {
             updateSelectedMicDevice(payload.data);
+        },
+        setSelectedMicDevice: (selected_mic_device) => {
+            asyncStdoutToPython("/controller/callback_set_mic_device", selected_mic_device);
+        },
+
+        updateMicHostAndDevice: (payload) => {
+            updateSelectedMicHost(payload.data.host);
+            updateSelectedMicDevice(payload.data.device);
         },
 
 
