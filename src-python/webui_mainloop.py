@@ -3,7 +3,7 @@ import json
 import time
 from config import config
 import webui_controller as controller
-from utils import printLog
+from utils import printLog, encodeUtf8
 
 config_mapping = {
     "/config/version": "VERSION",
@@ -371,7 +371,7 @@ if __name__ == "__main__":
 
                 match endpoint:
                     case  "/controller/callback_messagebox_press_key_enter":
-                        data = "テスト"
+                        data = {"id":"123456", "message":encodeUtf8("テスト")}
                     case "/controller/set_your_language_and_country":
                         data = {"language": "English", "country": "Hong Kong"}
                     case "/controller/set_target_language_and_country":
