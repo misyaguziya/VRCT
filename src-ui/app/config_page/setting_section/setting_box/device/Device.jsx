@@ -29,6 +29,10 @@ export const Device = () => {
 
                 break;
 
+            case "mic_device":
+
+                break;
+
             default:
                 break;
         }
@@ -45,14 +49,15 @@ export const Device = () => {
                 selectFunction={selectFunction}
                 state={currentSelectedMicHost.state}
             />
-            {/* <DropdownMenuContainer
+
+            <DropdownMenuContainer
                 dropdown_id="mic_device"
                 label={t("config_page.mic_device.label")}
                 selected_id={currentSelectedMicDevice.data}
                 list={currentMicDeviceList.data}
                 selectFunction={selectFunction}
                 state={currentSelectedMicDevice.state}
-            /> */}
+            />
 {/*
             <ThresholdContainer label={t("config_page.mic_dynamic_energy_threshold.label_for_manual")} desc={t("config_page.mic_dynamic_energy_threshold.desc_for_manual")} id="mic_threshold"  min="0" max="3000"/>
 
