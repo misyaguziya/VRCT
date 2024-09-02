@@ -349,16 +349,20 @@ class ChatMessage:
                     },
                 }
 
-def callbackMessageBoxPressKeyEnter(data, action, *args, **kwargs) -> dict:
+def callbackMessageBoxSend(data, action, *args, **kwargs) -> dict:
     chat = ChatMessage(action)
     response = chat.send(data)
     return response
 
-def messageBoxPressKeyAny(e):
+def callbackMessageBoxTyping(*args, **kwargs) -> dict:
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStartSendTyping()
-    else:
+    return {"status":200}
+
+def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
+    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
+    return {"status":200}
 
 def messageBoxFocusIn(e):
     # view.foregroundOffIfForegroundEnabled()
