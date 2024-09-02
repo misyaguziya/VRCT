@@ -2,11 +2,11 @@ import { useTranslation } from "react-i18next";
 import FolderOpenSvg from "@images/folder_open.svg?react";
 
 import { useSettingBox } from "../components/useSettingBox";
-import { useSelectedMicDeviceStatus, useMicDeviceListStatus } from "@store";
+import { useSelectedMicDevice, useMicDeviceList } from "@store";
 export const Appearance = () => {
     const { t } = useTranslation();
-    const { currentSelectedMicDeviceStatus, updateSelectedMicDeviceStatus } = useSelectedMicDeviceStatus();
-    const { currentMicDeviceListStatus } = useMicDeviceListStatus();
+    const { currentSelectedMicDevice, updateSelectedMicDevice } = useSelectedMicDevice();
+    const { currentMicDeviceList } = useMicDeviceList();
     const {
         DropdownMenuContainer,
         SliderContainer,
@@ -29,13 +29,13 @@ export const Appearance = () => {
                 }, 3000);
             });
         };
-        updateSelectedMicDeviceStatus(asyncFunction);
+        updateSelectedMicDevice(asyncFunction);
     };
 
     return (
         <>
             <DropdownMenuContainer dropdown_id="mic_host" label="Mic Host/Driver" desc="description" selected_id="b" list={{a: "A", b: "B", c: "C"}} />
-            <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDeviceStatus.data} list={currentMicDeviceListStatus} selectFunction={selectFunction} state={currentSelectedMicDeviceStatus.state} />
+            <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
 
             <SliderContainer label="Transparent" desc="description" min="0" max="3000"/>
             <CheckboxContainer label="Transparent" desc="description" checkbox_id="checkbox_id_1"/>

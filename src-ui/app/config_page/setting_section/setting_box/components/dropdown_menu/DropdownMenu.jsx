@@ -35,12 +35,18 @@ export const DropdownMenu = (props) => {
         [styles["is_opened"]]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
     });
 
+    const getSelectedText = () => {
+        if (props.state !== "hasData") return;
+        return (props.list[props.selected_id]) ? props.list[props.selected_id] : "Nothing selected";
+    };
+
+
     return (
         <div className={styles.container}>
             <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu}>
                 {(props.state === "loading")
                     ? <p className={styles.dropdown_selected_text}>Loading...</p>
-                    : <p className={styles.dropdown_selected_text}>{props.list[props.selected_id]}</p>
+                    : <p className={styles.dropdown_selected_text}>{getSelectedText()}</p>
                 }
                 {(props.state === "loading")
                     ? <span className={styles.loader}></span>
@@ -49,14 +55,15 @@ export const DropdownMenu = (props) => {
             </div>
             <div className={dropdown_content_wrapper_class_name}>
                 <div className={styles.dropdown_content}>
-                    {
-                        Object.entries(props.list).map(([key, value]) => {
+                    {(props.state === "hasData")
+                        ? Object.entries(props.list).map(([key, value]) => {
                             return (
                                 <div key={key} className={styles.value_button} onClick={() => selectValue(key)}>
                                     <p className={styles.value_text} >{value}</p>
                                 </div>
                             );
                         })
+                        : null
                     }
                 </div>
             </div>

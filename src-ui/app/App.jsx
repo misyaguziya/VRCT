@@ -14,13 +14,19 @@ export const App = () => {
     const main_page = getCurrent();
 
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
-    const { getSoftwareVersion } = useConfig();
+    const {
+        getSoftwareVersion,
+        getMicHostList,
+        getSelectedMicHost,
+    } = useConfig();
 
     useEffect(() => {
         main_page.setDecorations(true);
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getSoftwareVersion();
+                getMicHostList();
+                getSelectedMicHost();
             }).catch((err) => {
 
             });
