@@ -751,11 +751,7 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
     printLog("Set Mic Device", data)
     config.CHOICE_MIC_DEVICE = data
     model.stopCheckMicEnergy()
-    return {"status":200,
-            "result":{
-                "host":config.CHOICE_MIC_HOST,
-                },
-            }
+    return {"status":200, "result":config.CHOICE_MIC_DEVICE}
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     printLog("Set Mic Energy Threshold", data)
