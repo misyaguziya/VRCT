@@ -37,7 +37,8 @@ export const DropdownMenu = (props) => {
 
     const getSelectedText = () => {
         if (props.state !== "hasData") return;
-        return (props.list[props.selected_id]) ? props.list[props.selected_id] : "Nothing selected";
+        return props.selected_id;
+        // return (props.list[props.selected_id]) ? props.list[props.selected_id] : "Nothing selected";
     };
 
 
