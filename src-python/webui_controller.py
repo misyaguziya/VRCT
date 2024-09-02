@@ -364,15 +364,6 @@ def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
         model.oscStopSendTyping()
     return {"status":200}
 
-def messageBoxFocusIn(e):
-    # view.foregroundOffIfForegroundEnabled()
-    pass
-
-def messageBoxFocusOut(e):
-    # view.foregroundOnIfForegroundEnabled()
-    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-        model.oscStopSendTyping()
-
 # def addSentMessageLog(sent_message):
 #     config.SENT_MESSAGES_LOG.append(sent_message)
 #     config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
