@@ -212,16 +212,10 @@ action_mapping = {
         "error_translation_engine":"/action/error_translation_engine",
         "word_filter":"/action/word_filter",
     },
-    "/controller/callback_disable_transcription_send": {
-        "mic":"/action/transcription_send_mic_message_stopped"
-    },
     "/controller/callback_enable_transcription_receive": {
         "speaker":"/action/transcription_receive_speaker_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
-    },
-    "/controller/callback_disable_transcription_receive": {
-        "speaker":"/action/transcription_receive_speaker_message_stopped"
     },
     "/controller/callback_enable_check_mic_threshold": {
         "mic":"/action/check_mic_threshold_energy",
