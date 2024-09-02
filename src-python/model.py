@@ -672,9 +672,6 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def notificationXSOverlay(self, message):
-        xsoverlayForVRCT(content=f"{message}")
-
     def createOverlayImageShort(self, message, translation):
         your_language = config.TARGET_LANGUAGE
         target_language = config.SOURCE_LANGUAGE

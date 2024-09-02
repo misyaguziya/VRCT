@@ -3,7 +3,7 @@ import json
 import time
 from config import config
 import webui_controller as controller
-from utils import printLog
+from utils import printLog, encodeUtf8
 
 config_mapping = {
     "/config/version": "VERSION",
@@ -73,7 +73,6 @@ config_mapping = {
     "/config/enable_auto_clear_message_box": "ENABLE_AUTO_CLEAR_MESSAGE_BOX",
     "/config/enable_send_only_translated_messages": "ENABLE_SEND_ONLY_TRANSLATED_MESSAGES",
     "/config/send_message_button_type": "SEND_MESSAGE_BUTTON_TYPE",
-    "/config/enable_notice_xsoverlay": "ENABLE_NOTICE_XSOVERLAY",
     "/config/overlay_settings": "OVERLAY_SETTINGS",
     "/config/enable_overlay_small_log": "ENABLE_OVERLAY_SMALL_LOG",
     "/config/overlay_small_log_settings": "OVERLAY_SMALL_LOG_SETTINGS",
@@ -110,7 +109,9 @@ controller_mapping = {
     "/controller/callback_disable_transcription_send": controller.callbackDisableTranscriptionSend,
     "/controller/callback_enable_transcription_receive": controller.callbackEnableTranscriptionReceive,
     "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
-    "/controller/callback_messagebox_press_key_enter": controller.callbackMessageBoxPressKeyEnter,
+    "/controller/callback_messagebox_send": controller.callbackMessageBoxSend,
+    "/controller/callback_messagebox_typing": controller.callbackMessageBoxTyping,
+    "/controller/callback_messagebox_typing_stop": controller.callbackMessageBoxTypingStop,
     "/controller/callback_enable_foreground": controller.callbackEnableForeground,
     "/controller/callback_disable_foreground": controller.callbackDisableForeground,
     "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
@@ -175,8 +176,6 @@ controller_mapping = {
     "/controller/callback_enable_send_only_translated_messages": controller.callbackEnableSendOnlyTranslatedMessages,
     "/controller/callback_disable_send_only_translated_messages": controller.callbackDisableSendOnlyTranslatedMessages,
     "/controller/callback_set_send_message_button_type": controller.callbackSetSendMessageButtonType,
-    "/controller/callback_enable_notice_xsoverlay": controller.callbackEnableNoticeXsoverlay,
-    "/controller/callback_disable_notice_xsoverlay": controller.callbackDisableNoticeXsoverlay,
     "/controller/callback_enable_auto_export_message_logs": controller.callbackEnableAutoExportMessageLogs,
     "/controller/callback_disable_auto_export_message_logs": controller.callbackDisableAutoExportMessageLogs,
     "/controller/callback_enable_vrc_mic_mute_sync": controller.callbackEnableVrcMicMuteSync,
@@ -234,7 +233,7 @@ action_mapping = {
         "stopped":"/action/check_speaker_threshold_energy_stopped",
         "error_device":"/action/error_device",
     },
-    "/controller/callback_messagebox_press_key_enter": {
+    "/controller/callback_messagebox_send": {
         "error_translation_engine":"/action/error_translation_engine"
     },
     "/controller/callback_download_ctranslate2_weight": {
@@ -373,8 +372,8 @@ if __name__ == "__main__":
                 printLog("endpoint", endpoint)
 
                 match endpoint:
-                    case  "/controller/callback_messagebox_press_key_enter":
-                        data = "テスト"
+                    case  "/controller/callback_messagebox_send":
+                        data = {"id":"123456", "message":encodeUtf8("テスト")}
                     case "/controller/set_your_language_and_country":
                         data = {"language": "English", "country": "Hong Kong"}
                     case "/controller/set_target_language_and_country":

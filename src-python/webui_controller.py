@@ -99,7 +99,7 @@ class MicMessage:
                     }
                 })
         elif isinstance(message, str) and len(message) > 0:
-            addSentMessageLog(message)
+            # addSentMessageLog(message)
             translation = ""
             if model.checkKeywords(message):
                 self.action("word_filter", {
@@ -224,10 +224,6 @@ class SpeakerMessage:
                         })
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.ENABLE_NOTICE_XSOVERLAY is True:
-                    xsoverlay_message = messageFormatter("RECEIVED", translation, message)
-                    model.notificationXSOverlay(xsoverlay_message)
-
                 if config.ENABLE_OVERLAY_SMALL_LOG is True:
                     if model.overlay.initialized is True:
                         overlay_image = model.createOverlayImageShort(message, translation)
@@ -305,7 +301,7 @@ class ChatMessage:
         id = data["id"]
         message = decodeUtf8(data["message"])
         if len(message) > 0:
-            addSentMessageLog(message)
+            # addSentMessageLog(message)
             translation = ""
             if config.ENABLE_TRANSLATION is False:
                 pass
@@ -353,16 +349,20 @@ class ChatMessage:
                     },
                 }
 
-def callbackMessageBoxPressKeyEnter(data, action, *args, **kwargs) -> dict:
+def callbackMessageBoxSend(data, action, *args, **kwargs) -> dict:
     chat = ChatMessage(action)
     response = chat.send(data)
     return response
 
-def messageBoxPressKeyAny(e):
+def callbackMessageBoxTyping(*args, **kwargs) -> dict:
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStartSendTyping()
-    else:
+    return {"status":200}
+
+def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
+    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
+    return {"status":200}
 
 def messageBoxFocusIn(e):
     # view.foregroundOffIfForegroundEnabled()
@@ -373,9 +373,9 @@ def messageBoxFocusOut(e):
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
 
-def addSentMessageLog(sent_message):
-    config.SENT_MESSAGES_LOG.append(sent_message)
-    config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
+# def addSentMessageLog(sent_message):
+#     config.SENT_MESSAGES_LOG.append(sent_message)
+#     config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
 
 # def updateMessageBox(index_offset):
 #     if len(config.SENT_MESSAGES_LOG) == 0:
@@ -1172,16 +1172,6 @@ def callbackSetSendMessageButtonType(data, *args, **kwargs) -> dict:
     printLog("Set Send Message Button Type", data)
     config.SEND_MESSAGE_BUTTON_TYPE = data
     return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
-
-def callbackEnableNoticeXsoverlay(*args, **kwargs) -> dict:
-    printLog("Enable Notice Xsoverlay")
-    config.ENABLE_NOTICE_XSOVERLAY = True
-    return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
-
-def callbackDisableNoticeXsoverlay(*args, **kwargs) -> dict:
-    printLog("Disable Notice Xsoverlay")
-    config.ENABLE_NOTICE_XSOVERLAY = False
-    return {"status":200, "result":config.ENABLE_NOTICE_XSOVERLAY}
 
 def callbackEnableAutoExportMessageLogs(*args, **kwargs) -> dict:
     printLog("Enable Auto Export Message Logs")
