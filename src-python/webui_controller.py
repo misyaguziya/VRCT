@@ -99,7 +99,7 @@ class MicMessage:
                     }
                 })
         elif isinstance(message, str) and len(message) > 0:
-            addSentMessageLog(message)
+            # addSentMessageLog(message)
             translation = ""
             if model.checkKeywords(message):
                 self.action("word_filter", {
@@ -301,7 +301,7 @@ class ChatMessage:
         id = data["id"]
         message = decodeUtf8(data["message"])
         if len(message) > 0:
-            addSentMessageLog(message)
+            # addSentMessageLog(message)
             translation = ""
             if config.ENABLE_TRANSLATION is False:
                 pass
@@ -373,9 +373,9 @@ def messageBoxFocusOut(e):
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
 
-def addSentMessageLog(sent_message):
-    config.SENT_MESSAGES_LOG.append(sent_message)
-    config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
+# def addSentMessageLog(sent_message):
+#     config.SENT_MESSAGES_LOG.append(sent_message)
+#     config.CURRENT_SENT_MESSAGES_LOG_INDEX = len(config.SENT_MESSAGES_LOG)
 
 # def updateMessageBox(index_offset):
 #     if len(config.SENT_MESSAGES_LOG) == 0:
