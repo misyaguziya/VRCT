@@ -211,23 +211,23 @@ class Config:
         if value in list(translation_lang.keys()):
             self._CHOICE_OUTPUT_TRANSLATOR = value
 
-    @property
-    def SENT_MESSAGES_LOG(self):
-        return self._SENT_MESSAGES_LOG
+    # @property
+    # def SENT_MESSAGES_LOG(self):
+    #     return self._SENT_MESSAGES_LOG
 
-    @SENT_MESSAGES_LOG.setter
-    def SENT_MESSAGES_LOG(self, value):
-        if isinstance(value, list):
-            self._SENT_MESSAGES_LOG = value
+    # @SENT_MESSAGES_LOG.setter
+    # def SENT_MESSAGES_LOG(self, value):
+    #     if isinstance(value, list):
+    #         self._SENT_MESSAGES_LOG = value
 
-    @property
-    def CURRENT_SENT_MESSAGES_LOG_INDEX(self):
-        return self._CURRENT_SENT_MESSAGES_LOG_INDEX
+    # @property
+    # def CURRENT_SENT_MESSAGES_LOG_INDEX(self):
+    #     return self._CURRENT_SENT_MESSAGES_LOG_INDEX
 
-    @CURRENT_SENT_MESSAGES_LOG_INDEX.setter
-    def CURRENT_SENT_MESSAGES_LOG_INDEX(self, value):
-        if isinstance(value, int):
-            self._CURRENT_SENT_MESSAGES_LOG_INDEX = value
+    # @CURRENT_SENT_MESSAGES_LOG_INDEX.setter
+    # def CURRENT_SENT_MESSAGES_LOG_INDEX(self, value):
+    #     if isinstance(value, int):
+    #         self._CURRENT_SENT_MESSAGES_LOG_INDEX = value
 
     @property
     def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self):
@@ -770,17 +770,6 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_NOTICE_XSOVERLAY')
-    def ENABLE_NOTICE_XSOVERLAY(self):
-        return self._ENABLE_NOTICE_XSOVERLAY
-
-    @ENABLE_NOTICE_XSOVERLAY.setter
-    def ENABLE_NOTICE_XSOVERLAY(self, value):
-        if isinstance(value, bool):
-            self._ENABLE_NOTICE_XSOVERLAY = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('OVERLAY_SETTINGS')
     def OVERLAY_SETTINGS(self):
         return self._OVERLAY_SETTINGS
@@ -1017,8 +1006,8 @@ class Config:
         self._SOURCE_COUNTRY = "Japan"
         self._TARGET_LANGUAGE = "English"
         self._TARGET_COUNTRY = "United States"
-        self._SENT_MESSAGES_LOG = []
-        self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
+        # self._SENT_MESSAGES_LOG = []
+        # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
         self._IS_EASTER_EGG_ENABLED = False
@@ -1116,7 +1105,6 @@ class Config:
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
-        self._ENABLE_NOTICE_XSOVERLAY = False
         self._OVERLAY_SETTINGS = {
             "opacity": 1.0,
             "ui_scaling": 1.0,
