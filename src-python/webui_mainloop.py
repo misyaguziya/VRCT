@@ -109,7 +109,9 @@ controller_mapping = {
     "/controller/callback_disable_transcription_send": controller.callbackDisableTranscriptionSend,
     "/controller/callback_enable_transcription_receive": controller.callbackEnableTranscriptionReceive,
     "/controller/callback_disable_transcription_receive": controller.callbackDisableTranscriptionReceive,
-    "/controller/callback_messagebox_press_key_enter": controller.callbackMessageBoxPressKeyEnter,
+    "/controller/callback_messagebox_send": controller.callbackMessageBoxSend,
+    "/controller/callback_messagebox_typing": controller.callbackMessageBoxTyping,
+    "/controller/callback_messagebox_typing_stop": controller.callbackMessageBoxTypingStop,
     "/controller/callback_enable_foreground": controller.callbackEnableForeground,
     "/controller/callback_disable_foreground": controller.callbackDisableForeground,
     "/controller/set_your_language_and_country": controller.setYourLanguageAndCountry,
@@ -231,7 +233,7 @@ action_mapping = {
         "stopped":"/action/check_speaker_threshold_energy_stopped",
         "error_device":"/action/error_device",
     },
-    "/controller/callback_messagebox_press_key_enter": {
+    "/controller/callback_messagebox_send": {
         "error_translation_engine":"/action/error_translation_engine"
     },
     "/controller/callback_download_ctranslate2_weight": {
@@ -370,7 +372,7 @@ if __name__ == "__main__":
                 printLog("endpoint", endpoint)
 
                 match endpoint:
-                    case  "/controller/callback_messagebox_press_key_enter":
+                    case  "/controller/callback_messagebox_send":
                         data = {"id":"123456", "message":encodeUtf8("テスト")}
                     case "/controller/set_your_language_and_country":
                         data = {"language": "English", "country": "Hong Kong"}
