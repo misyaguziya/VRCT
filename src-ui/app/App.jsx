@@ -18,6 +18,8 @@ export const App = () => {
         getSoftwareVersion,
         getMicHostList,
         getSelectedMicHost,
+        getMicDeviceList,
+        getSelectedMicDevice,
     } = useConfig();
 
     useEffect(() => {
@@ -27,8 +29,10 @@ export const App = () => {
                 getSoftwareVersion();
                 getMicHostList();
                 getSelectedMicHost();
+                getMicDeviceList();
+                getSelectedMicDevice();
             }).catch((err) => {
-
+                console.error(err);
             });
         }
         return () => hasRunRef.current = true;

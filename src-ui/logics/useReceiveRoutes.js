@@ -19,6 +19,8 @@ export const useReceiveRoutes = () => {
         updateSoftwareVersion,
         updateMicHostList,
         updateSelectedMicHost,
+        updateMicDeviceList,
+        updateSelectedMicDevice,
     } = useConfig();
 
     const routes = {
@@ -32,7 +34,8 @@ export const useReceiveRoutes = () => {
         "/config/version": updateSoftwareVersion,
         "/controller/list_mic_host": updateMicHostList,
         "/config/choice_mic_host": updateSelectedMicHost,
-
+        "/controller/list_mic_device": updateMicDeviceList,
+        "/config/choice_mic_device": updateSelectedMicDevice,
 
         "/controller/callback_messagebox_send": updateSentMessageLog,
         "/action/transcription_send_mic_message": addSentMessageLog,
