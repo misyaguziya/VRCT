@@ -157,24 +157,19 @@ def startTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     mic_message = MicMessage(action)
     model.startMicTranscript(mic_message.send)
 
-def stopTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
+def stopTranscriptionSendMessage() -> None:
     model.stopMicTranscript()
-    action("mic", {
-        "status":200,
-        "result":{
-            "message":"Stopped sending messages"
-            }
-        })
 
 def startThreadingTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     th_startTranscriptionSendMessage = Thread(target=startTranscriptionSendMessage, args=(action,))
     th_startTranscriptionSendMessage.daemon = True
     th_startTranscriptionSendMessage.start()
 
-def stopThreadingTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
-    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage, args=(action,))
+def stopThreadingTranscriptionSendMessage() -> None:
+    th_stopTranscriptionSendMessage = Thread(target=stopTranscriptionSendMessage)
     th_stopTranscriptionSendMessage.daemon = True
     th_stopTranscriptionSendMessage.start()
+    th_stopTranscriptionSendMessage.join()
 
 def startTranscriptionSendMessageOnCloseConfigWindow(action:Callable[[dict], None]) -> None:
     mic_message = MicMessage(action)
@@ -256,24 +251,19 @@ def startTranscriptionReceiveMessage(action:Callable[[dict], None]) -> None:
     speaker_message = SpeakerMessage(action)
     model.startSpeakerTranscript(speaker_message.receive)
 
-def stopTranscriptionReceiveMessage(action:Callable[[dict], None]) -> None:
+def stopTranscriptionReceiveMessage() -> None:
     model.stopSpeakerTranscript()
-    action("speaker", {
-        "status":200,
-        "result": {
-            "message":"Stopped receiving messages"
-            }
-        })
 
 def startThreadingTranscriptionReceiveMessage(action:Callable[[dict], None]) -> None:
     th_startTranscriptionReceiveMessage = Thread(target=startTranscriptionReceiveMessage, args=(action,))
     th_startTranscriptionReceiveMessage.daemon = True
     th_startTranscriptionReceiveMessage.start()
 
-def stopThreadingTranscriptionReceiveMessage(action:Callable[[dict], None]) -> None:
-    th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage, args=(action,))
+def stopThreadingTranscriptionReceiveMessage() -> None:
+    th_stopTranscriptionReceiveMessage = Thread(target=stopTranscriptionReceiveMessage)
     th_stopTranscriptionReceiveMessage.daemon = True
     th_stopTranscriptionReceiveMessage.start()
+    th_stopTranscriptionReceiveMessage.join()
 
 def startTranscriptionReceiveMessageOnCloseConfigWindow(action:Callable[[dict], None]) -> None:
     speaker_message = SpeakerMessage(action)
@@ -522,10 +512,10 @@ def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     startThreadingTranscriptionSendMessage(action)
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
-def callbackDisableTranscriptionSend(data, action, *args, **kwargs) -> dict:
+def callbackDisableTranscriptionSend(*args, **kwargs) -> dict:
     printLog("Disable Transcription Send")
     config.ENABLE_TRANSCRIPTION_SEND = False
-    stopThreadingTranscriptionSendMessage(action)
+    stopThreadingTranscriptionSendMessage()
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
@@ -538,10 +528,10 @@ def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
             model.startOverlay()
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
-def callbackDisableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
+def callbackDisableTranscriptionReceive(*args, **kwargs) -> dict:
     printLog("Disable Transcription Receive")
     config.ENABLE_TRANSCRIPTION_RECEIVE = False
-    stopThreadingTranscriptionReceiveMessage(action)
+    stopThreadingTranscriptionReceiveMessage()
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackEnableForeground(*args, **kwargs) -> dict:
