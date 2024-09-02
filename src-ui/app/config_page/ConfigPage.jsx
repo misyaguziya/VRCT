@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 
 // import { useConfig } from "@logics/useConfig";
 export const ConfigPage = () => {
-    const { currentSoftwareVersion, updateSoftwareVersion } = useSoftwareVersion();
+    const { currentSoftwareVersion } = useSoftwareVersion();
     const { t } = useTranslation();
 
     return (

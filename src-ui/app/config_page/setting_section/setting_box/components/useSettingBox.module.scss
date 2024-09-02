@@ -3,7 +3,6 @@
     width: 100%;
     justify-content: space-between;
     align-items: center;
-    background-color: var(--dark_888_color);
     padding: 2rem;
     display: flex;
     justify-content: space-between;
@@ -12,6 +11,7 @@
     &.flex_column {
         flex-direction: column;
     }
+    border-bottom: solid 0.1rem var(--dark_800_color);
 }
 
 .label_only_section {
@@ -25,7 +25,6 @@
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-    background-color: var(--dark_888_color);
     padding: 2rem;
 }
 
@@ -61,7 +60,6 @@
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
-    background-color: var(--dark_888_color);
     padding: 2rem;
 }
 
