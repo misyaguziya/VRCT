@@ -29,7 +29,7 @@ export const useReceiveRoutes = () => {
 
         "/config/version": updateSoftwareVersion,
 
-        "/controller/callback_messagebox_press_key_enter": updateSentMessageLog,
+        "/controller/callback_messagebox_send": updateSentMessageLog,
         "/action/transcription_send_mic_message": addSentMessageLog,
         "/action/transcription_receive_speaker_message": addReceivedMessageLog
     };
