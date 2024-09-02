@@ -6,16 +6,16 @@
 
 .dropdown_toggle_button {
     position: relative;
-    background-color: var(--dark_925_color);
+    background-color: var(--dark_950_color);
     min-width: 20rem;
     padding: 0.6rem 1rem;
     cursor: pointer;
     border-radius: 0.4rem;
     &:hover {
-        background-color: var(--dark_850_color);
+        background-color: var(--dark_925_color);
     }
     &:active {
-        background-color: var(--dark_950_color);
+        background-color: var(--dark_975_color);
     }
     &.is_loading {
         pointer-events: none;
