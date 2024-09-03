@@ -16,10 +16,11 @@ export const App = () => {
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const {
         getSoftwareVersion,
-        getMicHostList,
+        // getMicHostList,
         getSelectedMicHost,
-        getMicDeviceList,
+        // getMicDeviceList,
         getSelectedMicDevice,
+        getSelectedSpeakerDevice,
     } = useConfig();
 
     useEffect(() => {
@@ -27,10 +28,11 @@ export const App = () => {
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getSoftwareVersion();
-                getMicHostList();
+                // getMicHostList();
                 getSelectedMicHost();
-                getMicDeviceList();
+                // getMicDeviceList();
                 getSelectedMicDevice();
+                getSelectedSpeakerDevice();
             }).catch((err) => {
                 console.error(err);
             });

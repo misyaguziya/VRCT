@@ -6,7 +6,6 @@ import {
 
 import {
     translator_list,
-    test_device_list,
     generateTestData,
     word_filter_list,
 } from "@data";
@@ -117,11 +116,13 @@ export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDrop
 
 
 // Config Page
-export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook([], "MicHostList");
+export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook({}, "MicHostList");
 export const { atomInstance: Atom_SelectedMicHost, useHook: useSelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
-export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook([], "MicDeviceList");
+export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook({}, "MicDeviceList");
 export const { atomInstance: Atom_SelectedMicDevice, useHook: useSelectedMicDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicDevice");
 
+export const { atomInstance: Atom_SpeakerDeviceList, useHook: useSpeakerDeviceList } = createAsyncAtomWithHook({}, "SpeakerDeviceList");
+export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useSelectedSpeakerDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedSpeakerDevice");
 
 export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
     before: "",
