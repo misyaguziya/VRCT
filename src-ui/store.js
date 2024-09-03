@@ -117,9 +117,9 @@ export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDrop
 
 
 // Config Page
-export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook([], "MicHostList");
+export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook({}, "MicHostList");
 export const { atomInstance: Atom_SelectedMicHost, useHook: useSelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
-export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook([], "MicDeviceList");
+export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook({}, "MicDeviceList");
 export const { atomInstance: Atom_SelectedMicDevice, useHook: useSelectedMicDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicDevice");
 
 
