@@ -3,7 +3,8 @@ import json
 import time
 from config import config
 import webui_controller as controller
-from utils import printLog, encodeUtf8
+from utils import printLog
+import base64
 
 config_mapping = {
     "/config/version": "VERSION",
@@ -288,6 +289,8 @@ def main():
     if received_data:
         endpoint = received_data.get("endpoint", None)
         data = received_data.get("data", None)
+        if data is not None:
+            data = json.loads(base64.b64decode(data).decode('utf-8'))
 
         with open('process.log', 'a') as f:
             f.write(f"received_data : endpoint: {endpoint}, data:{data}\n")
@@ -367,7 +370,7 @@ if __name__ == "__main__":
 
                 match endpoint:
                     case  "/controller/callback_messagebox_send":
-                        data = {"id":"123456", "message":encodeUtf8("テスト")}
+                        data = {"id":"123456", "message":"テスト"}
                     case "/controller/set_your_language_and_country":
                         data = {"language": "English", "country": "Hong Kong"}
                     case "/controller/set_target_language_and_country":
