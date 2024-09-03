@@ -5,7 +5,7 @@ from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
-from utils import getKeyByValue, isUniqueStrings, printLog
+from utils import getKeyByValue, isUniqueStrings, printLog, printResponse
 
 # Common
 class DownloadSoftwareProgressBar:
@@ -1282,13 +1282,7 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     printLog("Check Downloaded CTranslate2 Model Weight")
     if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
         def callback(progress):
-            print(json.dumps({
-                "endpoint":endpoints["ctranslate2"],
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-            }), flush=True)
+            printResponse(200, endpoints["ctranslate2"], {"progress":progress})
         printLog("Download CTranslate2 Model Weight")
         model.downloadCTranslate2ModelWeight(callback)
 
@@ -1303,13 +1297,7 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     printLog("Check Downloaded Whisper Model Weight")
     if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
         def callback(progress):
-            print(json.dumps({
-                "endpoint":endpoints["whisper"],
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-            }), flush=True)
+            printResponse(200, endpoints["whisper"], {"progress":progress})
         model.downloadWhisperModelWeight(callback)
 
     # set word filter

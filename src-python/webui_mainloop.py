@@ -3,8 +3,7 @@ import json
 import time
 from config import config
 import webui_controller as controller
-from utils import printLog
-import base64
+from utils import printLog, printResponse, encodeBase64
 
 config_mapping = {
     "/config/version": "VERSION",
@@ -271,53 +270,30 @@ class Action:
     def transmit(self, key:str, data:dict) -> None:
         status = data.get("status", None)
         result = data.get("result", None)
-        response = {
-            "endpoint": self.endpoints[key],
-            "status": status,
-            "result": result,
-        }
-        response = json.dumps(response)
-        print(response, flush=True)
+        printResponse(status, self.endpoints[key], result)
 
 def main():
     received_data = sys.stdin.readline().strip()
     received_data = json.loads(received_data)
 
-    with open('process.log', 'a') as f:
-        f.write(f"received_data: {received_data}\n")
-
     if received_data:
         endpoint = received_data.get("endpoint", None)
         data = received_data.get("data", None)
-        if data is not None:
-            data = json.loads(base64.b64decode(data).decode('utf-8'))
-
-        with open('process.log', 'a') as f:
-            f.write(f"received_data : endpoint: {endpoint}, data:{data}\n")
+        data = encodeBase64(data) if data is not None else None
+        printLog(endpoint, data)
 
         try:
             match endpoint.split("/")[1]:
                 case "config":
-                    result_data, status = handleConfigRequest(endpoint)
+                    result, status = handleConfigRequest(endpoint)
                 case "controller":
-                    result_data, status = handleControllerRequest(endpoint, data)
+                    result, status = handleControllerRequest(endpoint, data)
                 case _:
                     pass
         except Exception as e:
-            result_data = str(e)
+            result = str(e)
             status = 500
-
-        response = {
-            "status": status,
-            "endpoint": endpoint,
-            "result": result_data,
-        }
-
-        response = json.dumps(response)
-        with open('process.log', 'a') as f:
-            f.write(f"response: {response}\n")
-
-        print(response, flush=True)
+        printResponse(status, endpoint, result)
 
 if __name__ == "__main__":
     controller.init({
@@ -325,7 +301,7 @@ if __name__ == "__main__":
         "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
     })
 
-    process = "main"
+    process = "test_all"
     match process:
         case "main":
             try:
@@ -337,32 +313,18 @@ if __name__ == "__main__":
                     traceback.print_exc(file=f)
 
         case "test":
-            response_data, status = handleControllerRequest("/controller/callback_download_ctranslate2_weight")
-            response = {
-                "status": status,
-                "endpoint": "/controller/callback_download_ctranslate2_weight",
-                "result": response_data,
-            }
-            response = json.dumps(response)
-            response_data, status = handleControllerRequest("/controller/callback_download_whisper_weight")
-            response = {
-                "status": status,
-                "endpoint": "/controller/callback_download_whisper_weight",
-                "result": response_data,
-            }
-            response = json.dumps(response)
+            endpoint = "/controller/callback_download_ctranslate2_weight"
+            result, status = handleControllerRequest(endpoint)
+            printResponse(status, endpoint, result)
+            endpoint = "/controller/callback_download_whisper_weight"
+            result, status = handleControllerRequest(endpoint)
+            printResponse(status, endpoint, result)
 
         case "test_all":
             import time
             for endpoint, value in config_mapping.items():
-                response_data, status = handleConfigRequest(endpoint)
-                response = {
-                    "status": status,
-                    "endpoint": endpoint,
-                    "result": response_data,
-                }
-                response = json.dumps(response)
-                print(response, flush=True)
+                result, status = handleConfigRequest(endpoint)
+                printResponse(status, endpoint, result)
                 time.sleep(0.1)
 
             for endpoint, value in controller_mapping.items():
@@ -454,12 +416,6 @@ if __name__ == "__main__":
                     case _:
                         data = None
 
-                response_data, status = handleControllerRequest(endpoint, data)
-                response = {
-                    "status": status,
-                    "endpoint": endpoint,
-                    "result": response_data,
-                }
-                response = json.dumps(response)
-                print(response, flush=True)
+                result, status = handleControllerRequest(endpoint, data)
+                printResponse(status, endpoint, result)
                 time.sleep(0.5)
