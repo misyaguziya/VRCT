@@ -301,7 +301,7 @@ if __name__ == "__main__":
         "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
     })
 
-    process = "test_all"
+    process = "main"
     match process:
         case "main":
             try:
