@@ -20,31 +20,49 @@ export const useConfig = () => {
     const { updateSelectedMicDevice } = useSelectedMicDevice();
 
 
+    const asyncPending = () => new Promise(() => {});
     return {
-        getSoftwareVersion: () => asyncStdoutToPython("/config/version"),
+        getSoftwareVersion: () => {
+            updateSoftwareVersion(asyncPending);
+            asyncStdoutToPython("/config/version");
+        },
         updateSoftwareVersion: (payload) => updateSoftwareVersion(payload.data),
 
-        getMicHostList: () => asyncStdoutToPython("/controller/list_mic_host"),
+        getMicHostList: () => {
+            updateMicHostList(asyncPending);
+            asyncStdoutToPython("/controller/list_mic_host");
+        },
         updateMicHostList: (payload) => {
             updateMicHostList(arrayToObject(payload.data));
         },
-        getSelectedMicHost: () => asyncStdoutToPython("/config/choice_mic_host"),
+        getSelectedMicHost: () => {
+            updateSelectedMicHost(asyncPending);
+            asyncStdoutToPython("/config/choice_mic_host");
+        },
         updateSelectedMicHost: (payload) => {
             updateSelectedMicHost(payload.data);
         },
         setSelectedMicHost: (selected_mic_host) => {
+            updateSelectedMicHost(asyncPending);
             asyncStdoutToPython("/controller/callback_set_mic_host", selected_mic_host);
         },
 
-        getMicDeviceList: () => asyncStdoutToPython("/controller/list_mic_device"),
+        getMicDeviceList: () => {
+            updateMicDeviceList(asyncPending);
+            asyncStdoutToPython("/controller/list_mic_device");
+        },
         updateMicDeviceList: (payload) => {
             updateMicDeviceList(arrayToObject(payload.data));
         },
-        getSelectedMicDevice: () => asyncStdoutToPython("/config/choice_mic_device"),
+        getSelectedMicDevice: () => {
+            updateSelectedMicDevice(asyncPending);
+            asyncStdoutToPython("/config/choice_mic_device");
+        },
         updateSelectedMicDevice: (payload) => {
             updateSelectedMicDevice(payload.data);
         },
         setSelectedMicDevice: (selected_mic_device) => {
+            updateSelectedMicDevice(asyncPending);
             asyncStdoutToPython("/controller/callback_set_mic_device", selected_mic_device);
         },
 
