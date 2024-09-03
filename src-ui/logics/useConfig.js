@@ -4,6 +4,8 @@ import {
     useSelectedMicHost,
     useMicDeviceList,
     useSelectedMicDevice,
+    useSpeakerDeviceList,
+    useSelectedSpeakerDevice,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
@@ -18,6 +20,8 @@ export const useConfig = () => {
     const { updateSelectedMicHost } = useSelectedMicHost();
     const { updateMicDeviceList } = useMicDeviceList();
     const { updateSelectedMicDevice } = useSelectedMicDevice();
+    const { updateSpeakerDeviceList } = useSpeakerDeviceList();
+    const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
 
 
     const asyncPending = () => new Promise(() => {});
@@ -64,6 +68,25 @@ export const useConfig = () => {
         setSelectedMicDevice: (selected_mic_device) => {
             updateSelectedMicDevice(asyncPending);
             asyncStdoutToPython("/controller/callback_set_mic_device", selected_mic_device);
+        },
+
+        getSpeakerDeviceList: () => {
+            updateSpeakerDeviceList(asyncPending);
+            asyncStdoutToPython("/controller/list_speaker_device");
+        },
+        updateSpeakerDeviceList: (payload) => {
+            updateSpeakerDeviceList(arrayToObject(payload.data));
+        },
+        getSelectedSpeakerDevice: () => {
+            updateSelectedSpeakerDevice(asyncPending);
+            asyncStdoutToPython("/config/choice_speaker_device");
+        },
+        updateSelectedSpeakerDevice: (payload) => {
+            updateSelectedSpeakerDevice(payload.data);
+        },
+        setSelectedSpeakerDevice: (selected_speaker_device) => {
+            updateSelectedSpeakerDevice(asyncPending);
+            asyncStdoutToPython("/controller/callback_set_speaker_device", selected_speaker_device);
         },
 
         updateMicHostAndDevice: (payload) => {
