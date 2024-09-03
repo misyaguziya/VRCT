@@ -1,9 +1,10 @@
 import { store } from "@store";
+import { encode } from 'js-base64'
 
 export const useStdoutToPython = () => {
     const asyncStdoutToPython = async (path, value) => {
         let send_object = { endpoint: path };
-        if (value) send_object.data = value;
+        if (value) send_object.data = encode(JSON.stringify(value));
 
         // send to python
         const backend_subprocess = store.backend_subprocess;
