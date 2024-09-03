@@ -6,7 +6,6 @@ import {
 
 import {
     translator_list,
-    test_device_list,
     generateTestData,
     word_filter_list,
 } from "@data";

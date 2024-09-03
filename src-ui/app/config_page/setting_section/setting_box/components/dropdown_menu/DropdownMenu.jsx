@@ -2,27 +2,15 @@ import styles from "./DropdownMenu.module.scss";
 import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useIsOpenedDropdownMenu } from "@store";
-import { useConfig } from "@logics/useConfig";
 
 export const DropdownMenu = (props) => {
     const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
-    const { getMicHostList, getMicDeviceList } = useConfig();
 
     const toggleDropdownMenu = () => {
         if (currentIsOpenedDropdownMenu === props.dropdown_id) {
             updateIsOpenedDropdownMenu("");
         } else {
-            switch (props.dropdown_id) {
-                case "mic_host":
-                    getMicHostList();
-                    break;
-                case "mic_device":
-                    getMicDeviceList();
-                    break;
-
-                default:
-                    break;
-            }
+            if (props.openListFunction !== undefined) props.openListFunction();
             updateIsOpenedDropdownMenu(props.dropdown_id);
         }
     };
@@ -50,7 +38,6 @@ export const DropdownMenu = (props) => {
     const getSelectedText = () => {
         if (props.state !== "hasData") return;
         return props.selected_id;
-        // return (props.list[props.selected_id]) ? props.list[props.selected_id] : "Nothing selected";
     };
     const list = (props.list === undefined) ? {} : props.list;
 
