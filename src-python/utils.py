@@ -1,3 +1,4 @@
+import base64
 from typing import Any
 import json
 import random
@@ -73,5 +74,31 @@ def splitList(lst:list, split_count:int, to_shuffle:bool=False):
         split_lists.append(sub_list)
     return split_lists
 
+def encodeBase64(data:str) -> dict:
+    return json.loads(base64.b64decode(data).decode('utf-8'))
+
 def printLog(log:str, data:Any=None) -> None:
-    print(json.dumps({"status":348, "log":log, "data":str(data)}), flush=True)
+    response = {
+        "status": 348,
+        "log": log,
+        "data": data,
+    }
+
+    with open('process.log', 'a', encoding="utf-8") as f:
+        f.write(f"log: {response}\n")
+
+    response = json.dumps(response)
+    print(response, flush=True)
+
+def printResponse(status:int, endpoint:str, result:Any=None) -> None:
+    response = {
+        "status": status,
+        "endpoint": endpoint,
+        "result": result,
+    }
+
+    with open('process.log', 'a', encoding="utf-8") as f:
+        f.write(f"log: {response}\n")
+
+    response = json.dumps(response)
+    print(response, flush=True)
