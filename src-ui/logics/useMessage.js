@@ -7,14 +7,13 @@ import { useStdoutToPython } from "./useStdoutToPython";
 export const useMessage = () => {
     const { currentMessageLogsStatus, addMessageLogsStatus, updateMessageLogsStatus } = useMessageLogsStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
-    const encoder = new TextEncoder();
 
     return {
         sendMessage: (message) => {
             const uuid = crypto.randomUUID();
             const send_message_object = {
                 id: uuid,
-                message: encoder.encode(message),
+                message: message,
             };
             asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
 
