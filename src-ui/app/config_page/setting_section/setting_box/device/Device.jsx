@@ -1,6 +1,4 @@
 import { useTranslation } from "react-i18next";
-import FolderOpenSvg from "@images/folder_open.svg?react";
-
 import { useSettingBox } from "../components/useSettingBox";
 import {
     useMicHostList,
@@ -28,6 +26,8 @@ export const Device = () => {
     const {
         setSelectedMicHost,
         setSelectedMicDevice,
+        getMicHostList,
+        getMicDeviceList,
     } = useConfig();
 
     const selectFunction = (selected_data) => {
@@ -54,6 +54,7 @@ export const Device = () => {
                 selected_id={currentSelectedMicHost.data}
                 list={currentMicHostList.data}
                 selectFunction={selectFunction}
+                openListFunction={getMicHostList}
                 state={currentSelectedMicHost.state}
             />
 
@@ -63,6 +64,7 @@ export const Device = () => {
                 selected_id={currentSelectedMicDevice.data}
                 list={currentMicDeviceList.data}
                 selectFunction={selectFunction}
+                openListFunction={getMicDeviceList}
                 state={currentSelectedMicDevice.state}
             />
 {/*
