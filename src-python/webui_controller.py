@@ -5,7 +5,7 @@ from subprocess import Popen
 from threading import Thread
 from config import config
 from model import model
-from utils import getKeyByValue, isUniqueStrings, decodeUtf8, encodeUtf8, printLog
+from utils import getKeyByValue, isUniqueStrings, printLog
 
 # Common
 class DownloadSoftwareProgressBar:
@@ -289,7 +289,7 @@ class ChatMessage:
 
     def send(self, data):
         id = data["id"]
-        message = decodeUtf8(data["message"])
+        message = data["message"]
         if len(message) > 0:
             # addSentMessageLog(message)
             translation = ""
@@ -329,8 +329,6 @@ class ChatMessage:
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
 
-        message = encodeUtf8(message)
-        translation = encodeUtf8(translation)
         return {"status":200,
                 "result":{
                     "id":id,
