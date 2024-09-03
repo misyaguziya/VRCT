@@ -1,16 +1,16 @@
 import styles from "./DropdownMenu.module.scss";
-
 import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useIsOpenedDropdownMenu } from "@store";
 
 export const DropdownMenu = (props) => {
-
     const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
+
     const toggleDropdownMenu = () => {
         if (currentIsOpenedDropdownMenu === props.dropdown_id) {
             updateIsOpenedDropdownMenu("");
         } else {
+            if (props.openListFunction !== undefined) props.openListFunction();
             updateIsOpenedDropdownMenu(props.dropdown_id);
         }
     };
@@ -38,9 +38,8 @@ export const DropdownMenu = (props) => {
     const getSelectedText = () => {
         if (props.state !== "hasData") return;
         return props.selected_id;
-        // return (props.list[props.selected_id]) ? props.list[props.selected_id] : "Nothing selected";
     };
-
+    const list = (props.list === undefined) ? {} : props.list;
 
     return (
         <div className={styles.container}>
@@ -57,10 +56,10 @@ export const DropdownMenu = (props) => {
             <div className={dropdown_content_wrapper_class_name}>
                 <div className={styles.dropdown_content}>
                     {(props.state === "hasData")
-                        ? Object.entries(props.list).map(([key, value]) => {
+                        ? Object.entries(list).map(([key, value]) => {
                             return (
                                 <div key={key} className={styles.value_button} onClick={() => selectValue(key)}>
-                                    <p className={styles.value_text} >{value}</p>
+                                    <p className={styles.value_text}>{value}</p>
                                 </div>
                             );
                         })

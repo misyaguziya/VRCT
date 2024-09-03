@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import FolderOpenSvg from "@images/folder_open.svg?react";
-
 import { useSettingBox } from "../components/useSettingBox";
 import {
     useMicHostList,
     useSelectedMicHost,
     useSelectedMicDevice,
     useMicDeviceList,
+    useSelectedSpeakerDevice,
+    useSpeakerDeviceList,
 } from "@store";
 
 import { useConfig } from "@logics/useConfig";
@@ -25,9 +25,16 @@ export const Device = () => {
     const { currentMicDeviceList } = useMicDeviceList();
     const { currentSelectedMicDevice } = useSelectedMicDevice();
 
+    const { currentSpeakerDeviceList } = useSpeakerDeviceList();
+    const { currentSelectedSpeakerDevice } = useSelectedSpeakerDevice();
+
     const {
         setSelectedMicHost,
         setSelectedMicDevice,
+        getMicHostList,
+        getMicDeviceList,
+        setSelectedSpeakerDevice,
+        getSpeakerDeviceList,
     } = useConfig();
 
     const selectFunction = (selected_data) => {
@@ -38,6 +45,10 @@ export const Device = () => {
 
             case "mic_device":
                 setSelectedMicDevice(selected_data.selected_id);
+                break;
+
+                case "speaker_device":
+                setSelectedSpeakerDevice(selected_data.selected_id);
                 break;
 
             default:
@@ -54,6 +65,7 @@ export const Device = () => {
                 selected_id={currentSelectedMicHost.data}
                 list={currentMicHostList.data}
                 selectFunction={selectFunction}
+                openListFunction={getMicHostList}
                 state={currentSelectedMicHost.state}
             />
 
@@ -63,7 +75,18 @@ export const Device = () => {
                 selected_id={currentSelectedMicDevice.data}
                 list={currentMicDeviceList.data}
                 selectFunction={selectFunction}
+                openListFunction={getMicDeviceList}
                 state={currentSelectedMicDevice.state}
+            />
+
+            <DropdownMenuContainer
+                dropdown_id="speaker_device"
+                label={t("config_page.speaker_device.label")}
+                selected_id={currentSelectedSpeakerDevice.data}
+                list={currentSpeakerDeviceList.data}
+                selectFunction={selectFunction}
+                openListFunction={getSpeakerDeviceList}
+                state={currentSelectedSpeakerDevice.state}
             />
 {/*
             <ThresholdContainer label={t("config_page.mic_dynamic_energy_threshold.label_for_manual")} desc={t("config_page.mic_dynamic_energy_threshold.desc_for_manual")} id="mic_threshold"  min="0" max="3000"/>
