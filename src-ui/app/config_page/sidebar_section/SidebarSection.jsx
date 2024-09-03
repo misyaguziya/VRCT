@@ -4,6 +4,7 @@ export const SidebarSection = () => {
     return (
         <div className={styles.container}>
             <div className={styles.tabs_wrapper}>
+                <Tab tab_id="device" />
                 <Tab tab_id="appearance" />
                 <Tab tab_id="translation" />
                 <Tab tab_id="transcription" />

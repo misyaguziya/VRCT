@@ -78,6 +78,7 @@
             "invalid_value": "無効な値です。"
         },
         "side_menu_labels": {
+            "device": "デバイス",
             "appearance": "デザイン",
             "translation": "翻訳",
             "transcription": "音声認識",

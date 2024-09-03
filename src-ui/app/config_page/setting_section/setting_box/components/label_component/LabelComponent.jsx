@@ -4,7 +4,10 @@ export const LabelComponent = (props) => {
     return (
         <div className={styles.label_component}>
             <p className={styles.label}>{props.label}</p>
-            <p className={styles.desc}>{props.desc}</p>
+            {props.desc
+                ? <p className={styles.desc}>{props.desc}</p>
+                : null
+            }
         </div>
     );
 };

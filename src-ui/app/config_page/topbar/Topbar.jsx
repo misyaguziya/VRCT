@@ -12,7 +12,6 @@ export const Topbar = () => {
     const { currentIsOpenedConfigPage, updateIsOpenedConfigPage } = useIsOpenedConfigPage();
     const closeConfigPage = () => {
         updateIsOpenedConfigPage(false);
-
     };
 
     return (
