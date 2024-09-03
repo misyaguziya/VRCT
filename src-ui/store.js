@@ -112,12 +112,16 @@ export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useIsOpened
 
 export const { atomInstance: Atom_SelectedPresetTabStatus, useHook: useSelectedPresetTabStatus } = createAtomWithHook(1, "SelectedPresetTabStatus");
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useIsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
-export const { atomInstance: Atom_SelectedConfigTabId, useHook: useSelectedConfigTabId } = createAtomWithHook("appearance", "SelectedConfigTabId");
+export const { atomInstance: Atom_SelectedConfigTabId, useHook: useSelectedConfigTabId } = createAtomWithHook("device", "SelectedConfigTabId");
 export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
 
-export const { atomInstance: Atom_SelectedMicDeviceStatus, useHook: useSelectedMicDeviceStatus } = createAsyncAtomWithHook("device b", "SelectedMicDeviceStatus");
 
-export const { atomInstance: Atom_MicDeviceListStatus, useHook: useMicDeviceListStatus } = createAtomWithHook(test_device_list, "MicDeviceListStatus");
+// Config Page
+export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook([], "MicHostList");
+export const { atomInstance: Atom_SelectedMicHost, useHook: useSelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
+export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook([], "MicDeviceList");
+export const { atomInstance: Atom_SelectedMicDevice, useHook: useSelectedMicDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicDevice");
+
 
 export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
     before: "",

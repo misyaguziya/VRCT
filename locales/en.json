@@ -80,6 +80,7 @@
             "invalid_value": "Invalid value."
         },
         "side_menu_labels": {
+            "device": "Device",
             "appearance": "Appearance",
             "translation": "Translation",
             "transcription": "Transcription",

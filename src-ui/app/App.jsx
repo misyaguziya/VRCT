@@ -14,15 +14,25 @@ export const App = () => {
     const main_page = getCurrent();
 
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
-    const { get_software_version } = useConfig();
+    const {
+        getSoftwareVersion,
+        getMicHostList,
+        getSelectedMicHost,
+        getMicDeviceList,
+        getSelectedMicDevice,
+    } = useConfig();
 
     useEffect(() => {
         main_page.setDecorations(true);
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
-                get_software_version();
+                getSoftwareVersion();
+                getMicHostList();
+                getSelectedMicHost();
+                getMicDeviceList();
+                getSelectedMicDevice();
             }).catch((err) => {
-
+                console.error(err);
             });
         }
         return () => hasRunRef.current = true;

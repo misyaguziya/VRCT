@@ -17,6 +17,11 @@ export const useReceiveRoutes = () => {
 
     const {
         updateSoftwareVersion,
+        updateMicHostList,
+        updateSelectedMicHost,
+        updateMicDeviceList,
+        updateSelectedMicDevice,
+        updateMicHostAndDevice,
     } = useConfig();
 
     const routes = {
@@ -28,8 +33,14 @@ export const useReceiveRoutes = () => {
         "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
 
         "/config/version": updateSoftwareVersion,
+        "/controller/list_mic_host": updateMicHostList,
+        "/config/choice_mic_host": updateSelectedMicHost,
+        "/controller/list_mic_device": updateMicDeviceList,
+        "/config/choice_mic_device": updateSelectedMicDevice,
+        "/controller/callback_set_mic_host": updateMicHostAndDevice,
+        "/controller/callback_set_mic_device": updateSelectedMicDevice,
 
-        "/controller/callback_messagebox_press_key_enter": updateSentMessageLog,
+        "/controller/callback_messagebox_send": updateSentMessageLog,
         "/action/transcription_send_mic_message": addSentMessageLog,
         "/action/transcription_receive_speaker_message": addReceivedMessageLog
     };
