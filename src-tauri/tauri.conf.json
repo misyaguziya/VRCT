@@ -52,7 +52,10 @@
       ],
       "externalBin": [
         "bin/backend"
-      ]
+      ],
+      "resources":{
+        "bin/_internal": "_internal"
+      }
     }
   }
 }
