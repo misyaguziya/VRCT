@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "setup-python": "install.bat",
-    "build-python": "pyinstaller -F src-python/webui_mainloop.py --add-data ./fonts;fonts/ --add-data .venv/Lib/site-packages/zeroconf;zeroconf/ --add-data .venv/Lib/site-packages/openvr;openvr/ --distpath src-tauri/bin --exclude-module pandas --exclude-module matplotlib --exclude-module PyQt5 --clean -n backend-x86_64-pc-windows-msvc --icon=./src-ui/assets/chato_icon_fill.png",
+    "build-python": "pyinstaller backend.spec --distpath src-tauri/bin --clean --noconfirm",
     "vite": "vite",
     "vite-build": "vite build",
     "vite-preview": "vite preview",

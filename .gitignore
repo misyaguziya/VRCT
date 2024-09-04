@@ -3,7 +3,6 @@ build/
 dist/
 /config.json
 memo.txt
-VRCT.spec
 *.pyc
 logs/
 .venv/
@@ -43,5 +42,4 @@ dist-ssr
 .venv
 
 # Customize
-backend-x86_64-pc-windows-msvc.spec
 /build
