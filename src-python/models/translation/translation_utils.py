@@ -81,9 +81,9 @@ def downloadCTranslate2Weight(root, weight_type="Small", callbackFunc=None):
                     if isinstance(callbackFunc, Callable):
                         total_chunk += len(chunk)
                         callbackFunc(total_chunk/file_size)
-                    printLog(f"Downloading {filename}: {total_chunk/file_size:.0%}")
+                    printLog(f"Downloading CTranslate Model: {total_chunk/file_size:.0%}")
 
             with ZipFile(os_path.join(tmp_path, filename)) as zf:
                 zf.extractall(path)
     except Exception as e:
-        printLog("error:downloadCTranslate2Weight()", e)
+        printLog("warning:downloadCTranslate2Weight()", e)
