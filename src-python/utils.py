@@ -81,7 +81,7 @@ def printLog(log:str, data:Any=None) -> None:
     response = {
         "status": 348,
         "log": log,
-        "data": data,
+        "data": str(data),
     }
 
     with open('process.log', 'a', encoding="utf-8") as f:
