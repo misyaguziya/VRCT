@@ -297,8 +297,8 @@ def main():
 
 if __name__ == "__main__":
     controller.init({
-        "ctranslate2": action_mapping["/controller/callback_download_ctranslate2_weight"],
-        "whisper": action_mapping["/controller/callback_download_whisper_weight"],
+        "ctranslate2": action_mapping["/controller/callback_download_ctranslate2_weight"]["download"],
+        "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
     })
 
     process = "main"
