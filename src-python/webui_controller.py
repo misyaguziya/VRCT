@@ -286,19 +286,21 @@ def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow():
 
 # func message box
 def replaceExclamationsWithRandom(text):
-    characters = string.ascii_letters + string.digits
     # ![...] にマッチする正規表現
     pattern = r'!\[(.*?)\]'
 
     # 乱数と置換部分を保存する辞書
     replacement_dict = {}
 
-    # マッチした部分をランダムな整数に置換し、その対応を辞書に保存
+    num = 4096
+    # マッチした部分を4096から始まる整数に置換する。置換毎に4097, 4098, ... と増える
     def replace(match):
-        original = match.group(1)  # ![]内のテキストを取得
-        rand_value = ''.join(random.choices(characters, k=8)) # 8文字のランダムな文字列を生成
-        replacement_dict[rand_value] = original  # 辞書に保存
-        return str(rand_value)  # 置換する値
+        original = match.group(1)
+        nonlocal num
+        rand_value = hex(num)
+        replacement_dict[rand_value] = original
+        num += 1
+        return str(rand_value)
 
     # 文章内の ![] の部分を置換
     replaced_text = re.sub(pattern, replace, text)
@@ -306,9 +308,10 @@ def replaceExclamationsWithRandom(text):
     return replaced_text, replacement_dict
 
 def restoreText(escaped_text, escape_dict):
-    # 辞書のキーに対応する値でテキスト内を置換する
+    # 大文字小文字を無視して置換するために、正規表現を使う
     for escape_seq, char in escape_dict.items():
-        escaped_text = escaped_text.replace(escape_seq, char)
+        # escape_seq の部分を case-insensitive で置換
+        escaped_text = re.sub(re.escape(escape_seq), char, escaped_text, flags=re.IGNORECASE)
     return escaped_text
 
 def removeExclamations(text):
@@ -334,6 +337,7 @@ class ChatMessage:
                 if config.USE_EXCLUDE_WORDS is True:
                     replacement_message, replacement_dict = replaceExclamationsWithRandom(message)
                     translation, success = model.getInputTranslate(replacement_message)
+
                     message = removeExclamations(message)
                     translation = restoreText(translation, replacement_dict)
                 else:
