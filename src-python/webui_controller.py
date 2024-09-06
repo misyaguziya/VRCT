@@ -2,6 +2,9 @@ from typing import Callable, Union
 from time import sleep
 from subprocess import Popen
 from threading import Thread
+import re
+import random
+import string
 from config import config
 from model import model
 from utils import getKeyByValue, isUniqueStrings, printLog, printResponse
@@ -282,6 +285,39 @@ def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow():
     th_stopTranscriptionReceiveMessage.start()
 
 # func message box
+def replaceExclamationsWithRandom(text):
+    characters = string.ascii_letters + string.digits
+    # ![...] にマッチする正規表現
+    pattern = r'!\[(.*?)\]'
+
+    # 乱数と置換部分を保存する辞書
+    replacement_dict = {}
+
+    # マッチした部分をランダムな整数に置換し、その対応を辞書に保存
+    def replace(match):
+        original = match.group(1)  # ![]内のテキストを取得
+        rand_value = ''.join(random.choices(characters, k=8)) # 8文字のランダムな文字列を生成
+        replacement_dict[rand_value] = original  # 辞書に保存
+        return str(rand_value)  # 置換する値
+
+    # 文章内の ![] の部分を置換
+    replaced_text = re.sub(pattern, replace, text)
+
+    return replaced_text, replacement_dict
+
+def restoreText(escaped_text, escape_dict):
+    # 辞書のキーに対応する値でテキスト内を置換する
+    for escape_seq, char in escape_dict.items():
+        escaped_text = escaped_text.replace(escape_seq, char)
+    return escaped_text
+
+def removeExclamations(text):
+    # ![...] を [...] に置換する正規表現
+    pattern = r'!\[(.*?)\]'
+    # ![...] の部分を [] 内のテキストに置換
+    cleaned_text = re.sub(pattern, r'\1', text)
+    return cleaned_text
+
 class ChatMessage:
     def __init__(self, action:Callable[[dict], None]) -> None:
         self.action = action
@@ -295,7 +331,14 @@ class ChatMessage:
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getInputTranslate(message)
+                if config.USE_EXCLUDE_WORDS is True:
+                    replacement_message, replacement_dict = replaceExclamationsWithRandom(message)
+                    translation, success = model.getInputTranslate(replacement_message)
+                    message = removeExclamations(message)
+                    translation = restoreText(translation, replacement_dict)
+                else:
+                    translation, success = model.getInputTranslate(message)
+
                 if success is False:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
