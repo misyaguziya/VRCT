@@ -3,8 +3,6 @@ from time import sleep
 from subprocess import Popen
 from threading import Thread
 import re
-import random
-import string
 from config import config
 from model import model
 from utils import getKeyByValue, isUniqueStrings, printLog, printResponse
@@ -297,10 +295,10 @@ def replaceExclamationsWithRandom(text):
     def replace(match):
         original = match.group(1)
         nonlocal num
-        rand_value = f" <$ {hex(num)}> "
+        rand_value = hex(num)
         replacement_dict[rand_value] = original
         num += 1
-        return str(rand_value)
+        return f" ${rand_value} "
 
     # 文章内の ![] の部分を置換
     replaced_text = re.sub(pattern, replace, text)
@@ -310,8 +308,9 @@ def replaceExclamationsWithRandom(text):
 def restoreText(escaped_text, escape_dict):
     # 大文字小文字を無視して置換するために、正規表現を使う
     for escape_seq, char in escape_dict.items():
-        # escape_seq の部分を case-insensitive で置換
-        escaped_text = re.sub(re.escape(escape_seq[1:-1]), char, escaped_text, flags=re.IGNORECASE)
+        # escaped_text の部分を pattern で置換
+        pattern = re.escape(f"${escape_seq}") + r"|\$\s+" + re.escape(escape_seq)
+        escaped_text = re.sub(pattern, char, escaped_text, flags=re.IGNORECASE)
     return escaped_text
 
 def removeExclamations(text):
