@@ -1,5 +1,5 @@
 import { store } from "@store";
-import { encode } from 'js-base64'
+import { encode } from "js-base64";
 
 export const useStdoutToPython = () => {
     const asyncStdoutToPython = async (path, value) => {

@@ -124,6 +124,9 @@ export const { atomInstance: Atom_SelectedMicDevice, useHook: useSelectedMicDevi
 export const { atomInstance: Atom_SpeakerDeviceList, useHook: useSpeakerDeviceList } = createAsyncAtomWithHook({}, "SpeakerDeviceList");
 export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useSelectedSpeakerDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedSpeakerDevice");
 
+export const { atomInstance: Atom_MicVolume, useHook: useMicVolume } = createAsyncAtomWithHook(0, "MicVolume");
+export const { atomInstance: Atom_SpeakerVolume, useHook: useSpeakerVolume } = createAsyncAtomWithHook(0, "SpeakerVolume");
+
 export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
     before: "",
     after: "",
