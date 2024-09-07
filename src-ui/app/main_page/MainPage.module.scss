@@ -1,3 +1,22 @@
+.page {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    transition: transform 0.5s ease;
+}
+
+.show_config.main_page {
+    transform: translateY(-100%);
+}
+
+.show_main.main_page {
+    transform: translateY(0);
+}
+
+
 .container {
     width: 100%;
     height: 100%;
