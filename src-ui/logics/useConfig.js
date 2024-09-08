@@ -6,6 +6,8 @@ import {
     useSelectedMicDevice,
     useSpeakerDeviceList,
     useSelectedSpeakerDevice,
+
+    useEnableAutoClearMessageBox,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
@@ -22,6 +24,7 @@ export const useConfig = () => {
     const { updateSelectedMicDevice } = useSelectedMicDevice();
     const { updateSpeakerDeviceList } = useSpeakerDeviceList();
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
+    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
 
 
     const asyncPending = () => new Promise(() => {});
@@ -92,6 +95,22 @@ export const useConfig = () => {
         updateMicHostAndDevice: (payload) => {
             updateSelectedMicHost(payload.data.host);
             updateSelectedMicDevice(payload.data.device);
+        },
+
+
+
+        // Others
+        toggleEnableAutoClearMessageBox: () => {
+            updateEnableAutoClearMessageBox(asyncPending);
+            if (currentEnableAutoClearMessageBox.data) {
+                asyncStdoutToPython("/controller/callback_disable_auto_clear_chatbox");
+            } else {
+                asyncStdoutToPython("/controller/callback_enable_auto_clear_chatbox");
+            }
+        },
+        currentEnableAutoClearMessageBox: currentEnableAutoClearMessageBox,
+        updateEnableAutoClearMessageBox: (payload) => {
+            updateEnableAutoClearMessageBox(payload.data);
         },
 
 

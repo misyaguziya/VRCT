@@ -152,6 +152,14 @@ export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useIsOpenedWo
 export const { atomInstance: Atom_WordFilterList, useHook: useWordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
 
 
+
+// Others
+export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useEnableAutoClearMessageBox } = createAsyncAtomWithHook(true, "EnableAutoClearMessageBox");
+
+
+
+
+
 export const { atomInstance: Atom_TranslatorListStatus, useHook: useTranslatorListStatus } = createAtomWithHook(translator_list, "TranslatorListStatus");
 export const { atomInstance: Atom_SelectedTranslatorIdStatus, useHook: useSelectedTranslatorIdStatus } = createAtomWithHook("CTranslate2", "SelectedTranslatorIdStatus");
 export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useIsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
