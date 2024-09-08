@@ -155,7 +155,7 @@ export const { atomInstance: Atom_WordFilterList, useHook: useWordFilterList } =
 
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useEnableAutoClearMessageBox } = createAsyncAtomWithHook(true, "EnableAutoClearMessageBox");
-
+export const { atomInstance: Atom_SendMessageButtonType, useHook: useSendMessageButtonType } = createAsyncAtomWithHook("show", "SendMessageButtonType");
 
 
 
