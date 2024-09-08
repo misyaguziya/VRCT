@@ -1,5 +1,7 @@
+@import "@scss_mixins";
+
 .checkbox_container {
-    width: 100%;
+    // width: 100%;
     height: 100%;
     display: flex;
     justify-content: end;
@@ -10,6 +12,7 @@
     display: inline-block;
     cursor: pointer;
     padding: 2rem;
+    position: relative;
     &:hover {
         & .cbx {
             border: var(--primary_600_color) solid 0.2rem;
@@ -50,4 +53,8 @@
 .checkbox_wrapper input[type="checkbox"]:checked + .cbx svg {
     stroke-dashoffset: 0;
     transition: all 0.15s ease;
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, right, -2rem);
 }

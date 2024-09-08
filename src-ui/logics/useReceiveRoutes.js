@@ -26,6 +26,8 @@ export const useReceiveRoutes = () => {
 
         updateSpeakerDeviceList,
         updateSelectedSpeakerDevice,
+
+        updateEnableAutoClearMessageBox,
     } = useConfig();
 
     const { updateVolumeVariable_Mic, updateVolumeVariable_Speaker } = useVolume();
@@ -55,6 +57,10 @@ export const useReceiveRoutes = () => {
 
         "/action/check_mic_threshold_energy": updateVolumeVariable_Mic,
         "/action/check_speaker_threshold_energy": updateVolumeVariable_Speaker,
+
+        "/controller/callback_enable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
+        "/controller/callback_disable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
+
 
 
         "/controller/callback_messagebox_send": updateSentMessageLog,
