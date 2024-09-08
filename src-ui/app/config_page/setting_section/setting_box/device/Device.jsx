@@ -47,7 +47,7 @@ export const Device = () => {
                 setSelectedMicDevice(selected_data.selected_id);
                 break;
 
-                case "speaker_device":
+            case "speaker_device":
                 setSelectedSpeakerDevice(selected_data.selected_id);
                 break;
 
@@ -55,6 +55,13 @@ export const Device = () => {
                 break;
         }
     };
+
+    // const volumeCheckStartFunction_Mic = () => {
+    //     volumeCheckStart_Mic();
+    // };
+    // const volumeCheckStopFunction_Mic = () => {
+    //     volumeCheckStop_Mic();
+    // };
 
 
     return (
@@ -79,6 +86,17 @@ export const Device = () => {
                 state={currentSelectedMicDevice.state}
             />
 
+            <ThresholdContainer
+                label={t("config_page.mic_dynamic_energy_threshold.label_for_manual")}
+                desc={t("config_page.mic_dynamic_energy_threshold.desc_for_manual")}
+                id="mic_threshold"
+                min="0"
+                max="2000"
+                // volumeCheckStartFunction={volumeCheckStartFunction_Mic}
+                // volumeCheckStopFunction={volumeCheckStopFunction_Mic}
+            />
+
+
             <DropdownMenuContainer
                 dropdown_id="speaker_device"
                 label={t("config_page.speaker_device.label")}
@@ -88,13 +106,14 @@ export const Device = () => {
                 openListFunction={getSpeakerDeviceList}
                 state={currentSelectedSpeakerDevice.state}
             />
-{/*
-            <ThresholdContainer label={t("config_page.mic_dynamic_energy_threshold.label_for_manual")} desc={t("config_page.mic_dynamic_energy_threshold.desc_for_manual")} id="mic_threshold"  min="0" max="3000"/>
 
-
-            <DropdownMenuContainer dropdown_id="speaker_device" label={t("config_page.speaker_device.label")}  selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
-
-            <ThresholdContainer label={t("config_page.speaker_dynamic_energy_threshold.label_for_manual")} desc={t("config_page.speaker_dynamic_energy_threshold.desc_for_manual")} id="speaker_threshold"  min="0" max="3000"/> */}
+            <ThresholdContainer
+                label={t("config_page.speaker_dynamic_energy_threshold.label_for_manual")}
+                desc={t("config_page.speaker_dynamic_energy_threshold.desc_for_manual")}
+                id="speaker_threshold"
+                min="0"
+                max="4000"
+            />
         </>
     );
 };
