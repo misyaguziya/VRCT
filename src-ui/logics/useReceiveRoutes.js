@@ -28,7 +28,7 @@ export const useReceiveRoutes = () => {
         updateSelectedSpeakerDevice,
     } = useConfig();
 
-    const { updateVolumeVariable_Mic } = useVolume();
+    const { updateVolumeVariable_Mic, updateVolumeVariable_Speaker } = useVolume();
 
     const routes = {
         "/controller/callback_enable_translation": updateTranslationStatus,
@@ -54,6 +54,7 @@ export const useReceiveRoutes = () => {
         "/controller/callback_set_speaker_device": updateSelectedSpeakerDevice,
 
         "/action/check_mic_threshold_energy": updateVolumeVariable_Mic,
+        "/action/check_speaker_threshold_energy": updateVolumeVariable_Speaker,
 
 
         "/controller/callback_messagebox_send": updateSentMessageLog,
