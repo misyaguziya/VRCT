@@ -2,7 +2,7 @@ import { useState } from "react";
 import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics/useMessage";
-import { store } from "@store";
+import { store, useEnableAutoClearMessageBox } from "@store";
 import { scrollToBottom } from "@logics/scrollToBottom";
 
 
@@ -10,9 +10,13 @@ export const MessageInputBox = () => {
     const [inputValue, setInputValue] = useState("");
     const { sendMessage } = useMessage();
 
+    const { currentEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
+
     const onSubmitFunction = (e) => {
         e.preventDefault();
         sendMessage(inputValue);
+
+        if (currentEnableAutoClearMessageBox.data) setInputValue("");
 
         setTimeout(() => {
             scrollToBottom(store.log_box_ref);
@@ -31,6 +35,7 @@ export const MessageInputBox = () => {
                     className={styles.message_box_input_area}
                     onChange={onChangeFunction}
                     placeholder="Input Textfield"
+                    value={inputValue}
                 />
             </div>
             <button

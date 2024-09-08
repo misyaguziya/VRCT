@@ -100,6 +100,10 @@ export const useConfig = () => {
 
 
         // Others
+        getEnableAutoClearMessageBox: () => {
+            updateEnableAutoClearMessageBox(asyncPending);
+            asyncStdoutToPython("/config/enable_auto_clear_message_box");
+        },
         toggleEnableAutoClearMessageBox: () => {
             updateEnableAutoClearMessageBox(asyncPending);
             if (currentEnableAutoClearMessageBox.data) {

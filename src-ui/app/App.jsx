@@ -29,6 +29,8 @@ const StartPythonFacadeComponent = () => {
         // getMicDeviceList,
         getSelectedMicDevice,
         getSelectedSpeakerDevice,
+
+        getEnableAutoClearMessageBox,
     } = useConfig();
 
 
@@ -42,6 +44,8 @@ const StartPythonFacadeComponent = () => {
                 // getMicDeviceList();
                 getSelectedMicDevice();
                 getSelectedSpeakerDevice();
+
+                getEnableAutoClearMessageBox();
             }).catch((err) => {
                 console.error(err);
             });
