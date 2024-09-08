@@ -31,6 +31,7 @@ const StartPythonFacadeComponent = () => {
         getSelectedSpeakerDevice,
 
         getEnableAutoClearMessageBox,
+        getSendMessageButtonType,
     } = useConfig();
 
 
@@ -46,6 +47,7 @@ const StartPythonFacadeComponent = () => {
                 getSelectedSpeakerDevice();
 
                 getEnableAutoClearMessageBox();
+                getSendMessageButtonType();
             }).catch((err) => {
                 console.error(err);
             });

@@ -14,6 +14,7 @@ export const Others = () => {
     } = useSettingBox();
 
     const { currentEnableAutoClearMessageBox, toggleEnableAutoClearMessageBox } = useConfig();
+    const { currentSendMessageButtonType, setSendMessageButtonType } = useConfig();
 
 
     return (
@@ -24,7 +25,16 @@ export const Others = () => {
                 toggleFunction={toggleEnableAutoClearMessageBox}
             />
 
-            {/* <RadioButtonContainer label={t("config_page.send_message_button_type.label")} checkbox_id="checkbox_id_1"/> */}
+            <RadioButtonContainer
+                label={t("config_page.send_message_button_type.label")}
+                selectFunction={setSendMessageButtonType}
+                options={[
+                    { radio_button_id: "hide", label: t("config_page.send_message_button_type.hide") },
+                    { radio_button_id: "show", label: t("config_page.send_message_button_type.show") },
+                    { radio_button_id: "show_and_disable_enter_key", label: t("config_page.send_message_button_type.show_and_disable_enter_key") },
+                ]}
+                checked_variable={currentSendMessageButtonType}
+            />
         </>
     );
 };

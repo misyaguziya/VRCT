@@ -8,6 +8,7 @@ import {
     useSelectedSpeakerDevice,
 
     useEnableAutoClearMessageBox,
+    useSendMessageButtonType,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
@@ -25,6 +26,7 @@ export const useConfig = () => {
     const { updateSpeakerDeviceList } = useSpeakerDeviceList();
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
+    const { currentSendMessageButtonType, updateSendMessageButtonType } = useSendMessageButtonType();
 
 
     const asyncPending = () => new Promise(() => {});
@@ -116,6 +118,20 @@ export const useConfig = () => {
         updateEnableAutoClearMessageBox: (payload) => {
             updateEnableAutoClearMessageBox(payload.data);
         },
+
+        getSendMessageButtonType: () => {
+            updateSendMessageButtonType(asyncPending);
+            asyncStdoutToPython("/config/send_message_button_type");
+        },
+        setSendMessageButtonType: (selected_type) => {
+            updateSendMessageButtonType(asyncPending);
+            asyncStdoutToPython("/controller/callback_set_send_message_button_type", selected_type);
+        },
+        currentSendMessageButtonType: currentSendMessageButtonType,
+        updateSendMessageButtonType: (payload) => {
+            updateSendMessageButtonType(payload.data);
+        },
+
 
 
     };
