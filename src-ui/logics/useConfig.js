@@ -9,6 +9,8 @@ import {
 
     useEnableAutoClearMessageBox,
     useSendMessageButtonType,
+    useMicThreshold,
+    useSpeakerThreshold,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
@@ -27,6 +29,8 @@ export const useConfig = () => {
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
     const { currentSendMessageButtonType, updateSendMessageButtonType } = useSendMessageButtonType();
+    const { currentMicThreshold, updateMicThreshold } = useMicThreshold();
+    const { currentSpeakerThreshold, updateSpeakerThreshold } = useSpeakerThreshold();
 
 
     const asyncPending = () => new Promise(() => {});
@@ -37,6 +41,7 @@ export const useConfig = () => {
         },
         updateSoftwareVersion: (payload) => updateSoftwareVersion(payload.data),
 
+        // Device
         getMicHostList: () => {
             updateMicHostList(asyncPending);
             asyncStdoutToPython("/controller/list_mic_host");
@@ -97,6 +102,32 @@ export const useConfig = () => {
         updateMicHostAndDevice: (payload) => {
             updateSelectedMicHost(payload.data.host);
             updateSelectedMicDevice(payload.data.device);
+        },
+
+        getMicThreshold: () => {
+            // updateMicThreshold(asyncPending);
+            asyncStdoutToPython("/config/input_mic_energy_threshold");
+        },
+        setMicThreshold: (mic_threshold) => {
+            // updateMicThreshold(asyncPending);
+            asyncStdoutToPython("/controller/callback_set_mic_energy_threshold", mic_threshold);
+        },
+        currentMicThreshold: currentMicThreshold,
+        updateMicThreshold: (payload) => {
+            updateMicThreshold(payload.data);
+        },
+
+        getSpeakerThreshold: () => {
+            // updateSpeakerThreshold(asyncPending);
+            asyncStdoutToPython("/config/input_speaker_energy_threshold");
+        },
+        setSpeakerThreshold: (speaker_threshold) => {
+            // updateSpeakerThreshold(asyncPending);
+            asyncStdoutToPython("/controller/callback_set_speaker_energy_threshold", speaker_threshold);
+        },
+        currentSpeakerThreshold: currentSpeakerThreshold,
+        updateSpeakerThreshold: (payload) => {
+            updateSpeakerThreshold(payload.data);
         },
 
 

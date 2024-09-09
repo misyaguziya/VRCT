@@ -127,6 +127,10 @@ export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useSelectedSpe
 export const { atomInstance: Atom_MicVolume, useHook: useMicVolume } = createAsyncAtomWithHook(0, "MicVolume");
 export const { atomInstance: Atom_SpeakerVolume, useHook: useSpeakerVolume } = createAsyncAtomWithHook(0, "SpeakerVolume");
 
+export const { atomInstance: Atom_MicThreshold, useHook: useMicThreshold } = createAtomWithHook(0, "MicThreshold");
+export const { atomInstance: Atom_SpeakerThreshold, useHook: useSpeakerThreshold } = createAtomWithHook(0, "SpeakerThreshold");
+
+
 export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
     before: "",
     after: "",
