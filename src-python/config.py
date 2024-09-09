@@ -157,60 +157,6 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_FOREGROUND = value
 
-    @property
-    def SOURCE_COUNTRY(self):
-        return self._SOURCE_COUNTRY
-
-    @SOURCE_COUNTRY.setter
-    def SOURCE_COUNTRY(self, value):
-        if isinstance(value, str):
-            self._SOURCE_COUNTRY = value
-
-    @property
-    def SOURCE_LANGUAGE(self):
-        return self._SOURCE_LANGUAGE
-
-    @SOURCE_LANGUAGE.setter
-    def SOURCE_LANGUAGE(self, value):
-        if isinstance(value, str):
-            self._SOURCE_LANGUAGE = value
-
-    @property
-    def TARGET_COUNTRY(self):
-        return self._TARGET_COUNTRY
-
-    @TARGET_COUNTRY.setter
-    def TARGET_COUNTRY(self, value):
-        if isinstance(value, str):
-            self._TARGET_COUNTRY = value
-
-    @property
-    def TARGET_LANGUAGE(self):
-        return self._TARGET_LANGUAGE
-
-    @TARGET_LANGUAGE.setter
-    def TARGET_LANGUAGE(self, value):
-        if isinstance(value, str):
-            self._TARGET_LANGUAGE = value
-
-    @property
-    def CHOICE_INPUT_TRANSLATOR(self):
-        return self._CHOICE_INPUT_TRANSLATOR
-
-    @CHOICE_INPUT_TRANSLATOR.setter
-    def CHOICE_INPUT_TRANSLATOR(self, value):
-        if value in list(translation_lang.keys()):
-            self._CHOICE_INPUT_TRANSLATOR= value
-
-    @property
-    def CHOICE_OUTPUT_TRANSLATOR(self):
-        return self._CHOICE_OUTPUT_TRANSLATOR
-
-    @CHOICE_OUTPUT_TRANSLATOR.setter
-    def CHOICE_OUTPUT_TRANSLATOR(self, value):
-        if value in list(translation_lang.keys()):
-            self._CHOICE_OUTPUT_TRANSLATOR = value
-
     # @property
     # def SENT_MESSAGES_LOG(self):
     #     return self._SENT_MESSAGES_LOG
@@ -301,11 +247,12 @@ class Config:
         try:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_YOUR_LANGUAGES
-                for k, v in value.items():
-                    language = v["language"]
-                    country = v["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                        value[k] = value_old[k]
+                for k0, v0 in value.items():
+                    for k1, v1 in v0.items():
+                        language = v1["language"]
+                        country = v1["country"]
+                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                            value[k0][k1] = value_old[k0][k1]
                 self._SELECTED_TAB_YOUR_LANGUAGES = value
         except Exception:
             pass
@@ -321,11 +268,12 @@ class Config:
         try:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_TARGET_LANGUAGES
-                for k, v in value.items():
-                    language = v["language"]
-                    country = v["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                        value[k] = value_old[k]
+                for k0, v0 in value.items():
+                    for k1, v1 in v0.items():
+                        language = v1["language"]
+                        country = v1["country"]
+                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                            value[k0][k1] = value_old[k0][k1]
                 self._SELECTED_TAB_TARGET_LANGUAGES = value
         except Exception:
             pass
@@ -341,6 +289,17 @@ class Config:
         if isinstance(value, str):
             self._SELECTED_TRANSCRIPTION_ENGINE = value
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('ENABLE_MULTI_TRANSLATION')
+    def ENABLE_MULTI_TRANSLATION(self):
+        return self._ENABLE_MULTI_TRANSLATION
+
+    @ENABLE_MULTI_TRANSLATION.setter
+    def ENABLE_MULTI_TRANSLATION(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_MULTI_TRANSLATION = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
@@ -1000,12 +959,7 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-        self._CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-        self._CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-        self._SOURCE_LANGUAGE = "Japanese"
-        self._SOURCE_COUNTRY = "Japan"
-        self._TARGET_LANGUAGE = "English"
-        self._TARGET_COUNTRY = "United States"
+
         # self._SENT_MESSAGES_LOG = []
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -1027,33 +981,70 @@ class Config:
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
             "1":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
             "2":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
             "3":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
             "1":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
             "2":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
             "3":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
+        self._ENABLE_MULTI_TRANSLATION = False
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
