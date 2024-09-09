@@ -201,7 +201,7 @@ class SpeakerMessage:
                     },
                 })
         elif isinstance(message, str) and len(message) > 0:
-            translation = ""
+            translation = []
             if model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
