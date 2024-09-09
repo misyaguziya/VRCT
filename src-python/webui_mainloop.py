@@ -326,6 +326,7 @@ if __name__ == "__main__":
 
                 match endpoint:
                     case  "/controller/callback_messagebox_send":
+                        # handleControllerRequest("/controller/callback_enable_translation")
                         data = {"id":"123456", "message":"テスト"}
                     case "/controller/set_your_language_and_country":
                         data = {
