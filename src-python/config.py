@@ -291,14 +291,14 @@ class Config:
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_MULTI_TRANSLATION')
-    def ENABLE_MULTI_TRANSLATION(self):
-        return self._ENABLE_MULTI_TRANSLATION
+    @json_serializable('ENABLE_MULTI_LANGUAGE_TRANSLATION')
+    def ENABLE_MULTI_LANGUAGE_TRANSLATION(self):
+        return self._ENABLE_MULTI_LANGUAGE_TRANSLATION
 
-    @ENABLE_MULTI_TRANSLATION.setter
-    def ENABLE_MULTI_TRANSLATION(self, value):
+    @ENABLE_MULTI_LANGUAGE_TRANSLATION.setter
+    def ENABLE_MULTI_LANGUAGE_TRANSLATION(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MULTI_TRANSLATION = value
+            self._ENABLE_MULTI_LANGUAGE_TRANSLATION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1044,7 +1044,7 @@ class Config:
             },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        self._ENABLE_MULTI_TRANSLATION = False
+        self._ENABLE_MULTI_LANGUAGE_TRANSLATION = False
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
