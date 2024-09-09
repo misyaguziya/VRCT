@@ -229,7 +229,7 @@ class Model:
             target_country,
             message
             )
-        return translation, success_flag
+        return [translation], success_flag
 
     def addKeywords(self):
         for f in config.INPUT_MIC_WORD_FILTER:
