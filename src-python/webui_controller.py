@@ -324,8 +324,8 @@ class ChatMessage:
             # update textbox message log (Sent)
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
-                    translation = " (" + "/".join(translation) + ")"
-                model.logger.info(f"[SENT] {message}{translation}")
+                    translation_text = " (" + "/".join(translation) + ")"
+                model.logger.info(f"[SENT] {message}{translation_text}")
 
         return {"status":200,
                 "result":{
@@ -412,9 +412,14 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     printLog("swapYourLanguageAndTargetLanguage")
     your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+    your_language_primary = your_language["primary"]
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-    setYourLanguageAndCountry(target_language)
-    setTargetLanguageAndCountry(your_language)
+    target_language_primary = target_language["primary"]
+
+    your_language["primary"] = target_language_primary
+    target_language["primary"] = your_language_primary
+    setYourLanguageAndCountry(your_language)
+    setTargetLanguageAndCountry(target_language)
     return {"status":200}
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:

@@ -208,7 +208,7 @@ class Model:
 
     def getInputTranslate(self, message):
         translator_name=config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+        source_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_languages=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
         translations = []
