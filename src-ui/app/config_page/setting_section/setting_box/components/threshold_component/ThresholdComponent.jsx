@@ -8,7 +8,7 @@ export const ThresholdComponent = (props) => {
         <div className={styles.container}>
             <VolumeCheckButton {...props}/>
             <SliderAndMeter {...props}/>
-            <ThresholdEntry/>
+            <ThresholdEntry {...props}/>
         </div>
     );
 };
