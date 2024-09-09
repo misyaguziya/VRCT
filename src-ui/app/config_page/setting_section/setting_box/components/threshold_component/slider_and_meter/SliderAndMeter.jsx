@@ -6,15 +6,14 @@ import {
 } from "@store";
 
 import { useVolume } from "@logics/useVolume";
-import { useConfig } from "@logics/useConfig";
 
 export const SliderAndMeter = (props) => {
     return (
         <div className={styles.container}>
             <div className={styles.meter_container}>
                 {props.id === "mic_threshold"
-                    ? <ThresholdVolumeMeter_Mic min={props.min} max={props.max}/>
-                    : <ThresholdVolumeMeter_Speaker min={props.min} max={props.max}/>
+                    ? <ThresholdVolumeMeter_Mic {...props}/>
+                    : <ThresholdVolumeMeter_Speaker {...props}/>
                 }
             </div>
             <DevSection {...props}/>
@@ -23,28 +22,22 @@ export const SliderAndMeter = (props) => {
 };
 
 
-const ThresholdVolumeMeter_Mic = ({min, max}) => {
+const ThresholdVolumeMeter_Mic = (props) => {
     const { currentMicVolume } = useMicVolume();
-    const { currentMicThreshold, setMicThreshold } = useConfig();
-    const [threshold, setThreshold] = useState(currentMicThreshold);
 
-    const currentVolumeVariable = Math.min(currentMicVolume.data, max);
-    const volume_width_percentage = (currentVolumeVariable / max) * 100;
-
-    const onMOuseUpFunction = () => {
-        setMicThreshold(threshold);
-    };
+    const currentVolumeVariable = Math.min(currentMicVolume.data, props.max);
+    const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
 
     return (
         <>
-            <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={threshold}/>
+            <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold}/>
             <input
                 type="range"
-                min={min}
-                max={max}
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                onMouseUp={() => onMOuseUpFunction()}
+                min={props.min}
+                max={props.max}
+                value={props.ui_threshold}
+                onChange={(e) => props.setUiThresholdFunction(e.target.value)}
+                onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
                 className={styles.threshold_slider}
             />
         </>
@@ -52,28 +45,22 @@ const ThresholdVolumeMeter_Mic = ({min, max}) => {
 };
 
 
-const ThresholdVolumeMeter_Speaker = ({ min, max }) => {
+const ThresholdVolumeMeter_Speaker = (props) => {
     const { currentSpeakerVolume } = useSpeakerVolume();
-    const { currentSpeakerThreshold, setSpeakerThreshold } = useConfig();
-    const [threshold, setThreshold] = useState(currentSpeakerThreshold);
 
-    const currentVolumeVariable = Math.min(currentSpeakerVolume.data, max);
-    const volume_width_percentage = (currentVolumeVariable / max) * 100;
-
-    const onMouseUpFunction = () => {
-        setSpeakerThreshold(threshold);
-    };
+    const currentVolumeVariable = Math.min(currentSpeakerVolume.data, props.max);
+    const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
 
     return (
         <>
-            <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={threshold} />
+            <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold} />
             <input
                 type="range"
-                min={min}
-                max={max}
-                value={threshold}
-                onChange={(e) => setThreshold(e.target.value)}
-                onMouseUp={() => onMouseUpFunction()}
+                min={props.min}
+                max={props.max}
+                value={props.ui_threshold}
+                onChange={(e) => props.setUiThresholdFunction(e.target.value)}
+                onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
                 className={styles.threshold_slider}
             />
         </>
