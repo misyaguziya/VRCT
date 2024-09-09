@@ -33,10 +33,11 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
 };
 
 const WithTranslatedMessages = ({ messages }) => {
+    const translated_data = Array.isArray(messages.translated) ? messages.translated : [messages.translated];
     return (
         <>
             <p className={styles.message_second}>{messages.original}</p>
-            {messages.translated.map((message, index) => (
+            {translated_data.map((message, index) => (
                 <p key={index} className={styles.message_main}>{message}</p>
             ))}
         </>
