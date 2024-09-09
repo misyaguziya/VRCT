@@ -176,22 +176,58 @@ class Config:
             self._SOURCE_LANGUAGE = value
 
     @property
-    def TARGET_COUNTRY(self):
-        return self._TARGET_COUNTRY
+    def TARGET_COUNTRY_PRIMARY(self):
+        return self._TARGET_COUNTRY_PRIMARY
 
-    @TARGET_COUNTRY.setter
-    def TARGET_COUNTRY(self, value):
+    @TARGET_COUNTRY_PRIMARY.setter
+    def TARGET_COUNTRY_PRIMARY(self, value):
         if isinstance(value, str):
-            self._TARGET_COUNTRY = value
+            self._TARGET_COUNTRY_PRIMARY = value
 
     @property
-    def TARGET_LANGUAGE(self):
-        return self._TARGET_LANGUAGE
+    def TARGET_LANGUAGE_PRIMARY(self):
+        return self._TARGET_LANGUAGE_PRIMARY
 
-    @TARGET_LANGUAGE.setter
-    def TARGET_LANGUAGE(self, value):
+    @TARGET_LANGUAGE_PRIMARY.setter
+    def TARGET_LANGUAGE_PRIMARY(self, value):
         if isinstance(value, str):
-            self._TARGET_LANGUAGE = value
+            self._TARGET_LANGUAGE_PRIMARY = value
+
+    @property
+    def TARGET_COUNTRY_SECONDARY(self):
+        return self._TARGET_COUNTRY_SECONDARY
+
+    @TARGET_COUNTRY_SECONDARY.setter
+    def TARGET_COUNTRY_SECONDARY(self, value):
+        if isinstance(value, str):
+            self._TARGET_COUNTRY_SECONDARY = value
+
+    @property
+    def TARGET_LANGUAGE_SECONDARY(self):
+        return self._TARGET_LANGUAGE_SECONDARY
+
+    @TARGET_LANGUAGE_SECONDARY.setter
+    def TARGET_LANGUAGE_SECONDARY(self, value):
+        if isinstance(value, str):
+            self._TARGET_LANGUAGE_SECONDARY = value
+
+    @property
+    def TARGET_COUNTRY_TERTIARY(self):
+        return self._TARGET_COUNTRY_TERTIARY
+
+    @TARGET_COUNTRY_TERTIARY.setter
+    def TARGET_COUNTRY_TERTIARY(self, value):
+        if isinstance(value, str):
+            self._TARGET_COUNTRY_TERTIARY = value
+
+    @property
+    def TARGET_LANGUAGE_TERTIARY(self):
+        return self._TARGET_LANGUAGE_TERTIARY
+
+    @TARGET_LANGUAGE_TERTIARY.setter
+    def TARGET_LANGUAGE_TERTIARY(self, value):
+        if isinstance(value, str):
+            self._TARGET_LANGUAGE_TERTIARY = value
 
     @property
     def CHOICE_INPUT_TRANSLATOR(self):
@@ -321,11 +357,12 @@ class Config:
         try:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_TARGET_LANGUAGES
-                for k, v in value.items():
-                    language = v["language"]
-                    country = v["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                        value[k] = value_old[k]
+                for k0, v0 in value.items():
+                    for k1, v1 in v0.items():
+                        language = v1["language"]
+                        country = v1["country"]
+                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                            value[k0][k1] = value_old[k0][k1]
                 self._SELECTED_TAB_TARGET_LANGUAGES = value
         except Exception:
             pass
@@ -341,6 +378,17 @@ class Config:
         if isinstance(value, str):
             self._SELECTED_TRANSCRIPTION_ENGINE = value
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('ENABLE_MULTI_TRANSCRIPTION')
+    def ENABLE_MULTI_TRANSCRIPTION(self):
+        return self._ENABLE_MULTI_TRANSCRIPTION
+
+    @ENABLE_MULTI_TRANSCRIPTION.setter
+    def ENABLE_MULTI_TRANSCRIPTION(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_MULTI_TRANSCRIPTION = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
@@ -1004,8 +1052,12 @@ class Config:
         self._CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
         self._SOURCE_LANGUAGE = "Japanese"
         self._SOURCE_COUNTRY = "Japan"
-        self._TARGET_LANGUAGE = "English"
-        self._TARGET_COUNTRY = "United States"
+        self._TARGET_LANGUAGE_PRIMARY = "English"
+        self._TARGET_COUNTRY_PRIMARY = "United States"
+        self._TARGET_LANGUAGE_SECONDARY = "English"
+        self._TARGET_COUNTRY_SECONDARY = "United States"
+        self._TARGET_LANGUAGE_TERTIARY = "English"
+        self._TARGET_COUNTRY_TERTIARY = "United States"
         # self._SENT_MESSAGES_LOG = []
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -1041,19 +1093,50 @@ class Config:
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
             "1":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
             "2":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
             "3":{
-                "language":"English",
-                "country":"United States"
+                "primary":{
+                    "language":"English",
+                    "country":"United States",
+                },
+                "secondary":{
+                    "language":"English",
+                    "country":"United States"
+                },
+                "tertiary":{
+                    "language":"English",
+                    "country":"United States"
+                },
             },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
+        self._ENABLE_MULTI_TRANSLATION = True
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
