@@ -163,13 +163,17 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
-    def findTranslationEngines(self, source_lang, target_lang):
+    def findTranslationEngines(self, source_lang, target_lang, multi_language_translation=False):
         compatible_engines = []
         for engine in list(translation_lang.keys()):
             languages = translation_lang.get(engine, {}).get("source", {})
 
-            source_langs = [e["language"] for e in list(source_lang.values())]
-            target_langs = [e["language"] for e in list(target_lang.values())]
+            if multi_language_translation is True:
+                source_langs = [e["language"] for e in list(source_lang.values())]
+                target_langs = [e["language"] for e in list(target_lang.values())]
+            else:
+                source_langs = [source_lang["primary"]["language"]]
+                target_langs = [target_lang["primary"]["language"]]
             language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
@@ -214,7 +218,7 @@ class Model:
         translations = []
         success_flags = []
         for key in target_languages.keys():
-            if key == "primary" or config.ENABLE_MULTI_TRANSLATION is True:
+            if key == "primary" or config.ENABLE_MULTI_LANGUAGE_TRANSLATION is True:
                 target_language = target_languages[key]["language"]
                 target_country = target_languages[key]["country"]
                 if target_language is not None or target_country is not None:

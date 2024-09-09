@@ -377,7 +377,9 @@ def updateTranslationEngineAndEngineList():
     engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
     engines = model.findTranslationEngines(
         config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-        config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO])
+        config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+        config.ENABLE_MULTI_LANGUAGE_TRANSLATION,
+        )
     if engine not in engines:
         engine = engines[0]
     config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
