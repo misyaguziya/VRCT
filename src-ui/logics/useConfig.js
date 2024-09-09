@@ -6,6 +6,9 @@ import {
     useSelectedMicDevice,
     useSpeakerDeviceList,
     useSelectedSpeakerDevice,
+
+    useEnableAutoClearMessageBox,
+    useSendMessageButtonType,
 } from "@store";
 
 import { useStdoutToPython } from "./useStdoutToPython";
@@ -22,6 +25,8 @@ export const useConfig = () => {
     const { updateSelectedMicDevice } = useSelectedMicDevice();
     const { updateSpeakerDeviceList } = useSpeakerDeviceList();
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
+    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
+    const { currentSendMessageButtonType, updateSendMessageButtonType } = useSendMessageButtonType();
 
 
     const asyncPending = () => new Promise(() => {});
@@ -93,6 +98,40 @@ export const useConfig = () => {
             updateSelectedMicHost(payload.data.host);
             updateSelectedMicDevice(payload.data.device);
         },
+
+
+
+        // Others
+        getEnableAutoClearMessageBox: () => {
+            updateEnableAutoClearMessageBox(asyncPending);
+            asyncStdoutToPython("/config/enable_auto_clear_message_box");
+        },
+        toggleEnableAutoClearMessageBox: () => {
+            updateEnableAutoClearMessageBox(asyncPending);
+            if (currentEnableAutoClearMessageBox.data) {
+                asyncStdoutToPython("/controller/callback_disable_auto_clear_chatbox");
+            } else {
+                asyncStdoutToPython("/controller/callback_enable_auto_clear_chatbox");
+            }
+        },
+        currentEnableAutoClearMessageBox: currentEnableAutoClearMessageBox,
+        updateEnableAutoClearMessageBox: (payload) => {
+            updateEnableAutoClearMessageBox(payload.data);
+        },
+
+        getSendMessageButtonType: () => {
+            updateSendMessageButtonType(asyncPending);
+            asyncStdoutToPython("/config/send_message_button_type");
+        },
+        setSendMessageButtonType: (selected_type) => {
+            updateSendMessageButtonType(asyncPending);
+            asyncStdoutToPython("/controller/callback_set_send_message_button_type", selected_type);
+        },
+        currentSendMessageButtonType: currentSendMessageButtonType,
+        updateSendMessageButtonType: (payload) => {
+            updateSendMessageButtonType(payload.data);
+        },
+
 
 
     };

@@ -32,7 +32,7 @@ export const useMessage = () => {
 
         updateSentMessageLog: (payload) => {
             const data = payload.data;
-            updateMessageLogsStatus(updateItemById(data.id));
+            updateMessageLogsStatus(updateItemById(data.id, data.translation));
         },
         addSentMessageLog: (payload) => {
             const data = payload.data;
@@ -63,16 +63,17 @@ const generateMessageObject = (data, category) => {
         status: "ok",
         messages: {
             original: data.message,
-            translated: [],
+            translated: data.translation,
         },
     };
 };
 
 
-const updateItemById = (id) => (prev_items) => {
+const updateItemById = (id, translated_data) => (prev_items) => {
     return prev_items.map(item => {
         if (item.id === id) {
             item.status = "ok";
+            item.messages.translated = translated_data;
         }
         return item;
     });
