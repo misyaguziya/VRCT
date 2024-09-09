@@ -157,96 +157,6 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_FOREGROUND = value
 
-    @property
-    def SOURCE_COUNTRY(self):
-        return self._SOURCE_COUNTRY
-
-    @SOURCE_COUNTRY.setter
-    def SOURCE_COUNTRY(self, value):
-        if isinstance(value, str):
-            self._SOURCE_COUNTRY = value
-
-    @property
-    def SOURCE_LANGUAGE(self):
-        return self._SOURCE_LANGUAGE
-
-    @SOURCE_LANGUAGE.setter
-    def SOURCE_LANGUAGE(self, value):
-        if isinstance(value, str):
-            self._SOURCE_LANGUAGE = value
-
-    @property
-    def TARGET_COUNTRY_PRIMARY(self):
-        return self._TARGET_COUNTRY_PRIMARY
-
-    @TARGET_COUNTRY_PRIMARY.setter
-    def TARGET_COUNTRY_PRIMARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_COUNTRY_PRIMARY = value
-
-    @property
-    def TARGET_LANGUAGE_PRIMARY(self):
-        return self._TARGET_LANGUAGE_PRIMARY
-
-    @TARGET_LANGUAGE_PRIMARY.setter
-    def TARGET_LANGUAGE_PRIMARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_LANGUAGE_PRIMARY = value
-
-    @property
-    def TARGET_COUNTRY_SECONDARY(self):
-        return self._TARGET_COUNTRY_SECONDARY
-
-    @TARGET_COUNTRY_SECONDARY.setter
-    def TARGET_COUNTRY_SECONDARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_COUNTRY_SECONDARY = value
-
-    @property
-    def TARGET_LANGUAGE_SECONDARY(self):
-        return self._TARGET_LANGUAGE_SECONDARY
-
-    @TARGET_LANGUAGE_SECONDARY.setter
-    def TARGET_LANGUAGE_SECONDARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_LANGUAGE_SECONDARY = value
-
-    @property
-    def TARGET_COUNTRY_TERTIARY(self):
-        return self._TARGET_COUNTRY_TERTIARY
-
-    @TARGET_COUNTRY_TERTIARY.setter
-    def TARGET_COUNTRY_TERTIARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_COUNTRY_TERTIARY = value
-
-    @property
-    def TARGET_LANGUAGE_TERTIARY(self):
-        return self._TARGET_LANGUAGE_TERTIARY
-
-    @TARGET_LANGUAGE_TERTIARY.setter
-    def TARGET_LANGUAGE_TERTIARY(self, value):
-        if isinstance(value, str):
-            self._TARGET_LANGUAGE_TERTIARY = value
-
-    @property
-    def CHOICE_INPUT_TRANSLATOR(self):
-        return self._CHOICE_INPUT_TRANSLATOR
-
-    @CHOICE_INPUT_TRANSLATOR.setter
-    def CHOICE_INPUT_TRANSLATOR(self, value):
-        if value in list(translation_lang.keys()):
-            self._CHOICE_INPUT_TRANSLATOR= value
-
-    @property
-    def CHOICE_OUTPUT_TRANSLATOR(self):
-        return self._CHOICE_OUTPUT_TRANSLATOR
-
-    @CHOICE_OUTPUT_TRANSLATOR.setter
-    def CHOICE_OUTPUT_TRANSLATOR(self, value):
-        if value in list(translation_lang.keys()):
-            self._CHOICE_OUTPUT_TRANSLATOR = value
-
     # @property
     # def SENT_MESSAGES_LOG(self):
     #     return self._SENT_MESSAGES_LOG
@@ -337,11 +247,12 @@ class Config:
         try:
             if isinstance(value, dict):
                 value_old = self.SELECTED_TAB_YOUR_LANGUAGES
-                for k, v in value.items():
-                    language = v["language"]
-                    country = v["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                        value[k] = value_old[k]
+                for k0, v0 in value.items():
+                    for k1, v1 in v0.items():
+                        language = v1["language"]
+                        country = v1["country"]
+                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                            value[k0][k1] = value_old[k0][k1]
                 self._SELECTED_TAB_YOUR_LANGUAGES = value
         except Exception:
             pass
@@ -380,14 +291,14 @@ class Config:
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_MULTI_TRANSCRIPTION')
-    def ENABLE_MULTI_TRANSCRIPTION(self):
-        return self._ENABLE_MULTI_TRANSCRIPTION
+    @json_serializable('ENABLE_MULTI_TRANSLATION')
+    def ENABLE_MULTI_TRANSLATION(self):
+        return self._ENABLE_MULTI_TRANSLATION
 
-    @ENABLE_MULTI_TRANSCRIPTION.setter
-    def ENABLE_MULTI_TRANSCRIPTION(self, value):
+    @ENABLE_MULTI_TRANSLATION.setter
+    def ENABLE_MULTI_TRANSLATION(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MULTI_TRANSCRIPTION = value
+            self._ENABLE_MULTI_TRANSLATION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1048,16 +959,7 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
-        self._CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-        self._CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-        self._SOURCE_LANGUAGE = "Japanese"
-        self._SOURCE_COUNTRY = "Japan"
-        self._TARGET_LANGUAGE_PRIMARY = "English"
-        self._TARGET_COUNTRY_PRIMARY = "United States"
-        self._TARGET_LANGUAGE_SECONDARY = "English"
-        self._TARGET_COUNTRY_SECONDARY = "United States"
-        self._TARGET_LANGUAGE_TERTIARY = "English"
-        self._TARGET_COUNTRY_TERTIARY = "United States"
+
         # self._SENT_MESSAGES_LOG = []
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
@@ -1079,16 +981,22 @@ class Config:
         }
         self._SELECTED_TAB_YOUR_LANGUAGES = {
             "1":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
             "2":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
             "3":{
-                "language":"Japanese",
-                "country":"Japan"
+                "primary":{
+                    "language":"Japanese",
+                    "country":"Japan"
+                },
             },
         }
         self._SELECTED_TAB_TARGET_LANGUAGES = {
@@ -1136,7 +1044,7 @@ class Config:
             },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        self._ENABLE_MULTI_TRANSLATION = True
+        self._ENABLE_MULTI_TRANSLATION = False
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window

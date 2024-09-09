@@ -167,7 +167,12 @@ class Model:
         compatible_engines = []
         for engine in list(translation_lang.keys()):
             languages = translation_lang.get(engine, {}).get("source", {})
-            if source_lang in languages and target_lang in languages:
+
+            source_langs = [e["language"] for e in list(source_lang.values())]
+            target_langs = [e["language"] for e in list(target_lang.values())]
+            language_list = list(languages.keys())
+
+            if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
                 compatible_engines.append(engine)
         if "DeepL_API" in compatible_engines:
             if config.AUTH_KEYS["DeepL_API"] is None:
@@ -202,25 +207,34 @@ class Model:
         return translation, success_flag
 
     def getInputTranslate(self, message):
-        translator_name=config.CHOICE_INPUT_TRANSLATOR
-        source_language=config.SOURCE_LANGUAGE
-        target_language=config.TARGET_LANGUAGE
-        target_country = config.TARGET_COUNTRY
+        translator_name=config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        source_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+        target_languages=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
-        translation, success_flag = self.getTranslate(
-            translator_name,
-            source_language,
-            target_language,
-            target_country,
-            message
-            )
-        return translation, success_flag
+        translations = []
+        success_flags = []
+        for key in target_languages.keys():
+            if key == "primary" or config.ENABLE_MULTI_TRANSLATION is True:
+                target_language = target_languages[key]["language"]
+                target_country = target_languages[key]["country"]
+                if target_language is not None or target_country is not None:
+                    translation, success_flag = self.getTranslate(
+                        translator_name,
+                        source_language,
+                        target_language,
+                        target_country,
+                        message
+                        )
+                    translations.append(translation)
+                    success_flags.append(success_flag)
+
+        return translations, success_flags
 
     def getOutputTranslate(self, message):
-        translator_name=config.CHOICE_OUTPUT_TRANSLATOR
-        source_language=config.TARGET_LANGUAGE
-        target_language=config.SOURCE_LANGUAGE
-        target_country=config.SOURCE_COUNTRY
+        translator_name=config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        source_language=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_country=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]
 
         translation, success_flag = self.getTranslate(
             translator_name,
@@ -430,8 +444,8 @@ class Model:
             try:
                 res = self.mic_transcriber.transcribeAudioQueue(
                     self.mic_audio_queue,
-                    config.SOURCE_LANGUAGE,
-                    config.SOURCE_COUNTRY,
+                    config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
+                    config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
                     config.INPUT_MIC_AVG_LOGPROB,
                     config.INPUT_MIC_NO_SPEECH_PROB
                 )
@@ -590,8 +604,8 @@ class Model:
             try:
                 res = self.speaker_transcriber.transcribeAudioQueue(
                     speaker_audio_queue,
-                    config.TARGET_LANGUAGE,
-                    config.TARGET_COUNTRY,
+                    config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
+                    config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
                     config.INPUT_SPEAKER_AVG_LOGPROB,
                     config.INPUT_SPEAKER_NO_SPEECH_PROB
                 )
@@ -673,8 +687,8 @@ class Model:
             self.speaker_energy_recorder = None
 
     def createOverlayImageShort(self, message, translation):
-        your_language = config.TARGET_LANGUAGE
-        target_language = config.SOURCE_LANGUAGE
+        your_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         ui_type = config.OVERLAY_UI_TYPE
         self.pre_overlay_message = {
             "message" : message,
@@ -684,11 +698,6 @@ class Model:
             "ui_type" : ui_type,
         }
         return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
-
-    # def createOverlayImageLong(self, message_type, message, translation):
-    #     your_language = config.TARGET_LANGUAGE if message_type == "receive" else config.SOURCE_LANGUAGE
-    #     target_language = config.SOURCE_LANGUAGE if message_type == "receive" else config.TARGET_LANGUAGE
-    #     return self.overlay_image.create_overlay_image_long(message_type, message, your_language, translation, target_language)
 
     def clearOverlayImage(self):
         self.overlay.clearImage()
