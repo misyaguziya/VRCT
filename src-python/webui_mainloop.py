@@ -21,12 +21,6 @@ config_mapping = {
     "/config/enable_transcription_send": "ENABLE_TRANSCRIPTION_SEND",
     "/config/enable_transcription_receive": "ENABLE_TRANSCRIPTION_RECEIVE",
     "/config/enable_foreground": "ENABLE_FOREGROUND",
-    "/config/source_country": "SOURCE_COUNTRY",
-    "/config/source_language": "SOURCE_LANGUAGE",
-    "/config/target_country": "TARGET_COUNTRY",
-    "/config/target_language": "TARGET_LANGUAGE",
-    "/config/choice_input_translator": "CHOICE_INPUT_TRANSLATOR",
-    "/config/choice_output_translator": "CHOICE_OUTPUT_TRANSLATOR",
     "/config/is_reset_button_displayed_for_translation": "IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION",
     "/config/is_reset_button_displayed_for_whisper": "IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER",
     "/config/selected_tab_no": "SELECTED_TAB_NO",
@@ -334,9 +328,27 @@ if __name__ == "__main__":
                     case  "/controller/callback_messagebox_send":
                         data = {"id":"123456", "message":"テスト"}
                     case "/controller/set_your_language_and_country":
-                        data = {"language": "English", "country": "Hong Kong"}
+                        data = {
+                            "primary": {
+                                "language": "English",
+                                "country": "Hong Kong"
+                            }
+                        }
                     case "/controller/set_target_language_and_country":
-                        data = {"language": "Japanese", "country": "Japan"}
+                        data = {
+                            "primary": {
+                                "language": "Japanese",
+                                "country": "Japan"
+                            },
+                            "secondary": {
+                                "language": "English",
+                                "country": "United States"
+                            },
+                            "tertiary": {
+                                "language": "Chinese Simplified",
+                                "country": "China"
+                            }
+                        }
                     case "/controller/callback_set_transparency":
                         data = 0.5
                     case "/controller/callback_set_appearance":

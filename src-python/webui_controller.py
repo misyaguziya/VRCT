@@ -61,7 +61,7 @@ def callbackFilepathConfigFile(*args, **kwargs) -> dict:
 #     config.OVERLAY_UI_TYPE = "sakura"
 #     return {"status":200, "result":config.IS_EASTER_EGG_ENABLED}
 
-def messageFormatter(format_type:str, translation, message):
+def messageFormatter(format_type:str, translation:list, message:list):
     if format_type == "RECEIVED":
         FORMAT_WITH_T = config.RECEIVED_MESSAGE_FORMAT_WITH_T
         FORMAT = config.RECEIVED_MESSAGE_FORMAT
@@ -72,17 +72,16 @@ def messageFormatter(format_type:str, translation, message):
         raise ValueError("format_type is not found", format_type)
 
     if len(translation) > 0:
-        osc_message = FORMAT_WITH_T.replace("[message]", message)
-        osc_message = osc_message.replace("[translation]", translation)
+        osc_message = FORMAT_WITH_T.replace("[message]", "/".join(message))
+        osc_message = osc_message.replace("[translation]", "/".join(translation))
     else:
-        osc_message = FORMAT.replace("[message]", message)
+        osc_message = FORMAT.replace("[message]", "/".join(message))
     return osc_message
 
 def changeToCTranslate2Process():
-    if config.CHOICE_INPUT_TRANSLATOR != "CTranslate2" or config.CHOICE_OUTPUT_TRANSLATOR != "CTranslate2":
-        config.CHOICE_INPUT_TRANSLATOR = "CTranslate2"
-        config.CHOICE_OUTPUT_TRANSLATOR = "CTranslate2"
-        updateTranslationEngineAndEngineList()
+    config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+    config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+    updateTranslationEngineAndEngineList()
 
 # func transcription send message
 class MicMessage:
@@ -99,7 +98,7 @@ class MicMessage:
                 })
         elif isinstance(message, str) and len(message) > 0:
             # addSentMessageLog(message)
-            translation = ""
+            translation = []
             if model.checkKeywords(message):
                 self.action("word_filter", {
                     "status":200,
@@ -127,11 +126,11 @@ class MicMessage:
                 if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
                     if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
                         if config.ENABLE_TRANSLATION is False:
-                            osc_message = messageFormatter("SEND", "", message)
+                            osc_message = messageFormatter("SEND", "", [message])
                         else:
                             osc_message = messageFormatter("SEND", "", translation)
                     else:
-                        osc_message = messageFormatter("SEND", translation, message)
+                        osc_message = messageFormatter("SEND", translation, [message])
                     model.oscSendMessage(osc_message)
 
                 self.action("mic", {
@@ -143,7 +142,7 @@ class MicMessage:
                     })
                 if config.ENABLE_LOGGER is True:
                     if len(translation) > 0:
-                        translation = f" ({translation})"
+                        translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
 
                 # if config.ENABLE_OVERLAY_SMALL_LOG is True:
@@ -201,7 +200,7 @@ class SpeakerMessage:
                     },
                 })
         elif isinstance(message, str) and len(message) > 0:
-            translation = ""
+            translation = []
             if model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
@@ -229,7 +228,7 @@ class SpeakerMessage:
                 if config.ENABLE_SPEAKER2CHATBOX is True:
                     # send OSC message
                     if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                        osc_message = messageFormatter("RECEIVED", translation, message)
+                        osc_message = messageFormatter("RECEIVED", translation, [message])
                         model.oscSendMessage(osc_message)
                 # ------------Speaker2Chatbox------------
 
@@ -243,7 +242,7 @@ class SpeakerMessage:
                     })
                 if config.ENABLE_LOGGER is True:
                     if len(translation) > 0:
-                        translation = f" ({translation})"
+                        translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[RECEIVED] {message}{translation}")
 
 def startTranscriptionReceiveMessage(action:Callable[[dict], None]) -> None:
@@ -291,7 +290,7 @@ class ChatMessage:
         message = data["message"]
         if len(message) > 0:
             # addSentMessageLog(message)
-            translation = ""
+            translation = []
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
@@ -309,11 +308,11 @@ class ChatMessage:
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
                 if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
                     if config.ENABLE_TRANSLATION is False:
-                        osc_message = messageFormatter("SEND", "", message)
+                        osc_message = messageFormatter("SEND", "", [message])
                     else:
                         osc_message = messageFormatter("SEND", "", translation)
                 else:
-                    osc_message = messageFormatter("SEND", translation, message)
+                    osc_message = messageFormatter("SEND", translation, [message])
                 model.oscSendMessage(osc_message)
 
             # if config.ENABLE_OVERLAY_SMALL_LOG is True:
@@ -325,7 +324,7 @@ class ChatMessage:
             # update textbox message log (Sent)
             if config.ENABLE_LOGGER is True:
                 if len(translation) > 0:
-                    translation = f" ({translation})"
+                    translation = " (" + "/".join(translation) + ")"
                 model.logger.info(f"[SENT] {message}{translation}")
 
         return {"status":200,
@@ -375,72 +374,40 @@ def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
 #         updateMessageBox(1)
 
 def updateTranslationEngineAndEngineList():
-    engine = config.CHOICE_INPUT_TRANSLATOR
-    engines = model.findTranslationEngines(config.SOURCE_LANGUAGE, config.TARGET_LANGUAGE)
+    engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+    engines = model.findTranslationEngines(
+        config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+        config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO])
     if engine not in engines:
         engine = engines[0]
-    config.CHOICE_INPUT_TRANSLATOR = engine
-    config.CHOICE_OUTPUT_TRANSLATOR = engine
-
-def initSetTranslateEngine():
-    engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
-    config.CHOICE_INPUT_TRANSLATOR = engine
-    engine = config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
-    config.CHOICE_OUTPUT_TRANSLATOR = engine
-
-def initSetLanguageAndCountry():
-    select = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    config.SOURCE_LANGUAGE = select["language"]
-    config.SOURCE_COUNTRY = select["country"]
-    select = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-    config.TARGET_LANGUAGE = select["language"]
-    config.TARGET_COUNTRY = select["country"]
+    config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
+    config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
 
 def setYourTranslateEngine(select):
     engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
     engines[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = engines
-    config.CHOICE_INPUT_TRANSLATOR = select
 
 def setTargetTranslateEngine(select):
     engines = config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
     engines[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = engines
-    config.CHOICE_OUTPUT_TRANSLATOR = select
 
 def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setYourLanguageAndCountry", select)
     languages = config.SELECTED_TAB_YOUR_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
-    config.SOURCE_LANGUAGE = select["language"]
-    config.SOURCE_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":200,
-            "result":{
-                "your":{
-                    "language":config.SOURCE_LANGUAGE,
-                    "country":config.SOURCE_COUNTRY
-                }
-            }
-        }
+    return {"status":200}
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setTargetLanguageAndCountry", select)
     languages = config.SELECTED_TAB_TARGET_LANGUAGES
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
-    config.TARGET_LANGUAGE = select["language"]
-    config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":200,
-            "result":{
-                "target":{
-                    "language":config.TARGET_LANGUAGE,
-                    "country":config.TARGET_COUNTRY
-                },
-            }
-        }
+    return {"status":200}
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     printLog("swapYourLanguageAndTargetLanguage")
@@ -448,41 +415,13 @@ def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
     setYourLanguageAndCountry(target_language)
     setTargetLanguageAndCountry(your_language)
-    return {"status":200,
-            "result":{
-                "your":{"language":config.SOURCE_LANGUAGE,
-                        "country":config.SOURCE_COUNTRY,
-                        },
-                "target":{
-                    "language":config.TARGET_LANGUAGE,
-                    "country":config.TARGET_COUNTRY,
-                    },
-                },
-            }
+    return {"status":200}
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
     printLog("callbackSelectedLanguagePresetTab", selected_tab_no)
     config.SELECTED_TAB_NO = selected_tab_no
-
-    engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
-    engine = engines[config.SELECTED_TAB_NO]
-    config.CHOICE_INPUT_TRANSLATOR = engine
-
-    engines = config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
-    engine = engines[config.SELECTED_TAB_NO]
-    config.CHOICE_OUTPUT_TRANSLATOR = engine
-
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    config.SOURCE_LANGUAGE = select["language"]
-    config.SOURCE_COUNTRY = select["country"]
-
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    select = languages[config.SELECTED_TAB_NO]
-    config.TARGET_LANGUAGE = select["language"]
-    config.TARGET_COUNTRY = select["country"]
     updateTranslationEngineAndEngineList()
-    return {"status":200, "result":config.SELECTED_TAB_NO}
+    return {"status":200}
 
 def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
     printLog("callbackSelectedTranslationEngine", selected_translation_engine)
@@ -1270,10 +1209,6 @@ def getListOutputDevice(*args, **kwargs) -> dict:
 
 def init(endpoints:dict, *args, **kwargs) -> None:
     printLog("Start Initialization")
-    printLog("Start InitSetTranslateEngine")
-    initSetTranslateEngine()
-    printLog("Start Init LanguageAndCountry")
-    initSetLanguageAndCountry()
 
     printLog("Start check DeepL API Key")
     if config.AUTH_KEYS["DeepL_API"] is not None:
