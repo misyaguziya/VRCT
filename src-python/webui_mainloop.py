@@ -29,6 +29,7 @@ config_mapping = {
     "/config/selected_tab_your_languages": "SELECTED_TAB_YOUR_LANGUAGES",
     "/config/selected_tab_target_languages": "SELECTED_TAB_TARGET_LANGUAGES",
     "/config/selected_transcription_engine": "SELECTED_TRANSCRIPTION_ENGINE",
+    "/config/enable_multi_translation": "ENABLE_MULTI_LANGUAGE_TRANSLATION",
     "/config/is_main_window_sidebar_compact_mode": "IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
     "/config/transparency": "TRANSPARENCY",
     "/config/appearance_theme": "APPEARANCE_THEME",
