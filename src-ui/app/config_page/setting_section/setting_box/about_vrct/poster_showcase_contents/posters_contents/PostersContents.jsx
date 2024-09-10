@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import styles from "./PostersContents.module.scss";
-import { useUiLanguageStatus } from "@store";
+import { useStore_UiLanguage } from "@store";
 
-import { useVrctPosterIndex } from "@store";
+import { useStore_VrctPosterIndex } from "@store";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 
 import iya_vrct_poster_ja from "@images/about_vrct/vrct_posters/iya_vrct_poster_ja.png";
@@ -29,8 +29,8 @@ import poster_images_authors_m_ja from "@images/about_vrct/vrct_posters/authors/
 import poster_images_authors_m_en from "@images/about_vrct/vrct_posters/authors/poster_images_authors_m_en.png";
 
 export const PostersContents = () => {
-    const { currentVrctPosterIndex, updateVrctPosterIndex } = useVrctPosterIndex();
-    const { currentUiLanguageStatus } = useUiLanguageStatus();
+    const { currentVrctPosterIndex, updateVrctPosterIndex } = useStore_VrctPosterIndex();
+    const { currentUiLanguage } = useStore_UiLanguage();
 
 
     const updateIndex = (delta) => {
@@ -60,7 +60,7 @@ export const PostersContents = () => {
                 </button>
             </div>
             {
-                currentUiLanguageStatus === "ja"
+                currentUiLanguage === "ja"
                 ? <img src={current_poster_authors_img_ja} className={styles.poster_authors_img} />
                 : <img src={current_poster_authors_img_en} className={styles.poster_authors_img} />
             }

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import styles from "./SliderAndMeter.module.scss";
 import {
-    useMicVolume,
-    useSpeakerVolume,
+    useStore_MicVolume,
+    useStore_SpeakerVolume,
 } from "@store";
 
 import { useVolume } from "@logics/useVolume";
@@ -23,7 +23,7 @@ export const SliderAndMeter = (props) => {
 
 
 const ThresholdVolumeMeter_Mic = (props) => {
-    const { currentMicVolume } = useMicVolume();
+    const { currentMicVolume } = useStore_MicVolume();
 
     const currentVolumeVariable = Math.min(currentMicVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
@@ -46,7 +46,7 @@ const ThresholdVolumeMeter_Mic = (props) => {
 
 
 const ThresholdVolumeMeter_Speaker = (props) => {
-    const { currentSpeakerVolume } = useSpeakerVolume();
+    const { currentSpeakerVolume } = useStore_SpeakerVolume();
 
     const currentVolumeVariable = Math.min(currentSpeakerVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;

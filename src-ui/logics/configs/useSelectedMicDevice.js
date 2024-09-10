@@ -1,9 +1,9 @@
-import { useSelectedMicDevice as useStoreSelectedMicDevice } from "@store";
+import { useStore_SelectedMicDevice } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSelectedMicDevice = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useStoreSelectedMicDevice();
+    const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
 
     const getSelectedMicDevice = () => {
         updateSelectedMicDevice(() => new Promise(() => {}));
@@ -15,5 +15,10 @@ export const useSelectedMicDevice = () => {
         asyncStdoutToPython("/controller/callback_set_mic_device", selected_mic_device);
     };
 
-    return { currentSelectedMicDevice, getSelectedMicDevice, updateSelectedMicDevice, setSelectedMicDevice };
+    return {
+        currentSelectedMicDevice,
+        getSelectedMicDevice,
+        updateSelectedMicDevice,
+        setSelectedMicDevice,
+    };
 };

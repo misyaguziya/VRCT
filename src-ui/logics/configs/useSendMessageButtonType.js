@@ -1,9 +1,9 @@
-import { useSendMessageButtonType as useStoreSendMessageButtonType } from "@store";
+import { useStore_SendMessageButtonType } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSendMessageButtonType = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSendMessageButtonType, updateSendMessageButtonType } = useStoreSendMessageButtonType();
+    const { currentSendMessageButtonType, updateSendMessageButtonType } = useStore_SendMessageButtonType();
 
     const getSendMessageButtonType = () => {
         updateSendMessageButtonType(() => new Promise(() => {}));
@@ -16,9 +16,9 @@ export const useSendMessageButtonType = () => {
     };
 
     return {
+        currentSendMessageButtonType,
         getSendMessageButtonType,
         setSendMessageButtonType,
-        currentSendMessageButtonType,
-        updateSendMessageButtonType
+        updateSendMessageButtonType,
     };
 };

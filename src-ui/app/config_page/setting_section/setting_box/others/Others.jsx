@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useSettingBox } from "../components/useSettingBox";
 // import {
-//     useEnableAutoClearMessageBox,
+//     useStore_EnableAutoClearMessageBox,
 // } from "@store";
 
 import { useConfig } from "@logics/useConfig";

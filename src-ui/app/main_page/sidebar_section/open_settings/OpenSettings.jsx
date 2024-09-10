@@ -1,9 +1,9 @@
 import styles from "./OpenSettings.module.scss";
-import { useIsOpenedConfigPage } from "@store";
+import { useStore_IsOpenedConfigPage } from "@store";
 import ConfigurationSvg from "@images/configuration.svg?react";
 
 export const OpenSettings = () => {
-    const { updateIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { updateIsOpenedConfigPage } = useStore_IsOpenedConfigPage();
 
     const openConfigPage = () => {
         updateIsOpenedConfigPage(true);

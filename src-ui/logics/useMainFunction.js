@@ -1,10 +1,10 @@
 import { getCurrent } from "@tauri-apps/api/window";
 
 import {
-    useTranslationStatus,
-    useTranscriptionSendStatus,
-    useTranscriptionReceiveStatus,
-    useForegroundStatus,
+    useStore_TranslationStatus,
+    useStore_TranscriptionSendStatus,
+    useStore_TranscriptionReceiveStatus,
+    useStore_ForegroundStatus,
 } from "@store";
 
 import { useStdoutToPython } from "@logics/useStdoutToPython";
@@ -14,21 +14,21 @@ export const useMainFunction = () => {
         currentTranslationStatus,
         updateTranslationStatus,
         asyncUpdateTranslationStatus,
-    } = useTranslationStatus();
+    } = useStore_TranslationStatus();
     const {
         currentTranscriptionSendStatus,
         updateTranscriptionSendStatus,
         asyncUpdateTranscriptionSendStatus,
-    } = useTranscriptionSendStatus();
+    } = useStore_TranscriptionSendStatus();
     const {
         currentTranscriptionReceiveStatus,
         updateTranscriptionReceiveStatus,
         asyncUpdateTranscriptionReceiveStatus,
-    } = useTranscriptionReceiveStatus();
+    } = useStore_TranscriptionReceiveStatus();
     const {
         currentForegroundStatus,
         updateForegroundStatus,
-    } = useForegroundStatus();
+    } = useStore_ForegroundStatus();
 
     const { asyncStdoutToPython } = useStdoutToPython();
 

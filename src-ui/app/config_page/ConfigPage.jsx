@@ -4,7 +4,7 @@ import { Topbar } from "./topbar/Topbar.jsx";
 import { SidebarSection } from "./sidebar_section/SidebarSection.jsx";
 import { SettingSection } from "./setting_section/SettingSection.jsx";
 
-import { useSoftwareVersion  } from "@store";
+import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
 import { useTranslation } from "react-i18next";
 
 export const ConfigPage = () => {

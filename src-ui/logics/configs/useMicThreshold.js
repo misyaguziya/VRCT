@@ -1,9 +1,9 @@
-import { useMicThreshold as useStoreMicThreshold } from "@store";
+import { useStore_MicThreshold } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMicThreshold = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { updateMicThreshold, currentMicThreshold } = useStoreMicThreshold();
+    const { updateMicThreshold, currentMicThreshold } = useStore_MicThreshold();
 
     const getMicThreshold = () => {
         asyncStdoutToPython("/config/input_mic_energy_threshold");
@@ -13,5 +13,10 @@ export const useMicThreshold = () => {
         asyncStdoutToPython("/controller/callback_set_mic_energy_threshold", mic_threshold);
     };
 
-    return { getMicThreshold, setMicThreshold, currentMicThreshold, updateMicThreshold };
+    return {
+        currentMicThreshold,
+        getMicThreshold,
+        setMicThreshold,
+        updateMicThreshold,
+    };
 };

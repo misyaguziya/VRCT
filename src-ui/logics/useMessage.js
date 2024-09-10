@@ -1,11 +1,11 @@
 import {
-    useMessageLogsStatus,
+    useStore_MessageLogs,
 } from "@store";
 
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMessage = () => {
-    const { currentMessageLogsStatus, addMessageLogsStatus, updateMessageLogsStatus } = useMessageLogsStatus();
+    const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const sendMessage = (message) => {
@@ -16,7 +16,7 @@ export const useMessage = () => {
         };
         asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
 
-        addMessageLogsStatus({
+        addMessageLogs({
             id: uuid,
             category: "sent",
             status: "pending",
@@ -29,19 +29,19 @@ export const useMessage = () => {
     };
 
     const updateSentMessageLogById = (payload) => {
-        updateMessageLogsStatus(updateItemById(payload.id, payload.translation));
+        updateMessageLogs(updateItemById(payload.id, payload.translation));
     };
     const addSentMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "sent");
-        addMessageLogsStatus(message_object);
+        addMessageLogs(message_object);
     };
     const addReceivedMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "received");
-        addMessageLogsStatus(message_object);
+        addMessageLogs(message_object);
     };
 
     return {
-        currentMessageLogsStatus,
+        currentMessageLogs,
         sendMessage,
         updateSentMessageLogById,
         addSentMessageLog,
