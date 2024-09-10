@@ -81,7 +81,6 @@ def messageFormatter(format_type:str, translation:list, message:list):
 def changeToCTranslate2Process():
     config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
     config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
-    updateTranslationEngineAndEngineList()
 
 # func transcription send message
 class MicMessage:
@@ -373,13 +372,17 @@ def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
 #     if config.CURRENT_SENT_MESSAGES_LOG_INDEX < len(config.SENT_MESSAGES_LOG) - 1:
 #         updateMessageBox(1)
 
-def updateTranslationEngineAndEngineList():
-    engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+def getTranslationEngines(*args, **kwargs) -> dict:
     engines = model.findTranslationEngines(
         config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
         config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
         config.ENABLE_MULTI_LANGUAGE_TRANSLATION,
         )
+    return {"status":200, "result":engines}
+
+def updateTranslationEngineAndEngineList():
+    engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+    engines = getTranslationEngines()["result"]
     if engine not in engines:
         engine = engines[0]
     config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
@@ -487,6 +490,16 @@ def callbackDisableForeground(*args, **kwargs) -> dict:
     config.ENABLE_FOREGROUND = False
     return {"status":200, "result":config.ENABLE_FOREGROUND}
 
+def callbackEnableMultiLanguageTranslation(*args, **kwargs) -> dict:
+    printLog("Enable Multi Language Translation")
+    config.ENABLE_MULTI_LANGUAGE_TRANSLATION = True
+    return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+
+def callbackDisableMultiLanguageTranslation(*args, **kwargs) -> dict:
+    printLog("Disable Multi Language Translation")
+    config.ENABLE_MULTI_LANGUAGE_TRANSLATION = False
+    return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+
 def callbackEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
     printLog("Enable MainWindow Sidebar Compact Mode")
     config.IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
@@ -571,7 +584,7 @@ def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
     config.UI_LANGUAGE = data
     return {"status":200, "result":config.UI_LANGUAGE}
 
-def callbackEnableRestoreMainWindowGeometry(data, *args, **kwargs) -> dict:
+def callbackEnableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
     printLog("Enable Restore Main Window Geometry")
     config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
     return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
