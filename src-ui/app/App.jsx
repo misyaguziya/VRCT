@@ -1,7 +1,7 @@
 import { getCurrent } from "@tauri-apps/api/window";
 import { useEffect, useRef } from "react";
 import { useStartPython } from "@logics/useStartPython";
-import { useConfig } from "@logics/useConfig";
+// import { useConfig } from "@logics/useConfig";
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
 import styles from "./App.module.scss";
@@ -17,22 +17,28 @@ export const App = () => {
 };
 
 
+import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
+import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
+import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
+import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
+import { useMicThreshold } from "@logics_configs/useMicThreshold";
+import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
+import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
+import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
+
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const main_page = getCurrent();
 
-    const {
-        getSoftwareVersion,
-        // getMicHostList,
-        getSelectedMicHost,
-        // getMicDeviceList,
-        getSelectedMicDevice,
-        getSelectedSpeakerDevice,
-
-        getEnableAutoClearMessageBox,
-        getSendMessageButtonType,
-    } = useConfig();
+    const { getSoftwareVersion } = useSoftwareVersion();
+    const { getSelectedMicHost } = useSelectedMicHost();
+    const { getSelectedMicDevice } = useSelectedMicDevice();
+    const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
+    const { getMicThreshold } = useMicThreshold();
+    const { getSpeakerThreshold } = useSpeakerThreshold();
+    const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
+    const { getSendMessageButtonType } = useSendMessageButtonType();
 
 
     useEffect(() => {
@@ -40,11 +46,12 @@ const StartPythonFacadeComponent = () => {
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getSoftwareVersion();
-                // getMicHostList();
                 getSelectedMicHost();
-                // getMicDeviceList();
                 getSelectedMicDevice();
                 getSelectedSpeakerDevice();
+
+                getMicThreshold();
+                getSpeakerThreshold();
 
                 getEnableAutoClearMessageBox();
                 getSendMessageButtonType();

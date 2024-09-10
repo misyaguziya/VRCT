@@ -4,14 +4,14 @@ import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics/useMessage";
 import { store, useEnableAutoClearMessageBox } from "@store";
 import { scrollToBottom } from "@logics/scrollToBottom";
-import { useConfig } from "@logics/useConfig";
+import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 
 export const MessageInputBox = () => {
     const [inputValue, setInputValue] = useState("");
     const { sendMessage } = useMessage();
 
     const { currentEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
-    const { currentSendMessageButtonType } = useConfig();
+    const { currentSendMessageButtonType } = useSendMessageButtonType();
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
