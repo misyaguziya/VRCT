@@ -15,7 +15,11 @@ export const ThresholdEntry = (props) => {
 
 const ThresholdEntry_Mic = (props) => {
     const onChangeFunction = (e) => {
-        props.setThresholdFunction(e.currentTarget.value);
+        if (e.currentTarget.value === "") {
+            props.setThresholdFunction("0");
+        } else {
+            props.setThresholdFunction(e.currentTarget.value);
+        }
     };
 
     return (
@@ -29,7 +33,11 @@ const ThresholdEntry_Mic = (props) => {
 
 const ThresholdEntry_Speaker = (props) => {
     const onChangeFunction = (e) => {
-        props.setThresholdFunction(e.currentTarget.value);
+        if (e.currentTarget.value === "") {
+            props.setThresholdFunction("0");
+        } else {
+            props.setThresholdFunction(e.currentTarget.value);
+        }
     };
 
     return (
