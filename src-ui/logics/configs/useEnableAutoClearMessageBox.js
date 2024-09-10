@@ -1,9 +1,9 @@
-import { useEnableAutoClearMessageBox as useStoreEnableAutoClearMessageBox } from "@store";
+import { useStore_EnableAutoClearMessageBox } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useEnableAutoClearMessageBox = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useStoreEnableAutoClearMessageBox();
+    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useStore_EnableAutoClearMessageBox();
 
     const getEnableAutoClearMessageBox = () => {
         updateEnableAutoClearMessageBox(() => new Promise(() => {}));
@@ -20,9 +20,9 @@ export const useEnableAutoClearMessageBox = () => {
     };
 
     return {
+        currentEnableAutoClearMessageBox,
         getEnableAutoClearMessageBox,
         toggleEnableAutoClearMessageBox,
-        currentEnableAutoClearMessageBox,
-        updateEnableAutoClearMessageBox
+        updateEnableAutoClearMessageBox,
     };
 };

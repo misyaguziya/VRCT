@@ -94,79 +94,76 @@ const createAsyncAtomWithHook = (initialValue, base_ame) => {
     return { atomInstance, useHook };
 };
 
-export const { atomInstance: Atom_SoftwareVersion, useHook: useSoftwareVersion } = createAtomWithHook("-", "SoftwareVersion");
+export const { atomInstance: Atom_SoftwareVersion, useHook: useStore_SoftwareVersion } = createAtomWithHook("-", "SoftwareVersion");
 
-export const { atomInstance: Atom_UiLanguageStatus, useHook: useUiLanguageStatus } = createAtomWithHook("en", "UiLanguageStatus");
-export const { atomInstance: Atom_TranslationStatus, useHook: useTranslationStatus } = createAsyncAtomWithHook(false, "TranslationStatus");
-export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useTranscriptionSendStatus } = createAsyncAtomWithHook(false, "TranscriptionSendStatus");
-export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useTranscriptionReceiveStatus } = createAsyncAtomWithHook(false, "TranscriptionReceiveStatus");
-export const { atomInstance: Atom_ForegroundStatus, useHook: useForegroundStatus } = createAsyncAtomWithHook(false, "ForegroundStatus");
+export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAtomWithHook("en", "UiLanguage");
+export const { atomInstance: Atom_TranslationStatus, useHook: useStore_TranslationStatus } = createAsyncAtomWithHook(false, "TranslationStatus");
+export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useStore_TranscriptionSendStatus } = createAsyncAtomWithHook(false, "TranscriptionSendStatus");
+export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_TranscriptionReceiveStatus } = createAsyncAtomWithHook(false, "TranscriptionReceiveStatus");
+export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAsyncAtomWithHook(false, "ForegroundStatus");
 
-export const { atomInstance: Atom_MessageLogsStatus, useHook: useMessageLogsStatus } = createAtomWithHook(generateTestData(20), "MessageLogsStatus");
-export const { atomInstance: Atom_MainPageCompactModeStatus, useHook: useMainPageCompactModeStatus } = createAtomWithHook(false, "MainPageCompactModeStatus");
-export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useIsOpenedLanguageSelector } = createAtomWithHook(
+export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs");
+export const { atomInstance: Atom_IsMainPageCompactMode, useHook: useStore_IsMainPageCompactMode } = createAtomWithHook(false, "IsMainPageCompactMode");
+export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useStore_IsOpenedLanguageSelector } = createAtomWithHook(
     { your_language: false, target_language: false },
     "IsOpenedLanguageSelector"
 );
 
-export const { atomInstance: Atom_SelectedPresetTabStatus, useHook: useSelectedPresetTabStatus } = createAtomWithHook(1, "SelectedPresetTabStatus");
-export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useIsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
-export const { atomInstance: Atom_SelectedConfigTabId, useHook: useSelectedConfigTabId } = createAtomWithHook("device", "SelectedConfigTabId");
-export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useIsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
+export const { atomInstance: Atom_SelectedPresetTabNumber, useHook: useStore_SelectedPresetTabNumber } = createAtomWithHook(1, "SelectedPresetTabNumber");
+export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
+export const { atomInstance: Atom_SelectedConfigTabId, useHook: useStore_SelectedConfigTabId } = createAtomWithHook("device", "SelectedConfigTabId");
+export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useStore_IsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
 
 
 // Config Page
-export const { atomInstance: Atom_MicHostList, useHook: useMicHostList } = createAsyncAtomWithHook({}, "MicHostList");
-export const { atomInstance: Atom_SelectedMicHost, useHook: useSelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
-export const { atomInstance: Atom_MicDeviceList, useHook: useMicDeviceList } = createAsyncAtomWithHook({}, "MicDeviceList");
-export const { atomInstance: Atom_SelectedMicDevice, useHook: useSelectedMicDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicDevice");
+export const { atomInstance: Atom_MicHostList, useHook: useStore_MicHostList } = createAsyncAtomWithHook({}, "MicHostList");
+export const { atomInstance: Atom_SelectedMicHost, useHook: useStore_SelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
+export const { atomInstance: Atom_MicDeviceList, useHook: useStore_MicDeviceList } = createAsyncAtomWithHook({}, "MicDeviceList");
+export const { atomInstance: Atom_SelectedMicDevice, useHook: useStore_SelectedMicDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicDevice");
 
-export const { atomInstance: Atom_SpeakerDeviceList, useHook: useSpeakerDeviceList } = createAsyncAtomWithHook({}, "SpeakerDeviceList");
-export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useSelectedSpeakerDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedSpeakerDevice");
+export const { atomInstance: Atom_SpeakerDeviceList, useHook: useStore_SpeakerDeviceList } = createAsyncAtomWithHook({}, "SpeakerDeviceList");
+export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useStore_SelectedSpeakerDevice } = createAsyncAtomWithHook("Nothing Selected", "SelectedSpeakerDevice");
 
-export const { atomInstance: Atom_MicVolume, useHook: useMicVolume } = createAsyncAtomWithHook(0, "MicVolume");
-export const { atomInstance: Atom_SpeakerVolume, useHook: useSpeakerVolume } = createAsyncAtomWithHook(0, "SpeakerVolume");
+export const { atomInstance: Atom_MicVolume, useHook: useStore_MicVolume } = createAsyncAtomWithHook(0, "MicVolume");
+export const { atomInstance: Atom_SpeakerVolume, useHook: useStore_SpeakerVolume } = createAsyncAtomWithHook(0, "SpeakerVolume");
 
-export const { atomInstance: Atom_MicThreshold, useHook: useMicThreshold } = createAtomWithHook(0, "MicThreshold");
-export const { atomInstance: Atom_SpeakerThreshold, useHook: useSpeakerThreshold } = createAtomWithHook(0, "SpeakerThreshold");
+export const { atomInstance: Atom_MicThreshold, useHook: useStore_MicThreshold } = createAtomWithHook(0, "MicThreshold");
+export const { atomInstance: Atom_SpeakerThreshold, useHook: useStore_SpeakerThreshold } = createAtomWithHook(0, "SpeakerThreshold");
 
 
-export const { atomInstance: Atom_SendMessageFormat, useHook: useSendMessageFormat } = createAtomWithHook({
+export const { atomInstance: Atom_SendMessageFormat, useHook: useStore_SendMessageFormat } = createAtomWithHook({
     before: "",
     after: "",
 }, "SendMessageFormat");
-export const { atomInstance: Atom_SendMessageFormatWithT, useHook: useSendMessageFormatWithT } = createAtomWithHook({
+export const { atomInstance: Atom_SendMessageFormatWithT, useHook: useStore_SendMessageFormatWithT } = createAtomWithHook({
     before: "",
     between: "",
     after: "",
     is_message_first: true,
 }, "SendMessageFormatWithT");
-export const { atomInstance: Atom_ReceivedMessageFormat, useHook: useReceivedMessageFormat } = createAtomWithHook({
+export const { atomInstance: Atom_ReceivedMessageFormat, useHook: useStore_ReceivedMessageFormat } = createAtomWithHook({
     before: "",
     after: "",
 }, "ReceivedMessageFormat");
-export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useReceivedMessageFormatWithT } = createAtomWithHook({
+export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useStore_ReceivedMessageFormatWithT } = createAtomWithHook({
     before: "",
     between: "",
     after: "",
     is_message_first: true,
 }, "ReceivedMessageFormatWithT");
 
-export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useIsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
-export const { atomInstance: Atom_WordFilterList, useHook: useWordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
-
+export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
+export const { atomInstance: Atom_WordFilterList, useHook: useStore_WordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
 
 
 // Others
-export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useEnableAutoClearMessageBox } = createAsyncAtomWithHook(true, "EnableAutoClearMessageBox");
-export const { atomInstance: Atom_SendMessageButtonType, useHook: useSendMessageButtonType } = createAsyncAtomWithHook("show", "SendMessageButtonType");
+export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useStore_EnableAutoClearMessageBox } = createAsyncAtomWithHook(true, "EnableAutoClearMessageBox");
+export const { atomInstance: Atom_SendMessageButtonType, useHook: useStore_SendMessageButtonType } = createAsyncAtomWithHook("show", "SendMessageButtonType");
 
 
+export const { atomInstance: Atom_TranslatorList, useHook: useStore_TranslatorList } = createAtomWithHook(translator_list, "TranslatorList");
+export const { atomInstance: Atom_SelectedTranslatorId, useHook: useStore_SelectedTranslatorId } = createAtomWithHook("CTranslate2", "SelectedTranslatorId");
+export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useStore_IsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
 
-
-export const { atomInstance: Atom_TranslatorListStatus, useHook: useTranslatorListStatus } = createAtomWithHook(translator_list, "TranslatorListStatus");
-export const { atomInstance: Atom_SelectedTranslatorIdStatus, useHook: useSelectedTranslatorIdStatus } = createAtomWithHook("CTranslate2", "SelectedTranslatorIdStatus");
-export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useIsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
-
-export const { atomInstance: Atom_VrctPosterIndex, useHook: useVrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
-export const { atomInstance: Atom_PosterShowcaseWorldPageIndex, useHook: usePosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");
+export const { atomInstance: Atom_VrctPosterIndex, useHook: useStore_VrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
+export const { atomInstance: Atom_PosterShowcaseWorldPageIndex, useHook: useStore_PosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");

@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import styles from "./PosterShowcaseWorldsContents.module.scss";
-import { usePosterShowcaseWorldPageIndex } from "@store";
+import { useStore_PosterShowcaseWorldPageIndex } from "@store";
 const images = import.meta.glob("@images/about_vrct/showcased_worlds/*.{png,jpg,jpeg,svg}", { eager: true });
 
 const getImageByFileName = (file_name) => {
@@ -12,7 +12,7 @@ import poster_showcase_worlds_settings from "./poster_showcase_worlds_settings";
 import { chunkArray } from "@utils/chunkArray";
 
 export const PosterShowcaseWorldsContents = () => {
-    const { currentPosterShowcaseWorldPageIndex } = usePosterShowcaseWorldPageIndex();
+    const { currentPosterShowcaseWorldPageIndex } = useStore_PosterShowcaseWorldPageIndex();
     const poster_showcase_world_images = poster_showcase_worlds_settings.map((setting) => ({
         img: getImageByFileName(setting.image_file_name),
         x_post_num: setting.x_post_num
@@ -59,7 +59,7 @@ import chat_white_square from "@images/chato_white_square.png";
 import { useEffect } from "react";
 import { randomIntMinMax } from "@utils/randomIntMinMax";
 const PosterShowcaseWorldsPagination = ({ page_length }) => {
-    const { currentPosterShowcaseWorldPageIndex, updatePosterShowcaseWorldPageIndex } = usePosterShowcaseWorldPageIndex();
+    const { currentPosterShowcaseWorldPageIndex, updatePosterShowcaseWorldPageIndex } = useStore_PosterShowcaseWorldPageIndex();
 
     useEffect(() => {
         updatePosterShowcaseWorldPageIndex(randomIntMinMax(page_length -1));

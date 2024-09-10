@@ -1,14 +1,14 @@
 import {
-    useMicVolume,
-    useSpeakerVolume,
+    useStore_MicVolume,
+    useStore_SpeakerVolume,
 } from "@store";
 
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useVolume = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { updateMicVolume } = useMicVolume();
-    const { updateSpeakerVolume } = useSpeakerVolume();
+    const { updateMicVolume } = useStore_MicVolume();
+    const { updateSpeakerVolume } = useStore_SpeakerVolume();
 
     return {
         volumeCheckStart_Mic: () => asyncStdoutToPython("/controller/callback_enable_check_mic_threshold"),

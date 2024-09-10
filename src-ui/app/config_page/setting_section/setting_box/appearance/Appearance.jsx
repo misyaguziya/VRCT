@@ -2,11 +2,11 @@ import { useTranslation } from "react-i18next";
 import FolderOpenSvg from "@images/folder_open.svg?react";
 
 import { useSettingBox } from "../components/useSettingBox";
-import { useSelectedMicDevice, useMicDeviceList } from "@store";
+import { useStore_SelectedMicDevice, useStore_MicDeviceList } from "@store";
 export const Appearance = () => {
     const { t } = useTranslation();
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useSelectedMicDevice();
-    const { currentMicDeviceList } = useMicDeviceList();
+    const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
+    const { currentMicDeviceList } = useStore_MicDeviceList();
     const {
         DropdownMenuContainer,
         SliderContainer,

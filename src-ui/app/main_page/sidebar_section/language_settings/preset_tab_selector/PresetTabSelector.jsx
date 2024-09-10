@@ -12,16 +12,16 @@ export const PresetTabSelector = () => {
 
 import clsx from "clsx";
 
-import { useSelectedPresetTabStatus } from "@store";
+import { useStore_SelectedPresetTabNumber } from "@store";
 
 const Tab = (props) => {
-    const { updateSelectedPresetTabStatus, currentSelectedPresetTabStatus } = useSelectedPresetTabStatus();
+    const { updateSelectedPresetTabNumber, currentSelectedPresetTabNumber } = useStore_SelectedPresetTabNumber();
     const onclickFunction = () => {
-        updateSelectedPresetTabStatus(props.preset_number);
+        updateSelectedPresetTabNumber(props.preset_number);
     };
 
     const class_names = clsx(styles["tab_container"], {
-        [styles["is_selected"]]: (currentSelectedPresetTabStatus === props.preset_number) ? true : false
+        [styles["is_selected"]]: (currentSelectedPresetTabNumber === props.preset_number) ? true : false
     });
 
     return (

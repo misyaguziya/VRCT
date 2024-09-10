@@ -1,5 +1,5 @@
 import styles from "./useSettingBox.module.scss";
-import { useIsOpenedDropdownMenu } from "@store";
+import { useStore_IsOpenedDropdownMenu } from "@store";
 import clsx from "clsx";
 
 import { LabelComponent } from "./label_component/LabelComponent";
@@ -17,7 +17,7 @@ import { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFil
 
 
 const useOnMouseLeaveDropdownMenu = () => {
-    const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
+    const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const onMouseLeaveFunction = () => {
         updateIsOpenedDropdownMenu("");

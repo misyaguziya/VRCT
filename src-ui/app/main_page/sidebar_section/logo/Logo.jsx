@@ -11,11 +11,11 @@ export const Logo = () => {
 
 import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
 import chato_img from "@images/chato_white.png";
-import { useMainPageCompactModeStatus } from "@store";
+import { useStore_IsMainPageCompactMode } from "@store";
 
 export const LogoBox = () => {
-    const { currentMainPageCompactModeStatus } = useMainPageCompactModeStatus();
-    if (currentMainPageCompactModeStatus === true) {
+    const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
+    if (currentIsMainPageCompactMode === true) {
         return <img src={chato_img} className={styles.logo_chato} alt="VRCT logo chato" />;
     } else {
         return <img src={vrct_logo} className={styles.logo} alt="VRCT logo" />;

@@ -1,9 +1,9 @@
-import { useSelectedMicHost as useStoreSelectedMicHost } from "@store";
+import { useStore_SelectedMicHost } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSelectedMicHost = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSelectedMicHost, updateSelectedMicHost } = useStoreSelectedMicHost();
+    const { currentSelectedMicHost, updateSelectedMicHost } = useStore_SelectedMicHost();
 
     const getSelectedMicHost = () => {
         updateSelectedMicHost(() => new Promise(() => {}));
@@ -15,5 +15,10 @@ export const useSelectedMicHost = () => {
         asyncStdoutToPython("/controller/callback_set_mic_host", selected_mic_host);
     };
 
-    return { currentSelectedMicHost, getSelectedMicHost, updateSelectedMicHost, setSelectedMicHost };
+    return {
+        currentSelectedMicHost,
+        getSelectedMicHost,
+        updateSelectedMicHost,
+        setSelectedMicHost,
+    };
 };

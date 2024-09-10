@@ -1,9 +1,9 @@
 import { WebviewWindow } from "@tauri-apps/api/window";
-import { store, useIsOpenedConfigPage } from "@store";
+import { store, useStore_IsOpenedConfigPage } from "@store";
 import { getCurrent } from "@tauri-apps/api/window";
 
 export const useWindow = () => {
-    const { updateIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { updateIsOpenedConfigPage } = useStore_IsOpenedConfigPage();
 
     const createConfigPage = async () => {
         const main_page = getCurrent();

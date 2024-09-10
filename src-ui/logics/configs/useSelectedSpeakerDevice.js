@@ -1,9 +1,9 @@
-import { useSelectedSpeakerDevice as useStoreSelectedSpeakerDevice } from "@store";
+import { useStore_SelectedSpeakerDevice } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSelectedSpeakerDevice = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSelectedSpeakerDevice, updateSelectedSpeakerDevice } = useStoreSelectedSpeakerDevice();
+    const { currentSelectedSpeakerDevice, updateSelectedSpeakerDevice } = useStore_SelectedSpeakerDevice();
 
     const getSelectedSpeakerDevice = () => {
         updateSelectedSpeakerDevice(() => new Promise(() => {}));
@@ -15,5 +15,10 @@ export const useSelectedSpeakerDevice = () => {
         asyncStdoutToPython("/controller/callback_set_speaker_device", selected_speaker_device);
     };
 
-    return { currentSelectedSpeakerDevice, getSelectedSpeakerDevice, updateSelectedSpeakerDevice, setSelectedSpeakerDevice };
+    return {
+        currentSelectedSpeakerDevice,
+        getSelectedSpeakerDevice,
+        updateSelectedSpeakerDevice,
+        setSelectedSpeakerDevice,
+    };
 };

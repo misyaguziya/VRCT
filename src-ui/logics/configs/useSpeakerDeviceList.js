@@ -1,14 +1,18 @@
-import { useSpeakerDeviceList as useStoreSpeakerDeviceList } from "@store";
+import { useStore_SpeakerDeviceList } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSpeakerDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSpeakerDeviceList, updateSpeakerDeviceList } = useStoreSpeakerDeviceList();
+    const { currentSpeakerDeviceList, updateSpeakerDeviceList } = useStore_SpeakerDeviceList();
 
     const getSpeakerDeviceList = () => {
         updateSpeakerDeviceList(() => new Promise(() => {}));
         asyncStdoutToPython("/controller/list_speaker_device");
     };
 
-    return { currentSpeakerDeviceList, getSpeakerDeviceList, updateSpeakerDeviceList };
+    return {
+        currentSpeakerDeviceList,
+        getSpeakerDeviceList,
+        updateSpeakerDeviceList,
+    };
 };
