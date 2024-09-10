@@ -193,14 +193,14 @@ class Config:
         if isinstance(value, bool):
             self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
 
-    @property
-    def IS_EASTER_EGG_ENABLED(self):
-        return self._IS_EASTER_EGG_ENABLED
+    # @property
+    # def IS_EASTER_EGG_ENABLED(self):
+    #     return self._IS_EASTER_EGG_ENABLED
 
-    @IS_EASTER_EGG_ENABLED.setter
-    def IS_EASTER_EGG_ENABLED(self, value):
-        if isinstance(value, bool):
-            self._IS_EASTER_EGG_ENABLED = value
+    # @IS_EASTER_EGG_ENABLED.setter
+    # def IS_EASTER_EGG_ENABLED(self, value):
+    #     if isinstance(value, bool):
+    #         self._IS_EASTER_EGG_ENABLED = value
 
     # Save Json Data
     ## Main Window
@@ -964,7 +964,7 @@ class Config:
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
         self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
         self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
-        self._IS_EASTER_EGG_ENABLED = False
+        # self._IS_EASTER_EGG_ENABLED = False
 
         # Save Json Data
         ## Main Window
