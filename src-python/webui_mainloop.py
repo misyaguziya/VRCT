@@ -96,6 +96,8 @@ controller_mapping = {
     # "/controller/callback_enable_easter_egg": controller.callbackEnableEasterEgg,
     "/controller/callback_open_config_window": controller.callbackOpenConfigWindow,
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
+    "/controller/callback_enable_multi_language_translation": controller.callbackEnableMultiLanguageTranslation,
+    "/controller/callback_disable_multi_language_translation": controller.callbackDisableMultiLanguageTranslation,
     "/controller/callback_enable_main_window_sidebar_compact_mode": controller.callbackEnableMainWindowSidebarCompactMode,
     "/controller/callback_disable_main_window_sidebar_compact_mode": controller.callbackDisableMainWindowSidebarCompactMode,
     "/controller/callback_enable_translation": controller.callbackEnableTranslation,
@@ -113,6 +115,7 @@ controller_mapping = {
     "/controller/set_target_language_and_country": controller.setTargetLanguageAndCountry,
     "/controller/swap_your_language_and_target_language": controller.swapYourLanguageAndTargetLanguage,
     "/controller/callback_selected_language_preset_tab": controller.callbackSelectedLanguagePresetTab,
+    "/controller/list_translation_engines": controller.getTranslationEngines,
     "/controller/callback_selected_translation_engine": controller.callbackSelectedTranslationEngine,
     "/controller/callback_disable_config_window_compact_mode": controller.callbackEnableConfigWindowCompactMode,
     "/controller/callback_enable_config_window_compact_mode": controller.callbackDisableConfigWindowCompactMode,
@@ -329,6 +332,8 @@ if __name__ == "__main__":
                     case  "/controller/callback_messagebox_send":
                         # handleControllerRequest("/controller/callback_enable_translation")
                         data = {"id":"123456", "message":"テスト"}
+                    case "/controller/callback_selected_translation_engine":
+                        data = "DeepL"
                     case "/controller/set_your_language_and_country":
                         data = {
                             "primary": {
