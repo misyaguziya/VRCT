@@ -42,7 +42,12 @@ export const useReceiveRoutes = () => {
     const { updateSendMessageButtonType } = useSendMessageButtonType();
 
 
-    const { updateVolumeVariable_Mic, updateVolumeVariable_Speaker } = useVolume();
+    const {
+        updateVolumeVariable_Mic,
+        updateVolumeVariable_Speaker,
+        updateMicThresholdCheckStatus,
+        updateSpeakerThresholdCheckStatus,
+    } = useVolume();
 
     const routes = {
         "/controller/callback_enable_translation": updateTranslationStatus,
@@ -72,6 +77,10 @@ export const useReceiveRoutes = () => {
 
         "/action/check_mic_threshold_energy": updateVolumeVariable_Mic,
         "/action/check_speaker_threshold_energy": updateVolumeVariable_Speaker,
+        "/controller/callback_enable_check_mic_threshold": () => updateMicThresholdCheckStatus(true),
+        "/controller/callback_disable_check_mic_threshold": () => updateMicThresholdCheckStatus(false),
+        "/controller/callback_enable_check_speaker_threshold": () => updateSpeakerThresholdCheckStatus(true),
+        "/controller/callback_disable_check_speaker_threshold": () => updateSpeakerThresholdCheckStatus(false),
 
         "/config/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
         "/controller/callback_enable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
