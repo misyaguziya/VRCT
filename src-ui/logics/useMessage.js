@@ -29,7 +29,7 @@ export const useMessage = () => {
     };
 
     const updateSentMessageLogById = (payload) => {
-        updateMessageLogsStatus(updateItemById(data.id, payload.translation));
+        updateMessageLogsStatus(updateItemById(payload.id, payload.translation));
     };
     const addSentMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "sent");
