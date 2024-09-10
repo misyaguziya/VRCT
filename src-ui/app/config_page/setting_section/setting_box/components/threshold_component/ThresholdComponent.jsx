@@ -1,10 +1,8 @@
-import { useState } from "react";
-
+import { useEffect, useState } from "react";
 import styles from "./ThresholdComponent.module.scss";
 import { SliderAndMeter } from "./slider_and_meter/SliderAndMeter";
 import { ThresholdEntry } from "./threshold_entry/ThresholdEntry";
 import { VolumeCheckButton } from "./volume_check_button/VolumeCheckButton";
-import { useConfig } from "@logics/useConfig";
 
 export const ThresholdComponent = (props) => {
     return (
@@ -18,9 +16,14 @@ export const ThresholdComponent = (props) => {
     );
 };
 
+import { useMicThreshold } from "@logics_configs/useMicThreshold";
 const MicComponent = (props) => {
-    const { currentMicThreshold, setMicThreshold } = useConfig();
+    const { currentMicThreshold, setMicThreshold } = useMicThreshold();
     const [ui_threshold, setUiThreshold] = useState(currentMicThreshold);
+
+    useEffect(() => {
+        setUiThreshold(currentMicThreshold);
+    }, [currentMicThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -47,10 +50,14 @@ const MicComponent = (props) => {
     );
 };
 
+import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 const SpeakerComponent = (props) => {
-
-    const { currentSpeakerThreshold, setSpeakerThreshold } = useConfig();
+    const { currentSpeakerThreshold, setSpeakerThreshold } = useSpeakerThreshold();
     const [ui_threshold, setUiThreshold] = useState(currentSpeakerThreshold);
+
+    useEffect(() => {
+        setUiThreshold(currentSpeakerThreshold);
+    }, [currentSpeakerThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
