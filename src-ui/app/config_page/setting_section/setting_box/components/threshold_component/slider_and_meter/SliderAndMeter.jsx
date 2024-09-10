@@ -5,8 +5,6 @@ import {
     useStore_SpeakerVolume,
 } from "@store";
 
-import { useVolume } from "@logics/useVolume";
-
 export const SliderAndMeter = (props) => {
     return (
         <div className={styles.container}>
@@ -16,7 +14,6 @@ export const SliderAndMeter = (props) => {
                     : <ThresholdVolumeMeter_Speaker {...props}/>
                 }
             </div>
-            <DevSection {...props}/>
         </div>
     );
 };
@@ -79,45 +76,5 @@ const VolumeMeter = ({ volume_width_percentage, volume, threshold }) => {
                 backgroundColor: (volume < threshold) ? "var(--primary_750_color)" : "var(--primary_400_color)"
             }}
         />
-    );
-};
-
-
-const DevSection = (props) => {
-    const {
-        volumeCheckStart_Mic,
-        volumeCheckStop_Mic,
-        volumeCheckStart_Speaker,
-        volumeCheckStop_Speaker,
-    } = useVolume();
-
-    const volumeCheckStart = () => {
-        if (props.id === "mic_threshold") {
-            volumeCheckStart_Mic();
-        } else if (props.id === "speaker_threshold") {
-            volumeCheckStart_Speaker();
-        }
-    };
-
-    const volumeCheckStop = () => {
-        if (props.id === "mic_threshold") {
-            volumeCheckStop_Mic();
-        } else if (props.id === "speaker_threshold") {
-            volumeCheckStop_Speaker();
-        }
-    };
-
-    return (
-        <div className={styles.dev_info_box}>
-            <p>dev</p>
-            <button className={styles.volume_check_button} onClick={() => volumeCheckStart()}>Start</button>
-            <button className={styles.volume_check_button} onClick={() => volumeCheckStop()}>Stop</button>
-            <div className={styles.volume_info}>
-                {/* <span>Current Volume: {(currentVolumeVariable)}</span> */}
-            </div>
-            <div className={styles.threshold_info}>
-                {/* <span>Threshold: {props.threshold}</span> */}
-            </div>
-        </div>
     );
 };
