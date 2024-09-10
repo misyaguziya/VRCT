@@ -1,10 +1,10 @@
 import styles from "./DropdownMenu.module.scss";
 import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
-import { useIsOpenedDropdownMenu } from "@store";
+import { useStore_IsOpenedDropdownMenu } from "@store";
 
 export const DropdownMenu = (props) => {
-    const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
+    const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const toggleDropdownMenu = () => {
         if (currentIsOpenedDropdownMenu === props.dropdown_id) {

@@ -6,10 +6,10 @@ import { PresetTabSelector } from "./preset_tab_selector/PresetTabSelector";
 import { LanguageSelectorOpenButton } from "./language_selector_open_button/LanguageSelectorOpenButton";
 import { LanguageSwapButton } from "./language_swap_button/LanguageSwapButton";
 import { TranslatorSelectorOpenButton } from "./translator_selector_open_button/TranslatorSelectorOpenButton";
-import { useIsOpenedTranslatorSelector } from "@store";
+import { useStore_IsOpenedTranslatorSelector } from "@store";
 
 export const LanguageSettings = () => {
-    const { updateIsOpenedTranslatorSelector} = useIsOpenedTranslatorSelector();
+    const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
     const closeTranslatorSelector = () => updateIsOpenedTranslatorSelector(false);
 
     return (
@@ -24,12 +24,12 @@ export const LanguageSettings = () => {
 
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
-import { useIsOpenedLanguageSelector } from "@store";
+import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useMainFunction } from "@logics/useMainFunction";
 
 const PresetContainer = () => {
     const { t } = useTranslation();
-    const { updateIsOpenedLanguageSelector, currentIsOpenedLanguageSelector } = useIsOpenedLanguageSelector();
+    const { updateIsOpenedLanguageSelector, currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
 
     const {
         currentTranscriptionSendStatus,

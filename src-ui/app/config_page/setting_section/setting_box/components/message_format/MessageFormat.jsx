@@ -1,20 +1,20 @@
 import styles from "./MessageFormat.module.scss";
 import { useTranslation } from "react-i18next";
 import {
-    useUiLanguageStatus,
-    useSendMessageFormat,
-    useSendMessageFormatWithT,
-    useReceivedMessageFormat,
-    useReceivedMessageFormatWithT,
+    useStore_UiLanguage,
+    useStore_SendMessageFormat,
+    useStore_SendMessageFormatWithT,
+    useStore_ReceivedMessageFormat,
+    useStore_ReceivedMessageFormatWithT,
 } from "@store";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import SwapImg from "@images/swap_icon.png";
 
 export const MessageFormat = (props) => {
-    const { currentSendMessageFormat, updateSendMessageFormat } = useSendMessageFormat();
-    const { currentSendMessageFormatWithT, updateSendMessageFormatWithT } = useSendMessageFormatWithT();
-    const { currentReceivedMessageFormat, updateReceivedMessageFormat } = useReceivedMessageFormat();
-    const { currentReceivedMessageFormatWithT, updateReceivedMessageFormatWithT } = useReceivedMessageFormatWithT();
+    const { currentSendMessageFormat, updateSendMessageFormat } = useStore_SendMessageFormat();
+    const { currentSendMessageFormatWithT, updateSendMessageFormatWithT } = useStore_SendMessageFormatWithT();
+    const { currentReceivedMessageFormat, updateReceivedMessageFormat } = useStore_ReceivedMessageFormat();
+    const { currentReceivedMessageFormatWithT, updateReceivedMessageFormatWithT } = useStore_ReceivedMessageFormatWithT();
 
     let atoms = [];
     switch (props.id) {
@@ -49,14 +49,14 @@ export const MessageFormat = (props) => {
 
 const ExampleComponent = ({ id, current_format }) => {
     const { t } = useTranslation();
-    const { currentUiLanguageStatus } = useUiLanguageStatus();
+    const { currentUiLanguage } = useStore_UiLanguage();
 
     const createExampleMessage = () => {
         const originalLangMessage = t("config_page.send_message_format.example_text");
         let format = current_format;
 
         if (["send_with_t", "received_with_t"].includes(id)) {
-            const translationLocale = currentUiLanguageStatus === "en" ? "ja" : "en";
+            const translationLocale = currentUiLanguage === "en" ? "ja" : "en";
             const translatedLangMessage = t("config_page.send_message_format.example_text", { lng: translationLocale });
 
             return format.is_message_first

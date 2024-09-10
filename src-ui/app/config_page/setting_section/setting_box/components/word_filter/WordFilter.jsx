@@ -1,11 +1,11 @@
 import styles from "./WordFilter.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState } from "react";
-import { useWordFilterList, useIsOpenedWordFilterList } from "@store";
+import { useStore_WordFilterList, useStore_IsOpenedWordFilterList } from "@store";
 export const WordFilter = () => {
     const [input_value, setInputValue] = useState();
-    const { currentWordFilterList, updateWordFilterList } = useWordFilterList();
-    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useIsOpenedWordFilterList();
+    const { currentWordFilterList, updateWordFilterList } = useStore_WordFilterList();
+    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useStore_IsOpenedWordFilterList();
 
     const onChangeEntry = (e) => {
         setInputValue(e.target.value);
@@ -112,8 +112,8 @@ import { useTranslation } from "react-i18next";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 export const WordFilterListToggleComponent = (props) => {
     const { t } = useTranslation();
-    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useIsOpenedWordFilterList();
-    const { currentWordFilterList } = useWordFilterList();
+    const { currentIsOpenedWordFilterList, updateIsOpenedWordFilterList } = useStore_IsOpenedWordFilterList();
+    const { currentWordFilterList } = useStore_WordFilterList();
 
 
     const svg_class_names = clsx(styles["arrow_left_svg"], {

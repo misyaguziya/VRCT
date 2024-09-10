@@ -1,85 +1,88 @@
 import { getCurrent } from "@tauri-apps/api/window";
 
 import {
-    useTranslationStatus,
-    useTranscriptionSendStatus,
-    useTranscriptionReceiveStatus,
-    useForegroundStatus,
+    useStore_TranslationStatus,
+    useStore_TranscriptionSendStatus,
+    useStore_TranscriptionReceiveStatus,
+    useStore_ForegroundStatus,
 } from "@store";
 
-import { useStdoutToPython } from "./useStdoutToPython";
+import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMainFunction = () => {
     const {
         currentTranslationStatus,
         updateTranslationStatus,
         asyncUpdateTranslationStatus,
-    } = useTranslationStatus();
+    } = useStore_TranslationStatus();
     const {
         currentTranscriptionSendStatus,
         updateTranscriptionSendStatus,
         asyncUpdateTranscriptionSendStatus,
-    } = useTranscriptionSendStatus();
+    } = useStore_TranscriptionSendStatus();
     const {
         currentTranscriptionReceiveStatus,
         updateTranscriptionReceiveStatus,
         asyncUpdateTranscriptionReceiveStatus,
-    } = useTranscriptionReceiveStatus();
+    } = useStore_TranscriptionReceiveStatus();
     const {
         currentForegroundStatus,
         updateForegroundStatus,
-    } = useForegroundStatus();
+    } = useStore_ForegroundStatus();
 
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const asyncPending = () => new Promise(() => {});
+    const toggleTranslation = () => {
+        asyncUpdateTranslationStatus(asyncPending);
+        if (currentTranslationStatus.data) {
+            asyncStdoutToPython("/controller/callback_disable_translation");
+        } else {
+            asyncStdoutToPython("/controller/callback_enable_translation");
+        }
+    };
+
+    const toggleTranscriptionSend = () => {
+        asyncUpdateTranscriptionSendStatus(asyncPending);
+        if (currentTranscriptionSendStatus.data) {
+            asyncStdoutToPython("/controller/callback_disable_transcription_send");
+        } else {
+            asyncStdoutToPython("/controller/callback_enable_transcription_send");
+        }
+    };
+
+    const toggleTranscriptionReceive = () => {
+        asyncUpdateTranscriptionReceiveStatus(asyncPending);
+        if (currentTranscriptionReceiveStatus.data) {
+            asyncStdoutToPython("/controller/callback_disable_transcription_receive");
+        } else {
+            asyncStdoutToPython("/controller/callback_enable_transcription_receive");
+        }
+    };
+
+    const toggleForeground = () => {
+        const main_page = getCurrent();
+        const is_foreground_enabled = !currentForegroundStatus.data;
+        main_page.setAlwaysOnTop(is_foreground_enabled);
+        updateForegroundStatus(is_foreground_enabled);
+    };
+
     return {
-        toggleTranslation: () => {
-            asyncUpdateTranslationStatus(asyncPending);
-            if (currentTranslationStatus.data) {
-                asyncStdoutToPython("/controller/callback_disable_translation");
-            } else {
-                asyncStdoutToPython("/controller/callback_enable_translation");
-            }
-        },
-        currentTranslationStatus: currentTranslationStatus,
-        updateTranslationStatus: (payload) => {
-            updateTranslationStatus(payload.data);
-        },
+        currentTranslationStatus,
+        toggleTranslation,
+        updateTranslationStatus,
 
-        toggleTranscriptionSend: () => {
-            asyncUpdateTranscriptionSendStatus(asyncPending);
-            if (currentTranscriptionSendStatus.data) {
-                asyncStdoutToPython("/controller/callback_disable_transcription_send");
-            } else {
-                asyncStdoutToPython("/controller/callback_enable_transcription_send");
-            }
-        },
-        currentTranscriptionSendStatus: currentTranscriptionSendStatus,
-        updateTranscriptionSendStatus: (payload) => {
-            updateTranscriptionSendStatus(payload.data);
-        },
+        currentTranscriptionSendStatus,
+        toggleTranscriptionSend,
+        updateTranscriptionSendStatus,
 
-        toggleTranscriptionReceive: () => {
-            asyncUpdateTranscriptionReceiveStatus(asyncPending);
-            if (currentTranscriptionReceiveStatus.data) {
-                asyncStdoutToPython("/controller/callback_disable_transcription_receive");
-            } else {
-                asyncStdoutToPython("/controller/callback_enable_transcription_receive");
-            }
-        },
-        currentTranscriptionReceiveStatus: currentTranscriptionReceiveStatus,
-        updateTranscriptionReceiveStatus: (payload) => {
-            updateTranscriptionReceiveStatus(payload.data);
-        },
+        currentTranscriptionReceiveStatus,
+        toggleTranscriptionReceive,
+        updateTranscriptionReceiveStatus,
 
-        toggleForeground: () => {
-            const main_page = getCurrent();
-            const is_foreground_enabled = !currentForegroundStatus.data;
-            main_page.setAlwaysOnTop(is_foreground_enabled);
-            updateForegroundStatus(is_foreground_enabled);
+        currentForegroundStatus,
+        toggleForeground,
+        updateForegroundStatus,
 
-        },
-        currentForegroundStatus: currentForegroundStatus,
     };
 };

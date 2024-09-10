@@ -1,9 +1,9 @@
 import styles from "./LanguageSelectorTopBar.module.scss";
 
-import { useIsOpenedLanguageSelector } from "@store";
+import { useStore_IsOpenedLanguageSelector } from "@store";
 
 export const LanguageSelectorTopBar = (props) => {
-    const { updateIsOpenedLanguageSelector } = useIsOpenedLanguageSelector();
+    const { updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
 
     const closeLanguageSelector = () => {
         updateIsOpenedLanguageSelector({

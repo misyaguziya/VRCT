@@ -2,17 +2,17 @@ import { useTranslation } from "react-i18next";
 
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
-import { useTranslatorListStatus, useSelectedTranslatorIdStatus, useIsOpenedTranslatorSelector } from "@store";
+import { useStore_TranslatorList, useStore_SelectedTranslatorId, useStore_IsOpenedTranslatorSelector } from "@store";
 
 export const TranslatorSelectorOpenButton = () => {
     const { t } = useTranslation();
-    const { currentSelectedTranslatorIdStatus } = useSelectedTranslatorIdStatus();
-    const { currentTranslatorListStatus } = useTranslatorListStatus();
-    const currentTranslator = currentTranslatorListStatus.find(
-        translator_data => translator_data.translator_key === currentSelectedTranslatorIdStatus
+    const { currentSelectedTranslatorId } = useStore_SelectedTranslatorId();
+    const { currentTranslatorList } = useStore_TranslatorList();
+    const currentTranslator = currentTranslatorList.find(
+        translator_data => translator_data.translator_key === currentSelectedTranslatorId
     );
 
-    const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useIsOpenedTranslatorSelector();
+    const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 
     const openTranslatorSelector = () => updateIsOpenedTranslatorSelector(!currentIsOpenedTranslatorSelector);
 
