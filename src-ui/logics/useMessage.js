@@ -1,49 +1,51 @@
 import {
-    useMessageLogsStatus,
+    useStore_MessageLogs,
 } from "@store";
 
-import { useStdoutToPython } from "./useStdoutToPython";
+import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMessage = () => {
-    const { currentMessageLogsStatus, addMessageLogsStatus, updateMessageLogsStatus } = useMessageLogsStatus();
+    const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
     const { asyncStdoutToPython } = useStdoutToPython();
 
+    const sendMessage = (message) => {
+        const uuid = crypto.randomUUID();
+        const send_message_object = {
+            id: uuid,
+            message: message,
+        };
+        asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
+
+        addMessageLogs({
+            id: uuid,
+            category: "sent",
+            status: "pending",
+            created_at: generateTimeData(),
+            messages: {
+                original: message,
+                translated: [],
+            },
+        });
+    };
+
+    const updateSentMessageLogById = (payload) => {
+        updateMessageLogs(updateItemById(payload.id, payload.translation));
+    };
+    const addSentMessageLog = (payload) => {
+        const message_object = generateMessageObject(payload, "sent");
+        addMessageLogs(message_object);
+    };
+    const addReceivedMessageLog = (payload) => {
+        const message_object = generateMessageObject(payload, "received");
+        addMessageLogs(message_object);
+    };
+
     return {
-        sendMessage: (message) => {
-            const uuid = crypto.randomUUID();
-            const send_message_object = {
-                id: uuid,
-                message: message,
-            };
-            asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
-
-            addMessageLogsStatus({
-                id: uuid,
-                category: "sent",
-                status: "pending",
-                created_at: generateTimeData(),
-                messages: {
-                    original: message,
-                    translated: [],
-                },
-            });
-        },
-        currentMessageLogsStatus: currentMessageLogsStatus,
-
-        updateSentMessageLog: (payload) => {
-            const data = payload.data;
-            updateMessageLogsStatus(updateItemById(data.id, data.translation));
-        },
-        addSentMessageLog: (payload) => {
-            const data = payload.data;
-            const message_object = generateMessageObject(data, "sent");
-            addMessageLogsStatus(message_object);
-        },
-        addReceivedMessageLog: (payload) => {
-            const data = payload.data;
-            const message_object = generateMessageObject(data, "received");
-            addMessageLogsStatus(message_object);
-        },
+        currentMessageLogs,
+        sendMessage,
+        updateSentMessageLogById,
+        addSentMessageLog,
+        addReceivedMessageLog,
     };
 };
 

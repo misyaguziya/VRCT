@@ -53,32 +53,3 @@
         outline: none;
     }
 }
-
-
-
-
-//  for dev
-.dev_info_box {
-    position: absolute;
-    top: -4rem;
-    display: flex;
-    gap: 2rem
-}
-
-
-
-.volume_info, .threshold_info {
-    font-size: 1.2rem;
-}
-
-
-
-.volume_check_button {
-    font-size: 1.4rem;
-    background-color: var(--dark_800_color);
-    padding: 1rem;
-    cursor: pointer;
-    &:hover {
-        background-color: var(--dark_775_color);
-    }
-}

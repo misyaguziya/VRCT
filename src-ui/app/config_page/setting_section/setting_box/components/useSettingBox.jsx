@@ -1,5 +1,5 @@
 import styles from "./useSettingBox.module.scss";
-import { useIsOpenedDropdownMenu } from "@store";
+import { useStore_IsOpenedDropdownMenu } from "@store";
 import clsx from "clsx";
 
 import { LabelComponent } from "./label_component/LabelComponent";
@@ -15,21 +15,47 @@ import { MessageFormat } from "./message_format/MessageFormat";
 import { ActionButton } from "./action_button/ActionButton";
 import { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 
-export const useSettingBox = () => {
-    const { updateIsOpenedDropdownMenu } = useIsOpenedDropdownMenu();
 
-    const DropdownMenuContainer = (props) => {
-        const onMouseLeaveFunction = () => {
-            updateIsOpenedDropdownMenu("");
-        };
+const useOnMouseLeaveDropdownMenu = () => {
+    const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
-        return (
-            <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent label={props.label} desc={props.desc} />
-                <DropdownMenu {...props}/>
-            </div>
-        );
+    const onMouseLeaveFunction = () => {
+        updateIsOpenedDropdownMenu("");
     };
+
+    return { onMouseLeaveFunction };
+};
+
+export const DropdownMenuContainer = (props) => {
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
+    return (
+        <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <DropdownMenu {...props} />
+        </div>
+    );
+};
+
+
+export const ThresholdContainer = (props) => {
+    return (
+        <div className={styles.threshold_container}>
+            <div className={styles.threshold_switch_section}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <Switchbox {...props}/>
+            </div>
+            <div className={styles.threshold_section}>
+                <ThresholdComponent {...props}/>
+            </div>
+        </div>
+    );
+};
+
+
+export const useSettingBox = () => {
+    console.log("useSettingBox______________");
+
 
     const SliderContainer = (props) => {
         return (
@@ -72,20 +98,6 @@ export const useSettingBox = () => {
             <div className={styles.container}>
                 <LabelComponent label={props.label} desc={props.desc} />
                 <RadioButton {...props}/>
-            </div>
-        );
-    };
-
-    const ThresholdContainer = (props) => {
-        return (
-            <div className={styles.threshold_container}>
-                <div className={styles.threshold_switch_section}>
-                    <LabelComponent label={props.label} desc={props.desc} />
-                    <Switchbox {...props}/>
-                </div>
-                <div className={styles.threshold_section}>
-                    <ThresholdComponent {...props}/>
-                </div>
             </div>
         );
     };
@@ -144,12 +156,10 @@ export const useSettingBox = () => {
     };
 
     return {
-        DropdownMenuContainer,
         SliderContainer,
         CheckboxContainer,
         SwitchboxContainer,
         EntryContainer,
-        ThresholdContainer,
         RadioButtonContainer,
         DeeplAuthKeyContainer,
         MessageFormatContainer,

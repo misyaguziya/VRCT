@@ -1,17 +1,17 @@
-import { useSelectedConfigTabId } from "@store";
+import { useStore_SelectedConfigTabId } from "@store";
 
 import { Device } from "./device/Device";
 import { Appearance } from "./appearance/Appearance";
-import { Others } from "./others/Others";
-import { AboutVrct } from "./about_vrct/AboutVrct";
+// import { Others } from "./others/Others";
+// import { AboutVrct } from "./about_vrct/AboutVrct";
 
 export const SettingBox = () => {
-    const { currentSelectedConfigTabId } = useSelectedConfigTabId();
+    const { currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
     switch (currentSelectedConfigTabId) {
         case "device":
             return <Device />;
-        case "others":
-            return <Others />;
+        // case "others":
+        //     return <Others />;
         // case "appearance":
         //     return <Appearance />;
         // case "about_vrct":

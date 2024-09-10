@@ -4,7 +4,7 @@ import { TopBar } from "./top_bar/TopBar";
 import { MessageContainer } from "./message_container/MessageContainer";
 import { LanguageSelector } from "./language_selector/LanguageSelector";
 
-import { useIsOpenedLanguageSelector } from "@store";
+import { useStore_IsOpenedLanguageSelector } from "@store";
 
 export const MainSection = () => {
 
@@ -18,7 +18,7 @@ export const MainSection = () => {
 };
 
 const HandleLanguageSelector = () => {
-    const { currentIsOpenedLanguageSelector } = useIsOpenedLanguageSelector();
+    const { currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
 
     if (currentIsOpenedLanguageSelector.your_language === true) {
         return <LanguageSelector id="your_language"/>;

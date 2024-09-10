@@ -19,12 +19,12 @@ import vrchat_disclaimer from "@images/about_vrct/vrchat_disclaimer.png";
 
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import { useUiLanguageStatus } from "@store";
+import { useStore_UiLanguage } from "@store";
 import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 export const AboutVrct = () => {
     const { t } = useTranslation();
-    const { currentUiLanguageStatus } = useUiLanguageStatus();
+    const { currentUiLanguage } = useStore_UiLanguage();
     return (
         <div className={styles.container}>
             <div className={styles.dev_section}>
@@ -74,7 +74,7 @@ export const AboutVrct = () => {
                 <img src={special_thanks_section_title} className={clsx(styles.section_title, styles.special_thanks)} />
                 <img src={special_thanks_members} className={styles.special_thanks_members_img} />
                 {
-                    currentUiLanguageStatus === "ja"
+                    currentUiLanguage === "ja"
                     ? <img src={special_thanks_message_ja} className={styles.special_thanks_message_img} />
                     : <img src={special_thanks_message_en} className={styles.special_thanks_message_img} />
                 }
