@@ -157,6 +157,24 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_FOREGROUND = value
 
+    @property
+    def ENABLE_CHECK_ENERGY_SEND(self):
+        return self._ENABLE_CHECK_ENERGY_SEND
+
+    @ENABLE_CHECK_ENERGY_SEND.setter
+    def ENABLE_CHECK_ENERGY_SEND(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_CHECK_ENERGY_SEND = value
+
+    @property
+    def ENABLE_CHECK_ENERGY_RECEIVE(self):
+        return self._ENABLE_CHECK_ENERGY_RECEIVE
+
+    @ENABLE_CHECK_ENERGY_RECEIVE.setter
+    def ENABLE_CHECK_ENERGY_RECEIVE(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_CHECK_ENERGY_RECEIVE = value
+
     # @property
     # def SENT_MESSAGES_LOG(self):
     #     return self._SENT_MESSAGES_LOG
@@ -959,6 +977,8 @@ class Config:
         self._ENABLE_TRANSCRIPTION_SEND = False
         self._ENABLE_TRANSCRIPTION_RECEIVE = False
         self._ENABLE_FOREGROUND = False
+        self._ENABLE_CHECK_ENERGY_SEND = False
+        self._ENABLE_CHECK_ENERGY_RECEIVE = False
 
         # self._SENT_MESSAGES_LOG = []
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
