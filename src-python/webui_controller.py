@@ -454,30 +454,31 @@ def callbackDisableTranslation(*args, **kwargs) -> dict:
 
 def callbackEnableTranscriptionSend(data, action, *args, **kwargs) -> dict:
     printLog("Enable Transcription Send")
-    config.ENABLE_TRANSCRIPTION_SEND = True
     startThreadingTranscriptionSendMessage(action)
+    config.ENABLE_TRANSCRIPTION_SEND = True
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackDisableTranscriptionSend(*args, **kwargs) -> dict:
     printLog("Disable Transcription Send")
-    config.ENABLE_TRANSCRIPTION_SEND = False
     stopThreadingTranscriptionSendMessage()
+    config.ENABLE_TRANSCRIPTION_SEND = False
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
 def callbackEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     printLog("Enable Transcription Receive")
-    config.ENABLE_TRANSCRIPTION_RECEIVE = True
+
     startThreadingTranscriptionReceiveMessage(action)
 
     if config.ENABLE_OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
+    config.ENABLE_TRANSCRIPTION_RECEIVE = True
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackDisableTranscriptionReceive(*args, **kwargs) -> dict:
     printLog("Disable Transcription Receive")
-    config.ENABLE_TRANSCRIPTION_RECEIVE = False
     stopThreadingTranscriptionReceiveMessage()
+    config.ENABLE_TRANSCRIPTION_RECEIVE = False
     return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
 def callbackEnableForeground(*args, **kwargs) -> dict:
@@ -740,9 +741,6 @@ class ProgressBarMicEnergy:
     def set(self, energy) -> None:
         self.action("mic", {"status":200, "result":energy})
 
-    def stopped(self) -> None:
-        self.action("stopped", {"status":200})
-
     def error(self) -> None:
         self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
 
@@ -751,15 +749,16 @@ def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
     progressbar_mic_energy = ProgressBarMicEnergy(action)
     model.startCheckMicEnergy(
         progressbar_mic_energy.set,
-        progressbar_mic_energy.stopped,
         progressbar_mic_energy.error
     )
-    return {"status":200}
+    config.ENABLE_CHECK_ENERGY_SEND = True
+    return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
 def callbackDisableCheckMicThreshold(*args, **kwargs) -> dict:
     printLog("Disable Check Mic Threshold")
     model.stopCheckMicEnergy()
-    return {"status":200}
+    config.ENABLE_CHECK_ENERGY_SEND = False
+    return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
 def callbackSetMicRecordTimeout(data, *args, **kwargs) -> dict:
     printLog("Set Mic Record Timeout", data)
@@ -873,9 +872,6 @@ class ProgressBarSpeakerEnergy:
     def set(self, energy) -> None:
         self.action("speaker", {"status":200, "result":energy})
 
-    def stopped(self) -> None:
-        self.action("stopped", {"status":200})
-
     def error(self) -> None:
         self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
 
@@ -884,15 +880,16 @@ def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
     progressbar_speaker_energy = ProgressBarSpeakerEnergy(action)
     model.startCheckSpeakerEnergy(
         progressbar_speaker_energy.set,
-        progressbar_speaker_energy.stopped,
         progressbar_speaker_energy.error
     )
-    return {"status":200}
+    config.ENABLE_CHECK_ENERGY_RECEIVE = True
+    return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
 def callbackDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
     printLog("Disable Check Speaker Threshold")
     model.stopCheckSpeakerEnergy()
-    return {"status":200}
+    config.ENABLE_CHECK_ENERGY_RECEIVE = False
+    return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
 def callbackSetSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
     printLog("Set Speaker Record Timeout", data)

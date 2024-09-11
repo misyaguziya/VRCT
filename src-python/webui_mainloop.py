@@ -217,12 +217,10 @@ action_mapping = {
     },
     "/controller/callback_enable_check_mic_threshold": {
         "mic":"/action/check_mic_threshold_energy",
-        "stopped":"/action/check_mic_threshold_energy_stopped",
         "error_device":"/action/error_device",
     },
     "/controller/callback_enable_check_speaker_threshold": {
         "speaker":"/action/check_speaker_threshold_energy",
-        "stopped":"/action/check_speaker_threshold_energy_stopped",
         "error_device":"/action/error_device",
     },
     "/controller/callback_messagebox_send": {
