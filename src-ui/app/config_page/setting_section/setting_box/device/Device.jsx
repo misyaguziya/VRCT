@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
 import {
     ThresholdContainer,
+    useOnMouseLeaveDropdownMenu,
 } from "../components/useSettingBox";
 export const Device = () => {
     return (
@@ -25,6 +26,8 @@ const Mic_Container = () => {
     const { t } = useTranslation();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
     const { currentMicHostList, getMicHostList } = useMicHostList();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
 
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
@@ -40,7 +43,7 @@ const Mic_Container = () => {
 
     return (
         <div className={styles.mic_container}>
-            <div className={styles.device_container}>
+            <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.mic_host_device.label")} />
                 <div className={styles.device_contents}>
                     <div className={styles.device_dropdown_wrapper}>
@@ -88,15 +91,15 @@ const Speaker_Container = () => {
     const { t } = useTranslation();
     const { currentSelectedSpeakerDevice, setSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { currentSpeakerDeviceList, getSpeakerDeviceList } = useSpeakerDeviceList();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
 
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);
     };
 
-
     return (
         <div className={styles.speaker_container}>
-            <div className={styles.device_container}>
+            <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.speaker_device.label")} />
                 <div className={styles.device_contents}>
                     <div className={styles.device_dropdown_wrapper}>
