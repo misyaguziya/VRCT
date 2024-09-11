@@ -16,7 +16,7 @@ import { ActionButton } from "./action_button/ActionButton";
 import { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 
 
-const useOnMouseLeaveDropdownMenu = () => {
+export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const onMouseLeaveFunction = () => {

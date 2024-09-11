@@ -32,7 +32,6 @@
     position: absolute;
     top: 100%; // Position it below the toggle button
     right: 0;
-    width: 100%;
     min-width: 20rem;
     z-index: 1;
     &.is_opened {
@@ -46,11 +45,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
+    white-space: nowrap;
 }
 
 .value_button {
     background-color: var(--dark_875_color);
-    padding: 0.8rem;
+    padding: 1.2rem;
     cursor: pointer;
     &:hover {
         background-color: var(--dark_800_color);
@@ -61,7 +61,7 @@
 }
 
 .value_text {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
 }
 
 .loader {
