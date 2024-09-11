@@ -10,15 +10,17 @@ import { OpenSettings } from "./open_settings/OpenSettings";
 
 export const SidebarSection = () => {
     const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
-    const container_class_name = clsx(styles["container"], {
-        [styles["is_compact_mode"]]: currentIsMainPageCompactMode
+    const container_class_name = clsx(styles.container, {
+        [styles.is_compact_mode]: currentIsMainPageCompactMode
     });
 
     return (
         <div className={container_class_name}>
             <Logo />
-            <MainFunctionSwitch />
-            {!currentIsMainPageCompactMode && <LanguageSettings />}
+            <div className={styles.scroll_container}>
+                <MainFunctionSwitch />
+                {!currentIsMainPageCompactMode && <LanguageSettings />}
+            </div>
             <OpenSettings />
         </div>
     );
