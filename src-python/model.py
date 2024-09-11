@@ -271,12 +271,10 @@ class Model:
         self.previous_receive_message = message
         return repeat_flag
 
-    def convertMessageToRomajiAndHiragana(self, message: str, hiragana:bool, romaji:bool) -> str:
+    def convertMessageToTransliteration(self, message: str) -> str:
         data_list = self.kks.convert(message)
-        if 
         keys_to_keep = {"orig", "hira", "hepburn"}
         filtered_list = []
-
         for item in data_list:
             filtered_item = {key: value for key, value in item.items() if key in keys_to_keep}
             filtered_list.append(filtered_item)

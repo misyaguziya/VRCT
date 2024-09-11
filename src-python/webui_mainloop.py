@@ -30,6 +30,8 @@ config_mapping = {
     "/config/selected_tab_target_languages": "SELECTED_TAB_TARGET_LANGUAGES",
     "/config/selected_transcription_engine": "SELECTED_TRANSCRIPTION_ENGINE",
     "/config/enable_multi_translation": "ENABLE_MULTI_LANGUAGE_TRANSLATION",
+    "/config/enable_convert_message_to_romaji": "ENABLE_CONVERT_MESSAGE_TO_ROMAJI",
+    "/config/enable_convert_message_to_hiragana": "ENABLE_CONVERT_MESSAGE_TO_HIRAGANA",
     "/config/is_main_window_sidebar_compact_mode": "IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE",
     "/config/transparency": "TRANSPARENCY",
     "/config/appearance_theme": "APPEARANCE_THEME",
@@ -98,6 +100,10 @@ controller_mapping = {
     "/controller/callback_close_config_window": controller.callbackCloseConfigWindow,
     "/controller/callback_enable_multi_language_translation": controller.callbackEnableMultiLanguageTranslation,
     "/controller/callback_disable_multi_language_translation": controller.callbackDisableMultiLanguageTranslation,
+    "/controller/callback_enable_convert_message_to_romaji": controller.callbackEnableConvertMessageToRomaji,
+    "/controller/callback_disable_convert_message_to_romaji": controller.callbackDisableConvertMessageToRomaji,
+    "/controller/callback_enable_convert_message_to_hiragana": controller.callbackEnableConvertMessageToHiragana,
+    "/controller/callback_disable_convert_message_to_hiragana": controller.callbackDisableConvertMessageToHiragana,
     "/controller/callback_enable_main_window_sidebar_compact_mode": controller.callbackEnableMainWindowSidebarCompactMode,
     "/controller/callback_disable_main_window_sidebar_compact_mode": controller.callbackDisableMainWindowSidebarCompactMode,
     "/controller/callback_enable_translation": controller.callbackEnableTranslation,
@@ -331,6 +337,7 @@ if __name__ == "__main__":
                 match endpoint:
                     case  "/controller/callback_messagebox_send":
                         # handleControllerRequest("/controller/callback_enable_translation")
+                        # handleControllerRequest("/controller/callback_enable_convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
                     case "/controller/callback_selected_translation_engine":
                         data = "DeepL"
