@@ -54,9 +54,6 @@ export const ThresholdContainer = (props) => {
 
 
 export const useSettingBox = () => {
-    console.log("useSettingBox______________");
-
-
     const SliderContainer = (props) => {
         return (
             <div className={styles.container}>

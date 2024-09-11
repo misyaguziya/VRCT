@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import styles from "./Device.module.scss";
 import {
     DropdownMenuContainer,
     ThresholdContainer,
@@ -8,7 +9,7 @@ export const Device = () => {
     return (
         <>
             <DropdownMenuContainer_MicHost />
-            <DropdownMenuContainer_MicDevice />
+            {/* <DropdownMenuContainer_MicDevice /> */}
             <ThresholdContainer_Mic />
             <DropdownMenuContainer_SpeakerDevice />
             <ThresholdContainer_Speaker />
@@ -18,52 +19,89 @@ export const Device = () => {
 
 import { useMicHostList } from "@logics_configs/useMicHostList";
 import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
+
+import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
+import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
+
+import { LabelComponent } from "../components/label_component/LabelComponent";
+import { DropdownMenu } from "../components/dropdown_menu/DropdownMenu";
+
 const DropdownMenuContainer_MicHost = () => {
     const { t } = useTranslation();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
     const { currentMicHostList, getMicHostList } = useMicHostList();
 
-    const selectFunction = (selected_data) => {
+    const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
     };
 
-    return (
-        <DropdownMenuContainer
-            dropdown_id="mic_host"
-            label={t("config_page.mic_host.label")}
-            selected_id={currentSelectedMicHost.data}
-            list={currentMicHostList.data}
-            selectFunction={selectFunction}
-            openListFunction={getMicHostList}
-            state={currentSelectedMicHost.state}
-        />
-    );
-};
-
-import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
-import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
-const DropdownMenuContainer_MicDevice = () => {
-    const { t } = useTranslation();
     const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
     const { currentMicDeviceList, getMicDeviceList } = useMicDeviceList();
 
-    const selectFunction = (selected_data) => {
+    const selectFunction_device = (selected_data) => {
         setSelectedMicDevice(selected_data.selected_id);
     };
 
 
     return (
-        <DropdownMenuContainer
-            dropdown_id="mic_device"
-            label={t("config_page.mic_device.label")}
-            selected_id={currentSelectedMicDevice.data}
-            list={currentMicDeviceList.data}
-            selectFunction={selectFunction}
-            openListFunction={getMicDeviceList}
-            state={currentSelectedMicDevice.state}
-        />
+        <div className={styles.device_container}>
+            <LabelComponent label={t("config_page.mic_host.label")} />
+
+            <div className={styles.device_contents}>
+                <div className={styles.device_dropdown_wrapper}>
+                    <p className={styles.device_dropdown_label}>Host/Driver</p>
+                    <DropdownMenu
+                        dropdown_id="mic_host"
+                        selected_id={currentSelectedMicHost.data}
+                        list={currentMicHostList.data}
+                        selectFunction={selectFunction_host}
+                        openListFunction={getMicHostList}
+                        state={currentSelectedMicHost.state}
+                        style={{ maxWidth: "20rem", minWidth: "10rem" }}
+                    />
+                </div>
+
+                <div className={styles.device_dropdown_wrapper}>
+                    <p className={styles.device_dropdown_label}>Device</p>
+                    <DropdownMenu
+                        dropdown_id="mic_device"
+                        label={t("config_page.mic_device.label")}
+                        selected_id={currentSelectedMicDevice.data}
+                        list={currentMicDeviceList.data}
+                        selectFunction={selectFunction_device}
+                        openListFunction={getMicDeviceList}
+                        state={currentSelectedMicDevice.state}
+                    />
+                </div>
+            </div>
+        </div>
     );
 };
+
+// import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
+// import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
+// const DropdownMenuContainer_MicDevice = () => {
+//     const { t } = useTranslation();
+//     const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
+//     const { currentMicDeviceList, getMicDeviceList } = useMicDeviceList();
+
+//     const selectFunction = (selected_data) => {
+//         setSelectedMicDevice(selected_data.selected_id);
+//     };
+
+
+//     return (
+//         <DropdownMenuContainer
+//             dropdown_id="mic_device"
+//             label={t("config_page.mic_device.label")}
+//             selected_id={currentSelectedMicDevice.data}
+//             list={currentMicDeviceList.data}
+//             selectFunction={selectFunction}
+//             openListFunction={getMicDeviceList}
+//             state={currentSelectedMicDevice.state}
+//         />
+//     );
+// };
 
 import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
 import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
