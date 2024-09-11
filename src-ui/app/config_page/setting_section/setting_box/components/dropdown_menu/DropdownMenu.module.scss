@@ -24,14 +24,16 @@
 
 .dropdown_selected_text {
     font-size: 1.4rem;
+    padding-right: 2.8rem;
 }
 
 .dropdown_content_wrapper {
     display: none;
     position: absolute;
     top: 100%; // Position it below the toggle button
-    left: 0;
+    right: 0;
     width: 100%;
+    min-width: 20rem;
     z-index: 1;
     &.is_opened {
         display: block;
