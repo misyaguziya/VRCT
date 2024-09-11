@@ -15,13 +15,13 @@ import webbrowser
 
 from typing import Callable
 from flashtext import KeywordProcessor
+from pykakasi import kakasi
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices
 from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
-from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight
@@ -99,6 +99,7 @@ class Model:
         self.mic_audio_queue = None
         self.mic_mute_status = None
         self.mic_mute_status_check = None
+        self.kks = kakasi()
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -269,6 +270,17 @@ class Model:
             repeat_flag = True
         self.previous_receive_message = message
         return repeat_flag
+
+    def convertMessageToRomajiAndHiragana(self, message: str, hiragana:bool, romaji:bool) -> str:
+        data_list = self.kks.convert(message)
+        if 
+        keys_to_keep = {"orig", "hira", "hepburn"}
+        filtered_list = []
+
+        for item in data_list:
+            filtered_item = {key: value for key, value in item.items() if key in keys_to_keep}
+            filtered_list.append(filtered_item)
+        return filtered_list
 
     @staticmethod
     def oscStartSendTyping():

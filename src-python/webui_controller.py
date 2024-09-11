@@ -303,6 +303,10 @@ class ChatMessage:
                             }
                         })
 
+            message_romaji = []
+            if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                message_romaji = model.convertMessageToRomajiAndHiragana(message)
+
             # send OSC message
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
                 if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
@@ -331,6 +335,7 @@ class ChatMessage:
                     "id":id,
                     "message":message,
                     "translation":translation,
+                    "romaji":message_romaji,
                     },
                 }
 
