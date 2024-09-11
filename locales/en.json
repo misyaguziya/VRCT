@@ -141,11 +141,10 @@
             "auth_key_success": "Auth key update completed.",
             "auth_key_error": "Auth Key is incorrect or Usage limit reached."
         },
-        "mic_host": {
-            "label": "Mic Host/Driver"
-        },
-        "mic_device": {
-            "label": "Mic Device"
+        "mic_host_device": {
+            "label": "Mic Device",
+            "label_host": "Host/Driver",
+            "label_device": "Device"
         },
         "mic_dynamic_energy_threshold": {
             "label_for_automatic": "Mic Energy Threshold (Current Setting: Automatic)",
