@@ -302,6 +302,28 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_CONVERT_MESSAGE_TO_ROMAJI')
+    def ENABLE_CONVERT_MESSAGE_TO_ROMAJI(self):
+        return self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI
+
+    @ENABLE_CONVERT_MESSAGE_TO_ROMAJI.setter
+    def ENABLE_CONVERT_MESSAGE_TO_ROMAJI(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('ENABLE_CONVERT_MESSAGE_TO_HIRAGANA')
+    def ENABLE_CONVERT_MESSAGE_TO_HIRAGANA(self):
+        return self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA
+
+    @ENABLE_CONVERT_MESSAGE_TO_HIRAGANA.setter
+    def ENABLE_CONVERT_MESSAGE_TO_HIRAGANA(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
     def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
         return self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE
@@ -1045,6 +1067,8 @@ class Config:
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._ENABLE_MULTI_LANGUAGE_TRANSLATION = False
+        self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI = False
+        self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = False
         self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
