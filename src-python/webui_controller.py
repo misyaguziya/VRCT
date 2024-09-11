@@ -98,6 +98,7 @@ class MicMessage:
         elif isinstance(message, str) and len(message) > 0:
             # addSentMessageLog(message)
             translation = []
+            transliteration = []
             if model.checkKeywords(message):
                 self.action("word_filter", {
                     "status":200,
@@ -121,6 +122,10 @@ class MicMessage:
                             }
                         })
 
+                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(translation[0])
+
             if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
                     if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
@@ -136,7 +141,8 @@ class MicMessage:
                     "status":200,
                     "result": {
                         "message":message,
-                        "translation":translation
+                        "translation":translation,
+                        "transliteration":transliteration
                         }
                     })
                 if config.ENABLE_LOGGER is True:
@@ -200,6 +206,7 @@ class SpeakerMessage:
                 })
         elif isinstance(message, str) and len(message) > 0:
             translation = []
+            transliteration = []
             if model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
@@ -214,6 +221,10 @@ class SpeakerMessage:
                             "message":"translation engine limit error"
                             }
                         })
+
+                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(message)
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.ENABLE_OVERLAY_SMALL_LOG is True:
@@ -236,7 +247,8 @@ class SpeakerMessage:
                     "status":200,
                     "result": {
                         "message":message,
-                        "translation":translation
+                        "translation":translation,
+                        "transliteration":transliteration,
                         }
                     })
                 if config.ENABLE_LOGGER is True:
@@ -290,6 +302,7 @@ class ChatMessage:
         if len(message) > 0:
             # addSentMessageLog(message)
             translation = []
+            transliteration = []
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
@@ -303,9 +316,9 @@ class ChatMessage:
                             }
                         })
 
-            message_romaji = []
-            if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
-                message_romaji = model.convertMessageToRomajiAndHiragana(message)
+                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(translation[0])
 
             # send OSC message
             if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
@@ -335,7 +348,7 @@ class ChatMessage:
                     "id":id,
                     "message":message,
                     "translation":translation,
-                    "romaji":message_romaji,
+                    "transliteration":transliteration,
                     },
                 }
 
@@ -504,6 +517,26 @@ def callbackDisableMultiLanguageTranslation(*args, **kwargs) -> dict:
     printLog("Disable Multi Language Translation")
     config.ENABLE_MULTI_LANGUAGE_TRANSLATION = False
     return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+
+def callbackEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
+    printLog("Enable Convert Message To Romaji")
+    config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI = True
+    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI}
+
+def callbackDisableConvertMessageToRomaji(*args, **kwargs) -> dict:
+    printLog("Disable Convert Message To Romaji")
+    config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI = False
+    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI}
+
+def callbackEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
+    printLog("Enable Convert Message To Hiragana")
+    config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = True
+    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA}
+
+def callbackDisableConvertMessageToHiragana(*args, **kwargs) -> dict:
+    printLog("Disable Convert Message To Hiragana")
+    config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = False
+    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA}
 
 def callbackEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
     printLog("Enable MainWindow Sidebar Compact Mode")
