@@ -33,9 +33,19 @@
         border-radius: 0.4rem;
     }
 
+    &.is_opened {
+        &::-webkit-scrollbar-track {
+            background-color: var(--dark_875_color);
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: var(--dark_875_color);
+        }
+    }
+
     &:hover {
         &::-webkit-scrollbar-thumb {
             background-color: var(--dark_800_color);
         }
     }
+
 }
