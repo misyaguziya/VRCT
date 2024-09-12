@@ -691,6 +691,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
+    @json_serializable('USE_EXCLUDE_WORDS')
+    def USE_EXCLUDE_WORDS(self):
+        return self._USE_EXCLUDE_WORDS
+
+    @USE_EXCLUDE_WORDS.setter
+    def USE_EXCLUDE_WORDS(self, value):
+        if isinstance(value, bool):
+            self._USE_EXCLUDE_WORDS = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('USE_TRANSLATION_FEATURE')
     def USE_TRANSLATION_FEATURE(self):
         return self._USE_TRANSLATION_FEATURE
@@ -1129,6 +1140,7 @@ class Config:
         self._AUTH_KEYS = {
             "DeepL_API": None,
         }
+        self._USE_EXCLUDE_WORDS = True
         self._USE_TRANSLATION_FEATURE = True
         self._CTRANSLATE2_WEIGHT_TYPE = "Small"
         self._USE_WHISPER_FEATURE = False
