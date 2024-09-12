@@ -133,6 +133,8 @@ export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore
 export const { atomInstance: Atom_MicThreshold, useHook: useStore_MicThreshold } = createAtomWithHook(0, "MicThreshold");
 export const { atomInstance: Atom_SpeakerThreshold, useHook: useStore_SpeakerThreshold } = createAtomWithHook(0, "SpeakerThreshold");
 
+export const { atomInstance: Atom_EnableAutomaticMicThreshold, useHook: useStore_EnableAutomaticMicThreshold } = createAsyncAtomWithHook(false, "EnableAutomaticMicThreshold");
+export const { atomInstance: Atom_EnableAutomaticSpeakerThreshold, useHook: useStore_EnableAutomaticSpeakerThreshold } = createAsyncAtomWithHook(false, "EnableAutomaticSpeakerThreshold");
 
 export const { atomInstance: Atom_SendMessageFormat, useHook: useStore_SendMessageFormat } = createAtomWithHook({
     before: "",

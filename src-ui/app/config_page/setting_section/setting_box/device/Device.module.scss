@@ -22,6 +22,31 @@
     padding: 2rem;
 }
 
+
+
+.threshold_container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.threshold_switch_section {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.threshold_section {
+    width: 100%;
+}
+
+
+
+
 .device_label {
     font-size: 1.8rem;
     color: var(--dark_basic_text_color);

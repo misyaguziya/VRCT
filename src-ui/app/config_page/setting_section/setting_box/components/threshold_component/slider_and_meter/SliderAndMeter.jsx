@@ -1,4 +1,3 @@
-import { useState } from "react";
 import styles from "./SliderAndMeter.module.scss";
 import {
     useStore_MicVolume,
@@ -18,9 +17,11 @@ export const SliderAndMeter = (props) => {
     );
 };
 
-
+import { useMicThreshold } from "@logics_configs/useMicThreshold";
 const ThresholdVolumeMeter_Mic = (props) => {
     const { currentMicVolume } = useStore_MicVolume();
+
+    const { currentEnableAutomaticMicThreshold } = useMicThreshold();
 
     const currentVolumeVariable = Math.min(currentMicVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
@@ -28,22 +29,26 @@ const ThresholdVolumeMeter_Mic = (props) => {
     return (
         <>
             <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold}/>
-            <input
-                type="range"
-                min={props.min}
-                max={props.max}
-                value={props.ui_threshold}
-                onChange={(e) => props.setUiThresholdFunction(e.target.value)}
-                onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
-                className={styles.threshold_slider}
-            />
+            {currentEnableAutomaticMicThreshold.data === false &&
+                <input
+                    type="range"
+                    min={props.min}
+                    max={props.max}
+                    value={props.ui_threshold}
+                    onChange={(e) => props.setUiThresholdFunction(e.target.value)}
+                    onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
+                    className={styles.threshold_slider}
+                />
+            }
         </>
     );
 };
 
-
+import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 const ThresholdVolumeMeter_Speaker = (props) => {
     const { currentSpeakerVolume } = useStore_SpeakerVolume();
+
+    const { currentEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
 
     const currentVolumeVariable = Math.min(currentSpeakerVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
@@ -51,15 +56,17 @@ const ThresholdVolumeMeter_Speaker = (props) => {
     return (
         <>
             <VolumeMeter volume_width_percentage={volume_width_percentage} volume={currentVolumeVariable} threshold={props.ui_threshold} />
-            <input
-                type="range"
-                min={props.min}
-                max={props.max}
-                value={props.ui_threshold}
-                onChange={(e) => props.setUiThresholdFunction(e.target.value)}
-                onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
-                className={styles.threshold_slider}
-            />
+            {currentEnableAutomaticSpeakerThreshold.data === false &&
+                <input
+                    type="range"
+                    min={props.min}
+                    max={props.max}
+                    value={props.ui_threshold}
+                    onChange={(e) => props.setUiThresholdFunction(e.target.value)}
+                    onMouseUp={(e) => props.setThresholdFunction(e.target.value)}
+                    className={styles.threshold_slider}
+                />
+            }
         </>
     );
 };

@@ -36,8 +36,10 @@ export const useReceiveRoutes = () => {
     const { updateSelectedMicDevice } = useSelectedMicDevice();
     const { updateSpeakerDeviceList } = useSpeakerDeviceList();
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-    const { updateMicThreshold } = useMicThreshold();
-    const { updateSpeakerThreshold } = useSpeakerThreshold();
+
+    const { updateMicThreshold, updateEnableAutomaticMicThreshold } = useMicThreshold();
+    const { updateSpeakerThreshold, updateEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
+
     const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
 
@@ -94,6 +96,12 @@ export const useReceiveRoutes = () => {
         "/config/input_speaker_energy_threshold": updateSpeakerThreshold,
         "/controller/callback_set_speaker_energy_threshold": updateSpeakerThreshold,
 
+        "/config/input_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/controller/callback_enable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/controller/callback_disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/config/input_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+        "/controller/callback_enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+        "/controller/callback_disable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
 
         "/controller/callback_messagebox_send": updateSentMessageLogById,
         "/action/transcription_send_mic_message": addSentMessageLog,

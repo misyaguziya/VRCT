@@ -15,4 +15,9 @@
     height: 100%;
     font-size: 1.4rem;
     resize: none;
+    color: var(--dark_basic_text_color);
+    &.is_disable {
+        color: var(--dark_500_color);
+        pointer-events: none;
+    }
 }
