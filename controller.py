@@ -912,9 +912,6 @@ def callbackSetSendMessageButtonType(value):
     config.SEND_MESSAGE_BUTTON_TYPE = value
     view.changeMainWindowSendMessageButton(config.SEND_MESSAGE_BUTTON_TYPE)
 
-def callbackSetEnableNoticeXsoverlay(value):
-    pass
-
 def callbackSetEnableAutoExportMessageLogs(value):
     print("callbackSetEnableAutoExportMessageLogs", value)
     config.ENABLE_LOGGER = value
@@ -1162,7 +1159,6 @@ def createMainWindow(splash):
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
             "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
             "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
-            "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
