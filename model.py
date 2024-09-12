@@ -21,7 +21,6 @@ from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, 
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
-from models.xsoverlay.notification import xsoverlayForVRCT
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight
@@ -670,9 +669,6 @@ class Model:
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
-
-    def notificationXSOverlay(self, message):
-        xsoverlayForVRCT(content=f"{message}")
 
     def createOverlayImageShort(self, message, translation):
         your_language = config.TARGET_LANGUAGE
