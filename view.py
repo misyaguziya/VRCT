@@ -539,11 +539,6 @@ class View():
                 "show_and_disable_enter_key": StringVar(value=i18n.t("config_window.send_message_button_type.show_and_disable_enter_key")),
             },
 
-            VAR_LABEL_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.label")),
-            VAR_DESC_ENABLE_NOTICE_XSOVERLAY=StringVar(value=i18n.t("config_window.notice_xsoverlay.desc")),
-            CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=None,
-            VAR_ENABLE_NOTICE_XSOVERLAY=BooleanVar(value=config.ENABLE_NOTICE_XSOVERLAY),
-
             VAR_LABEL_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value=i18n.t("config_window.auto_export_message_logs.label")),
             VAR_DESC_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=StringVar(value=i18n.t("config_window.auto_export_message_logs.desc")),
             CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=None,
@@ -804,7 +799,6 @@ class View():
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=config_window_registers.get("callback_set_send_only_translated_messages", None)
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE=config_window_registers.get("callback_set_send_message_button_type", None)
-            self.view_variable.CALLBACK_SET_ENABLE_NOTICE_XSOVERLAY=config_window_registers.get("callback_set_enable_notice_xsoverlay", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
             self.view_variable.CALLBACK_SET_ENABLE_VRC_MIC_MUTE_SYNC=config_window_registers.get("callback_set_enable_vrc_mic_mute_sync", None)
