@@ -158,10 +158,6 @@ def receiveSpeakerMessage(message):
                 changeToCTranslate2Process()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            if config.ENABLE_NOTICE_XSOVERLAY is True:
-                xsoverlay_message = messageFormatter("RECEIVED", translation, message)
-                model.notificationXSOverlay(xsoverlay_message)
-
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 if model.overlay.initialized is True:
                     overlay_image = model.createOverlayImageShort(message, translation)
@@ -917,8 +913,7 @@ def callbackSetSendMessageButtonType(value):
     view.changeMainWindowSendMessageButton(config.SEND_MESSAGE_BUTTON_TYPE)
 
 def callbackSetEnableNoticeXsoverlay(value):
-    print("callbackSetEnableNoticeXsoverlay", value)
-    config.ENABLE_NOTICE_XSOVERLAY = value
+    pass
 
 def callbackSetEnableAutoExportMessageLogs(value):
     print("callbackSetEnableAutoExportMessageLogs", value)
