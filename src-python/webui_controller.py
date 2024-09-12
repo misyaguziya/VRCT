@@ -114,7 +114,7 @@ class MicMessage:
                 pass
             else:
                 translation, success = model.getInputTranslate(message)
-                if success is False:
+                if all(success) is not True:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
                         "status":400,
@@ -214,7 +214,7 @@ class SpeakerMessage:
                 pass
             else:
                 translation, success = model.getOutputTranslate(message)
-                if success is False:
+                if all(success) is not True:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
                         "status":400,
@@ -354,7 +354,7 @@ class ChatMessage:
                 else:
                     translation, success = model.getInputTranslate(message)
 
-                if success is False:
+                if all(success) is not True:
                     changeToCTranslate2Process()
                     self.action("error_translation_engine", {
                         "status":400,
