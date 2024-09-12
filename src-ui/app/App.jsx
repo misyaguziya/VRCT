@@ -35,8 +35,8 @@ const StartPythonFacadeComponent = () => {
     const { getSelectedMicHost } = useSelectedMicHost();
     const { getSelectedMicDevice } = useSelectedMicDevice();
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-    const { getMicThreshold } = useMicThreshold();
-    const { getSpeakerThreshold } = useSpeakerThreshold();
+    const { getMicThreshold, getEnableAutomaticMicThreshold } = useMicThreshold();
+    const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
     const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { getSendMessageButtonType } = useSendMessageButtonType();
 
@@ -52,6 +52,8 @@ const StartPythonFacadeComponent = () => {
 
                 getMicThreshold();
                 getSpeakerThreshold();
+                getEnableAutomaticMicThreshold();
+                getEnableAutomaticSpeakerThreshold();
 
                 getEnableAutoClearMessageBox();
                 getSendMessageButtonType();

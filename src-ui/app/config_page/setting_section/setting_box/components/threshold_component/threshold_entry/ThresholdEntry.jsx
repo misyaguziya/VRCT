@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import styles from "./ThresholdEntry.module.scss";
 
 export const ThresholdEntry = (props) => {
@@ -22,9 +23,13 @@ const ThresholdEntry_Mic = (props) => {
         }
     };
 
+    const class_names = clsx(styles.entry_input_area, {
+        [styles.is_disable]: props.is_disable
+    });
+
     return (
         <input
-            className={styles.entry_input_area}
+            className={class_names}
             onChange={onChangeFunction}
             value={props.ui_threshold}
         />
@@ -40,9 +45,13 @@ const ThresholdEntry_Speaker = (props) => {
         }
     };
 
+    const class_names = clsx(styles.entry_input_area, {
+        [styles.is_disable]: props.is_disable
+    });
+
     return (
         <input
-            className={styles.entry_input_area}
+            className={class_names}
             onChange={onChangeFunction}
             value={props.ui_threshold}
         />

@@ -16,7 +16,7 @@ import { ActionButton } from "./action_button/ActionButton";
 import { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 
 
-const useOnMouseLeaveDropdownMenu = () => {
+export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const onMouseLeaveFunction = () => {
@@ -38,25 +38,22 @@ export const DropdownMenuContainer = (props) => {
 };
 
 
-export const ThresholdContainer = (props) => {
-    return (
-        <div className={styles.threshold_container}>
-            <div className={styles.threshold_switch_section}>
-                <LabelComponent label={props.label} desc={props.desc} />
-                <Switchbox {...props}/>
-            </div>
-            <div className={styles.threshold_section}>
-                <ThresholdComponent {...props}/>
-            </div>
-        </div>
-    );
-};
+// export const ThresholdContainer = (props) => {
+//     return (
+//         <div className={styles.threshold_container}>
+//             <div className={styles.threshold_switch_section}>
+//                 <LabelComponent label={props.label} desc={props.desc} />
+//                 <Switchbox {...props}/>
+//             </div>
+//             <div className={styles.threshold_section}>
+//                 <ThresholdComponent {...props}/>
+//             </div>
+//         </div>
+//     );
+// };
 
 
 export const useSettingBox = () => {
-    console.log("useSettingBox______________");
-
-
     const SliderContainer = (props) => {
         return (
             <div className={styles.container}>

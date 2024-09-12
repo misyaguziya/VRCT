@@ -1,0 +1,70 @@
+.mic_container {
+    display: flex;
+    flex-direction: column;
+    border-bottom: solid 0.1rem var(--dark_800_color);
+    padding-bottom: 2rem;
+}
+
+.speaker_container {
+    padding-top: 2rem;
+}
+
+.device_container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    margin-bottom: 0rem;
+}
+
+.threshold_container {
+    padding: 2rem;
+}
+
+
+
+.threshold_container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.threshold_switch_section {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.threshold_section {
+    width: 100%;
+}
+
+
+
+
+.device_label {
+    font-size: 1.8rem;
+    color: var(--dark_basic_text_color);
+}
+
+.device_contents {
+    display: flex;
+    gap: 2.8rem;
+}
+
+.device_dropdown_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.device_dropdown_label {
+    padding-left: 0.2rem;
+    font-size: 1.4rem;
+    color: var(--dark_500_color);
+}

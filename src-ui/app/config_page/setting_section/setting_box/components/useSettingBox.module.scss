@@ -4,7 +4,6 @@
     justify-content: space-between;
     align-items: center;
     padding: 2rem;
-    display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 2rem;
@@ -18,27 +17,25 @@
     width: 100%;
 }
 
-.threshold_container {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: center;
-    gap: 2rem;
-    padding: 2rem;
-    border-bottom: solid 0.1rem var(--dark_800_color);
-}
+// .threshold_container {
+//     display: flex;
+//     width: 100%;
+//     flex-direction: column;
+//     justify-content: space-between;
+//     align-items: center;
+//     gap: 2rem;
+// }
 
-.threshold_switch_section {
-    display: flex;
-    width: 100%;
-    justify-content: space-between;
-    align-items: center;
-}
+// .threshold_switch_section {
+//     display: flex;
+//     width: 100%;
+//     justify-content: space-between;
+//     align-items: center;
+// }
 
-.threshold_section {
-    width: 100%;
-}
+// .threshold_section {
+//     width: 100%;
+// }
 
 .deepl_auth_key_label_section {
     max-width: 34rem;

@@ -8,7 +8,7 @@
     position: relative;
     background-color: var(--dark_950_color);
     min-width: 20rem;
-    padding: 0.6rem 1rem;
+    padding: 0.8rem 1.4rem;
     cursor: pointer;
     border-radius: 0.4rem;
     &:hover {
@@ -24,14 +24,15 @@
 
 .dropdown_selected_text {
     font-size: 1.4rem;
+    padding-right: 2.8rem;
 }
 
 .dropdown_content_wrapper {
     display: none;
     position: absolute;
     top: 100%; // Position it below the toggle button
-    left: 0;
-    width: 100%;
+    right: 0;
+    min-width: 20rem;
     z-index: 1;
     &.is_opened {
         display: block;
@@ -44,11 +45,12 @@
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
+    white-space: nowrap;
 }
 
 .value_button {
     background-color: var(--dark_875_color);
-    padding: 0.8rem;
+    padding: 1.2rem;
     cursor: pointer;
     &:hover {
         background-color: var(--dark_800_color);
@@ -59,7 +61,7 @@
 }
 
 .value_text {
-    font-size: 1.2rem;
+    font-size: 1.4rem;
 }
 
 .loader {
