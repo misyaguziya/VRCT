@@ -158,10 +158,6 @@ def receiveSpeakerMessage(message):
                 changeToCTranslate2Process()
 
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            if config.ENABLE_NOTICE_XSOVERLAY is True:
-                xsoverlay_message = messageFormatter("RECEIVED", translation, message)
-                model.notificationXSOverlay(xsoverlay_message)
-
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 if model.overlay.initialized is True:
                     overlay_image = model.createOverlayImageShort(message, translation)
@@ -916,10 +912,6 @@ def callbackSetSendMessageButtonType(value):
     config.SEND_MESSAGE_BUTTON_TYPE = value
     view.changeMainWindowSendMessageButton(config.SEND_MESSAGE_BUTTON_TYPE)
 
-def callbackSetEnableNoticeXsoverlay(value):
-    print("callbackSetEnableNoticeXsoverlay", value)
-    config.ENABLE_NOTICE_XSOVERLAY = value
-
 def callbackSetEnableAutoExportMessageLogs(value):
     print("callbackSetEnableAutoExportMessageLogs", value)
     config.ENABLE_LOGGER = value
@@ -1167,7 +1159,6 @@ def createMainWindow(splash):
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
             "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
             "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
-            "callback_set_enable_notice_xsoverlay": callbackSetEnableNoticeXsoverlay,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,
             "callback_set_enable_send_message_to_vrc": callbackSetEnableSendMessageToVrc,
