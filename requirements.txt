@@ -14,6 +14,6 @@ openvr==1.26.701
 pydub==0.25.1
 psutil==5.9.8
 pykakasi==2.3.0
-translators @ git+https://github.com/misyaguziya/translators@5.9.2
+translators @ git+https://github.com/misyaguziya/translators@5.9.2.1
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.2
