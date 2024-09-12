@@ -136,11 +136,10 @@
             "auth_key_success": "認証キーの更新が完了しました。",
             "auth_key_error": "認証キーが間違っているか、API使用制限が上限に達しています。"
         },
-        "mic_host": {
-            "label": "マイク（ホスト/ドライバー）"
-        },
-        "mic_device": {
-            "label": "マイク （デバイス）"
+        "mic_host_device": {
+            "label": "マイク （デバイス）",
+            "label_host": "ホスト/ドライバー",
+            "label_device": "デバイス"
         },
         "mic_dynamic_energy_threshold": {
             "label_for_automatic": "マイク入力感度の調整 (現在の設定: 自動)",

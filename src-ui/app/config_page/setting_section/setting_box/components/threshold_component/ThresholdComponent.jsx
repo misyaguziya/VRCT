@@ -17,14 +17,26 @@ export const ThresholdComponent = (props) => {
 import MicSvg from "@images/mic.svg?react";
 import { useMicThreshold } from "@logics_configs/useMicThreshold";
 const MicComponent = (props) => {
-    const { currentMicThreshold, setMicThreshold } = useMicThreshold();
+    const {
+        currentMicThreshold,
+        setMicThreshold,
+        currentEnableAutomaticMicThreshold,
+    } = useMicThreshold();
     const [ui_threshold, setUiThreshold] = useState(currentMicThreshold);
-    const {volumeCheckStart_Mic, volumeCheckStop_Mic, currentMicThresholdCheckStatus } = useVolume();
+    const {
+        volumeCheckStart_Mic,
+        volumeCheckStop_Mic,
+        currentMicThresholdCheckStatus,
+    } = useVolume();
 
 
     useEffect(() => {
-        setUiThreshold(currentMicThreshold);
-    }, [currentMicThreshold]);
+        if (currentEnableAutomaticMicThreshold.data === true) {
+            setUiThreshold("Auto");
+        } else {
+            setUiThreshold(currentMicThreshold);
+        }
+    }, [currentMicThreshold, currentEnableAutomaticMicThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -32,6 +44,8 @@ const MicComponent = (props) => {
     const setThresholdFunction = (payload_threshold) => {
         setMicThreshold(payload_threshold);
     };
+
+    const is_disable = currentEnableAutomaticMicThreshold.data === true ? true : false;
 
     return (
         <>
@@ -53,6 +67,7 @@ const MicComponent = (props) => {
                 ui_threshold={ui_threshold}
                 setUiThresholdFunction={setUiThresholdFunction}
                 setThresholdFunction={setThresholdFunction}
+                is_disable={is_disable}
             />
         </>
     );
@@ -60,13 +75,25 @@ const MicComponent = (props) => {
 import HeadphonesSvg from "@images/headphones.svg?react";
 import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 const SpeakerComponent = (props) => {
-    const { currentSpeakerThreshold, setSpeakerThreshold } = useSpeakerThreshold();
+    const {
+        currentSpeakerThreshold,
+        setSpeakerThreshold,
+        currentEnableAutomaticSpeakerThreshold,
+    } = useSpeakerThreshold();
     const [ui_threshold, setUiThreshold] = useState(currentSpeakerThreshold);
-    const {volumeCheckStart_Speaker, volumeCheckStop_Speaker, currentSpeakerThresholdCheckStatus } = useVolume();
+    const {
+        volumeCheckStart_Speaker,
+        volumeCheckStop_Speaker,
+        currentSpeakerThresholdCheckStatus,
+    } = useVolume();
 
     useEffect(() => {
-        setUiThreshold(currentSpeakerThreshold);
-    }, [currentSpeakerThreshold]);
+        if (currentEnableAutomaticSpeakerThreshold.data === true) {
+            setUiThreshold("Auto");
+        } else {
+            setUiThreshold(currentSpeakerThreshold);
+        }
+    }, [currentSpeakerThreshold, currentEnableAutomaticSpeakerThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -74,6 +101,8 @@ const SpeakerComponent = (props) => {
     const setThresholdFunction = (payload_threshold) => {
         setSpeakerThreshold(payload_threshold);
     };
+
+    const is_disable = currentEnableAutomaticSpeakerThreshold.data === true ? true : false;
 
     return (
         <>
@@ -95,6 +124,7 @@ const SpeakerComponent = (props) => {
                 ui_threshold={ui_threshold}
                 setUiThresholdFunction={setUiThresholdFunction}
                 setThresholdFunction={setThresholdFunction}
+                is_disable={is_disable}
             />
         </>
     );

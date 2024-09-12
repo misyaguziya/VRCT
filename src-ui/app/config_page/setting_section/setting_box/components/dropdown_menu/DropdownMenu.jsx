@@ -43,7 +43,7 @@ export const DropdownMenu = (props) => {
 
     return (
         <div className={styles.container}>
-            <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu}>
+            <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu} style={props.style}>
                 {(props.state === "loading")
                     ? <p className={styles.dropdown_selected_text}>Loading...</p>
                     : <p className={styles.dropdown_selected_text}>{getSelectedText()}</p>
