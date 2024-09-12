@@ -349,7 +349,8 @@ class ChatMessage:
                     translation, success = model.getInputTranslate(replacement_message)
 
                     message = removeExclamations(message)
-                    translation = restoreText(translation, replacement_dict)
+                    for i in range(len(translation)):
+                        translation[i] = restoreText(translation[i], replacement_dict)
                 else:
                     translation, success = model.getInputTranslate(message)
 
