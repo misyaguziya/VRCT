@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
 import {
-    ThresholdContainer,
     useOnMouseLeaveDropdownMenu,
 } from "../components/useSettingBox";
 export const Device = () => {
@@ -18,16 +17,19 @@ import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
 
 import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
 import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
+import { useMicThreshold } from "@logics_configs/useMicThreshold";
 
 import { LabelComponent } from "../components/label_component/LabelComponent";
 import { DropdownMenu } from "../components/dropdown_menu/DropdownMenu";
+import { ThresholdComponent } from "../components/threshold_component/ThresholdComponent";
+import { Switchbox } from "../components/switchbox/Switchbox";
 
 const Mic_Container = () => {
     const { t } = useTranslation();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
     const { currentMicHostList, getMicHostList } = useMicHostList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
+    const { currentEnableAutomaticMicThreshold, toggleEnableAutomaticMicThreshold } = useMicThreshold();
 
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
@@ -40,6 +42,20 @@ const Mic_Container = () => {
         setSelectedMicDevice(selected_data.selected_id);
     };
 
+    const getLabels = () => {
+        if (currentEnableAutomaticMicThreshold.data === true) {
+            return {
+                label: t("config_page.mic_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.mic_dynamic_energy_threshold.desc_for_automatic"),
+            };
+        } else {
+            return {
+                label: t("config_page.mic_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.mic_dynamic_energy_threshold.desc_for_manual"),
+            };
+        }
+
+    };
 
     return (
         <div className={styles.mic_container}>
@@ -73,13 +89,20 @@ const Mic_Container = () => {
                 </div>
             </div>
             <div className={styles.threshold_container}>
-                <ThresholdContainer
-                    label={t("config_page.mic_dynamic_energy_threshold.label_for_manual")}
-                    desc={t("config_page.mic_dynamic_energy_threshold.desc_for_manual")}
-                    id="mic_threshold"
-                    min="0"
-                    max="2000"
-                />
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent {...getLabels()} />
+                    <Switchbox
+                        variable={currentEnableAutomaticMicThreshold}
+                        toggleFunction={toggleEnableAutomaticMicThreshold}
+                    />
+                </div>
+                <div className={styles.threshold_section}>
+                    <ThresholdComponent
+                        id="mic_threshold"
+                        min="0"
+                        max="2000"
+                    />
+                </div>
             </div>
         </div>
     );
@@ -87,14 +110,32 @@ const Mic_Container = () => {
 
 import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
 import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
+import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
+
 const Speaker_Container = () => {
     const { t } = useTranslation();
     const { currentSelectedSpeakerDevice, setSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { currentSpeakerDeviceList, getSpeakerDeviceList } = useSpeakerDeviceList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+    const { currentEnableAutomaticSpeakerThreshold, toggleEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
 
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);
+    };
+
+    const getLabels = () => {
+        if (currentEnableAutomaticSpeakerThreshold.data === true) {
+            return {
+                label: t("config_page.speaker_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.speaker_dynamic_energy_threshold.desc_for_automatic"),
+            };
+        } else {
+            return {
+                label: t("config_page.speaker_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.speaker_dynamic_energy_threshold.desc_for_manual"),
+            };
+        }
+
     };
 
     return (
@@ -116,13 +157,20 @@ const Speaker_Container = () => {
                 </div>
             </div>
             <div className={styles.threshold_container}>
-                <ThresholdContainer
-                    label={t("config_page.speaker_dynamic_energy_threshold.label_for_manual")}
-                    desc={t("config_page.speaker_dynamic_energy_threshold.desc_for_manual")}
-                    id="speaker_threshold"
-                    min="0"
-                    max="4000"
-                />
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent {...getLabels()}/>
+                    <Switchbox
+                        variable={currentEnableAutomaticSpeakerThreshold}
+                        toggleFunction={toggleEnableAutomaticSpeakerThreshold}
+                    />
+                </div>
+                <div className={styles.threshold_section}>
+                    <ThresholdComponent
+                        id="speaker_threshold"
+                        min="0"
+                        max="4000"
+                    />
+                </div>
             </div>
         </div>
     );
