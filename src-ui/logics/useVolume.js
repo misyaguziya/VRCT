@@ -28,9 +28,13 @@ export const useVolume = () => {
             updateMicVolume(payload);
         },
         currentMicThresholdCheckStatus: currentMicThresholdCheckStatus,
-        updateMicThresholdCheckStatus: (payload) => updateMicThresholdCheckStatus(payload),
+        updateMicThresholdCheckStatus: (payload) => {
+            updateMicThresholdCheckStatus(payload);
+            if (payload === false) updateMicVolume("0");
+        },
 
         volumeCheckStart_Speaker: () => {
+            updateSpeakerVolume("0");
             updateSpeakerThresholdCheckStatus(asyncPending);
             asyncStdoutToPython("/controller/callback_enable_check_speaker_threshold");
         },
@@ -42,7 +46,10 @@ export const useVolume = () => {
             updateSpeakerVolume(payload);
         },
         currentSpeakerThresholdCheckStatus: currentSpeakerThresholdCheckStatus,
-        updateSpeakerThresholdCheckStatus: (payload) => updateSpeakerThresholdCheckStatus(payload),
+        updateSpeakerThresholdCheckStatus: (payload) => {
+            updateSpeakerThresholdCheckStatus(payload);
+            if (payload === false) updateSpeakerVolume("0");
+        }
 
     };
 };
