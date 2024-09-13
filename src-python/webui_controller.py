@@ -39,22 +39,22 @@ def callbackUpdateSoftware(data, action, *args, **kwargs) -> dict:
     download = DownloadSoftwareProgressBar(action)
     update = UpdateSoftwareProgressBar(action)
     model.updateSoftware(restart=True, download=download.set, update=update.set)
-    return {"status":200}
+    return {"status":200, "result":True}
 
 def callbackRestartSoftware(*args, **kwargs) -> dict:
     printLog("Restart callbackRestartSoftware")
     model.reStartSoftware()
-    return {"status":200}
+    return {"status":200, "result":True}
 
 def callbackFilepathLogs(*args, **kwargs) -> dict:
     printLog("Open Logs Folder")
     Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
-    return {"status":200}
+    return {"status":200, "result":True}
 
 def callbackFilepathConfigFile(*args, **kwargs) -> dict:
     printLog("Open Config File")
     Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
-    return {"status":200}
+    return {"status":200, "result":True}
 
 # def callbackEnableEasterEgg():
 #     printLog("Enable Easter Egg")
@@ -407,12 +407,12 @@ def callbackMessageBoxSend(data, action, *args, **kwargs) -> dict:
 def callbackMessageBoxTyping(*args, **kwargs) -> dict:
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStartSendTyping()
-    return {"status":200}
+    return {"status":200, "result":True}
 
 def callbackMessageBoxTypingStop(*args, **kwargs) -> dict:
     if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
-    return {"status":200}
+    return {"status":200, "result":True}
 
 # def addSentMessageLog(sent_message):
 #     config.SENT_MESSAGES_LOG.append(sent_message)
@@ -469,7 +469,7 @@ def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_YOUR_LANGUAGES = languages
     updateTranslationEngineAndEngineList()
-    return {"status":200}
+    return {"status":200, "result":config.SELECTED_TAB_YOUR_LANGUAGES}
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setTargetLanguageAndCountry", select)
@@ -477,7 +477,7 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     languages[config.SELECTED_TAB_NO] = select
     config.SELECTED_TAB_TARGET_LANGUAGES = languages
     updateTranslationEngineAndEngineList()
-    return {"status":200}
+    return {"status":200, "result":config.SELECTED_TAB_TARGET_LANGUAGES}
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     printLog("swapYourLanguageAndTargetLanguage")
@@ -490,19 +490,31 @@ def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     target_language["primary"] = your_language_primary
     setYourLanguageAndCountry(your_language)
     setTargetLanguageAndCountry(target_language)
-    return {"status":200}
+    return {
+        "status":200,
+        "result":{
+            "your":config.SELECTED_TAB_YOUR_LANGUAGES,
+            "target":config.SELECTED_TAB_TARGET_LANGUAGES,
+            }
+        }
 
 def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> dict:
     printLog("callbackSelectedLanguagePresetTab", selected_tab_no)
     config.SELECTED_TAB_NO = selected_tab_no
     updateTranslationEngineAndEngineList()
-    return {"status":200}
+    return {"status":200, "result":config.SELECTED_TAB_NO}
 
 def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
     printLog("callbackSelectedTranslationEngine", selected_translation_engine)
     setYourTranslateEngine(selected_translation_engine)
     setTargetTranslateEngine(selected_translation_engine)
-    return {"status":200, "result":selected_translation_engine}
+    return {
+        "status":200,
+        "result":{
+            "your":config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES,
+            "target":config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
+            }
+        }
 
 # command func
 def callbackEnableTranslation(*args, **kwargs) -> dict:
@@ -603,7 +615,7 @@ def callbackOpenConfigWindow(*args, **kwargs) -> dict:
         stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
-    return {"status":200}
+    return {"status":200, "result":True}
 
 def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
     printLog("Close Config Window")
@@ -616,7 +628,7 @@ def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
             sleep(2)
     if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(action)
-    return {"status":200}
+    return {"status":200, "result":True}
 
 # Compact Mode Switch
 def callbackEnableConfigWindowCompactMode(*args, **kwargs) -> dict:
