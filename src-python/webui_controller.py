@@ -793,7 +793,9 @@ def callbackSetMicHost(data, *args, **kwargs) -> dict:
     printLog("Set Mic Host", data)
     config.CHOICE_MIC_HOST = data
     config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
-    model.stopCheckMicEnergy()
+    if config.ENABLE_CHECK_ENERGY_SEND is True:
+        model.stopCheckMicEnergy()
+        model.startCheckMicEnergy()
     return {"status":200,
             "result":{
                 "host":config.CHOICE_MIC_HOST,
@@ -804,7 +806,9 @@ def callbackSetMicHost(data, *args, **kwargs) -> dict:
 def callbackSetMicDevice(data, *args, **kwargs) -> dict:
     printLog("Set Mic Device", data)
     config.CHOICE_MIC_DEVICE = data
-    model.stopCheckMicEnergy()
+    if config.ENABLE_CHECK_ENERGY_SEND is True:
+        model.stopCheckMicEnergy()
+        model.startCheckMicEnergy()
     return {"status":200, "result":config.CHOICE_MIC_DEVICE}
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
@@ -940,7 +944,9 @@ def callbackDisableSpeakerAutomaticSelection(*args, **kwargs) -> dict:
 def callbackSetSpeakerDevice(data, *args, **kwargs) -> dict:
     printLog("Set Speaker Device", data)
     config.CHOICE_SPEAKER_DEVICE = data
-    model.stopCheckSpeakerEnergy()
+    if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+        model.stopCheckSpeakerEnergy()
+        model.startCheckSpeakerEnergy()
     return {"status":200, "result":config.CHOICE_SPEAKER_DEVICE}
 
 def callbackSetSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
