@@ -630,21 +630,6 @@ def callbackCloseConfigWindow(data, action, *args, **kwargs) -> dict:
         startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(action)
     return {"status":200, "result":True}
 
-# Compact Mode Switch
-def callbackEnableConfigWindowCompactMode(*args, **kwargs) -> dict:
-    printLog("Enable Config Window Compact Mode")
-    config.IS_CONFIG_WINDOW_COMPACT_MODE = True
-    model.stopCheckMicEnergy()
-    model.stopCheckSpeakerEnergy()
-    return {"status":200, "result":config.IS_CONFIG_WINDOW_COMPACT_MODE}
-
-def callbackDisableConfigWindowCompactMode(*args, **kwargs) -> dict:
-    printLog("Disable Config Window Compact Mode")
-    config.IS_CONFIG_WINDOW_COMPACT_MODE = False
-    model.stopCheckMicEnergy()
-    model.stopCheckSpeakerEnergy()
-    return {"status":200, "result":config.IS_CONFIG_WINDOW_COMPACT_MODE}
-
 # Appearance Tab
 def callbackSetTransparency(data, *args, **kwargs) -> dict:
     printLog("Set Transparency", data)

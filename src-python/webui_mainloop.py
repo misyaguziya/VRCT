@@ -83,7 +83,6 @@ config_mapping = {
     "/config/enable_send_received_message_to_vrc": "ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC",
     "/config/enable_logger": "ENABLE_LOGGER",
     "/config/enable_vrc_mic_mute_sync": "ENABLE_VRC_MIC_MUTE_SYNC",
-    "/config/is_config_window_compact_mode": "IS_CONFIG_WINDOW_COMPACT_MODE",
 }
 
 controller_mapping = {
