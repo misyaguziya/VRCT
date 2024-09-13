@@ -122,8 +122,6 @@ controller_mapping = {
     "/controller/callback_selected_language_preset_tab": controller.callbackSelectedLanguagePresetTab,
     "/controller/list_translation_engines": controller.getTranslationEngines,
     "/controller/callback_selected_translation_engine": controller.callbackSelectedTranslationEngine,
-    "/controller/callback_disable_config_window_compact_mode": controller.callbackEnableConfigWindowCompactMode,
-    "/controller/callback_enable_config_window_compact_mode": controller.callbackDisableConfigWindowCompactMode,
     "/controller/callback_set_transparency": controller.callbackSetTransparency,
     "/controller/callback_set_appearance": controller.callbackSetAppearance,
     "/controller/callback_set_ui_scaling": controller.callbackSetUiScaling,
