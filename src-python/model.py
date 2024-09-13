@@ -423,7 +423,7 @@ class Model:
         return [device["name"] for device in getOutputDevices()]
 
     def startMicTranscript(self, fnc):
-        if config.INPUT_MIC_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
             default_device = getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
@@ -554,7 +554,7 @@ class Model:
         #     self.mic_get_energy = None
 
     def startCheckMicEnergy(self, fnc):
-        if config.INPUT_MIC_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
             default_device = getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
@@ -596,7 +596,7 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
-        if config.INPUT_SPEAKER_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
             default_device = getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
@@ -685,7 +685,7 @@ class Model:
         #     self.speaker_get_energy = None
 
     def startCheckSpeakerEnergy(self, fnc):
-        if config.INPUT_SPEAKER_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
             default_device = getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:

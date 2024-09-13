@@ -5,7 +5,6 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice, getOutputDevices, getDefaultOutputDevice
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -458,14 +457,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
-    @json_serializable('INPUT_MIC_AUTOMATIC_SELECTION')
-    def INPUT_MIC_AUTOMATIC_SELECTION(self):
-        return self._INPUT_MIC_AUTOMATIC_SELECTION
+    @json_serializable('ENABLE_MIC_AUTOMATIC_SELECTION')
+    def ENABLE_MIC_AUTOMATIC_SELECTION(self):
+        return self._ENABLE_MIC_AUTOMATIC_SELECTION
 
-    @INPUT_MIC_AUTOMATIC_SELECTION.setter
-    def INPUT_MIC_AUTOMATIC_SELECTION(self, value):
+    @ENABLE_MIC_AUTOMATIC_SELECTION.setter
+    def ENABLE_MIC_AUTOMATIC_SELECTION(self, value):
         if isinstance(value, bool):
-            self._INPUT_MIC_AUTOMATIC_SELECTION = value
+            self._ENABLE_MIC_AUTOMATIC_SELECTION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -579,14 +578,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_AUTOMATIC_SELECTION')
-    def INPUT_SPEAKER_AUTOMATIC_SELECTION(self):
-        return self._INPUT_SPEAKER_AUTOMATIC_SELECTION
+    @json_serializable('ENABLE_SPEAKER_AUTOMATIC_SELECTION')
+    def ENABLE_SPEAKER_AUTOMATIC_SELECTION(self):
+        return self._ENABLE_SPEAKER_AUTOMATIC_SELECTION
 
-    @INPUT_SPEAKER_AUTOMATIC_SELECTION.setter
-    def INPUT_SPEAKER_AUTOMATIC_SELECTION(self, value):
+    @ENABLE_SPEAKER_AUTOMATIC_SELECTION.setter
+    def ENABLE_SPEAKER_AUTOMATIC_SELECTION(self, value):
         if isinstance(value, bool):
-            self._INPUT_SPEAKER_AUTOMATIC_SELECTION = value
+            self._ENABLE_SPEAKER_AUTOMATIC_SELECTION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1139,7 +1138,7 @@ class Config:
             "width": "870",
             "height": "654",
         }
-        self._INPUT_MIC_AUTOMATIC_SELECTION = True
+        self._ENABLE_MIC_AUTOMATIC_SELECTION = True
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
@@ -1150,7 +1149,7 @@ class Config:
         self._INPUT_MIC_WORD_FILTER = []
         self._INPUT_MIC_AVG_LOGPROB=-0.8
         self._INPUT_MIC_NO_SPEECH_PROB=0.6
-        self._INPUT_SPEAKER_AUTOMATIC_SELECTION = True
+        self._ENABLE_SPEAKER_AUTOMATIC_SELECTION = True
         self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False

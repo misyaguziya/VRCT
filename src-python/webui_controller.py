@@ -779,6 +779,17 @@ def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
 
 # Transcription Tab
 # Transcription (Mic)
+
+def callbackEnableMicAutomaticSelection(*args, **kwargs) -> dict:
+    printLog("Enable Mic Automatic Selection")
+    config.ENABLE_MIC_AUTOMATIC_SELECTION = True
+    return {"status":200, "result":config.ENABLE_MIC_AUTOMATIC_SELECTION}
+
+def callbackDisableMicAutomaticSelection(*args, **kwargs) -> dict:
+    printLog("Disable Mic Automatic Selection")
+    config.ENABLE_MIC_AUTOMATIC_SELECTION = False
+    return {"status":200, "result":config.ENABLE_MIC_AUTOMATIC_SELECTION}
+
 def callbackSetMicHost(data, *args, **kwargs) -> dict:
     printLog("Set Mic Host", data)
     config.CHOICE_MIC_HOST = data
@@ -916,6 +927,17 @@ def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
 
 # Transcription (Speaker)
+
+def callbackEnableSpeakerAutomaticSelection(*args, **kwargs) -> dict:
+    printLog("Enable Speaker Automatic Selection")
+    config.ENABLE_SPEAKER_AUTOMATIC_SELECTION = True
+    return {"status":200, "result":config.ENABLE_SPEAKER_AUTOMATIC_SELECTION}
+
+def callbackDisableSpeakerAutomaticSelection(*args, **kwargs) -> dict:
+    printLog("Disable Speaker Automatic Selection")
+    config.ENABLE_SPEAKER_AUTOMATIC_SELECTION = False
+    return {"status":200, "result":config.ENABLE_SPEAKER_AUTOMATIC_SELECTION}
+
 def callbackSetSpeakerDevice(data, *args, **kwargs) -> dict:
     printLog("Set Speaker Device", data)
     config.CHOICE_SPEAKER_DEVICE = data
