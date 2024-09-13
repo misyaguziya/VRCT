@@ -821,17 +821,16 @@ class ProgressBarMicEnergy:
         self.action = action
 
     def set(self, energy) -> None:
-        self.action("mic", {"status":200, "result":energy})
-
-    def error(self) -> None:
-        self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+        if energy is False:
+            self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+        else:
+            self.action("mic", {"status":200, "result":energy})
 
 def callbackEnableCheckMicThreshold(data, action, *args, **kwargs) -> dict:
     printLog("Enable Check Mic Threshold")
     progressbar_mic_energy = ProgressBarMicEnergy(action)
     model.startCheckMicEnergy(
         progressbar_mic_energy.set,
-        progressbar_mic_energy.error
     )
     config.ENABLE_CHECK_ENERGY_SEND = True
     return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
@@ -952,17 +951,16 @@ class ProgressBarSpeakerEnergy:
         self.action = action
 
     def set(self, energy) -> None:
-        self.action("speaker", {"status":200, "result":energy})
-
-    def error(self) -> None:
-        self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+        if energy is False:
+            self.action("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+        else:
+            self.action("speaker", {"status":200, "result":energy})
 
 def callbackEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
     printLog("Enable Check Speaker Threshold")
     progressbar_speaker_energy = ProgressBarSpeakerEnergy(action)
     model.startCheckSpeakerEnergy(
         progressbar_speaker_energy.set,
-        progressbar_speaker_energy.error
     )
     config.ENABLE_CHECK_ENERGY_RECEIVE = True
     return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
