@@ -5,7 +5,7 @@ from threading import Thread
 import re
 from config import config
 from model import model
-from utils import getKeyByValue, isUniqueStrings, printLog, printResponse
+from utils import isUniqueStrings, printLog, printResponse
 
 # Common
 class DownloadSoftwareProgressBar:
@@ -663,7 +663,6 @@ def callbackSetFontFamily(data, *args, **kwargs) -> dict:
 
 def callbackSetUiLanguage(data, *args, **kwargs) -> dict:
     printLog("Set UI Language", data)
-    data = getKeyByValue(config.SELECTABLE_UI_LANGUAGES_DICT, data)
     config.UI_LANGUAGE = data
     return {"status":200, "result":config.UI_LANGUAGE}
 
