@@ -1,24 +1,24 @@
+import clsx from "clsx";
 import { useTranslation } from "react-i18next";
-import FolderOpenSvg from "@images/folder_open.svg?react";
-
+import styles from "./Appearance.module.scss";
 import { useSettingBox } from "../components/useSettingBox";
 import { useStore_SelectedMicDevice, useStore_MicDeviceList } from "@store";
 export const Appearance = () => {
     const { t } = useTranslation();
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
-    const { currentMicDeviceList } = useStore_MicDeviceList();
+    // const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
+    // const { currentMicDeviceList } = useStore_MicDeviceList();
     const {
         DropdownMenuContainer,
-        SliderContainer,
-        CheckboxContainer,
-        SwitchboxContainer,
-        EntryContainer,
-        ThresholdContainer,
-        RadioButtonContainer,
-        DeeplAuthKeyContainer,
-        MessageFormatContainer,
-        WordFilterContainer,
-        ActionButtonContainer,
+        // SliderContainer,
+        // CheckboxContainer,
+        // SwitchboxContainer,
+        // EntryContainer,
+        // ThresholdContainer,
+        // RadioButtonContainer,
+        // DeeplAuthKeyContainer,
+        // MessageFormatContainer,
+        // WordFilterContainer,
+        // ActionButtonContainer,
     } = useSettingBox();
 
     const selectFunction = (selected_data) => {
@@ -34,8 +34,13 @@ export const Appearance = () => {
 
     return (
         <>
-            <DropdownMenuContainer dropdown_id="mic_host" label="Mic Host/Driver" desc="description" selected_id="b" list={{a: "A", b: "B", c: "C"}} />
-            <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
+            <UiLanguageContainer
+
+            />
+
+
+
+            {/* <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
 
             <SliderContainer label="Transparent" desc="description" min="0" max="3000"/>
             <CheckboxContainer label="Transparent" desc="description" checkbox_id="checkbox_id_1"/>
@@ -61,8 +66,44 @@ export const Appearance = () => {
 
             <WordFilterContainer label={t(`config_page.mic_word_filter.label`)} desc={t(`config_page.mic_word_filter.desc`)}/>
 
-            <ActionButtonContainer label={t(`config_page.open_config_filepath.label`)} IconComponent={FolderOpenSvg} OnclickFunction={()=>{}}/>
+            <ActionButtonContainer label={t(`config_page.open_config_filepath.label`)} IconComponent={FolderOpenSvg} OnclickFunction={()=>{}}/> */}
 
         </>
+    );
+};
+
+import { LabelComponent } from "../components/label_component/LabelComponent";
+import { useUiLanguage } from "@logics_configs/useUiLanguage";
+
+const UiLanguageContainer = () => {
+    const { t } = useTranslation();
+    const { currentUiLanguage, setUiLanguage } = useUiLanguage();
+
+    const SELECTABLE_UI_LANGUAGES_DICT = {
+        en: "English",
+        ja: "日本語",
+        ko: "한국어",
+        "zh-Hant": "繁體中文",
+    };
+
+    return (
+        <div className={styles.ui_language_container}>
+            <LabelComponent label={t("config_page.ui_language.label")} />
+            <div className={styles.ui_language_selector_container}>
+                {currentUiLanguage.state === "loading" && <span className={styles.loader}></span>}
+                {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
+                    <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
+                        <input
+                            type="radio"
+                            name="radio"
+                            value={key}
+                            onChange={() => setUiLanguage(key)}
+                            checked={currentUiLanguage.data === key}
+                        />
+                        <p className={styles.radio_button_label}>{value}</p>
+                    </label>
+                ))}
+            </div>
+        </div>
     );
 };
