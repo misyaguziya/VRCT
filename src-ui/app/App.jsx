@@ -11,6 +11,7 @@ export const App = () => {
         <div className={styles.container}>
             <StartPythonFacadeComponent />
             <UiLanguageController />
+            <ConfigPageCloseTrigger />
             <ConfigPage />
             <MainPage />
         </div>
@@ -80,5 +81,25 @@ const UiLanguageController = () => {
     useEffect(() => {
         i18n.changeLanguage(currentUiLanguage.data);
     }, [currentUiLanguage]);
+    return null;
+};
+
+import { useVolume } from "@logics/useVolume";
+import { useStore_IsOpenedConfigPage } from "@store";
+const ConfigPageCloseTrigger = () => {
+    const { currentIsOpenedConfigPage } = useStore_IsOpenedConfigPage();
+    const {
+        currentMicThresholdCheckStatus,
+        volumeCheckStop_Mic,
+        currentSpeakerThresholdCheckStatus,
+        volumeCheckStop_Speaker,
+    } = useVolume();
+
+    useEffect(() => {
+        if (currentIsOpenedConfigPage === false) {
+            if (currentMicThresholdCheckStatus.data === true) volumeCheckStop_Mic();
+            if (currentSpeakerThresholdCheckStatus.data === true) volumeCheckStop_Speaker();
+        }
+    }, [currentIsOpenedConfigPage]);
     return null;
 };
