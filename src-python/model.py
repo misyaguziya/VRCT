@@ -422,6 +422,46 @@ class Model:
     def getListOutputDevice():
         return [device["name"] for device in getOutputDevices()]
 
+    def startAutomaticMicSelection(self, fnc):
+        def checkMicDevice(fnc):
+            if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
+                default_device = getDefaultInputDevice()
+                mic_host_name = default_device["host"]["name"]
+                mic_device_name = default_device["device"]["name"]
+                if mic_host_name != config.CHOICE_MIC_HOST or mic_device_name != config.CHOICE_MIC_DEVICE:
+                    config.CHOICE_MIC_HOST = mic_host_name
+                    config.CHOICE_MIC_DEVICE = mic_device_name
+                    fnc(config.CHOICE_MIC_DEVICE)
+            sleep(2)
+
+        self.th_check_mic_device = threadFnc(checkMicDevice, args=(fnc,))
+        self.th_check_mic_device.daemon = True
+        self.th_check_mic_device.start()
+
+    def stopAutomaticMicSelection(self):
+        if isinstance(self.th_check_mic_device, threadFnc):
+            self.th_check_mic_device.stop()
+            self.th_check_mic_device = None
+
+    def startAutomaticSpeakerSelection(self, fnc):
+        def checkSpeakerDevice(fnc):
+            if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
+                default_device = getDefaultOutputDevice()
+                speaker_device_name = default_device["device"]["name"]
+                if speaker_device_name != config.CHOICE_SPEAKER_DEVICE:
+                    config.CHOICE_SPEAKER_DEVICE = speaker_device_name
+                    fnc(config.CHOICE_SPEAKER_DEVICE)
+            sleep(2)
+
+        self.th_check_speaker_device = threadFnc(checkSpeakerDevice, args=(fnc,))
+        self.th_check_speaker_device.daemon = True
+        self.th_check_speaker_device.start()
+
+    def stopAutomaticSpeakerSelection(self):
+        if isinstance(self.th_check_speaker_device, threadFnc):
+            self.th_check_speaker_device.stop()
+            self.th_check_speaker_device = None
+
     def startMicTranscript(self, fnc):
         if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
             default_device = getDefaultInputDevice()

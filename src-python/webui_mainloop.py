@@ -240,6 +240,12 @@ action_mapping = {
     "/controller/callback_download_whisper_weight": {
         "download":"/action/download_whisper_weight"
     },
+    "/controller/callback_enable_mic_automatic_selection": {
+        "mic":"/controller/callback_set_mic_device"
+    },
+    "/controller/callback_enable_speaker_automatic_selection": {
+        "speaker":"/controller/callback_set_speaker_device"
+    }
 }
 
 def handleConfigRequest(endpoint):
@@ -303,6 +309,8 @@ if __name__ == "__main__":
     controller.init({
         "ctranslate2": action_mapping["/controller/callback_download_ctranslate2_weight"]["download"],
         "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
+        "check_mic_device": action_mapping["/controller/callback_enable_mic_automatic_selection"]["mic"],
+        "check_speaker_device": action_mapping["/controller/callback_enable_speaker_automatic_selection"]["speaker"],
     })
 
     process = "main"
