@@ -96,7 +96,6 @@ const createAsyncAtomWithHook = (initialValue, base_ame) => {
 
 export const { atomInstance: Atom_SoftwareVersion, useHook: useStore_SoftwareVersion } = createAtomWithHook("-", "SoftwareVersion");
 
-export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAtomWithHook("en", "UiLanguage");
 export const { atomInstance: Atom_TranslationStatus, useHook: useStore_TranslationStatus } = createAsyncAtomWithHook(false, "TranslationStatus");
 export const { atomInstance: Atom_TranscriptionSendStatus, useHook: useStore_TranscriptionSendStatus } = createAsyncAtomWithHook(false, "TranscriptionSendStatus");
 export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_TranscriptionReceiveStatus } = createAsyncAtomWithHook(false, "TranscriptionReceiveStatus");
@@ -135,6 +134,17 @@ export const { atomInstance: Atom_SpeakerThreshold, useHook: useStore_SpeakerThr
 
 export const { atomInstance: Atom_EnableAutomaticMicThreshold, useHook: useStore_EnableAutomaticMicThreshold } = createAsyncAtomWithHook(false, "EnableAutomaticMicThreshold");
 export const { atomInstance: Atom_EnableAutomaticSpeakerThreshold, useHook: useStore_EnableAutomaticSpeakerThreshold } = createAsyncAtomWithHook(false, "EnableAutomaticSpeakerThreshold");
+
+
+// Appearance
+export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAsyncAtomWithHook("en", "UiLanguage");
+
+
+
+
+
+
+
 
 export const { atomInstance: Atom_SendMessageFormat, useHook: useStore_SendMessageFormat } = createAtomWithHook({
     before: "",

@@ -10,6 +10,7 @@ export const App = () => {
     return (
         <div className={styles.container}>
             <StartPythonFacadeComponent />
+            <UiLanguageController />
             <ConfigPage />
             <MainPage />
         </div>
@@ -25,6 +26,7 @@ import { useMicThreshold } from "@logics_configs/useMicThreshold";
 import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
+import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
@@ -39,12 +41,15 @@ const StartPythonFacadeComponent = () => {
     const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
     const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { getSendMessageButtonType } = useSendMessageButtonType();
+    const { getUiLanguage } = useUiLanguage();
 
 
     useEffect(() => {
         main_page.setDecorations(true);
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
+                getUiLanguage();
+
                 getSoftwareVersion();
                 getSelectedMicHost();
                 getSelectedMicDevice();
@@ -64,5 +69,16 @@ const StartPythonFacadeComponent = () => {
         return () => hasRunRef.current = true;
     }, []);
 
+    return null;
+};
+
+import { useTranslation } from "react-i18next";
+const UiLanguageController = () => {
+    const { currentUiLanguage } = useUiLanguage();
+    const { i18n } = useTranslation();
+
+    useEffect(() => {
+        i18n.changeLanguage(currentUiLanguage.data);
+    }, [currentUiLanguage]);
     return null;
 };

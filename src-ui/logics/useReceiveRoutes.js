@@ -15,6 +15,8 @@ import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 
+import { useUiLanguage } from "@logics_configs/useUiLanguage";
+
 
 export const useReceiveRoutes = () => {
     const {
@@ -42,6 +44,8 @@ export const useReceiveRoutes = () => {
 
     const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
+
+    const { updateUiLanguage } = useUiLanguage();
 
 
     const {
@@ -101,7 +105,10 @@ export const useReceiveRoutes = () => {
         "/controller/callback_disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
         "/config/input_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
         "/controller/callback_enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
-        "/controller/callback_disable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+
+        "/config/ui_language": updateUiLanguage,
+        "/controller/callback_set_ui_language": updateUiLanguage,
+
 
         "/controller/callback_messagebox_send": updateSentMessageLogById,
         "/action/transcription_send_mic_message": addSentMessageLog,
