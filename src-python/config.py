@@ -458,6 +458,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
+    @json_serializable('INPUT_MIC_AUTOMATIC_SELECTION')
+    def INPUT_MIC_AUTOMATIC_SELECTION(self):
+        return self._INPUT_MIC_AUTOMATIC_SELECTION
+
+    @INPUT_MIC_AUTOMATIC_SELECTION.setter
+    def INPUT_MIC_AUTOMATIC_SELECTION(self, value):
+        if isinstance(value, bool):
+            self._INPUT_MIC_AUTOMATIC_SELECTION = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('CHOICE_MIC_HOST')
     def CHOICE_MIC_HOST(self):
         return self._CHOICE_MIC_HOST
@@ -565,6 +576,17 @@ class Config:
     def INPUT_MIC_NO_SPEECH_PROB(self, value):
         if isinstance(value, float) or isinstance(value, int):
             self._INPUT_MIC_NO_SPEECH_PROB = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('INPUT_SPEAKER_AUTOMATIC_SELECTION')
+    def INPUT_SPEAKER_AUTOMATIC_SELECTION(self):
+        return self._INPUT_SPEAKER_AUTOMATIC_SELECTION
+
+    @INPUT_SPEAKER_AUTOMATIC_SELECTION.setter
+    def INPUT_SPEAKER_AUTOMATIC_SELECTION(self, value):
+        if isinstance(value, bool):
+            self._INPUT_SPEAKER_AUTOMATIC_SELECTION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1117,6 +1139,7 @@ class Config:
             "width": "870",
             "height": "654",
         }
+        self._INPUT_MIC_AUTOMATIC_SELECTION = True
         self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
@@ -1127,6 +1150,7 @@ class Config:
         self._INPUT_MIC_WORD_FILTER = []
         self._INPUT_MIC_AVG_LOGPROB=-0.8
         self._INPUT_MIC_NO_SPEECH_PROB=0.6
+        self._INPUT_SPEAKER_AUTOMATIC_SELECTION = True
         self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
