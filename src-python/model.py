@@ -17,7 +17,7 @@ from typing import Callable
 from flashtext import KeywordProcessor
 from pykakasi import kakasi
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import getInputDevices, getOutputDevices
+from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
 from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
@@ -423,8 +423,17 @@ class Model:
         return [device["name"] for device in getOutputDevices()]
 
     def startMicTranscript(self, fnc):
-        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
-        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+        if config.INPUT_MIC_AUTOMATIC_SELECTION is True:
+            default_device = getDefaultInputDevice()
+            mic_host_name = default_device["host"]["name"]
+            mic_device_name = default_device["device"]["name"]
+        else:
+            mic_host_name = config.CHOICE_MIC_HOST
+            mic_device_name = config.CHOICE_MIC_DEVICE
+
+        mic_device_list = getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
+
         if len(choice_mic_device) == 0:
             return False
 
@@ -544,15 +553,20 @@ class Model:
         #     self.mic_get_energy.stop()
         #     self.mic_get_energy = None
 
-    def startCheckMicEnergy(self, fnc, error_fnc=None):
-        mic_device_list = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])
-        choice_mic_device = [device for device in mic_device_list if device["name"] == config.CHOICE_MIC_DEVICE]
+    def startCheckMicEnergy(self, fnc):
+        if config.INPUT_MIC_AUTOMATIC_SELECTION is True:
+            default_device = getDefaultInputDevice()
+            mic_host_name = default_device["host"]["name"]
+            mic_device_name = default_device["device"]["name"]
+        else:
+            mic_host_name = config.CHOICE_MIC_HOST
+            mic_device_name = config.CHOICE_MIC_DEVICE
+
+        mic_device_list = getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
+        choice_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
+
         if len(choice_mic_device) == 0:
-            try:
-                error_fnc()
-            except Exception:
-                pass
-            return
+            return False
 
         def sendMicEnergy():
             if mic_energy_queue.empty() is False:
@@ -581,15 +595,18 @@ class Model:
             self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
-    def startSpeakerTranscript(self, fnc, error_fnc=None):
+    def startSpeakerTranscript(self, fnc):
+        if config.INPUT_SPEAKER_AUTOMATIC_SELECTION is True:
+            default_device = getDefaultOutputDevice()
+            speaker_device_name = default_device["device"]["name"]
+        else:
+            speaker_device_name = config.CHOICE_SPEAKER_DEVICE
+
         speaker_device_list = getOutputDevices()
-        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+
         if len(choice_speaker_device) == 0:
-            try:
-                error_fnc()
-            except Exception:
-                pass
-            return
+            return False
 
         speaker_audio_queue = Queue()
         # speaker_energy_queue = Queue()
@@ -667,15 +684,18 @@ class Model:
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
 
-    def startCheckSpeakerEnergy(self, fnc, error_fnc=None):
+    def startCheckSpeakerEnergy(self, fnc):
+        if config.INPUT_SPEAKER_AUTOMATIC_SELECTION is True:
+            default_device = getDefaultOutputDevice()
+            speaker_device_name = default_device["device"]["name"]
+        else:
+            speaker_device_name = config.CHOICE_SPEAKER_DEVICE
+
         speaker_device_list = getOutputDevices()
-        choice_speaker_device = [device for device in speaker_device_list if device["name"] == config.CHOICE_SPEAKER_DEVICE]
+        choice_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+
         if len(choice_speaker_device) == 0:
-            try:
-                error_fnc()
-            except Exception:
-                pass
-            return
+            return False
 
         def sendSpeakerEnergy():
             if speaker_energy_queue.empty() is False:
