@@ -91,10 +91,6 @@ class Config:
         return self._MESSAGE_BOX_RATIO_RANGE
 
     @property
-    def SELECTABLE_UI_LANGUAGES_DICT(self):
-        return self._SELECTABLE_UI_LANGUAGES_DICT
-
-    @property
     def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self):
         return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
 
@@ -428,7 +424,7 @@ class Config:
 
     @UI_LANGUAGE.setter
     def UI_LANGUAGE(self, value):
-        if value in list(self.SELECTABLE_UI_LANGUAGES_DICT.keys()):
+        if isinstance(value, str):
             self._UI_LANGUAGE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -988,13 +984,6 @@ class Config:
         self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
         self._TEXTBOX_UI_SCALING_RANGE = (50, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
-        self._SELECTABLE_UI_LANGUAGES_DICT = {
-            "en": "English",
-            "ja": "日本語",
-            "ko": "한국어",
-            "zh-Hant": "繁體中文"
-            # If you want to add a new language and key, please append it here.
-        }
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
             # {Save json str}: {i18n_placeholder} pairs
             "Small": "Small",
