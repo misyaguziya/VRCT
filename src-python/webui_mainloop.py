@@ -241,10 +241,12 @@ action_mapping = {
         "download":"/action/download_whisper_weight"
     },
     "/controller/callback_enable_mic_automatic_selection": {
-        "mic":"/controller/callback_set_mic_device"
+        "mic":"/controller/callback_set_mic_device",
+        "speaker":"/controller/callback_set_speaker_device",
     },
     "/controller/callback_enable_speaker_automatic_selection": {
-        "speaker":"/controller/callback_set_speaker_device"
+        "mic":"/controller/callback_set_mic_device",
+        "speaker":"/controller/callback_set_speaker_device",
     }
 }
 
