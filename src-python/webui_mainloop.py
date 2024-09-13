@@ -12,7 +12,6 @@ config_mapping = {
     "/config/ui_scaling_list": "UI_SCALING_LIST",
     "/config/textbox_ui_scaling_range": "TEXTBOX_UI_SCALING_RANGE",
     "/config/message_box_ratio_range": "MESSAGE_BOX_RATIO_RANGE",
-    "/config/selectable_ui_languages_dict": "SELECTABLE_UI_LANGUAGES_DICT",
     "/config/selectable_ctranslate2_weight_type_dict": "SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT",
     "/config/selectable_whisper_weight_type_dict": "SELECTABLE_WHISPER_WEIGHT_TYPE_DICT",
     "/config/max_mic_energy_threshold": "MAX_MIC_ENERGY_THRESHOLD",
