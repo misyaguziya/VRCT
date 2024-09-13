@@ -967,17 +967,6 @@ class Config:
             self._ENABLE_VRC_MIC_MUTE_SYNC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('IS_CONFIG_WINDOW_COMPACT_MODE')
-    def IS_CONFIG_WINDOW_COMPACT_MODE(self):
-        return self._IS_CONFIG_WINDOW_COMPACT_MODE
-
-    @IS_CONFIG_WINDOW_COMPACT_MODE.setter
-    def IS_CONFIG_WINDOW_COMPACT_MODE(self, value):
-        if isinstance(value, bool):
-            self._IS_CONFIG_WINDOW_COMPACT_MODE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
     def init_config(self):
         # Read Only
         self._VERSION = "2.2.5"
