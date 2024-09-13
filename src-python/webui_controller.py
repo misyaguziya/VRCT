@@ -778,14 +778,27 @@ def callbackClearDeeplAuthKey(*args, **kwargs) -> dict:
 
 # Transcription Tab
 # Transcription (Mic)
+class UpdateMicDevice:
+    def __init__(self, action):
+        self.action = action
 
-def callbackEnableMicAutomaticSelection(*args, **kwargs) -> dict:
+    def set(self, device) -> None:
+        printLog("Update Mic Device", device)
+        self.action("mic", {
+            "status":200,
+            "result":device
+            })
+
+def callbackEnableMicAutomaticSelection(data, action, *args, **kwargs) -> dict:
     printLog("Enable Mic Automatic Selection")
+    update_mic_device = UpdateMicDevice(action)
+    model.startAutomaticMicSelection(update_mic_device.set)
     config.ENABLE_MIC_AUTOMATIC_SELECTION = True
     return {"status":200, "result":config.ENABLE_MIC_AUTOMATIC_SELECTION}
 
 def callbackDisableMicAutomaticSelection(*args, **kwargs) -> dict:
     printLog("Disable Mic Automatic Selection")
+    model.stopAutomaticMicSelection()
     config.ENABLE_MIC_AUTOMATIC_SELECTION = False
     return {"status":200, "result":config.ENABLE_MIC_AUTOMATIC_SELECTION}
 
@@ -930,14 +943,27 @@ def callbackDeleteMicWordFilter(data, *args, **kwargs) -> dict:
     return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
 
 # Transcription (Speaker)
+class UpdateSpeakerDevice:
+    def __init__(self, action):
+        self.action = action
 
-def callbackEnableSpeakerAutomaticSelection(*args, **kwargs) -> dict:
+    def set(self, device) -> None:
+        printLog("Update Speaker Device", device)
+        self.action("speaker", {
+            "status":200,
+            "result":device
+            })
+
+def callbackEnableSpeakerAutomaticSelection(data, action, *args, **kwargs) -> dict:
     printLog("Enable Speaker Automatic Selection")
+    update_speaker_device = UpdateSpeakerDevice(action)
+    model.startAutomaticSpeakerSelection(update_speaker_device.set)
     config.ENABLE_SPEAKER_AUTOMATIC_SELECTION = True
     return {"status":200, "result":config.ENABLE_SPEAKER_AUTOMATIC_SELECTION}
 
 def callbackDisableSpeakerAutomaticSelection(*args, **kwargs) -> dict:
     printLog("Disable Speaker Automatic Selection")
+    model.stopAutomaticSpeakerSelection()
     config.ENABLE_SPEAKER_AUTOMATIC_SELECTION = False
     return {"status":200, "result":config.ENABLE_SPEAKER_AUTOMATIC_SELECTION}
 
@@ -1387,3 +1413,15 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
     printLog("End Initialization")
+
+    # init Auto device selection
+    printLog("Init Auto Device Selection")
+    if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
+        def callback(device):
+            printResponse(200, endpoints["check_mic_device"], device)
+        model.startAutomaticMicSelection(callback)
+
+    if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
+        def callback(device):
+            printResponse(200, endpoints["check_speaker_device"], device)
+        model.startAutomaticSpeakerSelection(callback)
