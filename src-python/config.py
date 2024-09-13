@@ -1173,7 +1173,6 @@ class Config:
         self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
         self._ENABLE_LOGGER = False
         self._ENABLE_VRC_MIC_MUTE_SYNC = False
-        self._IS_CONFIG_WINDOW_COMPACT_MODE = False
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
