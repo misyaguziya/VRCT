@@ -123,11 +123,11 @@ export const useReceiveRoutes = () => {
         switch (parsed_data.status) {
             case 200:
                 const route = routes[parsed_data.endpoint];
-                (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}`);
+                (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
                 break;
 
             case 348:
-                console.log("from backend:", parsed_data);
+                console.log(`from backend: %c ${JSON.stringify(parsed_data)}`, style_348);
                 break;
 
             default:
@@ -138,3 +138,7 @@ export const useReceiveRoutes = () => {
     };
     return { receiveRoutes };
 };
+
+const style_348 = [
+    "color: gray",
+].join(";");
