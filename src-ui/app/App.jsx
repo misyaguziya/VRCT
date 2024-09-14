@@ -29,6 +29,8 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
+import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
+
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
@@ -44,6 +46,8 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
 
+    const { getSelectableLanguageList } = useSelectableLanguageList();
+
 
     useEffect(() => {
         main_page.setDecorations(true);
@@ -52,6 +56,9 @@ const StartPythonFacadeComponent = () => {
                 getUiLanguage();
 
                 getSoftwareVersion();
+
+                getSelectableLanguageList();
+
                 getSelectedMicHost();
                 getSelectedMicDevice();
                 getSelectedSpeakerDevice();

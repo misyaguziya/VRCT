@@ -1,6 +1,7 @@
 import { arrayToObject } from "@utils/arrayToObject";
 import { useMainFunction } from "./useMainFunction";
 import { useMessage } from "./useMessage";
+import { useSelectableLanguageList } from "./useSelectableLanguageList";
 import { useVolume } from "./useVolume";
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
@@ -24,6 +25,8 @@ export const useReceiveRoutes = () => {
         updateTranscriptionSendStatus,
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
+
+    const { updateSelectableLanguageList } = useSelectableLanguageList();
 
     const {
         updateSentMessageLogById,
@@ -63,6 +66,7 @@ export const useReceiveRoutes = () => {
         "/controller/callback_enable_transcription_receive": updateTranscriptionReceiveStatus,
         "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
 
+        "/controller/list_language_and_country": updateSelectableLanguageList,
 
         "/config/version": updateSoftwareVersion,
 
