@@ -240,6 +240,14 @@ action_mapping = {
     "/controller/callback_download_whisper_weight": {
         "download":"/action/download_whisper_weight"
     },
+    "/controller/callback_enable_mic_automatic_selection": {
+        "mic":"/controller/callback_set_mic_host",
+        "speaker":"/controller/callback_set_speaker_device",
+    },
+    "/controller/callback_enable_speaker_automatic_selection": {
+        "mic":"/controller/callback_set_mic_host",
+        "speaker":"/controller/callback_set_speaker_device",
+    }
 }
 
 def handleConfigRequest(endpoint):
@@ -259,12 +267,16 @@ def handleControllerRequest(endpoint, data=None):
         status = 404
     else:
         action_endpoint = action_mapping.get(endpoint, None)
-        if action_endpoint is not None:
-            response = handler(data, Action(action_endpoint).transmit)
-        else:
-            response = handler(data)
-        status = response.get("status", None)
-        result = response.get("result", None)
+        try:
+            if action_endpoint is not None:
+                response = handler(data, Action(action_endpoint).transmit)
+            else:
+                response = handler(data)
+            status = response.get("status", None)
+            result = response.get("result", None)
+        except Exception as e:
+            result = str(e)
+            status = 500
     return result, status
 
 class Action:
@@ -272,9 +284,12 @@ class Action:
         self.endpoints = endpoints
 
     def transmit(self, key:str, data:dict) -> None:
-        status = data.get("status", None)
-        result = data.get("result", None)
-        printResponse(status, self.endpoints[key], result)
+        if key not in self.endpoints:
+            printLog("Invalid endpoint", key)
+        else:
+            status = data.get("status", None)
+            result = data.get("result", None)
+            printResponse(status, self.endpoints[key], result)
 
 def main():
     received_data = sys.stdin.readline().strip()
@@ -284,7 +299,7 @@ def main():
         endpoint = received_data.get("endpoint", None)
         data = received_data.get("data", None)
         data = encodeBase64(data) if data is not None else None
-        printLog(endpoint, data)
+        printLog(endpoint, {"receive_data":data})
 
         try:
             match endpoint.split("/")[1]:
@@ -297,12 +312,14 @@ def main():
         except Exception as e:
             result = str(e)
             status = 500
+        printLog(endpoint, {"send_data":result})
         printResponse(status, endpoint, result)
 
 if __name__ == "__main__":
     controller.init({
-        "ctranslate2": action_mapping["/controller/callback_download_ctranslate2_weight"]["download"],
-        "whisper": action_mapping["/controller/callback_download_whisper_weight"]["download"],
+        "download_ctranslate2": Action(action_mapping["/controller/callback_download_ctranslate2_weight"]).transmit,
+        "download_whisper": Action(action_mapping["/controller/callback_download_whisper_weight"]).transmit,
+        "update_selected_device": Action(action_mapping["/controller/callback_enable_mic_automatic_selection"]).transmit,
     })
 
     process = "main"
@@ -317,12 +334,11 @@ if __name__ == "__main__":
                     traceback.print_exc(file=f)
 
         case "test":
-            endpoint = "/controller/callback_download_ctranslate2_weight"
-            result, status = handleControllerRequest(endpoint)
-            printResponse(status, endpoint, result)
-            endpoint = "/controller/callback_download_whisper_weight"
-            result, status = handleControllerRequest(endpoint)
-            printResponse(status, endpoint, result)
+            for _ in range(100):
+                time.sleep(0.5)
+                endpoint = "/controller/list_mic_host"
+                result, status = handleControllerRequest(endpoint)
+                printResponse(status, endpoint, result)
 
         case "test_all":
             import time
