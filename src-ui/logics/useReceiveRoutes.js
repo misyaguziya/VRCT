@@ -5,6 +5,8 @@ import { useSelectableLanguageList } from "./useSelectableLanguageList";
 import { useVolume } from "./useVolume";
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
+import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
+import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
 import { useMicHostList } from "@logics_configs/useMicHostList";
 import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
 import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
@@ -35,6 +37,10 @@ export const useReceiveRoutes = () => {
     } = useMessage();
 
     const { updateSoftwareVersion } = useSoftwareVersion();
+
+    const { updateEnableAutoMicSelect } = useEnableAutoMicSelect();
+    const { updateEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
+
     const { updateMicHostList } = useMicHostList();
     const { updateSelectedMicHost } = useSelectedMicHost();
     const { updateMicDeviceList } = useMicDeviceList();
@@ -69,6 +75,11 @@ export const useReceiveRoutes = () => {
         "/controller/list_language_and_country": updateSelectableLanguageList,
 
         "/config/version": updateSoftwareVersion,
+
+        "/controller/callback_enable_mic_automatic_selection": updateEnableAutoMicSelect,
+        "/controller/callback_disable_mic_automatic_selection": updateEnableAutoMicSelect,
+        "/controller/callback_enable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
+        "/controller/callback_disable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
 
         "/controller/list_mic_host": (payload) => updateMicHostList(arrayToObject(payload)),
         "/config/choice_mic_host": updateSelectedMicHost,
