@@ -845,7 +845,7 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
     if config.ENABLE_CHECK_ENERGY_SEND is True:
         model.stopCheckMicEnergy()
         model.startCheckMicEnergy()
-    return {"status":200, "result":{"host":config.CHOICE_MIC_HOST, "device":config.CHOICE_MIC_DEVICE}}
+    return {"status":200, "result": config.CHOICE_MIC_DEVICE}
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     printLog("Set Mic Energy Threshold", data)
