@@ -5,7 +5,7 @@ from threading import Thread
 import re
 from config import config
 from model import model
-from utils import isUniqueStrings, printLog, printResponse
+from utils import isUniqueStrings, printLog
 
 # Common
 class DownloadSoftwareProgressBar:
@@ -782,14 +782,17 @@ class UpdateSelectedDevice:
     def __init__(self, action):
         self.action = action
 
-    def set_mic(self, device) -> None:
-        printLog("Update Mic Device", device)
+    def set_mic(self, host, device) -> None:
+        config.CHOICE_MIC_HOST = host
+        config.CHOICE_MIC_DEVICE = device
+        printLog("Update Host/Mic Device", f"{host}/{device}")
         self.action("mic", {
             "status":200,
-            "result":device
+            "result":{"host":host, "device":device}
             })
 
     def set_speaker(self, device) -> None:
+        config.CHOICE_SPEAKER_DEVICE = device
         printLog("Update Speaker Device", device)
         self.action("speaker", {
             "status":200,
@@ -842,7 +845,7 @@ def callbackSetMicDevice(data, *args, **kwargs) -> dict:
     if config.ENABLE_CHECK_ENERGY_SEND is True:
         model.stopCheckMicEnergy()
         model.startCheckMicEnergy()
-    return {"status":200, "result":config.CHOICE_MIC_DEVICE}
+    return {"status":200, "result":{"host":config.CHOICE_MIC_HOST, "device":config.CHOICE_MIC_DEVICE}}
 
 def callbackSetMicEnergyThreshold(data, *args, **kwargs) -> dict:
     printLog("Set Mic Energy Threshold", data)
@@ -1353,7 +1356,7 @@ def getListInputDevice(*args, **kwargs) -> dict:
 def getListOutputDevice(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListOutputDevice()}
 
-def init(endpoints:dict, *args, **kwargs) -> None:
+def init(actions:dict, *args, **kwargs) -> None:
     printLog("Start Initialization")
 
     printLog("Start check DeepL API Key")
@@ -1371,9 +1374,8 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     # check Downloaded CTranslate2 Model Weight
     printLog("Check Downloaded CTranslate2 Model Weight")
     if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
-        def callback(progress):
-            printResponse(200, endpoints["ctranslate2"], {"progress":progress})
-        startThreadingDownloadCtranslate2Weight(callback)
+        download = DownloadCTranslate2ProgressBar(actions["download_ctranslate2"])
+        startThreadingDownloadCtranslate2Weight(download.set)
 
     # set Transcription Engine
     printLog("Set Transcription Engine")
@@ -1385,9 +1387,8 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     # check Downloaded Whisper Model Weight
     printLog("Check Downloaded Whisper Model Weight")
     if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
-        def callback(progress):
-            printResponse(200, endpoints["whisper"], {"progress":progress})
-        startThreadingDownloadWhisperWeight(callback)
+        download = DownloadWhisperProgressBar(actions["download_whisper"])
+        startThreadingDownloadWhisperWeight(download.set)
 
     # set word filter
     printLog("Set Word Filter")
@@ -1413,8 +1414,5 @@ def init(endpoints:dict, *args, **kwargs) -> None:
     # init Auto device selection
     printLog("Init Auto Device Selection")
     if config.ENABLE_MIC_AUTOMATIC_SELECTION is True or config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
-        def mic_callback(device):
-            printResponse(200, endpoints["check_mic_device"], device)
-        def speaker_callback(device):
-            printResponse(200, endpoints["check_speaker_device"], device)
-        model.startAutomaticDeviceSelection(mic_callback, speaker_callback)
+        update_device = UpdateSelectedDevice(actions["update_selected_device"])
+        model.startAutomaticDeviceSelection(update_device.set_mic, update_device.set_speaker)
