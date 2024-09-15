@@ -2,16 +2,20 @@
     display: flex;
     flex-direction: column;
     gap: 0.2rem;
+    flex-shrink: 0;
 }
 
 .label {
     font-size: 1.6rem;
     font-weight: 400;
     color: var(--dark_basic_text_color);
+    white-space: nowrap;
 }
 
 .desc {
     font-size: 1.4rem;
     font-weight: 300;
     color: var(--dark_500_color);
+    max-width: 38rem;
+    overflow-wrap: break-word;
 }
