@@ -20,6 +20,12 @@
     &.is_loading {
         pointer-events: none;
     }
+    &.is_disabled {
+        pointer-events: none;
+        .dropdown_selected_text, .arrow_left_svg {
+            color: var(--dark_550_color);
+        }
+    }
 }
 
 .dropdown_selected_text {
@@ -36,6 +42,12 @@
     z-index: 1;
     &.is_opened {
         display: block;
+    }
+    &.is_disabled {
+        pointer-events: none;
+        .value_text {
+            color: var(--dark_550_color);
+        }
     }
 }
 

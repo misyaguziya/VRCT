@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
 import {
@@ -11,6 +12,8 @@ export const Device = () => {
         </>
     );
 };
+
+import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
 
 import { useMicHostList } from "@logics_configs/useMicHostList";
 import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
@@ -26,6 +29,7 @@ import { Switchbox } from "../components/switchbox/Switchbox";
 
 const Mic_Container = () => {
     const { t } = useTranslation();
+    const { currentEnableAutoMicSelect, toggleEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
     const { currentMicHostList, getMicHostList } = useMicHostList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
@@ -34,6 +38,8 @@ const Mic_Container = () => {
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
     };
+
+    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "loading";
 
     const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
     const { currentMicDeviceList, getMicDeviceList } = useMicDeviceList();
@@ -54,7 +60,6 @@ const Mic_Container = () => {
                 desc: t("config_page.mic_dynamic_energy_threshold.desc_for_manual"),
             };
         }
-
     };
 
     return (
@@ -62,8 +67,17 @@ const Mic_Container = () => {
             <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.mic_host_device.label")} />
                 <div className={styles.device_contents}>
+
+                    <div className={styles.device_auto_select_wrapper}>
+                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_auto_select")}</p>
+                        <Switchbox
+                            variable={currentEnableAutoMicSelect}
+                            toggleFunction={toggleEnableAutoMicSelect}
+                        />
+                    </div>
+
                     <div className={styles.device_dropdown_wrapper}>
-                        <p className={styles.device_dropdown_label}>{t("config_page.mic_host_device.label_host")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_host")}</p>
                         <DropdownMenu
                             dropdown_id="mic_host"
                             selected_id={currentSelectedMicHost.data}
@@ -72,11 +86,12 @@ const Mic_Container = () => {
                             openListFunction={getMicHostList}
                             state={currentSelectedMicHost.state}
                             style={{ maxWidth: "20rem", minWidth: "10rem" }}
+                            is_disabled={is_disabled_selector}
                         />
                     </div>
 
                     <div className={styles.device_dropdown_wrapper}>
-                        <p className={styles.device_dropdown_label}>{t("config_page.mic_host_device.label_device")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
                         <DropdownMenu
                             dropdown_id="mic_device"
                             selected_id={currentSelectedMicDevice.data}
@@ -84,6 +99,7 @@ const Mic_Container = () => {
                             selectFunction={selectFunction_device}
                             openListFunction={getMicDeviceList}
                             state={currentSelectedMicDevice.state}
+                            is_disabled={is_disabled_selector}
                         />
                     </div>
                 </div>
@@ -107,6 +123,7 @@ const Mic_Container = () => {
         </div>
     );
 };
+import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
 
 import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
 import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
@@ -114,6 +131,7 @@ import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 
 const Speaker_Container = () => {
     const { t } = useTranslation();
+    const { currentEnableAutoSpeakerSelect, toggleEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
     const { currentSelectedSpeakerDevice, setSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { currentSpeakerDeviceList, getSpeakerDeviceList } = useSpeakerDeviceList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
@@ -122,6 +140,8 @@ const Speaker_Container = () => {
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);
     };
+
+    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "loading";
 
     const getLabels = () => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {
@@ -143,7 +163,17 @@ const Speaker_Container = () => {
             <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.speaker_device.label")} />
                 <div className={styles.device_contents}>
+
+                    <div className={styles.device_auto_select_wrapper}>
+                        <p className={styles.device_secondary_label}>{t("config_page.speaker_device.label_auto_select")}</p>
+                        <Switchbox
+                            variable={currentEnableAutoSpeakerSelect}
+                            toggleFunction={toggleEnableAutoSpeakerSelect}
+                        />
+                    </div>
+
                     <div className={styles.device_dropdown_wrapper}>
+                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
                         <DropdownMenu
                             dropdown_id="speaker_device"
                             label={t("config_page.speaker_device.label")}
@@ -152,6 +182,7 @@ const Speaker_Container = () => {
                             selectFunction={selectFunction}
                             openListFunction={getSpeakerDeviceList}
                             state={currentSelectedSpeakerDevice.state}
+                            is_disabled={is_disabled_selector}
                         />
                     </div>
                 </div>
