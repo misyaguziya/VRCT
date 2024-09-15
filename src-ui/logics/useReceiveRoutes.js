@@ -76,8 +76,10 @@ export const useReceiveRoutes = () => {
 
         "/config/version": updateSoftwareVersion,
 
+        "/config/enable_mic_automatic_selection": updateEnableAutoMicSelect,
         "/controller/callback_enable_mic_automatic_selection": updateEnableAutoMicSelect,
         "/controller/callback_disable_mic_automatic_selection": updateEnableAutoMicSelect,
+        "/config/enable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
         "/controller/callback_enable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
         "/controller/callback_disable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
 

@@ -20,6 +20,8 @@ export const App = () => {
 
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
+import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
+import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
 import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
 import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
 import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
@@ -37,6 +39,8 @@ const StartPythonFacadeComponent = () => {
     const main_page = getCurrent();
 
     const { getSoftwareVersion } = useSoftwareVersion();
+    const { getEnableAutoMicSelect } = useEnableAutoMicSelect();
+    const { getEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
     const { getSelectedMicHost } = useSelectedMicHost();
     const { getSelectedMicDevice } = useSelectedMicDevice();
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
@@ -59,6 +63,8 @@ const StartPythonFacadeComponent = () => {
 
                 getSelectableLanguageList();
 
+                getEnableAutoMicSelect();
+                getEnableAutoSpeakerSelect();
                 getSelectedMicHost();
                 getSelectedMicDevice();
                 getSelectedSpeakerDevice();
