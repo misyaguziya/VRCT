@@ -37,13 +37,13 @@ main_window:
 
     detected_by_word_filter: "The word %{detected_message} has not been sent due to detection by the word filter."
 
-    selected_your_language: "\"Your Language\" has set to %{your_language}."
-    selected_target_language: "\"Target Language\" has set to %{target_language}."
+    selected_your_language: "'Your Language' has set to %{your_language}."
+    selected_target_language: "'Target Language' has set to %{target_language}."
     switched_language_preset_tab: "Switched to Language Preset Tab No.%{tab_no}."
-    latest_language_setting: "Currently, \"Your Language\" is set to %{your_language}, and \"Target Language\" is set to %{target_language}."
+    latest_language_setting: "Currently, 'Your Language' is set to %{your_language}, and 'Target Language' is set to %{target_language}."
 
     opened_web_page_booth: "Opened Booth page in your web browser."
-    opened_web_page_vrct_documents: "Opened VRCT Documents page in your web browser.\nFor any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the \"Contact Form,\" or via X (formerly Twitter)!"
+    opened_web_page_vrct_documents: "Opened VRCT Documents page in your web browser.\nFor any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the 'Contact Form' or via X (formerly Twitter)!"
 
   update_available: "New version is here!"
   state_text_enabled: "Enabled"
@@ -181,7 +181,7 @@ config_window:
 
   mic_word_filter:
     label: "Mic Word Filter"
-    desc: "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a \",\" (comma). \n*Duplicate words will not be registered."
+    desc: "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a ',' (comma). \n*Duplicate words will not be registered."
     add_button_label: "Add"
     count_desc: "Current registered word count: %{count}"
 
