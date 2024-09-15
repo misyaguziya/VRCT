@@ -1,0 +1,61 @@
+@import "@scss_mixins";
+
+.ui_language_container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-radius: 0.6rem;
+}
+
+.ui_language_selector_container {
+    display: flex;
+    gap: 1rem;
+    position: relative;
+}
+
+
+
+.radio_button_wrapper {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 0.6rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.4rem;
+    position: relative;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+    &.is_selected {
+        pointer-events: none;
+    }
+}
+
+input[type="radio"] {
+    appearance: none;
+    margin: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 0.2rem solid var(--dark_600_color);
+    border-radius: 50%;
+    transition: border-color .1s ease, border-width .1s ease;
+    cursor: inherit;
+    &:checked {
+        border-color: var(--primary_400_color);
+        border-width: 0.4rem;
+    }
+}
+
+.radio_button_label {
+    font-size: 1.4rem;
+    font-weight: 400;
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, right, -3rem);
+}

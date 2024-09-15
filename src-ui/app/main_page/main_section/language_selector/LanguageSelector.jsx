@@ -1,11 +1,13 @@
 import { useTranslation } from "react-i18next";
 
-import { language_list } from "@data";
+import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
 import styles from "./LanguageSelector.module.scss";
 
 import { LanguageSelectorTopBar } from "./language_selector_top_bar/LanguageSelectorTopBar";
 export const LanguageSelector = ({ id }) => {
     const { t } = useTranslation();
+    const { currentSelectableLanguageList, updateSelectableLanguageList } = useSelectableLanguageList();
+
 
     const languageTitles = {
         "your_language": t("selectable_language_window.title_your_language"),
@@ -25,7 +27,7 @@ export const LanguageSelector = ({ id }) => {
         }, {});
     };
 
-    const groupedLanguages = groupLanguagesByFirstLetter(language_list);
+    const groupedLanguages = groupLanguagesByFirstLetter(currentSelectableLanguageList);
 
     return (
         <div className={styles.container}>
