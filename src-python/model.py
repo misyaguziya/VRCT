@@ -69,6 +69,7 @@ class Model:
 
     def init(self):
         self.logger = None
+        self.th_check_device = None
         self.mic_print_transcript = None
         self.mic_audio_recorder = None
         self.mic_energy_recorder = None
@@ -422,6 +423,33 @@ class Model:
     def getListOutputDevice():
         return [device["name"] for device in getOutputDevices()]
 
+    def startAutomaticDeviceSelection(self, fnc_mic, fnc_speaker):
+        def checkDevice(fnc_mic, fnc_speaker):
+            if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
+                default_device = getDefaultInputDevice()
+                mic_host_name = default_device["host"]["name"]
+                mic_device_name = default_device["device"]["name"]
+                if mic_host_name != config.CHOICE_MIC_HOST or mic_device_name != config.CHOICE_MIC_DEVICE:
+                    fnc_mic(mic_host_name, mic_device_name)
+
+            if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
+                default_device = getDefaultOutputDevice()
+                speaker_device_name = default_device["device"]["name"]
+                if speaker_device_name != config.CHOICE_SPEAKER_DEVICE:
+                    fnc_speaker(speaker_device_name)
+            sleep(1)
+
+        if isinstance(self.th_check_device, threadFnc) is False:
+            self.th_check_device = threadFnc(checkDevice, args=(fnc_mic, fnc_speaker,))
+            self.th_check_device.daemon = True
+            self.th_check_device.start()
+
+    def stopAutomaticDeviceSelection(self):
+        if config.ENABLE_MIC_AUTOMATIC_SELECTION is False and config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is False:
+            if isinstance(self.th_check_device, threadFnc):
+                self.th_check_device.stop()
+                self.th_check_device = None
+
     def startMicTranscript(self, fnc):
         if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
             default_device = getDefaultInputDevice()
@@ -553,7 +581,10 @@ class Model:
         #     self.mic_get_energy.stop()
         #     self.mic_get_energy = None
 
-    def startCheckMicEnergy(self, fnc):
+    def startCheckMicEnergy(self, fnc:Callable[[float], None]=None) -> None:
+        if isinstance(fnc, Callable):
+            self.check_mic_energy_fnc = fnc
+
         if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
             default_device = getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
@@ -572,7 +603,7 @@ class Model:
             if mic_energy_queue.empty() is False:
                 energy = mic_energy_queue.get()
                 try:
-                    fnc(energy)
+                    self.check_mic_energy_fnc(energy)
                 except Exception:
                     pass
             sleep(0.01)
@@ -684,7 +715,10 @@ class Model:
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
 
-    def startCheckSpeakerEnergy(self, fnc):
+    def startCheckSpeakerEnergy(self, fnc:Callable[[float], None]=None) -> None:
+        if isinstance(fnc, Callable):
+            self.check_speaker_energy_fnc = fnc
+
         if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
             default_device = getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
@@ -701,7 +735,7 @@ class Model:
             if speaker_energy_queue.empty() is False:
                 energy = speaker_energy_queue.get()
                 try:
-                    fnc(energy)
+                    self.check_speaker_energy_fnc(energy)
                 except Exception:
                     pass
             sleep(0.01)
