@@ -1409,10 +1409,11 @@ def init(actions:dict, *args, **kwargs) -> None:
     model.startReceiveOSC()
     if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
-    printLog("End Initialization")
 
     # init Auto device selection
     printLog("Init Auto Device Selection")
     if config.ENABLE_MIC_AUTOMATIC_SELECTION is True or config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
         update_device = UpdateSelectedDevice(actions["update_selected_device"])
         model.startAutomaticDeviceSelection(update_device.set_mic, update_device.set_speaker)
+
+    printLog("End Initialization")
