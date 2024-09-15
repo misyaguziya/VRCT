@@ -117,6 +117,9 @@ export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useStore_IsOpen
 
 
 // Config Page
+export const { atomInstance: Atom_EnableAutoMicSelect, useHook: useStore_EnableAutoMicSelect } = createAsyncAtomWithHook(true, "EnableAutoMicSelect");
+export const { atomInstance: Atom_EnableAutoSpeakerSelect, useHook: useStore_EnableAutoSpeakerSelect } = createAsyncAtomWithHook(true, "EnableAutoSpeakerSelect");
+
 export const { atomInstance: Atom_MicHostList, useHook: useStore_MicHostList } = createAsyncAtomWithHook({}, "MicHostList");
 export const { atomInstance: Atom_SelectedMicHost, useHook: useStore_SelectedMicHost } = createAsyncAtomWithHook("Nothing Selected", "SelectedMicHost");
 export const { atomInstance: Atom_MicDeviceList, useHook: useStore_MicDeviceList } = createAsyncAtomWithHook({}, "MicDeviceList");

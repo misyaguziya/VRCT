@@ -57,13 +57,23 @@
     gap: 2.8rem;
 }
 
+.device_auto_select_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+}
+
 .device_dropdown_wrapper {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
+    white-space: nowrap;
+    &.is_disabled {
+        pointer-events: none;
+    }
 }
 
-.device_dropdown_label {
+.device_secondary_label {
     padding-left: 0.2rem;
     font-size: 1.4rem;
     color: var(--dark_500_color);
