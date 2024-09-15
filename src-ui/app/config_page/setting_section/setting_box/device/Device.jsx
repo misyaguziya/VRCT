@@ -77,30 +77,32 @@ const Mic_Container = () => {
                     </div>
 
                     <div className={styles.device_dropdown_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_host")}</p>
-                        <DropdownMenu
-                            dropdown_id="mic_host"
-                            selected_id={currentSelectedMicHost.data}
-                            list={currentMicHostList.data}
-                            selectFunction={selectFunction_host}
-                            openListFunction={getMicHostList}
-                            state={currentSelectedMicHost.state}
-                            style={{ maxWidth: "20rem", minWidth: "10rem" }}
-                            is_disabled={is_disabled_selector}
-                        />
-                    </div>
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_host")}</p>
+                            <DropdownMenu
+                                dropdown_id="mic_host"
+                                selected_id={currentSelectedMicHost.data}
+                                list={currentMicHostList.data}
+                                selectFunction={selectFunction_host}
+                                openListFunction={getMicHostList}
+                                state={currentSelectedMicHost.state}
+                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
 
-                    <div className={styles.device_dropdown_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
-                        <DropdownMenu
-                            dropdown_id="mic_device"
-                            selected_id={currentSelectedMicDevice.data}
-                            list={currentMicDeviceList.data}
-                            selectFunction={selectFunction_device}
-                            openListFunction={getMicDeviceList}
-                            state={currentSelectedMicDevice.state}
-                            is_disabled={is_disabled_selector}
-                        />
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
+                            <DropdownMenu
+                                dropdown_id="mic_device"
+                                selected_id={currentSelectedMicDevice.data}
+                                list={currentMicDeviceList.data}
+                                selectFunction={selectFunction_device}
+                                openListFunction={getMicDeviceList}
+                                state={currentSelectedMicDevice.state}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
@@ -172,7 +174,7 @@ const Speaker_Container = () => {
                         />
                     </div>
 
-                    <div className={styles.device_dropdown_wrapper}>
+                    <div className={styles.device_dropdown}>
                         <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
                         <DropdownMenu
                             dropdown_id="speaker_device"
