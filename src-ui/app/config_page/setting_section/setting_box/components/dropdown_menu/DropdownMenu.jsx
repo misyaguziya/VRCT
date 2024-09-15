@@ -24,15 +24,17 @@ export const DropdownMenu = (props) => {
     };
 
     const dropdown_content_wrapper_class_name = clsx(styles["dropdown_content_wrapper"], {
-        [styles["is_opened"]]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
+        [styles.is_opened]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false,
+        [styles.is_disabled]: props.is_disabled,
     });
 
     const dropdown_toggle_button_class_name = clsx(styles["dropdown_toggle_button"], {
-        [styles["is_loading"]]: (props.state === "loading") ? true : false
+        [styles.is_loading]: (props.state === "loading") ? true : false,
+        [styles.is_disabled]: props.is_disabled,
     });
 
     const arrow_class_names = clsx(styles["arrow_left_svg"], {
-        [styles["is_opened"]]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
+        [styles.is_opened]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
     });
 
     const getSelectedText = () => {

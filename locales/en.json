@@ -143,6 +143,7 @@
         },
         "mic_host_device": {
             "label": "Mic Device",
+            "label_auto_select": "Auto Select",
             "label_host": "Host/Driver",
             "label_device": "Device"
         },
@@ -175,7 +176,9 @@
             "count_desc": "Current registered word count: {{count}}"
         },
         "speaker_device": {
-            "label": "Speaker Device"
+            "label": "Speaker Device",
+            "label_auto_select": "Auto Select",
+            "label_device": "Device"
         },
         "speaker_dynamic_energy_threshold": {
             "label_for_automatic": "Speaker Energy Threshold (Current Setting: Automatic)",
