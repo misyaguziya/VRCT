@@ -430,16 +430,13 @@ class Model:
                 mic_host_name = default_device["host"]["name"]
                 mic_device_name = default_device["device"]["name"]
                 if mic_host_name != config.CHOICE_MIC_HOST or mic_device_name != config.CHOICE_MIC_DEVICE:
-                    config.CHOICE_MIC_HOST = mic_host_name
-                    config.CHOICE_MIC_DEVICE = mic_device_name
-                    fnc_mic(config.CHOICE_MIC_DEVICE)
+                    fnc_mic(mic_host_name, mic_device_name)
 
             if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
                 default_device = getDefaultOutputDevice()
                 speaker_device_name = default_device["device"]["name"]
                 if speaker_device_name != config.CHOICE_SPEAKER_DEVICE:
-                    config.CHOICE_SPEAKER_DEVICE = speaker_device_name
-                    fnc_speaker(config.CHOICE_SPEAKER_DEVICE)
+                    fnc_speaker(speaker_device_name)
             sleep(1)
 
         if isinstance(self.th_check_device, threadFnc) is False:
