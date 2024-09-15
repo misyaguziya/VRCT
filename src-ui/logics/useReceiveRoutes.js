@@ -1,6 +1,7 @@
 import { arrayToObject } from "@utils/arrayToObject";
 import { useMainFunction } from "./useMainFunction";
 import { useMessage } from "./useMessage";
+import { useSelectableLanguageList } from "./useSelectableLanguageList";
 import { useVolume } from "./useVolume";
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
@@ -15,6 +16,8 @@ import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 
+import { useUiLanguage } from "@logics_configs/useUiLanguage";
+
 
 export const useReceiveRoutes = () => {
     const {
@@ -22,6 +25,8 @@ export const useReceiveRoutes = () => {
         updateTranscriptionSendStatus,
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
+
+    const { updateSelectableLanguageList } = useSelectableLanguageList();
 
     const {
         updateSentMessageLogById,
@@ -43,6 +48,8 @@ export const useReceiveRoutes = () => {
     const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
 
+    const { updateUiLanguage } = useUiLanguage();
+
 
     const {
         updateVolumeVariable_Mic,
@@ -59,6 +66,7 @@ export const useReceiveRoutes = () => {
         "/controller/callback_enable_transcription_receive": updateTranscriptionReceiveStatus,
         "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
 
+        "/controller/list_language_and_country": updateSelectableLanguageList,
 
         "/config/version": updateSoftwareVersion,
 
@@ -79,10 +87,10 @@ export const useReceiveRoutes = () => {
 
         "/action/check_mic_threshold_energy": updateVolumeVariable_Mic,
         "/action/check_speaker_threshold_energy": updateVolumeVariable_Speaker,
-        "/controller/callback_enable_check_mic_threshold": () => updateMicThresholdCheckStatus(true),
-        "/controller/callback_disable_check_mic_threshold": () => updateMicThresholdCheckStatus(false),
-        "/controller/callback_enable_check_speaker_threshold": () => updateSpeakerThresholdCheckStatus(true),
-        "/controller/callback_disable_check_speaker_threshold": () => updateSpeakerThresholdCheckStatus(false),
+        "/controller/callback_enable_check_mic_threshold": updateMicThresholdCheckStatus,
+        "/controller/callback_disable_check_mic_threshold": updateMicThresholdCheckStatus,
+        "/controller/callback_enable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
+        "/controller/callback_disable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
 
         "/config/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
         "/controller/callback_enable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
@@ -101,7 +109,10 @@ export const useReceiveRoutes = () => {
         "/controller/callback_disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
         "/config/input_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
         "/controller/callback_enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
-        "/controller/callback_disable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+
+        "/config/ui_language": updateUiLanguage,
+        "/controller/callback_set_ui_language": updateUiLanguage,
+
 
         "/controller/callback_messagebox_send": updateSentMessageLogById,
         "/action/transcription_send_mic_message": addSentMessageLog,
@@ -112,11 +123,11 @@ export const useReceiveRoutes = () => {
         switch (parsed_data.status) {
             case 200:
                 const route = routes[parsed_data.endpoint];
-                (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}`);
+                (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
                 break;
 
             case 348:
-                console.log("from backend:", parsed_data);
+                console.log(`from backend: %c ${JSON.stringify(parsed_data)}`, style_348);
                 break;
 
             default:
@@ -127,3 +138,7 @@ export const useReceiveRoutes = () => {
     };
     return { receiveRoutes };
 };
+
+const style_348 = [
+    "color: gray",
+].join(";");

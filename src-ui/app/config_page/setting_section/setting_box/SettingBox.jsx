@@ -12,8 +12,8 @@ export const SettingBox = () => {
             return <Device />;
         // case "others":
         //     return <Others />;
-        // case "appearance":
-        //     return <Appearance />;
+        case "appearance":
+            return <Appearance />;
         // case "about_vrct":
         //     return <AboutVrct />;
 
