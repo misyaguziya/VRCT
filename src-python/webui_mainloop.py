@@ -2,6 +2,8 @@ import sys
 import json
 import time
 from config import config
+from threading import Thread
+from queue import Queue
 import webui_controller as controller
 from utils import printLog, printResponse, encodeBase64
 
@@ -291,31 +293,83 @@ class Action:
             result = data.get("result", None)
             printResponse(status, self.endpoints[key], result)
 
-def main():
-    received_data = sys.stdin.readline().strip()
-    received_data = json.loads(received_data)
+class Main:
+    def __init__(self) -> None:
+        self.queue_config = Queue()
+        self.queue_controller = Queue()
 
-    if received_data:
-        endpoint = received_data.get("endpoint", None)
-        data = received_data.get("data", None)
-        data = encodeBase64(data) if data is not None else None
-        printLog(endpoint, {"receive_data":data})
+    def receiver(self) -> None:
+        while True:
+            received_data = sys.stdin.readline().strip()
+            received_data = json.loads(received_data)
 
-        try:
-            match endpoint.split("/")[1]:
-                case "config":
+            if received_data:
+                endpoint = received_data.get("endpoint", None)
+                data = received_data.get("data", None)
+                data = encodeBase64(data) if data is not None else None
+                printLog(endpoint, {"receive_data":data})
+
+                match endpoint.split("/")[1]:
+                    case "config":
+                        self.queue_config.put(endpoint)
+                    case "controller":
+                        self.queue_controller.put((endpoint, data))
+                    case _:
+                        pass
+
+    def startReceiver(self) -> None:
+        th_receiver = Thread(target=self.receiver)
+        th_receiver.daemon = True
+        th_receiver.start()
+
+    def configHandler(self) -> None:
+        while True:
+            if not self.queue_config.empty():
+                endpoint = self.queue_config.get()
+                try:
                     result, status = handleConfigRequest(endpoint)
-                case "controller":
-                    result, status = handleControllerRequest(endpoint, data)
-                case _:
-                    pass
-        except Exception as e:
-            result = str(e)
-            status = 500
-        printLog(endpoint, {"send_data":result})
-        printResponse(status, endpoint, result)
+                except Exception as e:
+                    import traceback
+                    with open('error.log', 'a') as f:
+                        traceback.print_exc(file=f)
+                    result = str(e)
+                    status = 500
+                printLog(endpoint, {"send_data":result})
+                printResponse(status, endpoint, result)
+
+    def startConfigHandler(self) -> None:
+        th_config = Thread(target=self.configHandler)
+        th_config.daemon = True
+        th_config.start()
+
+    def controllerHandler(self) -> None:
+        if not self.queue_controller.empty():
+            try:
+                endpoint, data = self.queue_controller.get()
+                result, status = handleControllerRequest(endpoint, data)
+            except Exception as e:
+                import traceback
+                with open('error.log', 'a') as f:
+                    traceback.print_exc(file=f)
+                result = str(e)
+                status = 500
+            printLog(endpoint, {"send_data":result})
+            printResponse(status, endpoint, result)
+
+    def startControllerHandler(self) -> None:
+        th_controller = Thread(target=self.controllerHandler)
+        th_controller.daemon = True
+        th_controller.start()
+
+    def loop(self) -> None:
+        while True:
+            time.sleep(1)
 
 if __name__ == "__main__":
+    main = Main()
+    main.startReceiver()
+    main.startConfigHandler()
+
     controller.init({
         "download_ctranslate2": Action(action_mapping["/controller/callback_download_ctranslate2_weight"]).transmit,
         "download_whisper": Action(action_mapping["/controller/callback_download_whisper_weight"]).transmit,
@@ -325,13 +379,8 @@ if __name__ == "__main__":
     process = "main"
     match process:
         case "main":
-            try:
-                while True:
-                    main()
-            except Exception:
-                import traceback
-                with open('error.log', 'a') as f:
-                    traceback.print_exc(file=f)
+            main.startControllerHandler()
+            main.loop()
 
         case "test":
             for _ in range(100):
