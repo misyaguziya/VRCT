@@ -17,7 +17,7 @@ from typing import Callable
 from flashtext import KeywordProcessor
 from pykakasi import kakasi
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import getInputDevices, getOutputDevices, getDefaultInputDevice, getDefaultOutputDevice
+from models.transcription.transcription_utils import device_manager
 from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
@@ -69,7 +69,6 @@ class Model:
 
     def init(self):
         self.logger = None
-        self.device_access = False
         self.th_check_device = None
         self.mic_print_transcript = None
         self.mic_audio_recorder = None
@@ -408,53 +407,33 @@ class Model:
         command = [os_path.join(current_directory, batch_name), program_name]
         Popen(command, cwd=current_directory)
 
-    def startAccessDevice(self):
-        while self.device_access is True:
-            sleep(0.1)
-        self.device_access = True
-
-    def stopAccessDevice(self):
-        self.device_access = False
-
     def getListInputHost(self):
-        self.startAccessDevice()
-        result = [host for host in getInputDevices().keys()]
-        self.stopAccessDevice()
+        result = [host for host in device_manager.getInputDevices().keys()]
         return result
 
     def getInputDefaultDevice(self):
-        self.startAccessDevice()
-        result = getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
-        self.stopAccessDevice()
+        result = device_manager.getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
         return result
 
     def getListInputDevice(self):
-        self.startAccessDevice()
-        result = [device["name"] for device in getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])]
-        self.stopAccessDevice()
+        result = [device["name"] for device in device_manager.getInputDevices().get(config.CHOICE_MIC_HOST, [{"name": "NoDevice"}])]
         return result
 
     def getListOutputDevice(self):
-        self.startAccessDevice()
-        result = [device["name"] for device in getOutputDevices()]
-        self.stopAccessDevice()
+        result = [device["name"] for device in device_manager.getOutputDevices()]
         return result
 
     def startAutomaticDeviceSelection(self, fnc_mic, fnc_speaker):
         def checkDevice(fnc_mic, fnc_speaker):
             if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
-                self.startAccessDevice()
-                default_device = getDefaultInputDevice()
-                self.stopAccessDevice()
+                default_device = device_manager.getDefaultInputDevice()
                 mic_host_name = default_device["host"]["name"]
                 mic_device_name = default_device["device"]["name"]
                 if mic_host_name != config.CHOICE_MIC_HOST or mic_device_name != config.CHOICE_MIC_DEVICE:
                     fnc_mic(mic_host_name, mic_device_name)
 
             if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
-                self.startAccessDevice()
-                default_device = getDefaultOutputDevice()
-                self.stopAccessDevice()
+                default_device = device_manager.getDefaultOutputDevice()
                 speaker_device_name = default_device["device"]["name"]
                 if speaker_device_name != config.CHOICE_SPEAKER_DEVICE:
                     fnc_speaker(speaker_device_name)
@@ -473,18 +452,14 @@ class Model:
 
     def startMicTranscript(self, fnc):
         if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
-            self.startAccessDevice()
-            default_device = getDefaultInputDevice()
-            self.stopAccessDevice()
+            default_device = device_manager.getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
         else:
             mic_host_name = config.CHOICE_MIC_HOST
             mic_device_name = config.CHOICE_MIC_DEVICE
 
-        self.startAccessDevice()
-        mic_device_list = getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
-        self.stopAccessDevice()
+        mic_device_list = device_manager.getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
         choice_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
 
         if len(choice_mic_device) == 0:
@@ -611,18 +586,14 @@ class Model:
             self.check_mic_energy_fnc = fnc
 
         if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
-            self.startAccessDevice()
-            default_device = getDefaultInputDevice()
-            self.stopAccessDevice()
+            default_device = device_manager.getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
         else:
             mic_host_name = config.CHOICE_MIC_HOST
             mic_device_name = config.CHOICE_MIC_DEVICE
 
-        self.startAccessDevice()
-        mic_device_list = getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
-        self.stopAccessDevice()
+        mic_device_list = device_manager.getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
         choice_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
 
         if len(choice_mic_device) == 0:
@@ -657,16 +628,12 @@ class Model:
 
     def startSpeakerTranscript(self, fnc):
         if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
-            self.startAccessDevice()
-            default_device = getDefaultOutputDevice()
-            self.stopAccessDevice()
+            default_device = device_manager.getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
             speaker_device_name = config.CHOICE_SPEAKER_DEVICE
 
-        self.startAccessDevice()
-        speaker_device_list = getOutputDevices()
-        self.stopAccessDevice()
+        speaker_device_list = device_manager.getOutputDevices()
         choice_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(choice_speaker_device) == 0:
@@ -753,16 +720,12 @@ class Model:
             self.check_speaker_energy_fnc = fnc
 
         if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
-            self.startAccessDevice()
-            default_device = getDefaultOutputDevice()
-            self.stopAccessDevice()
+            default_device = device_manager.getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
             speaker_device_name = config.CHOICE_SPEAKER_DEVICE
 
-        self.startAccessDevice()
-        speaker_device_list = getOutputDevices()
-        self.stopAccessDevice()
+        speaker_device_list = device_manager.getOutputDevices()
         choice_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(choice_speaker_device) == 0:
