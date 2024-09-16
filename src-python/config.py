@@ -5,7 +5,7 @@ from json import load as json_load
 from json import dump as json_dump
 import tkinter as tk
 from tkinter import font
-from models.transcription.transcription_utils import getInputDevices, getDefaultInputDevice, getOutputDevices, getDefaultOutputDevice
+from models.transcription.transcription_utils import device_manager
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
 
@@ -470,7 +470,7 @@ class Config:
 
     @CHOICE_MIC_HOST.setter
     def CHOICE_MIC_HOST(self, value):
-        if value in [host for host in getInputDevices().keys()]:
+        if value in [host for host in device_manager.getInputDevices().keys()]:
             self._CHOICE_MIC_HOST = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -481,7 +481,7 @@ class Config:
 
     @CHOICE_MIC_DEVICE.setter
     def CHOICE_MIC_DEVICE(self, value):
-        if value in [device["name"] for device in getInputDevices()[self.CHOICE_MIC_HOST]]:
+        if value in [device["name"] for device in device_manager.getInputDevices()[self.CHOICE_MIC_HOST]]:
             self._CHOICE_MIC_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -591,7 +591,7 @@ class Config:
 
     @CHOICE_SPEAKER_DEVICE.setter
     def CHOICE_SPEAKER_DEVICE(self, value):
-        if value in [device["name"] for device in getOutputDevices()]:
+        if value in [device["name"] for device in device_manager.getOutputDevices()]:
             self._CHOICE_SPEAKER_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -1117,8 +1117,8 @@ class Config:
             "height": "654",
         }
         self._ENABLE_MIC_AUTOMATIC_SELECTION = True
-        self._CHOICE_MIC_HOST = getDefaultInputDevice()["host"]["name"]
-        self._CHOICE_MIC_DEVICE = getDefaultInputDevice()["device"]["name"]
+        self._CHOICE_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
+        self._CHOICE_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
         self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
         self._INPUT_MIC_RECORD_TIMEOUT = 3
@@ -1128,7 +1128,7 @@ class Config:
         self._INPUT_MIC_AVG_LOGPROB=-0.8
         self._INPUT_MIC_NO_SPEECH_PROB=0.6
         self._ENABLE_SPEAKER_AUTOMATIC_SELECTION = True
-        self._CHOICE_SPEAKER_DEVICE = getDefaultOutputDevice()["device"]["name"]
+        self._CHOICE_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
         self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
