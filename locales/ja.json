@@ -113,7 +113,7 @@
             "label": "使用フォント"
         },
         "ui_language": {
-            "label": "UIの言語 / UI Language"
+            "label": "UIの言語"
         },
         "to_restore_main_page_geometry": {
             "label": "メイン画面の位置を記憶する",
