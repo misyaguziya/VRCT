@@ -15,6 +15,7 @@
     cursor: pointer;
     padding: 2rem;
     height: 100%;
+    flex-shrink: 0;
     &.is_loading {
         pointer-events: none;
     }

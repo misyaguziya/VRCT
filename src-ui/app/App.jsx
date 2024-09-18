@@ -20,6 +20,8 @@ export const App = () => {
 
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
+import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
+import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
 import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
 import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
 import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
@@ -29,6 +31,7 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
+import { useLanguageSettings } from "@logics/useLanguageSettings";
 import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
 
 const StartPythonFacadeComponent = () => {
@@ -37,6 +40,8 @@ const StartPythonFacadeComponent = () => {
     const main_page = getCurrent();
 
     const { getSoftwareVersion } = useSoftwareVersion();
+    const { getEnableAutoMicSelect } = useEnableAutoMicSelect();
+    const { getEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
     const { getSelectedMicHost } = useSelectedMicHost();
     const { getSelectedMicDevice } = useSelectedMicDevice();
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
@@ -46,6 +51,7 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
 
+    const { getSelectedPresetTabNumber, getEnableMultiTranslation, getSelectedYourLanguages, getSelectedTargetLanguages } = useLanguageSettings();
     const { getSelectableLanguageList } = useSelectableLanguageList();
 
 
@@ -57,8 +63,14 @@ const StartPythonFacadeComponent = () => {
 
                 getSoftwareVersion();
 
+                getSelectedPresetTabNumber();
+                getEnableMultiTranslation();
+                getSelectedYourLanguages();
+                getSelectedTargetLanguages();
                 getSelectableLanguageList();
 
+                getEnableAutoMicSelect();
+                getEnableAutoSpeakerSelect();
                 getSelectedMicHost();
                 getSelectedMicDevice();
                 getSelectedSpeakerDevice();

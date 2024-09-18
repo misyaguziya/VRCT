@@ -17,13 +17,23 @@ export const MainSection = () => {
     );
 };
 
+
+import { useLanguageSettings } from "@logics/useLanguageSettings";
 const HandleLanguageSelector = () => {
     const { currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
+    const {
+        currentSelectedYourLanguages,
+        setSelectedYourLanguages,
+        currentSelectedTargetLanguages,
+        setSelectedTargetLanguages,
+    } = useLanguageSettings();
 
     if (currentIsOpenedLanguageSelector.your_language === true) {
-        return <LanguageSelector id="your_language"/>;
+        const onclickFunction_YourLanguage = (payload) => setSelectedYourLanguages(payload);
+        return <LanguageSelector id="your_language" onClickFunction={onclickFunction_YourLanguage}/>;
     } else if (currentIsOpenedLanguageSelector.target_language === true) {
-        return <LanguageSelector id="target_language"/>;
+        const onclickFunction_TargetLanguage = (payload) => setSelectedTargetLanguages(payload);
+        return <LanguageSelector id="target_language" onClickFunction={onclickFunction_TargetLanguage}/>;
     } else {
         return null;
     }

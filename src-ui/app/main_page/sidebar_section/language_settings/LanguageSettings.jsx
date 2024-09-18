@@ -1,7 +1,5 @@
 import { useTranslation } from "react-i18next";
-
 import styles from "./LanguageSettings.module.scss";
-
 import { PresetTabSelector } from "./preset_tab_selector/PresetTabSelector";
 import { LanguageSelectorOpenButton } from "./language_selector_open_button/LanguageSelectorOpenButton";
 import { LanguageSwapButton } from "./language_swap_button/LanguageSwapButton";
@@ -9,11 +7,11 @@ import { TranslatorSelectorOpenButton } from "./translator_selector_open_button/
 import { useStore_IsOpenedTranslatorSelector } from "@store";
 
 export const LanguageSettings = () => {
-    const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
+    const { updateIsOpenedTranslatorSelector } = useStore_IsOpenedTranslatorSelector();
     const closeTranslatorSelector = () => updateIsOpenedTranslatorSelector(false);
 
     return (
-        <div className={styles.container} onMouseLeave={closeTranslatorSelector} >
+        <div className={styles.container} onMouseLeave={closeTranslatorSelector}>
             <p className={styles.title}>Language Settings</p>
             <PresetTabSelector />
             <PresetContainer />
@@ -21,80 +19,69 @@ export const LanguageSettings = () => {
     );
 };
 
-
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useMainFunction } from "@logics/useMainFunction";
+import { useLanguageSettings } from "@logics/useLanguageSettings";
+
+// 言語セレクターをトグルする処理を関数化
+const toggleSelector = (selector, currentStatus, updateSelector) => {
+    if (currentStatus) {
+        updateSelector({ your_language: false, target_language: false });
+    } else {
+        updateSelector({
+            your_language: selector === "your_language",
+            target_language: selector === "target_language",
+        });
+    }
+};
+
+// 選択された言語データの取得を関数化
+const getSelectedLanguageData = (presetTabData, languageData) => {
+    return (presetTabData !== undefined && languageData !== undefined)
+        ? languageData[Number(presetTabData)]
+        : undefined;
+};
 
 const PresetContainer = () => {
     const { t } = useTranslation();
     const { updateIsOpenedLanguageSelector, currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
 
+    const { currentTranscriptionSendStatus, currentTranscriptionReceiveStatus } = useMainFunction();
     const {
-        currentTranscriptionSendStatus,
-        currentTranscriptionReceiveStatus,
-    } = useMainFunction();
+        currentSelectedPresetTabNumber,
+        currentSelectedYourLanguages,
+        currentSelectedTargetLanguages,
+    } = useLanguageSettings();
+
+    const your_language_data = getSelectedLanguageData(currentSelectedPresetTabNumber.data, currentSelectedYourLanguages.data);
+    const target_language_data = getSelectedLanguageData(currentSelectedPresetTabNumber.data, currentSelectedTargetLanguages.data);
 
 
-    const closeLanguageSelector = () => {
-        updateIsOpenedLanguageSelector({
-            your_language: false,
-            target_language: false,
-        });
-    };
-
-    const toggleYourLanguageSelector = () => {
-        if (currentIsOpenedLanguageSelector.your_language === true) {
-            closeLanguageSelector();
-        } else {
-            updateIsOpenedLanguageSelector({
-                your_language: true,
-                target_language: false,
-            });
-        }
-    };
-
-    const toggleTargetLanguageSelector = () => {
-        if (currentIsOpenedLanguageSelector.target_language === true) {
-            closeLanguageSelector();
-        } else {
-            updateIsOpenedLanguageSelector({
-                your_language: false,
-                target_language: true,
-            });
-        }
-    };
-
-    const handleLanguageSelectorClick = (selector) => {
-        if (selector === "your_language") {
-            toggleYourLanguageSelector();
-        } else if (selector === "target_language") {
-            toggleTargetLanguageSelector();
-        }
-    };
-
-    const your_language_settings = {
+    const yourLanguageSettings = {
         title: t("main_page.your_language"),
         is_opened: currentIsOpenedLanguageSelector.your_language,
-        onClickFunction: () => handleLanguageSelectorClick("your_language"),
+        onClickFunction: () => toggleSelector("your_language", currentIsOpenedLanguageSelector.your_language, updateIsOpenedLanguageSelector),
         TurnedOnSvgComponent: <MicSvg />,
         is_turned_on: currentTranscriptionSendStatus.data,
+        variable: your_language_data?.primary,
     };
 
-    const target_language_settings = {
+    const targetLanguageSettings = {
         title: t("main_page.target_language"),
         is_opened: currentIsOpenedLanguageSelector.target_language,
-        onClickFunction: () => handleLanguageSelectorClick("target_language"),
+        onClickFunction: () => toggleSelector("target_language", currentIsOpenedLanguageSelector.target_language, updateIsOpenedLanguageSelector),
         TurnedOnSvgComponent: <HeadphonesSvg />,
         is_turned_on: currentTranscriptionReceiveStatus.data,
+        variable: target_language_data?.primary,
     };
 
     return (
         <div className={styles.preset_container}>
-            <LanguageSelectorOpenButton {...your_language_settings} />
+            <LanguageSelectorOpenButton {...yourLanguageSettings} />
             <LanguageSwapButton />
-            <LanguageSelectorOpenButton {...target_language_settings} />
+            <LanguageSelectorOpenButton {...targetLanguageSettings} />
             <TranslatorSelectorOpenButton />
         </div>
     );
