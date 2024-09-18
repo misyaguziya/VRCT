@@ -86,9 +86,20 @@ const UiLanguageContainer = () => {
         "zh-Hant": "繁體中文",
     };
 
+
+    const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
         <div className={styles.ui_language_container}>
-            <LabelComponent label={t("config_page.ui_language.label")} />
+            <div className={styles.ui_language_label_wrapper}>
+                {is_not_en_lang
+                ?
+                    <>
+                        <LabelComponent label="UI Language" desc={t("config_page.ui_language.label")}/>
+                    </>
+                :
+                    <LabelComponent label={t("config_page.ui_language.label")}/>
+                }
+            </div>
             <div className={styles.ui_language_selector_container}>
                 {currentUiLanguage.state === "loading" && <span className={styles.loader}></span>}
                 {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
