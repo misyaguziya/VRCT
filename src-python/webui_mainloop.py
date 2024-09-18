@@ -244,10 +244,8 @@ action_mapping = {
     },
     "/controller/callback_enable_mic_automatic_selection": {
         "mic":"/controller/callback_set_mic_host",
-        "speaker":"/controller/callback_set_speaker_device",
     },
     "/controller/callback_enable_speaker_automatic_selection": {
-        "mic":"/controller/callback_set_mic_host",
         "speaker":"/controller/callback_set_speaker_device",
     }
 }
@@ -391,7 +389,8 @@ if __name__ == "__main__":
     controller.init({
         "download_ctranslate2": Action(action_mapping["/controller/callback_download_ctranslate2_weight"]).transmit,
         "download_whisper": Action(action_mapping["/controller/callback_download_whisper_weight"]).transmit,
-        "update_selected_device": Action(action_mapping["/controller/callback_enable_mic_automatic_selection"]).transmit,
+        "update_selected_mic_device": Action(action_mapping["/controller/callback_enable_mic_automatic_selection"]).transmit,
+        "update_selected_speaker_device": Action(action_mapping["/controller/callback_enable_speaker_automatic_selection"]).transmit,
     })
 
     # mappingのすべてのstatusをTrueにする

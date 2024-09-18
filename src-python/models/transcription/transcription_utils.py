@@ -35,6 +35,9 @@ class DeviceManager:
         self.default_output_device = {"device": {"name": "NoDevice"}}
         self.update()
 
+        self.callback_default_input_device = None
+        self.callback_default_output_device = None
+
         self.monitoring_flag = False
         self.startMonitoring()
 
@@ -123,6 +126,11 @@ class DeviceManager:
                 enumerator.UnregisterEndpointNotificationCallback(cb)
                 self.update()
 
+                if self.callback_default_input_device is not None:
+                    self.callback_default_input_device(self.default_input_device["host"]["name"], self.default_input_device["device"]["name"])
+                if self.callback_default_output_device is not None:
+                    self.callback_default_output_device(self.default_output_device["device"]["name"])
+
                 cb = Client()
                 enumerator = AudioUtilities.GetDeviceEnumerator()
                 enumerator.RegisterEndpointNotificationCallback(cb)
@@ -139,6 +147,18 @@ class DeviceManager:
     def stopMonitoring(self):
         self.monitoring_flag = False
         self.th_monitoring.join()
+
+    def setCallbackDefaultInputDevice(self, callback):
+        self.callback_default_input_device = callback
+
+    def clearCallbackDefaultInputDevice(self):
+        self.callback_default_input_device = None
+
+    def setCallbackDefaultOutputDevice(self, callback):
+        self.callback_default_output_device = callback
+
+    def clearCallbackDefaultOutputDevice(self):
+        self.callback_default_output_device = None
 
     def getInputDevices(self):
         return self.input_devices
