@@ -1,6 +1,23 @@
 from time import sleep
 from threading import Thread
+import comtypes
 from pyaudiowpatch import PyAudio, paWASAPI
+from pycaw.callbacks import MMNotificationClient
+from pycaw.utils import AudioUtilities
+
+class Client(MMNotificationClient):
+    def __init__(self):
+        super().__init__()
+        self.loop = True
+
+    def on_default_device_changed(self, flow, flow_id, role, role_id, default_device_id):
+        self.loop = False
+
+    def on_device_added(self, added_device_id):
+        self.loop = False
+
+    def on_device_removed(self, removed_device_id):
+        self.loop = False
 
 class DeviceManager:
     _instance = None
@@ -18,10 +35,8 @@ class DeviceManager:
         self.default_output_device = {"device": {"name": "NoDevice"}}
         self.update()
 
-        self.monitoring_flag = True
-        self.th_monitoring = Thread(target=self.startMonitoring)
-        self.th_monitoring.daemon = True
-        self.th_monitoring.start()
+        self.monitoring_flag = False
+        self.startMonitoring()
 
     def update(self):
         buffer_input_devices = {}
@@ -96,11 +111,32 @@ class DeviceManager:
         self.output_devices = buffer_output_devices
         self.default_output_device = buffer_default_output_device
 
+        print("default_input_device", self.default_input_device)
+
+    def monitoring(self):
+        comtypes.CoInitialize()
+        cb = Client()
+        enumerator = AudioUtilities.GetDeviceEnumerator()
+        enumerator.RegisterEndpointNotificationCallback(cb)
+        try:
+            while self.monitoring_flag is True:
+                while cb.loop is True:
+                    sleep(1)
+                enumerator.UnregisterEndpointNotificationCallback(cb)
+                self.update()
+
+                cb = Client()
+                enumerator = AudioUtilities.GetDeviceEnumerator()
+                enumerator.RegisterEndpointNotificationCallback(cb)
+        except Exception:
+            pass
+        comtypes.CoUninitialize()
+
     def startMonitoring(self):
         self.monitoring_flag = True
-        while self.monitoring_flag is True:
-            self.update()
-            sleep(1)
+        self.th_monitoring = Thread(target=self.monitoring)
+        self.th_monitoring.daemon = True
+        self.th_monitoring.start()
 
     def stopMonitoring(self):
         self.monitoring_flag = False
@@ -121,7 +157,10 @@ class DeviceManager:
 device_manager = DeviceManager()
 
 if __name__ == "__main__":
-    print("getInputDevices()", device_manager.getInputDevices())
-    print("getDefaultInputDevice()", device_manager.getDefaultInputDevice())
-    print("getOutputDevices()", device_manager.getOutputDevices())
-    print("getDefaultOutputDevice()", device_manager.getDefaultOutputDevice())
+    # print("getInputDevices()", device_manager.getInputDevices())
+    # print("getDefaultInputDevice()", device_manager.getDefaultInputDevice())
+    # print("getOutputDevices()", device_manager.getOutputDevices())
+    # print("getDefaultOutputDevice()", device_manager.getDefaultOutputDevice())
+
+    while True:
+        sleep(1)
