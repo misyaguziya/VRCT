@@ -111,8 +111,6 @@ class DeviceManager:
         self.output_devices = buffer_output_devices
         self.default_output_device = buffer_default_output_device
 
-        print("default_input_device", self.default_input_device)
-
     def monitoring(self):
         comtypes.CoInitialize()
         cb = Client()
