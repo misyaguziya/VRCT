@@ -7,12 +7,13 @@ import { TranslatorSelectorOpenButton } from "./translator_selector_open_button/
 import { useStore_IsOpenedTranslatorSelector } from "@store";
 
 export const LanguageSettings = () => {
+    const { t } = useTranslation();
     const { updateIsOpenedTranslatorSelector } = useStore_IsOpenedTranslatorSelector();
     const closeTranslatorSelector = () => updateIsOpenedTranslatorSelector(false);
 
     return (
         <div className={styles.container} onMouseLeave={closeTranslatorSelector}>
-            <p className={styles.title}>Language Settings</p>
+            <p className={styles.title}>{t("main_page.language_settings")}</p>
             <PresetTabSelector />
             <PresetContainer />
         </div>
