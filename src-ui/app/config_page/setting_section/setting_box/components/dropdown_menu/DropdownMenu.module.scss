@@ -31,6 +31,8 @@
 .dropdown_selected_text {
     font-size: 1.4rem;
     padding-right: 2.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dropdown_content_wrapper {
