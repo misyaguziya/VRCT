@@ -2,32 +2,31 @@ import clsx from "clsx";
 import styles from "./LanguageSelectorOpenButton.module.scss";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useSvg } from "@utils/useSvg";
-export const LanguageSelectorOpenButton = (props) => {
 
-    const toggleLanguageSelector = () => {
-        props.onClickFunction();
-    };
-
-    const class_names = clsx(styles["arrow_left_svg"], {
-        [styles["reverse"]]: props.is_opened
+export const LanguageSelectorOpenButton = ({ title, onClickFunction, is_opened, TurnedOnSvgComponent, is_turned_on, variable }) => {
+    const classNames = clsx(styles.arrow_left_svg, {
+        [styles.reverse]: is_opened,
     });
 
-    const SvgComponent = useSvg(props.TurnedOnSvgComponent,
-        {className: clsx(styles["category_svg"], {
-            [styles["is_turned_on"]]: props.is_turned_on
-        })}
-    );
+    const SvgComponent = useSvg(TurnedOnSvgComponent, {
+        className: clsx(styles.category_svg, {
+            [styles.is_turned_on]: is_turned_on,
+        }),
+    });
+
+    const languageText = variable?.language ?? "Loading...";
+    const countryText = variable?.country ?? "Loading...";
 
     return (
         <div className={styles.container}>
             <div className={styles.title_container}>
                 {SvgComponent}
-                <p className={styles.title}>{props.title}</p>
+                <p className={styles.title}>{title}</p>
             </div>
-            <div className={styles.dropdown_menu_container} onClick={toggleLanguageSelector}>
-                <p className={styles.selected_language}>Japanese</p>
-                <p className={styles.selected_language}>(Japan)</p>
-                <ArrowLeftSvg className={class_names} />
+            <div className={styles.dropdown_menu_container} onClick={onClickFunction}>
+                <p className={styles.selected_language}>{languageText}</p>
+                <p className={styles.selected_language}>({countryText})</p>
+                <ArrowLeftSvg className={classNames} />
             </div>
         </div>
     );
