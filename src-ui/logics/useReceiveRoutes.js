@@ -2,6 +2,7 @@ import { arrayToObject } from "@utils/arrayToObject";
 import { useMainFunction } from "./useMainFunction";
 import { useMessage } from "./useMessage";
 import { useSelectableLanguageList } from "./useSelectableLanguageList";
+import { useLanguageSettings } from "./useLanguageSettings";
 import { useVolume } from "./useVolume";
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
@@ -28,6 +29,12 @@ export const useReceiveRoutes = () => {
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
 
+    const {
+        updateSelectedPresetTabNumber,
+        updateEnableMultiTranslation,
+        updateSelectedYourLanguages,
+        updateSelectedTargetLanguages
+    } = useLanguageSettings();
     const { updateSelectableLanguageList } = useSelectableLanguageList();
 
     const {
@@ -71,6 +78,14 @@ export const useReceiveRoutes = () => {
         "/controller/callback_disable_transcription_send": updateTranscriptionSendStatus,
         "/controller/callback_enable_transcription_receive": updateTranscriptionReceiveStatus,
         "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
+
+        "/config/selected_tab_no": updateSelectedPresetTabNumber,
+        "/controller/callback_selected_language_preset_tab": updateSelectedPresetTabNumber,
+        "/config/enable_multi_translation": updateEnableMultiTranslation,
+        "/config/selected_tab_your_languages": updateSelectedYourLanguages,
+        "/controller/set_your_language_and_country": updateSelectedYourLanguages,
+        "/config/selected_tab_target_languages": updateSelectedTargetLanguages,
+        "/controller/set_your_language_and_country": updateSelectedTargetLanguages,
 
         "/controller/list_language_and_country": updateSelectableLanguageList,
 

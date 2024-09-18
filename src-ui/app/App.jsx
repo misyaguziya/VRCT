@@ -31,6 +31,7 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
+import { useLanguageSettings } from "@logics/useLanguageSettings";
 import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
 
 const StartPythonFacadeComponent = () => {
@@ -50,6 +51,7 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
 
+    const { getSelectedPresetTabNumber, getEnableMultiTranslation, getSelectedYourLanguages, getSelectedTargetLanguages } = useLanguageSettings();
     const { getSelectableLanguageList } = useSelectableLanguageList();
 
 
@@ -61,6 +63,10 @@ const StartPythonFacadeComponent = () => {
 
                 getSoftwareVersion();
 
+                getSelectedPresetTabNumber();
+                getEnableMultiTranslation();
+                getSelectedYourLanguages();
+                getSelectedTargetLanguages();
                 getSelectableLanguageList();
 
                 getEnableAutoMicSelect();
