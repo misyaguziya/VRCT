@@ -466,17 +466,13 @@ def setTargetTranslateEngine(select):
 
 def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setYourLanguageAndCountry", select)
-    languages = config.SELECTED_TAB_YOUR_LANGUAGES
-    languages[config.SELECTED_TAB_NO] = select
-    config.SELECTED_TAB_YOUR_LANGUAGES = languages
+    config.SELECTED_TAB_YOUR_LANGUAGES = select
     updateTranslationEngineAndEngineList()
     return {"status":200, "result":config.SELECTED_TAB_YOUR_LANGUAGES}
 
 def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setTargetLanguageAndCountry", select)
-    languages = config.SELECTED_TAB_TARGET_LANGUAGES
-    languages[config.SELECTED_TAB_NO] = select
-    config.SELECTED_TAB_TARGET_LANGUAGES = languages
+    config.SELECTED_TAB_TARGET_LANGUAGES = select
     updateTranslationEngineAndEngineList()
     return {"status":200, "result":config.SELECTED_TAB_TARGET_LANGUAGES}
 
