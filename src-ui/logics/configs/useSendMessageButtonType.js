@@ -7,12 +7,12 @@ export const useSendMessageButtonType = () => {
 
     const getSendMessageButtonType = () => {
         updateSendMessageButtonType(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/send_message_button_type");
+        asyncStdoutToPython("/get/send_message_button_type");
     };
 
     const setSendMessageButtonType = (selected_type) => {
         updateSendMessageButtonType(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/callback_set_send_message_button_type", selected_type);
+        asyncStdoutToPython("/set/send_message_button_type", selected_type);
     };
 
     return {

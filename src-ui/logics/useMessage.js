@@ -14,7 +14,7 @@ export const useMessage = () => {
             id: uuid,
             message: message,
         };
-        asyncStdoutToPython("/controller/callback_messagebox_send", send_message_object);
+        asyncStdoutToPython("/run/send_message_box", send_message_object);
 
         addMessageLogs({
             id: uuid,

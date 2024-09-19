@@ -10,24 +10,24 @@ export const useLanguageSettings = () => {
 
     const getEnableMultiTranslation = () => {
         updateEnableMultiTranslation(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/enable_multi_translation");
+        asyncStdoutToPython("/get/multi_language_translation");
     };
 
     const getSelectedPresetTabNumber = () => {
         updateSelectedPresetTabNumber(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/selected_tab_no");
+        asyncStdoutToPython("/get/selected_tab_no");
     };
 
     const setSelectedPresetTabNumber = (preset_number) => {
         updateSelectedPresetTabNumber(() => new Promise(() => {}));
 
-        asyncStdoutToPython("/controller/callback_selected_language_preset_tab", preset_number);
+        asyncStdoutToPython("/set/selected_tab_no", preset_number);
     };
 
 
     const getSelectedYourLanguages = () => {
         updateSelectedYourLanguages(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/selected_tab_your_languages");
+        asyncStdoutToPython("/get/selected_your_languages");
     };
 
     const setSelectedYourLanguages = (selected_language_data) => {
@@ -41,13 +41,13 @@ export const useLanguageSettings = () => {
                 }
             }
         };
-        asyncStdoutToPython("/controller/set_your_language_and_country", send_obj);
+        asyncStdoutToPython("/set/selected_your_languages", send_obj);
     };
 
 
     const getSelectedTargetLanguages = () => {
         updateSelectedTargetLanguages(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/selected_tab_target_languages");
+        asyncStdoutToPython("/get/selected_target_languages");
     };
 
     const setSelectedTargetLanguages = (selected_language_data) => {
@@ -57,7 +57,7 @@ export const useLanguageSettings = () => {
         send_obj[currentSelectedPresetTabNumber.data].primary.language = selected_language_data.language,
         send_obj[currentSelectedPresetTabNumber.data].primary.country = selected_language_data.country,
 
-        asyncStdoutToPython("/controller/set_target_language_and_country", send_obj);
+        asyncStdoutToPython("/set/selected_target_languages", send_obj);
     };
 
     return {

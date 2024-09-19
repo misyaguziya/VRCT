@@ -47,19 +47,19 @@ mapping = {
 
     "/get/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
 
-    "/get/enable_multi_language_translation": {"status": True, "variable":controller.getEnableMultiLanguageTranslation},
+    "/get/multi_language_translation": {"status": True, "variable":controller.getMultiLanguageTranslation},
     "/set/enable_multi_language_translation": {"status": True, "variable":controller.setEnableMultiLanguageTranslation},
     "/set/disable_multi_language_translation": {"status": True, "variable":controller.setDisableMultiLanguageTranslation},
 
-    "/get/enable_convert_message_to_romaji": {"status": True, "variable":controller.getEnableConvertMessageToRomaji},
+    "/get/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable_convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable_convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
 
-    "/get/enable_convert_message_to_hiragana": {"status": True, "variable":controller.getEnableConvertMessageToHiragana},
+    "/get/convert_message_to_hiragana": {"status": True, "variable":controller.getConvertMessageToHiragana},
     "/set/enable_convert_message_to_hiragana": {"status": True, "variable":controller.setEnableConvertMessageToHiragana},
     "/set/disable_convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
 
-    "/get/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.getEnableMainWindowSidebarCompactMode},
+    "/get/main_window_sidebar_compact_mode": {"status": True, "variable":controller.getMainWindowSidebarCompactMode},
     "/set/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
     "/set/disable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
 
@@ -84,76 +84,77 @@ mapping = {
     "/get/ui_language": {"status": True, "variable":controller.getUiLanguage},
     "/set/ui_language": {"status": True, "variable":controller.setUiLanguage},
 
-    "/get/enable_restore_main_window_geometry": {"status": True, "variable":controller.getEnableRestoreMainWindowGeometry},
+    "/get/restore_main_window_geometry": {"status": True, "variable":controller.getRestoreMainWindowGeometry},
     "/set/enable_restore_main_window_geometry": {"status": True, "variable":controller.setEnableRestoreMainWindowGeometry},
     "/set/disable_restore_main_window_geometry": {"status": True, "variable":controller.setDisableRestoreMainWindowGeometry},
 
     "/get/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
     "/set/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
 
-    "/get/enable_mic_auto_selection": {"status": True, "variable":controller.getEnableMicAutoSelection},
-    "/set/enable_mic_auto_selection": {"status": True, "variable":controller.setEnableMicAutoSelection},
-    "/set/disable_mic_auto_selection": {"status": True, "variable":controller.setDisableMicAutoSelection},
+    "/get/auto_mic_select": {"status": True, "variable":controller.getAutoMicSelect},
+    "/set/enable_auto_mic_select": {"status": True, "variable":controller.setEnableAutoMicSelect},
+    "/set/disable_auto_mic_select": {"status": True, "variable":controller.setDisableAutoMicSelect},
 
-    "/get/choice_mic_host": {"status": True, "variable":controller.getChoiceMicHost},
-    "/set/choice_mic_host": {"status": True, "variable":controller.setChoiceMicHost},
+    "/get/selected_mic_host": {"status": True, "variable":controller.getSelectedMicHost},
+    "/set/selected_mic_host": {"status": True, "variable":controller.setSelectedMicHost},
 
-    "/get/choice_mic_device": {"status": True, "variable":controller.getChoiceMicDevice},
-    "/set/choice_mic_device": {"status": True, "variable":controller.setChoiceMicDevice},
+    "/get/selected_mic_device": {"status": True, "variable":controller.getSelectedMicDevice},
+    "/set/selected_mic_device": {"status": True, "variable":controller.setSelectedMicDevice},
 
-    "/get/input_mic_energy_threshold": {"status": True, "variable":controller.getInputMicEnergyThreshold},
-    "/set/input_mic_energy_threshold": {"status": True, "variable":controller.setInputMicEnergyThreshold},
+    "/get/mic_energy_threshold": {"status": True, "variable":controller.getMicEnergyThreshold},
+    "/set/mic_energy_threshold": {"status": True, "variable":controller.setMicEnergyThreshold},
 
-    "/get/input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.getInputMicDynamicEnergyThreshold},
-    "/set/enable_input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableInputMicDynamicEnergyThreshold},
-    "/set/disable_input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableInputMicDynamicEnergyThreshold},
+    "/get/mic_dynamic_energy_threshold": {"status": True, "variable":controller.getMicDynamicEnergyThreshold},
+    "/set/enable_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableMicDynamicEnergyThreshold},
+    "/set/disable_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableMicDynamicEnergyThreshold},
 
-    "/get/input_mic_record_timeout": {"status": True, "variable":controller.getInputMicRecordTimeout},
-    "/set/input_mic_record_timeout": {"status": True, "variable":controller.setInputMicRecordTimeout},
+    "/get/mic_record_timeout": {"status": True, "variable":controller.getMicRecordTimeout},
+    "/set/mic_record_timeout": {"status": True, "variable":controller.setMicRecordTimeout},
 
-    "/get/input_mic_phrase_timeout": {"status": True, "variable":controller.getInputMicPhraseTimeout},
-    "/set/input_mic_phrase_timeout": {"status": True, "variable":controller.setInputMicPhraseTimeout},
+    "/get/mic_phrase_timeout": {"status": True, "variable":controller.getMicPhraseTimeout},
+    "/set/mic_phrase_timeout": {"status": True, "variable":controller.setMicPhraseTimeout},
 
-    "/get/input_mic_max_phrases": {"status": True, "variable":controller.getInputMicMaxPhrases},
-    "/set/input_mic_max_phrases": {"status": True, "variable":controller.setInputMicMaxPhrases},
+    "/get/mic_max_phrases": {"status": True, "variable":controller.getMicMaxPhrases},
+    "/set/mic_max_phrases": {"status": True, "variable":controller.setMicMaxPhrases},
 
-    "/get/input_mic_word_filter": {"status": True, "variable":controller.getInputMicWordFilter},
-    "/set/input_mic_word_filter": {"status": True, "variable":controller.setInputMicWordFilter},
-    "/del/input_mic_word_filter": {"status": True, "variable":controller.delInputMicWordFilter},
+    "/get/mic_word_filter": {"status": True, "variable":controller.getMicWordFilter},
+    "/set/mic_word_filter": {"status": True, "variable":controller.setMicWordFilter},
+    "/del/mic_word_filter": {"status": True, "variable":controller.delMicWordFilter},
 
-    "/get/input_mic_avg_logprob": {"status": True, "variable":controller.getInputMicAvgLogprob},
-    "/set/input_mic_avg_logprob": {"status": True, "variable":controller.setInputMicAvgLogprob},
+    "/get/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
+    "/set/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 
-    "/get/input_mic_no_speech_prob": {"status": True, "variable":controller.getInputMicNoSpeechProb},
-    "/set/input_mic_no_speech_prob": {"status": True, "variable":controller.setInputMicNoSpeechProb},
+    "/get/mic_no_speech_prob": {"status": True, "variable":controller.getMicNoSpeechProb},
+    "/set/mic_no_speech_prob": {"status": True, "variable":controller.setMicNoSpeechProb},
 
-    "/set/enable_speaker_auto_selection": {"status": True, "variable":controller.setEnableSpeakerAutoSelection},
-    "/set/disable_speaker_auto_selection": {"status": True, "variable":controller.setDisableSpeakerAutoSelection},
+    "/get/auto_speaker_select": {"status": True, "variable":controller.getAutoSpeakerSelect},
+    "/set/enable_auto_speaker_select": {"status": True, "variable":controller.setEnableAutoSpeakerSelect},
+    "/set/disable_auto_speaker_select": {"status": True, "variable":controller.setDisableAutoSpeakerSelect},
 
-    "/get/choice_speaker_device": {"status": True, "variable":controller.getChoiceSpeakerDevice},
-    "/set/choice_speaker_device": {"status": True, "variable":controller.setChoiceSpeakerDevice},
+    "/get/selected_speaker_device": {"status": True, "variable":controller.getSelectedSpeakerDevice},
+    "/set/selected_speaker_device": {"status": True, "variable":controller.setSelectedSpeakerDevice},
 
-    "/get/input_speaker_energy_threshold": {"status": True, "variable":controller.getInputSpeakerEnergyThreshold},
-    "/set/input_speaker_energy_threshold": {"status": True, "variable":controller.setInputSpeakerEnergyThreshold},
+    "/get/speaker_energy_threshold": {"status": True, "variable":controller.getSpeakerEnergyThreshold},
+    "/set/speaker_energy_threshold": {"status": True, "variable":controller.setSpeakerEnergyThreshold},
 
-    "/get/input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.getInputSpeakerDynamicEnergyThreshold},
-    "/set/enable_input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableInputSpeakerDynamicEnergyThreshold},
-    "/set/disable_input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableInputSpeakerDynamicEnergyThreshold},
+    "/get/speaker_dynamic_energy_threshold": {"status": True, "variable":controller.getSpeakerDynamicEnergyThreshold},
+    "/set/enable_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableSpeakerDynamicEnergyThreshold},
+    "/set/disable_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableSpeakerDynamicEnergyThreshold},
 
-    "/get/input_speaker_record_timeout": {"status": True, "variable":controller.getInputSpeakerRecordTimeout},
-    "/set/input_speaker_record_timeout": {"status": True, "variable":controller.setInputSpeakerRecordTimeout},
+    "/get/speaker_record_timeout": {"status": True, "variable":controller.getSpeakerRecordTimeout},
+    "/set/speaker_record_timeout": {"status": True, "variable":controller.setSpeakerRecordTimeout},
 
-    "/get/input_speaker_phrase_timeout": {"status": True, "variable":controller.getInputSpeakerPhraseTimeout},
-    "/set/input_speaker_phrase_timeout": {"status": True, "variable":controller.setInputSpeakerPhraseTimeout},
+    "/get/speaker_phrase_timeout": {"status": True, "variable":controller.getSpeakerPhraseTimeout},
+    "/set/speaker_phrase_timeout": {"status": True, "variable":controller.setSpeakerPhraseTimeout},
 
-    "/get/input_speaker_max_phrases": {"status": True, "variable":controller.getInputSpeakerMaxPhrases},
-    "/set/input_speaker_max_phrases": {"status": True, "variable":controller.setInputSpeakerMaxPhrases},
+    "/get/speaker_max_phrases": {"status": True, "variable":controller.getSpeakerMaxPhrases},
+    "/set/speaker_max_phrases": {"status": True, "variable":controller.setSpeakerMaxPhrases},
 
-    "/get/input_speaker_avg_logprob": {"status": True, "variable":controller.getInputSpeakerAvgLogprob},
-    "/set/input_speaker_avg_logprob": {"status": True, "variable":controller.setInputSpeakerAvgLogprob},
+    "/get/speaker_avg_logprob": {"status": True, "variable":controller.getSpeakerAvgLogprob},
+    "/set/speaker_avg_logprob": {"status": True, "variable":controller.setSpeakerAvgLogprob},
 
-    "/get/input_speaker_no_speech_prob": {"status": True, "variable":controller.getInputSpeakerNoSpeechProb},
-    "/set/input_speaker_no_speech_prob": {"status": True, "variable":controller.setInputSpeakerNoSpeechProb},
+    "/get/speaker_no_speech_prob": {"status": True, "variable":controller.getSpeakerNoSpeechProb},
+    "/set/speaker_no_speech_prob": {"status": True, "variable":controller.setSpeakerNoSpeechProb},
 
     "/get/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
@@ -179,11 +180,11 @@ mapping = {
     "/get/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
-    "/get/enable_auto_clear_message_box": {"status": True, "variable":controller.getEnableAutoClearMessageBox},
+    "/get/auto_clear_message_box": {"status": True, "variable":controller.getAutoClearMessageBox},
     "/set/enable_auto_clear_message_box": {"status": True, "variable":controller.setEnableAutoClearMessageBox},
     "/set/disable_auto_clear_message_box": {"status": True, "variable":controller.setDisableAutoClearMessageBox},
 
-    "/get/enable_send_only_translated_messages": {"status": True, "variable":controller.getEnableSendOnlyTranslatedMessages},
+    "/get/send_only_translated_messages": {"status": True, "variable":controller.getSendOnlyTranslatedMessages},
     "/set/enable_send_only_translated_messages": {"status": True, "variable":controller.setEnableSendOnlyTranslatedMessages},
     "/set/disable_send_only_translated_messages": {"status": True, "variable":controller.setDisableSendOnlyTranslatedMessages},
 
@@ -196,11 +197,11 @@ mapping = {
     "/get/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
     "/set/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
-    "/get/enable_overlay_small_log": {"status": True, "variable":controller.getEnableOverlaySmallLog},
+    "/get/overlay_small_log": {"status": True, "variable":controller.getOverlaySmallLog},
     "/set/enable_overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
     "/set/disable_overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
 
-    "/get/enable_send_message_to_vrc": {"status": True, "variable":controller.getEnableSendMessageToVrc},
+    "/get/send_message_to_vrc": {"status": True, "variable":controller.getSendMessageToVrc},
     "/set/enable_send_message_to_vrc": {"status": True, "variable":controller.setEnableSendMessageToVrc},
     "/set/disable_send_message_to_vrc": {"status": True, "variable":controller.setDisableSendMessageToVrc},
 
@@ -216,19 +217,18 @@ mapping = {
     "/get/received_message_format_with_t": {"status": True, "variable":controller.getReceivedMessageFormatWithT},
     "/set/received_message_format_with_t": {"status": True, "variable":controller.setReceivedMessageFormatWithT},
 
-    "/get/enable_speaker2chatbox_pass": {"status": True, "variable":controller.getEnableSpeaker2ChatboxPass},
-    "/set/enable_speaker2chatbox_pass": {"status": True, "variable":controller.setEnableSpeaker2ChatboxPass},
-    "/set/disable_speaker2chatbox_pass": {"status": True, "variable":controller.setDisableSpeaker2ChatboxPass},
+    "/get/speaker2chatbox_pass": {"status": True, "variable":controller.getSpeaker2ChatboxPass},
+    "/set/speaker2chatbox_pass": {"status": True, "variable":controller.setSpeaker2ChatboxPass},
 
-    "/get/enable_send_received_message_to_vrc": {"status": True, "variable":controller.getEnableSendReceivedMessageToVrc},
+    "/get/send_received_message_to_vrc": {"status": True, "variable":controller.getSendReceivedMessageToVrc},
     "/set/enable_send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
     "/set/disable_send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
 
-    "/get/enable_logger": {"status": True, "variable":controller.getEnableLogger},
+    "/get/logger": {"status": True, "variable":controller.getLogger},
     "/set/enable_logger": {"status": True, "variable":controller.setEnableLogger},
     "/set/disable_logger": {"status": True, "variable":controller.setDisableLogger},
 
-    "/get/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.getEnableVrcMicMuteSync},
+    "/get/vrc_mic_mute_sync": {"status": True, "variable":controller.getVrcMicMuteSync},
     "/set/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.setEnableVrcMicMuteSync},
     "/set/disable_vrc_mic_mute_sync": {"status": True, "variable":controller.setDisableVrcMicMuteSync},
 
@@ -250,9 +250,9 @@ mapping = {
     "/set/enable_transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
     "/set/disable_transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
 
-    "/run/send_messagebox": {"status": False, "variable":controller.sendMessageBox},
-    "/run/typing_messagebox": {"status": False, "variable":controller.typingMessageBox},
-    "/run/stop_typing_messagebox": {"status": False, "variable":controller.stopTypingMessageBox},
+    "/run/send_message_box": {"status": False, "variable":controller.sendMessageBox},
+    "/run/typing_message_box": {"status": False, "variable":controller.typingMessageBox},
+    "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
 
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
@@ -290,7 +290,7 @@ action_mapping = {
         "speaker":"/action/check_speaker_threshold_energy",
         "error_device":"/action/error_device",
     },
-    "/run/send_messagebox": {
+    "/run/send_message_box": {
         "error_translation_engine":"/action/error_translation_engine"
     },
     "/run/download_ctranslate2_weight": {
@@ -299,11 +299,11 @@ action_mapping = {
     "/run/download_whisper_weight": {
         "download":"/action/download_whisper_weight"
     },
-    "/set/enable_mic_auto_selection": {
-        "mic":"/set/choice_mic_host",
+    "/set/enable_auto_mic_select": {
+        "mic":"/set/selected_mic_host",
     },
-    "/set/enable_speaker_auto_selection": {
-        "speaker":"/set/choice_speaker_device",
+    "/set/enable_auto_speaker_select": {
+        "speaker":"/set/selected_speaker_device",
     }
 }
 
@@ -399,8 +399,8 @@ if __name__ == "__main__":
     controller.init({
         "download_ctranslate2": Action(action_mapping["/run/download_ctranslate2_weight"]).transmit,
         "download_whisper": Action(action_mapping["/run/download_whisper_weight"]).transmit,
-        "update_selected_mic_device": Action(action_mapping["/set/enable_mic_auto_selection"]).transmit,
-        "update_selected_speaker_device": Action(action_mapping["/set/enable_speaker_auto_selection"]).transmit,
+        "update_selected_mic_device": Action(action_mapping["/set/enable_auto_mic_select"]).transmit,
+        "update_selected_speaker_device": Action(action_mapping["/set/enable_auto_speaker_select"]).transmit,
     })
 
     # mappingのすべてのstatusをTrueにする
@@ -425,7 +425,7 @@ if __name__ == "__main__":
                 printLog("endpoint", endpoint)
 
                 match endpoint:
-                    case  "/run/send_messagebox":
+                    case  "/run/send_message_box":
                         # handleRequest("/set/enable_translation")
                         # handleRequest("/set/enable_convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
@@ -519,31 +519,31 @@ if __name__ == "__main__":
                         data = "Small"
                     case "/set/deepl_auth_key":
                         data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
-                    case "/set/choice_mic_host":
+                    case "/set/selected_mic_host":
                         data = "MME"
-                    case "/set/choice_mic_device":
+                    case "/set/selected_mic_device":
                         data = "マイク (Realtek High Definition Audio)"
-                    case "/set/input_mic_energy_threshold":
+                    case "/set/mic_energy_threshold":
                         data = 0.5
-                    case "/set/input_mic_record_timeout":
+                    case "/set/mic_record_timeout":
                         data = 1
-                    case "/set/input_mic_phrase_timeout":
+                    case "/set/mic_phrase_timeout":
                         data = 5
                     case "/set/input_set_mic_max_phrases":
                         data = 5
-                    case "/set/input_mic_word_filter":
+                    case "/set/mic_word_filter":
                         data = "test0, test1, test2"
-                    case "/del/input_mic_word_filter":
+                    case "/del/mic_word_filter":
                         data = "test1"
-                    case "/set/choice_speaker_device":
+                    case "/set/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
-                    case "/set/input_speaker_energy_threshold":
+                    case "/set/speaker_energy_threshold":
                         data = 0.5
-                    case "/set/input_speaker_record_timeout":
+                    case "/set/speaker_record_timeout":
                         data = 5
-                    case "/set/input_speaker_phrase_timeout":
+                    case "/set/speaker_phrase_timeout":
                         data = 5
-                    case "/set/input_speaker_max_phrases":
+                    case "/set/speaker_max_phrases":
                         data = 5
                     case "/set/whisper_weight_type":
                         data = "base"
@@ -577,15 +577,15 @@ if __name__ == "__main__":
                         data = "127.0.0.1"
                     case "/set/osc_port":
                         data = 8000
-                    case "/set/input_speaker_no_speech_prob":
+                    case "/set/speaker_no_speech_prob":
                         data = 0.5
-                    case "/set/input_speaker_avg_logprob":
+                    case "/set/speaker_avg_logprob":
                         data = 0.5
-                    case "/set/input_mic_no_speech_prob":
+                    case "/set/mic_no_speech_prob":
                         data = 0.5
-                    case "/set/input_mic_avg_logprob":
+                    case "/set/mic_avg_logprob":
                         data = 0.5
-                    case "/set/input_mic_max_phrases":
+                    case "/set/mic_max_phrases":
                         data = 5
                     case _:
                         data = None

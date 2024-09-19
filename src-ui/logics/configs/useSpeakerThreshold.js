@@ -7,24 +7,24 @@ export const useSpeakerThreshold = () => {
     const { updateEnableAutomaticSpeakerThreshold, currentEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
 
     const getSpeakerThreshold = () => {
-        asyncStdoutToPython("/config/input_speaker_energy_threshold");
+        asyncStdoutToPython("/get/speaker_energy_threshold");
     };
 
     const setSpeakerThreshold = (speaker_threshold) => {
-        asyncStdoutToPython("/controller/callback_set_speaker_energy_threshold", speaker_threshold);
+        asyncStdoutToPython("/set/speaker_energy_threshold", speaker_threshold);
     };
 
     const getEnableAutomaticSpeakerThreshold = () => {
         updateEnableAutomaticSpeakerThreshold(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/input_speaker_dynamic_energy_threshold");
+        asyncStdoutToPython("/get/speaker_dynamic_energy_threshold");
     };
 
     const toggleEnableAutomaticSpeakerThreshold = () => {
         updateEnableAutomaticSpeakerThreshold(() => new Promise(() => {}));
         if (currentEnableAutomaticSpeakerThreshold.data) {
-            asyncStdoutToPython("/controller/callback_disable_speaker_dynamic_energy_threshold");
+            asyncStdoutToPython("/set/disable_speaker_dynamic_energy_threshold");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_speaker_dynamic_energy_threshold");
+            asyncStdoutToPython("/set/enable_speaker_dynamic_energy_threshold");
         }
     };
 

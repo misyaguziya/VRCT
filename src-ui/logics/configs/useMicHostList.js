@@ -7,7 +7,7 @@ export const useMicHostList = () => {
 
     const getMicHostList = () => {
         updateMicHostList(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/list_mic_host");
+        asyncStdoutToPython("/get/list_mic_host");
     };
 
     return {
