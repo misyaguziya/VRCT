@@ -214,8 +214,8 @@ class Model:
 
     def getInputTranslate(self, message):
         translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_languages=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+        source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
         translations = []
         success_flags = []
@@ -238,9 +238,9 @@ class Model:
 
     def getOutputTranslate(self, message):
         translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_country=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]
+        source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_country=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]
 
         translation, success_flag = self.getTranslate(
             translator_name,
@@ -424,7 +424,7 @@ class Model:
         return result
 
     def startMicTranscript(self, fnc):
-        if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_MIC_AUTO_SELECTION is True:
             default_device = device_manager.getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
@@ -468,8 +468,8 @@ class Model:
             try:
                 res = self.mic_transcriber.transcribeAudioQueue(
                     self.mic_audio_queue,
-                    config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
-                    config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
                     config.INPUT_MIC_AVG_LOGPROB,
                     config.INPUT_MIC_NO_SPEECH_PROB
                 )
@@ -558,7 +558,7 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_mic_energy_fnc = fnc
 
-        if config.ENABLE_MIC_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_MIC_AUTO_SELECTION is True:
             default_device = device_manager.getDefaultInputDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
@@ -600,7 +600,7 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
-        if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_SPEAKER_AUTO_SELECTION is True:
             default_device = device_manager.getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
@@ -641,8 +641,8 @@ class Model:
             try:
                 res = self.speaker_transcriber.transcribeAudioQueue(
                     speaker_audio_queue,
-                    config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
-                    config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
+                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
+                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
                     config.INPUT_SPEAKER_AVG_LOGPROB,
                     config.INPUT_SPEAKER_NO_SPEECH_PROB
                 )
@@ -692,7 +692,7 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_speaker_energy_fnc = fnc
 
-        if config.ENABLE_SPEAKER_AUTOMATIC_SELECTION is True:
+        if config.ENABLE_SPEAKER_AUTO_SELECTION is True:
             default_device = device_manager.getDefaultOutputDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
@@ -732,8 +732,8 @@ class Model:
             self.speaker_energy_recorder = None
 
     def createOverlayImageShort(self, message, translation):
-        your_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         ui_type = config.OVERLAY_UI_TYPE
         self.pre_overlay_message = {
             "message" : message,
