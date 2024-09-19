@@ -398,7 +398,7 @@ if __name__ == "__main__":
     for key in controller_mapping.keys():
         controller_mapping[key]["status"] = True
 
-    process = "test_all"
+    process = "main"
     match process:
         case "main":
             main.loop()
