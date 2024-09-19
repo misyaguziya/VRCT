@@ -466,15 +466,17 @@ def setTargetLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
 
 def swapYourLanguageAndTargetLanguage(*args, **kwargs) -> dict:
     printLog("swapYourLanguageAndTargetLanguage")
-    your_language = config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
-    your_language_primary = your_language["primary"]
-    target_language = config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-    target_language_primary = target_language["primary"]
+    your_languages = config.SELECTED_TAB_YOUR_LANGUAGES
+    your_language_primary = your_languages[config.SELECTED_TAB_NO]["primary"]
 
-    your_language["primary"] = target_language_primary
-    target_language["primary"] = your_language_primary
-    setYourLanguageAndCountry(your_language)
-    setTargetLanguageAndCountry(target_language)
+    target_languages = config.SELECTED_TAB_TARGET_LANGUAGES
+    target_language_primary = target_languages[config.SELECTED_TAB_NO]["primary"]
+
+    your_languages[config.SELECTED_TAB_NO]["primary"] = target_language_primary
+    target_languages[config.SELECTED_TAB_NO]["primary"] = your_language_primary
+
+    setYourLanguageAndCountry(your_languages)
+    setTargetLanguageAndCountry(target_languages)
     return {
         "status":200,
         "result":{

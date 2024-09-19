@@ -398,7 +398,7 @@ if __name__ == "__main__":
     for key in controller_mapping.keys():
         controller_mapping[key]["status"] = True
 
-    process = "main"
+    process = "test_all"
     match process:
         case "main":
             main.loop()
@@ -425,29 +425,77 @@ if __name__ == "__main__":
                         # handleControllerRequest("/controller/callback_enable_translation")
                         # handleControllerRequest("/controller/callback_enable_convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
-                    case "/controller/callback_selected_translation_engine":
-                        data = "DeepL"
+                    case "/controller/callback_set_translation_engines":
+                        data = {
+                            "1":"CTranslate2",
+                            "2":"CTranslate2",
+                            "3":"CTranslate2",
+                        }
                     case "/controller/set_your_language_and_country":
                         data = {
-                            "primary": {
+                            "1":{
+                                "primary":{
                                 "language": "English",
                                 "country": "Hong Kong"
-                            }
+                                },
+                            },
+                            "2":{
+                                "primary":{
+                                    "language":"Japanese",
+                                    "country":"Japan"
+                                },
+                            },
+                            "3":{
+                                "primary":{
+                                    "language":"Japanese",
+                                    "country":"Japan"
+                                },
+                            },
                         }
                     case "/controller/set_target_language_and_country":
-                        data = {
-                            "primary": {
-                                "language": "Japanese",
-                                "country": "Japan"
+                        data ={
+                            "1":{
+                                "primary": {
+                                    "language": "Japanese",
+                                    "country": "Japan"
+                                },
+                                "secondary": {
+                                    "language": "English",
+                                    "country": "United States"
+                                },
+                                "tertiary": {
+                                    "language": "Chinese Simplified",
+                                    "country": "China"
+                                }
                             },
-                            "secondary": {
-                                "language": "English",
-                                "country": "United States"
+                            "2":{
+                                "primary":{
+                                    "language":"English",
+                                    "country":"United States",
+                                },
+                                "secondary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                                "tertiary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
                             },
-                            "tertiary": {
-                                "language": "Chinese Simplified",
-                                "country": "China"
-                            }
+                            "3":{
+                                "primary":{
+                                    "language":"English",
+                                    "country":"United States",
+                                },
+                                "secondary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                                "tertiary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                            },
                         }
                     case "/controller/callback_set_transparency":
                         data = 0.5
