@@ -229,25 +229,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SELECTED_TAB_YOUR_TRANSLATOR_ENGINES')
-    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self):
-        return self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
+    @json_serializable('SELECTED_TRANSLATOR_ENGINES')
+    def SELECTED_TRANSLATOR_ENGINES(self):
+        return self._SELECTED_TRANSLATOR_ENGINES
 
-    @SELECTED_TAB_YOUR_TRANSLATOR_ENGINES.setter
-    def SELECTED_TAB_YOUR_TRANSLATOR_ENGINES(self, value):
+    @SELECTED_TRANSLATOR_ENGINES.setter
+    def SELECTED_TRANSLATOR_ENGINES(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('SELECTED_TAB_TARGET_TRANSLATOR_ENGINES')
-    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self):
-        return self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
-
-    @SELECTED_TAB_TARGET_TRANSLATOR_ENGINES.setter
-    def SELECTED_TAB_TARGET_TRANSLATOR_ENGINES(self, value):
-        if isinstance(value, dict):
-            self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = value
+            self._SELECTED_TRANSLATOR_ENGINES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1021,12 +1010,7 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
-        self._SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = {
-            "1":"CTranslate2",
-            "2":"CTranslate2",
-            "3":"CTranslate2",
-        }
-        self._SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = {
+        self._SELECTED_TRANSLATOR_ENGINES= {
             "1":"CTranslate2",
             "2":"CTranslate2",
             "3":"CTranslate2",

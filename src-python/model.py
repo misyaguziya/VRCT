@@ -213,7 +213,7 @@ class Model:
         return translation, success_flag
 
     def getInputTranslate(self, message):
-        translator_name=config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
         source_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_languages=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
@@ -237,7 +237,7 @@ class Model:
         return translations, success_flags
 
     def getOutputTranslate(self, message):
-        translator_name=config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
         source_language=config.SELECTED_TAB_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_country=config.SELECTED_TAB_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]

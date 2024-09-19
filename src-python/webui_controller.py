@@ -81,8 +81,7 @@ def messageFormatter(format_type:str, translation:list, message:list):
     return osc_message
 
 def changeToCTranslate2Process():
-    config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
-    config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+    config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
 
 # func transcription send message
 class MicMessage:
@@ -447,22 +446,11 @@ def getTranslationEngines(*args, **kwargs) -> dict:
     return {"status":200, "result":engines}
 
 def updateTranslationEngineAndEngineList():
-    engine = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+    engine = config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
     engines = getTranslationEngines()["result"]
     if engine not in engines:
         engine = engines[0]
-    config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
-    config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
-
-def setYourTranslateEngine(select):
-    engines = config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES
-    engines[config.SELECTED_TAB_NO] = select
-    config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES = engines
-
-def setTargetTranslateEngine(select):
-    engines = config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
-    engines[config.SELECTED_TAB_NO] = select
-    config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES = engines
+    config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
 
 def setYourLanguageAndCountry(select:dict, *args, **kwargs) -> dict:
     printLog("setYourLanguageAndCountry", select)
@@ -501,17 +489,10 @@ def callbackSelectedLanguagePresetTab(selected_tab_no:str, *args, **kwargs) -> d
     updateTranslationEngineAndEngineList()
     return {"status":200, "result":config.SELECTED_TAB_NO}
 
-def callbackSelectedTranslationEngine(selected_translation_engine:str, *args, **kwargs) -> dict:
-    printLog("callbackSelectedTranslationEngine", selected_translation_engine)
-    setYourTranslateEngine(selected_translation_engine)
-    setTargetTranslateEngine(selected_translation_engine)
-    return {
-        "status":200,
-        "result":{
-            "your":config.SELECTED_TAB_YOUR_TRANSLATOR_ENGINES,
-            "target":config.SELECTED_TAB_TARGET_TRANSLATOR_ENGINES
-            }
-        }
+def callbackSetSelectedTranslationEngines(engines:dict, *args, **kwargs) -> dict:
+    printLog("callbackSelectedTranslationEngine", engines)
+    config.SELECTED_TRANSLATOR_ENGINES = engines
+    return {"status":200,"result":{config.SELECTED_TRANSLATOR_ENGINES}}
 
 # command func
 def callbackEnableTranslation(*args, **kwargs) -> dict:
