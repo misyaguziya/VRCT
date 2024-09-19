@@ -240,43 +240,43 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SELECTED_TAB_YOUR_LANGUAGES')
-    def SELECTED_TAB_YOUR_LANGUAGES(self):
-        return self._SELECTED_TAB_YOUR_LANGUAGES
+    @json_serializable('SELECTED_YOUR_LANGUAGES')
+    def SELECTED_YOUR_LANGUAGES(self):
+        return self._SELECTED_YOUR_LANGUAGES
 
-    @SELECTED_TAB_YOUR_LANGUAGES.setter
-    def SELECTED_TAB_YOUR_LANGUAGES(self, value):
+    @SELECTED_YOUR_LANGUAGES.setter
+    def SELECTED_YOUR_LANGUAGES(self, value):
         try:
             if isinstance(value, dict):
-                value_old = self.SELECTED_TAB_YOUR_LANGUAGES
+                value_old = self.SELECTED_YOUR_LANGUAGES
                 for k0, v0 in value.items():
                     for k1, v1 in v0.items():
                         language = v1["language"]
                         country = v1["country"]
                         if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                             value[k0][k1] = value_old[k0][k1]
-                self._SELECTED_TAB_YOUR_LANGUAGES = value
+                self._SELECTED_YOUR_LANGUAGES = value
         except Exception:
             pass
         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SELECTED_TAB_TARGET_LANGUAGES')
-    def SELECTED_TAB_TARGET_LANGUAGES(self):
-        return self._SELECTED_TAB_TARGET_LANGUAGES
+    @json_serializable('SELECTED_TARGET_LANGUAGES')
+    def SELECTED_TARGET_LANGUAGES(self):
+        return self._SELECTED_TARGET_LANGUAGES
 
-    @SELECTED_TAB_TARGET_LANGUAGES.setter
-    def SELECTED_TAB_TARGET_LANGUAGES(self, value):
+    @SELECTED_TARGET_LANGUAGES.setter
+    def SELECTED_TARGET_LANGUAGES(self, value):
         try:
             if isinstance(value, dict):
-                value_old = self.SELECTED_TAB_TARGET_LANGUAGES
+                value_old = self.SELECTED_TARGET_LANGUAGES
                 for k0, v0 in value.items():
                     for k1, v1 in v0.items():
                         language = v1["language"]
                         country = v1["country"]
                         if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
                             value[k0][k1] = value_old[k0][k1]
-                self._SELECTED_TAB_TARGET_LANGUAGES = value
+                self._SELECTED_TARGET_LANGUAGES = value
         except Exception:
             pass
         saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
@@ -326,14 +326,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
-    def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
-        return self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE
+    @json_serializable('ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
+    def ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
+        return self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE
 
-    @IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
-    def IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
+    @ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
+    def ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
         if isinstance(value, bool):
-            self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
+            self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     ## Config Window
@@ -442,14 +442,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
-    @json_serializable('ENABLE_MIC_AUTOMATIC_SELECTION')
-    def ENABLE_MIC_AUTOMATIC_SELECTION(self):
-        return self._ENABLE_MIC_AUTOMATIC_SELECTION
+    @json_serializable('ENABLE_MIC_AUTO_SELECTION')
+    def ENABLE_MIC_AUTO_SELECTION(self):
+        return self._ENABLE_MIC_AUTO_SELECTION
 
-    @ENABLE_MIC_AUTOMATIC_SELECTION.setter
-    def ENABLE_MIC_AUTOMATIC_SELECTION(self, value):
+    @ENABLE_MIC_AUTO_SELECTION.setter
+    def ENABLE_MIC_AUTO_SELECTION(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MIC_AUTOMATIC_SELECTION = value
+            self._ENABLE_MIC_AUTO_SELECTION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -563,14 +563,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_SPEAKER_AUTOMATIC_SELECTION')
-    def ENABLE_SPEAKER_AUTOMATIC_SELECTION(self):
-        return self._ENABLE_SPEAKER_AUTOMATIC_SELECTION
+    @json_serializable('ENABLE_SPEAKER_AUTO_SELECTION')
+    def ENABLE_SPEAKER_AUTO_SELECTION(self):
+        return self._ENABLE_SPEAKER_AUTO_SELECTION
 
-    @ENABLE_SPEAKER_AUTOMATIC_SELECTION.setter
-    def ENABLE_SPEAKER_AUTOMATIC_SELECTION(self, value):
+    @ENABLE_SPEAKER_AUTO_SELECTION.setter
+    def ENABLE_SPEAKER_AUTO_SELECTION(self, value):
         if isinstance(value, bool):
-            self._ENABLE_SPEAKER_AUTOMATIC_SELECTION = value
+            self._ENABLE_SPEAKER_AUTO_SELECTION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1015,7 +1015,7 @@ class Config:
             "2":"CTranslate2",
             "3":"CTranslate2",
         }
-        self._SELECTED_TAB_YOUR_LANGUAGES = {
+        self._SELECTED_YOUR_LANGUAGES = {
             "1":{
                 "primary":{
                     "language":"Japanese",
@@ -1035,7 +1035,7 @@ class Config:
                 },
             },
         }
-        self._SELECTED_TAB_TARGET_LANGUAGES = {
+        self._SELECTED_TARGET_LANGUAGES = {
             "1":{
                 "primary":{
                     "language":"English",
@@ -1083,7 +1083,7 @@ class Config:
         self._ENABLE_MULTI_LANGUAGE_TRANSLATION = False
         self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI = False
         self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = False
-        self._IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
         self._TRANSPARENCY = 100
@@ -1100,7 +1100,7 @@ class Config:
             "width": "870",
             "height": "654",
         }
-        self._ENABLE_MIC_AUTOMATIC_SELECTION = True
+        self._ENABLE_MIC_AUTO_SELECTION = True
         self._CHOICE_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
         self._CHOICE_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
         self._INPUT_MIC_ENERGY_THRESHOLD = 300
@@ -1111,7 +1111,7 @@ class Config:
         self._INPUT_MIC_WORD_FILTER = []
         self._INPUT_MIC_AVG_LOGPROB=-0.8
         self._INPUT_MIC_NO_SPEECH_PROB=0.6
-        self._ENABLE_SPEAKER_AUTOMATIC_SELECTION = True
+        self._ENABLE_SPEAKER_AUTO_SELECTION = True
         self._CHOICE_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
         self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
         self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False

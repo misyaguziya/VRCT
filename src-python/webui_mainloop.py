@@ -1,251 +1,309 @@
 import sys
 import json
 import time
-from config import config
 from threading import Thread
 from queue import Queue
 import webui_controller as controller
 from utils import printLog, printResponse, encodeBase64
 
-config_mapping = {
-    "/config/version": {"status": True, "variable":"VERSION"},
-    "/config/transparency_range": {"status": True, "variable":"TRANSPARENCY_RANGE"},
-    "/config/appearance_theme_list": {"status": True, "variable":"APPEARANCE_THEME_LIST"},
-    "/config/ui_scaling_list": {"status": True, "variable":"UI_SCALING_LIST"},
-    "/config/textbox_ui_scaling_range": {"status": True, "variable":"TEXTBOX_UI_SCALING_RANGE"},
-    "/config/message_box_ratio_range": {"status": True, "variable":"MESSAGE_BOX_RATIO_RANGE"},
-    "/config/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":"SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT"},
-    "/config/selectable_whisper_weight_type_dict": {"status": True, "variable":"SELECTABLE_WHISPER_WEIGHT_TYPE_DICT"},
-    "/config/max_mic_energy_threshold": {"status": True, "variable":"MAX_MIC_ENERGY_THRESHOLD"},
-    "/config/max_speaker_energy_threshold": {"status": True, "variable":"MAX_SPEAKER_ENERGY_THRESHOLD"},
-    # "/config/enable_translation": {"status": True, "variable":"ENABLE_TRANSLATION"},
-    # "/config/enable_transcription_send": {"status": True, "variable":"ENABLE_TRANSCRIPTION_SEND"},
-    # "/config/enable_transcription_receive": {"status": True, "variable":"ENABLE_TRANSCRIPTION_RECEIVE"},
-    # "/config/enable_foreground": {"status": True, "variable":"ENABLE_FOREGROUND"},
-    # "/config/is_reset_button_displayed_for_translation": {"status": True, "variable":"IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION"},
-    # "/config/is_reset_button_displayed_for_whisper": {"status": True, "variable":"IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER"},
-    "/config/selected_tab_no": {"status": True, "variable":"SELECTED_TAB_NO"},
-    "/config/selected_translator_engines": {"status": False, "variable":"SELECTED_TRANSLATOR_ENGINES"},
-    "/config/selected_tab_your_languages": {"status": True, "variable":"SELECTED_TAB_YOUR_LANGUAGES"},
-    "/config/selected_tab_target_languages": {"status": True, "variable":"SELECTED_TAB_TARGET_LANGUAGES"},
-    "/config/selected_transcription_engine": {"status": False, "variable":"SELECTED_TRANSCRIPTION_ENGINE"},
-    "/config/enable_multi_translation": {"status": True, "variable":"ENABLE_MULTI_LANGUAGE_TRANSLATION"},
-    "/config/enable_convert_message_to_romaji": {"status": True, "variable":"ENABLE_CONVERT_MESSAGE_TO_ROMAJI"},
-    "/config/enable_convert_message_to_hiragana": {"status": True, "variable":"ENABLE_CONVERT_MESSAGE_TO_HIRAGANA"},
-    "/config/is_main_window_sidebar_compact_mode": {"status": True, "variable":"IS_MAIN_WINDOW_SIDEBAR_COMPACT_MODE"},
-    "/config/transparency": {"status": True, "variable":"TRANSPARENCY"},
-    "/config/appearance_theme": {"status": True, "variable":"APPEARANCE_THEME"},
-    "/config/ui_scaling": {"status": True, "variable":"UI_SCALING"},
-    "/config/textbox_ui_scaling": {"status": True, "variable":"TEXTBOX_UI_SCALING"},
-    "/config/message_box_ratio": {"status": True, "variable":"MESSAGE_BOX_RATIO"},
-    "/config/font_family": {"status": True, "variable":"FONT_FAMILY"},
-    "/config/ui_language": {"status": True, "variable":"UI_LANGUAGE"},
-    "/config/enable_restore_main_window_geometry": {"status": True, "variable":"ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY"},
-    "/config/main_window_geometry": {"status": True, "variable":"MAIN_WINDOW_GEOMETRY"},
-    "/config/enable_mic_automatic_selection": {"status": True, "variable":"ENABLE_MIC_AUTOMATIC_SELECTION"},
-    "/config/choice_mic_host": {"status": True, "variable":"CHOICE_MIC_HOST"},
-    "/config/choice_mic_device": {"status": True, "variable":"CHOICE_MIC_DEVICE"},
-    "/config/input_mic_energy_threshold": {"status": True, "variable":"INPUT_MIC_ENERGY_THRESHOLD"},
-    "/config/input_mic_dynamic_energy_threshold": {"status": True, "variable":"INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD"},
-    "/config/input_mic_record_timeout": {"status": True, "variable":"INPUT_MIC_RECORD_TIMEOUT"},
-    "/config/input_mic_phrase_timeout": {"status": True, "variable":"INPUT_MIC_PHRASE_TIMEOUT"},
-    "/config/input_mic_max_phrases": {"status": True, "variable":"INPUT_MIC_MAX_PHRASES"},
-    "/config/input_mic_word_filter": {"status": True, "variable":"INPUT_MIC_WORD_FILTER"},
-    "/config/input_mic_avg_logprob": {"status": True, "variable":"INPUT_MIC_AVG_LOGPROB"},
-    "/config/input_mic_no_speech_prob": {"status": True, "variable":"INPUT_MIC_NO_SPEECH_PROB"},
-    "/config/enable_speaker_automatic_selection": {"status": True, "variable":"ENABLE_SPEAKER_AUTOMATIC_SELECTION"},
-    "/config/choice_speaker_device": {"status": True, "variable":"CHOICE_SPEAKER_DEVICE"},
-    "/config/input_speaker_energy_threshold": {"status": True, "variable":"INPUT_SPEAKER_ENERGY_THRESHOLD"},
-    "/config/input_speaker_dynamic_energy_threshold": {"status": True, "variable":"INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD"},
-    "/config/input_speaker_record_timeout": {"status": True, "variable":"INPUT_SPEAKER_RECORD_TIMEOUT"},
-    "/config/input_speaker_phrase_timeout": {"status": True, "variable":"INPUT_SPEAKER_PHRASE_TIMEOUT"},
-    "/config/input_speaker_max_phrases": {"status": True, "variable":"INPUT_SPEAKER_MAX_PHRASES"},
-    "/config/input_speaker_avg_logprob": {"status": True, "variable":"INPUT_SPEAKER_AVG_LOGPROB"},
-    "/config/input_speaker_no_speech_prob": {"status": True, "variable":"INPUT_SPEAKER_NO_SPEECH_PROB"},
-    "/config/osc_ip_address": {"status": True, "variable":"OSC_IP_ADDRESS"},
-    "/config/osc_port": {"status": True, "variable":"OSC_PORT"},
-    "/config/auth_keys": {"status": False, "variable":"AUTH_KEYS"},
-    "/config/use_translation_feature": {"status": True, "variable":"USE_TRANSLATION_FEATURE"},
-    "/config/use_whisper_feature": {"status": True, "variable":"USE_WHISPER_FEATURE"},
-    "/config/ctranslate2_weight_type": {"status": True, "variable":"CTRANSLATE2_WEIGHT_TYPE"},
-    "/config/whisper_weight_type": {"status": True, "variable":"WHISPER_WEIGHT_TYPE"},
-    "/config/enable_auto_clear_message_box": {"status": True, "variable":"ENABLE_AUTO_CLEAR_MESSAGE_BOX"},
-    "/config/enable_send_only_translated_messages": {"status": True, "variable":"ENABLE_SEND_ONLY_TRANSLATED_MESSAGES"},
-    "/config/send_message_button_type": {"status": True, "variable":"SEND_MESSAGE_BUTTON_TYPE"},
-    "/config/overlay_settings": {"status": True, "variable":"OVERLAY_SETTINGS"},
-    "/config/enable_overlay_small_log": {"status": True, "variable":"ENABLE_OVERLAY_SMALL_LOG"},
-    "/config/overlay_small_log_settings": {"status": True, "variable":"OVERLAY_SMALL_LOG_SETTINGS"},
-    "/config/overlay_ui_type": {"status": True, "variable":"OVERLAY_UI_TYPE"},
-    "/config/enable_send_message_to_vrc": {"status": True, "variable":"ENABLE_SEND_MESSAGE_TO_VRC"},
-    "/config/send_message_format": {"status": True, "variable":"SEND_MESSAGE_FORMAT"},
-    "/config/send_message_format_with_t": {"status": True, "variable":"SEND_MESSAGE_FORMAT_WITH_T"},
-    "/config/received_message_format": {"status": True, "variable":"RECEIVED_MESSAGE_FORMAT"},
-    "/config/received_message_format_with_t": {"status": True, "variable":"RECEIVED_MESSAGE_FORMAT_WITH_T"},
-    "/config/enable_speaker2chatbox_pass": {"status": True, "variable":"ENABLE_SPEAKER2CHATBOX_PASS"},
-    "/config/enable_send_received_message_to_vrc": {"status": True, "variable":"ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC"},
-    "/config/enable_logger": {"status": True, "variable":"ENABLE_LOGGER"},
-    "/config/enable_vrc_mic_mute_sync": {"status": True, "variable":"ENABLE_VRC_MIC_MUTE_SYNC"},
-}
+mapping = {
+    "/get/version": {"status": True, "variable":controller.getVersion},
+    "/get/transparency_range": {"status": True, "variable":controller.getTransparencyRange},
+    "/get/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
+    "/get/ui_scaling_list": {"status": True, "variable":controller.getUiScalingList},
+    "/get/textbox_ui_scaling_range": {"status": True, "variable":controller.getTextboxUiScalingRange},
+    "/get/message_box_ratio_range": {"status": True, "variable":controller.getMessageBoxRatioRange},
+    "/get/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
+    "/get/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperModelTypeDict},
+    "/get/max_mic_energy_threshold": {"status": True, "variable":controller.getMaxMicEnergyThreshold},
+    "/get/max_speaker_energy_threshold": {"status": True, "variable":controller.getMaxSpeakerEnergyThreshold},
 
-controller_mapping = {
-    "/controller/list_language_and_country": {"status": True, "variable":controller.getListLanguageAndCountry},
-    "/controller/list_mic_host": {"status": True, "variable":controller.getListInputHost},
-    "/controller/list_mic_device": {"status": True, "variable":controller.getListInputDevice},
-    "/controller/list_speaker_device": {"status": True, "variable":controller.getListOutputDevice},
-    # "/controller/callback_update_software": {"status": True, "variable":controller.callbackUpdateSoftware},
-    # "/controller/callback_restart_software": {"status": True, "variable":controller.callbackRestartSoftware},
-    "/controller/callback_filepath_logs": {"status": True, "variable":controller.callbackFilepathLogs},
-    "/controller/callback_filepath_config_file": {"status": True, "variable":controller.callbackFilepathConfigFile},
-    # "/controller/callback_enable_easter_egg": {"status": True, "variable":controller.callbackEnableEasterEgg},
-    "/controller/callback_open_config_window": {"status": True, "variable":controller.callbackOpenConfigWindow},
-    "/controller/callback_close_config_window": {"status": True, "variable":controller.callbackCloseConfigWindow},
-    "/controller/callback_enable_multi_language_translation": {"status": True, "variable":controller.callbackEnableMultiLanguageTranslation},
-    "/controller/callback_disable_multi_language_translation": {"status": True, "variable":controller.callbackDisableMultiLanguageTranslation},
-    "/controller/callback_enable_convert_message_to_romaji": {"status": True, "variable":controller.callbackEnableConvertMessageToRomaji},
-    "/controller/callback_disable_convert_message_to_romaji": {"status": True, "variable":controller.callbackDisableConvertMessageToRomaji},
-    "/controller/callback_enable_convert_message_to_hiragana": {"status": True, "variable":controller.callbackEnableConvertMessageToHiragana},
-    "/controller/callback_disable_convert_message_to_hiragana": {"status": True, "variable":controller.callbackDisableConvertMessageToHiragana},
-    "/controller/callback_enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.callbackEnableMainWindowSidebarCompactMode},
-    "/controller/callback_disable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.callbackDisableMainWindowSidebarCompactMode},
-    "/controller/callback_enable_translation": {"status": False, "variable":controller.callbackEnableTranslation},
-    "/controller/callback_disable_translation": {"status": False, "variable":controller.callbackDisableTranslation},
-    "/controller/callback_enable_transcription_send": {"status": False, "variable":controller.callbackEnableTranscriptionSend},
-    "/controller/callback_disable_transcription_send": {"status": False, "variable":controller.callbackDisableTranscriptionSend},
-    "/controller/callback_enable_transcription_receive": {"status": False, "variable":controller.callbackEnableTranscriptionReceive},
-    "/controller/callback_disable_transcription_receive": {"status": False, "variable":controller.callbackDisableTranscriptionReceive},
-    "/controller/callback_messagebox_send": {"status": False, "variable":controller.callbackMessageBoxSend},
-    "/controller/callback_messagebox_typing": {"status": False, "variable":controller.callbackMessageBoxTyping},
-    "/controller/callback_messagebox_typing_stop": {"status": False, "variable":controller.callbackMessageBoxTypingStop},
-    "/controller/callback_enable_foreground": {"status": True, "variable":controller.callbackEnableForeground},
-    "/controller/callback_disable_foreground": {"status": True, "variable":controller.callbackDisableForeground},
-    "/controller/set_your_language_and_country": {"status": True, "variable":controller.setYourLanguageAndCountry},
-    "/controller/set_target_language_and_country": {"status": True, "variable":controller.setTargetLanguageAndCountry},
-    "/controller/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
-    "/controller/callback_selected_language_preset_tab": {"status": True, "variable":controller.callbackSelectedLanguagePresetTab},
-    "/controller/list_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
-    "/controller/callback_set_translation_engines": {"status": True, "variable":controller.callbackSetSelectedTranslationEngines},
-    "/controller/callback_set_transparency": {"status": True, "variable":controller.callbackSetTransparency},
-    "/controller/callback_set_appearance": {"status": True, "variable":controller.callbackSetAppearance},
-    "/controller/callback_set_ui_scaling": {"status": True, "variable":controller.callbackSetUiScaling},
-    "/controller/callback_set_textbox_ui_scaling": {"status": True, "variable":controller.callbackSetTextboxUiScaling},
-    "/controller/callback_set_message_box_ratio": {"status": True, "variable":controller.callbackSetMessageBoxRatio},
-    "/controller/callback_set_font_family": {"status": True, "variable":controller.callbackSetFontFamily},
-    "/controller/callback_set_ui_language": {"status": True, "variable":controller.callbackSetUiLanguage},
-    "/controller/callback_enable_restore_main_window_geometry": {"status": True, "variable":controller.callbackEnableRestoreMainWindowGeometry},
-    "/controller/callback_disable_restore_main_window_geometry": {"status": True, "variable":controller.callbackDisableRestoreMainWindowGeometry},
-    "/controller/callback_enable_use_translation_feature": {"status": True, "variable":controller.callbackEnableUseTranslationFeature},
-    "/controller/callback_disable_use_translation_feature": {"status": True, "variable":controller.callbackDisableUseTranslationFeature},
-    "/controller/callback_set_ctranslate2_weight_type": {"status": True, "variable":controller.callbackSetCtranslate2WeightType},
-    "/controller/callback_download_ctranslate2_weight": {"status": True, "variable":controller.callbackDownloadCtranslate2Weight},
-    "/controller/callback_set_deepl_auth_key": {"status": True, "variable":controller.callbackSetDeeplAuthKey},
-    "/controller/callback_clear_deepl_auth_key": {"status": True, "variable":controller.callbackClearDeeplAuthKey},
-    "/controller/callback_enable_mic_automatic_selection": {"status": False, "variable":controller.callbackEnableMicAutomaticSelection},
-    "/controller/callback_disable_mic_automatic_selection": {"status": False, "variable":controller.callbackDisableMicAutomaticSelection},
-    "/controller/callback_set_mic_host": {"status": True, "variable":controller.callbackSetMicHost},
-    "/controller/callback_set_mic_device": {"status": True, "variable":controller.callbackSetMicDevice},
-    "/controller/callback_set_mic_energy_threshold": {"status": True, "variable":controller.callbackSetMicEnergyThreshold},
-    "/controller/callback_enable_mic_dynamic_energy_threshold": {"status": True, "variable":controller.callbackEnableMicDynamicEnergyThreshold},
-    "/controller/callback_disable_mic_dynamic_energy_threshold": {"status": True, "variable":controller.callbackDisableMicDynamicEnergyThreshold},
-    "/controller/callback_enable_check_mic_threshold": {"status": True, "variable":controller.callbackEnableCheckMicThreshold},
-    "/controller/callback_disable_check_mic_threshold": {"status": True, "variable":controller.callbackDisableCheckMicThreshold},
-    "/controller/callback_set_mic_record_timeout": {"status": True, "variable":controller.callbackSetMicRecordTimeout},
-    "/controller/callback_set_mic_phrase_timeout": {"status": True, "variable":controller.callbackSetMicPhraseTimeout},
-    "/controller/callback_set_mic_max_phrases": {"status": True, "variable":controller.callbackSetMicMaxPhrases},
-    "/controller/callback_set_mic_word_filter": {"status": False, "variable":controller.callbackSetMicWordFilter},
-    "/controller/callback_delete_mic_word_filter": {"status": False, "variable":controller.callbackDeleteMicWordFilter},
-    "/controller/callback_enable_speaker_automatic_selection": {"status": False, "variable":controller.callbackEnableSpeakerAutomaticSelection},
-    "/controller/callback_disable_speaker_automatic_selection": {"status": False, "variable":controller.callbackDisableSpeakerAutomaticSelection},
-    "/controller/callback_set_speaker_device": {"status": True, "variable":controller.callbackSetSpeakerDevice},
-    "/controller/callback_set_speaker_energy_threshold": {"status": True, "variable":controller.callbackSetSpeakerEnergyThreshold},
-    "/controller/callback_enable_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.callbackEnableSpeakerDynamicEnergyThreshold},
-    "/controller/callback_disable_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.callbackDisableSpeakerDynamicEnergyThreshold},
-    "/controller/callback_enable_check_speaker_threshold": {"status": True, "variable":controller.callbackEnableCheckSpeakerThreshold},
-    "/controller/callback_disable_check_speaker_threshold": {"status": True, "variable":controller.callbackDisableCheckSpeakerThreshold},
-    "/controller/callback_set_speaker_record_timeout": {"status": True, "variable":controller.callbackSetSpeakerRecordTimeout},
-    "/controller/callback_set_speaker_phrase_timeout": {"status": True, "variable":controller.callbackSetSpeakerPhraseTimeout},
-    "/controller/callback_set_speaker_max_phrases": {"status": True, "variable":controller.callbackSetSpeakerMaxPhrases},
-    "/controller/callback_enable_use_whisper_feature": {"status": True, "variable":controller.callbackEnableUseWhisperFeature},
-    "/controller/callback_disable_use_whisper_feature": {"status": True, "variable":controller.callbackDisableUseWhisperFeature},
-    "/controller/callback_set_whisper_weight_type": {"status": True, "variable":controller.callbackSetWhisperWeightType},
-    "/controller/callback_download_whisper_weight": {"status": True, "variable":controller.callbackDownloadWhisperWeight},
-    "/controller/callback_set_overlay_settings_opacity": {"status": True, "variable":controller.callbackSetOverlaySettingsOpacity},
-    "/controller/callback_set_overlay_settings_ui_scaling": {"status": True, "variable":controller.callbackSetOverlaySettingsUiScaling},
-    "/controller/callback_enable_overlay_small_log": {"status": True, "variable":controller.callbackEnableOverlaySmallLog},
-    "/controller/callback_disable_overlay_small_log": {"status": True, "variable":controller.callbackDisableOverlaySmallLog},
-    "/controller/callback_set_overlay_small_log_settings_x_pos": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsXPos},
-    "/controller/callback_set_overlay_small_log_settings_y_pos": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsYPos},
-    "/controller/callback_set_overlay_small_log_settings_z_pos": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsZPos},
-    "/controller/callback_set_overlay_small_log_settings_x_rotation": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsXRotation},
-    "/controller/callback_set_overlay_small_log_settings_y_rotation": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsYRotation},
-    "/controller/callback_set_overlay_small_log_settings_z_rotation": {"status": True, "variable":controller.callbackSetOverlaySmallLogSettingsZRotation},
-    "/controller/callback_enable_auto_clear_chatbox": {"status": True, "variable":controller.callbackEnableAutoClearMessageBox},
-    "/controller/callback_disable_auto_clear_chatbox": {"status": True, "variable":controller.callbackDisableAutoClearMessageBox},
-    "/controller/callback_enable_send_only_translated_messages": {"status": True, "variable":controller.callbackEnableSendOnlyTranslatedMessages},
-    "/controller/callback_disable_send_only_translated_messages": {"status": True, "variable":controller.callbackDisableSendOnlyTranslatedMessages},
-    "/controller/callback_set_send_message_button_type": {"status": True, "variable":controller.callbackSetSendMessageButtonType},
-    "/controller/callback_enable_auto_export_message_logs": {"status": True, "variable":controller.callbackEnableAutoExportMessageLogs},
-    "/controller/callback_disable_auto_export_message_logs": {"status": True, "variable":controller.callbackDisableAutoExportMessageLogs},
-    "/controller/callback_enable_vrc_mic_mute_sync": {"status": False, "variable":controller.callbackEnableVrcMicMuteSync},
-    "/controller/callback_disable_vrc_mic_mute_sync": {"status": False, "variable":controller.callbackDisableVrcMicMuteSync},
-    "/controller/callback_enable_send_message_to_vrc": {"status": True, "variable":controller.callbackEnableSendMessageToVrc},
-    "/controller/callback_disable_send_message_to_vrc": {"status": True, "variable":controller.callbackDisableSendMessageToVrc},
-    "/controller/callback_set_send_message_format": {"status": True, "variable":controller.callbackSetSendMessageFormat},
-    "/controller/callback_set_send_message_format_with_t": {"status": True, "variable":controller.callbackSetSendMessageFormatWithT},
-    "/controller/callback_set_received_message_format": {"status": True, "variable":controller.callbackSetReceivedMessageFormat},
-    "/controller/callback_set_received_message_format_with_t": {"status": True, "variable":controller.callbackSetReceivedMessageFormatWithT},
-    "/controller/callback_enable_send_received_message_to_vrc": {"status": True, "variable":controller.callbackEnableSendReceivedMessageToVrc},
-    "/controller/callback_disable_send_received_message_to_vrc": {"status": True, "variable":controller.callbackDisableSendReceivedMessageToVrc},
-    "/controller/callback_enable_logger": {"status": False, "variable":controller.callbackEnableLogger},
-    "/controller/callback_disable_logger": {"status": False, "variable":controller.callbackDisableLogger},
-    "/controller/callback_set_osc_ip_address": {"status": True, "variable":controller.callbackSetOscIpAddress},
-    "/controller/callback_set_osc_port": {"status": True, "variable":controller.callbackSetOscPort},
+    "/set/enable_translation": {"status": False, "variable":controller.setEnableTranslation},
+    "/set/disable_translation": {"status": False, "variable":controller.setDisableTranslation},
+
+    "/set/enable_foreground": {"status": True, "variable":controller.setEnableForeground},
+    "/set/disable_foreground": {"status": True, "variable":controller.setDisableForeground},
+
+    "/set/enable_config_window": {"status": True, "variable":controller.setEnableConfigWindow},
+    "/set/disable_config_window": {"status": True, "variable":controller.setDisableConfigWindow},
+
+    "/get/selected_tab_no": {"status": True, "variable":controller.getSelectedTabNo},
+    "/set/selected_tab_no": {"status": True, "variable":controller.setSelectedTabNo},
+
+    "/get/list_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
+    "/get/list_languages": {"status": True, "variable":controller.getListLanguageAndCountry},
+    "/get/list_mic_host": {"status": True, "variable":controller.getListInputHost},
+    "/get/list_mic_device": {"status": True, "variable":controller.getListInputDevice},
+    "/get/list_speaker_device": {"status": True, "variable":controller.getListOutputDevice},
+
+    "/get/selected_translator_engines": {"status": False, "variable":controller.getSelectedTranslatorEngines},
+    "/set/selected_translator_engines": {"status": True, "variable":controller.setSelectedTranslatorEngines},
+
+    "/get/selected_your_languages": {"status": True, "variable":controller.getSelectedYourLanguages},
+    "/set/selected_your_languages": {"status": True, "variable":controller.setSelectedYourLanguages},
+
+    "/get/selected_target_languages": {"status": True, "variable":controller.getSelectedTargetLanguages},
+    "/set/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
+
+    "/get/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
+
+    "/get/enable_multi_language_translation": {"status": True, "variable":controller.getEnableMultiLanguageTranslation},
+    "/set/enable_multi_language_translation": {"status": True, "variable":controller.setEnableMultiLanguageTranslation},
+    "/set/disable_multi_language_translation": {"status": True, "variable":controller.setDisableMultiLanguageTranslation},
+
+    "/get/enable_convert_message_to_romaji": {"status": True, "variable":controller.getEnableConvertMessageToRomaji},
+    "/set/enable_convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
+    "/set/disable_convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
+
+    "/get/enable_convert_message_to_hiragana": {"status": True, "variable":controller.getEnableConvertMessageToHiragana},
+    "/set/enable_convert_message_to_hiragana": {"status": True, "variable":controller.setEnableConvertMessageToHiragana},
+    "/set/disable_convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
+
+    "/get/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.getEnableMainWindowSidebarCompactMode},
+    "/set/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
+    "/set/disable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
+
+    "/get/transparency": {"status": True, "variable":controller.getTransparency},
+    "/set/transparency": {"status": True, "variable":controller.setTransparency},
+
+    "/get/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
+    "/set/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
+
+    "/get/ui_scaling": {"status": True, "variable":controller.getUiScaling},
+    "/set/ui_scaling": {"status": True, "variable":controller.setUiScaling},
+
+    "/get/textbox_ui_scaling": {"status": True, "variable":controller.getTextboxUiScaling},
+    "/set/textbox_ui_scaling": {"status": True, "variable":controller.setTextboxUiScaling},
+
+    "/get/message_box_ratio": {"status": True, "variable":controller.getMessageBoxRatio},
+    "/set/message_box_ratio": {"status": True, "variable":controller.setMessageBoxRatio},
+
+    "/get/font_family": {"status": True, "variable":controller.getFontFamily},
+    "/set/font_family": {"status": True, "variable":controller.setFontFamily},
+
+    "/get/ui_language": {"status": True, "variable":controller.getUiLanguage},
+    "/set/ui_language": {"status": True, "variable":controller.setUiLanguage},
+
+    "/get/enable_restore_main_window_geometry": {"status": True, "variable":controller.getEnableRestoreMainWindowGeometry},
+    "/set/enable_restore_main_window_geometry": {"status": True, "variable":controller.setEnableRestoreMainWindowGeometry},
+    "/set/disable_restore_main_window_geometry": {"status": True, "variable":controller.setDisableRestoreMainWindowGeometry},
+
+    "/get/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
+    "/set/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
+
+    "/get/enable_mic_auto_selection": {"status": True, "variable":controller.getEnableMicAutoSelection},
+    "/set/enable_mic_auto_selection": {"status": True, "variable":controller.setEnableMicAutoSelection},
+    "/set/disable_mic_auto_selection": {"status": True, "variable":controller.setDisableMicAutoSelection},
+
+    "/get/choice_mic_host": {"status": True, "variable":controller.getChoiceMicHost},
+    "/set/choice_mic_host": {"status": True, "variable":controller.setChoiceMicHost},
+
+    "/get/choice_mic_device": {"status": True, "variable":controller.getChoiceMicDevice},
+    "/set/choice_mic_device": {"status": True, "variable":controller.setChoiceMicDevice},
+
+    "/get/input_mic_energy_threshold": {"status": True, "variable":controller.getInputMicEnergyThreshold},
+    "/set/input_mic_energy_threshold": {"status": True, "variable":controller.setInputMicEnergyThreshold},
+
+    "/get/input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.getInputMicDynamicEnergyThreshold},
+    "/set/enable_input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableInputMicDynamicEnergyThreshold},
+    "/set/disable_input_mic_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableInputMicDynamicEnergyThreshold},
+
+    "/get/input_mic_record_timeout": {"status": True, "variable":controller.getInputMicRecordTimeout},
+    "/set/input_mic_record_timeout": {"status": True, "variable":controller.setInputMicRecordTimeout},
+
+    "/get/input_mic_phrase_timeout": {"status": True, "variable":controller.getInputMicPhraseTimeout},
+    "/set/input_mic_phrase_timeout": {"status": True, "variable":controller.setInputMicPhraseTimeout},
+
+    "/get/input_mic_max_phrases": {"status": True, "variable":controller.getInputMicMaxPhrases},
+    "/set/input_mic_max_phrases": {"status": True, "variable":controller.setInputMicMaxPhrases},
+
+    "/get/input_mic_word_filter": {"status": True, "variable":controller.getInputMicWordFilter},
+    "/set/input_mic_word_filter": {"status": True, "variable":controller.setInputMicWordFilter},
+    "/del/input_mic_word_filter": {"status": True, "variable":controller.delInputMicWordFilter},
+
+    "/get/input_mic_avg_logprob": {"status": True, "variable":controller.getInputMicAvgLogprob},
+    "/set/input_mic_avg_logprob": {"status": True, "variable":controller.setInputMicAvgLogprob},
+
+    "/get/input_mic_no_speech_prob": {"status": True, "variable":controller.getInputMicNoSpeechProb},
+    "/set/input_mic_no_speech_prob": {"status": True, "variable":controller.setInputMicNoSpeechProb},
+
+    "/set/enable_speaker_auto_selection": {"status": True, "variable":controller.setEnableSpeakerAutoSelection},
+    "/set/disable_speaker_auto_selection": {"status": True, "variable":controller.setDisableSpeakerAutoSelection},
+
+    "/get/choice_speaker_device": {"status": True, "variable":controller.getChoiceSpeakerDevice},
+    "/set/choice_speaker_device": {"status": True, "variable":controller.setChoiceSpeakerDevice},
+
+    "/get/input_speaker_energy_threshold": {"status": True, "variable":controller.getInputSpeakerEnergyThreshold},
+    "/set/input_speaker_energy_threshold": {"status": True, "variable":controller.setInputSpeakerEnergyThreshold},
+
+    "/get/input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.getInputSpeakerDynamicEnergyThreshold},
+    "/set/enable_input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setEnableInputSpeakerDynamicEnergyThreshold},
+    "/set/disable_input_speaker_dynamic_energy_threshold": {"status": True, "variable":controller.setDisableInputSpeakerDynamicEnergyThreshold},
+
+    "/get/input_speaker_record_timeout": {"status": True, "variable":controller.getInputSpeakerRecordTimeout},
+    "/set/input_speaker_record_timeout": {"status": True, "variable":controller.setInputSpeakerRecordTimeout},
+
+    "/get/input_speaker_phrase_timeout": {"status": True, "variable":controller.getInputSpeakerPhraseTimeout},
+    "/set/input_speaker_phrase_timeout": {"status": True, "variable":controller.setInputSpeakerPhraseTimeout},
+
+    "/get/input_speaker_max_phrases": {"status": True, "variable":controller.getInputSpeakerMaxPhrases},
+    "/set/input_speaker_max_phrases": {"status": True, "variable":controller.setInputSpeakerMaxPhrases},
+
+    "/get/input_speaker_avg_logprob": {"status": True, "variable":controller.getInputSpeakerAvgLogprob},
+    "/set/input_speaker_avg_logprob": {"status": True, "variable":controller.setInputSpeakerAvgLogprob},
+
+    "/get/input_speaker_no_speech_prob": {"status": True, "variable":controller.getInputSpeakerNoSpeechProb},
+    "/set/input_speaker_no_speech_prob": {"status": True, "variable":controller.setInputSpeakerNoSpeechProb},
+
+    "/get/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
+    "/set/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
+
+    "/get/osc_port": {"status": True, "variable":controller.getOscPort},
+    "/set/osc_port": {"status": True, "variable":controller.setOscPort},
+
+    "/get/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
+    "/set/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
+    "/del/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
+
+    "/get/use_translation_feature": {"status": True, "variable":controller.getUseTranslationFeature},
+    "/set/enable_use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
+    "/set/disable_use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
+
+    "/get/use_whisper_feature": {"status": True, "variable":controller.getUseWhisperFeature},
+    "/set/enable_use_whisper_feature": {"status": True, "variable":controller.setEnableUseWhisperFeature},
+    "/set/disable_use_whisper_feature": {"status": True, "variable":controller.setDisableUseWhisperFeature},
+
+    "/get/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
+    "/set/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
+
+    "/get/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
+    "/set/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+
+    "/get/enable_auto_clear_message_box": {"status": True, "variable":controller.getEnableAutoClearMessageBox},
+    "/set/enable_auto_clear_message_box": {"status": True, "variable":controller.setEnableAutoClearMessageBox},
+    "/set/disable_auto_clear_message_box": {"status": True, "variable":controller.setDisableAutoClearMessageBox},
+
+    "/get/enable_send_only_translated_messages": {"status": True, "variable":controller.getEnableSendOnlyTranslatedMessages},
+    "/set/enable_send_only_translated_messages": {"status": True, "variable":controller.setEnableSendOnlyTranslatedMessages},
+    "/set/disable_send_only_translated_messages": {"status": True, "variable":controller.setDisableSendOnlyTranslatedMessages},
+
+    "/get/send_message_button_type": {"status": True, "variable":controller.getSendMessageButtonType},
+    "/set/send_message_button_type": {"status": True, "variable":controller.setSendMessageButtonType},
+
+    "/get/overlay_settings": {"status": True, "variable":controller.getOverlaySettings},
+    "/set/overlay_settings": {"status": True, "variable":controller.setOverlaySettings},
+
+    "/get/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
+    "/set/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
+
+    "/get/enable_overlay_small_log": {"status": True, "variable":controller.getEnableOverlaySmallLog},
+    "/set/enable_overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
+    "/set/disable_overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
+
+    "/get/enable_send_message_to_vrc": {"status": True, "variable":controller.getEnableSendMessageToVrc},
+    "/set/enable_send_message_to_vrc": {"status": True, "variable":controller.setEnableSendMessageToVrc},
+    "/set/disable_send_message_to_vrc": {"status": True, "variable":controller.setDisableSendMessageToVrc},
+
+    "/get/send_message_format": {"status": True, "variable":controller.getSendMessageFormat},
+    "/set/send_message_format": {"status": True, "variable":controller.setSendMessageFormat},
+
+    "/get/send_message_format_with_t": {"status": True, "variable":controller.getSendMessageFormatWithT},
+    "/set/send_message_format_with_t": {"status": True, "variable":controller.setSendMessageFormatWithT},
+
+    "/get/received_message_format": {"status": True, "variable":controller.getReceivedMessageFormat},
+    "/set/received_message_format": {"status": True, "variable":controller.setReceivedMessageFormat},
+
+    "/get/received_message_format_with_t": {"status": True, "variable":controller.getReceivedMessageFormatWithT},
+    "/set/received_message_format_with_t": {"status": True, "variable":controller.setReceivedMessageFormatWithT},
+
+    "/get/enable_speaker2chatbox_pass": {"status": True, "variable":controller.getEnableSpeaker2ChatboxPass},
+    "/set/enable_speaker2chatbox_pass": {"status": True, "variable":controller.setEnableSpeaker2ChatboxPass},
+    "/set/disable_speaker2chatbox_pass": {"status": True, "variable":controller.setDisableSpeaker2ChatboxPass},
+
+    "/get/enable_send_received_message_to_vrc": {"status": True, "variable":controller.getEnableSendReceivedMessageToVrc},
+    "/set/enable_send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
+    "/set/disable_send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
+
+    "/get/enable_logger": {"status": True, "variable":controller.getEnableLogger},
+    "/set/enable_logger": {"status": True, "variable":controller.setEnableLogger},
+    "/set/disable_logger": {"status": True, "variable":controller.setDisableLogger},
+
+    "/get/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.getEnableVrcMicMuteSync},
+    "/set/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.setEnableVrcMicMuteSync},
+    "/set/disable_vrc_mic_mute_sync": {"status": True, "variable":controller.setDisableVrcMicMuteSync},
+
+    "/set/enable_check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
+    "/set/disable_check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
+
+    "/set/enable_check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
+    "/set/disable_check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
+
+    # "/run/update_software": {"status": True, "variable":controller.updateSoftware},
+    # "/run/restart_software": {"status": True, "variable":controller.restartSoftware},
+
+    "/run/open_filepath_logs": {"status": True, "variable":controller.openFilepathLogs},
+    "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
+
+    "/set/enable_transcription_send": {"status": False, "variable":controller.setEnableTranscriptionSend},
+    "/set/disable_transcription_send": {"status": False, "variable":controller.setDisableTranscriptionSend},
+
+    "/set/enable_transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
+    "/set/disable_transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
+
+    "/run/send_messagebox": {"status": False, "variable":controller.sendMessageBox},
+    "/run/typing_messagebox": {"status": False, "variable":controller.typingMessageBox},
+    "/run/stop_typing_messagebox": {"status": False, "variable":controller.stopTypingMessageBox},
+
+    "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
+    "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
+    "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 }
 
 action_mapping = {
-    "/controller/callback_update_software": {
+    "/run/update_software": {
         "download":"/action/download_software",
         "update":"/action/update_software"
     },
-    "/controller/callback_close_config_window": {
+    "/set/disable_config_window": {
         "mic":"/action/transcription_send_mic_message",
         "speaker":"/action/transcription_receive_speaker_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
         "word_filter":"/action/word_filter",
     },
-    "/controller/callback_enable_transcription_send": {
+    "/set/enable_transcription_send": {
         "mic":"/action/transcription_send_mic_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
         "word_filter":"/action/word_filter",
     },
-    "/controller/callback_enable_transcription_receive": {
+    "/set/enable_transcription_receive": {
         "speaker":"/action/transcription_receive_speaker_message",
         "error_device":"/action/error_device",
         "error_translation_engine":"/action/error_translation_engine",
     },
-    "/controller/callback_enable_check_mic_threshold": {
+    "/set/enable_check_mic_threshold": {
         "mic":"/action/check_mic_threshold_energy",
         "error_device":"/action/error_device",
     },
-    "/controller/callback_enable_check_speaker_threshold": {
+    "/set/enable_check_speaker_threshold": {
         "speaker":"/action/check_speaker_threshold_energy",
         "error_device":"/action/error_device",
     },
-    "/controller/callback_messagebox_send": {
+    "/run/send_messagebox": {
         "error_translation_engine":"/action/error_translation_engine"
     },
-    "/controller/callback_download_ctranslate2_weight": {
+    "/run/download_ctranslate2_weight": {
         "download":"/action/download_ctranslate2_weight"
     },
-    "/controller/callback_download_whisper_weight": {
+    "/run/download_whisper_weight": {
         "download":"/action/download_whisper_weight"
     },
-    "/controller/callback_enable_mic_automatic_selection": {
-        "mic":"/controller/callback_set_mic_host",
+    "/set/enable_mic_auto_selection": {
+        "mic":"/set/choice_mic_host",
     },
-    "/controller/callback_enable_speaker_automatic_selection": {
-        "speaker":"/controller/callback_set_speaker_device",
+    "/set/enable_speaker_auto_selection": {
+        "speaker":"/set/choice_speaker_device",
     }
 }
 
@@ -263,8 +321,7 @@ class Action:
 
 class Main:
     def __init__(self) -> None:
-        self.queue_config = Queue()
-        self.queue_controller = Queue()
+        self.queue = Queue()
 
     def receiver(self) -> None:
         while True:
@@ -276,35 +333,15 @@ class Main:
                 data = received_data.get("data", None)
                 data = encodeBase64(data) if data is not None else None
                 printLog(endpoint, {"receive_data":data})
-
-                match endpoint.split("/")[1]:
-                    case "config":
-                        self.queue_config.put(endpoint)
-                    case "controller":
-                        self.queue_controller.put((endpoint, data))
-                    case _:
-                        pass
+                self.queue.put((endpoint, data))
 
     def startReceiver(self) -> None:
         th_receiver = Thread(target=self.receiver)
         th_receiver.daemon = True
         th_receiver.start()
 
-    def handleConfigRequest(self, endpoint):
-        handler = config_mapping.get(endpoint)
-        if handler is None:
-            response = "Invalid endpoint"
-            status = 404
-        elif handler["status"] is False:
-            response = "Locked endpoint"
-            status = 423
-        else:
-            response = getattr(config, handler["variable"])
-            status = 200
-        return response, status
-
-    def handleControllerRequest(self, endpoint, data=None):
-        handler = controller_mapping.get(endpoint)
+    def handleRequest(self, endpoint, data=None):
+        handler = mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
             status = 404
@@ -325,12 +362,12 @@ class Main:
                 status = 500
         return result, status
 
-    def configHandler(self) -> None:
+    def handler(self) -> None:
         while True:
-            if not self.queue_config.empty():
-                endpoint = self.queue_config.get()
+            if not self.queue.empty():
                 try:
-                    result, status = self.handleConfigRequest(endpoint)
+                    endpoint, data = self.queue.get()
+                    result, status = self.handleRequest(endpoint, data)
                 except Exception as e:
                     import traceback
                     with open('error.log', 'a') as f:
@@ -339,41 +376,16 @@ class Main:
                     status = 500
 
                 if status == 423:
-                    self.queue_config.put(endpoint)
+                    self.queue.put((endpoint, data))
                 else:
                     printLog(endpoint, {"send_data":result})
                     printResponse(status, endpoint, result)
             time.sleep(0.1)
 
-    def startConfigHandler(self) -> None:
-        th_config = Thread(target=self.configHandler)
-        th_config.daemon = True
-        th_config.start()
-
-    def controllerHandler(self) -> None:
-        while True:
-            if not self.queue_controller.empty():
-                try:
-                    endpoint, data = self.queue_controller.get()
-                    result, status = self.handleControllerRequest(endpoint, data)
-                except Exception as e:
-                    import traceback
-                    with open('error.log', 'a') as f:
-                        traceback.print_exc(file=f)
-                    result = str(e)
-                    status = 500
-
-                if status == 423:
-                    self.queue_controller.put((endpoint, data))
-                else:
-                    printLog(endpoint, {"send_data":result})
-                    printResponse(status, endpoint, result)
-            time.sleep(0.1)
-
-    def startControllerHandler(self) -> None:
-        th_controller = Thread(target=self.controllerHandler)
-        th_controller.daemon = True
-        th_controller.start()
+    def startHandler(self) -> None:
+        th_handler = Thread(target=self.handler)
+        th_handler.daemon = True
+        th_handler.start()
 
     def loop(self) -> None:
         while True:
@@ -382,21 +394,18 @@ class Main:
 if __name__ == "__main__":
     main = Main()
     main.startReceiver()
-    main.startConfigHandler()
-    main.startControllerHandler()
+    main.startHandler()
 
     controller.init({
-        "download_ctranslate2": Action(action_mapping["/controller/callback_download_ctranslate2_weight"]).transmit,
-        "download_whisper": Action(action_mapping["/controller/callback_download_whisper_weight"]).transmit,
-        "update_selected_mic_device": Action(action_mapping["/controller/callback_enable_mic_automatic_selection"]).transmit,
-        "update_selected_speaker_device": Action(action_mapping["/controller/callback_enable_speaker_automatic_selection"]).transmit,
+        "download_ctranslate2": Action(action_mapping["/run/download_ctranslate2_weight"]).transmit,
+        "download_whisper": Action(action_mapping["/run/download_whisper_weight"]).transmit,
+        "update_selected_mic_device": Action(action_mapping["/set/enable_mic_auto_selection"]).transmit,
+        "update_selected_speaker_device": Action(action_mapping["/set/enable_speaker_auto_selection"]).transmit,
     })
 
     # mappingのすべてのstatusをTrueにする
-    for key in config_mapping.keys():
-        config_mapping[key]["status"] = True
-    for key in controller_mapping.keys():
-        controller_mapping[key]["status"] = True
+    for key in mapping.keys():
+        mapping[key]["status"] = True
 
     process = "main"
     match process:
@@ -406,32 +415,27 @@ if __name__ == "__main__":
         case "test":
             for _ in range(100):
                 time.sleep(0.5)
-                endpoint = "/controller/list_mic_host"
-                result, status = main.handleControllerRequest(endpoint)
+                endpoint = "/get/list_mic_host"
+                result, status = main.handleRequest(endpoint)
                 printResponse(status, endpoint, result)
 
         case "test_all":
             import time
-            for endpoint, value in config_mapping.items():
-                result, status = main.handleConfigRequest(endpoint)
-                printResponse(status, endpoint, result)
-                time.sleep(0.1)
-
-            for endpoint, value in controller_mapping.items():
+            for endpoint, value in mapping.items():
                 printLog("endpoint", endpoint)
 
                 match endpoint:
-                    case  "/controller/callback_messagebox_send":
-                        # handleControllerRequest("/controller/callback_enable_translation")
-                        # handleControllerRequest("/controller/callback_enable_convert_message_to_romaji")
+                    case  "/run/send_messagebox":
+                        # handleRequest("/set/enable_translation")
+                        # handleRequest("/set/enable_convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
-                    case "/controller/callback_set_translation_engines":
+                    case "/set/selected_translator_engines":
                         data = {
                             "1":"CTranslate2",
                             "2":"CTranslate2",
                             "3":"CTranslate2",
                         }
-                    case "/controller/set_your_language_and_country":
+                    case "/set/selected_your_languages":
                         data = {
                             "1":{
                                 "primary":{
@@ -452,7 +456,7 @@ if __name__ == "__main__":
                                 },
                             },
                         }
-                    case "/controller/set_target_language_and_country":
+                    case "/set/selected_target_languages":
                         data ={
                             "1":{
                                 "primary": {
@@ -497,85 +501,95 @@ if __name__ == "__main__":
                                 },
                             },
                         }
-                    case "/controller/callback_set_transparency":
+                    case "/set/transparency":
                         data = 0.5
-                    case "/controller/callback_set_appearance":
+                    case "/set/appearance":
                         data = "Dark"
-                    case "/controller/callback_set_ui_scaling":
+                    case "/set/ui_scaling":
                         data = 1.5
-                    case "/controller/callback_set_textbox_ui_scaling":
+                    case "/set/textbox_ui_scaling":
                         data = 1.5
-                    case "/controller/callback_set_message_box_ratio":
+                    case "/set/message_box_ratio":
                         data = 0.5
-                    case "/controller/callback_set_font_family":
+                    case "/set/font_family":
                         data = "Yu Gothic UI"
-                    case "/controller/callback_set_ui_language":
+                    case "/set/ui_language":
                         data = "ja"
-                    case "/controller/callback_set_ctranslate2_weight_type":
+                    case "/set/ctranslate2_weight_type":
                         data = "Small"
-                    case "/controller/callback_set_deepl_auth_key":
+                    case "/set/deepl_auth_key":
                         data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
-                    case "/controller/callback_set_mic_host":
+                    case "/set/choice_mic_host":
                         data = "MME"
-                    case "/controller/callback_set_mic_device":
+                    case "/set/choice_mic_device":
                         data = "マイク (Realtek High Definition Audio)"
-                    case "/controller/callback_set_mic_energy_threshold":
+                    case "/set/input_mic_energy_threshold":
                         data = 0.5
-                    case "/controller/callback_set_mic_record_timeout":
+                    case "/set/input_mic_record_timeout":
+                        data = 1
+                    case "/set/input_mic_phrase_timeout":
                         data = 5
-                    case "/controller/callback_set_mic_phrase_timeout":
+                    case "/set/input_set_mic_max_phrases":
                         data = 5
-                    case "/controller/callback_set_mic_max_phrases":
-                        data = 5
-                    case "/controller/callback_set_mic_word_filter":
+                    case "/set/input_mic_word_filter":
                         data = "test0, test1, test2"
-                    case "/controller/callback_delete_mic_word_filter":
+                    case "/del/input_mic_word_filter":
                         data = "test1"
-                    case "/controller/callback_set_speaker_device":
+                    case "/set/choice_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
-                    case "/controller/callback_set_speaker_energy_threshold":
+                    case "/set/input_speaker_energy_threshold":
                         data = 0.5
-                    case "/controller/callback_set_speaker_record_timeout":
+                    case "/set/input_speaker_record_timeout":
                         data = 5
-                    case "/controller/callback_set_speaker_phrase_timeout":
+                    case "/set/input_speaker_phrase_timeout":
                         data = 5
-                    case "/controller/callback_set_speaker_max_phrases":
+                    case "/set/input_speaker_max_phrases":
                         data = 5
-                    case "/controller/callback_set_whisper_weight_type":
+                    case "/set/whisper_weight_type":
                         data = "base"
-                    case "/controller/callback_set_overlay_settings_opacity":
-                        data = 0.5
-                    case "/controller/callback_set_overlay_settings_ui_scaling":
-                        data = 1.5
-                    case "/controller/callback_set_overlay_small_log_settings_x_pos":
-                        data = 0
-                    case "/controller/callback_set_overlay_small_log_settings_y_pos":
-                        data = 0
-                    case "/controller/callback_set_overlay_small_log_settings_z_pos":
-                        data = 0
-                    case "/controller/callback_set_overlay_small_log_settings_x_rotation":
-                        data = 0
-                    case "/controller/callback_set_overlay_small_log_settings_y_rotation":
-                        data = 0
-                    case "/controller/callback_set_overlay_small_log_settings_z_rotation":
-                        data = 0
-                    case "/controller/callback_set_send_message_button_type":
+                    case "/set/overlay_settings":
+                        data = {
+                            "opacity": 0.5,
+                            "ui_scaling": 1.5,
+                        }
+                    case "/set/overlay_small_log_settings":
+                        data = {
+                            "x_pos": 0,
+                            "y_pos": 0,
+                            "z_pos": 0,
+                            "x_rotation": 0,
+                            "y_rotation": 0,
+                            "z_rotation": 0,
+                            "display_duration": 5,
+                            "fadeout_duration": 0.5,
+                        }
+                    case "/set/send_message_button_type":
                         data = "show"
-                    case "/controller/callback_set_send_message_format":
+                    case "/set/send_message_format":
                         data = "[message]"
-                    case "/controller/callback_set_send_message_format_with_t":
+                    case "/set/send_message_format_with_t":
                         data = "[message]([translation])"
-                    case "/controller/callback_set_received_message_format":
+                    case "/set/received_message_format":
                         data = "[message]"
-                    case "/controller/callback_set_received_message_format_with_t":
+                    case "/set/received_message_format_with_t":
                         data = "[message]([translation])"
-                    case "/controller/callback_set_osc_ip_address":
+                    case "/set/osc_ip_address":
                         data = "127.0.0.1"
-                    case "/controller/callback_set_osc_port":
+                    case "/set/osc_port":
                         data = 8000
+                    case "/set/input_speaker_no_speech_prob":
+                        data = 0.5
+                    case "/set/input_speaker_avg_logprob":
+                        data = 0.5
+                    case "/set/input_mic_no_speech_prob":
+                        data = 0.5
+                    case "/set/input_mic_avg_logprob":
+                        data = 0.5
+                    case "/set/input_mic_max_phrases":
+                        data = 5
                     case _:
                         data = None
 
-                result, status = main.handleControllerRequest(endpoint, data)
+                result, status = main.handleRequest(endpoint, data)
                 printResponse(status, endpoint, result)
                 time.sleep(0.5)
