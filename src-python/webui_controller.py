@@ -40,8 +40,8 @@ class UpdateSelectedMicDevice:
         self.action = action
 
     def set(self, host, device) -> None:
-        config.CHOICE_MIC_HOST = host
-        config.CHOICE_MIC_DEVICE = device
+        config.SELECTED_MIC_HOST = host
+        config.SELECTED_MIC_DEVICE = device
         printLog("Update Host/Mic Device", f"{host}/{device}")
         self.action("mic", {
             "status":200,
@@ -53,7 +53,7 @@ class UpdateSelectedSpeakerDevice:
         self.action = action
 
     def set(self, device) -> None:
-        config.CHOICE_SPEAKER_DEVICE = device
+        config.SELECTED_SPEAKER_DEVICE = device
         printLog("Update Speaker Device", device)
         self.action("speaker", {
             "status":200,
@@ -132,13 +132,13 @@ class MicMessage:
                             }
                         })
 
-                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(translation[0])
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
-                if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-                    if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+                if config.SEND_MESSAGE_TO_VRC is True:
+                    if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                         if config.ENABLE_TRANSLATION is False:
                             osc_message = messageFormatter("SEND", "", [message])
                         else:
@@ -155,12 +155,12 @@ class MicMessage:
                         "transliteration":transliteration
                         }
                     })
-                if config.ENABLE_LOGGER is True:
+                if config.LOGGER is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
 
-                # if config.ENABLE_OVERLAY_SMALL_LOG is True:
+                # if config.OVERLAY_SMALL_LOG is True:
                 #     overlay_image = model.createOverlayImageShort(message, translation)
                 #     model.updateOverlay(overlay_image)
                 #     overlay_image = model.createOverlayImageLong("send", message, translation)
@@ -196,12 +196,12 @@ class SpeakerMessage:
                             }
                         })
 
-                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(message)
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.ENABLE_OVERLAY_SMALL_LOG is True:
+                if config.OVERLAY_SMALL_LOG is True:
                     if model.overlay.initialized is True:
                         overlay_image = model.createOverlayImageShort(message, translation)
                         model.updateOverlay(overlay_image)
@@ -211,7 +211,7 @@ class SpeakerMessage:
                 # ------------Speaker2Chatbox------------
                 if config.ENABLE_SPEAKER2CHATBOX is True:
                     # send OSC message
-                    if config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC is True:
+                    if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                         osc_message = messageFormatter("RECEIVED", translation, [message])
                         model.oscSendMessage(osc_message)
                 # ------------Speaker2Chatbox------------
@@ -225,7 +225,7 @@ class SpeakerMessage:
                         "transliteration":transliteration,
                         }
                     })
-                if config.ENABLE_LOGGER is True:
+                if config.LOGGER is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[RECEIVED] {message}{translation}")
@@ -263,13 +263,13 @@ class ChatMessage:
                             }
                         })
 
-                if config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI is True or config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(translation[0])
 
             # send OSC message
-            if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
-                if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES is True:
+            if config.SEND_MESSAGE_TO_VRC is True:
+                if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                     if config.ENABLE_TRANSLATION is False:
                         osc_message = messageFormatter("SEND", "", [message])
                     else:
@@ -278,14 +278,14 @@ class ChatMessage:
                     osc_message = messageFormatter("SEND", translation, [message])
                 model.oscSendMessage(osc_message)
 
-            # if config.ENABLE_OVERLAY_SMALL_LOG is True:
+            # if config.OVERLAY_SMALL_LOG is True:
             #     overlay_image = model.createOverlayImageShort(message, translation)
             #     model.updateOverlay(overlay_image)
             #     overlay_image = model.createOverlayImageLong("send", message, translation)
             #     model.updateOverlay(overlay_image)
 
             # update textbox message log (Sent)
-            if config.ENABLE_LOGGER is True:
+            if config.LOGGER is True:
                 if len(translation) > 0:
                     translation_text = " (" + "/".join(translation) + ")"
                 model.logger.info(f"[SENT] {message}{translation_text}")
@@ -394,7 +394,7 @@ def getTranslationEngines(*args, **kwargs) -> dict:
     engines = model.findTranslationEngines(
         config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
         config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-        config.ENABLE_MULTI_LANGUAGE_TRANSLATION,
+        config.MULTI_LANGUAGE_TRANSLATION,
         )
     return {"status":200, "result":engines}
 
@@ -437,49 +437,49 @@ def setSelectedTargetLanguages(select:dict, *args, **kwargs) -> dict:
 def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
-def getEnableMultiLanguageTranslation(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+def getMultiLanguageTranslation(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
 
 def setEnableMultiLanguageTranslation(*args, **kwargs) -> dict:
-    config.ENABLE_MULTI_LANGUAGE_TRANSLATION = True
-    return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+    config.MULTI_LANGUAGE_TRANSLATION = True
+    return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
 
 def setDisableMultiLanguageTranslation(*args, **kwargs) -> dict:
-    config.ENABLE_MULTI_LANGUAGE_TRANSLATION = False
-    return {"status":200, "result":config.ENABLE_MULTI_LANGUAGE_TRANSLATION}
+    config.MULTI_LANGUAGE_TRANSLATION = False
+    return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
 
-def getEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI}
+def getConvertMessageToRomaji(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
 def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
-    config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI = True
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI}
+    config.CONVERT_MESSAGE_TO_ROMAJI = True
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
 def setDisableConvertMessageToRomaji(*args, **kwargs) -> dict:
-    config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI = False
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_ROMAJI}
+    config.CONVERT_MESSAGE_TO_ROMAJI = False
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
-def getEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA}
+def getConvertMessageToHiragana(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
 def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
-    config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = True
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA}
+    config.CONVERT_MESSAGE_TO_HIRAGANA = True
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
 def setDisableConvertMessageToHiragana(*args, **kwargs) -> dict:
-    config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = False
-    return {"status":200, "result":config.ENABLE_CONVERT_MESSAGE_TO_HIRAGANA}
+    config.CONVERT_MESSAGE_TO_HIRAGANA = False
+    return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
-def getEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
+def getMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 def setEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-    config.ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
-    return {"status":200, "result":config.ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
+    config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+    return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 def setDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-    config.ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
-    return {"status":200, "result":config.ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
+    config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+    return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
 def getTransparency(*args, **kwargs) -> dict:
     return {"status":200, "result":config.TRANSPARENCY}
@@ -530,16 +530,16 @@ def setUiLanguage(data, *args, **kwargs) -> dict:
     config.UI_LANGUAGE = data
     return {"status":200, "result":config.UI_LANGUAGE}
 
-def getEnableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
+def getRestoreMainWindowGeometry(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
 
 def setEnableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
-    return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
+    config.RESTORE_MAIN_WINDOW_GEOMETRY = True
+    return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
 
 def setDisableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-    config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = False
-    return {"status":200, "result":config.ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY}
+    config.RESTORE_MAIN_WINDOW_GEOMETRY = False
+    return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
 
 def getMainWindowGeometry(*args, **kwargs) -> dict:
     return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
@@ -548,279 +548,278 @@ def setMainWindowGeometry(data, *args, **kwargs) -> dict:
     config.MAIN_WINDOW_GEOMETRY = data
     return {"status":200, "result":config.MAIN_WINDOW_GEOMETRY}
 
-def getEnableMicAutoSelection(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_MIC_AUTO_SELECTION}
+def getAutoMicSelect(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-def setEnableMicAutoSelection(data, action, *args, **kwargs) -> dict:
+def setEnableAutoMicSelect(data, action, *args, **kwargs) -> dict:
     update_device = UpdateSelectedMicDevice(action)
     device_manager.setCallbackDefaultInputDevice(update_device.set)
-    config.ENABLE_MIC_AUTO_SELECTION = True
-    return {"status":200, "result":config.ENABLE_MIC_AUTO_SELECTION}
+    config.AUTO_MIC_SELECT = True
+    return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-def setDisableMicAutoSelection(*args, **kwargs) -> dict:
+def setDisableAutoMicSelect(*args, **kwargs) -> dict:
     device_manager.clearCallbackDefaultInputDevice()
-    config.ENABLE_MIC_AUTO_SELECTION = False
-    return {"status":200, "result":config.ENABLE_MIC_AUTO_SELECTION}
+    config.AUTO_MIC_SELECT = False
+    return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-def getChoiceMicHost(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.CHOICE_MIC_HOST}
+def getSelectedMicHost(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SELECTED_MIC_HOST}
 
-def setChoiceMicHost(data, *args, **kwargs) -> dict:
-    config.CHOICE_MIC_HOST = data
-    config.CHOICE_MIC_DEVICE = model.getInputDefaultDevice()
+def setSelectedMicHost(data, *args, **kwargs) -> dict:
+    config.SELECTED_MIC_HOST = data
+    config.SELECTED_MIC_DEVICE = model.getInputDefaultDevice()
     if config.ENABLE_CHECK_ENERGY_SEND is True:
         model.stopCheckMicEnergy()
         model.startCheckMicEnergy()
     return {"status":200,
             "result":{
-                "host":config.CHOICE_MIC_HOST,
-                "device":config.CHOICE_MIC_DEVICE,
+                "host":config.SELECTED_MIC_HOST,
+                "device":config.SELECTED_MIC_DEVICE,
                 },
             }
 
-def getChoiceMicDevice(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.CHOICE_MIC_DEVICE}
+def getSelectedMicDevice(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SELECTED_MIC_DEVICE}
 
-def setChoiceMicDevice(data, *args, **kwargs) -> dict:
-    config.CHOICE_MIC_DEVICE = data
+def setSelectedMicDevice(data, *args, **kwargs) -> dict:
+    config.SELECTED_MIC_DEVICE = data
     if config.ENABLE_CHECK_ENERGY_SEND is True:
         model.stopCheckMicEnergy()
         model.startCheckMicEnergy()
-    return {"status":200, "result": config.CHOICE_MIC_DEVICE}
+    return {"status":200, "result": config.SELECTED_MIC_DEVICE}
 
-def getInputMicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_ENERGY_THRESHOLD}
+def getMicEnergyThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_ENERGY_THRESHOLD}
 
-def setInputMicEnergyThreshold(data, *args, **kwargs) -> dict:
+def setMicEnergyThreshold(data, *args, **kwargs) -> dict:
     status = 400
     data = int(data)
     if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
-        config.INPUT_MIC_ENERGY_THRESHOLD = data
+        config.MIC_ENERGY_THRESHOLD = data
         status = 200
-    return {"status": status, "result": config.INPUT_MIC_ENERGY_THRESHOLD}
+    return {"status": status, "result": config.MIC_ENERGY_THRESHOLD}
 
-def getInputMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
+def getMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
 
-def setEnableInputMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = True
-    return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
+def setEnableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    config.MIC_DYNAMIC_ENERGY_THRESHOLD = True
+    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
 
-def setDisableInputMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
-    return {"status":200, "result":config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD}
+def setDisableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    config.MIC_DYNAMIC_ENERGY_THRESHOLD = False
+    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
 
-def getInputMicRecordTimeout(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_RECORD_TIMEOUT}
+def getMicRecordTimeout(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_RECORD_TIMEOUT}
 
-def setInputMicRecordTimeout(data, *args, **kwargs) -> dict:
+def setMicRecordTimeout(data, *args, **kwargs) -> dict:
     printLog("Set Mic Record Timeout", data)
     try:
         data = int(data)
-        if 0 <= data <= config.INPUT_MIC_PHRASE_TIMEOUT:
-            config.INPUT_MIC_RECORD_TIMEOUT = data
+        if 0 <= data <= config.MIC_PHRASE_TIMEOUT:
+            config.MIC_RECORD_TIMEOUT = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Mic Record Timeout"}}
     else:
-        response = {"status":200, "result":config.INPUT_MIC_RECORD_TIMEOUT}
+        response = {"status":200, "result":config.MIC_RECORD_TIMEOUT}
     return response
 
-def getInputMicPhraseTimeout(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_PHRASE_TIMEOUT}
+def getMicPhraseTimeout(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
 
-def setInputMicPhraseTimeout(data, *args, **kwargs) -> dict:
-    printLog("Set Mic Phrase Timeout", data)
+def setMicPhraseTimeout(data, *args, **kwargs) -> dict:
     try:
         data = int(data)
-        if data >= config.INPUT_MIC_RECORD_TIMEOUT:
-            config.INPUT_MIC_PHRASE_TIMEOUT = data
+        if data >= config.MIC_RECORD_TIMEOUT:
+            config.MIC_PHRASE_TIMEOUT = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Mic Phrase Timeout"}}
     else:
-        response = {"status":200, "result":config.INPUT_MIC_PHRASE_TIMEOUT}
+        response = {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
     return response
 
-def getInputMicMaxPhrases(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_MAX_PHRASES}
+def getMicMaxPhrases(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_MAX_PHRASES}
 
-def setInputMicMaxPhrases(data, *args, **kwargs) -> dict:
+def setMicMaxPhrases(data, *args, **kwargs) -> dict:
     try:
         data = int(data)
         if 0 <= data:
-            config.INPUT_MIC_MAX_PHRASES = data
+            config.MIC_MAX_PHRASES = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Mic Max Phrases"}}
     else:
-        response = {"status":200, "result":config.INPUT_MIC_MAX_PHRASES}
+        response = {"status":200, "result":config.MIC_MAX_PHRASES}
     return response
 
-def getInputMicWordFilter(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
+def getMicWordFilter(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_WORD_FILTER}
 
-def setInputMicWordFilter(data, *args, **kwargs) -> dict:
+def setMicWordFilter(data, *args, **kwargs) -> dict:
     data = str(data)
     data = [w.strip() for w in data.split(",") if len(w.strip()) > 0]
     # Copy the list
-    new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
+    new_mic_word_filter_list = config.MIC_WORD_FILTER
     new_added_value = []
     for value in data:
-        if value in new_input_mic_word_filter_list:
+        if value in new_mic_word_filter_list:
             # If the value is already in the list, do nothing.
             pass
         else:
-            new_input_mic_word_filter_list.append(value)
+            new_mic_word_filter_list.append(value)
             new_added_value.append(value)
-    config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+    config.MIC_WORD_FILTER = new_mic_word_filter_list
 
     model.resetKeywordProcessor()
     model.addKeywords()
-    return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
+    return {"status":200, "result":config.MIC_WORD_FILTER}
 
-def delInputMicWordFilter(data, *args, **kwargs) -> dict:
+def delMicWordFilter(data, *args, **kwargs) -> dict:
     try:
-        new_input_mic_word_filter_list = config.INPUT_MIC_WORD_FILTER
-        new_input_mic_word_filter_list.remove(str(data))
-        config.INPUT_MIC_WORD_FILTER = new_input_mic_word_filter_list
+        new_mic_word_filter_list = config.MIC_WORD_FILTER
+        new_mic_word_filter_list.remove(str(data))
+        config.MIC_WORD_FILTER = new_mic_word_filter_list
         model.resetKeywordProcessor()
         model.addKeywords()
     except Exception:
-        printLog("Delete Mic Word Filter", "There was no the target word in config.INPUT_MIC_WORD_FILTER")
-    return {"status":200, "result":config.INPUT_MIC_WORD_FILTER}
+        printLog("Delete Mic Word Filter", "There was no the target word in config.MIC_WORD_FILTER")
+    return {"status":200, "result":config.MIC_WORD_FILTER}
 
-def getInputMicAvgLogprob(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_AVG_LOGPROB}
+def getMicAvgLogprob(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
-def setInputMicAvgLogprob(data, *args, **kwargs) -> dict:
-    config.INPUT_MIC_AVG_LOGPROB = float(data)
-    return {"status":200, "result":config.INPUT_MIC_AVG_LOGPROB}
+def setMicAvgLogprob(data, *args, **kwargs) -> dict:
+    config.MIC_AVG_LOGPROB = float(data)
+    return {"status":200, "result":config.MIC_AVG_LOGPROB}
 
-def getInputMicNoSpeechProb(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_MIC_NO_SPEECH_PROB}
+def getMicNoSpeechProb(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
-def setInputMicNoSpeechProb(data, *args, **kwargs) -> dict:
-    config.INPUT_MIC_NO_SPEECH_PROB = float(data)
-    return {"status":200, "result":config.INPUT_MIC_NO_SPEECH_PROB}
+def setMicNoSpeechProb(data, *args, **kwargs) -> dict:
+    config.MIC_NO_SPEECH_PROB = float(data)
+    return {"status":200, "result":config.MIC_NO_SPEECH_PROB}
 
-def getEnableSpeakerAutoSelection(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_SPEAKER_AUTO_SELECTION}
+def getAutoSpeakerSelect(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-def setEnableSpeakerAutoSelection(data, action, *args, **kwargs) -> dict:
+def setEnableAutoSpeakerSelect(data, action, *args, **kwargs) -> dict:
     update_device = UpdateSelectedSpeakerDevice(action)
     device_manager.setCallbackDefaultOutputDevice(update_device.set)
-    config.ENABLE_SPEAKER_AUTO_SELECTION = True
-    return {"status":200, "result":config.ENABLE_SPEAKER_AUTO_SELECTION}
+    config.AUTO_SPEAKER_SELECT = True
+    return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-def setDisableSpeakerAutoSelection(*args, **kwargs) -> dict:
+def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
     device_manager.clearCallbackDefaultInputDevice()
-    config.ENABLE_SPEAKER_AUTO_SELECTION = False
-    return {"status":200, "result":config.ENABLE_SPEAKER_AUTO_SELECTION}
+    config.AUTO_SPEAKER_SELECT = False
+    return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-def getChoiceSpeakerDevice(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.CHOICE_SPEAKER_DEVICE}
+def getSelectedSpeakerDevice(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
-def setChoiceSpeakerDevice(data, *args, **kwargs) -> dict:
-    config.CHOICE_SPEAKER_DEVICE = data
+def setSelectedSpeakerDevice(data, *args, **kwargs) -> dict:
+    config.SELECTED_SPEAKER_DEVICE = data
     if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
         model.stopCheckSpeakerEnergy()
         model.startCheckSpeakerEnergy()
-    return {"status":200, "result":config.CHOICE_SPEAKER_DEVICE}
+    return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
-def getInputSpeakerEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_ENERGY_THRESHOLD}
+def getSpeakerEnergyThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_ENERGY_THRESHOLD}
 
-def setInputSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
+def setSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
     printLog("Set Speaker Energy Threshold", data)
     try:
         data = int(data)
         if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
-            config.INPUT_SPEAKER_ENERGY_THRESHOLD = data
+            config.SPEAKER_ENERGY_THRESHOLD = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Set Speaker Energy Threshold"}}
     else:
-        response = {"status":200, "result":config.INPUT_SPEAKER_ENERGY_THRESHOLD}
+        response = {"status":200, "result":config.SPEAKER_ENERGY_THRESHOLD}
     return response
 
-def getInputSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def getSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
-def setEnableInputSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
-    return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def setEnableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
+    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
-def setDisableInputSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
-    return {"status":200, "result":config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def setDisableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
+    config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
+    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
 
-def getInputSpeakerRecordTimeout(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_RECORD_TIMEOUT}
+def getSpeakerRecordTimeout(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
 
-def setInputSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
+def setSpeakerRecordTimeout(data, *args, **kwargs) -> dict:
     try:
         data = int(data)
-        if 0 <= data <= config.INPUT_SPEAKER_PHRASE_TIMEOUT:
-            config.INPUT_SPEAKER_RECORD_TIMEOUT = data
+        if 0 <= data <= config.SPEAKER_PHRASE_TIMEOUT:
+            config.SPEAKER_RECORD_TIMEOUT = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Speaker Record Timeout"}}
     else:
-        response = {"status":200, "result":config.INPUT_SPEAKER_RECORD_TIMEOUT}
+        response = {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
     return response
 
-def getInputSpeakerPhraseTimeout(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_PHRASE_TIMEOUT}
+def getSpeakerPhraseTimeout(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
 
-def setInputSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
+def setSpeakerPhraseTimeout(data, *args, **kwargs) -> dict:
     try:
         data = int(data)
-        if 0 <= data and data >= config.INPUT_SPEAKER_RECORD_TIMEOUT:
-            config.INPUT_SPEAKER_PHRASE_TIMEOUT = data
+        if 0 <= data and data >= config.SPEAKER_RECORD_TIMEOUT:
+            config.SPEAKER_PHRASE_TIMEOUT = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Speaker Phrase Timeout"}}
     else:
-        response = {"status":200, "result":config.INPUT_SPEAKER_PHRASE_TIMEOUT}
+        response = {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
     return response
 
-def getInputSpeakerMaxPhrases(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_MAX_PHRASES}
+def getSpeakerMaxPhrases(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_MAX_PHRASES}
 
-def setInputSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
+def setSpeakerMaxPhrases(data, *args, **kwargs) -> dict:
     printLog("Set Speaker Max Phrases", data)
     try:
         data = int(data)
         if 0 <= data:
-            config.INPUT_SPEAKER_MAX_PHRASES = data
+            config.SPEAKER_MAX_PHRASES = data
         else:
             raise ValueError()
     except Exception:
         response = {"status":400, "result":{"message":"Error Speaker Max Phrases"}}
     else:
-        response = {"status":200, "result":config.INPUT_SPEAKER_MAX_PHRASES}
+        response = {"status":200, "result":config.SPEAKER_MAX_PHRASES}
     return response
 
-def getInputSpeakerAvgLogprob(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_AVG_LOGPROB}
+def getSpeakerAvgLogprob(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
-def setInputSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
-    config.INPUT_SPEAKER_AVG_LOGPROB = float(data)
-    return {"status":200, "result":config.INPUT_SPEAKER_AVG_LOGPROB}
+def setSpeakerAvgLogprob(data, *args, **kwargs) -> dict:
+    config.SPEAKER_AVG_LOGPROB = float(data)
+    return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 
-def getInputSpeakerNoSpeechProb(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.INPUT_SPEAKER_NO_SPEECH_PROB}
+def getSpeakerNoSpeechProb(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
-def setInputSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
-    config.INPUT_SPEAKER_NO_SPEECH_PROB = float(data)
-    return {"status":200, "result":config.INPUT_SPEAKER_NO_SPEECH_PROB}
+def setSpeakerNoSpeechProb(data, *args, **kwargs) -> dict:
+    config.SPEAKER_NO_SPEECH_PROB = float(data)
+    return {"status":200, "result":config.SPEAKER_NO_SPEECH_PROB}
 
 def getOscIpAddress(*args, **kwargs) -> dict:
     return {"status":200, "result":config.OSC_IP_ADDRESS}
@@ -964,27 +963,27 @@ def setWhisperWeightType(data, *args, **kwargs) -> dict:
             }
         }
 
-def getEnableAutoClearMessageBox(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
+def getAutoClearMessageBox(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
 def setEnableAutoClearMessageBox(*args, **kwargs) -> dict:
-    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
-    return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
+    config.AUTO_CLEAR_MESSAGE_BOX = True
+    return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
 def setDisableAutoClearMessageBox(*args, **kwargs) -> dict:
-    config.ENABLE_AUTO_CLEAR_MESSAGE_BOX = False
-    return {"status":200, "result":config.ENABLE_AUTO_CLEAR_MESSAGE_BOX}
+    config.AUTO_CLEAR_MESSAGE_BOX = False
+    return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
-def getEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
+def getSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
 def setEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = True
-    return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
+    config.SEND_ONLY_TRANSLATED_MESSAGES = True
+    return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
 def setDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
-    return {"status":200, "result":config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES}
+    config.SEND_ONLY_TRANSLATED_MESSAGES = False
+    return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
 def getSendMessageButtonType(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
@@ -1010,33 +1009,33 @@ def setOverlaySmallLogSettings(data, *args, **kwargs) -> dict:
     model.updateOverlayPosition()
     return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
-def getEnableOverlaySmallLog(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_OVERLAY_SMALL_LOG}
+def getOverlaySmallLog(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
 def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
-    config.ENABLE_OVERLAY_SMALL_LOG = True
-    if config.ENABLE_OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+    config.OVERLAY_SMALL_LOG = True
+    if config.OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
-    return {"status":200, "result":config.ENABLE_OVERLAY_SMALL_LOG}
+    return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
 def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
-    config.ENABLE_OVERLAY_SMALL_LOG = False
-    if config.ENABLE_OVERLAY_SMALL_LOG is False:
+    config.OVERLAY_SMALL_LOG = False
+    if config.OVERLAY_SMALL_LOG is False:
         model.clearOverlayImage()
         model.shutdownOverlay()
-    return {"status":200, "result":config.ENABLE_OVERLAY_SMALL_LOG}
+    return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
-def getEnableSendMessageToVrc(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_SEND_MESSAGE_TO_VRC}
+def getSendMessageToVrc(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
 def setEnableSendMessageToVrc(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_MESSAGE_TO_VRC = True
-    return {"status":200, "result":config.ENABLE_SEND_MESSAGE_TO_VRC}
+    config.SEND_MESSAGE_TO_VRC = True
+    return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
 def setDisableSendMessageToVrc(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_MESSAGE_TO_VRC = False
-    return {"status":200, "result":config.ENABLE_SEND_MESSAGE_TO_VRC}
+    config.SEND_MESSAGE_TO_VRC = False
+    return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
 def getSendMessageFormat(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
@@ -1072,55 +1071,51 @@ def setReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
             config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
 
-def getEnableSpeaker2ChatboxPass(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_SPEAKER2CHATBOX_PASS}
+def getSpeaker2ChatboxPass(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER2CHATBOX_PASS}
 
-def setEnableSpeaker2ChatboxPass(*args, **kwargs) -> dict:
-    config.ENABLE_SPEAKER2CHATBOX_PASS = True
-    return {"status":200, "result":config.ENABLE_SPEAKER2CHATBOX_PASS}
+def setSpeaker2ChatboxPass(data, *args, **kwargs) -> dict:
+    config.SPEAKER2CHATBOX_PASS = data
+    return {"status":200, "result":config.SPEAKER2CHATBOX_PASS}
 
-def setDisableSpeaker2ChatboxPass(*args, **kwargs) -> dict:
-    config.ENABLE_SPEAKER2CHATBOX_PASS = False
-    return {"status":200, "result":config.ENABLE_SPEAKER2CHATBOX_PASS}
-
-def getEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
+def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
 def setEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = True
-    return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
+    config.SEND_RECEIVED_MESSAGE_TO_VRC = True
+    return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
 def setDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-    config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
-    return {"status":200, "result":config.ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC}
+    config.SEND_RECEIVED_MESSAGE_TO_VRC = False
+    return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
-def getEnableLogger(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_LOGGER}
+def getLogger(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.LOGGER}
 
 def setEnableLogger(*args, **kwargs) -> dict:
-    config.ENABLE_LOGGER = True
+    config.LOGGER = True
     model.startLogger()
-    return {"status":200, "result":config.ENABLE_LOGGER}
+    return {"status":200, "result":config.LOGGER}
 
 def setDisableLogger(*args, **kwargs) -> dict:
     model.stopLogger()
-    config.ENABLE_LOGGER = False
-    return {"status":200, "result":config.ENABLE_LOGGER}
+    config.LOGGER = False
+    return {"status":200, "result":config.LOGGER}
 
-def getEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
+def getVrcMicMuteSync(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
 def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-    config.ENABLE_VRC_MIC_MUTE_SYNC = True
+    config.VRC_MIC_MUTE_SYNC = True
     model.startCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
-    return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
+    return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
 def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
-    config.ENABLE_VRC_MIC_MUTE_SYNC = False
+    config.VRC_MIC_MUTE_SYNC = False
     model.stopCheckMuteSelfStatus()
     model.changeMicTranscriptStatus()
-    return {"status":200, "result":config.ENABLE_VRC_MIC_MUTE_SYNC}
+    return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
 def setEnableCheckSpeakerThreshold(data, action, *args, **kwargs) -> dict:
     progressbar_speaker_energy = ProgressBarSpeakerEnergy(action)
@@ -1180,7 +1175,7 @@ def setDisableTranscriptionSend(*args, **kwargs) -> dict:
 
 def setEnableTranscriptionReceive(data, action, *args, **kwargs) -> dict:
     startThreadingTranscriptionReceiveMessage(action)
-    if config.ENABLE_OVERLAY_SMALL_LOG is True:
+    if config.OVERLAY_SMALL_LOG is True:
         if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
             model.startOverlay()
     config.ENABLE_TRANSCRIPTION_RECEIVE = True
@@ -1198,12 +1193,12 @@ def sendMessageBox(data, action, *args, **kwargs) -> dict:
     return response
 
 def typingMessageBox(*args, **kwargs) -> dict:
-    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+    if config.SEND_MESSAGE_TO_VRC is True:
         model.oscStartSendTyping()
     return {"status":200, "result":True}
 
 def stopTypingMessageBox(*args, **kwargs) -> dict:
-    if config.ENABLE_SEND_MESSAGE_TO_VRC is True:
+    if config.SEND_MESSAGE_TO_VRC is True:
         model.oscStopSendTyping()
     return {"status":200, "result":True}
 
@@ -1426,22 +1421,22 @@ def init(actions:dict, *args, **kwargs) -> None:
 
     # init logger
     printLog("Init Logger")
-    if config.ENABLE_LOGGER is True:
+    if config.LOGGER is True:
         model.startLogger()
 
     # init OSC receive
     printLog("Init OSC Receive")
     model.startReceiveOSC()
-    if config.ENABLE_VRC_MIC_MUTE_SYNC is True:
+    if config.VRC_MIC_MUTE_SYNC is True:
         model.startCheckMuteSelfStatus()
 
     # init Auto device selection
     printLog("Init Auto Device Selection")
-    if config.ENABLE_MIC_AUTO_SELECTION is True:
+    if config.AUTO_MIC_SELECT is True:
         update_mic_device = UpdateSelectedMicDevice(actions["update_selected_mic_device"])
         device_manager.setCallbackDefaultInputDevice(update_mic_device.set)
 
-    if config.ENABLE_SPEAKER_AUTO_SELECTION is True:
+    if config.AUTO_SPEAKER_SELECT is True:
         update_speaker_device = UpdateSelectedSpeakerDevice(actions["update_selected_speaker_device"])
         device_manager.setCallbackDefaultOutputDevice(update_speaker_device.set)
 

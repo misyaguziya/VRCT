@@ -7,7 +7,7 @@ export const useSpeakerDeviceList = () => {
 
     const getSpeakerDeviceList = () => {
         updateSpeakerDeviceList(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/list_speaker_device");
+        asyncStdoutToPython("/get/list_speaker_device");
     };
 
     return {

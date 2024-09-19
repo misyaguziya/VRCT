@@ -7,12 +7,12 @@ export const useSelectedSpeakerDevice = () => {
 
     const getSelectedSpeakerDevice = () => {
         updateSelectedSpeakerDevice(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/choice_speaker_device");
+        asyncStdoutToPython("/get/selected_speaker_device");
     };
 
     const setSelectedSpeakerDevice = (selected_speaker_device) => {
         updateSelectedSpeakerDevice(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/callback_set_speaker_device", selected_speaker_device);
+        asyncStdoutToPython("/set/selected_speaker_device", selected_speaker_device);
     };
 
     return {

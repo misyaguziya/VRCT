@@ -7,15 +7,15 @@ export const useEnableAutoMicSelect = () => {
 
     const getEnableAutoMicSelect = () => {
         updateEnableAutoMicSelect(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/enable_mic_automatic_selection");
+        asyncStdoutToPython("/get/auto_mic_select");
     };
 
     const toggleEnableAutoMicSelect = () => {
         updateEnableAutoMicSelect(() => new Promise(() => {}));
         if (currentEnableAutoMicSelect.data) {
-            asyncStdoutToPython("/controller/callback_disable_mic_automatic_selection");
+            asyncStdoutToPython("/set/disable_auto_mic_select");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_mic_automatic_selection");
+            asyncStdoutToPython("/set/enable_auto_mic_select");
         }
     };
 

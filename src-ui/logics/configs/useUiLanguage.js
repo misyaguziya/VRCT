@@ -7,12 +7,12 @@ export const useUiLanguage = () => {
 
     const getUiLanguage = () => {
         updateUiLanguage(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/ui_language");
+        asyncStdoutToPython("/get/ui_language");
     };
 
     const setUiLanguage = (selected_ui_language) => {
         updateUiLanguage(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/callback_set_ui_language", selected_ui_language);
+        asyncStdoutToPython("/set/ui_language", selected_ui_language);
     };
 
     return {

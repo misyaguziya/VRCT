@@ -7,12 +7,12 @@ export const useSelectedMicDevice = () => {
 
     const getSelectedMicDevice = () => {
         updateSelectedMicDevice(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/choice_mic_device");
+        asyncStdoutToPython("/get/selected_mic_device");
     };
 
     const setSelectedMicDevice = (selected_mic_device) => {
         updateSelectedMicDevice(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/callback_set_mic_device", selected_mic_device);
+        asyncStdoutToPython("/set/selected_mic_device", selected_mic_device);
     };
 
     return {

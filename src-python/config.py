@@ -39,8 +39,8 @@ class Config:
         return self._VERSION
 
     @property
-    def ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION(self):
-        return self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION
+    def SPEAKER2CHATBOX_PASS_CONFIRMATION(self):
+        return self._SPEAKER2CHATBOX_PASS_CONFIRMATION
 
     @property
     def PATH_LOCAL(self):
@@ -293,47 +293,47 @@ class Config:
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_MULTI_LANGUAGE_TRANSLATION')
-    def ENABLE_MULTI_LANGUAGE_TRANSLATION(self):
-        return self._ENABLE_MULTI_LANGUAGE_TRANSLATION
+    @json_serializable('MULTI_LANGUAGE_TRANSLATION')
+    def MULTI_LANGUAGE_TRANSLATION(self):
+        return self._MULTI_LANGUAGE_TRANSLATION
 
-    @ENABLE_MULTI_LANGUAGE_TRANSLATION.setter
-    def ENABLE_MULTI_LANGUAGE_TRANSLATION(self, value):
+    @MULTI_LANGUAGE_TRANSLATION.setter
+    def MULTI_LANGUAGE_TRANSLATION(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MULTI_LANGUAGE_TRANSLATION = value
+            self._MULTI_LANGUAGE_TRANSLATION = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_CONVERT_MESSAGE_TO_ROMAJI')
-    def ENABLE_CONVERT_MESSAGE_TO_ROMAJI(self):
-        return self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI
+    @json_serializable('CONVERT_MESSAGE_TO_ROMAJI')
+    def CONVERT_MESSAGE_TO_ROMAJI(self):
+        return self._CONVERT_MESSAGE_TO_ROMAJI
 
-    @ENABLE_CONVERT_MESSAGE_TO_ROMAJI.setter
-    def ENABLE_CONVERT_MESSAGE_TO_ROMAJI(self, value):
+    @CONVERT_MESSAGE_TO_ROMAJI.setter
+    def CONVERT_MESSAGE_TO_ROMAJI(self, value):
         if isinstance(value, bool):
-            self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI = value
+            self._CONVERT_MESSAGE_TO_ROMAJI = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_CONVERT_MESSAGE_TO_HIRAGANA')
-    def ENABLE_CONVERT_MESSAGE_TO_HIRAGANA(self):
-        return self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA
+    @json_serializable('CONVERT_MESSAGE_TO_HIRAGANA')
+    def CONVERT_MESSAGE_TO_HIRAGANA(self):
+        return self._CONVERT_MESSAGE_TO_HIRAGANA
 
-    @ENABLE_CONVERT_MESSAGE_TO_HIRAGANA.setter
-    def ENABLE_CONVERT_MESSAGE_TO_HIRAGANA(self, value):
+    @CONVERT_MESSAGE_TO_HIRAGANA.setter
+    def CONVERT_MESSAGE_TO_HIRAGANA(self, value):
         if isinstance(value, bool):
-            self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = value
+            self._CONVERT_MESSAGE_TO_HIRAGANA = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
-    def ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
-        return self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE
+    @json_serializable('MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
+    def MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
+        return self._MAIN_WINDOW_SIDEBAR_COMPACT_MODE
 
-    @ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
-    def ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
+    @MAIN_WINDOW_SIDEBAR_COMPACT_MODE.setter
+    def MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
+            self._MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     ## Config Window
@@ -418,14 +418,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY')
-    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self):
-        return self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY
+    @json_serializable('RESTORE_MAIN_WINDOW_GEOMETRY')
+    def RESTORE_MAIN_WINDOW_GEOMETRY(self):
+        return self._RESTORE_MAIN_WINDOW_GEOMETRY
 
-    @ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY.setter
-    def ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
+    @RESTORE_MAIN_WINDOW_GEOMETRY.setter
+    def RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
         if isinstance(value, bool):
-            self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = value
+            self._RESTORE_MAIN_WINDOW_GEOMETRY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -442,223 +442,223 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
-    @json_serializable('ENABLE_MIC_AUTO_SELECTION')
-    def ENABLE_MIC_AUTO_SELECTION(self):
-        return self._ENABLE_MIC_AUTO_SELECTION
+    @json_serializable('AUTO_MIC_SELECT')
+    def AUTO_MIC_SELECT(self):
+        return self._AUTO_MIC_SELECT
 
-    @ENABLE_MIC_AUTO_SELECTION.setter
-    def ENABLE_MIC_AUTO_SELECTION(self, value):
+    @AUTO_MIC_SELECT.setter
+    def AUTO_MIC_SELECT(self, value):
         if isinstance(value, bool):
-            self._ENABLE_MIC_AUTO_SELECTION = value
+            self._AUTO_MIC_SELECT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('CHOICE_MIC_HOST')
-    def CHOICE_MIC_HOST(self):
-        return self._CHOICE_MIC_HOST
+    @json_serializable('SELECTED_MIC_HOST')
+    def SELECTED_MIC_HOST(self):
+        return self._SELECTED_MIC_HOST
 
-    @CHOICE_MIC_HOST.setter
-    def CHOICE_MIC_HOST(self, value):
+    @SELECTED_MIC_HOST.setter
+    def SELECTED_MIC_HOST(self, value):
         if value in [host for host in device_manager.getInputDevices().keys()]:
-            self._CHOICE_MIC_HOST = value
+            self._SELECTED_MIC_HOST = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('CHOICE_MIC_DEVICE')
-    def CHOICE_MIC_DEVICE(self):
-        return self._CHOICE_MIC_DEVICE
+    @json_serializable('SELECTED_MIC_DEVICE')
+    def SELECTED_MIC_DEVICE(self):
+        return self._SELECTED_MIC_DEVICE
 
-    @CHOICE_MIC_DEVICE.setter
-    def CHOICE_MIC_DEVICE(self, value):
-        if value in [device["name"] for device in device_manager.getInputDevices()[self.CHOICE_MIC_HOST]]:
-            self._CHOICE_MIC_DEVICE = value
+    @SELECTED_MIC_DEVICE.setter
+    def SELECTED_MIC_DEVICE(self, value):
+        if value in [device["name"] for device in device_manager.getInputDevices()[self.SELECTED_MIC_HOST]]:
+            self._SELECTED_MIC_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_ENERGY_THRESHOLD')
-    def INPUT_MIC_ENERGY_THRESHOLD(self):
-        return self._INPUT_MIC_ENERGY_THRESHOLD
+    @json_serializable('MIC_ENERGY_THRESHOLD')
+    def MIC_ENERGY_THRESHOLD(self):
+        return self._MIC_ENERGY_THRESHOLD
 
-    @INPUT_MIC_ENERGY_THRESHOLD.setter
-    def INPUT_MIC_ENERGY_THRESHOLD(self, value):
+    @MIC_ENERGY_THRESHOLD.setter
+    def MIC_ENERGY_THRESHOLD(self, value):
         if isinstance(value, int):
-            self._INPUT_MIC_ENERGY_THRESHOLD = value
+            self._MIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD')
-    def INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD(self):
-        return self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD
+    @json_serializable('MIC_DYNAMIC_ENERGY_THRESHOLD')
+    def MIC_DYNAMIC_ENERGY_THRESHOLD(self):
+        return self._MIC_DYNAMIC_ENERGY_THRESHOLD
 
-    @INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD.setter
-    def INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD(self, value):
+    @MIC_DYNAMIC_ENERGY_THRESHOLD.setter
+    def MIC_DYNAMIC_ENERGY_THRESHOLD(self, value):
         if isinstance(value, bool):
-            self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
+            self._MIC_DYNAMIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_RECORD_TIMEOUT')
-    def INPUT_MIC_RECORD_TIMEOUT(self):
-        return self._INPUT_MIC_RECORD_TIMEOUT
+    @json_serializable('MIC_RECORD_TIMEOUT')
+    def MIC_RECORD_TIMEOUT(self):
+        return self._MIC_RECORD_TIMEOUT
 
-    @INPUT_MIC_RECORD_TIMEOUT.setter
-    def INPUT_MIC_RECORD_TIMEOUT(self, value):
+    @MIC_RECORD_TIMEOUT.setter
+    def MIC_RECORD_TIMEOUT(self, value):
         if isinstance(value, int):
-            self._INPUT_MIC_RECORD_TIMEOUT = value
+            self._MIC_RECORD_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_PHRASE_TIMEOUT')
-    def INPUT_MIC_PHRASE_TIMEOUT(self):
-        return self._INPUT_MIC_PHRASE_TIMEOUT
+    @json_serializable('MIC_PHRASE_TIMEOUT')
+    def MIC_PHRASE_TIMEOUT(self):
+        return self._MIC_PHRASE_TIMEOUT
 
-    @INPUT_MIC_PHRASE_TIMEOUT.setter
-    def INPUT_MIC_PHRASE_TIMEOUT(self, value):
+    @MIC_PHRASE_TIMEOUT.setter
+    def MIC_PHRASE_TIMEOUT(self, value):
         if isinstance(value, int):
-            self._INPUT_MIC_PHRASE_TIMEOUT = value
+            self._MIC_PHRASE_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_MAX_PHRASES')
-    def INPUT_MIC_MAX_PHRASES(self):
-        return self._INPUT_MIC_MAX_PHRASES
+    @json_serializable('MIC_MAX_PHRASES')
+    def MIC_MAX_PHRASES(self):
+        return self._MIC_MAX_PHRASES
 
-    @INPUT_MIC_MAX_PHRASES.setter
-    def INPUT_MIC_MAX_PHRASES(self, value):
+    @MIC_MAX_PHRASES.setter
+    def MIC_MAX_PHRASES(self, value):
         if isinstance(value, int):
-            self._INPUT_MIC_MAX_PHRASES = value
+            self._MIC_MAX_PHRASES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_WORD_FILTER')
-    def INPUT_MIC_WORD_FILTER(self):
-        return self._INPUT_MIC_WORD_FILTER
+    @json_serializable('MIC_WORD_FILTER')
+    def MIC_WORD_FILTER(self):
+        return self._MIC_WORD_FILTER
 
-    @INPUT_MIC_WORD_FILTER.setter
-    def INPUT_MIC_WORD_FILTER(self, value):
+    @MIC_WORD_FILTER.setter
+    def MIC_WORD_FILTER(self, value):
         if isinstance(value, list):
-            self._INPUT_MIC_WORD_FILTER = sorted(set(value), key=value.index)
+            self._MIC_WORD_FILTER = sorted(set(value), key=value.index)
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_AVG_LOGPROB')
-    def INPUT_MIC_AVG_LOGPROB(self):
-        return self._INPUT_MIC_AVG_LOGPROB
+    @json_serializable('MIC_AVG_LOGPROB')
+    def MIC_AVG_LOGPROB(self):
+        return self._MIC_AVG_LOGPROB
 
-    @INPUT_MIC_AVG_LOGPROB.setter
-    def INPUT_MIC_AVG_LOGPROB(self, value):
+    @MIC_AVG_LOGPROB.setter
+    def MIC_AVG_LOGPROB(self, value):
         if isinstance(value, float) or isinstance(value, int):
-            self._INPUT_MIC_AVG_LOGPROB = value
+            self._MIC_AVG_LOGPROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_MIC_NO_SPEECH_PROB')
-    def INPUT_MIC_NO_SPEECH_PROB(self):
-        return self._INPUT_MIC_NO_SPEECH_PROB
+    @json_serializable('MIC_NO_SPEECH_PROB')
+    def MIC_NO_SPEECH_PROB(self):
+        return self._MIC_NO_SPEECH_PROB
 
-    @INPUT_MIC_NO_SPEECH_PROB.setter
-    def INPUT_MIC_NO_SPEECH_PROB(self, value):
+    @MIC_NO_SPEECH_PROB.setter
+    def MIC_NO_SPEECH_PROB(self, value):
         if isinstance(value, float) or isinstance(value, int):
-            self._INPUT_MIC_NO_SPEECH_PROB = value
+            self._MIC_NO_SPEECH_PROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_SPEAKER_AUTO_SELECTION')
-    def ENABLE_SPEAKER_AUTO_SELECTION(self):
-        return self._ENABLE_SPEAKER_AUTO_SELECTION
+    @json_serializable('AUTO_SPEAKER_SELECT')
+    def AUTO_SPEAKER_SELECT(self):
+        return self._AUTO_SPEAKER_SELECT
 
-    @ENABLE_SPEAKER_AUTO_SELECTION.setter
-    def ENABLE_SPEAKER_AUTO_SELECTION(self, value):
+    @AUTO_SPEAKER_SELECT.setter
+    def AUTO_SPEAKER_SELECT(self, value):
         if isinstance(value, bool):
-            self._ENABLE_SPEAKER_AUTO_SELECTION = value
+            self._AUTO_SPEAKER_SELECT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('CHOICE_SPEAKER_DEVICE')
-    def CHOICE_SPEAKER_DEVICE(self):
-        return self._CHOICE_SPEAKER_DEVICE
+    @json_serializable('SELECTED_SPEAKER_DEVICE')
+    def SELECTED_SPEAKER_DEVICE(self):
+        return self._SELECTED_SPEAKER_DEVICE
 
-    @CHOICE_SPEAKER_DEVICE.setter
-    def CHOICE_SPEAKER_DEVICE(self, value):
+    @SELECTED_SPEAKER_DEVICE.setter
+    def SELECTED_SPEAKER_DEVICE(self, value):
         if value in [device["name"] for device in device_manager.getOutputDevices()]:
-            self._CHOICE_SPEAKER_DEVICE = value
+            self._SELECTED_SPEAKER_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_ENERGY_THRESHOLD')
-    def INPUT_SPEAKER_ENERGY_THRESHOLD(self):
-        return self._INPUT_SPEAKER_ENERGY_THRESHOLD
+    @json_serializable('SPEAKER_ENERGY_THRESHOLD')
+    def SPEAKER_ENERGY_THRESHOLD(self):
+        return self._SPEAKER_ENERGY_THRESHOLD
 
-    @INPUT_SPEAKER_ENERGY_THRESHOLD.setter
-    def INPUT_SPEAKER_ENERGY_THRESHOLD(self, value):
+    @SPEAKER_ENERGY_THRESHOLD.setter
+    def SPEAKER_ENERGY_THRESHOLD(self, value):
         if isinstance(value, int):
-            self._INPUT_SPEAKER_ENERGY_THRESHOLD = value
+            self._SPEAKER_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD')
-    def INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self):
-        return self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD
+    @json_serializable('SPEAKER_DYNAMIC_ENERGY_THRESHOLD')
+    def SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self):
+        return self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD
 
-    @INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD.setter
-    def INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self, value):
+    @SPEAKER_DYNAMIC_ENERGY_THRESHOLD.setter
+    def SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self, value):
         if isinstance(value, bool):
-            self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+            self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_RECORD_TIMEOUT')
-    def INPUT_SPEAKER_RECORD_TIMEOUT(self):
-        return self._INPUT_SPEAKER_RECORD_TIMEOUT
+    @json_serializable('SPEAKER_RECORD_TIMEOUT')
+    def SPEAKER_RECORD_TIMEOUT(self):
+        return self._SPEAKER_RECORD_TIMEOUT
 
-    @INPUT_SPEAKER_RECORD_TIMEOUT.setter
-    def INPUT_SPEAKER_RECORD_TIMEOUT(self, value):
+    @SPEAKER_RECORD_TIMEOUT.setter
+    def SPEAKER_RECORD_TIMEOUT(self, value):
         if isinstance(value, int):
-            self._INPUT_SPEAKER_RECORD_TIMEOUT = value
+            self._SPEAKER_RECORD_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_PHRASE_TIMEOUT')
-    def INPUT_SPEAKER_PHRASE_TIMEOUT(self):
-        return self._INPUT_SPEAKER_PHRASE_TIMEOUT
+    @json_serializable('SPEAKER_PHRASE_TIMEOUT')
+    def SPEAKER_PHRASE_TIMEOUT(self):
+        return self._SPEAKER_PHRASE_TIMEOUT
 
-    @INPUT_SPEAKER_PHRASE_TIMEOUT.setter
-    def INPUT_SPEAKER_PHRASE_TIMEOUT(self, value):
+    @SPEAKER_PHRASE_TIMEOUT.setter
+    def SPEAKER_PHRASE_TIMEOUT(self, value):
         if isinstance(value, int):
-            self._INPUT_SPEAKER_PHRASE_TIMEOUT = value
+            self._SPEAKER_PHRASE_TIMEOUT = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_MAX_PHRASES')
-    def INPUT_SPEAKER_MAX_PHRASES(self):
-        return self._INPUT_SPEAKER_MAX_PHRASES
+    @json_serializable('SPEAKER_MAX_PHRASES')
+    def SPEAKER_MAX_PHRASES(self):
+        return self._SPEAKER_MAX_PHRASES
 
-    @INPUT_SPEAKER_MAX_PHRASES.setter
-    def INPUT_SPEAKER_MAX_PHRASES(self, value):
+    @SPEAKER_MAX_PHRASES.setter
+    def SPEAKER_MAX_PHRASES(self, value):
         if isinstance(value, int):
-            self._INPUT_SPEAKER_MAX_PHRASES = value
+            self._SPEAKER_MAX_PHRASES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_AVG_LOGPROB')
-    def INPUT_SPEAKER_AVG_LOGPROB(self):
-        return self._INPUT_SPEAKER_AVG_LOGPROB
+    @json_serializable('SPEAKER_AVG_LOGPROB')
+    def SPEAKER_AVG_LOGPROB(self):
+        return self._SPEAKER_AVG_LOGPROB
 
-    @INPUT_SPEAKER_AVG_LOGPROB.setter
-    def INPUT_SPEAKER_AVG_LOGPROB(self, value):
+    @SPEAKER_AVG_LOGPROB.setter
+    def SPEAKER_AVG_LOGPROB(self, value):
         if isinstance(value, float) or isinstance(value, int):
-            self._INPUT_SPEAKER_AVG_LOGPROB = value
+            self._SPEAKER_AVG_LOGPROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('INPUT_SPEAKER_NO_SPEECH_PROB')
-    def INPUT_SPEAKER_NO_SPEECH_PROB(self):
-        return self._INPUT_SPEAKER_NO_SPEECH_PROB
+    @json_serializable('SPEAKER_NO_SPEECH_PROB')
+    def SPEAKER_NO_SPEECH_PROB(self):
+        return self._SPEAKER_NO_SPEECH_PROB
 
-    @INPUT_SPEAKER_NO_SPEECH_PROB.setter
-    def INPUT_SPEAKER_NO_SPEECH_PROB(self, value):
+    @SPEAKER_NO_SPEECH_PROB.setter
+    def SPEAKER_NO_SPEECH_PROB(self, value):
         if isinstance(value, float) or isinstance(value, int):
-            self._INPUT_SPEAKER_NO_SPEECH_PROB = value
+            self._SPEAKER_NO_SPEECH_PROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -753,25 +753,25 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_AUTO_CLEAR_MESSAGE_BOX')
-    def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self):
-        return self._ENABLE_AUTO_CLEAR_MESSAGE_BOX
+    @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
+    def AUTO_CLEAR_MESSAGE_BOX(self):
+        return self._AUTO_CLEAR_MESSAGE_BOX
 
-    @ENABLE_AUTO_CLEAR_MESSAGE_BOX.setter
-    def ENABLE_AUTO_CLEAR_MESSAGE_BOX(self, value):
+    @AUTO_CLEAR_MESSAGE_BOX.setter
+    def AUTO_CLEAR_MESSAGE_BOX(self, value):
         if isinstance(value, bool):
-            self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = value
+            self._AUTO_CLEAR_MESSAGE_BOX = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_SEND_ONLY_TRANSLATED_MESSAGES')
-    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self):
-        return self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES
+    @json_serializable('SEND_ONLY_TRANSLATED_MESSAGES')
+    def SEND_ONLY_TRANSLATED_MESSAGES(self):
+        return self._SEND_ONLY_TRANSLATED_MESSAGES
 
-    @ENABLE_SEND_ONLY_TRANSLATED_MESSAGES.setter
-    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES(self, value):
+    @SEND_ONLY_TRANSLATED_MESSAGES.setter
+    def SEND_ONLY_TRANSLATED_MESSAGES(self, value):
         if isinstance(value, bool):
-            self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
+            self._SEND_ONLY_TRANSLATED_MESSAGES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -799,14 +799,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
 
     @property
-    @json_serializable('ENABLE_OVERLAY_SMALL_LOG')
-    def ENABLE_OVERLAY_SMALL_LOG(self):
-        return self._ENABLE_OVERLAY_SMALL_LOG
+    @json_serializable('OVERLAY_SMALL_LOG')
+    def OVERLAY_SMALL_LOG(self):
+        return self._OVERLAY_SMALL_LOG
 
-    @ENABLE_OVERLAY_SMALL_LOG.setter
-    def ENABLE_OVERLAY_SMALL_LOG(self, value):
+    @OVERLAY_SMALL_LOG.setter
+    def OVERLAY_SMALL_LOG(self, value):
         if isinstance(value, bool):
-            self._ENABLE_OVERLAY_SMALL_LOG = value
+            self._OVERLAY_SMALL_LOG = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -839,14 +839,14 @@ class Config:
             # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_SEND_MESSAGE_TO_VRC')
-    def ENABLE_SEND_MESSAGE_TO_VRC(self):
-        return self._ENABLE_SEND_MESSAGE_TO_VRC
+    @json_serializable('SEND_MESSAGE_TO_VRC')
+    def SEND_MESSAGE_TO_VRC(self):
+        return self._SEND_MESSAGE_TO_VRC
 
-    @ENABLE_SEND_MESSAGE_TO_VRC.setter
-    def ENABLE_SEND_MESSAGE_TO_VRC(self, value):
+    @SEND_MESSAGE_TO_VRC.setter
+    def SEND_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
-            self._ENABLE_SEND_MESSAGE_TO_VRC = value
+            self._SEND_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -903,60 +903,60 @@ class Config:
 
     # Speaker2Chatbox------------------
     @property
-    @json_serializable('ENABLE_SPEAKER2CHATBOX_PASS')
-    def ENABLE_SPEAKER2CHATBOX_PASS(self):
-        return self._ENABLE_SPEAKER2CHATBOX_PASS
+    @json_serializable('SPEAKER2CHATBOX_PASS')
+    def SPEAKER2CHATBOX_PASS(self):
+        return self._SPEAKER2CHATBOX_PASS
 
-    @ENABLE_SPEAKER2CHATBOX_PASS.setter
-    def ENABLE_SPEAKER2CHATBOX_PASS(self, value):
+    @SPEAKER2CHATBOX_PASS.setter
+    def SPEAKER2CHATBOX_PASS(self, value):
         if isinstance(value, str):
-            self._ENABLE_SPEAKER2CHATBOX_PASS = value
+            self._SPEAKER2CHATBOX_PASS = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC')
-    def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self):
-        return self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC
+    @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
+    def SEND_RECEIVED_MESSAGE_TO_VRC(self):
+        return self._SEND_RECEIVED_MESSAGE_TO_VRC
 
-    @ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC.setter
-    def ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
+    @SEND_RECEIVED_MESSAGE_TO_VRC.setter
+    def SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
             if self._ENABLE_SPEAKER2CHATBOX is True:
-                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = value
+                self._SEND_RECEIVED_MESSAGE_TO_VRC = value
             else:
-                self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False
+                self._SEND_RECEIVED_MESSAGE_TO_VRC = False
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
     # Speaker2Chatbox------------------
 
 
 
     @property
-    @json_serializable('ENABLE_LOGGER')
-    def ENABLE_LOGGER(self):
-        return self._ENABLE_LOGGER
+    @json_serializable('LOGGER')
+    def LOGGER(self):
+        return self._LOGGER
 
-    @ENABLE_LOGGER.setter
-    def ENABLE_LOGGER(self, value):
+    @LOGGER.setter
+    def LOGGER(self, value):
         if isinstance(value, bool):
-            self._ENABLE_LOGGER = value
+            self._LOGGER = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('ENABLE_VRC_MIC_MUTE_SYNC')
-    def ENABLE_VRC_MIC_MUTE_SYNC(self):
-        return self._ENABLE_VRC_MIC_MUTE_SYNC
+    @json_serializable('VRC_MIC_MUTE_SYNC')
+    def VRC_MIC_MUTE_SYNC(self):
+        return self._VRC_MIC_MUTE_SYNC
 
-    @ENABLE_VRC_MIC_MUTE_SYNC.setter
-    def ENABLE_VRC_MIC_MUTE_SYNC(self, value):
+    @VRC_MIC_MUTE_SYNC.setter
+    def VRC_MIC_MUTE_SYNC(self, value):
         if isinstance(value, bool):
-            self._ENABLE_VRC_MIC_MUTE_SYNC = value
+            self._VRC_MIC_MUTE_SYNC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     def init_config(self):
         # Read Only
         self._VERSION = "2.2.5"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
-        self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
+        self._SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1080,10 +1080,10 @@ class Config:
             },
         }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        self._ENABLE_MULTI_LANGUAGE_TRANSLATION = False
-        self._ENABLE_CONVERT_MESSAGE_TO_ROMAJI = False
-        self._ENABLE_CONVERT_MESSAGE_TO_HIRAGANA = False
-        self._ENABLE_MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        self._MULTI_LANGUAGE_TRANSLATION = False
+        self._CONVERT_MESSAGE_TO_ROMAJI = False
+        self._CONVERT_MESSAGE_TO_HIRAGANA = False
+        self._MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
 
         ## Config Window
         self._TRANSPARENCY = 100
@@ -1093,33 +1093,33 @@ class Config:
         self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
-        self._ENABLE_RESTORE_MAIN_WINDOW_GEOMETRY = True
+        self._RESTORE_MAIN_WINDOW_GEOMETRY = True
         self._MAIN_WINDOW_GEOMETRY = {
             "x_pos": "0",
             "y_pos": "0",
             "width": "870",
             "height": "654",
         }
-        self._ENABLE_MIC_AUTO_SELECTION = True
-        self._CHOICE_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
-        self._CHOICE_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
-        self._INPUT_MIC_ENERGY_THRESHOLD = 300
-        self._INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = False
-        self._INPUT_MIC_RECORD_TIMEOUT = 3
-        self._INPUT_MIC_PHRASE_TIMEOUT = 3
-        self._INPUT_MIC_MAX_PHRASES = 10
-        self._INPUT_MIC_WORD_FILTER = []
-        self._INPUT_MIC_AVG_LOGPROB=-0.8
-        self._INPUT_MIC_NO_SPEECH_PROB=0.6
-        self._ENABLE_SPEAKER_AUTO_SELECTION = True
-        self._CHOICE_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
-        self._INPUT_SPEAKER_ENERGY_THRESHOLD = 300
-        self._INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
-        self._INPUT_SPEAKER_RECORD_TIMEOUT = 3
-        self._INPUT_SPEAKER_PHRASE_TIMEOUT = 3
-        self._INPUT_SPEAKER_MAX_PHRASES = 10
-        self._INPUT_SPEAKER_AVG_LOGPROB=-0.8
-        self._INPUT_SPEAKER_NO_SPEECH_PROB=0.6
+        self._AUTO_MIC_SELECT = True
+        self._SELECTED_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
+        self._SELECTED_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
+        self._MIC_ENERGY_THRESHOLD = 300
+        self._MIC_DYNAMIC_ENERGY_THRESHOLD = False
+        self._MIC_RECORD_TIMEOUT = 3
+        self._MIC_PHRASE_TIMEOUT = 3
+        self._MIC_MAX_PHRASES = 10
+        self._MIC_WORD_FILTER = []
+        self._MIC_AVG_LOGPROB=-0.8
+        self._MIC_NO_SPEECH_PROB=0.6
+        self._AUTO_SPEAKER_SELECT = True
+        self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
+        self._SPEAKER_ENERGY_THRESHOLD = 300
+        self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
+        self._SPEAKER_RECORD_TIMEOUT = 3
+        self._SPEAKER_PHRASE_TIMEOUT = 3
+        self._SPEAKER_MAX_PHRASES = 10
+        self._SPEAKER_AVG_LOGPROB=-0.8
+        self._SPEAKER_NO_SPEECH_PROB=0.6
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
@@ -1134,14 +1134,14 @@ class Config:
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
         self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
-        self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
-        self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
+        self._AUTO_CLEAR_MESSAGE_BOX = True
+        self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._OVERLAY_SETTINGS = {
             "opacity": 1.0,
             "ui_scaling": 1.0,
         }
-        self._ENABLE_OVERLAY_SMALL_LOG = False
+        self._OVERLAY_SMALL_LOG = False
         self._OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
             "y_pos": 0.0,
@@ -1153,11 +1153,11 @@ class Config:
             "fadeout_duration": 2,
         }
         self._OVERLAY_UI_TYPE = "default"
-        self._ENABLE_SEND_MESSAGE_TO_VRC = True
-        self._ENABLE_SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
-        self._ENABLE_SPEAKER2CHATBOX_PASS = "000000000"
-        self._ENABLE_LOGGER = False
-        self._ENABLE_VRC_MIC_MUTE_SYNC = False
+        self._SEND_MESSAGE_TO_VRC = True
+        self._SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
+        self._SPEAKER2CHATBOX_PASS = "000000000"
+        self._LOGGER = False
+        self._VRC_MIC_MUTE_SYNC = False
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
@@ -1170,8 +1170,8 @@ class Config:
                     old_message_format = config[key]
                 setattr(self, key, config[key])
 
-                if key == "ENABLE_SPEAKER2CHATBOX_PASS":
-                    if self.ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
+                if key == "SPEAKER2CHATBOX_PASS":
+                    if self.SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
                         self.ENABLE_SPEAKER2CHATBOX = True
 
             if old_message_format is not None:
