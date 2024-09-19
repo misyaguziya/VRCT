@@ -14,8 +14,13 @@
     gap: 1rem;
     position: relative;
 }
-
-
+.ui_language_label_wrapper {
+    display: flex;
+    align-items: center;
+}
+.ui_language_secondly_label {
+    font-size: 1.2rem;
+}
 
 .radio_button_wrapper {
     display: flex;
