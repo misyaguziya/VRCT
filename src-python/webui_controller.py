@@ -552,9 +552,10 @@ def getAutoMicSelect(*args, **kwargs) -> dict:
     return {"status":200, "result":config.AUTO_MIC_SELECT}
 
 def setEnableAutoMicSelect(data, action, *args, **kwargs) -> dict:
+    config.AUTO_MIC_SELECT = True
     update_device = UpdateSelectedMicDevice(action)
     device_manager.setCallbackDefaultInputDevice(update_device.set)
-    config.AUTO_MIC_SELECT = True
+    device_manager.noticeDefaultDevice()
     return {"status":200, "result":config.AUTO_MIC_SELECT}
 
 def setDisableAutoMicSelect(*args, **kwargs) -> dict:
@@ -710,9 +711,10 @@ def getAutoSpeakerSelect(*args, **kwargs) -> dict:
     return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
 def setEnableAutoSpeakerSelect(data, action, *args, **kwargs) -> dict:
+    config.AUTO_SPEAKER_SELECT = True
     update_device = UpdateSelectedSpeakerDevice(action)
     device_manager.setCallbackDefaultOutputDevice(update_device.set)
-    config.AUTO_SPEAKER_SELECT = True
+    device_manager.noticeDefaultDevice()
     return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
 def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:

@@ -125,11 +125,7 @@ class DeviceManager:
                     sleep(1)
                 enumerator.UnregisterEndpointNotificationCallback(cb)
                 self.update()
-
-                if self.callback_default_input_device is not None:
-                    self.callback_default_input_device(self.default_input_device["host"]["name"], self.default_input_device["device"]["name"])
-                if self.callback_default_output_device is not None:
-                    self.callback_default_output_device(self.default_output_device["device"]["name"])
+                self.noticeDefaultDevice()
 
                 cb = Client()
                 enumerator = AudioUtilities.GetDeviceEnumerator()
@@ -159,6 +155,12 @@ class DeviceManager:
 
     def clearCallbackDefaultOutputDevice(self):
         self.callback_default_output_device = None
+
+    def noticeDefaultDevice(self):
+        if self.callback_default_input_device is not None:
+            self.callback_default_input_device(self.default_input_device["host"]["name"], self.default_input_device["device"]["name"])
+        if self.callback_default_output_device is not None:
+            self.callback_default_output_device(self.default_output_device["device"]["name"])
 
     def getInputDevices(self):
         return self.input_devices
