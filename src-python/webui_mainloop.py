@@ -25,8 +25,7 @@ config_mapping = {
     # "/config/is_reset_button_displayed_for_translation": {"status": True, "variable":"IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION"},
     # "/config/is_reset_button_displayed_for_whisper": {"status": True, "variable":"IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER"},
     "/config/selected_tab_no": {"status": True, "variable":"SELECTED_TAB_NO"},
-    "/config/selected_tab_your_translator_engines": {"status": False, "variable":"SELECTED_TAB_YOUR_TRANSLATOR_ENGINES"},
-    "/config/selected_tab_target_translator_engines": {"status": False, "variable":"SELECTED_TAB_TARGET_TRANSLATOR_ENGINES"},
+    "/config/selected_translator_engines": {"status": False, "variable":"SELECTED_TRANSLATOR_ENGINES"},
     "/config/selected_tab_your_languages": {"status": True, "variable":"SELECTED_TAB_YOUR_LANGUAGES"},
     "/config/selected_tab_target_languages": {"status": True, "variable":"SELECTED_TAB_TARGET_LANGUAGES"},
     "/config/selected_transcription_engine": {"status": False, "variable":"SELECTED_TRANSCRIPTION_ENGINE"},
@@ -124,7 +123,7 @@ controller_mapping = {
     "/controller/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
     "/controller/callback_selected_language_preset_tab": {"status": True, "variable":controller.callbackSelectedLanguagePresetTab},
     "/controller/list_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
-    "/controller/callback_selected_translation_engine": {"status": True, "variable":controller.callbackSelectedTranslationEngine},
+    "/controller/callback_set_translation_engines": {"status": True, "variable":controller.callbackSetSelectedTranslationEngines},
     "/controller/callback_set_transparency": {"status": True, "variable":controller.callbackSetTransparency},
     "/controller/callback_set_appearance": {"status": True, "variable":controller.callbackSetAppearance},
     "/controller/callback_set_ui_scaling": {"status": True, "variable":controller.callbackSetUiScaling},
@@ -426,29 +425,77 @@ if __name__ == "__main__":
                         # handleControllerRequest("/controller/callback_enable_translation")
                         # handleControllerRequest("/controller/callback_enable_convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
-                    case "/controller/callback_selected_translation_engine":
-                        data = "DeepL"
+                    case "/controller/callback_set_translation_engines":
+                        data = {
+                            "1":"CTranslate2",
+                            "2":"CTranslate2",
+                            "3":"CTranslate2",
+                        }
                     case "/controller/set_your_language_and_country":
                         data = {
-                            "primary": {
+                            "1":{
+                                "primary":{
                                 "language": "English",
                                 "country": "Hong Kong"
-                            }
+                                },
+                            },
+                            "2":{
+                                "primary":{
+                                    "language":"Japanese",
+                                    "country":"Japan"
+                                },
+                            },
+                            "3":{
+                                "primary":{
+                                    "language":"Japanese",
+                                    "country":"Japan"
+                                },
+                            },
                         }
                     case "/controller/set_target_language_and_country":
-                        data = {
-                            "primary": {
-                                "language": "Japanese",
-                                "country": "Japan"
+                        data ={
+                            "1":{
+                                "primary": {
+                                    "language": "Japanese",
+                                    "country": "Japan"
+                                },
+                                "secondary": {
+                                    "language": "English",
+                                    "country": "United States"
+                                },
+                                "tertiary": {
+                                    "language": "Chinese Simplified",
+                                    "country": "China"
+                                }
                             },
-                            "secondary": {
-                                "language": "English",
-                                "country": "United States"
+                            "2":{
+                                "primary":{
+                                    "language":"English",
+                                    "country":"United States",
+                                },
+                                "secondary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                                "tertiary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
                             },
-                            "tertiary": {
-                                "language": "Chinese Simplified",
-                                "country": "China"
-                            }
+                            "3":{
+                                "primary":{
+                                    "language":"English",
+                                    "country":"United States",
+                                },
+                                "secondary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                                "tertiary":{
+                                    "language":"English",
+                                    "country":"United States"
+                                },
+                            },
                         }
                     case "/controller/callback_set_transparency":
                         data = 0.5
