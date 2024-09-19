@@ -36,27 +36,27 @@ export const useMainFunction = () => {
     const toggleTranslation = () => {
         asyncUpdateTranslationStatus(asyncPending);
         if (currentTranslationStatus.data) {
-            asyncStdoutToPython("/controller/callback_disable_translation");
+            asyncStdoutToPython("/set/disable_translation");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_translation");
+            asyncStdoutToPython("/set/enable_translation");
         }
     };
 
     const toggleTranscriptionSend = () => {
         asyncUpdateTranscriptionSendStatus(asyncPending);
         if (currentTranscriptionSendStatus.data) {
-            asyncStdoutToPython("/controller/callback_disable_transcription_send");
+            asyncStdoutToPython("/set/disable_transcription_send");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_transcription_send");
+            asyncStdoutToPython("/set/enable_transcription_send");
         }
     };
 
     const toggleTranscriptionReceive = () => {
         asyncUpdateTranscriptionReceiveStatus(asyncPending);
         if (currentTranscriptionReceiveStatus.data) {
-            asyncStdoutToPython("/controller/callback_disable_transcription_receive");
+            asyncStdoutToPython("/set/disable_transcription_receive");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_transcription_receive");
+            asyncStdoutToPython("/set/enable_transcription_receive");
         }
     };
 

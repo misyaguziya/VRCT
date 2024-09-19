@@ -6,7 +6,7 @@ export const useSelectableLanguageList = () => {
     const { currentSelectableLanguageList, updateSelectableLanguageList } = useStore_SelectableLanguageList();
 
     const getSelectableLanguageList = () => {
-        asyncStdoutToPython("/controller/list_language_and_country");
+        asyncStdoutToPython("/get/list_languages");
     };
 
     return {

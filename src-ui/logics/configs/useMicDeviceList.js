@@ -7,7 +7,7 @@ export const useMicDeviceList = () => {
 
     const getMicDeviceList = () => {
         updateMicDeviceList(() => new Promise(() => {}));
-        asyncStdoutToPython("/controller/list_mic_device");
+        asyncStdoutToPython("/get/list_mic_device");
     };
 
     return {
