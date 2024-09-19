@@ -72,77 +72,77 @@ export const useReceiveRoutes = () => {
     } = useVolume();
 
     const routes = {
-        "/controller/callback_enable_translation": updateTranslationStatus,
-        "/controller/callback_disable_translation": updateTranslationStatus,
-        "/controller/callback_enable_transcription_send": updateTranscriptionSendStatus,
-        "/controller/callback_disable_transcription_send": updateTranscriptionSendStatus,
-        "/controller/callback_enable_transcription_receive": updateTranscriptionReceiveStatus,
-        "/controller/callback_disable_transcription_receive": updateTranscriptionReceiveStatus,
+        "/set/enable_translation": updateTranslationStatus,
+        "/set/disable_translation": updateTranslationStatus,
+        "/set/enable_transcription_send": updateTranscriptionSendStatus,
+        "/set/disable_transcription_send": updateTranscriptionSendStatus,
+        "/set/enable_transcription_receive": updateTranscriptionReceiveStatus,
+        "/set/disable_transcription_receive": updateTranscriptionReceiveStatus,
 
-        "/config/selected_tab_no": updateSelectedPresetTabNumber,
-        "/controller/callback_selected_language_preset_tab": updateSelectedPresetTabNumber,
-        "/config/enable_multi_translation": updateEnableMultiTranslation,
-        "/config/selected_tab_your_languages": updateSelectedYourLanguages,
-        "/controller/set_your_language_and_country": updateSelectedYourLanguages,
-        "/config/selected_tab_target_languages": updateSelectedTargetLanguages,
-        "/controller/set_your_language_and_country": updateSelectedTargetLanguages,
+        "/get/selected_tab_no": updateSelectedPresetTabNumber,
+        "/set/selected_tab_no": updateSelectedPresetTabNumber,
+        "/get/multi_language_translation": updateEnableMultiTranslation,
+        "/get/selected_your_languages": updateSelectedYourLanguages,
+        "/set/selected_your_languages": updateSelectedYourLanguages,
+        "/get/selected_target_languages": updateSelectedTargetLanguages,
+        "/set/selected_target_languages": updateSelectedTargetLanguages,
 
-        "/controller/list_language_and_country": updateSelectableLanguageList,
+        "/get/list_languages": updateSelectableLanguageList,
 
-        "/config/version": updateSoftwareVersion,
+        "/get/version": updateSoftwareVersion,
 
-        "/config/enable_mic_automatic_selection": updateEnableAutoMicSelect,
-        "/controller/callback_enable_mic_automatic_selection": updateEnableAutoMicSelect,
-        "/controller/callback_disable_mic_automatic_selection": updateEnableAutoMicSelect,
-        "/config/enable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
-        "/controller/callback_enable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
-        "/controller/callback_disable_speaker_automatic_selection": updateEnableAutoSpeakerSelect,
+        "/get/auto_mic_select": updateEnableAutoMicSelect,
+        "/set/enable_auto_mic_select": updateEnableAutoMicSelect,
+        "/set/disable_auto_mic_select": updateEnableAutoMicSelect,
+        "/get/auto_speaker_select": updateEnableAutoSpeakerSelect,
+        "/set/enable_auto_speaker_select": updateEnableAutoSpeakerSelect,
+        "/set/disable_auto_speaker_select": updateEnableAutoSpeakerSelect,
 
-        "/controller/list_mic_host": (payload) => updateMicHostList(arrayToObject(payload)),
-        "/config/choice_mic_host": updateSelectedMicHost,
-        "/controller/callback_set_mic_host": (payload) => {
+        "/get/list_mic_host": (payload) => updateMicHostList(arrayToObject(payload)),
+        "/get/selected_mic_host": updateSelectedMicHost,
+        "/set/selected_mic_host": (payload) => {
             updateSelectedMicHost(payload.host);
             updateSelectedMicDevice(payload.device);
         },
 
-        "/controller/list_mic_device": (payload) => updateMicDeviceList(arrayToObject(payload)),
-        "/config/choice_mic_device": updateSelectedMicDevice,
-        "/controller/callback_set_mic_device": updateSelectedMicDevice,
+        "/get/list_mic_device": (payload) => updateMicDeviceList(arrayToObject(payload)),
+        "/get/selected_mic_device": updateSelectedMicDevice,
+        "/set/selected_mic_device": updateSelectedMicDevice,
 
-        "/controller/list_speaker_device": (payload) => updateSpeakerDeviceList(arrayToObject(payload)),
-        "/config/choice_speaker_device": updateSelectedSpeakerDevice,
-        "/controller/callback_set_speaker_device": updateSelectedSpeakerDevice,
+        "/get/list_speaker_device": (payload) => updateSpeakerDeviceList(arrayToObject(payload)),
+        "/get/selected_speaker_device": updateSelectedSpeakerDevice,
+        "/set/selected_speaker_device": updateSelectedSpeakerDevice,
 
         "/action/check_mic_threshold_energy": updateVolumeVariable_Mic,
         "/action/check_speaker_threshold_energy": updateVolumeVariable_Speaker,
-        "/controller/callback_enable_check_mic_threshold": updateMicThresholdCheckStatus,
-        "/controller/callback_disable_check_mic_threshold": updateMicThresholdCheckStatus,
-        "/controller/callback_enable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
-        "/controller/callback_disable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
+        "/set/enable_check_mic_threshold": updateMicThresholdCheckStatus,
+        "/set/disable_check_mic_threshold": updateMicThresholdCheckStatus,
+        "/set/enable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
+        "/set/disable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
 
-        "/config/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/controller/callback_enable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
-        "/controller/callback_disable_auto_clear_chatbox": updateEnableAutoClearMessageBox,
+        "/get/auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/set/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/set/disable_auto_clear_message_box": updateEnableAutoClearMessageBox,
 
-        "/config/send_message_button_type": updateSendMessageButtonType,
-        "/controller/callback_set_send_message_button_type": updateSendMessageButtonType,
+        "/get/send_message_button_type": updateSendMessageButtonType,
+        "/set/send_message_button_type": updateSendMessageButtonType,
 
-        "/config/input_mic_energy_threshold": updateMicThreshold,
-        "/controller/callback_set_mic_energy_threshold": updateMicThreshold,
-        "/config/input_speaker_energy_threshold": updateSpeakerThreshold,
-        "/controller/callback_set_speaker_energy_threshold": updateSpeakerThreshold,
+        "/get/mic_energy_threshold": updateMicThreshold,
+        "/set/mic_energy_threshold": updateMicThreshold,
+        "/get/speaker_energy_threshold": updateSpeakerThreshold,
+        "/set/speaker_energy_threshold": updateSpeakerThreshold,
 
-        "/config/input_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
-        "/controller/callback_enable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
-        "/controller/callback_disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
-        "/config/input_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
-        "/controller/callback_enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+        "/get/mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/set/enable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/set/disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
+        "/get/speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+        "/set/enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
 
-        "/config/ui_language": updateUiLanguage,
-        "/controller/callback_set_ui_language": updateUiLanguage,
+        "/get/ui_language": updateUiLanguage,
+        "/set/ui_language": updateUiLanguage,
 
 
-        "/controller/callback_messagebox_send": updateSentMessageLogById,
+        "/run/send_message_box": updateSentMessageLogById,
         "/action/transcription_send_mic_message": addSentMessageLog,
         "/action/transcription_receive_speaker_message": addReceivedMessageLog
     };

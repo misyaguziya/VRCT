@@ -7,7 +7,7 @@ export const useSoftwareVersion = () => {
 
     const getSoftwareVersion = () => {
         updateSoftwareVersion(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/version");
+        asyncStdoutToPython("/get/version");
     };
 
     return {

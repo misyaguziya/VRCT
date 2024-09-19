@@ -7,15 +7,15 @@ export const useEnableAutoSpeakerSelect = () => {
 
     const getEnableAutoSpeakerSelect = () => {
         updateEnableAutoSpeakerSelect(() => new Promise(() => {}));
-        asyncStdoutToPython("/config/enable_speaker_automatic_selection");
+        asyncStdoutToPython("/get/auto_speaker_select");
     };
 
     const toggleEnableAutoSpeakerSelect = () => {
         updateEnableAutoSpeakerSelect(() => new Promise(() => {}));
         if (currentEnableAutoSpeakerSelect.data) {
-            asyncStdoutToPython("/controller/callback_disable_speaker_automatic_selection");
+            asyncStdoutToPython("/set/disable_auto_speaker_select");
         } else {
-            asyncStdoutToPython("/controller/callback_enable_speaker_automatic_selection");
+            asyncStdoutToPython("/set/enable_auto_speaker_select");
         }
     };
 
