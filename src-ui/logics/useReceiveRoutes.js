@@ -1,9 +1,9 @@
 import { arrayToObject } from "@utils/arrayToObject";
-import { useMainFunction } from "./useMainFunction";
-import { useMessage } from "./useMessage";
-import { useSelectableLanguageList } from "./useSelectableLanguageList";
-import { useLanguageSettings } from "./useLanguageSettings";
-import { useVolume } from "./useVolume";
+import { useMainFunction } from "@logics_main/useMainFunction";
+import { useMessage } from "@logics_common/useMessage";
+import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
+import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import { useVolume } from "@logics_common/useVolume";
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
 import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";

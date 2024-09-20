@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "./LogBox.module.scss";
 import { useStore_MessageLogs, store } from "@store";
 import { MessageContainer } from "./message_container/MessageContainer";
-import { scrollToBottom } from "@logics/scrollToBottom";
+import { scrollToBottom } from "@utils/scrollToBottom";
 
 export const LogBox = () => {
     const { currentMessageLogs } = useStore_MessageLogs();

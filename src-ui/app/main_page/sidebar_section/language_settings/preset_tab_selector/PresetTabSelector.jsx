@@ -12,7 +12,7 @@ export const PresetTabSelector = () => {
 
 import clsx from "clsx";
 
-import { useLanguageSettings } from "@logics/useLanguageSettings";
+import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 
 const Tab = (props) => {
     const { currentSelectedPresetTabNumber, setSelectedPresetTabNumber } = useLanguageSettings();
