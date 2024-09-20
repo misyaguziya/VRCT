@@ -31,8 +31,8 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
-import { useLanguageSettings } from "@logics/useLanguageSettings";
-import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
+import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
@@ -103,7 +103,7 @@ const UiLanguageController = () => {
     return null;
 };
 
-import { useVolume } from "@logics/useVolume";
+import { useVolume } from "@logics_common/useVolume";
 import { useStore_IsOpenedConfigPage } from "@store";
 const ConfigPageCloseTrigger = () => {
     const { currentIsOpenedConfigPage } = useStore_IsOpenedConfigPage();

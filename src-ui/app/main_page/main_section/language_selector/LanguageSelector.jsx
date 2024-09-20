@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 
-import { useSelectableLanguageList } from "@logics/useSelectableLanguageList";
+import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 import styles from "./LanguageSelector.module.scss";
 
 import { LanguageSelectorTopBar } from "./language_selector_top_bar/LanguageSelectorTopBar";

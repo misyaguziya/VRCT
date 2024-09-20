@@ -7,7 +7,7 @@ import HeadphonesSvg from "@images/headphones.svg?react";
 import ForegroundSvg from "@images/foreground.svg?react";
 import { useStore_IsMainPageCompactMode } from "@store";
 
-import { useMainFunction } from "@logics/useMainFunction";
+import { useMainFunction } from "@logics_main/useMainFunction";
 
 export const MainFunctionSwitch = () => {
     const { t } = useTranslation();
