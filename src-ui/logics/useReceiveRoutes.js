@@ -137,6 +137,7 @@ export const useReceiveRoutes = () => {
         "/set/disable_mic_dynamic_energy_threshold": updateEnableAutomaticMicThreshold,
         "/get/speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
         "/set/enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
+        "/set/disable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
 
         "/get/ui_language": updateUiLanguage,
         "/set/ui_language": updateUiLanguage,
