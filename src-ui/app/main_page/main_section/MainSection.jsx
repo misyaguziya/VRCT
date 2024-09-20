@@ -18,7 +18,7 @@ export const MainSection = () => {
 };
 
 
-import { useLanguageSettings } from "@logics/useLanguageSettings";
+import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 const HandleLanguageSelector = () => {
     const { currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const {

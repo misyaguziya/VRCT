@@ -40,6 +40,8 @@ export default defineConfig(async () => ({
             "@images": path.resolve(__dirname, "src-ui/assets"),
             "@utils": path.resolve(__dirname, "src-ui/utils"),
             "@logics": path.resolve(__dirname, "src-ui/logics"),
+            "@logics_common": path.resolve(__dirname, "src-ui/logics/common"),
+            "@logics_main": path.resolve(__dirname, "src-ui/logics/main"),
             "@logics_configs": path.resolve(__dirname, "src-ui/logics/configs"),
         },
     },
