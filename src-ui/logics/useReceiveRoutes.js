@@ -21,14 +21,12 @@ import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonTy
 
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
-
 export const useReceiveRoutes = () => {
     const {
         updateTranslationStatus,
         updateTranscriptionSendStatus,
         updateTranscriptionReceiveStatus,
     } = useMainFunction();
-
     const {
         updateSelectedPresetTabNumber,
         updateEnableMultiTranslation,
@@ -36,34 +34,25 @@ export const useReceiveRoutes = () => {
         updateSelectedTargetLanguages
     } = useLanguageSettings();
     const { updateSelectableLanguageList } = useSelectableLanguageList();
-
     const {
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,
     } = useMessage();
-
     const { updateSoftwareVersion } = useSoftwareVersion();
-
     const { updateEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { updateEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
-
     const { updateMicHostList } = useMicHostList();
     const { updateSelectedMicHost } = useSelectedMicHost();
     const { updateMicDeviceList } = useMicDeviceList();
     const { updateSelectedMicDevice } = useSelectedMicDevice();
     const { updateSpeakerDeviceList } = useSpeakerDeviceList();
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-
     const { updateMicThreshold, updateEnableAutomaticMicThreshold } = useMicThreshold();
     const { updateSpeakerThreshold, updateEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-
     const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
-
     const { updateUiLanguage } = useUiLanguage();
-
-
     const {
         updateVolumeVariable_Mic,
         updateVolumeVariable_Speaker,
@@ -72,6 +61,8 @@ export const useReceiveRoutes = () => {
     } = useVolume();
 
     const routes = {
+        // Main Page
+        // Main Functions
         "/set/enable_translation": updateTranslationStatus,
         "/set/disable_translation": updateTranslationStatus,
         "/set/enable_transcription_send": updateTranscriptionSendStatus,
@@ -79,6 +70,7 @@ export const useReceiveRoutes = () => {
         "/set/enable_transcription_receive": updateTranscriptionReceiveStatus,
         "/set/disable_transcription_receive": updateTranscriptionReceiveStatus,
 
+        // Language Settings
         "/get/selected_tab_no": updateSelectedPresetTabNumber,
         "/set/selected_tab_no": updateSelectedPresetTabNumber,
         "/get/multi_language_translation": updateEnableMultiTranslation,
@@ -87,10 +79,20 @@ export const useReceiveRoutes = () => {
         "/get/selected_target_languages": updateSelectedTargetLanguages,
         "/set/selected_target_languages": updateSelectedTargetLanguages,
 
+        // Language Selector
         "/get/list_languages": updateSelectableLanguageList,
 
+        // Message
+        "/run/send_message_box": updateSentMessageLogById,
+        "/action/transcription_send_mic_message": addSentMessageLog,
+        "/action/transcription_receive_speaker_message": addReceivedMessageLog,
+
+
+        // Config Page
+        // Common
         "/get/version": updateSoftwareVersion,
 
+        // Device Tab
         "/get/auto_mic_select": updateEnableAutoMicSelect,
         "/set/enable_auto_mic_select": updateEnableAutoMicSelect,
         "/set/disable_auto_mic_select": updateEnableAutoMicSelect,
@@ -120,13 +122,6 @@ export const useReceiveRoutes = () => {
         "/set/enable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
         "/set/disable_check_speaker_threshold": updateSpeakerThresholdCheckStatus,
 
-        "/get/auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/disable_auto_clear_message_box": updateEnableAutoClearMessageBox,
-
-        "/get/send_message_button_type": updateSendMessageButtonType,
-        "/set/send_message_button_type": updateSendMessageButtonType,
-
         "/get/mic_energy_threshold": updateMicThreshold,
         "/set/mic_energy_threshold": updateMicThreshold,
         "/get/speaker_energy_threshold": updateSpeakerThreshold,
@@ -139,13 +134,17 @@ export const useReceiveRoutes = () => {
         "/set/enable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
         "/set/disable_speaker_dynamic_energy_threshold": updateEnableAutomaticSpeakerThreshold,
 
+        // Appearance
         "/get/ui_language": updateUiLanguage,
         "/set/ui_language": updateUiLanguage,
 
+        // Others Tab
+        "/get/auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/set/enable_auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/set/disable_auto_clear_message_box": updateEnableAutoClearMessageBox,
 
-        "/run/send_message_box": updateSentMessageLogById,
-        "/action/transcription_send_mic_message": addSentMessageLog,
-        "/action/transcription_receive_speaker_message": addReceivedMessageLog
+        "/get/send_message_button_type": updateSendMessageButtonType,
+        "/set/send_message_button_type": updateSendMessageButtonType,
     };
 
     const receiveRoutes = (parsed_data) => {
