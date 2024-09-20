@@ -7,19 +7,15 @@ import webui_controller as controller
 from utils import printLog, printResponse, encodeBase64
 
 mapping = {
-    "/get/version": {"status": True, "variable":controller.getVersion},
-    "/get/transparency_range": {"status": True, "variable":controller.getTransparencyRange},
-    "/get/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
-    "/get/ui_scaling_list": {"status": True, "variable":controller.getUiScalingList},
-    "/get/textbox_ui_scaling_range": {"status": True, "variable":controller.getTextboxUiScalingRange},
-    "/get/message_box_ratio_range": {"status": True, "variable":controller.getMessageBoxRatioRange},
-    "/get/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
-    "/get/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperModelTypeDict},
-    "/get/max_mic_energy_threshold": {"status": True, "variable":controller.getMaxMicEnergyThreshold},
-    "/get/max_speaker_energy_threshold": {"status": True, "variable":controller.getMaxSpeakerEnergyThreshold},
-
+    # Main Window
     "/set/enable_translation": {"status": False, "variable":controller.setEnableTranslation},
     "/set/disable_translation": {"status": False, "variable":controller.setDisableTranslation},
+
+    "/set/enable_transcription_send": {"status": False, "variable":controller.setEnableTranscriptionSend},
+    "/set/disable_transcription_send": {"status": False, "variable":controller.setDisableTranscriptionSend},
+
+    "/set/enable_transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
+    "/set/disable_transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
 
     "/set/enable_foreground": {"status": True, "variable":controller.setEnableForeground},
     "/set/disable_foreground": {"status": True, "variable":controller.setDisableForeground},
@@ -30,11 +26,12 @@ mapping = {
     "/get/selected_tab_no": {"status": True, "variable":controller.getSelectedTabNo},
     "/set/selected_tab_no": {"status": True, "variable":controller.setSelectedTabNo},
 
+    "/get/main_window_sidebar_compact_mode": {"status": True, "variable":controller.getMainWindowSidebarCompactMode},
+    "/set/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
+    "/set/disable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
+
     "/get/list_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
     "/get/list_languages": {"status": True, "variable":controller.getListLanguageAndCountry},
-    "/get/list_mic_host": {"status": True, "variable":controller.getListInputHost},
-    "/get/list_mic_device": {"status": True, "variable":controller.getListInputDevice},
-    "/get/list_speaker_device": {"status": True, "variable":controller.getListOutputDevice},
 
     "/get/selected_translator_engines": {"status": False, "variable":controller.getSelectedTranslatorEngines},
     "/set/selected_translator_engines": {"status": True, "variable":controller.setSelectedTranslatorEngines},
@@ -47,34 +44,33 @@ mapping = {
 
     "/get/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
 
-    "/get/multi_language_translation": {"status": True, "variable":controller.getMultiLanguageTranslation},
-    "/set/enable_multi_language_translation": {"status": True, "variable":controller.setEnableMultiLanguageTranslation},
-    "/set/disable_multi_language_translation": {"status": True, "variable":controller.setDisableMultiLanguageTranslation},
+    "/run/send_message_box": {"status": False, "variable":controller.sendMessageBox},
+    "/run/typing_message_box": {"status": False, "variable":controller.typingMessageBox},
+    "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
 
-    "/get/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
-    "/set/enable_convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
-    "/set/disable_convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
+    "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 
-    "/get/convert_message_to_hiragana": {"status": True, "variable":controller.getConvertMessageToHiragana},
-    "/set/enable_convert_message_to_hiragana": {"status": True, "variable":controller.setEnableConvertMessageToHiragana},
-    "/set/disable_convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
+    # Config Window
+    # Appearance
+    "/get/version": {"status": True, "variable":controller.getVersion},
 
-    "/get/main_window_sidebar_compact_mode": {"status": True, "variable":controller.getMainWindowSidebarCompactMode},
-    "/set/enable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
-    "/set/disable_main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
-
+    "/get/transparency_range": {"status": True, "variable":controller.getTransparencyRange},
     "/get/transparency": {"status": True, "variable":controller.getTransparency},
     "/set/transparency": {"status": True, "variable":controller.setTransparency},
 
+    "/get/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
     "/get/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
     "/set/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
 
+    "/get/ui_scaling_list": {"status": True, "variable":controller.getUiScalingList},
     "/get/ui_scaling": {"status": True, "variable":controller.getUiScaling},
     "/set/ui_scaling": {"status": True, "variable":controller.setUiScaling},
 
+    "/get/textbox_ui_scaling_range": {"status": True, "variable":controller.getTextboxUiScalingRange},
     "/get/textbox_ui_scaling": {"status": True, "variable":controller.getTextboxUiScaling},
     "/set/textbox_ui_scaling": {"status": True, "variable":controller.setTextboxUiScaling},
 
+    "/get/message_box_ratio_range": {"status": True, "variable":controller.getMessageBoxRatioRange},
     "/get/message_box_ratio": {"status": True, "variable":controller.getMessageBoxRatio},
     "/set/message_box_ratio": {"status": True, "variable":controller.setMessageBoxRatio},
 
@@ -90,6 +86,42 @@ mapping = {
 
     "/get/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
     "/set/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
+
+    # Translation
+    "/get/use_translation_feature": {"status": True, "variable":controller.getUseTranslationFeature},
+    "/set/enable_use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
+    "/set/disable_use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
+
+    "/get/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
+
+    "/get/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
+    "/set/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
+
+    "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
+
+    "/get/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
+    "/set/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
+    "/del/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
+
+    "/get/multi_language_translation": {"status": True, "variable":controller.getMultiLanguageTranslation},
+    "/set/enable_multi_language_translation": {"status": True, "variable":controller.setEnableMultiLanguageTranslation},
+    "/set/disable_multi_language_translation": {"status": True, "variable":controller.setDisableMultiLanguageTranslation},
+
+    "/get/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
+    "/set/enable_convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
+    "/set/disable_convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
+
+    "/get/convert_message_to_hiragana": {"status": True, "variable":controller.getConvertMessageToHiragana},
+    "/set/enable_convert_message_to_hiragana": {"status": True, "variable":controller.setEnableConvertMessageToHiragana},
+    "/set/disable_convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
+
+    # Transcription
+    "/get/list_mic_host": {"status": True, "variable":controller.getListInputHost},
+    "/get/list_mic_device": {"status": True, "variable":controller.getListInputDevice},
+    "/get/list_speaker_device": {"status": True, "variable":controller.getListOutputDevice},
+
+    "/get/max_mic_energy_threshold": {"status": True, "variable":controller.getMaxMicEnergyThreshold},
+    "/get/max_speaker_energy_threshold": {"status": True, "variable":controller.getMaxSpeakerEnergyThreshold},
 
     "/get/auto_mic_select": {"status": True, "variable":controller.getAutoMicSelect},
     "/set/enable_auto_mic_select": {"status": True, "variable":controller.setEnableAutoMicSelect},
@@ -117,15 +149,18 @@ mapping = {
     "/get/mic_max_phrases": {"status": True, "variable":controller.getMicMaxPhrases},
     "/set/mic_max_phrases": {"status": True, "variable":controller.setMicMaxPhrases},
 
-    "/get/mic_word_filter": {"status": True, "variable":controller.getMicWordFilter},
-    "/set/mic_word_filter": {"status": True, "variable":controller.setMicWordFilter},
-    "/del/mic_word_filter": {"status": True, "variable":controller.delMicWordFilter},
-
     "/get/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 
     "/get/mic_no_speech_prob": {"status": True, "variable":controller.getMicNoSpeechProb},
     "/set/mic_no_speech_prob": {"status": True, "variable":controller.setMicNoSpeechProb},
+
+    "/set/enable_check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
+    "/set/disable_check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
+
+    "/get/mic_word_filter": {"status": True, "variable":controller.getMicWordFilter},
+    "/set/mic_word_filter": {"status": True, "variable":controller.setMicWordFilter},
+    "/del/mic_word_filter": {"status": True, "variable":controller.delMicWordFilter},
 
     "/get/auto_speaker_select": {"status": True, "variable":controller.getAutoSpeakerSelect},
     "/set/enable_auto_speaker_select": {"status": True, "variable":controller.setEnableAutoSpeakerSelect},
@@ -156,30 +191,32 @@ mapping = {
     "/get/speaker_no_speech_prob": {"status": True, "variable":controller.getSpeakerNoSpeechProb},
     "/set/speaker_no_speech_prob": {"status": True, "variable":controller.setSpeakerNoSpeechProb},
 
-    "/get/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
-    "/set/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
+    "/set/enable_check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
+    "/set/disable_check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
-    "/get/osc_port": {"status": True, "variable":controller.getOscPort},
-    "/set/osc_port": {"status": True, "variable":controller.setOscPort},
+    "/get/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperModelTypeDict},
 
-    "/get/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
-    "/set/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
-    "/del/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
-
-    "/get/use_translation_feature": {"status": True, "variable":controller.getUseTranslationFeature},
-    "/set/enable_use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
-    "/set/disable_use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
+    "/get/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
+    "/set/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
     "/get/use_whisper_feature": {"status": True, "variable":controller.getUseWhisperFeature},
     "/set/enable_use_whisper_feature": {"status": True, "variable":controller.setEnableUseWhisperFeature},
     "/set/disable_use_whisper_feature": {"status": True, "variable":controller.setDisableUseWhisperFeature},
 
-    "/get/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
-    "/set/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
+    "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
-    "/get/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
-    "/set/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+    # VR
+    "/get/overlay_settings": {"status": True, "variable":controller.getOverlaySettings},
+    "/set/overlay_settings": {"status": True, "variable":controller.setOverlaySettings},
 
+    "/get/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
+    "/set/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
+
+    "/get/overlay_small_log": {"status": True, "variable":controller.getOverlaySmallLog},
+    "/set/enable_overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
+    "/set/disable_overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
+
+    # Others
     "/get/auto_clear_message_box": {"status": True, "variable":controller.getAutoClearMessageBox},
     "/set/enable_auto_clear_message_box": {"status": True, "variable":controller.setEnableAutoClearMessageBox},
     "/set/disable_auto_clear_message_box": {"status": True, "variable":controller.setDisableAutoClearMessageBox},
@@ -191,15 +228,15 @@ mapping = {
     "/get/send_message_button_type": {"status": True, "variable":controller.getSendMessageButtonType},
     "/set/send_message_button_type": {"status": True, "variable":controller.setSendMessageButtonType},
 
-    "/get/overlay_settings": {"status": True, "variable":controller.getOverlaySettings},
-    "/set/overlay_settings": {"status": True, "variable":controller.setOverlaySettings},
+    "/get/logger": {"status": True, "variable":controller.getLogger},
+    "/set/enable_logger": {"status": True, "variable":controller.setEnableLogger},
+    "/set/disable_logger": {"status": True, "variable":controller.setDisableLogger},
 
-    "/get/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
-    "/set/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
+    "/run/open_filepath_logs": {"status": True, "variable":controller.openFilepathLogs},
 
-    "/get/overlay_small_log": {"status": True, "variable":controller.getOverlaySmallLog},
-    "/set/enable_overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
-    "/set/disable_overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
+    "/get/vrc_mic_mute_sync": {"status": True, "variable":controller.getVrcMicMuteSync},
+    "/set/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.setEnableVrcMicMuteSync},
+    "/set/disable_vrc_mic_mute_sync": {"status": True, "variable":controller.setDisableVrcMicMuteSync},
 
     "/get/send_message_to_vrc": {"status": True, "variable":controller.getSendMessageToVrc},
     "/set/enable_send_message_to_vrc": {"status": True, "variable":controller.setEnableSendMessageToVrc},
@@ -224,39 +261,17 @@ mapping = {
     "/set/enable_send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
     "/set/disable_send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
 
-    "/get/logger": {"status": True, "variable":controller.getLogger},
-    "/set/enable_logger": {"status": True, "variable":controller.setEnableLogger},
-    "/set/disable_logger": {"status": True, "variable":controller.setDisableLogger},
+    # Advanced Settings
+    "/get/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
+    "/set/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
 
-    "/get/vrc_mic_mute_sync": {"status": True, "variable":controller.getVrcMicMuteSync},
-    "/set/enable_vrc_mic_mute_sync": {"status": True, "variable":controller.setEnableVrcMicMuteSync},
-    "/set/disable_vrc_mic_mute_sync": {"status": True, "variable":controller.setDisableVrcMicMuteSync},
+    "/get/osc_port": {"status": True, "variable":controller.getOscPort},
+    "/set/osc_port": {"status": True, "variable":controller.setOscPort},
 
-    "/set/enable_check_mic_threshold": {"status": True, "variable":controller.setEnableCheckMicThreshold},
-    "/set/disable_check_mic_threshold": {"status": True, "variable":controller.setDisableCheckMicThreshold},
-
-    "/set/enable_check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
-    "/set/disable_check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
+    "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
 
     # "/run/update_software": {"status": True, "variable":controller.updateSoftware},
     # "/run/restart_software": {"status": True, "variable":controller.restartSoftware},
-
-    "/run/open_filepath_logs": {"status": True, "variable":controller.openFilepathLogs},
-    "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
-
-    "/set/enable_transcription_send": {"status": False, "variable":controller.setEnableTranscriptionSend},
-    "/set/disable_transcription_send": {"status": False, "variable":controller.setDisableTranscriptionSend},
-
-    "/set/enable_transcription_receive": {"status": False, "variable":controller.setEnableTranscriptionReceive},
-    "/set/disable_transcription_receive": {"status": False, "variable":controller.setDisableTranscriptionReceive},
-
-    "/run/send_message_box": {"status": False, "variable":controller.sendMessageBox},
-    "/run/typing_message_box": {"status": False, "variable":controller.typingMessageBox},
-    "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
-
-    "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
-    "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
-    "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 }
 
 action_mapping = {
