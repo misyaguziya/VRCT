@@ -15,7 +15,7 @@ export const WordFilter = () => {
         if (input_value === undefined) return;
         const input_value_array = input_value.split(",");
 
-        let updated_list = [...currentWordFilterList];
+        let updated_list = [...currentWordFilterList.data];
 
         for (let each_input_value of input_value_array) {
             each_input_value = each_input_value.trim();
@@ -57,10 +57,10 @@ export const WordFilter = () => {
 
     return (
         <div className={styles.container}>
-            { currentIsOpenedWordFilterList &&
+            { currentIsOpenedWordFilterList.data &&
             <div className={styles.list_section_wrapper}>
                 {
-                    currentWordFilterList.map((item, index) => {
+                    currentWordFilterList.data.map((item, index) => {
                         return <WordFilterItem value={item.value} key={index} is_redoable={item.is_redoable} deleteAction={deleteAction} redoAction={redoAction}/>;
                     })
                 }
@@ -117,15 +117,15 @@ export const WordFilterListToggleComponent = (props) => {
 
 
     const svg_class_names = clsx(styles["arrow_left_svg"], {
-        [styles.to_down]: !currentIsOpenedWordFilterList,
-        [styles.to_up]: currentIsOpenedWordFilterList
+        [styles.to_down]: !currentIsOpenedWordFilterList.data,
+        [styles.to_up]: currentIsOpenedWordFilterList.data
     });
 
     const OnclickFunction = () => {
-        updateIsOpenedWordFilterList(!currentIsOpenedWordFilterList);
+        updateIsOpenedWordFilterList(!currentIsOpenedWordFilterList.data);
     };
 
-    const word_filter_list_length = currentWordFilterList.filter(item => item.is_redoable === false).length;
+    const word_filter_list_length = currentWordFilterList.data.filter(item => item.is_redoable === false).length;
 
 
     return (

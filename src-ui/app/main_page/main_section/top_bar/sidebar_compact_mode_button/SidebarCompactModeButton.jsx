@@ -8,11 +8,11 @@ export const SidebarCompactModeButton = () => {
     const { updateIsMainPageCompactMode, currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
 
     const toggleCompactMode = () => {
-        updateIsMainPageCompactMode(!currentIsMainPageCompactMode);
+        updateIsMainPageCompactMode(!currentIsMainPageCompactMode.data);
     };
 
     const class_names = clsx(styles["arrow_left_svg"], {
-        [styles["reverse"]]: currentIsMainPageCompactMode
+        [styles["reverse"]]: currentIsMainPageCompactMode.data
     });
 
     return (

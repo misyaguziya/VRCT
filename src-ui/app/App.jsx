@@ -124,7 +124,7 @@ const ConfigPageCloseTrigger = () => {
     } = useVolume();
 
     useEffect(() => {
-        if (currentIsOpenedConfigPage === false) {
+        if (currentIsOpenedConfigPage.data === false) {
             if (currentMicThresholdCheckStatus.data === true) volumeCheckStop_Mic();
             if (currentSpeakerThresholdCheckStatus.data === true) volumeCheckStop_Speaker();
         }

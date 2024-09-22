@@ -3,10 +3,10 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMicHostList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentMicHostList, updateMicHostList } = useStore_MicHostList();
+    const { currentMicHostList, updateMicHostList, pendingMicHostList } = useStore_MicHostList();
 
     const getMicHostList = () => {
-        updateMicHostList(() => new Promise(() => {}));
+        pendingMicHostList();
         asyncStdoutToPython("/get/list_mic_host");
     };
 

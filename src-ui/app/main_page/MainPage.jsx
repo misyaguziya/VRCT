@@ -9,8 +9,8 @@ export const MainPage = () => {
 
     return (
         <div className={clsx(styles.page, styles.main_page, {
-            [styles.show_config]: currentIsOpenedConfigPage,
-            [styles.show_main]: !currentIsOpenedConfigPage
+            [styles.show_config]: currentIsOpenedConfigPage.data,
+            [styles.show_main]: !currentIsOpenedConfigPage.data
         })}>
             <div className={styles.container}>
                 <SidebarSection />

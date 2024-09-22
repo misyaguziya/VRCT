@@ -11,17 +11,24 @@ export const useVolume = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { updateMicVolume } = useStore_MicVolume();
     const { updateSpeakerVolume } = useStore_SpeakerVolume();
-    const { currentMicThresholdCheckStatus, updateMicThresholdCheckStatus } = useStore_MicThresholdCheckStatus();
-    const { currentSpeakerThresholdCheckStatus, updateSpeakerThresholdCheckStatus } = useStore_SpeakerThresholdCheckStatus();
+    const {
+        currentMicThresholdCheckStatus,
+        updateMicThresholdCheckStatus,
+        pendingMicThresholdCheckStatus,
+    } = useStore_MicThresholdCheckStatus();
+    const {
+        currentSpeakerThresholdCheckStatus,
+        updateSpeakerThresholdCheckStatus,
+        pendingSpeakerThresholdCheckStatus,
+    } = useStore_SpeakerThresholdCheckStatus();
 
-    const asyncPending = () => new Promise(() => {});
     return {
         volumeCheckStart_Mic: () => {
-            updateMicThresholdCheckStatus(asyncPending);
+            pendingMicThresholdCheckStatus();
             asyncStdoutToPython("/set/enable_check_mic_threshold");
         },
         volumeCheckStop_Mic: () => {
-            updateMicThresholdCheckStatus(asyncPending);
+            pendingMicThresholdCheckStatus();
             asyncStdoutToPython("/set/disable_check_mic_threshold");
         },
         updateVolumeVariable_Mic: (payload) => {
@@ -35,11 +42,11 @@ export const useVolume = () => {
 
         volumeCheckStart_Speaker: () => {
             updateSpeakerVolume("0");
-            updateSpeakerThresholdCheckStatus(asyncPending);
+            pendingSpeakerThresholdCheckStatus();
             asyncStdoutToPython("/set/enable_check_speaker_threshold");
         },
         volumeCheckStop_Speaker: () => {
-            updateSpeakerThresholdCheckStatus(asyncPending);
+            pendingSpeakerThresholdCheckStatus();
             asyncStdoutToPython("/set/disable_check_speaker_threshold");
         },
         updateVolumeVariable_Speaker: (payload) => {

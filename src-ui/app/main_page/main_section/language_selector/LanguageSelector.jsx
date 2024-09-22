@@ -27,7 +27,7 @@ export const LanguageSelector = ({ id, onClickFunction }) => {
         }, {});
     };
 
-    const groupedLanguages = groupLanguagesByFirstLetter(currentSelectableLanguageList);
+    const groupedLanguages = groupLanguagesByFirstLetter(currentSelectableLanguageList.data);
 
     return (
         <div className={styles.container}>

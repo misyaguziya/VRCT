@@ -71,8 +71,8 @@ const generateMessageObject = (data, category) => {
 };
 
 
-const updateItemById = (id, translated_data) => (prev_items) => {
-    return prev_items.map(item => {
+const updateItemById = (id, translated_data) => (current_items) => {
+    return current_items.data.map(item => {
         if (item.id === id) {
             item.status = "ok";
             item.messages.translated = translated_data;

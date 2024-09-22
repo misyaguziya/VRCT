@@ -6,7 +6,7 @@ export const Switchbox = (props) => {
     const [is_hovered, setIsHovered] = useState(false);
     const [is_mouse_down, setIsMouseDown] = useState(false);
 
-    const is_loading = (props.variable.state === "loading");
+    const is_loading = (props.variable.state === "pending");
 
     const getClassNames = (base_class) => clsx(base_class, {
         [styles.is_active]: (props.variable.data === true),
