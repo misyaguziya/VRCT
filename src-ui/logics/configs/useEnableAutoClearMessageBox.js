@@ -3,15 +3,15 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useEnableAutoClearMessageBox = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox } = useStore_EnableAutoClearMessageBox();
+    const { currentEnableAutoClearMessageBox, updateEnableAutoClearMessageBox, pendingEnableAutoClearMessageBox } = useStore_EnableAutoClearMessageBox();
 
     const getEnableAutoClearMessageBox = () => {
-        updateEnableAutoClearMessageBox(() => new Promise(() => {}));
+        pendingEnableAutoClearMessageBox();
         asyncStdoutToPython("/get/auto_clear_message_box");
     };
 
     const toggleEnableAutoClearMessageBox = () => {
-        updateEnableAutoClearMessageBox(() => new Promise(() => {}));
+        pendingEnableAutoClearMessageBox();
         if (currentEnableAutoClearMessageBox.data) {
             asyncStdoutToPython("/set/disable_auto_clear_message_box");
         } else {

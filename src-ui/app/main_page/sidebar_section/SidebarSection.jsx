@@ -11,12 +11,12 @@ import { OpenSettings } from "./open_settings/OpenSettings";
 export const SidebarSection = () => {
     const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
     const container_class_name = clsx(styles.container, {
-        [styles.is_compact_mode]: currentIsMainPageCompactMode
+        [styles.is_compact_mode]: currentIsMainPageCompactMode.data
     });
 
     const { currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const scroll_container_class_names = clsx(styles.scroll_container, {
-        [styles.is_opened]: (currentIsOpenedLanguageSelector.your_language === true || currentIsOpenedLanguageSelector.target_language === true)
+        [styles.is_opened]: (currentIsOpenedLanguageSelector.data.your_language === true || currentIsOpenedLanguageSelector.data.target_language === true)
     });
 
     return (
@@ -24,7 +24,7 @@ export const SidebarSection = () => {
             <Logo />
             <div className={scroll_container_class_names}>
                 <MainFunctionSwitch />
-                {!currentIsMainPageCompactMode && <LanguageSettings />}
+                {!currentIsMainPageCompactMode.data && <LanguageSettings />}
             </div>
             <OpenSettings />
         </div>

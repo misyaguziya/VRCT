@@ -7,7 +7,7 @@ import { Appearance } from "./appearance/Appearance";
 
 export const SettingBox = () => {
     const { currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
-    switch (currentSelectedConfigTabId) {
+    switch (currentSelectedConfigTabId.data) {
         case "device":
             return <Device />;
         // case "others":

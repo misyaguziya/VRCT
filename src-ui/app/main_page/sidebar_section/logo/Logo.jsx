@@ -15,7 +15,7 @@ import { useStore_IsMainPageCompactMode } from "@store";
 
 export const LogoBox = () => {
     const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
-    if (currentIsMainPageCompactMode === true) {
+    if (currentIsMainPageCompactMode.data === true) {
         return <img src={chato_img} className={styles.logo_chato} alt="VRCT logo chato" />;
     } else {
         return <img src={vrct_logo} className={styles.logo} alt="VRCT logo" />;

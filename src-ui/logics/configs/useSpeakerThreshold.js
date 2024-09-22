@@ -4,7 +4,7 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 export const useSpeakerThreshold = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { updateSpeakerThreshold, currentSpeakerThreshold } = useStore_SpeakerThreshold();
-    const { updateEnableAutomaticSpeakerThreshold, currentEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
+    const { updateEnableAutomaticSpeakerThreshold, currentEnableAutomaticSpeakerThreshold, pendingEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
 
     const getSpeakerThreshold = () => {
         asyncStdoutToPython("/get/speaker_energy_threshold");
@@ -15,12 +15,12 @@ export const useSpeakerThreshold = () => {
     };
 
     const getEnableAutomaticSpeakerThreshold = () => {
-        updateEnableAutomaticSpeakerThreshold(() => new Promise(() => {}));
+        pendingEnableAutomaticSpeakerThreshold();
         asyncStdoutToPython("/get/speaker_dynamic_energy_threshold");
     };
 
     const toggleEnableAutomaticSpeakerThreshold = () => {
-        updateEnableAutomaticSpeakerThreshold(() => new Promise(() => {}));
+        pendingEnableAutomaticSpeakerThreshold();
         if (currentEnableAutomaticSpeakerThreshold.data) {
             asyncStdoutToPython("/set/disable_speaker_dynamic_energy_threshold");
         } else {

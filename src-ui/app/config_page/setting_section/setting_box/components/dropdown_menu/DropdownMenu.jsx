@@ -7,7 +7,7 @@ export const DropdownMenu = (props) => {
     const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const toggleDropdownMenu = () => {
-        if (currentIsOpenedDropdownMenu === props.dropdown_id) {
+        if (currentIsOpenedDropdownMenu.data === props.dropdown_id) {
             updateIsOpenedDropdownMenu("");
         } else {
             if (props.openListFunction !== undefined) props.openListFunction();
@@ -24,21 +24,21 @@ export const DropdownMenu = (props) => {
     };
 
     const dropdown_content_wrapper_class_name = clsx(styles["dropdown_content_wrapper"], {
-        [styles.is_opened]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false,
+        [styles.is_opened]: (currentIsOpenedDropdownMenu.data === props.dropdown_id) ? true : false,
         [styles.is_disabled]: props.is_disabled,
     });
 
     const dropdown_toggle_button_class_name = clsx(styles["dropdown_toggle_button"], {
-        [styles.is_loading]: (props.state === "loading") ? true : false,
+        [styles.is_loading]: (props.state === "pending") ? true : false,
         [styles.is_disabled]: props.is_disabled,
     });
 
     const arrow_class_names = clsx(styles["arrow_left_svg"], {
-        [styles.is_opened]: (currentIsOpenedDropdownMenu === props.dropdown_id) ? true : false
+        [styles.is_opened]: (currentIsOpenedDropdownMenu.data === props.dropdown_id) ? true : false
     });
 
     const getSelectedText = () => {
-        if (props.state !== "hasData") return;
+        if (props.state !== "ok") return;
         return props.selected_id;
     };
     const list = (props.list === undefined) ? {} : props.list;
@@ -46,18 +46,18 @@ export const DropdownMenu = (props) => {
     return (
         <div className={styles.container}>
             <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu} style={props.style}>
-                {(props.state === "loading")
+                {(props.state === "pending")
                     ? <p className={styles.dropdown_selected_text}>Loading...</p>
                     : <p className={styles.dropdown_selected_text}>{getSelectedText()}</p>
                 }
-                {(props.state === "loading")
+                {(props.state === "pending")
                     ? <span className={styles.loader}></span>
                     : <ArrowLeftSvg className={arrow_class_names} />
                 }
             </div>
             <div className={dropdown_content_wrapper_class_name}>
                 <div className={styles.dropdown_content}>
-                    {(props.state === "hasData")
+                    {(props.state === "ok")
                         ? Object.entries(list).map(([key, value]) => {
                             return (
                                 <div key={key} className={styles.value_button} onClick={() => selectValue(key)}>

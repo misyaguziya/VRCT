@@ -7,7 +7,7 @@ export const RadioButton = (props) => {
                 <label key={option.radio_button_id} className={styles.radio_button_wrapper}>
                     {props.checked_variable.data === option.radio_button_id
                         ? <>
-                            { props.checked_variable.state === "loading" && <span className={styles.loader}></span> }
+                            { props.checked_variable.state === "pending" && <span className={styles.loader}></span> }
                             <input
                                 type="radio"
                                 name="radio"

@@ -101,7 +101,7 @@ const UiLanguageContainer = () => {
                 }
             </div>
             <div className={styles.ui_language_selector_container}>
-                {currentUiLanguage.state === "loading" && <span className={styles.loader}></span>}
+                {currentUiLanguage.state === "pending" && <span className={styles.loader}></span>}
                 {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
                     <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
                         <input

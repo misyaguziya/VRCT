@@ -56,7 +56,7 @@ const ExampleComponent = ({ id, current_format }) => {
         let format = current_format;
 
         if (["send_with_t", "received_with_t"].includes(id)) {
-            const translationLocale = currentUiLanguage === "en" ? "ja" : "en";
+            const translationLocale = currentUiLanguage.data === "en" ? "ja" : "en";
             const translatedLangMessage = t("config_page.send_message_format.example_text", { lng: translationLocale });
 
             return format.is_message_first

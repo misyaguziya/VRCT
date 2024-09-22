@@ -4,7 +4,7 @@ export const Checkbox = (props) => {
     return (
         <div className={styles.checkbox_container}>
             <label className={styles.checkbox_wrapper} htmlFor={props.checkbox_id}>
-                {(props.state === "loading")
+                {(props.state === "pending")
                     ? <span className={styles.loader}></span>
                     : <input
                         type="checkbox"

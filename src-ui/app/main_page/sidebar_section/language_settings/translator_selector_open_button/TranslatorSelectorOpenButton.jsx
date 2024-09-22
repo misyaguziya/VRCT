@@ -14,11 +14,10 @@ export const TranslatorSelectorOpenButton = () => {
         currentSelectedTranslationEngines,
     } = useLanguageSettings();
 
-    // console.log(currentTranslationEngines, currentSelectedTranslationEngines);
-    const selected_translator_name = (currentTranslationEngines.state === "loading")
+    const selected_translator_name = (currentTranslationEngines.state === "pending")
     ? "Loading..."
     : currentTranslationEngines.data.find(
-        translator_data => translator_data.translator_id === currentSelectedTranslationEngines[currentSelectedPresetTabNumber.data]
+        translator_data => translator_data.translator_id === currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data]
     )?.translator_name;
 
 
@@ -26,7 +25,7 @@ export const TranslatorSelectorOpenButton = () => {
 
     const openTranslatorSelector = () => {
         getTranslationEngines();
-        updateIsOpenedTranslatorSelector(!currentIsOpenedTranslatorSelector);
+        updateIsOpenedTranslatorSelector(!currentIsOpenedTranslatorSelector.data);
     };
 
     return (
@@ -35,7 +34,7 @@ export const TranslatorSelectorOpenButton = () => {
                 <p className={styles.label}>{t("main_page.translator")}: </p>
                 <p className={styles.label}>{selected_translator_name}</p>
             </div>
-            {currentIsOpenedTranslatorSelector &&
+            {currentIsOpenedTranslatorSelector.data &&
                 <TranslatorSelector
                     selected_translator_id={currentSelectedTranslationEngines}
                     translation_engines={currentTranslationEngines}

@@ -34,11 +34,11 @@ export const PostersContents = () => {
 
 
     const updateIndex = (delta) => {
-        const newIndex = (currentVrctPosterIndex + delta + poster_images.length) % poster_images.length;
+        const newIndex = (currentVrctPosterIndex.data + delta + poster_images.length) % poster_images.length;
         updateVrctPosterIndex(newIndex);
     };
 
-    const current_poster = poster_images[currentVrctPosterIndex];
+    const current_poster = poster_images[currentVrctPosterIndex.data];
     const current_poster_authors_img_ja = (current_poster.poster_type === "poster") ? poster_images_authors_ja : poster_images_authors_m_ja;
     const current_poster_authors_img_en = (current_poster.poster_type === "poster") ? poster_images_authors_en : poster_images_authors_m_en;
 
@@ -60,7 +60,7 @@ export const PostersContents = () => {
                 </button>
             </div>
             {
-                currentUiLanguage === "ja"
+                currentUiLanguage.data === "ja"
                 ? <img src={current_poster_authors_img_ja} className={styles.poster_authors_img} />
                 : <img src={current_poster_authors_img_en} className={styles.poster_authors_img} />
             }

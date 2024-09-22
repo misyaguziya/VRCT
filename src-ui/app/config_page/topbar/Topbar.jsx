@@ -16,8 +16,8 @@ export const Topbar = () => {
 
     return (
         <div className={clsx(styles.container, {
-            [styles.show_config]: currentIsOpenedConfigPage,
-            [styles.show_main]: !currentIsOpenedConfigPage
+            [styles.show_config]: currentIsOpenedConfigPage.data,
+            [styles.show_main]: !currentIsOpenedConfigPage.data
         })}>
             <div className={styles.wrapper} onClick={() => closeConfigPage()}>
                 <div className={styles.go_back_button}>
