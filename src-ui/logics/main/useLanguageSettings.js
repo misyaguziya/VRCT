@@ -1,4 +1,4 @@
-import { useStore_SelectedPresetTabNumber, useStore_EnableMultiTranslation, useStore_SelectedYourLanguages, useStore_SelectedTargetLanguages } from "@store";
+import { useStore_SelectedPresetTabNumber, useStore_EnableMultiTranslation, useStore_SelectedYourLanguages, useStore_SelectedTargetLanguages, useStore_TranslationEngines, useStore_SelectedTranslationEngines } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useLanguageSettings = () => {
@@ -7,6 +7,8 @@ export const useLanguageSettings = () => {
     const { currentSelectedYourLanguages, updateSelectedYourLanguages } = useStore_SelectedYourLanguages();
     const { currentSelectedTargetLanguages, updateSelectedTargetLanguages } = useStore_SelectedTargetLanguages();
     const { currentSelectedPresetTabNumber, updateSelectedPresetTabNumber } = useStore_SelectedPresetTabNumber();
+    const { currentTranslationEngines, updateTranslationEngines } = useStore_TranslationEngines();
+    const { currentSelectedTranslationEngines, updateSelectedTranslationEngines } = useStore_SelectedTranslationEngines();
 
     const getEnableMultiTranslation = () => {
         updateEnableMultiTranslation(() => new Promise(() => {}));
@@ -60,6 +62,27 @@ export const useLanguageSettings = () => {
         asyncStdoutToPython("/set/selected_target_languages", send_obj);
     };
 
+
+    const getTranslationEngines = () => {
+        updateTranslationEngines(() => new Promise(() => {}));
+        asyncStdoutToPython("/get/list_translation_engines");
+    };
+
+    const getSelectedTranslationEngines = () => {
+        updateSelectedTranslationEngines(() => new Promise(() => {}));
+        asyncStdoutToPython("/get/selected_translator_engines");
+    };
+
+    const setSelectedTranslationEngines = (selected_translator) => {
+        // updateSelectedTranslationEngines(() => new Promise(() => {}));
+        let send_obj = currentSelectedTranslationEngines;
+
+        send_obj[currentSelectedPresetTabNumber.data] = selected_translator;
+
+        asyncStdoutToPython("/set/selected_translator_engines", send_obj);
+    };
+
+
     return {
         currentSelectedPresetTabNumber,
         getSelectedPresetTabNumber,
@@ -80,5 +103,14 @@ export const useLanguageSettings = () => {
         getSelectedTargetLanguages,
         updateSelectedTargetLanguages,
         setSelectedTargetLanguages,
+
+        currentTranslationEngines,
+        getTranslationEngines,
+        updateTranslationEngines,
+
+        currentSelectedTranslationEngines,
+        getSelectedTranslationEngines,
+        updateSelectedTranslationEngines,
+        setSelectedTranslationEngines,
     };
 };

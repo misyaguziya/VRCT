@@ -51,7 +51,14 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
 
-    const { getSelectedPresetTabNumber, getEnableMultiTranslation, getSelectedYourLanguages, getSelectedTargetLanguages } = useLanguageSettings();
+    const {
+        getSelectedPresetTabNumber,
+        getEnableMultiTranslation,
+        getSelectedYourLanguages,
+        getSelectedTargetLanguages,
+        getTranslationEngines,
+        getSelectedTranslationEngines,
+    } = useLanguageSettings();
     const { getSelectableLanguageList } = useSelectableLanguageList();
 
 
@@ -68,6 +75,8 @@ const StartPythonFacadeComponent = () => {
                 getSelectedYourLanguages();
                 getSelectedTargetLanguages();
                 getSelectableLanguageList();
+                getTranslationEngines();
+                getSelectedTranslationEngines();
 
                 getEnableAutoMicSelect();
                 getEnableAutoSpeakerSelect();
