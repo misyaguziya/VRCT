@@ -27,76 +27,6 @@ const generatePropertyNames = (base_ame) => ({
     async_add: `asyncAdd${base_ame}`,
 });
 
-const createAtomWithHook = (initialValue, base_ame) => {
-    const property_names = generatePropertyNames(base_ame);
-    const atomInstance = atom(initialValue);
-
-    const useHook = () => {
-        const currentAtom = useAtomValue(atomInstance);
-        const setAtom = useSetAtom(atomInstance);
-
-        const updateAtom = (value) => {
-            setAtom(value);
-        };
-
-        const addAtom = (value) => {
-            setAtom((old_value) => [...old_value, value]);
-        };
-
-        return {
-            [property_names.current]: currentAtom,
-            [property_names.update]: updateAtom,
-            [property_names.add]: addAtom,
-        };
-    };
-
-    return { atomInstance, useHook };
-};
-
-import { loadable } from "jotai/utils";
-const createAsyncAtomWithHook = (initialValue, base_ame) => {
-    const property_names = generatePropertyNames(base_ame);
-    const atomInstance = atom(initialValue);
-    const asyncAtom = atom(async (get) => get(atomInstance));
-    const loadableAtom = loadable(asyncAtom);
-
-    const useHook = () => {
-        const asyncCurrentAtom = useAtomValue(loadableAtom);
-        const setAtom = useSetAtom(atomInstance);
-
-        const updateAtom = (value) => {
-            setAtom(value);
-        };
-
-        const asyncSetAtom = useSetAtom(atom(null, async (get, set, payloadAsyncFunc, ...args) => {
-            set(atomInstance, payloadAsyncFunc(...args));
-        }));
-
-        const asyncUpdateAtom = async (asyncFunction, ...args) => {
-            asyncSetAtom(asyncFunction, ...args);
-        };
-
-        const addAtom = (value) => {
-            setAtom((old_value) => [...old_value, value]);
-        };
-
-        const asyncAddAtom = useSetAtom(atom(null, async (get, set, payloadAsyncFunc, ...args) => {
-            const old_value = await get(atomInstance);
-            set(atomInstance, payloadAsyncFunc([...old_value, ...args]));
-        }));
-
-        return {
-            [property_names.current]: asyncCurrentAtom,
-            [property_names.update]: updateAtom,
-            [property_names.async_update]: asyncUpdateAtom,
-            [property_names.add]: addAtom,
-            [property_names.async_add]: asyncAddAtom,
-        };
-    };
-
-    return { atomInstance, useHook };
-};
-
 
 const createAtomWithHook_WIP = (initialValue, base_ame, options) => {
     const property_names = generatePropertyNames(base_ame);
@@ -228,33 +158,6 @@ export const { atomInstance: Atom_EnableAutomaticSpeakerThreshold, useHook: useS
 // Appearance
 export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAtomWithHook_WIP("en", "UiLanguage");
 
-
-
-
-
-
-
-
-export const { atomInstance: Atom_SendMessageFormat, useHook: useStore_SendMessageFormat } = createAtomWithHook({
-    before: "",
-    after: "",
-}, "SendMessageFormat");
-export const { atomInstance: Atom_SendMessageFormatWithT, useHook: useStore_SendMessageFormatWithT } = createAtomWithHook({
-    before: "",
-    between: "",
-    after: "",
-    is_message_first: true,
-}, "SendMessageFormatWithT");
-export const { atomInstance: Atom_ReceivedMessageFormat, useHook: useStore_ReceivedMessageFormat } = createAtomWithHook({
-    before: "",
-    after: "",
-}, "ReceivedMessageFormat");
-export const { atomInstance: Atom_ReceivedMessageFormatWithT, useHook: useStore_ReceivedMessageFormatWithT } = createAtomWithHook({
-    before: "",
-    between: "",
-    after: "",
-    is_message_first: true,
-}, "ReceivedMessageFormatWithT");
 
 export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook_WIP(false, "IsOpenedWordFilterList");
 export const { atomInstance: Atom_WordFilterList, useHook: useStore_WordFilterList } = createAtomWithHook_WIP(word_filter_list, "WordFilterList");

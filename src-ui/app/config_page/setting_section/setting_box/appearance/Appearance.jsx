@@ -16,7 +16,6 @@ export const Appearance = () => {
         // ThresholdContainer,
         // RadioButtonContainer,
         // DeeplAuthKeyContainer,
-        // MessageFormatContainer,
         // WordFilterContainer,
         // ActionButtonContainer,
     } = useSettingBox();
@@ -53,16 +52,6 @@ export const Appearance = () => {
             <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
 
             <DeeplAuthKeyContainer label={t(`config_page.deepl_auth_key.label`)} desc={t(`config_page.deepl_auth_key.desc`)}/>
-
-
-            <MessageFormatContainer label={t(`config_page.send_message_format.label`)} desc={t(`config_page.send_message_format.desc`)} id="send"/>
-
-            <MessageFormatContainer label={t(`config_page.send_message_format_with_t.label`)} desc={t(`config_page.send_message_format_with_t.desc`)} id="send_with_t"/>
-
-
-            <MessageFormatContainer label={t(`config_page.send_message_format.label`)} desc={t(`config_page.send_message_format.desc`)} id="received"/>
-
-            <MessageFormatContainer label={t(`config_page.send_message_format_with_t.label`)} desc={t(`config_page.send_message_format_with_t.desc`)} id="received_with_t"/>
 
             <WordFilterContainer label={t(`config_page.mic_word_filter.label`)} desc={t(`config_page.mic_word_filter.desc`)}/>
 

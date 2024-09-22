@@ -8,10 +8,8 @@ import { Slider } from "./slider/Slider";
 import { Checkbox } from "./checkbox/Checkbox";
 import { Switchbox } from "./switchbox/Switchbox";
 import { Entry } from "./entry/Entry";
-import { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 import { RadioButton } from "./radio_button/RadioButton";
 import { OpenWebpage_DeeplAuthKey, DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
-import { MessageFormat } from "./message_format/MessageFormat";
 import { ActionButton } from "./action_button/ActionButton";
 import { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 
@@ -36,21 +34,6 @@ export const DropdownMenuContainer = (props) => {
         </div>
     );
 };
-
-
-// export const ThresholdContainer = (props) => {
-//     return (
-//         <div className={styles.threshold_container}>
-//             <div className={styles.threshold_switch_section}>
-//                 <LabelComponent label={props.label} desc={props.desc} />
-//                 <Switchbox {...props}/>
-//             </div>
-//             <div className={styles.threshold_section}>
-//                 <ThresholdComponent {...props}/>
-//             </div>
-//         </div>
-//     );
-// };
 
 
 export const useSettingBox = () => {
@@ -111,21 +94,6 @@ export const useSettingBox = () => {
         );
     };
 
-
-    const MessageFormatContainer = (props) => {
-        return (
-            <div className={clsx(styles.container, styles.flex_column)}>
-                <div className={styles.label_only_section}>
-                    <LabelComponent label={props.label} desc={props.desc} />
-                </div>
-                <div className={styles.message_format_section}>
-                    <MessageFormat {...props}/>
-                </div>
-            </div>
-        );
-    };
-
-
     const ActionButtonContainer = (props) => {
         return (
             <div className={styles.container}>
@@ -159,7 +127,6 @@ export const useSettingBox = () => {
         EntryContainer,
         RadioButtonContainer,
         DeeplAuthKeyContainer,
-        MessageFormatContainer,
         WordFilterContainer,
         ActionButtonContainer,
     };
