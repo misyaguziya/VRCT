@@ -5,7 +5,7 @@ import {
 } from "jotai";
 
 import {
-    translator_list,
+    translator_status,
     generateTestData,
     word_filter_list,
 } from "@data";
@@ -116,6 +116,10 @@ export const { atomInstance: Atom_SelectedYourLanguages, useHook: useStore_Selec
 export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_SelectedTargetLanguages } = createAsyncAtomWithHook({}, "SelectedTargetLanguages");
 
 
+export const { atomInstance: Atom_TranslationEngines, useHook: useStore_TranslationEngines } = createAsyncAtomWithHook(translator_status, "TranslationEngines");
+export const { atomInstance: Atom_SelectedTranslationEngines, useHook: useStore_SelectedTranslationEngines } = createAtomWithHook({}, "SelectedTranslationEngines");
+
+
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_SelectedConfigTabId, useHook: useStore_SelectedConfigTabId } = createAtomWithHook("device", "SelectedConfigTabId");
 export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useStore_IsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
@@ -186,8 +190,6 @@ export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useStore_E
 export const { atomInstance: Atom_SendMessageButtonType, useHook: useStore_SendMessageButtonType } = createAsyncAtomWithHook("show", "SendMessageButtonType");
 
 
-export const { atomInstance: Atom_TranslatorList, useHook: useStore_TranslatorList } = createAtomWithHook(translator_list, "TranslatorList");
-export const { atomInstance: Atom_SelectedTranslatorId, useHook: useStore_SelectedTranslatorId } = createAtomWithHook("CTranslate2", "SelectedTranslatorId");
 export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useStore_IsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
 
 export const { atomInstance: Atom_VrctPosterIndex, useHook: useStore_VrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
