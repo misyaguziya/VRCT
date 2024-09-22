@@ -74,7 +74,7 @@ export const AboutVrct = () => {
                 <img src={special_thanks_section_title} className={clsx(styles.section_title, styles.special_thanks)} />
                 <img src={special_thanks_members} className={styles.special_thanks_members_img} />
                 {
-                    currentUiLanguage === "ja"
+                    currentUiLanguage.data === "ja"
                     ? <img src={special_thanks_message_ja} className={styles.special_thanks_message_img} />
                     : <img src={special_thanks_message_en} className={styles.special_thanks_message_img} />
                 }

@@ -1,16 +1,11 @@
-export const translator_list = [
-    { translator_key: "DeepL", translator_name: "DeepL", is_available: true },
-    { translator_key: "DeepL_API", translator_name: `DeepL\nAPI`, is_available: false },
-    { translator_key: "Google", translator_name: "Google", is_available: true },
-    { translator_key: "Bing", translator_name: "Bing", is_available: true },
-    { translator_key: "Papago", translator_name: "Papago", is_available: true },
-    { translator_key: "CTranslate2", translator_name: `Internal\n(Default)`, is_available: true },
+export const translator_status = [
+    { translator_id: "DeepL", translator_name: "DeepL", is_available: false },
+    { translator_id: "DeepL_API", translator_name: `DeepL\nAPI`, is_available: false },
+    { translator_id: "Google", translator_name: "Google", is_available: false },
+    { translator_id: "Bing", translator_name: "Bing", is_available: false },
+    { translator_id: "Papago", translator_name: "Papago", is_available: false },
+    { translator_id: "CTranslate2", translator_name: `Internal\n(Default)`, is_available: false },
 ];
-
-export const test_device_list = {
-    a: "Device A",
-    "device b": "Device B",
-};
 
 
 export const generateTestData = (num) => {

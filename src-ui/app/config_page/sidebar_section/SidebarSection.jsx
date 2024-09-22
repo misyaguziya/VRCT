@@ -32,10 +32,10 @@ const Tab = (props) => {
     };
 
     const tab_container_class_names = clsx(styles["tab_container"], {
-        [styles["is_selected"]]: (currentSelectedConfigTabId === props.tab_id) ? true : false
+        [styles["is_selected"]]: (currentSelectedConfigTabId.data === props.tab_id) ? true : false
     });
     const switch_indicator_class_names = clsx(styles["switch_indicator"], {
-        [styles["is_selected"]]: (currentSelectedConfigTabId === props.tab_id) ? true : false
+        [styles["is_selected"]]: (currentSelectedConfigTabId.data === props.tab_id) ? true : false
     });
 
     return (

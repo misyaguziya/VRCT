@@ -22,7 +22,7 @@ const MicComponent = (props) => {
         setMicThreshold,
         currentEnableAutomaticMicThreshold,
     } = useMicThreshold();
-    const [ui_threshold, setUiThreshold] = useState(currentMicThreshold);
+    const [ui_threshold, setUiThreshold] = useState(currentMicThreshold.data);
     const {
         volumeCheckStart_Mic,
         volumeCheckStop_Mic,
@@ -34,9 +34,9 @@ const MicComponent = (props) => {
         if (currentEnableAutomaticMicThreshold.data === true) {
             setUiThreshold("Auto");
         } else {
-            setUiThreshold(currentMicThreshold);
+            setUiThreshold(currentMicThreshold.data);
         }
-    }, [currentMicThreshold, currentEnableAutomaticMicThreshold]);
+    }, [currentMicThreshold.data, currentEnableAutomaticMicThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);
@@ -80,7 +80,7 @@ const SpeakerComponent = (props) => {
         setSpeakerThreshold,
         currentEnableAutomaticSpeakerThreshold,
     } = useSpeakerThreshold();
-    const [ui_threshold, setUiThreshold] = useState(currentSpeakerThreshold);
+    const [ui_threshold, setUiThreshold] = useState(currentSpeakerThreshold.data);
     const {
         volumeCheckStart_Speaker,
         volumeCheckStop_Speaker,
@@ -91,9 +91,9 @@ const SpeakerComponent = (props) => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {
             setUiThreshold("Auto");
         } else {
-            setUiThreshold(currentSpeakerThreshold);
+            setUiThreshold(currentSpeakerThreshold.data);
         }
-    }, [currentSpeakerThreshold, currentEnableAutomaticSpeakerThreshold]);
+    }, [currentSpeakerThreshold.data, currentEnableAutomaticSpeakerThreshold]);
 
     const setUiThresholdFunction = (payload_ui_threshold) => {
         setUiThreshold(payload_ui_threshold);

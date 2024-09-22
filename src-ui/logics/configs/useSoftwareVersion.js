@@ -3,10 +3,10 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSoftwareVersion = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSoftwareVersion, updateSoftwareVersion } = useStore_SoftwareVersion();
+    const { currentSoftwareVersion, updateSoftwareVersion, pendingSoftwareVersion } = useStore_SoftwareVersion();
 
     const getSoftwareVersion = () => {
-        updateSoftwareVersion(() => new Promise(() => {}));
+        pendingSoftwareVersion();
         asyncStdoutToPython("/get/version");
     };
 

@@ -16,7 +16,6 @@ export const Appearance = () => {
         // ThresholdContainer,
         // RadioButtonContainer,
         // DeeplAuthKeyContainer,
-        // MessageFormatContainer,
         // WordFilterContainer,
         // ActionButtonContainer,
     } = useSettingBox();
@@ -53,16 +52,6 @@ export const Appearance = () => {
             <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
 
             <DeeplAuthKeyContainer label={t(`config_page.deepl_auth_key.label`)} desc={t(`config_page.deepl_auth_key.desc`)}/>
-
-
-            <MessageFormatContainer label={t(`config_page.send_message_format.label`)} desc={t(`config_page.send_message_format.desc`)} id="send"/>
-
-            <MessageFormatContainer label={t(`config_page.send_message_format_with_t.label`)} desc={t(`config_page.send_message_format_with_t.desc`)} id="send_with_t"/>
-
-
-            <MessageFormatContainer label={t(`config_page.send_message_format.label`)} desc={t(`config_page.send_message_format.desc`)} id="received"/>
-
-            <MessageFormatContainer label={t(`config_page.send_message_format_with_t.label`)} desc={t(`config_page.send_message_format_with_t.desc`)} id="received_with_t"/>
 
             <WordFilterContainer label={t(`config_page.mic_word_filter.label`)} desc={t(`config_page.mic_word_filter.desc`)}/>
 
@@ -101,7 +90,7 @@ const UiLanguageContainer = () => {
                 }
             </div>
             <div className={styles.ui_language_selector_container}>
-                {currentUiLanguage.state === "loading" && <span className={styles.loader}></span>}
+                {currentUiLanguage.state === "pending" && <span className={styles.loader}></span>}
                 {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
                     <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
                         <input

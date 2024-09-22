@@ -21,7 +21,7 @@ export const ConfigPage = () => {
                 </div>
                 <p className={styles.software_version}>
                     {
-                        t("config_page.version", {version: currentSoftwareVersion})
+                        t("config_page.version", {version: currentSoftwareVersion.data})
                     }
                 </p>
             </div>
