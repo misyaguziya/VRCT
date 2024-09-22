@@ -3,15 +3,15 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useEnableAutoSpeakerSelect = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentEnableAutoSpeakerSelect, updateEnableAutoSpeakerSelect } = useStore_EnableAutoSpeakerSelect();
+    const { currentEnableAutoSpeakerSelect, updateEnableAutoSpeakerSelect, pendingEnableAutoSpeakerSelect } = useStore_EnableAutoSpeakerSelect();
 
     const getEnableAutoSpeakerSelect = () => {
-        updateEnableAutoSpeakerSelect(() => new Promise(() => {}));
+        pendingEnableAutoSpeakerSelect();
         asyncStdoutToPython("/get/auto_speaker_select");
     };
 
     const toggleEnableAutoSpeakerSelect = () => {
-        updateEnableAutoSpeakerSelect(() => new Promise(() => {}));
+        pendingEnableAutoSpeakerSelect();
         if (currentEnableAutoSpeakerSelect.data) {
             asyncStdoutToPython("/set/disable_auto_speaker_select");
         } else {

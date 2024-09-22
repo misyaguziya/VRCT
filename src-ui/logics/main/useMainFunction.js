@@ -13,17 +13,17 @@ export const useMainFunction = () => {
     const {
         currentTranslationStatus,
         updateTranslationStatus,
-        asyncUpdateTranslationStatus,
+        pendingTranslationStatus,
     } = useStore_TranslationStatus();
     const {
         currentTranscriptionSendStatus,
         updateTranscriptionSendStatus,
-        asyncUpdateTranscriptionSendStatus,
+        pendingTranscriptionSendStatus,
     } = useStore_TranscriptionSendStatus();
     const {
         currentTranscriptionReceiveStatus,
         updateTranscriptionReceiveStatus,
-        asyncUpdateTranscriptionReceiveStatus,
+        pendingTranscriptionReceiveStatus,
     } = useStore_TranscriptionReceiveStatus();
     const {
         currentForegroundStatus,
@@ -32,9 +32,8 @@ export const useMainFunction = () => {
 
     const { asyncStdoutToPython } = useStdoutToPython();
 
-    const asyncPending = () => new Promise(() => {});
     const toggleTranslation = () => {
-        asyncUpdateTranslationStatus(asyncPending);
+        pendingTranslationStatus();
         if (currentTranslationStatus.data) {
             asyncStdoutToPython("/set/disable_translation");
         } else {
@@ -43,7 +42,7 @@ export const useMainFunction = () => {
     };
 
     const toggleTranscriptionSend = () => {
-        asyncUpdateTranscriptionSendStatus(asyncPending);
+        pendingTranscriptionSendStatus();
         if (currentTranscriptionSendStatus.data) {
             asyncStdoutToPython("/set/disable_transcription_send");
         } else {
@@ -52,7 +51,7 @@ export const useMainFunction = () => {
     };
 
     const toggleTranscriptionReceive = () => {
-        asyncUpdateTranscriptionReceiveStatus(asyncPending);
+        pendingTranscriptionReceiveStatus();
         if (currentTranscriptionReceiveStatus.data) {
             asyncStdoutToPython("/set/disable_transcription_receive");
         } else {

@@ -77,9 +77,9 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
     const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
 
     const getClassNames = (baseClass) => clsx(baseClass, {
-        [styles.is_compact_mode]: currentIsMainPageCompactMode,
+        [styles.is_compact_mode]: currentIsMainPageCompactMode.data,
         [styles.is_active]: (currentState.data === true),
-        [styles.is_loading]: (currentState.state === "loading"),
+        [styles.is_loading]: (currentState.state === "pending"),
         [styles.is_hovered]: is_hovered,
         [styles.is_mouse_down]: is_mouse_down,
     });
@@ -108,7 +108,7 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
             </div>
 
             <div className={getClassNames(styles.switch_indicator)}></div>
-            {(currentState.state === "loading")
+            {(currentState.state === "pending")
                 ? <span className={styles.loader}></span>
                 : null
             }

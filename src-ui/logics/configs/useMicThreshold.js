@@ -4,7 +4,7 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 export const useMicThreshold = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { updateMicThreshold, currentMicThreshold } = useStore_MicThreshold();
-    const { updateEnableAutomaticMicThreshold, currentEnableAutomaticMicThreshold } = useStore_EnableAutomaticMicThreshold();
+    const { updateEnableAutomaticMicThreshold, currentEnableAutomaticMicThreshold, pendingEnableAutomaticMicThreshold } = useStore_EnableAutomaticMicThreshold();
 
     const getMicThreshold = () => {
         asyncStdoutToPython("/get/mic_energy_threshold");
@@ -15,12 +15,12 @@ export const useMicThreshold = () => {
     };
 
     const getEnableAutomaticMicThreshold = () => {
-        updateEnableAutomaticMicThreshold(() => new Promise(() => {}));
+        pendingEnableAutomaticMicThreshold();
         asyncStdoutToPython("/get/mic_dynamic_energy_threshold");
     };
 
     const toggleEnableAutomaticMicThreshold = () => {
-        updateEnableAutomaticMicThreshold(() => new Promise(() => {}));
+        pendingEnableAutomaticMicThreshold();
         if (currentEnableAutomaticMicThreshold.data) {
             asyncStdoutToPython("/set/disable_mic_dynamic_energy_threshold");
         } else {

@@ -3,15 +3,15 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSelectedMicDevice = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
+    const { currentSelectedMicDevice, updateSelectedMicDevice, pendingSelectedMicDevice } = useStore_SelectedMicDevice();
 
     const getSelectedMicDevice = () => {
-        updateSelectedMicDevice(() => new Promise(() => {}));
+        pendingSelectedMicDevice();
         asyncStdoutToPython("/get/selected_mic_device");
     };
 
     const setSelectedMicDevice = (selected_mic_device) => {
-        updateSelectedMicDevice(() => new Promise(() => {}));
+        pendingSelectedMicDevice();
         asyncStdoutToPython("/set/selected_mic_device", selected_mic_device);
     };
 

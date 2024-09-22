@@ -1,3 +1,5 @@
+import { translator_status } from "@data";
+
 import { arrayToObject } from "@utils/arrayToObject";
 import { useMainFunction } from "@logics_main/useMainFunction";
 import { useMessage } from "@logics_common/useMessage";
@@ -31,7 +33,9 @@ export const useReceiveRoutes = () => {
         updateSelectedPresetTabNumber,
         updateEnableMultiTranslation,
         updateSelectedYourLanguages,
-        updateSelectedTargetLanguages
+        updateSelectedTargetLanguages,
+        updateTranslationEngines,
+        updateSelectedTranslationEngines,
     } = useLanguageSettings();
     const { updateSelectableLanguageList } = useSelectableLanguageList();
     const {
@@ -78,6 +82,21 @@ export const useReceiveRoutes = () => {
         "/set/selected_your_languages": updateSelectedYourLanguages,
         "/get/selected_target_languages": updateSelectedTargetLanguages,
         "/set/selected_target_languages": updateSelectedTargetLanguages,
+        "/get/list_translation_engines": (payload) => {
+            const updateTranslatorAvailability = (keys) => {
+                return translator_status.map(translator => ({
+                    ...translator,
+                    is_available: keys.includes(translator.translator_id),
+                }));
+            };
+
+            const updated_list = updateTranslatorAvailability(payload);
+
+            updateTranslationEngines(updated_list);
+        },
+        "/get/selected_translator_engines": updateSelectedTranslationEngines,
+        "/set/selected_translator_engines": updateSelectedTranslationEngines,
+
 
         // Language Selector
         "/get/list_languages": updateSelectableLanguageList,
@@ -155,7 +174,7 @@ export const useReceiveRoutes = () => {
                 break;
 
             case 348:
-                console.log(`from backend: %c ${JSON.stringify(parsed_data)}`, style_348);
+                // console.log(`from backend: %c ${JSON.stringify(parsed_data)}`, style_348);
                 break;
 
             default:

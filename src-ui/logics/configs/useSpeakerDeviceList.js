@@ -3,10 +3,10 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useSpeakerDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentSpeakerDeviceList, updateSpeakerDeviceList } = useStore_SpeakerDeviceList();
+    const { currentSpeakerDeviceList, updateSpeakerDeviceList, pendingSpeakerDeviceList } = useStore_SpeakerDeviceList();
 
     const getSpeakerDeviceList = () => {
-        updateSpeakerDeviceList(() => new Promise(() => {}));
+        pendingSpeakerDeviceList();
         asyncStdoutToPython("/get/list_speaker_device");
     };
 

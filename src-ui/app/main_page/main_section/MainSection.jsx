@@ -28,10 +28,10 @@ const HandleLanguageSelector = () => {
         setSelectedTargetLanguages,
     } = useLanguageSettings();
 
-    if (currentIsOpenedLanguageSelector.your_language === true) {
+    if (currentIsOpenedLanguageSelector.data.your_language === true) {
         const onclickFunction_YourLanguage = (payload) => setSelectedYourLanguages(payload);
         return <LanguageSelector id="your_language" onClickFunction={onclickFunction_YourLanguage}/>;
-    } else if (currentIsOpenedLanguageSelector.target_language === true) {
+    } else if (currentIsOpenedLanguageSelector.data.target_language === true) {
         const onclickFunction_TargetLanguage = (payload) => setSelectedTargetLanguages(payload);
         return <LanguageSelector id="target_language" onClickFunction={onclickFunction_TargetLanguage}/>;
     } else {

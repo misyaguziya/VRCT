@@ -51,7 +51,14 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
 
-    const { getSelectedPresetTabNumber, getEnableMultiTranslation, getSelectedYourLanguages, getSelectedTargetLanguages } = useLanguageSettings();
+    const {
+        getSelectedPresetTabNumber,
+        getEnableMultiTranslation,
+        getSelectedYourLanguages,
+        getSelectedTargetLanguages,
+        getTranslationEngines,
+        getSelectedTranslationEngines,
+    } = useLanguageSettings();
     const { getSelectableLanguageList } = useSelectableLanguageList();
 
 
@@ -68,6 +75,8 @@ const StartPythonFacadeComponent = () => {
                 getSelectedYourLanguages();
                 getSelectedTargetLanguages();
                 getSelectableLanguageList();
+                getTranslationEngines();
+                getSelectedTranslationEngines();
 
                 getEnableAutoMicSelect();
                 getEnableAutoSpeakerSelect();
@@ -115,7 +124,7 @@ const ConfigPageCloseTrigger = () => {
     } = useVolume();
 
     useEffect(() => {
-        if (currentIsOpenedConfigPage === false) {
+        if (currentIsOpenedConfigPage.data === false) {
             if (currentMicThresholdCheckStatus.data === true) volumeCheckStop_Mic();
             if (currentSpeakerThresholdCheckStatus.data === true) volumeCheckStop_Speaker();
         }

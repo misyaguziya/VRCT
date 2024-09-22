@@ -19,7 +19,7 @@ export const PosterShowcaseWorldsContents = () => {
     }));
 
     const chunked_poster_showcase_world_images = chunkArray(poster_showcase_world_images, 8);
-    const target_poster_showcase_world_images = chunked_poster_showcase_world_images[currentPosterShowcaseWorldPageIndex];
+    const target_poster_showcase_world_images = chunked_poster_showcase_world_images[currentPosterShowcaseWorldPageIndex.data];
 
 
     return (
@@ -70,7 +70,7 @@ const PosterShowcaseWorldsPagination = ({ page_length }) => {
     };
 
     const getClassNames = (index, baseClass) => clsx(baseClass, {
-        [styles.is_active]: (currentPosterShowcaseWorldPageIndex === index),
+        [styles.is_active]: (currentPosterShowcaseWorldPageIndex.data === index),
     });
 
     return (

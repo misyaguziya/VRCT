@@ -3,15 +3,15 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useEnableAutoMicSelect = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { currentEnableAutoMicSelect, updateEnableAutoMicSelect } = useStore_EnableAutoMicSelect();
+    const { currentEnableAutoMicSelect, updateEnableAutoMicSelect, pendingEnableAutoMicSelect } = useStore_EnableAutoMicSelect();
 
     const getEnableAutoMicSelect = () => {
-        updateEnableAutoMicSelect(() => new Promise(() => {}));
+        pendingEnableAutoMicSelect();
         asyncStdoutToPython("/get/auto_mic_select");
     };
 
     const toggleEnableAutoMicSelect = () => {
-        updateEnableAutoMicSelect(() => new Promise(() => {}));
+        pendingEnableAutoMicSelect();
         if (currentEnableAutoMicSelect.data) {
             asyncStdoutToPython("/set/disable_auto_mic_select");
         } else {
