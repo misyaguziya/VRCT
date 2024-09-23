@@ -104,6 +104,12 @@ export const useLanguageSettings = () => {
         asyncStdoutToPython("/set/selected_translator_engines", send_obj);
     };
 
+    const runLanguageSwap = () => {
+        pendingSelectedYourLanguages();
+        pendingSelectedTargetLanguages();
+        asyncStdoutToPython("/run/swap_your_language_and_target_language");
+    };
+
 
     return {
         currentSelectedPresetTabNumber,
@@ -134,5 +140,7 @@ export const useLanguageSettings = () => {
         getSelectedTranslationEngines,
         updateSelectedTranslationEngines,
         setSelectedTranslationEngines,
+
+        runLanguageSwap,
     };
 };
