@@ -5,7 +5,9 @@ import { useMainFunction } from "@logics_main/useMainFunction";
 import { useMessage } from "@logics_common/useMessage";
 import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useVolume } from "@logics_common/useVolume";
+
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
 import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
@@ -24,6 +26,7 @@ import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonTy
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
 export const useReceiveRoutes = () => {
+    const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
     const {
         updateTranslationStatus,
         updateTranscriptionSendStatus,
@@ -66,6 +69,10 @@ export const useReceiveRoutes = () => {
 
     const routes = {
         // Main Page
+        // Page Controls
+        "/get/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
+        "/set/enable_main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
+        "/set/disable_main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
         // Main Functions
         "/set/enable_translation": updateTranslationStatus,
         "/set/disable_translation": updateTranslationStatus,

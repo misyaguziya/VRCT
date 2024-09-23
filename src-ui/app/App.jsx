@@ -31,6 +31,7 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
+import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 
@@ -39,6 +40,7 @@ const StartPythonFacadeComponent = () => {
     const hasRunRef = useRef(false);
     const main_page = getCurrent();
 
+    const { getIsMainPageCompactMode } = useIsMainPageCompactMode();
     const { getSoftwareVersion } = useSoftwareVersion();
     const { getEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { getEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
@@ -67,6 +69,7 @@ const StartPythonFacadeComponent = () => {
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getUiLanguage();
+                getIsMainPageCompactMode();
 
                 getSoftwareVersion();
 
