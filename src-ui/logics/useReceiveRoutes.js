@@ -97,6 +97,11 @@ export const useReceiveRoutes = () => {
         "/get/selected_translator_engines": updateSelectedTranslationEngines,
         "/set/selected_translator_engines": updateSelectedTranslationEngines,
 
+        "/run/swap_your_language_and_target_language": (payload) => {
+            updateSelectedYourLanguages(payload.your);
+            updateSelectedTargetLanguages(payload.target);
+        },
+
 
         // Language Selector
         "/get/list_languages": updateSelectableLanguageList,
