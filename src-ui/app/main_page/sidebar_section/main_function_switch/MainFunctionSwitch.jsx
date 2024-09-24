@@ -5,7 +5,7 @@ import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import ForegroundSvg from "@images/foreground.svg?react";
-import { useStore_IsMainPageCompactMode } from "@store";
+import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 
 import { useMainFunction } from "@logics_main/useMainFunction";
 
@@ -74,12 +74,12 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
     const [is_hovered, setIsHovered] = useState(false);
     const [is_mouse_down, setIsMouseDown] = useState(false);
 
-    const { currentIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
+    const { currentIsMainPageCompactMode } = useIsMainPageCompactMode();
 
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_compact_mode]: currentIsMainPageCompactMode.data,
         [styles.is_active]: (currentState.data === true),
-        [styles.is_loading]: (currentState.state === "pending"),
+        [styles.is_pending]: (currentState.state === "pending"),
         [styles.is_hovered]: is_hovered,
         [styles.is_mouse_down]: is_mouse_down,
     });

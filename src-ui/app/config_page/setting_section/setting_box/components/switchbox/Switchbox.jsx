@@ -6,11 +6,11 @@ export const Switchbox = (props) => {
     const [is_hovered, setIsHovered] = useState(false);
     const [is_mouse_down, setIsMouseDown] = useState(false);
 
-    const is_loading = (props.variable.state === "pending");
+    const is_pending = (props.variable.state === "pending");
 
     const getClassNames = (base_class) => clsx(base_class, {
         [styles.is_active]: (props.variable.data === true),
-        [styles.is_loading]: is_loading,
+        [styles.is_pending]: is_pending,
         [styles.is_hovered]: is_hovered,
         [styles.is_mouse_down]: is_mouse_down,
     });
@@ -36,7 +36,7 @@ export const Switchbox = (props) => {
             >
                 <div className={getClassNames(styles.toggle_control)}>
                     <span className={getClassNames(styles.control)}></span>
-                    {is_loading && <span className={styles.loader}></span>}
+                    {is_pending && <span className={styles.loader}></span>}
                 </div>
             </div>
         </div>
