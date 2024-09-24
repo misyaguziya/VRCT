@@ -7,7 +7,7 @@ export const useSelectedMicDevice = () => {
 
     const getSelectedMicDevice = () => {
         pendingSelectedMicDevice();
-        asyncStdoutToPython("/get/selected_mic_device");
+        asyncStdoutToPython("/get/data/selected_mic_device");
     };
 
     const setSelectedMicDevice = (selected_mic_device) => {
