@@ -6,7 +6,7 @@ export const useSelectableLanguageList = () => {
     const { currentSelectableLanguageList, updateSelectableLanguageList } = useStore_SelectableLanguageList();
 
     const getSelectableLanguageList = () => {
-        asyncStdoutToPython("/get/list_languages");
+        asyncStdoutToPython("/get/data/selectable_language_list");
     };
 
     return {

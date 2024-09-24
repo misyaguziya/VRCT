@@ -155,7 +155,7 @@ class MicMessage:
                         "transliteration":transliteration
                         }
                     })
-                if config.LOGGER is True:
+                if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
@@ -225,7 +225,7 @@ class SpeakerMessage:
                         "transliteration":transliteration,
                         }
                     })
-                if config.LOGGER is True:
+                if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[RECEIVED] {message}{translation}")
@@ -285,7 +285,7 @@ class ChatMessage:
             #     model.updateOverlay(overlay_image)
 
             # update textbox message log (Sent)
-            if config.LOGGER is True:
+            if config.LOGGER_FEATURE is True:
                 if len(translation) > 0:
                     translation_text = " (" + "/".join(translation) + ")"
                 model.logger.info(f"[SENT] {message}{translation_text}")
@@ -339,7 +339,7 @@ def getSelectableWhisperModelTypeDict(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
 
 def getMaxMicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.MAX_MIC_ENERGY_THRESHOLD}
+    return {"status":200, "result":config.MAX_MIC_THRESHOLD}
 
 def getMaxSpeakerEnergyThreshold(*args, **kwargs) -> dict:
     return {"status":200, "result":config.MAX_SPEAKER_ENERGY_THRESHOLD}
@@ -401,22 +401,22 @@ def getTranslationEngines(*args, **kwargs) -> dict:
 def getListLanguageAndCountry(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListLanguageAndCountry()}
 
-def getListInputHost(*args, **kwargs) -> dict:
+def getMicHostList(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListInputHost()}
 
-def getListInputDevice(*args, **kwargs) -> dict:
+def getMicDeviceList(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListInputDevice()}
 
-def getListOutputDevice(*args, **kwargs) -> dict:
+def getSpeakerDeviceList(*args, **kwargs) -> dict:
     return {"status":200, "result": model.getListOutputDevice()}
 
-def getSelectedTranslatorEngines(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.SELECTED_TRANSLATOR_ENGINES}
+def getSelectedTranslationEngines(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
 def setSelectedTranslatorEngines(engines:dict, *args, **kwargs) -> dict:
     printLog("setSelectedTranslatorEngines", engines)
-    config.SELECTED_TRANSLATOR_ENGINES = engines
-    return {"status":200,"result":config.SELECTED_TRANSLATOR_ENGINES}
+    config.SELECTED_TRANSLATION_ENGINES = engines
+    return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
 def getSelectedYourLanguages(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SELECTED_YOUR_LANGUAGES}
@@ -589,27 +589,27 @@ def setSelectedMicDevice(data, *args, **kwargs) -> dict:
         model.startCheckMicEnergy()
     return {"status":200, "result": config.SELECTED_MIC_DEVICE}
 
-def getMicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.MIC_ENERGY_THRESHOLD}
+def getMicThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_THRESHOLD}
 
-def setMicEnergyThreshold(data, *args, **kwargs) -> dict:
+def setMicThreshold(data, *args, **kwargs) -> dict:
     status = 400
     data = int(data)
-    if 0 <= data <= config.MAX_MIC_ENERGY_THRESHOLD:
-        config.MIC_ENERGY_THRESHOLD = data
+    if 0 <= data <= config.MAX_MIC_THRESHOLD:
+        config.MIC_THRESHOLD = data
         status = 200
-    return {"status": status, "result": config.MIC_ENERGY_THRESHOLD}
+    return {"status": status, "result": config.MIC_THRESHOLD}
 
-def getMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
+def getMicAutomaticThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
-def setEnableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.MIC_DYNAMIC_ENERGY_THRESHOLD = True
-    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
+def setEnableMicAutomaticThreshold(*args, **kwargs) -> dict:
+    config.MIC_AUTOMATIC_THRESHOLD = True
+    return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
-def setDisableMicDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.MIC_DYNAMIC_ENERGY_THRESHOLD = False
-    return {"status":200, "result":config.MIC_DYNAMIC_ENERGY_THRESHOLD}
+def setDisableMicAutomaticThreshold(*args, **kwargs) -> dict:
+    config.MIC_AUTOMATIC_THRESHOLD = False
+    return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
 def getMicRecordTimeout(*args, **kwargs) -> dict:
     return {"status":200, "result":config.MIC_RECORD_TIMEOUT}
@@ -749,16 +749,16 @@ def setSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
         response = {"status":200, "result":config.SPEAKER_ENERGY_THRESHOLD}
     return response
 
-def getSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def getSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
-def setEnableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD = True
-    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def setEnableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
+    config.SPEAKER_AUTOMATIC_THRESHOLD = True
+    return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
-def setDisableSpeakerDynamicEnergyThreshold(*args, **kwargs) -> dict:
-    config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
-    return {"status":200, "result":config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD}
+def setDisableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
+    config.SPEAKER_AUTOMATIC_THRESHOLD = False
+    return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
 def getSpeakerRecordTimeout(*args, **kwargs) -> dict:
     return {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
@@ -1091,18 +1091,18 @@ def setDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
     config.SEND_RECEIVED_MESSAGE_TO_VRC = False
     return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
-def getLogger(*args, **kwargs) -> dict:
-    return {"status":200, "result":config.LOGGER}
+def getLoggerFeature(*args, **kwargs) -> dict:
+    return {"status":200, "result":config.LOGGER_FEATURE}
 
-def setEnableLogger(*args, **kwargs) -> dict:
-    config.LOGGER = True
+def setEnableLoggerFeature(*args, **kwargs) -> dict:
+    config.LOGGER_FEATURE = True
     model.startLogger()
-    return {"status":200, "result":config.LOGGER}
+    return {"status":200, "result":config.LOGGER_FEATURE}
 
-def setDisableLogger(*args, **kwargs) -> dict:
+def setDisableLoggerFeature(*args, **kwargs) -> dict:
     model.stopLogger()
-    config.LOGGER = False
-    return {"status":200, "result":config.LOGGER}
+    config.LOGGER_FEATURE = False
+    return {"status":200, "result":config.LOGGER_FEATURE}
 
 def getVrcMicMuteSync(*args, **kwargs) -> dict:
     return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
@@ -1252,7 +1252,7 @@ def messageFormatter(format_type:str, translation:list, message:list) -> str:
     return osc_message
 
 def changeToCTranslate2Process() -> None:
-    config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+    config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
 
 def startTranscriptionSendMessage(action:Callable[[dict], None]) -> None:
     mic_message = MicMessage(action)
@@ -1362,11 +1362,11 @@ def removeExclamations(text):
     return cleaned_text
 
 def updateTranslationEngineAndEngineList():
-    engine = config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+    engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
     engines = getTranslationEngines()["result"]
     if engine not in engines:
         engine = engines[0]
-    config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO] = engine
+    config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
 
 def startThreadingDownloadCtranslate2Weight(callback:Callable[[float], None]) -> None:
     th_download = Thread(target=model.downloadCTranslate2ModelWeight, args=(callback,))
@@ -1423,7 +1423,7 @@ def init(actions:dict, *args, **kwargs) -> None:
 
     # init logger
     printLog("Init Logger")
-    if config.LOGGER is True:
+    if config.LOGGER_FEATURE is True:
         model.startLogger()
 
     # init OSC receive

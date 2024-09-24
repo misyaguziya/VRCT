@@ -7,12 +7,12 @@ export const useSelectedSpeakerDevice = () => {
 
     const getSelectedSpeakerDevice = () => {
         pendingSelectedSpeakerDevice();
-        asyncStdoutToPython("/get/selected_speaker_device");
+        asyncStdoutToPython("/get/data/selected_speaker_device");
     };
 
     const setSelectedSpeakerDevice = (selected_speaker_device) => {
         pendingSelectedSpeakerDevice();
-        asyncStdoutToPython("/set/selected_speaker_device", selected_speaker_device);
+        asyncStdoutToPython("/set/data/selected_speaker_device", selected_speaker_device);
     };
 
     return {

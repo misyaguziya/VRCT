@@ -35,27 +35,27 @@ export const useMainFunction = () => {
     const toggleTranslation = () => {
         pendingTranslationStatus();
         if (currentTranslationStatus.data) {
-            asyncStdoutToPython("/set/disable_translation");
+            asyncStdoutToPython("/set/disable/translation");
         } else {
-            asyncStdoutToPython("/set/enable_translation");
+            asyncStdoutToPython("/set/enable/translation");
         }
     };
 
     const toggleTranscriptionSend = () => {
         pendingTranscriptionSendStatus();
         if (currentTranscriptionSendStatus.data) {
-            asyncStdoutToPython("/set/disable_transcription_send");
+            asyncStdoutToPython("/set/disable/transcription_send");
         } else {
-            asyncStdoutToPython("/set/enable_transcription_send");
+            asyncStdoutToPython("/set/enable/transcription_send");
         }
     };
 
     const toggleTranscriptionReceive = () => {
         pendingTranscriptionReceiveStatus();
         if (currentTranscriptionReceiveStatus.data) {
-            asyncStdoutToPython("/set/disable_transcription_receive");
+            asyncStdoutToPython("/set/disable/transcription_receive");
         } else {
-            asyncStdoutToPython("/set/enable_transcription_receive");
+            asyncStdoutToPython("/set/enable/transcription_receive");
         }
     };
 

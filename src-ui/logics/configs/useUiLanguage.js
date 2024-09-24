@@ -7,12 +7,12 @@ export const useUiLanguage = () => {
 
     const getUiLanguage = () => {
         pendingUiLanguage();
-        asyncStdoutToPython("/get/ui_language");
+        asyncStdoutToPython("/get/data/ui_language");
     };
 
     const setUiLanguage = (selected_ui_language) => {
         pendingUiLanguage();
-        asyncStdoutToPython("/set/ui_language", selected_ui_language);
+        asyncStdoutToPython("/set/data/ui_language", selected_ui_language);
     };
 
     return {
