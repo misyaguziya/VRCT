@@ -5,7 +5,7 @@ import clsx from "clsx";
 export const VolumeCheckButton = React.memo((props) => {
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_active]: (props.isChecking?.data === true),
-        [styles.is_loading]: (props.isChecking.state === "pending"),
+        [styles.is_pending]: (props.isChecking.state === "pending"),
     });
 
     const toggleFunction = () => {

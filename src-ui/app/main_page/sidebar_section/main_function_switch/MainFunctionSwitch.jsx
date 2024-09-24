@@ -79,7 +79,7 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_compact_mode]: currentIsMainPageCompactMode.data,
         [styles.is_active]: (currentState.data === true),
-        [styles.is_loading]: (currentState.state === "pending"),
+        [styles.is_pending]: (currentState.state === "pending"),
         [styles.is_hovered]: is_hovered,
         [styles.is_mouse_down]: is_mouse_down,
     });
