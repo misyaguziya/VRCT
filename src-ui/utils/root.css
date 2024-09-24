@@ -8,6 +8,7 @@
 }
 
 * {
+    user-select: none;
     &::-webkit-scrollbar {
         width: 0.8rem;
     }
@@ -19,10 +20,6 @@
         background-color: var(--dark_800_color);
         border-radius: 0.4rem;
     }
-}
-
-p, img, button {
-    user-select: none;
 }
 
 html, body {

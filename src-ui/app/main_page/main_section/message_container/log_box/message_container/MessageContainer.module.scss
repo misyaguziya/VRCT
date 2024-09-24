@@ -6,6 +6,7 @@
     flex-direction: column;
     display: flex;
     justify-content: center;
+    user-select: text;
     &.sent_message {
         align-items: end;
     }
@@ -61,12 +62,12 @@
 
 .message_main {
     color: var(--dark_basic_text_color);
-    font-size: 1.4rem;
     user-select: text;
+    font-size: 1.4rem;
 }
 
 .message_second {
     color: var(--dark_450_color);
-    font-size: 1rem;
     user-select: text;
+    font-size: 1rem;
 }
