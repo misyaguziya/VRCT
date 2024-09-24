@@ -23,7 +23,7 @@
     &.is_compact_mode {
         padding: 1.5rem;
     }
-    &.is_loading {
+    &.is_pending {
         pointer-events: none;
     }
 }
@@ -36,23 +36,23 @@
 }
 
 $basic_label_color: var(--dark_basic_text_color);
-$loading_label_color: var(--dark_500_color);
+$pending_label_color: var(--dark_500_color);
 .switch_label {
     font-size: 1.4rem;
     color: $basic_label_color;
     &.is_compact_mode {
         display: none;
     }
-    &.is_loading {
-        color: $loading_label_color;
+    &.is_pending {
+        color: $pending_label_color;
     }
 }
 
 .switch_svg {
     width: 1.8rem;
     color: $basic_label_color;
-    &.is_loading {
-        color: $loading_label_color;
+    &.is_pending {
+        color: $pending_label_color;
     }
     &:not(.is_compact_mode) {
         width: 1.6rem;

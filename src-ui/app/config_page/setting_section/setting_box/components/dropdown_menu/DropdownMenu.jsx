@@ -29,7 +29,7 @@ export const DropdownMenu = (props) => {
     });
 
     const dropdown_toggle_button_class_name = clsx(styles["dropdown_toggle_button"], {
-        [styles.is_loading]: (props.state === "pending") ? true : false,
+        [styles.is_pending]: (props.state === "pending") ? true : false,
         [styles.is_disabled]: props.is_disabled,
     });
 
