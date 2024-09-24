@@ -70,9 +70,9 @@ export const useReceiveRoutes = () => {
     const routes = {
         // Main Page
         // Page Controls
-        "/get/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
-        "/set/enable_main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
-        "/set/disable_main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
+        "/get/data/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
+        "/set/enable/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
+        "/set/disable/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
         // Main Functions
         "/set/enable/translation": updateTranslationStatus,
         "/set/disable/translation": updateTranslationStatus,
