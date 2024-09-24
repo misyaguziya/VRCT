@@ -6,14 +6,14 @@ export const useIsMainPageCompactMode = () => {
     const { currentIsMainPageCompactMode, updateIsMainPageCompactMode } = useStore_IsMainPageCompactMode();
 
     const getIsMainPageCompactMode = () => {
-        asyncStdoutToPython("/get/main_window_sidebar_compact_mode");
+        asyncStdoutToPython("/get/data/main_window_sidebar_compact_mode");
     };
 
     const toggleIsMainPageCompactMode = () => {
         if (currentIsMainPageCompactMode.data) {
-            asyncStdoutToPython("/set/disable_main_window_sidebar_compact_mode");
+            asyncStdoutToPython("/set/disable/main_window_sidebar_compact_mode");
         } else {
-            asyncStdoutToPython("/set/enable_main_window_sidebar_compact_mode");
+            asyncStdoutToPython("/set/enable/main_window_sidebar_compact_mode");
         }
     };
 
