@@ -7,7 +7,7 @@ export const useSoftwareVersion = () => {
 
     const getSoftwareVersion = () => {
         pendingSoftwareVersion();
-        asyncStdoutToPython("/get/version");
+        asyncStdoutToPython("/get/data/version");
     };
 
     return {

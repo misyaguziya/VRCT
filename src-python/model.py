@@ -213,7 +213,7 @@ class Model:
         return translation, success_flag
 
     def getInputTranslate(self, message):
-        translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
@@ -237,7 +237,7 @@ class Model:
         return translations, success_flags
 
     def getOutputTranslate(self, message):
-        translator_name=config.SELECTED_TRANSLATOR_ENGINES[config.SELECTED_TAB_NO]
+        translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_country=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]
@@ -449,8 +449,8 @@ class Model:
 
         self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
             device=mic_device,
-            energy_threshold=config.MIC_ENERGY_THRESHOLD,
-            dynamic_energy_threshold=config.MIC_DYNAMIC_ENERGY_THRESHOLD,
+            energy_threshold=config.MIC_THRESHOLD,
+            dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
             record_timeout=record_timeout,
         )
         # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
@@ -623,7 +623,7 @@ class Model:
         self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
             energy_threshold=config.SPEAKER_ENERGY_THRESHOLD,
-            dynamic_energy_threshold=config.SPEAKER_DYNAMIC_ENERGY_THRESHOLD,
+            dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
             record_timeout=record_timeout,
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)

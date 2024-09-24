@@ -7,15 +7,15 @@ export const useEnableAutoClearMessageBox = () => {
 
     const getEnableAutoClearMessageBox = () => {
         pendingEnableAutoClearMessageBox();
-        asyncStdoutToPython("/get/auto_clear_message_box");
+        asyncStdoutToPython("/get/data/auto_clear_message_box");
     };
 
     const toggleEnableAutoClearMessageBox = () => {
         pendingEnableAutoClearMessageBox();
         if (currentEnableAutoClearMessageBox.data) {
-            asyncStdoutToPython("/set/disable_auto_clear_message_box");
+            asyncStdoutToPython("/set/disable/auto_clear_message_box");
         } else {
-            asyncStdoutToPython("/set/enable_auto_clear_message_box");
+            asyncStdoutToPython("/set/enable/auto_clear_message_box");
         }
     };
 

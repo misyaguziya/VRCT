@@ -99,8 +99,8 @@ class Config:
         return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
 
     @property
-    def MAX_MIC_ENERGY_THRESHOLD(self):
-        return self._MAX_MIC_ENERGY_THRESHOLD
+    def MAX_MIC_THRESHOLD(self):
+        return self._MAX_MIC_THRESHOLD
 
     @property
     def MAX_SPEAKER_ENERGY_THRESHOLD(self):
@@ -229,14 +229,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SELECTED_TRANSLATOR_ENGINES')
-    def SELECTED_TRANSLATOR_ENGINES(self):
-        return self._SELECTED_TRANSLATOR_ENGINES
+    @json_serializable('SELECTED_TRANSLATION_ENGINES')
+    def SELECTED_TRANSLATION_ENGINES(self):
+        return self._SELECTED_TRANSLATION_ENGINES
 
-    @SELECTED_TRANSLATOR_ENGINES.setter
-    def SELECTED_TRANSLATOR_ENGINES(self, value):
+    @SELECTED_TRANSLATION_ENGINES.setter
+    def SELECTED_TRANSLATION_ENGINES(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TRANSLATOR_ENGINES = value
+            self._SELECTED_TRANSLATION_ENGINES = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -475,25 +475,25 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('MIC_ENERGY_THRESHOLD')
-    def MIC_ENERGY_THRESHOLD(self):
-        return self._MIC_ENERGY_THRESHOLD
+    @json_serializable('MIC_THRESHOLD')
+    def MIC_THRESHOLD(self):
+        return self._MIC_THRESHOLD
 
-    @MIC_ENERGY_THRESHOLD.setter
-    def MIC_ENERGY_THRESHOLD(self, value):
+    @MIC_THRESHOLD.setter
+    def MIC_THRESHOLD(self, value):
         if isinstance(value, int):
-            self._MIC_ENERGY_THRESHOLD = value
+            self._MIC_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('MIC_DYNAMIC_ENERGY_THRESHOLD')
-    def MIC_DYNAMIC_ENERGY_THRESHOLD(self):
-        return self._MIC_DYNAMIC_ENERGY_THRESHOLD
+    @json_serializable('MIC_AUTOMATIC_THRESHOLD')
+    def MIC_AUTOMATIC_THRESHOLD(self):
+        return self._MIC_AUTOMATIC_THRESHOLD
 
-    @MIC_DYNAMIC_ENERGY_THRESHOLD.setter
-    def MIC_DYNAMIC_ENERGY_THRESHOLD(self, value):
+    @MIC_AUTOMATIC_THRESHOLD.setter
+    def MIC_AUTOMATIC_THRESHOLD(self, value):
         if isinstance(value, bool):
-            self._MIC_DYNAMIC_ENERGY_THRESHOLD = value
+            self._MIC_AUTOMATIC_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -596,14 +596,14 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SPEAKER_DYNAMIC_ENERGY_THRESHOLD')
-    def SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self):
-        return self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD
+    @json_serializable('SPEAKER_AUTOMATIC_THRESHOLD')
+    def SPEAKER_AUTOMATIC_THRESHOLD(self):
+        return self._SPEAKER_AUTOMATIC_THRESHOLD
 
-    @SPEAKER_DYNAMIC_ENERGY_THRESHOLD.setter
-    def SPEAKER_DYNAMIC_ENERGY_THRESHOLD(self, value):
+    @SPEAKER_AUTOMATIC_THRESHOLD.setter
+    def SPEAKER_AUTOMATIC_THRESHOLD(self, value):
         if isinstance(value, bool):
-            self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
+            self._SPEAKER_AUTOMATIC_THRESHOLD = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -931,14 +931,14 @@ class Config:
 
 
     @property
-    @json_serializable('LOGGER')
-    def LOGGER(self):
-        return self._LOGGER
+    @json_serializable('LOGGER_FEATURE')
+    def LOGGER_FEATURE(self):
+        return self._LOGGER_FEATURE
 
-    @LOGGER.setter
-    def LOGGER(self, value):
+    @LOGGER_FEATURE.setter
+    def LOGGER_FEATURE(self, value):
         if isinstance(value, bool):
-            self._LOGGER = value
+            self._LOGGER_FEATURE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -990,7 +990,7 @@ class Config:
             "large-v3": "large-v3",
         }
 
-        self._MAX_MIC_ENERGY_THRESHOLD = 2000
+        self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_ENERGY_THRESHOLD = 4000
 
         # Read Write
@@ -1010,7 +1010,7 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
-        self._SELECTED_TRANSLATOR_ENGINES= {
+        self._SELECTED_TRANSLATION_ENGINES= {
             "1":"CTranslate2",
             "2":"CTranslate2",
             "3":"CTranslate2",
@@ -1103,8 +1103,8 @@ class Config:
         self._AUTO_MIC_SELECT = True
         self._SELECTED_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
         self._SELECTED_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
-        self._MIC_ENERGY_THRESHOLD = 300
-        self._MIC_DYNAMIC_ENERGY_THRESHOLD = False
+        self._MIC_THRESHOLD = 300
+        self._MIC_AUTOMATIC_THRESHOLD = False
         self._MIC_RECORD_TIMEOUT = 3
         self._MIC_PHRASE_TIMEOUT = 3
         self._MIC_MAX_PHRASES = 10
@@ -1114,7 +1114,7 @@ class Config:
         self._AUTO_SPEAKER_SELECT = True
         self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
         self._SPEAKER_ENERGY_THRESHOLD = 300
-        self._SPEAKER_DYNAMIC_ENERGY_THRESHOLD = False
+        self._SPEAKER_AUTOMATIC_THRESHOLD = False
         self._SPEAKER_RECORD_TIMEOUT = 3
         self._SPEAKER_PHRASE_TIMEOUT = 3
         self._SPEAKER_MAX_PHRASES = 10
@@ -1156,7 +1156,7 @@ class Config:
         self._SEND_MESSAGE_TO_VRC = True
         self._SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
         self._SPEAKER2CHATBOX_PASS = "000000000"
-        self._LOGGER = False
+        self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
 
     def load_config(self):

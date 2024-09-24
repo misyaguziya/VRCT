@@ -7,7 +7,7 @@ export const useMicHostList = () => {
 
     const getMicHostList = () => {
         pendingMicHostList();
-        asyncStdoutToPython("/get/list_mic_host");
+        asyncStdoutToPython("/get/data/mic_host_list");
     };
 
     return {
