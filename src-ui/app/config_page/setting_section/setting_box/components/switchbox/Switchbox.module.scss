@@ -16,7 +16,7 @@
     padding: 2rem;
     height: 100%;
     flex-shrink: 0;
-    &.is_loading {
+    &.is_pending {
         pointer-events: none;
     }
 }

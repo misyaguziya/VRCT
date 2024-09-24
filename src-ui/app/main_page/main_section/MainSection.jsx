@@ -20,7 +20,7 @@ export const MainSection = () => {
 
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 const HandleLanguageSelector = () => {
-    const { currentIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
+    const { currentIsOpenedLanguageSelector, updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const {
         currentSelectedYourLanguages,
         setSelectedYourLanguages,
@@ -29,11 +29,27 @@ const HandleLanguageSelector = () => {
     } = useLanguageSettings();
 
     if (currentIsOpenedLanguageSelector.data.your_language === true) {
-        const onclickFunction_YourLanguage = (payload) => setSelectedYourLanguages(payload);
-        return <LanguageSelector id="your_language" onClickFunction={onclickFunction_YourLanguage}/>;
+        const onclickFunction_YourLanguage = (payload) => {
+            updateIsOpenedLanguageSelector({ your_language: false, target_language: false });
+            setSelectedYourLanguages(payload);
+        };
+        return (
+            <LanguageSelector
+                id="your_language"
+                onClickFunction={onclickFunction_YourLanguage}
+            />
+        );
     } else if (currentIsOpenedLanguageSelector.data.target_language === true) {
-        const onclickFunction_TargetLanguage = (payload) => setSelectedTargetLanguages(payload);
-        return <LanguageSelector id="target_language" onClickFunction={onclickFunction_TargetLanguage}/>;
+        const onclickFunction_TargetLanguage = (payload) => {
+            updateIsOpenedLanguageSelector({ your_language: false, target_language: false });
+            setSelectedTargetLanguages(payload);
+        };
+        return (
+            <LanguageSelector
+                id="target_language"
+                onClickFunction={onclickFunction_TargetLanguage}
+            />
+        );
     } else {
         return null;
     }
