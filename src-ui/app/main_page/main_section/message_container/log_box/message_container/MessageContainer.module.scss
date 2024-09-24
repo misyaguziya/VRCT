@@ -62,9 +62,11 @@
 .message_main {
     color: var(--dark_basic_text_color);
     font-size: 1.4rem;
+    user-select: text;
 }
 
 .message_second {
     color: var(--dark_450_color);
     font-size: 1rem;
+    user-select: text;
 }
