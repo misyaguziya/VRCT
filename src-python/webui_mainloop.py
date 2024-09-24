@@ -3,8 +3,10 @@ import json
 import time
 from threading import Thread
 from queue import Queue
-import webui_controller as controller
+from webui_controller import Controller
 from utils import printLog, printResponse, encodeBase64
+
+controller = Controller()
 
 mapping = {
     # Main Window
