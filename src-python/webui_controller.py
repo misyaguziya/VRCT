@@ -1,4 +1,4 @@
-from typing import Callable, Union
+from typing import Callable, Union, Any
 from time import sleep
 from subprocess import Popen
 from threading import Thread
@@ -9,125 +9,146 @@ from utils import isUniqueStrings, printLog
 from models.transcription.transcription_utils import device_manager
 
 class Controller:
-    def __call__(self, mapping:dict={}) -> None:
-        self.mapping = mapping
+    def __call__(self) -> None:
+        self.run_mapping = {}
+        self.run = None
+
+    def setRunMapping(self, run_mapping:dict) -> None:
+        self.run_mapping = run_mapping
+
+    def setRun(self, run:Callable[[int, str, Any], None]) -> None:
+        self.run = run
 
     # response functions
     class DownloadSoftwareProgressBar:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, progress) -> None:
-            printLog("Software Download Progress", progress)
-            self.run("download", {
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-                })
+            self.parent.run(
+                200,
+                self.parent.run_mapping["download_software"],
+                progress,
+            )
 
     class UpdateSoftwareProgressBar:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, progress) -> None:
-            printLog("Software Update Progress", progress)
-            self.run("update", {
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-                })
+            self.parent.run(
+                200,
+                self.parent.run_mapping["update_software"],
+                progress,
+            )
 
     class UpdateSelectedMicDevice:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, host, device) -> None:
             config.SELECTED_MIC_HOST = host
             config.SELECTED_MIC_DEVICE = device
-            printLog("Update Host/Mic Device", f"{host}/{device}")
-            self.run("mic", {
-                "status":200,
-                "result":{"host":host, "device":device}
-                })
+            self.parent.run(
+                200,
+                self.parent.run_mapping["selected_mic_device"],
+                {"host":host, "device":device},
+            )
 
     class UpdateSelectedSpeakerDevice:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, device) -> None:
             config.SELECTED_SPEAKER_DEVICE = device
-            printLog("Update Speaker Device", device)
-            self.run("speaker", {
-                "status":200,
-                "result":device
-                })
+            self.parent.run(
+                200,
+                self.parent.run_mapping["selected_speaker_device"],
+                device,
+            )
 
     class ProgressBarMicEnergy:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, energy) -> None:
             if energy is False:
-                self.run("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+                self.parent.run(
+                    400,
+                    self.parent.run_mapping["error_device"],
+                    {"message":"No mic device detected."},
+                )
             else:
-                self.run("mic", {"status":200, "result":energy})
+                self.parent.run(
+                    200,
+                    self.parent.run_mapping["check_mic_volume"],
+                    energy,
+                )
 
     class ProgressBarSpeakerEnergy:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, energy) -> None:
             if energy is False:
-                self.run("error_device", {"status":400,"result": {"message":"No mic device detected."}})
+                self.parent.run(
+                    400,
+                    self.parent.run_mapping["error_device"],
+                    {"message":"No mic device detected."},
+                )
             else:
-                self.run("speaker", {"status":200, "result":energy})
+                self.parent.run(
+                    200,
+                    self.parent.run_mapping["check_speaker_volume"],
+                    energy,
+                )
+
+    class DownloadCTranslate2ProgressBar:
+        def __init__(self, parent) -> None:
+            self.parent = parent
+
+        def set(self, progress) -> None:
+            printLog("CTranslate2 Weight Download Progress", progress)
+            self.parent.run(
+                200,
+                self.parent.run_mapping["download_ctranslate2"],
+                progress,
+            )
 
     class DownloadWhisperProgressBar:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def set(self, progress) -> None:
             printLog("Whisper Weight Download Progress", progress)
-            self.run("download", {
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-                })
+            self.parent.run(
+                200,
+                self.parent.run_mapping["download_whisper"],
+                progress,
+            )
 
     class MicMessage:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def send(self, message: Union[str, bool]) -> None:
             if isinstance(message, bool) and message is False:
-                self.run("error_device", {
-                    "status":400,
-                    "result": {
-                        "message":"No mic device detected."
-                        }
-                    })
+                self.parent.run(
+                    400,
+                    self.parent.run_mapping["error_device"],
+                    {"message":"No mic device detected."},
+                )
+
             elif isinstance(message, str) and len(message) > 0:
                 # addSentMessageLog(message)
                 translation = []
                 transliteration = []
                 if model.checkKeywords(message):
-                    self.run("word_filter", {
-                        "status":200,
-                        "result": {
-                            "message":f"Detected by word filter:{message}"
-                            }
-                        })
+                    self.parent.run(
+                        200,
+                        self.parent.run_mapping["word_filter"],
+                        {"message":f"Detected by word filter:{message}"},
+                    )
                     return
                 elif model.detectRepeatSendMessage(message):
                     return
@@ -137,12 +158,11 @@ class Controller:
                     translation, success = model.getInputTranslate(message)
                     if all(success) is not True:
                         self.parent.changeToCTranslate2Process()
-                        self.run("error_translation_engine", {
-                            "status":400,
-                            "result": {
-                                "message":"translation engine limit error"
-                                }
-                            })
+                        self.parent.run(
+                            400,
+                            self.parent.run_mapping["error_translation_engine"],
+                            {"message":"translation engine limit error"},
+                        )
 
                     if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                         if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
@@ -159,13 +179,13 @@ class Controller:
                             osc_message = self.parent.messageFormatter("SEND", translation, [message])
                         model.oscSendMessage(osc_message)
 
-                    self.run("mic", {
-                        "status":200,
-                        "result": {
+                    self.parent.run(
+                        200,
+                        self.parent.run_mapping["transcription_mic"],
+                        {
                             "message":message,
                             "translation":translation,
                             "transliteration":transliteration
-                            }
                         })
                     if config.LOGGER_FEATURE is True:
                         if len(translation) > 0:
@@ -179,18 +199,16 @@ class Controller:
                     #     model.updateOverlay(overlay_image)
 
     class SpeakerMessage:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def receive(self, message):
             if isinstance(message, bool) and message is False:
-                self.run("error_device",{
-                    "status":400,
-                    "result": {
-                        "message":"No mic device detected."
-                        },
-                    })
+                self.parent.run(
+                    400,
+                    self.parent.run_mapping["error_device"],
+                    {"message":"No mic device detected."},
+                )
             elif isinstance(message, str) and len(message) > 0:
                 translation = []
                 transliteration = []
@@ -202,12 +220,11 @@ class Controller:
                     translation, success = model.getOutputTranslate(message)
                     if all(success) is not True:
                         self.parent.changeToCTranslate2Process()
-                        self.run("error_translation_engine", {
-                            "status":400,
-                            "result": {
-                                "message":"translation engine limit error"
-                                }
-                            })
+                        self.parent.run(
+                            400,
+                            self.parent.run_mapping["error_translation_engine"],
+                            {"message":"translation engine limit error"},
+                        )
 
                     if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                         if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
@@ -230,13 +247,13 @@ class Controller:
                     # ------------Speaker2Chatbox------------
 
                     # update textbox message log (Received)
-                    self.run("speaker",{
-                        "status":200,
-                        "result": {
+                    self.parent.run(
+                        200,
+                        self.parent.run_mapping["speaker"],
+                        {
                             "message":message,
                             "translation":translation,
                             "transliteration":transliteration,
-                            }
                         })
                     if config.LOGGER_FEATURE is True:
                         if len(translation) > 0:
@@ -244,9 +261,8 @@ class Controller:
                         model.logger.info(f"[RECEIVED] {message}{translation}")
 
     class ChatMessage:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
+        def __init__(self, parent) -> None:
             self.parent = parent
-            self.run = run
 
         def send(self, data):
             id = data["id"]
@@ -270,12 +286,11 @@ class Controller:
 
                     if all(success) is not True:
                         self.parent.changeToCTranslate2Process()
-                        self.run("error_translation_engine", {
-                            "status":400,
-                            "result":{
-                                "message":"translation engine limit error"
-                                }
-                            })
+                        self.parent.run(
+                            400,
+                            self.parent.run_mapping["error_translation_engine"],
+                            {"message":"translation engine limit error"},
+                        )
 
                     if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                         if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
@@ -312,20 +327,6 @@ class Controller:
                         "transliteration":transliteration,
                         },
                     }
-
-    class DownloadCTranslate2ProgressBar:
-        def __init__(self, parent, run:Callable[[dict], None]) -> None:
-            self.parent = parent
-            self.run = run
-
-        def set(self, progress) -> None:
-            printLog("CTranslate2 Weight Download Progress", progress)
-            self.run("download", {
-                "status":200,
-                "result":{
-                    "progress":progress
-                    }
-                })
 
     @staticmethod
     def getVersion(*args, **kwargs) -> dict:
@@ -396,16 +397,16 @@ class Controller:
             self.stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
         return {"status":200, "result":True}
 
-    def setDisableConfigWindow(self, data, run, *args, **kwargs) -> dict:
+    def setDisableConfigWindow(self, *args, **kwargs) -> dict:
         model.stopCheckMicEnergy()
         model.stopCheckSpeakerEnergy()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessageOnCloseConfigWindow(run)
+            self.startThreadingTranscriptionSendMessageOnCloseConfigWindow()
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 sleep(2)
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(run)
+            self.startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
         return {"status":200, "result":True}
 
     @staticmethod
@@ -621,9 +622,9 @@ class Controller:
     def getAutoMicSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-    def setEnableAutoMicSelect(self, data, run, *args, **kwargs) -> dict:
+    def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
-        update_device = self.UpdateSelectedMicDevice(self, run)
+        update_device = self.UpdateSelectedMicDevice(self)
         device_manager.setCallbackDefaultInputDevice(update_device.set)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
@@ -804,9 +805,9 @@ class Controller:
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-    def setEnableAutoSpeakerSelect(self, data, run, *args, **kwargs) -> dict:
+    def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
-        update_device = self.UpdateSelectedSpeakerDevice(self, run)
+        update_device = self.UpdateSelectedSpeakerDevice(self)
         device_manager.setCallbackDefaultOutputDevice(update_device.set)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
@@ -1283,8 +1284,8 @@ class Controller:
         model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
-    def setEnableCheckSpeakerThreshold(self, data, run, *args, **kwargs) -> dict:
-        progressbar_speaker_energy = self.ProgressBarSpeakerEnergy(run)
+    def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
+        progressbar_speaker_energy = self.ProgressBarSpeakerEnergy(self)
         model.startCheckSpeakerEnergy(
             progressbar_speaker_energy.set,
         )
@@ -1297,8 +1298,8 @@ class Controller:
         config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
-    def setEnableCheckMicThreshold(self, data, run, *args, **kwargs) -> dict:
-        progressbar_mic_energy = self.ProgressBarMicEnergy(self, run)
+    def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
+        progressbar_mic_energy = self.ProgressBarMicEnergy(self)
         model.startCheckMicEnergy(
             progressbar_mic_energy.set,
         )
@@ -1311,10 +1312,10 @@ class Controller:
         config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
-    # def updateSoftware(data, run, *args, **kwargs) -> dict:
+    # def updateSoftware(*args, **kwargs) -> dict:
     #     printLog("Update callbackUpdateSoftware")
-    #     download = DownloadSoftwareProgressBar(run)
-    #     update = UpdateSoftwareProgressBar(run)
+    #     download = DownloadSoftwareProgressBar(self)
+    #     update = UpdateSoftwareProgressBar(self)
     #     model.updateSoftware(restart=True, download=download.set, update=update.set)
     #     return {"status":200, "result":True}
 
@@ -1333,8 +1334,8 @@ class Controller:
         Popen(['explorer', config.PATH_LOCAL.replace('/', '\\')], shell=True)
         return {"status":200, "result":True}
 
-    def setEnableTranscriptionSend(self, data, run, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionSendMessage(run)
+    def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
+        self.startThreadingTranscriptionSendMessage()
         config.ENABLE_TRANSCRIPTION_SEND = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
@@ -1343,8 +1344,8 @@ class Controller:
         config.ENABLE_TRANSCRIPTION_SEND = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
-    def setEnableTranscriptionReceive(self, data, run, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionReceiveMessage(run)
+    def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
+        self.startThreadingTranscriptionReceiveMessage()
         if config.OVERLAY_SMALL_LOG is True:
             if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
                 model.startOverlay()
@@ -1356,8 +1357,8 @@ class Controller:
         config.ENABLE_TRANSCRIPTION_RECEIVE = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
-    def sendMessageBox(self, data, run, *args, **kwargs) -> dict:
-        chat = self.ChatMessage(self, run)
+    def sendMessageBox(self, data, *args, **kwargs) -> dict:
+        chat = self.ChatMessage(self)
         response = chat.send(data)
         return response
 
@@ -1393,13 +1394,13 @@ class Controller:
                 }
             }
 
-    def downloadCtranslate2Weight(self, data, run, *args, **kwargs) -> dict:
-        download = self.DownloadCTranslate2ProgressBar(self, run)
+    def downloadCtranslate2Weight(self, *args, **kwargs) -> dict:
+        download = self.DownloadCTranslate2ProgressBar(self)
         self.startThreadingDownloadCtranslate2Weight(download.set)
         return {"status":200}
 
-    def downloadWhisperWeight(self, data, run, *args, **kwargs) -> dict:
-        download = self.DownloadWhisperProgressBar(self, run)
+    def downloadWhisperWeight(self, *args, **kwargs) -> dict:
+        download = self.DownloadWhisperProgressBar(self)
         self.startThreadingDownloadWhisperWeight(download.set)
         return {"status":200}
 
@@ -1425,16 +1426,16 @@ class Controller:
     def changeToCTranslate2Process() -> None:
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
 
-    def startTranscriptionSendMessage(self, run:Callable[[dict], None]) -> None:
-        mic_message = self.MicMessage(self, run)
+    def startTranscriptionSendMessage(self) -> None:
+        mic_message = self.MicMessage(self)
         model.startMicTranscript(mic_message.send)
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
         model.stopMicTranscript()
 
-    def startThreadingTranscriptionSendMessage(self, run:Callable[[dict], None]) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessage, args=(run,))
+    def startThreadingTranscriptionSendMessage(self) -> None:
+        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessage)
         th_startTranscriptionSendMessage.daemon = True
         th_startTranscriptionSendMessage.start()
 
@@ -1444,35 +1445,34 @@ class Controller:
         th_stopTranscriptionSendMessage.start()
         th_stopTranscriptionSendMessage.join()
 
-    def startTranscriptionSendMessageOnCloseConfigWindow(self, run:Callable[[dict], None]) -> None:
-        mic_message = self.MicMessage(self, run)
+    def startTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
+        mic_message = self.MicMessage(self)
         model.startMicTranscript(mic_message.send)
 
     @staticmethod
     def stopTranscriptionSendMessageOnOpenConfigWindow() -> None:
         model.stopMicTranscript()
 
-    def startThreadingTranscriptionSendMessageOnCloseConfigWindow(self, run:Callable[[dict], None]) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessageOnCloseConfigWindow, args=(run,))
+    def startThreadingTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
+        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessageOnCloseConfigWindow)
         th_startTranscriptionSendMessage.daemon = True
         th_startTranscriptionSendMessage.start()
 
-    @staticmethod
     def stopThreadingTranscriptionSendMessageOnOpenConfigWindow(self) -> None:
         th_stopTranscriptionSendMessage = Thread(target=self.stopTranscriptionSendMessageOnOpenConfigWindow)
         th_stopTranscriptionSendMessage.daemon = True
         th_stopTranscriptionSendMessage.start()
 
-    def startTranscriptionReceiveMessage(self, run:Callable[[dict], None]) -> None:
-        speaker_message = self.SpeakerMessage(self, run)
+    def startTranscriptionReceiveMessage(self) -> None:
+        speaker_message = self.SpeakerMessage(self)
         model.startSpeakerTranscript(speaker_message.receive)
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
         model.stopSpeakerTranscript()
 
-    def startThreadingTranscriptionReceiveMessage(self, run:Callable[[dict], None]) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessage, args=(run,))
+    def startThreadingTranscriptionReceiveMessage(self) -> None:
+        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessage)
         th_startTranscriptionReceiveMessage.daemon = True
         th_startTranscriptionReceiveMessage.start()
 
@@ -1482,16 +1482,16 @@ class Controller:
         th_stopTranscriptionReceiveMessage.start()
         th_stopTranscriptionReceiveMessage.join()
 
-    def startTranscriptionReceiveMessageOnCloseConfigWindow(self, run:Callable[[dict], None]) -> None:
-        speaker_message = self.SpeakerMessage(self, run)
+    def startTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
+        speaker_message = self.SpeakerMessage(self)
         model.startSpeakerTranscript(speaker_message.receive)
 
     @staticmethod
     def stopTranscriptionReceiveMessageOnOpenConfigWindow() -> None:
         model.stopSpeakerTranscript()
 
-    def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(self, run:Callable[[dict], None]) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessageOnCloseConfigWindow, args=(run,))
+    def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
+        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessageOnCloseConfigWindow)
         th_startTranscriptionReceiveMessage.daemon = True
         th_startTranscriptionReceiveMessage.start()
 
@@ -1559,7 +1559,7 @@ class Controller:
         th_download.daemon = True
         th_download.start()
 
-    def init(self, run_dict:dict, *args, **kwargs) -> None:
+    def init(self, *args, **kwargs) -> None:
         printLog("Start Initialization")
 
         printLog("Start check DeepL API Key")
@@ -1577,7 +1577,7 @@ class Controller:
         # check Downloaded CTranslate2 Model Weight
         printLog("Check Downloaded CTranslate2 Model Weight")
         if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
-            download = self.DownloadCTranslate2ProgressBar(self, run_dict["download_ctranslate2"])
+            download = self.DownloadCTranslate2ProgressBar(self)
             self.startThreadingDownloadCtranslate2Weight(download.set)
 
         # set Transcription Engine
@@ -1590,7 +1590,7 @@ class Controller:
         # check Downloaded Whisper Model Weight
         printLog("Check Downloaded Whisper Model Weight")
         if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
-            download = self.DownloadWhisperProgressBar(self, run_dict["download_whisper"])
+            download = self.DownloadWhisperProgressBar(self)
             self.startThreadingDownloadWhisperWeight(download.set)
 
         # set word filter
@@ -1616,11 +1616,11 @@ class Controller:
         # init Auto device selection
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            update_mic_device = self.UpdateSelectedMicDevice(self, run_dict["update_selected_mic_device"])
+            update_mic_device = self.UpdateSelectedMicDevice(self)
             device_manager.setCallbackDefaultInputDevice(update_mic_device.set)
 
         if config.AUTO_SPEAKER_SELECT is True:
-            update_speaker_device = self.UpdateSelectedSpeakerDevice(self, run_dict["update_selected_speaker_device"])
+            update_speaker_device = self.UpdateSelectedSpeakerDevice(self)
             device_manager.setCallbackDefaultOutputDevice(update_speaker_device.set)
 
         printLog("End Initialization")

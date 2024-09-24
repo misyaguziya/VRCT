@@ -1,12 +1,41 @@
 import sys
 import json
 import time
+from typing import Any
 from threading import Thread
 from queue import Queue
 from webui_controller import Controller
 from utils import printLog, printResponse, encodeBase64
 
 controller = Controller()
+
+run_mapping = {
+    "download_software":"/run/download_software",
+    "update_software":"/run/update_software",
+
+    "transcription_mic":"/run/transcription_send_mic_message",
+    "transcription_speaker":"/run/transcription_receive_speaker_message",
+
+    "check_mic_volume":"/run/check_mic_volume",
+    "check_speaker_volume":"/run/check_speaker_volume",
+
+    "error_device":"/run/error_device",
+    "error_translation_engine":"/run/error_translation_engine",
+    "word_filter":"/run/word_filter",
+
+    "download_ctranslate2":"/run/download_ctranslate2_weight",
+    "download_whisper":"/run/download_whisper_weight",
+
+    "selected_mic_device":"/set/data/selected_mic_host",
+    "selected_speaker_device":"/set/data/selected_speaker_device",
+}
+
+controller.setRunMapping(run_mapping)
+
+def run(status:int, endpoint:str, result:Any) -> None:
+    printResponse(status, endpoint, result)
+
+controller.setRun(run)
 
 mapping = {
     # Main Window
@@ -276,66 +305,6 @@ mapping = {
     # "/run/restart_software": {"status": True, "variable":controller.restartSoftware},
 }
 
-run_mapping = {
-    "/run/update_software": {
-        "download":"/run/download_software",
-        "update":"/run/update_software"
-    },
-    "/set/disable/config_window": {
-        "mic":"/run/transcription_send_mic_message",
-        "speaker":"/run/transcription_receive_speaker_message",
-        "error_device":"/run/error_device",
-        "error_translation_engine":"/run/error_translation_engine",
-        "word_filter":"/run/word_filter",
-    },
-    "/set/enable/transcription_send": {
-        "mic":"/run/transcription_send_mic_message",
-        "error_device":"/run/error_device",
-        "error_translation_engine":"/run/error_translation_engine",
-        "word_filter":"/run/word_filter",
-    },
-    "/set/enable/transcription_receive": {
-        "speaker":"/run/transcription_receive_speaker_message",
-        "error_device":"/run/error_device",
-        "error_translation_engine":"/run/error_translation_engine",
-    },
-    "/set/enable/check_mic_threshold": {
-        "mic":"/run/check_mic_volume",
-        "error_device":"/run/error_device",
-    },
-    "/set/enable/check_speaker_threshold": {
-        "speaker":"/run/check_speaker_volume",
-        "error_device":"/run/error_device",
-    },
-    "/run/send_message_box": {
-        "error_translation_engine":"/run/error_translation_engine"
-    },
-    "/run/download_ctranslate2_weight": {
-        "download":"/run/download_ctranslate2_weight"
-    },
-    "/run/download_whisper_weight": {
-        "download":"/run/download_whisper_weight"
-    },
-    "/set/enable/auto_mic_select": {
-        "mic":"/set/data/selected_mic_host",
-    },
-    "/set/enable/auto_speaker_select": {
-        "speaker":"/set/data/selected_speaker_device",
-    }
-}
-
-class Run:
-    def __init__(self, endpoints:dict) -> None:
-        self.endpoints = endpoints
-
-    def transmit(self, key:str, data:dict) -> None:
-        if key not in self.endpoints:
-            printLog("Invalid endpoint", key)
-        else:
-            status = data.get("status", None)
-            result = data.get("result", None)
-            printResponse(status, self.endpoints[key], result)
-
 class Main:
     def __init__(self) -> None:
         self.queue = Queue()
@@ -366,12 +335,8 @@ class Main:
             response = "Locked endpoint"
             status = 423
         else:
-            run_endpoint = run_mapping.get(endpoint, None)
             try:
-                if run_endpoint is not None:
-                    response = handler["variable"](data, Run(run_endpoint).transmit)
-                else:
-                    response = handler["variable"](data)
+                response = handler["variable"](data)
                 status = response.get("status", None)
                 result = response.get("result", None)
             except Exception as e:
@@ -413,12 +378,7 @@ if __name__ == "__main__":
     main.startReceiver()
     main.startHandler()
 
-    controller.init({
-        "download_ctranslate2": Run(run_mapping["/run/download_ctranslate2_weight"]).transmit,
-        "download_whisper": Run(run_mapping["/run/download_whisper_weight"]).transmit,
-        "update_selected_mic_device": Run(run_mapping["/set/enable/auto_mic_select"]).transmit,
-        "update_selected_speaker_device": Run(run_mapping["/set/enable/auto_speaker_select"]).transmit,
-    })
+    controller.init()
 
     # mappingのすべてのstatusをTrueにする
     for key in mapping.keys():
