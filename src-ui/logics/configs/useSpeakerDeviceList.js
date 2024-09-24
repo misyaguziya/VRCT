@@ -7,7 +7,7 @@ export const useSpeakerDeviceList = () => {
 
     const getSpeakerDeviceList = () => {
         pendingSpeakerDeviceList();
-        asyncStdoutToPython("/get/list_speaker_device");
+        asyncStdoutToPython("/get/data/speaker_device_list");
     };
 
     return {

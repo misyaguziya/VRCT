@@ -97,7 +97,7 @@ def sendMicMessage(message):
 
 
             view.printToTextbox_SentMessage(message, translation)
-            if config.ENABLE_LOGGER is True:
+            if config.ENABLE_LOGGER_FEATURE is True:
                 if len(translation) > 0:
                     translation = f" ({translation})"
                 model.logger.info(f"[SENT] {message}{translation}")
@@ -179,7 +179,7 @@ def receiveSpeakerMessage(message):
 
             # update textbox message log (Received)
             view.printToTextbox_ReceivedMessage(message, translation)
-            if config.ENABLE_LOGGER is True:
+            if config.ENABLE_LOGGER_FEATURE is True:
                 if len(translation) > 0:
                     translation = f" ({translation})"
                 model.logger.info(f"[RECEIVED] {message}{translation}")
@@ -252,7 +252,7 @@ def sendChatMessage(message):
 
         # update textbox message log (Sent)
         view.printToTextbox_SentMessage(message, translation)
-        if config.ENABLE_LOGGER is True:
+        if config.ENABLE_LOGGER_FEATURE is True:
             if len(translation) > 0:
                 translation = f" ({translation})"
             model.logger.info(f"[SENT] {message}{translation}")
@@ -627,10 +627,10 @@ def callbackSetMicEnergyThreshold(value):
         return
     try:
         value = int(value)
-        if 0 <= value and value <= config.MAX_MIC_ENERGY_THRESHOLD:
+        if 0 <= value and value <= config.MAX_MIC_THRESHOLD:
             view.clearNotificationMessage()
-            config.INPUT_MIC_ENERGY_THRESHOLD = value
-            view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_ENERGY_THRESHOLD)
+            config.INPUT_MIC_THRESHOLD = value
+            view.setGuiVariable_MicEnergyThreshold(config.INPUT_MIC_THRESHOLD)
         else:
             raise ValueError()
     except Exception:
@@ -638,8 +638,8 @@ def callbackSetMicEnergyThreshold(value):
 
 def callbackSetMicDynamicEnergyThreshold(value):
     print("callbackSetMicDynamicEnergyThreshold", value)
-    config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD = value
-    if config.INPUT_MIC_DYNAMIC_ENERGY_THRESHOLD is True:
+    config.INPUT_MIC_AUTOMATIC_THRESHOLD = value
+    if config.INPUT_MIC_AUTOMATIC_THRESHOLD is True:
         view.closeMicEnergyThresholdWidget()
     else:
         view.openMicEnergyThresholdWidget()
@@ -763,8 +763,8 @@ def callbackSetSpeakerEnergyThreshold(value):
 
 def callbackSetSpeakerDynamicEnergyThreshold(value):
     print("callbackSetSpeakerDynamicEnergyThreshold", value)
-    config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD = value
-    if config.INPUT_SPEAKER_DYNAMIC_ENERGY_THRESHOLD is True:
+    config.INPUT_SPEAKER_AUTOMATIC_THRESHOLD = value
+    if config.INPUT_SPEAKER_AUTOMATIC_THRESHOLD is True:
         view.closeSpeakerEnergyThresholdWidget()
     else:
         view.openSpeakerEnergyThresholdWidget()
@@ -922,9 +922,9 @@ def callbackSetEnableNoticeXsoverlay(value):
 
 def callbackSetEnableAutoExportMessageLogs(value):
     print("callbackSetEnableAutoExportMessageLogs", value)
-    config.ENABLE_LOGGER = value
+    config.ENABLE_LOGGER_FEATURE = value
 
-    if config.ENABLE_LOGGER is True:
+    if config.ENABLE_LOGGER_FEATURE is True:
         model.startLogger()
     else:
         model.stopLogger()
@@ -1057,7 +1057,7 @@ def createMainWindow(splash):
         view.showUpdateAvailableButton()
 
     # init logger
-    if config.ENABLE_LOGGER is True:
+    if config.ENABLE_LOGGER_FEATURE is True:
         model.startLogger()
 
     # init OSC receive

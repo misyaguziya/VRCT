@@ -7,15 +7,15 @@ export const useEnableAutoMicSelect = () => {
 
     const getEnableAutoMicSelect = () => {
         pendingEnableAutoMicSelect();
-        asyncStdoutToPython("/get/auto_mic_select");
+        asyncStdoutToPython("/get/data/auto_mic_select");
     };
 
     const toggleEnableAutoMicSelect = () => {
         pendingEnableAutoMicSelect();
         if (currentEnableAutoMicSelect.data) {
-            asyncStdoutToPython("/set/disable_auto_mic_select");
+            asyncStdoutToPython("/set/disable/auto_mic_select");
         } else {
-            asyncStdoutToPython("/set/enable_auto_mic_select");
+            asyncStdoutToPython("/set/enable/auto_mic_select");
         }
     };
 
