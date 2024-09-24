@@ -36,24 +36,24 @@ export const useLanguageSettings = () => {
 
     const getEnableMultiTranslation = () => {
         pendingEnableMultiTranslation();
-        asyncStdoutToPython("/get/multi_language_translation");
+        asyncStdoutToPython("/get/data/multi_language_translation");
     };
 
     const getSelectedPresetTabNumber = () => {
         pendingSelectedPresetTabNumber();
-        asyncStdoutToPython("/get/selected_tab_no");
+        asyncStdoutToPython("/get/data/selected_tab_no");
     };
 
     const setSelectedPresetTabNumber = (preset_number) => {
         pendingSelectedPresetTabNumber();
 
-        asyncStdoutToPython("/set/selected_tab_no", preset_number);
+        asyncStdoutToPython("/set/data/selected_tab_no", preset_number);
     };
 
 
     const getSelectedYourLanguages = () => {
         pendingSelectedPresetTabNumber();
-        asyncStdoutToPython("/get/selected_your_languages");
+        asyncStdoutToPython("/get/data/selected_your_languages");
     };
 
     const setSelectedYourLanguages = (selected_language_data) => {
@@ -67,13 +67,13 @@ export const useLanguageSettings = () => {
                 }
             }
         };
-        asyncStdoutToPython("/set/selected_your_languages", send_obj);
+        asyncStdoutToPython("/set/data/selected_your_languages", send_obj);
     };
 
 
     const getSelectedTargetLanguages = () => {
         pendingSelectedTargetLanguages();
-        asyncStdoutToPython("/get/selected_target_languages");
+        asyncStdoutToPython("/get/data/selected_target_languages");
     };
 
     const setSelectedTargetLanguages = (selected_language_data) => {
@@ -83,25 +83,25 @@ export const useLanguageSettings = () => {
         send_obj[currentSelectedPresetTabNumber.data].primary.language = selected_language_data.language,
         send_obj[currentSelectedPresetTabNumber.data].primary.country = selected_language_data.country,
 
-        asyncStdoutToPython("/set/selected_target_languages", send_obj);
+        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
 
 
     const getTranslationEngines = () => {
         pendingTranslationEngines();
-        asyncStdoutToPython("/get/list_translation_engines");
+        asyncStdoutToPython("/get/data/translation_engines");
     };
 
     const getSelectedTranslationEngines = () => {
         pendingSelectedTranslationEngines();
-        asyncStdoutToPython("/get/selected_translator_engines");
+        asyncStdoutToPython("/get/data/selected_translation_engines");
     };
 
     const setSelectedTranslationEngines = (selected_translator) => {
         pendingSelectedTranslationEngines();
         let send_obj = currentSelectedTranslationEngines.data;
         send_obj[currentSelectedPresetTabNumber.data] = selected_translator;
-        asyncStdoutToPython("/set/selected_translator_engines", send_obj);
+        asyncStdoutToPython("/set/data/selected_translator_engines", send_obj);
     };
 
 

@@ -7,24 +7,24 @@ export const useMicThreshold = () => {
     const { updateEnableAutomaticMicThreshold, currentEnableAutomaticMicThreshold, pendingEnableAutomaticMicThreshold } = useStore_EnableAutomaticMicThreshold();
 
     const getMicThreshold = () => {
-        asyncStdoutToPython("/get/mic_energy_threshold");
+        asyncStdoutToPython("/get/data/mic_threshold");
     };
 
     const setMicThreshold = (mic_threshold) => {
-        asyncStdoutToPython("/set/mic_energy_threshold", mic_threshold);
+        asyncStdoutToPython("/set/data/mic_threshold", mic_threshold);
     };
 
     const getEnableAutomaticMicThreshold = () => {
         pendingEnableAutomaticMicThreshold();
-        asyncStdoutToPython("/get/mic_dynamic_energy_threshold");
+        asyncStdoutToPython("/get/data/mic_automatic_threshold");
     };
 
     const toggleEnableAutomaticMicThreshold = () => {
         pendingEnableAutomaticMicThreshold();
         if (currentEnableAutomaticMicThreshold.data) {
-            asyncStdoutToPython("/set/disable_mic_dynamic_energy_threshold");
+            asyncStdoutToPython("/set/disable/mic_automatic_threshold");
         } else {
-            asyncStdoutToPython("/set/enable_mic_dynamic_energy_threshold");
+            asyncStdoutToPython("/set/enable/mic_automatic_threshold");
         }
     };
 

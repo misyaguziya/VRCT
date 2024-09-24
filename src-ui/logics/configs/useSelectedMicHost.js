@@ -7,12 +7,12 @@ export const useSelectedMicHost = () => {
 
     const getSelectedMicHost = () => {
         pendingSelectedMicHost();
-        asyncStdoutToPython("/get/selected_mic_host");
+        asyncStdoutToPython("/get/data/selected_mic_host");
     };
 
     const setSelectedMicHost = (selected_mic_host) => {
         pendingSelectedMicHost();
-        asyncStdoutToPython("/set/selected_mic_host", selected_mic_host);
+        asyncStdoutToPython("/set/data/selected_mic_host", selected_mic_host);
     };
 
     return {

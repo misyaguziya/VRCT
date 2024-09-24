@@ -7,15 +7,15 @@ export const useEnableAutoSpeakerSelect = () => {
 
     const getEnableAutoSpeakerSelect = () => {
         pendingEnableAutoSpeakerSelect();
-        asyncStdoutToPython("/get/auto_speaker_select");
+        asyncStdoutToPython("/get/data/auto_speaker_select");
     };
 
     const toggleEnableAutoSpeakerSelect = () => {
         pendingEnableAutoSpeakerSelect();
         if (currentEnableAutoSpeakerSelect.data) {
-            asyncStdoutToPython("/set/disable_auto_speaker_select");
+            asyncStdoutToPython("/set/disable/auto_speaker_select");
         } else {
-            asyncStdoutToPython("/set/enable_auto_speaker_select");
+            asyncStdoutToPython("/set/enable/auto_speaker_select");
         }
     };
 

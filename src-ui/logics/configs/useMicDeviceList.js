@@ -7,7 +7,7 @@ export const useMicDeviceList = () => {
 
     const getMicDeviceList = () => {
         pendingMicDeviceList();
-        asyncStdoutToPython("/get/list_mic_device");
+        asyncStdoutToPython("/get/data/mic_device_list");
     };
 
     return {

@@ -25,11 +25,11 @@ export const useVolume = () => {
     return {
         volumeCheckStart_Mic: () => {
             pendingMicThresholdCheckStatus();
-            asyncStdoutToPython("/set/enable_check_mic_threshold");
+            asyncStdoutToPython("/set/enable/check_mic_threshold");
         },
         volumeCheckStop_Mic: () => {
             pendingMicThresholdCheckStatus();
-            asyncStdoutToPython("/set/disable_check_mic_threshold");
+            asyncStdoutToPython("/set/disable/check_mic_threshold");
         },
         updateVolumeVariable_Mic: (payload) => {
             updateMicVolume(payload);
@@ -43,11 +43,11 @@ export const useVolume = () => {
         volumeCheckStart_Speaker: () => {
             updateSpeakerVolume("0");
             pendingSpeakerThresholdCheckStatus();
-            asyncStdoutToPython("/set/enable_check_speaker_threshold");
+            asyncStdoutToPython("/set/enable/check_speaker_threshold");
         },
         volumeCheckStop_Speaker: () => {
             pendingSpeakerThresholdCheckStatus();
-            asyncStdoutToPython("/set/disable_check_speaker_threshold");
+            asyncStdoutToPython("/set/disable/check_speaker_threshold");
         },
         updateVolumeVariable_Speaker: (payload) => {
             updateSpeakerVolume(payload);
