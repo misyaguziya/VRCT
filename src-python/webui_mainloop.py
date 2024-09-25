@@ -158,8 +158,8 @@ mapping = {
     "/get/data/mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
     "/get/data/speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
-    "/get/data/max_mic_energy_threshold": {"status": True, "variable":controller.getMaxMicEnergyThreshold},
-    "/get/data/max_speaker_energy_threshold": {"status": True, "variable":controller.getMaxSpeakerEnergyThreshold},
+    "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
+    "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
 
     "/get/data/auto_mic_select": {"status": True, "variable":controller.getAutoMicSelect},
     "/set/enable/auto_mic_select": {"status": True, "variable":controller.setEnableAutoMicSelect},
@@ -207,8 +207,8 @@ mapping = {
     "/get/data/selected_speaker_device": {"status": True, "variable":controller.getSelectedSpeakerDevice},
     "/set/data/selected_speaker_device": {"status": True, "variable":controller.setSelectedSpeakerDevice},
 
-    "/get/data/speaker_energy_threshold": {"status": True, "variable":controller.getSpeakerEnergyThreshold},
-    "/set/data/speaker_energy_threshold": {"status": True, "variable":controller.setSpeakerEnergyThreshold},
+    "/get/data/speaker_threshold": {"status": True, "variable":controller.getSpeakerThreshold},
+    "/set/data/speaker_threshold": {"status": True, "variable":controller.setSpeakerThreshold},
 
     "/get/data/speaker_automatic_threshold": {"status": True, "variable":controller.getSpeakerAutomaticThreshold},
     "/set/enable/speaker_automatic_threshold": {"status": True, "variable":controller.setEnableSpeakerAutomaticThreshold},
@@ -523,7 +523,7 @@ if __name__ == "__main__":
                         data = "test1"
                     case "/set/data/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
-                    case "/set/data/speaker_energy_threshold":
+                    case "/set/data/speaker_threshold":
                         data = 0.5
                     case "/set/data/speaker_record_timeout":
                         data = 5

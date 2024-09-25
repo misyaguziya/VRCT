@@ -7,11 +7,11 @@ export const useSpeakerThreshold = () => {
     const { updateEnableAutomaticSpeakerThreshold, currentEnableAutomaticSpeakerThreshold, pendingEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
 
     const getSpeakerThreshold = () => {
-        asyncStdoutToPython("/get/data/speaker_energy_threshold");
+        asyncStdoutToPython("/get/data/speaker_threshold");
     };
 
     const setSpeakerThreshold = (speaker_threshold) => {
-        asyncStdoutToPython("/set/data/speaker_energy_threshold", speaker_threshold);
+        asyncStdoutToPython("/set/data/speaker_threshold", speaker_threshold);
     };
 
     const getEnableAutomaticSpeakerThreshold = () => {
