@@ -35,7 +35,7 @@ const TranslatorBox = (props) => {
 
     const box_class_name = clsx(
         styles.box,
-        { [styles["is_selected"]]: (currentSelectedTranslationEngines[currentSelectedPresetTabNumber.data] === props.translator_id) ? true : false },
+        { [styles["is_selected"]]: (currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data] === props.translator_id) ? true : false },
         { [styles["is_available"]]: (props.is_available === true) ? true : false }
     );
 

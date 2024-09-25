@@ -29,7 +29,7 @@ run_mapping = {
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
 
-    "selected_translation_engine":"/run/selected_translation_engine",
+    "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
 
     "mic_host_list":"/run/mic_host_list",
@@ -72,7 +72,7 @@ mapping = {
     "/get/data/selectable_language_list": {"status": True, "variable":controller.getListLanguageAndCountry},
 
     "/get/data/selected_translation_engines": {"status": False, "variable":controller.getSelectedTranslationEngines},
-    "/set/data/selected_translator_engines": {"status": True, "variable":controller.setSelectedTranslatorEngines},
+    "/set/data/selected_translation_engines": {"status": True, "variable":controller.setSelectedTranslationEngines},
 
     "/get/data/selected_your_languages": {"status": True, "variable":controller.getSelectedYourLanguages},
     "/set/data/selected_your_languages": {"status": True, "variable":controller.setSelectedYourLanguages},
@@ -413,7 +413,7 @@ if __name__ == "__main__":
                         # handleRequest("/set/enable/translation")
                         # handleRequest("/set/enable/convert_message_to_romaji")
                         data = {"id":"123456", "message":"テスト"}
-                    case "/set/data/selected_translator_engines":
+                    case "/set/data/selected_translation_engines":
                         data = {
                             "1":"CTranslate2",
                             "2":"CTranslate2",
