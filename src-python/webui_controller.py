@@ -38,21 +38,21 @@ class Controller:
         self.run(
             200,
             self.run_mapping["mic_host_list"],
-            model.getListInputHost(),
+            model.getListMicHost(),
         )
 
     def updateMicDeviceList(self) -> None:
         self.run(
             200,
             self.run_mapping["mic_device_list"],
-            model.getListInputDevice(),
+            model.getListMicDevice(),
         )
 
     def updateSpeakerDeviceList(self) -> None:
         self.run(
             200,
             self.run_mapping["speaker_device_list"],
-            model.getListOutputDevice(),
+            model.getListSpeakerDevice(),
         )
 
     def updateSelectedMicDevice(self, host, device) -> None:
@@ -411,15 +411,15 @@ class Controller:
 
     @staticmethod
     def getMicHostList(*args, **kwargs) -> dict:
-        return {"status":200, "result": model.getListInputHost()}
+        return {"status":200, "result": model.getListMicHost()}
 
     @staticmethod
     def getMicDeviceList(*args, **kwargs) -> dict:
-        return {"status":200, "result": model.getListInputDevice()}
+        return {"status":200, "result": model.getListMicDevice()}
 
     @staticmethod
     def getSpeakerDeviceList(*args, **kwargs) -> dict:
-        return {"status":200, "result": model.getListOutputDevice()}
+        return {"status":200, "result": model.getListSpeakerDevice()}
 
     @staticmethod
     def getSelectedTranslationEngines(*args, **kwargs) -> dict:
@@ -601,13 +601,13 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
-        device_manager.setCallbackDefaultInputDevice(self.updateSelectedMicDevice)
+        device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackDefaultInputDevice()
+        device_manager.clearCallbackDefaultMicDevice()
         config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
@@ -618,7 +618,7 @@ class Controller:
     @staticmethod
     def setSelectedMicHost(data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_HOST = data
-        config.SELECTED_MIC_DEVICE = model.getInputDefaultDevice()
+        config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
             model.startCheckMicEnergy()
@@ -783,13 +783,13 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
-        device_manager.setCallbackDefaultOutputDevice(self.updateSelectedSpeakerDevice)
+        device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackDefaultInputDevice()
+        device_manager.clearCallbackDefaultSpeakerDevice()
         config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -1582,13 +1582,13 @@ class Controller:
         # init Auto device selection
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            device_manager.setCallbackDefaultInputDevice(self.updateSelectedMicDevice)
+            device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
 
         if config.AUTO_SPEAKER_SELECT is True:
-            device_manager.setCallbackDefaultOutputDevice(self.updateSelectedSpeakerDevice)
+            device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
 
         device_manager.setCallbackHostList(self.updateMicHostList)
-        device_manager.setCallbackInputDeviceList(self.updateMicDeviceList)
-        device_manager.setCallbackOutputDeviceList(self.updateSpeakerDeviceList)
+        device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
+        device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
 
         printLog("End Initialization")
