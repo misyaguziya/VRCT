@@ -515,7 +515,7 @@ if __name__ == "__main__":
                         data = 1
                     case "/set/data/mic_phrase_timeout":
                         data = 5
-                    case "/set/input_set_mic_max_phrases":
+                    case "/set/data/mic_max_phrases":
                         data = 5
                     case "/set//data/mic_word_filter":
                         data = "test0, test1, test2"
@@ -571,8 +571,6 @@ if __name__ == "__main__":
                         data = 0.5
                     case "/set/data/mic_avg_logprob":
                         data = 0.5
-                    case "/set/data/mic_max_phrases":
-                        data = 5
                     case _:
                         data = None
 
