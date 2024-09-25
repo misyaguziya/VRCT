@@ -459,7 +459,7 @@ class Config:
 
     @SELECTED_MIC_HOST.setter
     def SELECTED_MIC_HOST(self, value):
-        if value in [host for host in device_manager.getInputDevices().keys()]:
+        if value in [host for host in device_manager.getMicDevices().keys()]:
             self._SELECTED_MIC_HOST = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -470,7 +470,7 @@ class Config:
 
     @SELECTED_MIC_DEVICE.setter
     def SELECTED_MIC_DEVICE(self, value):
-        if value in [device["name"] for device in device_manager.getInputDevices()[self.SELECTED_MIC_HOST]]:
+        if value in [device["name"] for device in device_manager.getMicDevices()[self.SELECTED_MIC_HOST]]:
             self._SELECTED_MIC_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -580,7 +580,7 @@ class Config:
 
     @SELECTED_SPEAKER_DEVICE.setter
     def SELECTED_SPEAKER_DEVICE(self, value):
-        if value in [device["name"] for device in device_manager.getOutputDevices()]:
+        if value in [device["name"] for device in device_manager.getSpeakerDevices()]:
             self._SELECTED_SPEAKER_DEVICE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -1101,8 +1101,8 @@ class Config:
             "height": "654",
         }
         self._AUTO_MIC_SELECT = True
-        self._SELECTED_MIC_HOST = device_manager.getDefaultInputDevice()["host"]["name"]
-        self._SELECTED_MIC_DEVICE = device_manager.getDefaultInputDevice()["device"]["name"]
+        self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
+        self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
         self._MIC_THRESHOLD = 300
         self._MIC_AUTOMATIC_THRESHOLD = False
         self._MIC_RECORD_TIMEOUT = 3
@@ -1112,7 +1112,7 @@ class Config:
         self._MIC_AVG_LOGPROB=-0.8
         self._MIC_NO_SPEECH_PROB=0.6
         self._AUTO_SPEAKER_SELECT = True
-        self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultOutputDevice()["device"]["name"]
+        self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
         self._SPEAKER_ENERGY_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
         self._SPEAKER_RECORD_TIMEOUT = 3
