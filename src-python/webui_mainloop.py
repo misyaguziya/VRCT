@@ -26,8 +26,15 @@ run_mapping = {
     "download_ctranslate2":"/run/download_ctranslate2_weight",
     "download_whisper":"/run/download_whisper_weight",
 
-    "selected_mic_device":"/set/data/selected_mic_host",
-    "selected_speaker_device":"/set/data/selected_speaker_device",
+    "selected_mic_device":"/run/selected_mic_device",
+    "selected_speaker_device":"/run/selected_speaker_device",
+
+    "selected_translation_engine":"/run/selected_translation_engine",
+    "translation_engines":"/run/translation_engines",
+
+    "mic_host_list":"/run/mic_host_list",
+    "mic_device_list":"/run/mic_device_list",
+    "speaker_device_list":"/run/speaker_device_list",
 }
 
 controller.setRunMapping(run_mapping)
@@ -151,8 +158,8 @@ mapping = {
     "/get/data/mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
     "/get/data/speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
-    "/get/data/max_mic_energy_threshold": {"status": True, "variable":controller.getMaxMicEnergyThreshold},
-    "/get/data/max_speaker_energy_threshold": {"status": True, "variable":controller.getMaxSpeakerEnergyThreshold},
+    "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
+    "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
 
     "/get/data/auto_mic_select": {"status": True, "variable":controller.getAutoMicSelect},
     "/set/enable/auto_mic_select": {"status": True, "variable":controller.setEnableAutoMicSelect},
@@ -200,8 +207,8 @@ mapping = {
     "/get/data/selected_speaker_device": {"status": True, "variable":controller.getSelectedSpeakerDevice},
     "/set/data/selected_speaker_device": {"status": True, "variable":controller.setSelectedSpeakerDevice},
 
-    "/get/data/speaker_energy_threshold": {"status": True, "variable":controller.getSpeakerEnergyThreshold},
-    "/set/data/speaker_energy_threshold": {"status": True, "variable":controller.setSpeakerEnergyThreshold},
+    "/get/data/speaker_threshold": {"status": True, "variable":controller.getSpeakerThreshold},
+    "/set/data/speaker_threshold": {"status": True, "variable":controller.setSpeakerThreshold},
 
     "/get/data/speaker_automatic_threshold": {"status": True, "variable":controller.getSpeakerAutomaticThreshold},
     "/set/enable/speaker_automatic_threshold": {"status": True, "variable":controller.setEnableSpeakerAutomaticThreshold},
@@ -508,7 +515,7 @@ if __name__ == "__main__":
                         data = 1
                     case "/set/data/mic_phrase_timeout":
                         data = 5
-                    case "/set/input_set_mic_max_phrases":
+                    case "/set/data/mic_max_phrases":
                         data = 5
                     case "/set//data/mic_word_filter":
                         data = "test0, test1, test2"
@@ -516,7 +523,7 @@ if __name__ == "__main__":
                         data = "test1"
                     case "/set/data/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
-                    case "/set/data/speaker_energy_threshold":
+                    case "/set/data/speaker_threshold":
                         data = 0.5
                     case "/set/data/speaker_record_timeout":
                         data = 5
@@ -564,8 +571,6 @@ if __name__ == "__main__":
                         data = 0.5
                     case "/set/data/mic_avg_logprob":
                         data = 0.5
-                    case "/set/data/mic_max_phrases":
-                        data = 5
                     case _:
                         data = None
 

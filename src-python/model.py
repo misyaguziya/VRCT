@@ -407,32 +407,32 @@ class Model:
         command = [os_path.join(current_directory, batch_name), program_name]
         Popen(command, cwd=current_directory)
 
-    def getListInputHost(self):
-        result = [host for host in device_manager.getInputDevices().keys()]
+    def getListMicHost(self):
+        result = [host for host in device_manager.getMicDevices().keys()]
         return result
 
-    def getInputDefaultDevice(self):
-        result = device_manager.getInputDevices().get(config.SELECTED_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
+    def getMicDefaultDevice(self):
+        result = device_manager.getMicDevices().get(config.SELECTED_MIC_HOST, [{"name": "NoDevice"}])[0]["name"]
         return result
 
-    def getListInputDevice(self):
-        result = [device["name"] for device in device_manager.getInputDevices().get(config.SELECTED_MIC_HOST, [{"name": "NoDevice"}])]
+    def getListMicDevice(self):
+        result = [device["name"] for device in device_manager.getMicDevices().get(config.SELECTED_MIC_HOST, [{"name": "NoDevice"}])]
         return result
 
-    def getListOutputDevice(self):
-        result = [device["name"] for device in device_manager.getOutputDevices()]
+    def getListSpeakerDevice(self):
+        result = [device["name"] for device in device_manager.getSpeakerDevices()]
         return result
 
     def startMicTranscript(self, fnc):
         if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultInputDevice()
+            default_device = device_manager.getDefaultMicDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
         else:
             mic_host_name = config.SELECTED_MIC_HOST
             mic_device_name = config.SELECTED_MIC_DEVICE
 
-        mic_device_list = device_manager.getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
+        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
 
         if len(selected_mic_device) == 0:
@@ -559,14 +559,14 @@ class Model:
             self.check_mic_energy_fnc = fnc
 
         if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultInputDevice()
+            default_device = device_manager.getDefaultMicDevice()
             mic_host_name = default_device["host"]["name"]
             mic_device_name = default_device["device"]["name"]
         else:
             mic_host_name = config.SELECTED_MIC_HOST
             mic_device_name = config.SELECTED_MIC_DEVICE
 
-        mic_device_list = device_manager.getInputDevices().get(mic_host_name, [{"name": "NoDevice"}])
+        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
 
         if len(selected_mic_device) == 0:
@@ -601,12 +601,12 @@ class Model:
 
     def startSpeakerTranscript(self, fnc):
         if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultOutputDevice()
+            default_device = device_manager.getDefaultSpeakerDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
             speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
-        speaker_device_list = device_manager.getOutputDevices()
+        speaker_device_list = device_manager.getSpeakerDevices()
         selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(selected_speaker_device) == 0:
@@ -622,7 +622,7 @@ class Model:
 
         self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
-            energy_threshold=config.SPEAKER_ENERGY_THRESHOLD,
+            energy_threshold=config.SPEAKER_THRESHOLD,
             dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
             record_timeout=record_timeout,
         )
@@ -693,12 +693,12 @@ class Model:
             self.check_speaker_energy_fnc = fnc
 
         if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultOutputDevice()
+            default_device = device_manager.getDefaultSpeakerDevice()
             speaker_device_name = default_device["device"]["name"]
         else:
             speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
-        speaker_device_list = device_manager.getOutputDevices()
+        speaker_device_list = device_manager.getSpeakerDevices()
         selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(selected_speaker_device) == 0:
