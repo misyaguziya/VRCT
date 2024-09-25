@@ -34,6 +34,7 @@ import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
+import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
 
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
@@ -62,6 +63,7 @@ const StartPythonFacadeComponent = () => {
         getSelectedTranslationEngines,
     } = useLanguageSettings();
     const { getSelectableLanguageList } = useSelectableLanguageList();
+    const { getMessageInputBoxRatio } = useMessageInputBoxRatio();
 
 
     useEffect(() => {
@@ -70,6 +72,7 @@ const StartPythonFacadeComponent = () => {
             asyncStartPython().then((result) => {
                 getUiLanguage();
                 getIsMainPageCompactMode();
+                getMessageInputBoxRatio();
 
                 getSoftwareVersion();
 
