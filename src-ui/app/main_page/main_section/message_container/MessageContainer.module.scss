@@ -6,6 +6,11 @@
     padding: 0 1.6rem 1rem 1.6rem;
 }
 
+.log_box_resize_wrapper {
+    flex: 1;
+    overflow: auto;
+}
+
 .separator {
     position: relative;
     width: 100%;

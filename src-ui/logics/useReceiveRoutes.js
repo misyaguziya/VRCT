@@ -1,12 +1,15 @@
 import { translator_status } from "@data";
 
 import { arrayToObject } from "@utils/arrayToObject";
-import { useMainFunction } from "@logics_main/useMainFunction";
+
 import { useMessage } from "@logics_common/useMessage";
+import { useVolume } from "@logics_common/useVolume";
+
+import { useMainFunction } from "@logics_main/useMainFunction";
 import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
-import { useVolume } from "@logics_common/useVolume";
+import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
 
 
 import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
@@ -67,6 +70,9 @@ export const useReceiveRoutes = () => {
         updateSpeakerThresholdCheckStatus,
     } = useVolume();
 
+    const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
+
+
     const routes = {
         // Main Page
         // Page Controls
@@ -117,6 +123,10 @@ export const useReceiveRoutes = () => {
         "/run/send_message_box": updateSentMessageLogById,
         "/run/transcription_send_mic_message": addSentMessageLog,
         "/run/transcription_receive_speaker_message": addReceivedMessageLog,
+
+        // Message Box
+        "/get/data/message_box_ratio": updateMessageInputBoxRatio,
+        "/set/data/message_box_ratio": updateMessageInputBoxRatio,
 
 
         // Config Page
