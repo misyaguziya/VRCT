@@ -26,8 +26,15 @@ run_mapping = {
     "download_ctranslate2":"/run/download_ctranslate2_weight",
     "download_whisper":"/run/download_whisper_weight",
 
-    "selected_mic_device":"/set/data/selected_mic_host",
-    "selected_speaker_device":"/set/data/selected_speaker_device",
+    "selected_mic_device":"/run/selected_mic_device",
+    "selected_speaker_device":"/run/selected_speaker_device",
+
+    "selected_translation_engine":"/run/selected_translation_engine",
+    "translation_engines":"/run/translation_engines",
+
+    "mic_host_list":"/run/mic_host_list",
+    "mic_device_list":"/run/mic_device_list",
+    "speaker_device_list":"/run/speaker_device_list",
 }
 
 controller.setRunMapping(run_mapping)
