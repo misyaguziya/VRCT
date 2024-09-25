@@ -310,6 +310,10 @@ mapping = {
 
     # "/run/update_software": {"status": True, "variable":controller.updateSoftware},
     # "/run/restart_software": {"status": True, "variable":controller.restartSoftware},
+
+    # "/run/start_watchdog": {"status": True, "variable":controller.startWatchdog},
+    "/run/feed_watchdog": {"status": True, "variable":controller.feedWatchdog},
+    # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
 
 class Main:
@@ -333,7 +337,7 @@ class Main:
         th_receiver.daemon = True
         th_receiver.start()
 
-    def handleRequest(self, endpoint, data=None):
+    def handleRequest(self, endpoint, data=None) -> tuple:
         handler = mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
