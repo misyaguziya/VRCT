@@ -338,12 +338,12 @@ class Controller:
         return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
 
     @staticmethod
-    def getMaxMicEnergyThreshold(*args, **kwargs) -> dict:
+    def getMaxMicThreshold(*args, **kwargs) -> dict:
         return {"status":200, "result":config.MAX_MIC_THRESHOLD}
 
     @staticmethod
-    def getMaxSpeakerEnergyThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAX_SPEAKER_ENERGY_THRESHOLD}
+    def getMaxSpeakerThreshold(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.MAX_SPEAKER_THRESHOLD}
 
     @staticmethod
     def setEnableTranslation(*args, **kwargs) -> dict:
@@ -806,22 +806,22 @@ class Controller:
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     @staticmethod
-    def getSpeakerEnergyThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER_ENERGY_THRESHOLD}
+    def getSpeakerThreshold(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SPEAKER_THRESHOLD}
 
     @staticmethod
-    def setSpeakerEnergyThreshold(data, *args, **kwargs) -> dict:
+    def setSpeakerThreshold(data, *args, **kwargs) -> dict:
         printLog("Set Speaker Energy Threshold", data)
         try:
             data = int(data)
-            if 0 <= data <= config.MAX_SPEAKER_ENERGY_THRESHOLD:
-                config.SPEAKER_ENERGY_THRESHOLD = data
+            if 0 <= data <= config.MAX_SPEAKER_THRESHOLD:
+                config.SPEAKER_THRESHOLD = data
             else:
                 raise ValueError()
         except Exception:
             response = {"status":400, "result":{"message":"Error Set Speaker Energy Threshold"}}
         else:
-            response = {"status":200, "result":config.SPEAKER_ENERGY_THRESHOLD}
+            response = {"status":200, "result":config.SPEAKER_THRESHOLD}
         return response
 
     @staticmethod

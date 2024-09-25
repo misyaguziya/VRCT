@@ -155,8 +155,8 @@ export const useReceiveRoutes = () => {
 
         "/get/data/mic_threshold": updateMicThreshold,
         "/set/data/mic_threshold": updateMicThreshold,
-        "/get/data/speaker_energy_threshold": updateSpeakerThreshold,
-        "/set/data/speaker_energy_threshold": updateSpeakerThreshold,
+        "/get/data/speaker_threshold": updateSpeakerThreshold,
+        "/set/data/speaker_threshold": updateSpeakerThreshold,
 
         "/get/data/mic_automatic_threshold": updateEnableAutomaticMicThreshold,
         "/set/enable/mic_automatic_threshold": updateEnableAutomaticMicThreshold,

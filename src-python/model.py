@@ -622,7 +622,7 @@ class Model:
 
         self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
             device=speaker_device,
-            energy_threshold=config.SPEAKER_ENERGY_THRESHOLD,
+            energy_threshold=config.SPEAKER_THRESHOLD,
             dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
             record_timeout=record_timeout,
         )
