@@ -95,6 +95,7 @@ export const useReceiveRoutes = () => {
         "/set/data/selected_your_languages": updateSelectedYourLanguages,
         "/get/data/selected_target_languages": updateSelectedTargetLanguages,
         "/set/data/selected_target_languages": updateSelectedTargetLanguages,
+
         "/get/data/translation_engines": (payload) => {
             const updateTranslatorAvailability = (keys) => {
                 return translator_status.map(translator => ({
@@ -102,13 +103,22 @@ export const useReceiveRoutes = () => {
                     is_available: keys.includes(translator.translator_id),
                 }));
             };
-
             const updated_list = updateTranslatorAvailability(payload);
-
+            updateTranslationEngines(updated_list);
+        },
+        "/run/translation_engines": (payload) => {
+            const updateTranslatorAvailability = (keys) => {
+                return translator_status.map(translator => ({
+                    ...translator,
+                    is_available: keys.includes(translator.translator_id),
+                }));
+            };
+            const updated_list = updateTranslatorAvailability(payload);
             updateTranslationEngines(updated_list);
         },
         "/get/data/selected_translation_engines": updateSelectedTranslationEngines,
-        "/set/data/selected_translator_engines": updateSelectedTranslationEngines,
+        "/set/data/selected_translation_engines": updateSelectedTranslationEngines,
+        "/run/selected_translation_engines": updateSelectedTranslationEngines,
 
         "/run/swap_your_language_and_target_language": (payload) => {
             updateSelectedYourLanguages(payload.your);
