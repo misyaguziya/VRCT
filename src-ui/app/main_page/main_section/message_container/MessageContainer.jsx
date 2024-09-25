@@ -1,7 +1,7 @@
 import { useResizable } from "react-resizable-layout";
 import { useRef, useEffect, useState } from "react";
 import styles from "./MessageContainer.module.scss";
-
+import { appWindow } from "@tauri-apps/api/window"; // Tauriのwindow APIをインポート
 import { LogBox } from "./log_box/LogBox";
 import { MessageInputBox } from "./message_input_box/MessageInputBox";
 import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
@@ -50,8 +50,26 @@ export const MessageContainer = () => {
         const container_padding_bottom = parseFloat(window.getComputedStyle(container_ref.current).paddingBottom);
         const total_height = container_height - container_padding_bottom;
 
-        return (ratio / 100) * total_height / 10; // 10px = 1rem
+        return ((ratio / 100) * total_height / 10) | 0; // 10px = 1rem
     };
+
+
+        // Tauriのwindow resizeイベントをリッスン
+        useEffect(() => {
+            let resizeTimeout;
+
+            // イベントのリスナーを設定
+            const unlisten = appWindow.onResized(() => {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(() => {
+                    calculateMessageBoxRatioAndHeight(); // リサイズが終了した後に実行
+                }, 200); // ドラッグが終了したと見なすまでの遅延（200ms程度）
+            });
+
+            return () => {
+                unlisten.then((dispose) => dispose()); // イベントリスナーを解除
+            };
+        }, []);
 
     return (
         <div className={styles.container} ref={container_ref}>
