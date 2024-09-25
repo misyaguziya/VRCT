@@ -1527,6 +1527,21 @@ class Controller:
         th_download.daemon = True
         th_download.start()
 
+    @staticmethod
+    def startWatchdog() -> dict:
+        model.startWatchdog()
+        return {"status":200, "result":True}
+
+    @staticmethod
+    def feedWatchdog() -> dict:
+        model.feedWatchdog()
+        return {"status":200, "result":True}
+
+    @staticmethod
+    def stopWatchdog() -> dict:
+        model.stopWatchdog()
+        return {"status":200, "result":True}
+
     def init(self, *args, **kwargs) -> None:
         printLog("Start Initialization")
 
@@ -1592,3 +1607,5 @@ class Controller:
         device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
 
         printLog("End Initialization")
+
+        self.startWatchdog()
