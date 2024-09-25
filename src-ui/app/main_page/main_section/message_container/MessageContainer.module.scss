@@ -6,6 +6,11 @@
     padding: 0 1.6rem 1rem 1.6rem;
 }
 
+.log_box_resize_wrapper {
+    flex: 1;
+    overflow: auto;
+}
+
 .separator {
     position: relative;
     width: 100%;
@@ -32,5 +37,5 @@
 .message_box_resize_wrapper {
     height: 10rem;
     min-height: 3.8rem;
-    max-height: 80%;
+    max-height: 90%;
 }
