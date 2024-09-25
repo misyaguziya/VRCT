@@ -426,8 +426,8 @@ class Controller:
         return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
-    def setSelectedTranslatorEngines(engines:dict, *args, **kwargs) -> dict:
-        printLog("setSelectedTranslatorEngines", engines)
+    def setSelectedTranslationEngines(engines:dict, *args, **kwargs) -> dict:
+        printLog("setSelectedTranslationEngines", engines)
         config.SELECTED_TRANSLATION_ENGINES = engines
         return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
@@ -1512,7 +1512,7 @@ class Controller:
         if engine not in engines:
             engine = engines[0]
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
-        self.run(200, self.run_mapping["selected_translation_engine"], engine)
+        self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], engines)
 
     @staticmethod

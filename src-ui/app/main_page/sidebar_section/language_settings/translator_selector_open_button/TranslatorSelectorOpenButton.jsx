@@ -10,7 +10,6 @@ export const TranslatorSelectorOpenButton = () => {
     const {
         currentSelectedPresetTabNumber,
         currentTranslationEngines,
-        getTranslationEngines,
         currentSelectedTranslationEngines,
     } = useLanguageSettings();
 
@@ -24,7 +23,6 @@ export const TranslatorSelectorOpenButton = () => {
     const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 
     const openTranslatorSelector = () => {
-        getTranslationEngines();
         updateIsOpenedTranslatorSelector(!currentIsOpenedTranslatorSelector.data);
     };
 
