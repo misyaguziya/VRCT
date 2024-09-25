@@ -1390,9 +1390,9 @@ class Controller:
             osc_message = FORMAT.replace("[message]", "/".join(message))
         return osc_message
 
-    @staticmethod
-    def changeToCTranslate2Process() -> None:
+    def changeToCTranslate2Process(self) -> None:
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
+        self.run(200, self.run_mapping["translation_engines"], "CTranslate2")
 
     def startTranscriptionSendMessage(self) -> None:
         model.startMicTranscript(self.micMessage)
