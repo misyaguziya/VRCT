@@ -37,6 +37,9 @@ class DeviceManager:
 
         self.callback_default_input_device = None
         self.callback_default_output_device = None
+        self.callback_host_list = None
+        self.callback_input_device_list = None
+        self.callback_output_device_list = None
 
         self.monitoring_flag = False
         self.startMonitoring()
@@ -156,11 +159,35 @@ class DeviceManager:
     def clearCallbackDefaultOutputDevice(self):
         self.callback_default_output_device = None
 
+    def setCallbackHostList(self, callback):
+        self.callback_host_list = callback
+
+    def clearCallbackHostList(self):
+        self.callback_host_list = None
+
+    def setCallbackInputDeviceList(self, callback):
+        self.callback_input_device_list = callback
+
+    def clearCallbackInputDeviceList(self):
+        self.callback_input_device_list = None
+
+    def setCallbackOutputDeviceList(self, callback):
+        self.callback_output_device_list = callback
+
+    def clearCallbackOutputDeviceList(self):
+        self.callback_output_device_list = None
+
     def noticeDefaultDevice(self):
         if self.callback_default_input_device is not None:
             self.callback_default_input_device(self.default_input_device["host"]["name"], self.default_input_device["device"]["name"])
         if self.callback_default_output_device is not None:
             self.callback_default_output_device(self.default_output_device["device"]["name"])
+        if self.callback_host_list is not None:
+            self.callback_host_list()
+        if self.callback_input_device_list is not None:
+            self.callback_input_device_list()
+        if self.callback_output_device_list is not None:
+            self.callback_output_device_list()
 
     def getInputDevices(self):
         return self.input_devices

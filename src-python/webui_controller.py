@@ -20,292 +20,162 @@ class Controller:
         self.run = run
 
     # response functions
-    class DownloadSoftwareProgressBar:
-        def __init__(self, parent) -> None:
-            self.parent = parent
+    def downloadSoftwareProgressBar(self, progress) -> None:
+        self.run(
+            200,
+            self.run_mapping["download_software"],
+            progress,
+        )
 
-        def set(self, progress) -> None:
-            self.parent.run(
+    def updateSoftwareProgressBar(self, progress) -> None:
+        self.run(
+            200,
+            self.run_mapping["update_software"],
+            progress,
+        )
+
+    def updateMicHostList(self) -> None:
+        self.run(
+            200,
+            self.run_mapping["mic_host_list"],
+            model.getListInputHost(),
+        )
+
+    def updateMicDeviceList(self) -> None:
+        self.run(
+            200,
+            self.run_mapping["mic_device_list"],
+            model.getListInputDevice(),
+        )
+
+    def updateSpeakerDeviceList(self) -> None:
+        self.run(
+            200,
+            self.run_mapping["speaker_device_list"],
+            model.getListOutputDevice(),
+        )
+
+    def updateSelectedMicDevice(self, host, device) -> None:
+        config.SELECTED_MIC_HOST = host
+        config.SELECTED_MIC_DEVICE = device
+        self.run(
+            200,
+            self.run_mapping["selected_mic_device"],
+            {"host":host, "device":device},
+        )
+
+    def updateSelectedSpeakerDevice(self, device) -> None:
+        config.SELECTED_SPEAKER_DEVICE = device
+        self.run(
+            200,
+            self.run_mapping["selected_speaker_device"],
+            device,
+        )
+
+    def progressBarMicEnergy(self, energy) -> None:
+        if energy is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {"message":"No mic device detected."},
+            )
+        else:
+            self.run(
                 200,
-                self.parent.run_mapping["download_software"],
-                progress,
+                self.run_mapping["check_mic_volume"],
+                energy,
             )
 
-    class UpdateSoftwareProgressBar:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, progress) -> None:
-            self.parent.run(
+    def progressBarSpeakerEnergy(self, energy) -> None:
+        if energy is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {"message":"No mic device detected."},
+            )
+        else:
+            self.run(
                 200,
-                self.parent.run_mapping["update_software"],
-                progress,
+                self.run_mapping["check_speaker_volume"],
+                energy,
             )
 
-    class UpdateSelectedMicDevice:
-        def __init__(self, parent) -> None:
-            self.parent = parent
+    def downloadCTranslate2ProgressBar(self, progress) -> None:
+        printLog("CTranslate2 Weight Download Progress", progress)
+        self.run(
+            200,
+            self.run_mapping["download_ctranslate2"],
+            progress,
+        )
 
-        def set(self, host, device) -> None:
-            config.SELECTED_MIC_HOST = host
-            config.SELECTED_MIC_DEVICE = device
-            self.parent.run(
-                200,
-                self.parent.run_mapping["selected_mic_device"],
-                {"host":host, "device":device},
+    def downloadWhisperProgressBar(self, progress) -> None:
+        printLog("Whisper Weight Download Progress", progress)
+        self.run(
+            200,
+            self.run_mapping["download_whisper"],
+            progress,
+        )
+
+    def micMessage(self, message: Union[str, bool]) -> None:
+        if isinstance(message, bool) and message is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {"message":"No mic device detected."},
             )
 
-    class UpdateSelectedSpeakerDevice:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, device) -> None:
-            config.SELECTED_SPEAKER_DEVICE = device
-            self.parent.run(
-                200,
-                self.parent.run_mapping["selected_speaker_device"],
-                device,
-            )
-
-    class ProgressBarMicEnergy:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, energy) -> None:
-            if energy is False:
-                self.parent.run(
-                    400,
-                    self.parent.run_mapping["error_device"],
-                    {"message":"No mic device detected."},
-                )
-            else:
-                self.parent.run(
+        elif isinstance(message, str) and len(message) > 0:
+            # addSentMessageLog(message)
+            translation = []
+            transliteration = []
+            if model.checkKeywords(message):
+                self.run(
                     200,
-                    self.parent.run_mapping["check_mic_volume"],
-                    energy,
+                    self.run_mapping["word_filter"],
+                    {"message":f"Detected by word filter:{message}"},
                 )
-
-    class ProgressBarSpeakerEnergy:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, energy) -> None:
-            if energy is False:
-                self.parent.run(
-                    400,
-                    self.parent.run_mapping["error_device"],
-                    {"message":"No mic device detected."},
-                )
+                return
+            elif model.detectRepeatSendMessage(message):
+                return
+            elif config.ENABLE_TRANSLATION is False:
+                pass
             else:
-                self.parent.run(
-                    200,
-                    self.parent.run_mapping["check_speaker_volume"],
-                    energy,
-                )
-
-    class DownloadCTranslate2ProgressBar:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, progress) -> None:
-            printLog("CTranslate2 Weight Download Progress", progress)
-            self.parent.run(
-                200,
-                self.parent.run_mapping["download_ctranslate2"],
-                progress,
-            )
-
-    class DownloadWhisperProgressBar:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def set(self, progress) -> None:
-            printLog("Whisper Weight Download Progress", progress)
-            self.parent.run(
-                200,
-                self.parent.run_mapping["download_whisper"],
-                progress,
-            )
-
-    class MicMessage:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def send(self, message: Union[str, bool]) -> None:
-            if isinstance(message, bool) and message is False:
-                self.parent.run(
-                    400,
-                    self.parent.run_mapping["error_device"],
-                    {"message":"No mic device detected."},
-                )
-
-            elif isinstance(message, str) and len(message) > 0:
-                # addSentMessageLog(message)
-                translation = []
-                transliteration = []
-                if model.checkKeywords(message):
-                    self.parent.run(
-                        200,
-                        self.parent.run_mapping["word_filter"],
-                        {"message":f"Detected by word filter:{message}"},
+                translation, success = model.getInputTranslate(message)
+                if all(success) is not True:
+                    self.changeToCTranslate2Process()
+                    self.run(
+                        400,
+                        self.run_mapping["error_translation_engine"],
+                        {"message":"translation engine limit error"},
                     )
-                    return
-                elif model.detectRepeatSendMessage(message):
-                    return
-                elif config.ENABLE_TRANSLATION is False:
-                    pass
-                else:
-                    translation, success = model.getInputTranslate(message)
-                    if all(success) is not True:
-                        self.parent.changeToCTranslate2Process()
-                        self.parent.run(
-                            400,
-                            self.parent.run_mapping["error_translation_engine"],
-                            {"message":"translation engine limit error"},
-                        )
 
-                    if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                        if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
-                            transliteration = model.convertMessageToTransliteration(translation[0])
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(translation[0])
 
-                if config.ENABLE_TRANSCRIPTION_SEND is True:
-                    if config.SEND_MESSAGE_TO_VRC is True:
-                        if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
-                            if config.ENABLE_TRANSLATION is False:
-                                osc_message = self.parent.messageFormatter("SEND", "", [message])
-                            else:
-                                osc_message = self.parent.messageFormatter("SEND", "", translation)
-                        else:
-                            osc_message = self.parent.messageFormatter("SEND", translation, [message])
-                        model.oscSendMessage(osc_message)
-
-                    self.parent.run(
-                        200,
-                        self.parent.run_mapping["transcription_mic"],
-                        {
-                            "message":message,
-                            "translation":translation,
-                            "transliteration":transliteration
-                        })
-                    if config.LOGGER_FEATURE is True:
-                        if len(translation) > 0:
-                            translation = " (" + "/".join(translation) + ")"
-                        model.logger.info(f"[SENT] {message}{translation}")
-
-                    # if config.OVERLAY_SMALL_LOG is True:
-                    #     overlay_image = model.createOverlayImageShort(message, translation)
-                    #     model.updateOverlay(overlay_image)
-                    #     overlay_image = model.createOverlayImageLong("send", message, translation)
-                    #     model.updateOverlay(overlay_image)
-
-    class SpeakerMessage:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def receive(self, message):
-            if isinstance(message, bool) and message is False:
-                self.parent.run(
-                    400,
-                    self.parent.run_mapping["error_device"],
-                    {"message":"No mic device detected."},
-                )
-            elif isinstance(message, str) and len(message) > 0:
-                translation = []
-                transliteration = []
-                if model.detectRepeatReceiveMessage(message):
-                    return
-                elif config.ENABLE_TRANSLATION is False:
-                    pass
-                else:
-                    translation, success = model.getOutputTranslate(message)
-                    if all(success) is not True:
-                        self.parent.changeToCTranslate2Process()
-                        self.parent.run(
-                            400,
-                            self.parent.run_mapping["error_translation_engine"],
-                            {"message":"translation engine limit error"},
-                        )
-
-                    if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                        if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
-                            transliteration = model.convertMessageToTransliteration(message)
-
-                if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                    if config.OVERLAY_SMALL_LOG is True:
-                        if model.overlay.initialized is True:
-                            overlay_image = model.createOverlayImageShort(message, translation)
-                            model.updateOverlay(overlay_image)
-                        # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                        # model.updateOverlay(overlay_image)
-
-                    # ------------Speaker2Chatbox------------
-                    if config.ENABLE_SPEAKER2CHATBOX is True:
-                        # send OSC message
-                        if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                            osc_message = self.parent.messageFormatter("RECEIVED", translation, [message])
-                            model.oscSendMessage(osc_message)
-                    # ------------Speaker2Chatbox------------
-
-                    # update textbox message log (Received)
-                    self.parent.run(
-                        200,
-                        self.parent.run_mapping["speaker"],
-                        {
-                            "message":message,
-                            "translation":translation,
-                            "transliteration":transliteration,
-                        })
-                    if config.LOGGER_FEATURE is True:
-                        if len(translation) > 0:
-                            translation = " (" + "/".join(translation) + ")"
-                        model.logger.info(f"[RECEIVED] {message}{translation}")
-
-    class ChatMessage:
-        def __init__(self, parent) -> None:
-            self.parent = parent
-
-        def send(self, data):
-            id = data["id"]
-            message = data["message"]
-            if len(message) > 0:
-                # addSentMessageLog(message)
-                translation = []
-                transliteration = []
-                if config.ENABLE_TRANSLATION is False:
-                    pass
-                else:
-                    if config.USE_EXCLUDE_WORDS is True:
-                        replacement_message, replacement_dict = self.parent.replaceExclamationsWithRandom(message)
-                        translation, success = model.getInputTranslate(replacement_message)
-
-                        message = self.parent.removeExclamations(message)
-                        for i in range(len(translation)):
-                            translation[i] = self.parent.restoreText(translation[i], replacement_dict)
-                    else:
-                        translation, success = model.getInputTranslate(message)
-
-                    if all(success) is not True:
-                        self.parent.changeToCTranslate2Process()
-                        self.parent.run(
-                            400,
-                            self.parent.run_mapping["error_translation_engine"],
-                            {"message":"translation engine limit error"},
-                        )
-
-                    if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                        if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
-                            transliteration = model.convertMessageToTransliteration(translation[0])
-
-                # send OSC message
+            if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.SEND_MESSAGE_TO_VRC is True:
                     if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                         if config.ENABLE_TRANSLATION is False:
-                            osc_message = self.parent.messageFormatter("SEND", "", [message])
+                            osc_message = self.messageFormatter("SEND", "", [message])
                         else:
-                            osc_message = self.parent.messageFormatter("SEND", "", translation)
+                            osc_message = self.messageFormatter("SEND", "", translation)
                     else:
-                        osc_message = self.parent.messageFormatter("SEND", translation, [message])
+                        osc_message = self.messageFormatter("SEND", translation, [message])
                     model.oscSendMessage(osc_message)
+
+                self.run(
+                    200,
+                    self.run_mapping["transcription_mic"],
+                    {
+                        "message":message,
+                        "translation":translation,
+                        "transliteration":transliteration
+                    })
+                if config.LOGGER_FEATURE is True:
+                    if len(translation) > 0:
+                        translation = " (" + "/".join(translation) + ")"
+                    model.logger.info(f"[SENT] {message}{translation}")
 
                 # if config.OVERLAY_SMALL_LOG is True:
                 #     overlay_image = model.createOverlayImageShort(message, translation)
@@ -313,20 +183,127 @@ class Controller:
                 #     overlay_image = model.createOverlayImageLong("send", message, translation)
                 #     model.updateOverlay(overlay_image)
 
-                # update textbox message log (Sent)
-                if config.LOGGER_FEATURE is True:
-                    if len(translation) > 0:
-                        translation_text = " (" + "/".join(translation) + ")"
-                    model.logger.info(f"[SENT] {message}{translation_text}")
+    def speakerMessage(self, message) -> None:
+        if isinstance(message, bool) and message is False:
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {"message":"No mic device detected."},
+            )
+        elif isinstance(message, str) and len(message) > 0:
+            translation = []
+            transliteration = []
+            if model.detectRepeatReceiveMessage(message):
+                return
+            elif config.ENABLE_TRANSLATION is False:
+                pass
+            else:
+                translation, success = model.getOutputTranslate(message)
+                if all(success) is not True:
+                    self.changeToCTranslate2Process()
+                    self.run(
+                        400,
+                        self.run_mapping["error_translation_engine"],
+                        {"message":"translation engine limit error"},
+                    )
 
-            return {"status":200,
-                    "result":{
-                        "id":id,
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(message)
+
+            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+                if config.OVERLAY_SMALL_LOG is True:
+                    if model.overlay.initialized is True:
+                        overlay_image = model.createOverlayImageShort(message, translation)
+                        model.updateOverlay(overlay_image)
+                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                    # model.updateOverlay(overlay_image)
+
+                # ------------Speaker2Chatbox------------
+                if config.ENABLE_SPEAKER2CHATBOX is True:
+                    # send OSC message
+                    if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
+                        osc_message = self.messageFormatter("RECEIVED", translation, [message])
+                        model.oscSendMessage(osc_message)
+                # ------------Speaker2Chatbox------------
+
+                # update textbox message log (Received)
+                self.run(
+                    200,
+                    self.run_mapping["speaker"],
+                    {
                         "message":message,
                         "translation":translation,
                         "transliteration":transliteration,
-                        },
-                    }
+                    })
+                if config.LOGGER_FEATURE is True:
+                    if len(translation) > 0:
+                        translation = " (" + "/".join(translation) + ")"
+                    model.logger.info(f"[RECEIVED] {message}{translation}")
+
+    def chatMessage(self, data) -> None:
+        id = data["id"]
+        message = data["message"]
+        if len(message) > 0:
+            # addSentMessageLog(message)
+            translation = []
+            transliteration = []
+            if config.ENABLE_TRANSLATION is False:
+                pass
+            else:
+                if config.USE_EXCLUDE_WORDS is True:
+                    replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
+                    translation, success = model.getInputTranslate(replacement_message)
+
+                    message = self.removeExclamations(message)
+                    for i in range(len(translation)):
+                        translation[i] = self.restoreText(translation[i], replacement_dict)
+                else:
+                    translation, success = model.getInputTranslate(message)
+
+                if all(success) is not True:
+                    self.changeToCTranslate2Process()
+                    self.run(
+                        400,
+                        self.run_mapping["error_translation_engine"],
+                        {"message":"translation engine limit error"},
+                    )
+
+                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                        transliteration = model.convertMessageToTransliteration(translation[0])
+
+            # send OSC message
+            if config.SEND_MESSAGE_TO_VRC is True:
+                if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
+                    if config.ENABLE_TRANSLATION is False:
+                        osc_message = self.messageFormatter("SEND", "", [message])
+                    else:
+                        osc_message = self.messageFormatter("SEND", "", translation)
+                else:
+                    osc_message = self.messageFormatter("SEND", translation, [message])
+                model.oscSendMessage(osc_message)
+
+            # if config.OVERLAY_SMALL_LOG is True:
+            #     overlay_image = model.createOverlayImageShort(message, translation)
+            #     model.updateOverlay(overlay_image)
+            #     overlay_image = model.createOverlayImageLong("send", message, translation)
+            #     model.updateOverlay(overlay_image)
+
+            # update textbox message log (Sent)
+            if config.LOGGER_FEATURE is True:
+                if len(translation) > 0:
+                    translation_text = " (" + "/".join(translation) + ")"
+                model.logger.info(f"[SENT] {message}{translation_text}")
+
+        return {"status":200,
+                "result":{
+                    "id":id,
+                    "message":message,
+                    "translation":translation,
+                    "transliteration":transliteration,
+                    },
+                }
 
     @staticmethod
     def getVersion(*args, **kwargs) -> dict:
@@ -624,8 +601,7 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
-        update_device = self.UpdateSelectedMicDevice(self)
-        device_manager.setCallbackDefaultInputDevice(update_device.set)
+        device_manager.setCallbackDefaultInputDevice(self.updateSelectedMicDevice)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
@@ -807,8 +783,7 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
-        update_device = self.UpdateSelectedSpeakerDevice(self)
-        device_manager.setCallbackDefaultOutputDevice(update_device.set)
+        device_manager.setCallbackDefaultOutputDevice(self.updateSelectedSpeakerDevice)
         device_manager.noticeDefaultDevice()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -1285,9 +1260,8 @@ class Controller:
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        progressbar_speaker_energy = self.ProgressBarSpeakerEnergy(self)
         model.startCheckSpeakerEnergy(
-            progressbar_speaker_energy.set,
+            self.progressBarSpeakerEnergy,
         )
         config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
@@ -1299,9 +1273,8 @@ class Controller:
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        progressbar_mic_energy = self.ProgressBarMicEnergy(self)
         model.startCheckMicEnergy(
-            progressbar_mic_energy.set,
+            self.progressBarMicEnergy,
         )
         config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
@@ -1314,9 +1287,7 @@ class Controller:
 
     # def updateSoftware(*args, **kwargs) -> dict:
     #     printLog("Update callbackUpdateSoftware")
-    #     download = DownloadSoftwareProgressBar(self)
-    #     update = UpdateSoftwareProgressBar(self)
-    #     model.updateSoftware(restart=True, download=download.set, update=update.set)
+    #     model.updateSoftware(restart=True, download=self.downloadSoftwareProgressBar, update=self.updateSoftwareProgressBar)
     #     return {"status":200, "result":True}
 
     # def restartSoftware(*args, **kwargs) -> dict:
@@ -1358,8 +1329,7 @@ class Controller:
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def sendMessageBox(self, data, *args, **kwargs) -> dict:
-        chat = self.ChatMessage(self)
-        response = chat.send(data)
+        response = self.chatMessage(data)
         return response
 
     @staticmethod
@@ -1395,13 +1365,11 @@ class Controller:
             }
 
     def downloadCtranslate2Weight(self, *args, **kwargs) -> dict:
-        download = self.DownloadCTranslate2ProgressBar(self)
-        self.startThreadingDownloadCtranslate2Weight(download.set)
+        self.startThreadingDownloadCtranslate2Weight(self.downloadCTranslate2ProgressBar)
         return {"status":200}
 
     def downloadWhisperWeight(self, *args, **kwargs) -> dict:
-        download = self.DownloadWhisperProgressBar(self)
-        self.startThreadingDownloadWhisperWeight(download.set)
+        self.startThreadingDownloadWhisperWeight(self.downloadWhisperProgressBar)
         return {"status":200}
 
     @staticmethod
@@ -1427,8 +1395,7 @@ class Controller:
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
 
     def startTranscriptionSendMessage(self) -> None:
-        mic_message = self.MicMessage(self)
-        model.startMicTranscript(mic_message.send)
+        model.startMicTranscript(self.micMessage)
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -1464,8 +1431,7 @@ class Controller:
         th_stopTranscriptionSendMessage.start()
 
     def startTranscriptionReceiveMessage(self) -> None:
-        speaker_message = self.SpeakerMessage(self)
-        model.startSpeakerTranscript(speaker_message.receive)
+        model.startSpeakerTranscript(self.speakerMessage)
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
@@ -1546,6 +1512,8 @@ class Controller:
         if engine not in engines:
             engine = engines[0]
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
+        self.run(200, self.run_mapping["selected_translation_engine"], engine)
+        self.run(200, self.run_mapping["translation_engines"], engines)
 
     @staticmethod
     def startThreadingDownloadCtranslate2Weight(callback:Callable[[float], None]) -> None:
@@ -1577,8 +1545,7 @@ class Controller:
         # check Downloaded CTranslate2 Model Weight
         printLog("Check Downloaded CTranslate2 Model Weight")
         if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
-            download = self.DownloadCTranslate2ProgressBar(self)
-            self.startThreadingDownloadCtranslate2Weight(download.set)
+            self.startThreadingDownloadCtranslate2Weight(self.downloadCTranslate2ProgressBar)
 
         # set Transcription Engine
         printLog("Set Transcription Engine")
@@ -1590,8 +1557,7 @@ class Controller:
         # check Downloaded Whisper Model Weight
         printLog("Check Downloaded Whisper Model Weight")
         if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
-            download = self.DownloadWhisperProgressBar(self)
-            self.startThreadingDownloadWhisperWeight(download.set)
+            self.startThreadingDownloadWhisperWeight(self.downloadWhisperProgressBar)
 
         # set word filter
         printLog("Set Word Filter")
@@ -1616,11 +1582,13 @@ class Controller:
         # init Auto device selection
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            update_mic_device = self.UpdateSelectedMicDevice(self)
-            device_manager.setCallbackDefaultInputDevice(update_mic_device.set)
+            device_manager.setCallbackDefaultInputDevice(self.updateSelectedMicDevice)
 
         if config.AUTO_SPEAKER_SELECT is True:
-            update_speaker_device = self.UpdateSelectedSpeakerDevice(self)
-            device_manager.setCallbackDefaultOutputDevice(update_speaker_device.set)
+            device_manager.setCallbackDefaultOutputDevice(self.updateSelectedSpeakerDevice)
+
+        device_manager.setCallbackHostList(self.updateMicHostList)
+        device_manager.setCallbackInputDeviceList(self.updateMicDeviceList)
+        device_manager.setCallbackOutputDeviceList(self.updateSpeakerDeviceList)
 
         printLog("End Initialization")
