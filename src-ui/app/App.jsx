@@ -14,6 +14,7 @@ export const App = () => {
             <ConfigPageCloseTrigger />
             <ConfigPage />
             <MainPage />
+            <UiSizeController />
         </div>
     );
 };
@@ -30,6 +31,7 @@ import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
+import { useUiScaling } from "@logics_configs/useUiScaling";
 
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
@@ -61,6 +63,7 @@ const StartPythonFacadeComponent = () => {
     const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
+    const { getUiScaling } = useUiScaling();
 
     const {
         getSelectedPresetTabNumber,
@@ -79,6 +82,7 @@ const StartPythonFacadeComponent = () => {
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getUiLanguage();
+                getUiScaling();
                 getIsMainPageCompactMode();
                 getMessageInputBoxRatio();
 
@@ -147,5 +151,17 @@ const ConfigPageCloseTrigger = () => {
             if (currentSpeakerThresholdCheckStatus.data === true) volumeCheckStop_Speaker();
         }
     }, [currentIsOpenedConfigPage]);
+    return null;
+};
+
+import React from "react";
+const UiSizeController = () => {
+    const { currentUiScaling } = useUiScaling();
+    const font_size = 62.5 * currentUiScaling.data / 100;
+
+    useEffect(() => {
+        document.documentElement.style.setProperty("font-size", `${font_size}%`);
+    }, [currentUiScaling.data]);
+
     return null;
 };

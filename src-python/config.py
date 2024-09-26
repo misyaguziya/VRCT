@@ -366,7 +366,7 @@ class Config:
 
     @UI_SCALING.setter
     def UI_SCALING(self, value):
-        if value in self.UI_SCALING_LIST:
+        if isinstance(value, int):
             self._UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -1088,7 +1088,7 @@ class Config:
         ## Config Window
         self._TRANSPARENCY = 100
         self._APPEARANCE_THEME = "Dark"
-        self._UI_SCALING = "100%"
+        self._UI_SCALING = 100
         self._TEXTBOX_UI_SCALING = 100
         self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
