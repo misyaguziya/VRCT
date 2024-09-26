@@ -533,7 +533,7 @@ class Controller:
 
     @staticmethod
     def setUiScaling(data, *args, **kwargs) -> dict:
-        config.UI_SCALING = data
+        config.UI_SCALING = int(data)
         return {"status":200, "result":config.UI_SCALING}
 
     @staticmethod
