@@ -85,7 +85,7 @@ const Mic_Container = () => {
                                 selected_id={currentSelectedMicHost.data}
                                 list={currentMicHostList.data}
                                 selectFunction={selectFunction_host}
-                                openListFunction={getMicHostList}
+                                // openListFunction={getMicHostList}
                                 state={currentSelectedMicHost.state}
                                 style={{ maxWidth: "20rem", minWidth: "10rem" }}
                                 is_disabled={is_disabled_selector}
@@ -99,7 +99,7 @@ const Mic_Container = () => {
                                 selected_id={currentSelectedMicDevice.data}
                                 list={currentMicDeviceList.data}
                                 selectFunction={selectFunction_device}
-                                openListFunction={getMicDeviceList}
+                                // openListFunction={getMicDeviceList}
                                 state={currentSelectedMicDevice.state}
                                 is_disabled={is_disabled_selector}
                             />
@@ -183,7 +183,7 @@ const Speaker_Container = () => {
                             selected_id={currentSelectedSpeakerDevice.data}
                             list={currentSpeakerDeviceList.data}
                             selectFunction={selectFunction}
-                            openListFunction={getSpeakerDeviceList}
+                            // openListFunction={getSpeakerDeviceList}
                             state={currentSelectedSpeakerDevice.state}
                             is_disabled={is_disabled_selector}
                         />
