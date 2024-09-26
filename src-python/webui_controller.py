@@ -58,6 +58,14 @@ class Controller:
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
+        if config.IS_OPENED_CONFIG_WINDOW is False:
+            if config.ENABLE_TRANSCRIPTION_SEND is True:
+                model.stopMicTranscript()
+                model.startMicTranscript()
+        else:
+            if config.ENABLE_CHECK_ENERGY_SEND is True:
+                model.stopCheckMicEnergy()
+                model.startCheckMicEnergy
         self.run(
             200,
             self.run_mapping["selected_mic_device"],
@@ -66,6 +74,14 @@ class Controller:
 
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
+        if config.IS_OPENED_CONFIG_WINDOW is False:
+            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+                model.stopSpeakerTranscript()
+                model.startSpeakerTranscript()
+        else:
+            if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+                model.stopCheckSpeakerEnergy()
+                model.startCheckSpeakerEnergy()
         self.run(
             200,
             self.run_mapping["selected_speaker_device"],
@@ -366,22 +382,24 @@ class Controller:
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
     def setEnableConfigWindow(self, *args, **kwargs) -> dict:
+        config.IS_OPENED_CONFIG_WINDOW = True
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
+            self.stopThreadingTranscriptionSendMessage()
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
+            self.stopThreadingTranscriptionReceiveMessage()
         return {"status":200, "result":True}
 
     def setDisableConfigWindow(self, *args, **kwargs) -> dict:
+        config.IS_OPENED_CONFIG_WINDOW = False
         model.stopCheckMicEnergy()
         model.stopCheckSpeakerEnergy()
 
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessageOnCloseConfigWindow()
+            self.startThreadingTranscriptionSendMessage()
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 sleep(2)
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
+            self.startThreadingTranscriptionReceiveMessage()
         return {"status":200, "result":True}
 
     @staticmethod
@@ -1412,23 +1430,6 @@ class Controller:
         th_stopTranscriptionSendMessage.start()
         th_stopTranscriptionSendMessage.join()
 
-    def startTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
-        model.startMicTranscript(self.micMessage)
-
-    @staticmethod
-    def stopTranscriptionSendMessageOnOpenConfigWindow() -> None:
-        model.stopMicTranscript()
-
-    def startThreadingTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessageOnCloseConfigWindow)
-        th_startTranscriptionSendMessage.daemon = True
-        th_startTranscriptionSendMessage.start()
-
-    def stopThreadingTranscriptionSendMessageOnOpenConfigWindow(self) -> None:
-        th_stopTranscriptionSendMessage = Thread(target=self.stopTranscriptionSendMessageOnOpenConfigWindow)
-        th_stopTranscriptionSendMessage.daemon = True
-        th_stopTranscriptionSendMessage.start()
-
     def startTranscriptionReceiveMessage(self) -> None:
         model.startSpeakerTranscript(self.speakerMessage)
 
@@ -1446,23 +1447,6 @@ class Controller:
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
         th_stopTranscriptionReceiveMessage.join()
-
-    def startTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
-        model.startSpeakerTranscript(self.speakerMessage)
-
-    @staticmethod
-    def stopTranscriptionReceiveMessageOnOpenConfigWindow() -> None:
-        model.stopSpeakerTranscript()
-
-    def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessageOnCloseConfigWindow)
-        th_startTranscriptionReceiveMessage.daemon = True
-        th_startTranscriptionReceiveMessage.start()
-
-    def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow(self) -> None:
-        th_stopTranscriptionReceiveMessage = Thread(target=self.stopTranscriptionReceiveMessageOnOpenConfigWindow)
-        th_stopTranscriptionReceiveMessage.daemon = True
-        th_stopTranscriptionReceiveMessage.start()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
