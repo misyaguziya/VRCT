@@ -125,7 +125,6 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) > 0:
-            # addSentMessageLog(message)
             translation = []
             transliteration = []
             if model.checkKeywords(message):
@@ -245,7 +244,6 @@ class Controller:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
-            # addSentMessageLog(message)
             translation = []
             transliteration = []
             if config.ENABLE_TRANSLATION is False:
@@ -1415,8 +1413,7 @@ class Controller:
         th_stopTranscriptionSendMessage.join()
 
     def startTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
-        mic_message = self.MicMessage(self)
-        model.startMicTranscript(mic_message.send)
+        model.startMicTranscript(self.micMessage)
 
     @staticmethod
     def stopTranscriptionSendMessageOnOpenConfigWindow() -> None:
@@ -1451,8 +1448,7 @@ class Controller:
         th_stopTranscriptionReceiveMessage.join()
 
     def startTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
-        speaker_message = self.SpeakerMessage(self)
-        model.startSpeakerTranscript(speaker_message.receive)
+        model.startSpeakerTranscript(self.speakerMessage)
 
     @staticmethod
     def stopTranscriptionReceiveMessageOnOpenConfigWindow() -> None:
