@@ -27,6 +27,7 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
+import { useUiScaling } from "@logics_configs/useUiScaling";
 
 export const useReceiveRoutes = () => {
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
@@ -63,6 +64,7 @@ export const useReceiveRoutes = () => {
     const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
     const { updateUiLanguage } = useUiLanguage();
+    const { updateUiScaling } = useUiScaling();
     const {
         updateVolumeVariable_Mic,
         updateVolumeVariable_Speaker,
@@ -197,6 +199,9 @@ export const useReceiveRoutes = () => {
         // Appearance
         "/get/data/ui_language": updateUiLanguage,
         "/set/data/ui_language": updateUiLanguage,
+
+        "/get/data/ui_scaling": updateUiScaling,
+        "/set/data/ui_scaling": updateUiScaling,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,

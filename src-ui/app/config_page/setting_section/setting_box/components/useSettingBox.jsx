@@ -36,15 +36,16 @@ export const DropdownMenuContainer = (props) => {
 };
 
 
+export const SliderContainer = (props) => {
+    return (
+        <div className={styles.container}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <Slider {...props}/>
+        </div>
+    );
+};
+
 export const useSettingBox = () => {
-    const SliderContainer = (props) => {
-        return (
-            <div className={styles.container}>
-                <LabelComponent label={props.label} desc={props.desc} />
-                <Slider {...props}/>
-            </div>
-        );
-    };
 
     const CheckboxContainer = (props) => {
         return (
@@ -121,7 +122,6 @@ export const useSettingBox = () => {
     };
 
     return {
-        SliderContainer,
         CheckboxContainer,
         SwitchboxContainer,
         EntryContainer,
