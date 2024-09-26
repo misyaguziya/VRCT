@@ -1528,7 +1528,7 @@ class Controller:
         th_download.start()
 
     @staticmethod
-    def startWatchdog() -> dict:
+    def startWatchdog(*args, **kwargs) -> dict:
         model.startWatchdog()
         return {"status":200, "result":True}
 
@@ -1538,7 +1538,7 @@ class Controller:
         return {"status":200, "result":True}
 
     @staticmethod
-    def stopWatchdog() -> dict:
+    def stopWatchdog(*args, **kwargs) -> dict:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
