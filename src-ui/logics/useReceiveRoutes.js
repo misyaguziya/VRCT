@@ -152,6 +152,7 @@ export const useReceiveRoutes = () => {
         "/set/disable/auto_speaker_select": updateEnableAutoSpeakerSelect,
 
         "/get/data/mic_host_list": (payload) => updateMicHostList(arrayToObject(payload)),
+        "/run/mic_host_list": (payload) => updateMicHostList(arrayToObject(payload)),
         "/get/data/selected_mic_host": updateSelectedMicHost,
         "/set/data/selected_mic_host": (payload) => {
             updateSelectedMicHost(payload.host);
@@ -159,12 +160,20 @@ export const useReceiveRoutes = () => {
         },
 
         "/get/data/mic_device_list": (payload) => updateMicDeviceList(arrayToObject(payload)),
+        "/run/mic_device_list": (payload) => updateMicDeviceList(arrayToObject(payload)),
         "/get/data/selected_mic_device": updateSelectedMicDevice,
         "/set/data/selected_mic_device": updateSelectedMicDevice,
 
+        "/run/selected_mic_device": (payload) => {
+            updateSelectedMicHost(payload.host);
+            updateSelectedMicDevice(payload.device);
+        },
+
         "/get/data/speaker_device_list": (payload) => updateSpeakerDeviceList(arrayToObject(payload)),
+        "/run/speaker_device_list": (payload) => updateSpeakerDeviceList(arrayToObject(payload)),
         "/get/data/selected_speaker_device": updateSelectedSpeakerDevice,
         "/set/data/selected_speaker_device": updateSelectedSpeakerDevice,
+        "/run/selected_speaker_device": updateSelectedSpeakerDevice,
 
         "/run/check_mic_volume": updateVolumeVariable_Mic,
         "/run/check_speaker_volume": updateVolumeVariable_Speaker,

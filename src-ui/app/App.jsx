@@ -36,10 +36,18 @@ import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
 import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
 
+import { useMicHostList } from "@logics_configs/useMicHostList";
+import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
+import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
+
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const main_page = getCurrent();
+
+    const { getMicHostList } = useMicHostList();
+    const { getMicDeviceList } = useMicDeviceList();
+    const { getSpeakerDeviceList } = useSpeakerDeviceList();
 
     const { getIsMainPageCompactMode } = useIsMainPageCompactMode();
     const { getSoftwareVersion } = useSoftwareVersion();
@@ -83,6 +91,10 @@ const StartPythonFacadeComponent = () => {
                 getSelectableLanguageList();
                 getTranslationEngines();
                 getSelectedTranslationEngines();
+
+                getMicHostList();
+                getMicDeviceList();
+                getSpeakerDeviceList();
 
                 getEnableAutoMicSelect();
                 getEnableAutoSpeakerSelect();
