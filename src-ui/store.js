@@ -165,6 +165,7 @@ export const { atomInstance: Atom_EnableAutomaticSpeakerThreshold, useHook: useS
 
 // Appearance
 export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAtomWithHook("en", "UiLanguage");
+export const { atomInstance: Atom_UiScaling, useHook: useStore_UiScaling } = createAtomWithHook(100, "UiScaling");
 
 
 export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");

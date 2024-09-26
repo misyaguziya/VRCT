@@ -20,22 +20,10 @@ export const Appearance = () => {
         // ActionButtonContainer,
     } = useSettingBox();
 
-    const selectFunction = (selected_data) => {
-        const asyncFunction = () => {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(selected_data.selected_id);
-                }, 3000);
-            });
-        };
-        updateSelectedMicDevice(asyncFunction);
-    };
-
     return (
         <>
-            <UiLanguageContainer
-
-            />
+            <UiLanguageContainer />
+            <UiScalingContainer />
 
 
 
@@ -105,5 +93,51 @@ const UiLanguageContainer = () => {
                 ))}
             </div>
         </div>
+    );
+};
+
+
+import { useUiScaling } from "@logics_configs/useUiScaling";
+import { SliderContainer } from "../components/useSettingBox";
+
+import { useEffect, useState } from "react";
+const UiScalingContainer = () => {
+    const { t } = useTranslation();
+    const { currentUiScaling, setUiScaling } = useUiScaling();
+    const [ui_ui_scaling, setUiUiScaling] = useState(currentUiScaling.data);
+
+    const onchangeFunction = (value) => {
+        setUiUiScaling(value);
+    };
+    const onchangeCommittedFunction = (value) => {
+        setUiScaling(value);
+    };
+    useEffect(() => {
+        setUiUiScaling(currentUiScaling.data);
+    }, [currentUiScaling.data]);
+
+    const createMarks = (min, max) => {
+        const marks = [];
+        for (let value = min; value <= max; value += 10) {
+            const label = ([50,70,130,140,160,170,190].includes(value)) ? "" : value;
+            marks.push({ value, label: `${label}` });
+        }
+        return marks;
+    };
+
+    const marks = createMarks(40, 200);
+
+    return (
+        <SliderContainer
+            label={t("config_page.ui_size.label") + " (%)"}
+            min="40"
+            max="200"
+            onchangeCommittedFunction={onchangeCommittedFunction}
+            onchangeFunction={onchangeFunction}
+            variable={ui_ui_scaling}
+            marks={marks}
+            step={null}
+            track={false}
+        />
     );
 };
