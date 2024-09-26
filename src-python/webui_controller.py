@@ -1533,7 +1533,7 @@ class Controller:
         return {"status":200, "result":True}
 
     @staticmethod
-    def feedWatchdog() -> dict:
+    def feedWatchdog(*args, **kwargs) -> dict:
         model.feedWatchdog()
         return {"status":200, "result":True}
 

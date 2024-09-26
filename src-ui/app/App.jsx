@@ -68,6 +68,8 @@ const StartPythonFacadeComponent = () => {
         main_page.setDecorations(true);
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
+                startFeedingToWatchDog();
+
                 getUiLanguage();
                 getIsMainPageCompactMode();
 
@@ -133,4 +135,12 @@ const ConfigPageCloseTrigger = () => {
         }
     }, [currentIsOpenedConfigPage]);
     return null;
+};
+
+import { useStdoutToPython } from "@logics/useStdoutToPython";
+const startFeedingToWatchDog = () => {
+    const { asyncStdoutToPython } = useStdoutToPython();
+    setInterval(() => {
+        asyncStdoutToPython("/run/feed_watchdog");
+    }, 10000); // 10000ミリ秒 = 10秒
 };
