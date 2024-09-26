@@ -603,6 +603,7 @@ class Controller:
         config.AUTO_MIC_SELECT = True
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.noticeDefaultDevice()
+        device_manager.forceSetMicDefaultDevice()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -785,6 +786,7 @@ class Controller:
         config.AUTO_SPEAKER_SELECT = True
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.noticeDefaultDevice()
+        device_manager.forceSetSpeakerDefaultDevice()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
