@@ -1538,6 +1538,10 @@ class Controller:
         return {"status":200, "result":True}
 
     @staticmethod
+    def setWatchdogCallback(callback) -> dict:
+        model.setWatchdogCallback(callback)
+
+    @staticmethod
     def stopWatchdog(*args, **kwargs) -> dict:
         model.stopWatchdog()
         return {"status":200, "result":True}
