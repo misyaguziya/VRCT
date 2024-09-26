@@ -1508,7 +1508,7 @@ class Controller:
         engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         engines = self.getTranslationEngines()["result"]
         if engine not in engines:
-            engine = engines[0]
+            engine = "CTranslate2"
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], engines)
