@@ -35,6 +35,12 @@ class DeviceManager:
         self.default_speaker_device = {"device": {"name": "NoDevice"}}
         self.update()
 
+        self.prev_mic_host = [host for host in self.mic_devices]
+        self.prev_mic_devices = self.mic_devices
+        self.prev_default_mic_device = self.default_mic_device
+        self.prev_speaker_devices = self.speaker_devices
+        self.prev_default_speaker_device = self.default_speaker_device
+
         self.callback_default_mic_device = None
         self.callback_default_speaker_device = None
         self.callback_host_list = None
@@ -127,6 +133,8 @@ class DeviceManager:
                 while cb.loop is True:
                     sleep(1)
                 enumerator.UnregisterEndpointNotificationCallback(cb)
+                sleep(1)
+
                 self.update()
                 self.noticeDefaultDevice()
 
@@ -179,15 +187,35 @@ class DeviceManager:
 
     def noticeDefaultDevice(self):
         if self.callback_default_mic_device is not None:
-            self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
+            if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
+                self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
+                self.prev_default_mic_device = self.default_mic_device
+
         if self.callback_default_speaker_device is not None:
-            self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
+            if self.prev_default_speaker_device["device"]["name"] != self.default_speaker_device["device"]["name"]:
+                self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
+                self.prev_default_speaker_device = self.default_speaker_device
+
         if self.callback_host_list is not None:
-            self.callback_host_list()
+            if self.prev_mic_host != [host for host in self.mic_devices]:
+                self.callback_host_list()
+                self.prev_mic_host = [host for host in self.mic_devices]
+
         if self.callback_mic_device_list is not None:
-            self.callback_mic_device_list()
+            if {key: [device['name'] for device in devices] for key, devices in self.prev_mic_devices.items()} != {key: [device['name'] for device in devices] for key, devices in self.mic_devices.items()}:
+                self.callback_mic_device_list()
+                self.prev_mic_devices = self.mic_devices
+
         if self.callback_speaker_device_list is not None:
-            self.callback_speaker_device_list()
+            if [device['name'] for device in self.prev_speaker_devices] != [device['name'] for device in self.speaker_devices]:
+                self.callback_speaker_device_list()
+                self.prev_speaker_devices = self.speaker_devices
+
+    def forceSetMicDefaultDevice(self):
+        self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
+
+    def forceSetSpeakerDefaultDevice(self):
+        self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
 
     def getMicDevices(self):
         return self.mic_devices
