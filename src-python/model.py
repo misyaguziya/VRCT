@@ -783,12 +783,20 @@ class Model:
         self.overlay.shutdownOverlay()
 
     def startWatchdog(self):
-        self.watchdog.start()
+        self.th_watchdog = threadFnc(self.watchdog.start)
+        self.th_watchdog.daemon = True
+        self.th_watchdog.start()
 
     def feedWatchdog(self):
         self.watchdog.feed()
 
+    def setWatchdogCallback(self, callback):
+        self.watchdog.setCallback(callback)
+
     def stopWatchdog(self):
-        self.watchdog.stop()
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            self.th_watchdog.join()
+            self.th_watchdog = None
 
 model = Model()

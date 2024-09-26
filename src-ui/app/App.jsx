@@ -142,5 +142,5 @@ const startFeedingToWatchDog = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     setInterval(() => {
         asyncStdoutToPython("/run/feed_watchdog");
-    }, 10000); // 10000ミリ秒 = 10秒
+    }, 20000); // 20000ミリ秒 = 20秒
 };

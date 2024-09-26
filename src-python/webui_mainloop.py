@@ -319,6 +319,7 @@ mapping = {
 class Main:
     def __init__(self) -> None:
         self.queue = Queue()
+        self.main_loop = True
 
     def receiver(self) -> None:
         while True:
@@ -380,15 +381,19 @@ class Main:
         th_handler.daemon = True
         th_handler.start()
 
-    def loop(self) -> None:
-        while True:
+    def start(self) -> None:
+        while self.main_loop:
             time.sleep(1)
+
+    def stop(self) -> None:
+        self.main_loop = False
 
 if __name__ == "__main__":
     main = Main()
     main.startReceiver()
     main.startHandler()
 
+    controller.setWatchdogCallback(main.stop)
     controller.init()
 
     # mappingのすべてのstatusをTrueにする
@@ -398,7 +403,7 @@ if __name__ == "__main__":
     process = "main"
     match process:
         case "main":
-            main.loop()
+            main.start()
 
         case "test":
             for _ in range(100):
