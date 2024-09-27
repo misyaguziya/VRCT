@@ -58,9 +58,6 @@ mapping = {
     "/set/enable/foreground": {"status": True, "variable":controller.setEnableForeground},
     "/set/disable/foreground": {"status": True, "variable":controller.setDisableForeground},
 
-    "/set/enable/config_window": {"status": True, "variable":controller.setEnableConfigWindow},
-    "/set/disable/config_window": {"status": True, "variable":controller.setDisableConfigWindow},
-
     "/get/data/selected_tab_no": {"status": True, "variable":controller.getSelectedTabNo},
     "/set/data/selected_tab_no": {"status": True, "variable":controller.setSelectedTabNo},
 
