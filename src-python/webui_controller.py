@@ -55,6 +55,16 @@ class Controller:
             model.getListSpeakerDevice(),
         )
 
+    def prevUpdateSelectedDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            model.stopMicTranscript()
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            model.stopSpeakerTranscript()
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            model.stopCheckMicEnergy()
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            model.stopCheckSpeakerEnergy()
+
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
@@ -588,6 +598,7 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
+        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.noticeDefaultDevice()
         device_manager.forceSetMicDefaultDevice()
@@ -595,6 +606,7 @@ class Controller:
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
+        device_manager.clearCallbackPrevUpdateDevices()
         device_manager.clearCallbackDefaultMicDevice()
         config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
@@ -771,6 +783,7 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
+        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.noticeDefaultDevice()
         device_manager.forceSetSpeakerDefaultDevice()
@@ -778,6 +791,7 @@ class Controller:
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
+        device_manager.clearCallbackPrevUpdateDevices()
         device_manager.clearCallbackDefaultSpeakerDevice()
         config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
@@ -1535,10 +1549,10 @@ class Controller:
         # init Auto device selection
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
+            self.setEnableAutoMicSelect()
 
         if config.AUTO_SPEAKER_SELECT is True:
-            device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
+            self.setEnableAutoSpeakerSelect()
 
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
