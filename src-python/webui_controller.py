@@ -58,14 +58,10 @@ class Controller:
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
-        if config.IS_OPENED_CONFIG_WINDOW is False:
-            if config.ENABLE_TRANSCRIPTION_SEND is True:
-                model.stopMicTranscript()
-                model.startMicTranscript()
-        else:
-            if config.ENABLE_CHECK_ENERGY_SEND is True:
-                model.stopCheckMicEnergy()
-                model.startCheckMicEnergy
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            model.startMicTranscript()
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            model.startCheckMicEnergy()
         self.run(
             200,
             self.run_mapping["selected_mic_device"],
@@ -74,14 +70,10 @@ class Controller:
 
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
-        if config.IS_OPENED_CONFIG_WINDOW is False:
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                model.stopSpeakerTranscript()
-                model.startSpeakerTranscript()
-        else:
-            if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-                model.stopCheckSpeakerEnergy()
-                model.startCheckSpeakerEnergy()
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            model.startSpeakerTranscript()
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            model.startCheckSpeakerEnergy()
         self.run(
             200,
             self.run_mapping["selected_speaker_device"],
@@ -380,27 +372,6 @@ class Controller:
     def setDisableForeground(*args, **kwargs) -> dict:
         config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
-
-    def setEnableConfigWindow(self, *args, **kwargs) -> dict:
-        config.IS_OPENED_CONFIG_WINDOW = True
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessage()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
-        return {"status":200, "result":True}
-
-    def setDisableConfigWindow(self, *args, **kwargs) -> dict:
-        config.IS_OPENED_CONFIG_WINDOW = False
-        model.stopCheckMicEnergy()
-        model.stopCheckSpeakerEnergy()
-
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessage()
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                sleep(2)
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
-        return {"status":200, "result":True}
 
     @staticmethod
     def getSelectedTabNo(*args, **kwargs) -> dict:

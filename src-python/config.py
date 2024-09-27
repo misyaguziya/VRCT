@@ -170,15 +170,6 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_CHECK_ENERGY_RECEIVE = value
 
-    @property
-    def IS_OPENED_CONFIG_WINDOW(self):
-        return self._IS_OPENED_CONFIG_WINDOW
-
-    @IS_OPENED_CONFIG_WINDOW.setter
-    def IS_OPENED_CONFIG_WINDOW(self, value):
-        if isinstance(value, bool):
-            self._IS_OPENED_CONFIG_WINDOW = value
-
     # @property
     # def SENT_MESSAGES_LOG(self):
     #     return self._SENT_MESSAGES_LOG
@@ -1009,7 +1000,6 @@ class Config:
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
-        self._IS_OPENED_CONFIG_WINDOW = False
 
         # self._SENT_MESSAGES_LOG = []
         # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
