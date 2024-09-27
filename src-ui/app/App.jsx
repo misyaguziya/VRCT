@@ -134,10 +134,19 @@ const UiLanguageController = () => {
     return null;
 };
 
+import { useStore_MainFunctionsStateMemory } from "@store";
 import { useVolume } from "@logics_common/useVolume";
-import { useStore_IsOpenedConfigPage } from "@store";
+import { useIsOpenedConfigPage } from "@logics_common/useIsOpenedConfigPage";
+import { useMainFunction } from "@logics_main/useMainFunction";
 const ConfigPageCloseTrigger = () => {
-    const { currentIsOpenedConfigPage } = useStore_IsOpenedConfigPage();
+    const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
+    const { currentMainFunctionsStateMemory, updateMainFunctionsStateMemory} = useStore_MainFunctionsStateMemory();
+    const {
+        currentTranscriptionSendStatus,
+        setTranscriptionSend,
+        currentTranscriptionReceiveStatus,
+        setTranscriptionReceive,
+    } = useMainFunction();
     const {
         currentMicThresholdCheckStatus,
         volumeCheckStop_Mic,
@@ -145,12 +154,30 @@ const ConfigPageCloseTrigger = () => {
         volumeCheckStop_Speaker,
     } = useVolume();
 
+
+    const memorizeLatestMainFunctionsState = () => {
+        updateMainFunctionsStateMemory({
+            transcription_send: currentTranscriptionSendStatus.data,
+            transcription_receive: currentTranscriptionReceiveStatus.data,
+        });
+    };
+
+    const restoreMainFunctionState = () => {
+        if (currentMainFunctionsStateMemory.data.transcription_send === true) setTranscriptionSend(true);
+        if (currentMainFunctionsStateMemory.data.transcription_receive === true) setTranscriptionReceive(true);
+    };
+
     useEffect(() => {
-        if (currentIsOpenedConfigPage.data === false) {
+        if (currentIsOpenedConfigPage.data === true) { // When config page is opened.
+            memorizeLatestMainFunctionsState();
+            if (currentTranscriptionSendStatus.data === true) setTranscriptionSend(false);
+            if (currentTranscriptionReceiveStatus.data === true) setTranscriptionReceive(false);
+        } else if (currentIsOpenedConfigPage.data === false) { // When config page is closed.
             if (currentMicThresholdCheckStatus.data === true) volumeCheckStop_Mic();
             if (currentSpeakerThresholdCheckStatus.data === true) volumeCheckStop_Speaker();
+            restoreMainFunctionState();
         }
-    }, [currentIsOpenedConfigPage]);
+    }, [currentIsOpenedConfigPage.data]);
     return null;
 };
 
