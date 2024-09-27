@@ -9,9 +9,10 @@ from utils import isUniqueStrings, printLog
 from models.transcription.transcription_utils import device_manager
 
 class Controller:
-    def __call__(self) -> None:
+    def __init__(self) -> None:
         self.run_mapping = {}
         self.run = None
+        self.transcription_access_status = True
 
     def setRunMapping(self, run_mapping:dict) -> None:
         self.run_mapping = run_mapping
@@ -1398,7 +1399,11 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], "CTranslate2")
 
     def startTranscriptionSendMessage(self) -> None:
+        while self.transcription_access_status is False:
+            sleep(1)
+        self.transcription_access_status = False
         model.startMicTranscript(self.micMessage)
+        self.transcription_access_status = True
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -1416,7 +1421,11 @@ class Controller:
         th_stopTranscriptionSendMessage.join()
 
     def startTranscriptionReceiveMessage(self) -> None:
+        while self.transcription_access_status is False:
+            sleep(1)
+        self.transcription_access_status = False
         model.startSpeakerTranscript(self.speakerMessage)
+        self.transcription_access_status = True
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
