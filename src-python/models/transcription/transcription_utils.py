@@ -137,17 +137,20 @@ class DeviceManager:
         enumerator.RegisterEndpointNotificationCallback(cb)
         try:
             while self.monitoring_flag is True:
-                while cb.loop is True:
-                    sleep(1)
-                enumerator.UnregisterEndpointNotificationCallback(cb)
-                self.runPrevUpdateDevices()
-                sleep(2)
-                self.update()
-                self.noticeDefaultDevice()
-
-                cb = Client()
-                enumerator = AudioUtilities.GetDeviceEnumerator()
-                enumerator.RegisterEndpointNotificationCallback(cb)
+                try:
+                    while cb.loop is True:
+                        sleep(1)
+                    enumerator.UnregisterEndpointNotificationCallback(cb)
+                    self.runPrevUpdateDevices()
+                    sleep(2)
+                    self.update()
+                    self.noticeDefaultDevice()
+                except Exception:
+                    pass
+                finally:
+                    cb = Client()
+                    enumerator = AudioUtilities.GetDeviceEnumerator()
+                    enumerator.RegisterEndpointNotificationCallback(cb)
         except Exception:
             pass
         comtypes.CoUninitialize()
