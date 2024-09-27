@@ -2,10 +2,10 @@ import clsx from "clsx";
 import styles from "./MainPage.module.scss";
 import { SidebarSection } from "./sidebar_section/SidebarSection";
 import { MainSection } from "./main_section/MainSection";
-import { useStore_IsOpenedConfigPage } from "@store";
+import { useIsOpenedConfigPage } from "@logics_common/useIsOpenedConfigPage";
 
 export const MainPage = () => {
-    const { currentIsOpenedConfigPage } = useStore_IsOpenedConfigPage();
+    const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
 
     return (
         <div className={clsx(styles.page, styles.main_page, {

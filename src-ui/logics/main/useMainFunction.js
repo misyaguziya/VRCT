@@ -32,32 +32,36 @@ export const useMainFunction = () => {
 
     const { asyncStdoutToPython } = useStdoutToPython();
 
-    const toggleTranslation = () => {
+    const setTranslation = (to_enable) => {
         pendingTranslationStatus();
-        if (currentTranslationStatus.data) {
-            asyncStdoutToPython("/set/disable/translation");
-        } else {
+        if (to_enable) {
             asyncStdoutToPython("/set/enable/translation");
+        } else {
+            asyncStdoutToPython("/set/disable/translation");
         }
     };
+    const toggleTranslation = () => setTranslation(!currentTranslationStatus.data);
 
-    const toggleTranscriptionSend = () => {
+    const setTranscriptionSend = (to_enable) => {
         pendingTranscriptionSendStatus();
-        if (currentTranscriptionSendStatus.data) {
-            asyncStdoutToPython("/set/disable/transcription_send");
-        } else {
+        if (to_enable) {
             asyncStdoutToPython("/set/enable/transcription_send");
-        }
-    };
-
-    const toggleTranscriptionReceive = () => {
-        pendingTranscriptionReceiveStatus();
-        if (currentTranscriptionReceiveStatus.data) {
-            asyncStdoutToPython("/set/disable/transcription_receive");
         } else {
-            asyncStdoutToPython("/set/enable/transcription_receive");
+            asyncStdoutToPython("/set/disable/transcription_send");
         }
     };
+    const toggleTranscriptionSend = () => setTranscriptionSend(!currentTranscriptionSendStatus.data);
+
+    const setTranscriptionReceive = (to_enable) => {
+        pendingTranscriptionReceiveStatus();
+        if (to_enable) {
+            asyncStdoutToPython("/set/enable/transcription_receive");
+        } else {
+            asyncStdoutToPython("/set/disable/transcription_receive");
+        }
+    };
+    const toggleTranscriptionReceive = () => setTranscriptionReceive(!currentTranscriptionReceiveStatus.data);
+
 
     const toggleForeground = () => {
         const main_page = getCurrent();
@@ -70,14 +74,17 @@ export const useMainFunction = () => {
         currentTranslationStatus,
         toggleTranslation,
         updateTranslationStatus,
+        setTranslation,
 
         currentTranscriptionSendStatus,
         toggleTranscriptionSend,
         updateTranscriptionSendStatus,
+        setTranscriptionSend,
 
         currentTranscriptionReceiveStatus,
         toggleTranscriptionReceive,
         updateTranscriptionReceiveStatus,
+        setTranscriptionReceive,
 
         currentForegroundStatus,
         toggleForeground,
