@@ -55,9 +55,23 @@ class Controller:
             model.getListSpeakerDevice(),
         )
 
+    def prevUpdateSelectedDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            model.stopMicTranscript()
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            model.stopSpeakerTranscript()
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            model.stopCheckMicEnergy()
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            model.stopCheckSpeakerEnergy()
+
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            model.startMicTranscript()
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            model.startCheckMicEnergy()
         self.run(
             200,
             self.run_mapping["selected_mic_device"],
@@ -66,6 +80,10 @@ class Controller:
 
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            model.startSpeakerTranscript()
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            model.startCheckSpeakerEnergy()
         self.run(
             200,
             self.run_mapping["selected_speaker_device"],
@@ -125,7 +143,6 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) > 0:
-            # addSentMessageLog(message)
             translation = []
             transliteration = []
             if model.checkKeywords(message):
@@ -245,7 +262,6 @@ class Controller:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
-            # addSentMessageLog(message)
             translation = []
             transliteration = []
             if config.ENABLE_TRANSLATION is False:
@@ -366,25 +382,6 @@ class Controller:
     def setDisableForeground(*args, **kwargs) -> dict:
         config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
-
-    def setEnableConfigWindow(self, *args, **kwargs) -> dict:
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.stopThreadingTranscriptionSendMessageOnOpenConfigWindow()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow()
-        return {"status":200, "result":True}
-
-    def setDisableConfigWindow(self, *args, **kwargs) -> dict:
-        model.stopCheckMicEnergy()
-        model.stopCheckSpeakerEnergy()
-
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessageOnCloseConfigWindow()
-            if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                sleep(2)
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessageOnCloseConfigWindow()
-        return {"status":200, "result":True}
 
     @staticmethod
     def getSelectedTabNo(*args, **kwargs) -> dict:
@@ -601,6 +598,7 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
+        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.noticeDefaultDevice()
         device_manager.forceSetMicDefaultDevice()
@@ -608,6 +606,7 @@ class Controller:
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
+        device_manager.clearCallbackPrevUpdateDevices()
         device_manager.clearCallbackDefaultMicDevice()
         config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
@@ -784,6 +783,7 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
+        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.noticeDefaultDevice()
         device_manager.forceSetSpeakerDefaultDevice()
@@ -791,6 +791,7 @@ class Controller:
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
+        device_manager.clearCallbackPrevUpdateDevices()
         device_manager.clearCallbackDefaultSpeakerDevice()
         config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
@@ -1414,24 +1415,6 @@ class Controller:
         th_stopTranscriptionSendMessage.start()
         th_stopTranscriptionSendMessage.join()
 
-    def startTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
-        mic_message = self.MicMessage(self)
-        model.startMicTranscript(mic_message.send)
-
-    @staticmethod
-    def stopTranscriptionSendMessageOnOpenConfigWindow() -> None:
-        model.stopMicTranscript()
-
-    def startThreadingTranscriptionSendMessageOnCloseConfigWindow(self) -> None:
-        th_startTranscriptionSendMessage = Thread(target=self.startTranscriptionSendMessageOnCloseConfigWindow)
-        th_startTranscriptionSendMessage.daemon = True
-        th_startTranscriptionSendMessage.start()
-
-    def stopThreadingTranscriptionSendMessageOnOpenConfigWindow(self) -> None:
-        th_stopTranscriptionSendMessage = Thread(target=self.stopTranscriptionSendMessageOnOpenConfigWindow)
-        th_stopTranscriptionSendMessage.daemon = True
-        th_stopTranscriptionSendMessage.start()
-
     def startTranscriptionReceiveMessage(self) -> None:
         model.startSpeakerTranscript(self.speakerMessage)
 
@@ -1449,24 +1432,6 @@ class Controller:
         th_stopTranscriptionReceiveMessage.daemon = True
         th_stopTranscriptionReceiveMessage.start()
         th_stopTranscriptionReceiveMessage.join()
-
-    def startTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
-        speaker_message = self.SpeakerMessage(self)
-        model.startSpeakerTranscript(speaker_message.receive)
-
-    @staticmethod
-    def stopTranscriptionReceiveMessageOnOpenConfigWindow() -> None:
-        model.stopSpeakerTranscript()
-
-    def startThreadingTranscriptionReceiveMessageOnCloseConfigWindow(self) -> None:
-        th_startTranscriptionReceiveMessage = Thread(target=self.startTranscriptionReceiveMessageOnCloseConfigWindow)
-        th_startTranscriptionReceiveMessage.daemon = True
-        th_startTranscriptionReceiveMessage.start()
-
-    def stopThreadingTranscriptionReceiveMessageOnOpenConfigWindow(self) -> None:
-        th_stopTranscriptionReceiveMessage = Thread(target=self.stopTranscriptionReceiveMessageOnOpenConfigWindow)
-        th_stopTranscriptionReceiveMessage.daemon = True
-        th_stopTranscriptionReceiveMessage.start()
 
     @staticmethod
     def replaceExclamationsWithRandom(text):
@@ -1512,7 +1477,7 @@ class Controller:
         engine = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
         engines = self.getTranslationEngines()["result"]
         if engine not in engines:
-            engine = engines[0]
+            engine = "CTranslate2"
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], engines)
@@ -1584,10 +1549,10 @@ class Controller:
         # init Auto device selection
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
+            self.setEnableAutoMicSelect()
 
         if config.AUTO_SPEAKER_SELECT is True:
-            device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
+            self.setEnableAutoSpeakerSelect()
 
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
