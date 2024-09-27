@@ -19,6 +19,12 @@ class Client(MMNotificationClient):
     def on_device_removed(self, removed_device_id):
         self.loop = False
 
+    def on_device_state_changed(self, device_id, state):
+        self.loop = False
+
+    def on_property_value_changed(self, device_id, key):
+        self.loop = False
+
 class DeviceManager:
     _instance = None
 
@@ -46,6 +52,7 @@ class DeviceManager:
         self.callback_host_list = None
         self.callback_mic_device_list = None
         self.callback_speaker_device_list = None
+        self.callback_prev_update = None
 
         self.monitoring_flag = False
         self.startMonitoring()
@@ -133,8 +140,8 @@ class DeviceManager:
                 while cb.loop is True:
                     sleep(1)
                 enumerator.UnregisterEndpointNotificationCallback(cb)
-                sleep(1)
-
+                self.runPrevUpdateDevices()
+                sleep(2)
                 self.update()
                 self.noticeDefaultDevice()
 
@@ -184,6 +191,15 @@ class DeviceManager:
 
     def clearCallbackSpeakerDeviceList(self):
         self.callback_speaker_device_list = None
+
+    def setCallbackPrevUpdateDevices(self, callback):
+        self.callback_prev_update = callback
+
+    def clearCallbackPrevUpdateDevices(self):
+        self.callback_prev_update = None
+
+    def runPrevUpdateDevices(self):
+        self.callback_prev_update()
 
     def noticeDefaultDevice(self):
         if self.callback_default_mic_device is not None:
