@@ -248,7 +248,7 @@ class Controller:
                 # update textbox message log (Received)
                 self.run(
                     200,
-                    self.run_mapping["speaker"],
+                    self.run_mapping["transcription_speaker"],
                     {
                         "message":message,
                         "translation":translation,
