@@ -377,7 +377,7 @@ class Config:
 
     @TEXTBOX_UI_SCALING.setter
     def TEXTBOX_UI_SCALING(self, value):
-        if isinstance(value, int) and self.TEXTBOX_UI_SCALING_RANGE[0] <= value <= self.TEXTBOX_UI_SCALING_RANGE[1]:
+        if isinstance(value, int):
             self._TEXTBOX_UI_SCALING = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

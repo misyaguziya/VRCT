@@ -24,6 +24,7 @@ export const Appearance = () => {
         <>
             <UiLanguageContainer />
             <UiScalingContainer />
+            <MessageLogUiScalingContainer />
 
 
 
@@ -135,6 +136,49 @@ const UiScalingContainer = () => {
             onchangeCommittedFunction={onchangeCommittedFunction}
             onchangeFunction={onchangeFunction}
             variable={ui_ui_scaling}
+            marks={marks}
+            step={null}
+            track={false}
+        />
+    );
+};
+
+import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
+
+const MessageLogUiScalingContainer = () => {
+    const { t } = useTranslation();
+    const { currentMessageLogUiScaling, setMessageLogUiScaling } = useMessageLogUiScaling();
+    const [ui_message_log_ui_scaling, setUiMessageLogUiScaling] = useState(currentMessageLogUiScaling.data);
+
+    const onchangeFunction = (value) => {
+        setUiMessageLogUiScaling(value);
+    };
+    const onchangeCommittedFunction = (value) => {
+        setMessageLogUiScaling(value);
+    };
+    useEffect(() => {
+        setUiMessageLogUiScaling(currentMessageLogUiScaling.data);
+    }, [currentMessageLogUiScaling.data]);
+
+    const createMarks = (min, max) => {
+        const marks = [];
+        for (let value = min; value <= max; value += 10) {
+            const label = ([50,70,130,140,160,170,190].includes(value)) ? "" : value;
+            marks.push({ value, label: `${label}` });
+        }
+        return marks;
+    };
+
+    const marks = createMarks(40, 200);
+
+    return (
+        <SliderContainer
+            label={t("config_page.textbox_ui_size.label") + " (%)"}
+            min="40"
+            max="200"
+            onchangeCommittedFunction={onchangeCommittedFunction}
+            onchangeFunction={onchangeFunction}
+            variable={ui_message_log_ui_scaling}
             marks={marks}
             step={null}
             track={false}
