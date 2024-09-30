@@ -1,7 +1,7 @@
 @import "@scss_mixins";
 
 .container {
-    margin-bottom: 1rem;
+    margin-bottom: 1em;
     width: 100%;
     flex-direction: column;
     display: flex;
@@ -18,7 +18,7 @@
 .info_box {
     position: relative;
     display: flex;
-    gap: 0.8rem;
+    gap: 0.8em;
     justify-content: center;
     &.sent_message {
         align-items: end;
@@ -30,16 +30,16 @@
 }
 
 .loader {
-    @include loader(0.8rem, 0.1rem, left, -1rem);
+    @include loader(0.8em, 0.1em, left, -1em);
 }
 
 .time {
-    font-size: 1rem;
+    font-size: 1em;
     color: var(--dark_600_color);
 }
 
 .category {
-    font-size: 1rem;
+    font-size: 1em;
     &.sent_message {
         color: var(--sent_400_color);
     }
@@ -63,11 +63,11 @@
 .message_main {
     color: var(--dark_basic_text_color);
     user-select: text;
-    font-size: 1.4rem;
+    font-size: 1.4em;
 }
 
 .message_second {
     color: var(--dark_450_color);
     user-select: text;
-    font-size: 1rem;
+    font-size: 1em;
 }
