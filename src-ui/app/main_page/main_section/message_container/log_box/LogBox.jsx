@@ -41,9 +41,23 @@ export const LogBox = () => {
 
     return (
         <div id="log_container" className={styles.container} ref={log_container_ref}>
+            <MessageLogUiSizeController />
             {currentMessageLogs.data.map(message_data => (
                 <MessageContainer key={message_data.id} {...message_data} />
             ))}
         </div>
     );
+};
+
+import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
+const MessageLogUiSizeController = () => {
+    const { currentMessageLogUiScaling } = useMessageLogUiScaling();
+    const font_size = currentMessageLogUiScaling.data / 100;
+
+    useEffect(() => {
+        const log_container_el = document.getElementById("log_container");
+        log_container_el.style.setProperty("font-size", `${font_size}rem`);
+    }, [currentMessageLogUiScaling.data]);
+
+    return null;
 };

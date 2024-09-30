@@ -32,6 +32,7 @@ import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClear
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useUiScaling } from "@logics_configs/useUiScaling";
+import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
 
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
@@ -64,6 +65,7 @@ const StartPythonFacadeComponent = () => {
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
     const { getUiScaling } = useUiScaling();
+    const { getMessageLogUiScaling } = useMessageLogUiScaling();
 
     const {
         getSelectedPresetTabNumber,
@@ -83,6 +85,7 @@ const StartPythonFacadeComponent = () => {
             asyncStartPython().then((result) => {
                 getUiLanguage();
                 getUiScaling();
+                getMessageLogUiScaling();
                 getIsMainPageCompactMode();
                 getMessageInputBoxRatio();
 
