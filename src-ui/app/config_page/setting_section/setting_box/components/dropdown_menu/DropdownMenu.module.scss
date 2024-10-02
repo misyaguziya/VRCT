@@ -60,6 +60,8 @@
     flex-direction: column;
     gap: 0.1rem;
     white-space: nowrap;
+    max-height: 20rem;
+    overflow-y: scroll;
 }
 
 .value_button {
