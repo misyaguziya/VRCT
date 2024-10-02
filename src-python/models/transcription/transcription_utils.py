@@ -4,6 +4,7 @@ import comtypes
 from pyaudiowpatch import PyAudio, paWASAPI
 from pycaw.callbacks import MMNotificationClient
 from pycaw.utils import AudioUtilities
+from utils import printLog
 
 class Client(MMNotificationClient):
     def __init__(self):
@@ -22,8 +23,8 @@ class Client(MMNotificationClient):
     def on_device_state_changed(self, device_id, state):
         self.loop = False
 
-    def on_property_value_changed(self, device_id, key):
-        self.loop = False
+    # def on_property_value_changed(self, device_id, key):
+    #     self.loop = False
 
 class DeviceManager:
     _instance = None
@@ -39,6 +40,7 @@ class DeviceManager:
         self.default_mic_device = {"host": {"name": "NoHost"}, "device": {"name": "NoDevice"}}
         self.speaker_devices = [{"name": "NoDevice"}]
         self.default_speaker_device = {"device": {"name": "NoDevice"}}
+
         self.update()
 
         self.prev_mic_host = [host for host in self.mic_devices]
@@ -47,12 +49,19 @@ class DeviceManager:
         self.prev_speaker_devices = self.speaker_devices
         self.prev_default_speaker_device = self.default_speaker_device
 
+        self.update_flag_default_mic_device = False
+        self.update_flag_default_speaker_device = False
+        self.update_flag_host_list = False
+        self.update_flag_mic_device_list = False
+        self.update_flag_speaker_device_list = False
+
         self.callback_default_mic_device = None
         self.callback_default_speaker_device = None
         self.callback_host_list = None
         self.callback_mic_device_list = None
         self.callback_speaker_device_list = None
-        self.callback_prev_update = None
+        self.callback_process_before_update_devices = None
+        self.callback_process_after_update_devices = None
 
         self.monitoring_flag = False
         self.startMonitoring()
@@ -130,30 +139,71 @@ class DeviceManager:
         self.speaker_devices = buffer_speaker_devices
         self.default_speaker_device = buffer_default_speaker_device
 
+    def checkUpdate(self):
+        printLog("checkUpdate")
+        if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
+            printLog("checkUpdate: default_mic_device")
+            self.update_flag_default_mic_device = True
+            self.prev_default_mic_device = self.default_mic_device
+        if self.prev_default_speaker_device["device"]["name"] != self.default_speaker_device["device"]["name"]:
+            printLog("checkUpdate: default_speaker_device")
+            self.update_flag_default_speaker_device = True
+            self.prev_default_speaker_device = self.default_speaker_device
+        if self.prev_mic_host != [host for host in self.mic_devices]:
+            printLog("checkUpdate: mic_host")
+            self.update_flag_host_list = True
+            self.prev_mic_host = [host for host in self.mic_devices]
+        if self.prev_mic_devices != self.mic_devices:
+            printLog("checkUpdate: mic_devices")
+            self.update_flag_mic_device_list = True
+            self.prev_mic_devices = self.mic_devices
+        if self.prev_speaker_devices != self.speaker_devices:
+            printLog("checkUpdate: speaker_devices")
+            self.update_flag_speaker_device_list = True
+            self.prev_speaker_devices = self.speaker_devices
+
+        update_flag = (
+            self.update_flag_default_mic_device or
+            self.update_flag_default_speaker_device or
+            self.update_flag_host_list or
+            self.update_flag_mic_device_list or
+            self.update_flag_speaker_device_list
+        )
+        return update_flag
+
     def monitoring(self):
-        comtypes.CoInitialize()
-        cb = Client()
-        enumerator = AudioUtilities.GetDeviceEnumerator()
-        enumerator.RegisterEndpointNotificationCallback(cb)
         try:
             while self.monitoring_flag is True:
                 try:
-                    while cb.loop is True:
+                    comtypes.CoInitialize()
+                    self.cb = Client()
+                    self.enumerator = AudioUtilities.GetDeviceEnumerator()
+                    self.enumerator.RegisterEndpointNotificationCallback(self.cb)
+                    while self.cb.loop is True:
+                        printLog("Monitoring Loop")
                         sleep(1)
-                    enumerator.UnregisterEndpointNotificationCallback(cb)
-                    self.runPrevUpdateDevices()
+                    self.enumerator.UnregisterEndpointNotificationCallback(self.cb)
+                except Exception as e:
+                    printLog("Device Monitoring: ", e)
+                finally:
+                    printLog("Device Monitoring Finally Init")
+                    comtypes.CoUninitialize()
+
+                printLog("Run Process Before Update Devices")
+                self.runProcessBeforeUpdateDevices()
+                while True:
                     sleep(2)
                     self.update()
-                    self.noticeDefaultDevice()
-                except Exception:
-                    pass
-                finally:
-                    cb = Client()
-                    enumerator = AudioUtilities.GetDeviceEnumerator()
-                    enumerator.RegisterEndpointNotificationCallback(cb)
-        except Exception:
-            pass
-        comtypes.CoUninitialize()
+                    if self.checkUpdate() is True:
+                        break
+                printLog("Notice Update Devices")
+                self.noticeUpdateDevices()
+                printLog("Run Process After Update Devices")
+                self.runProcessAfterUpdateDevices()
+
+        except Exception as e:
+            printLog("Device Monitoring Exception: ", e)
+        printLog("Device Monitoring End")
 
     def startMonitoring(self):
         self.monitoring_flag = True
@@ -195,46 +245,56 @@ class DeviceManager:
     def clearCallbackSpeakerDeviceList(self):
         self.callback_speaker_device_list = None
 
-    def setCallbackPrevUpdateDevices(self, callback):
-        self.callback_prev_update = callback
+    def setCallbackProcessBeforeUpdateDevices(self, callback):
+        self.callback_process_before_update_devices = callback
 
-    def clearCallbackPrevUpdateDevices(self):
-        self.callback_prev_update = None
+    def clearCallbackProcessBeforeUpdateDevices(self):
+        self.callback_process_before_update_devices = None
 
-    def runPrevUpdateDevices(self):
-        self.callback_prev_update()
+    def runProcessBeforeUpdateDevices(self):
+        self.callback_process_before_update_devices()
 
-    def noticeDefaultDevice(self):
-        if self.callback_default_mic_device is not None:
-            if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
-                self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
-                self.prev_default_mic_device = self.default_mic_device
+    def setCallbackProcessAfterUpdateDevices(self, callback):
+        self.callback_process_after_update_devices = callback
 
-        if self.callback_default_speaker_device is not None:
-            if self.prev_default_speaker_device["device"]["name"] != self.default_speaker_device["device"]["name"]:
-                self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
-                self.prev_default_speaker_device = self.default_speaker_device
+    def clearCallbackProcessAfterUpdateDevices(self):
+        self.callback_process_after_update_devices = None
 
-        if self.callback_host_list is not None:
-            if self.prev_mic_host != [host for host in self.mic_devices]:
-                self.callback_host_list()
-                self.prev_mic_host = [host for host in self.mic_devices]
+    def runProcessAfterUpdateDevices(self):
+        self.callback_process_after_update_devices()
 
-        if self.callback_mic_device_list is not None:
-            if {key: [device['name'] for device in devices] for key, devices in self.prev_mic_devices.items()} != {key: [device['name'] for device in devices] for key, devices in self.mic_devices.items()}:
-                self.callback_mic_device_list()
-                self.prev_mic_devices = self.mic_devices
+    def noticeUpdateDevices(self):
+        if self.callback_default_mic_device is not None and self.update_flag_default_mic_device is True:
+            self.setMicDefaultDevice()
+        if self.callback_default_speaker_device is not None and self.update_flag_default_speaker_device is True:
+            self.setSpeakerDefaultDevice()
+        if self.callback_host_list is not None and self.update_flag_host_list is True:
+            self.setMicHost()
+        if self.callback_mic_device_list is not None and self.update_flag_mic_device_list is True:
+            self.setMicDeviceList()
+        if self.callback_speaker_device_list is not None and self.update_flag_speaker_device_list is True:
+            self.setSpeakerDeviceList()
 
-        if self.callback_speaker_device_list is not None:
-            if [device['name'] for device in self.prev_speaker_devices] != [device['name'] for device in self.speaker_devices]:
-                self.callback_speaker_device_list()
-                self.prev_speaker_devices = self.speaker_devices
+        self.update_flag_default_mic_device = False
+        self.update_flag_default_speaker_device = False
+        self.update_flag_host_list = False
+        self.update_flag_mic_device_list = False
+        self.update_flag_speaker_device_list = False
 
-    def forceSetMicDefaultDevice(self):
+    def setMicDefaultDevice(self):
         self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
 
-    def forceSetSpeakerDefaultDevice(self):
+    def setSpeakerDefaultDevice(self):
         self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
+
+    def setMicHost(self):
+        self.callback_host_list()
+
+    def setMicDeviceList(self):
+        self.callback_mic_device_list()
+
+    def setSpeakerDeviceList(self):
+        self.callback_speaker_device_list()
 
     def getMicDevices(self):
         return self.mic_devices

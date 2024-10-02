@@ -56,7 +56,25 @@ class Controller:
             model.getListSpeakerDevice(),
         )
 
-    def prevUpdateSelectedDevices(self) -> None:
+    def restartAccessDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            printLog("Restart Access Devices", "Start Mic Transcript")
+            self.startThreadingTranscriptionSendMessage()
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            printLog("Restart Access Devices", "Start Speaker Transcript")
+            self.startThreadingTranscriptionReceiveMessage()
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            printLog("Restart Access Devices", "Start Check Mic Energy")
+            model.startCheckMicEnergy(
+                self.progressBarMicEnergy,
+            )
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            printLog("Restart Access Devices", "Start Check Speaker Energy")
+            model.startCheckSpeakerEnergy(
+                self.progressBarSpeakerEnergy,
+            )
+
+    def stopAccessDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             model.stopMicTranscript()
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -70,9 +88,11 @@ class Controller:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            model.startMicTranscript()
+            self.startThreadingTranscriptionSendMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.startCheckMicEnergy()
+            model.startCheckMicEnergy(
+                self.progressBarMicEnergy,
+            )
         self.run(
             200,
             self.run_mapping["selected_mic_device"],
@@ -82,9 +102,11 @@ class Controller:
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            model.startSpeakerTranscript()
+            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.startCheckSpeakerEnergy()
+            model.startCheckSpeakerEnergy(
+                self.progressBarSpeakerEnergy,
+            )
         self.run(
             200,
             self.run_mapping["selected_speaker_device"],
@@ -599,16 +621,18 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         config.AUTO_MIC_SELECT = True
-        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
+        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-        device_manager.noticeDefaultDevice()
-        device_manager.forceSetMicDefaultDevice()
+        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+        device_manager.noticeUpdateDevices()
+        device_manager.setMicDefaultDevice()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackPrevUpdateDevices()
+        device_manager.clearCallbackProcessBeforeUpdateDevices()
         device_manager.clearCallbackDefaultMicDevice()
+        device_manager.clearCallbackProcessAfterUpdateDevices()
         config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
@@ -616,13 +640,14 @@ class Controller:
     def getSelectedMicHost(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_MIC_HOST}
 
-    @staticmethod
-    def setSelectedMicHost(data, *args, **kwargs) -> dict:
+    def setSelectedMicHost(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_HOST = data
         config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
-            model.startCheckMicEnergy()
+            model.startCheckMicEnergy(
+                self.progressBarMicEnergy,
+            )
         return {"status":200,
                 "result":{
                     "host":config.SELECTED_MIC_HOST,
@@ -634,12 +659,13 @@ class Controller:
     def getSelectedMicDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_MIC_DEVICE}
 
-    @staticmethod
-    def setSelectedMicDevice(data, *args, **kwargs) -> dict:
+    def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
-            model.startCheckMicEnergy()
+            model.startCheckMicEnergy(
+                self.progressBarMicEnergy,
+            )
         return {"status":200, "result": config.SELECTED_MIC_DEVICE}
 
     @staticmethod
@@ -784,16 +810,18 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         config.AUTO_SPEAKER_SELECT = True
-        device_manager.setCallbackPrevUpdateDevices(self.prevUpdateSelectedDevices)
+        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-        device_manager.noticeDefaultDevice()
-        device_manager.forceSetSpeakerDefaultDevice()
+        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+        device_manager.noticeUpdateDevices()
+        device_manager.setSpeakerDefaultDevice()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackPrevUpdateDevices()
+        device_manager.clearCallbackProcessBeforeUpdateDevices()
         device_manager.clearCallbackDefaultSpeakerDevice()
+        device_manager.clearCallbackProcessAfterUpdateDevices()
         config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
@@ -801,12 +829,13 @@ class Controller:
     def getSelectedSpeakerDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
-    @staticmethod
-    def setSelectedSpeakerDevice(data, *args, **kwargs) -> dict:
+    def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.stopCheckSpeakerEnergy()
-            model.startCheckSpeakerEnergy()
+            model.startCheckSpeakerEnergy(
+                self.progressBarSpeakerEnergy,
+            )
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     @staticmethod
