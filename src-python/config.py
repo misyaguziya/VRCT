@@ -3,8 +3,6 @@ import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
-import tkinter as tk
-from tkinter import font
 from models.transcription.transcription_utils import device_manager
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -399,12 +397,9 @@ class Config:
 
     @FONT_FAMILY.setter
     def FONT_FAMILY(self, value):
-        root = tk.Tk()
-        root.withdraw()
-        if value in list(font.families()):
+        if isinstance(value, str):
             self._FONT_FAMILY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-        root.destroy()
 
     @property
     @json_serializable('UI_LANGUAGE')
