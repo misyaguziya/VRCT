@@ -221,8 +221,13 @@ import { invoke } from "@tauri-apps/api/tauri";
 const useAsyncFetchFonts = () => {
     const { updateSelectableFontFamilyList } = useStore_SelectableFontFamilyList();
     const asyncFetchFonts = async () => {
-        const fonts = await invoke("get_font_list");
-        updateSelectableFontFamilyList(arrayToObject(fonts));
+        try {
+            let fonts = await invoke("get_font_list");
+            fonts = fonts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+            updateSelectableFontFamilyList(arrayToObject(fonts));
+        } catch (error) {
+            console.error("Error fetching fonts:", error);
+        }
     };
     return { asyncFetchFonts };
 };
