@@ -31,6 +31,8 @@ from models.overlay.overlay_image import OverlayImage
 
 from config import config
 
+import utils
+
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
         super(threadFnc, self).__init__(daemon=daemon, target=fnc, *args, **kwargs)
@@ -600,14 +602,8 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
-        if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultSpeakerDevice()
-            speaker_device_name = default_device["device"]["name"]
-        else:
-            speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-
         speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+        selected_speaker_device = [device for device in speaker_device_list if device["name"] == config.SELECTED_SPEAKER_DEVICE]
 
         if len(selected_speaker_device) == 0:
             return False
@@ -678,12 +674,16 @@ class Model:
 
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
+            utils.printLog("stop speaker_print_transcript")
             self.speaker_print_transcript.stop()
             self.speaker_print_transcript.join()
             self.speaker_print_transcript = None
+            utils.printLog("stopped speaker_audio_recorder")
         if isinstance(self.speaker_audio_recorder, SelectedSpeakerEnergyAndAudioRecorder):
+            utils.printLog("stop speaker_audio_recorder")
             self.speaker_audio_recorder.stop()
             self.speaker_audio_recorder = None
+            utils.printLog("stopped speaker_audio_recorder")
         # if isinstance(self.speaker_get_energy, threadFnc):
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
@@ -692,14 +692,8 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_speaker_energy_fnc = fnc
 
-        if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultSpeakerDevice()
-            speaker_device_name = default_device["device"]["name"]
-        else:
-            speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-
         speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+        selected_speaker_device = [device for device in speaker_device_list if device["name"] == config.SELECTED_SPEAKER_DEVICE]
 
         if len(selected_speaker_device) == 0:
             return False
@@ -723,13 +717,17 @@ class Model:
 
     def stopCheckSpeakerEnergy(self):
         if isinstance(self.speaker_energy_plot_progressbar, threadFnc):
+            utils.printLog("stop speaker_energy_plot_progressbar")
             self.speaker_energy_plot_progressbar.stop()
             self.speaker_energy_plot_progressbar.join()
             self.speaker_energy_plot_progressbar = None
+            utils.printLog("stopped speaker_energy_plot_progressbar")
         if isinstance(self.speaker_energy_recorder, SelectedSpeakerEnergyRecorder):
+            utils.printLog("stopped speaker_energy_recorder")
             self.speaker_energy_recorder.resume()
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
+            utils.printLog("stopped speaker_energy_recorder")
 
     def createOverlayImageShort(self, message, translation):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
