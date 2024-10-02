@@ -25,6 +25,7 @@ export const Appearance = () => {
             <UiLanguageContainer />
             <UiScalingContainer />
             <MessageLogUiScalingContainer />
+            <FontFamilyContainer />
 
 
 
@@ -182,6 +183,30 @@ const MessageLogUiScalingContainer = () => {
             marks={marks}
             step={null}
             track={false}
+        />
+    );
+};
+import { useStore_SelectableFontFamilyList } from "@store";
+import { DropdownMenuContainer } from "../components/useSettingBox";
+import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
+const FontFamilyContainer = () => {
+    const { t } = useTranslation();
+    const { currentSelectedFontFamily, setSelectedFontFamily } = useSelectedFontFamily();
+
+    const selectFunction = (selected_data) => {
+        setSelectedFontFamily(selected_data.selected_id);
+    };
+    const { currentSelectableFontFamilyList } = useStore_SelectableFontFamilyList();
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="font_family"
+            label={t("config_page.font_family.label")}
+            desc={t("config_page.font_family.label")}
+            selected_id={currentSelectedFontFamily.data}
+            list={currentSelectableFontFamilyList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedFontFamily.state}
         />
     );
 };
