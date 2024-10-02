@@ -15,6 +15,7 @@ export const App = () => {
             <ConfigPage />
             <MainPage />
             <UiSizeController />
+            <FontFamilyController />
         </div>
     );
 };
@@ -33,6 +34,7 @@ import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonTy
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useUiScaling } from "@logics_configs/useUiScaling";
 import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
+import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
 
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
@@ -47,6 +49,7 @@ const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const main_page = getCurrent();
+    const { asyncFetchFonts } = useAsyncFetchFonts();
 
     const { getMicHostList } = useMicHostList();
     const { getMicDeviceList } = useMicDeviceList();
@@ -66,6 +69,7 @@ const StartPythonFacadeComponent = () => {
     const { getUiLanguage } = useUiLanguage();
     const { getUiScaling } = useUiScaling();
     const { getMessageLogUiScaling } = useMessageLogUiScaling();
+    const { getSelectedFontFamily } = useSelectedFontFamily();
 
     const {
         getSelectedPresetTabNumber,
@@ -88,6 +92,9 @@ const StartPythonFacadeComponent = () => {
                 getMessageLogUiScaling();
                 getIsMainPageCompactMode();
                 getMessageInputBoxRatio();
+
+                asyncFetchFonts();
+                getSelectedFontFamily();
 
                 getSoftwareVersion();
 
@@ -191,7 +198,36 @@ const UiSizeController = () => {
 
     useEffect(() => {
         document.documentElement.style.setProperty("font-size", `${font_size}%`);
+        document.documentElement.style.setProperty("font-family", `Yu Gothic UI`);
     }, [currentUiScaling.data]);
 
     return null;
+};
+
+
+const FontFamilyController = () => {
+    const { currentSelectedFontFamily } = useSelectedFontFamily();
+    useEffect(() => {
+        document.documentElement.style.setProperty("font-family", `${currentSelectedFontFamily.data}`);
+    }, [currentSelectedFontFamily.data]);
+
+    return null;
+};
+
+import { useStore_SelectableFontFamilyList } from "@store";
+import { arrayToObject } from "@utils/arrayToObject";
+
+import { invoke } from "@tauri-apps/api/tauri";
+const useAsyncFetchFonts = () => {
+    const { updateSelectableFontFamilyList } = useStore_SelectableFontFamilyList();
+    const asyncFetchFonts = async () => {
+        try {
+            let fonts = await invoke("get_font_list");
+            fonts = fonts.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+            updateSelectableFontFamilyList(arrayToObject(fonts));
+        } catch (error) {
+            console.error("Error fetching fonts:", error);
+        }
+    };
+    return { asyncFetchFonts };
 };

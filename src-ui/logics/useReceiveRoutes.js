@@ -25,6 +25,7 @@ import { useMicThreshold } from "@logics_configs/useMicThreshold";
 import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
 import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
+import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
 
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useUiScaling } from "@logics_configs/useUiScaling";
@@ -75,6 +76,7 @@ export const useReceiveRoutes = () => {
     } = useVolume();
 
     const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
+    const { updateSelectedFontFamily } = useSelectedFontFamily();
 
 
     const routes = {
@@ -207,6 +209,9 @@ export const useReceiveRoutes = () => {
 
         "/get/data/textbox_ui_scaling": updateMessageLogUiScaling,
         "/set/data/textbox_ui_scaling": updateMessageLogUiScaling,
+
+        "/get/data/font_family": updateSelectedFontFamily,
+        "/set/data/font_family": updateSelectedFontFamily,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
