@@ -134,6 +134,8 @@ class DeviceManager:
                 if buffer_default_speaker_device["device"]["name"] != "NoDevice":
                     break
 
+        printLog(self.mic_devices)
+
         self.mic_devices = buffer_mic_devices
         self.default_mic_device = buffer_default_mic_device
         self.speaker_devices = buffer_speaker_devices
@@ -152,11 +154,11 @@ class DeviceManager:
             printLog("checkUpdate: mic_host")
             self.update_flag_host_list = True
             self.prev_mic_host = [host for host in self.mic_devices]
-        if self.prev_mic_devices != self.mic_devices:
+        if {key: [device['name'] for device in devices] for key, devices in self.prev_mic_devices.items()} != {key: [device['name'] for device in devices] for key, devices in self.mic_devices.items()}:
             printLog("checkUpdate: mic_devices")
             self.update_flag_mic_device_list = True
             self.prev_mic_devices = self.mic_devices
-        if self.prev_speaker_devices != self.speaker_devices:
+        if [device['name'] for device in self.prev_speaker_devices] != [device['name'] for device in self.speaker_devices]:
             printLog("checkUpdate: speaker_devices")
             self.update_flag_speaker_device_list = True
             self.prev_speaker_devices = self.speaker_devices
@@ -184,8 +186,11 @@ class DeviceManager:
                     comtypes.CoUninitialize()
                     self.runProcessBeforeUpdateDevices()
                     sleep(2)
-                    self.update()
-                    self.checkUpdate()
+                    for _ in range(10):
+                        self.update()
+                        if self.checkUpdate():
+                            break
+                        sleep(2)
                     self.noticeUpdateDevices()
                     self.runProcessAfterUpdateDevices()
                 except Exception as e:
