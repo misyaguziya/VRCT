@@ -12,7 +12,7 @@ class Controller:
     def __init__(self) -> None:
         self.run_mapping = {}
         self.run = None
-        self.transcription_access_status = True
+        self.device_access_status = True
 
     def setRunMapping(self, run_mapping:dict) -> None:
         self.run_mapping = run_mapping
@@ -87,12 +87,6 @@ class Controller:
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
-        if config.ENABLE_TRANSCRIPTION_SEND is True:
-            self.startThreadingTranscriptionSendMessage()
-        if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.startCheckMicEnergy(
-                self.progressBarMicEnergy,
-            )
         self.run(
             200,
             self.run_mapping["selected_mic_device"],
@@ -101,12 +95,6 @@ class Controller:
 
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
-        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.startCheckSpeakerEnergy(
-                self.progressBarSpeakerEnergy,
-            )
         self.run(
             200,
             self.run_mapping["selected_speaker_device"],
@@ -644,10 +632,8 @@ class Controller:
         config.SELECTED_MIC_HOST = data
         config.SELECTED_MIC_DEVICE = model.getMicDefaultDevice()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.stopCheckMicEnergy()
-            model.startCheckMicEnergy(
-                self.progressBarMicEnergy,
-            )
+            self.stopThreadingCheckMicEnergy()
+            self.startThreadingTranscriptionSendMessage()
         return {"status":200,
                 "result":{
                     "host":config.SELECTED_MIC_HOST,
@@ -662,10 +648,8 @@ class Controller:
     def setSelectedMicDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_MIC_DEVICE = data
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            model.stopCheckMicEnergy()
-            model.startCheckMicEnergy(
-                self.progressBarMicEnergy,
-            )
+            self.stopThreadingCheckMicEnergy()
+            self.startThreadingTranscriptionSendMessage()
         return {"status":200, "result": config.SELECTED_MIC_DEVICE}
 
     @staticmethod
@@ -832,10 +816,8 @@ class Controller:
     def setSelectedSpeakerDevice(self, data, *args, **kwargs) -> dict:
         config.SELECTED_SPEAKER_DEVICE = data
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            model.stopCheckSpeakerEnergy()
-            model.startCheckSpeakerEnergy(
-                self.progressBarSpeakerEnergy,
-            )
+            self.stopThreadingCheckSpeakerEnergy()
+            self.startThreadingTranscriptionReceiveMessage()
         return {"status":200, "result":config.SELECTED_SPEAKER_DEVICE}
 
     @staticmethod
@@ -1293,28 +1275,22 @@ class Controller:
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        model.startCheckSpeakerEnergy(
-            self.progressBarSpeakerEnergy,
-        )
+        self.startThreadingCheckSpeakerEnergy()
         config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
-    @staticmethod
-    def setDisableCheckSpeakerThreshold(*args, **kwargs) -> dict:
-        model.stopCheckSpeakerEnergy()
+    def setDisableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
+        self.stopThreadingCheckSpeakerEnergy()
         config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        model.startCheckMicEnergy(
-            self.progressBarMicEnergy,
-        )
+        self.startThreadingCheckMicEnergy()
         config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
-    @staticmethod
-    def setDisableCheckMicThreshold(*args, **kwargs) -> dict:
-        model.stopCheckMicEnergy()
+    def setDisableCheckMicThreshold(self, *args, **kwargs) -> dict:
+        self.stopThreadingCheckMicEnergy()
         config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
@@ -1428,11 +1404,11 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], "CTranslate2")
 
     def startTranscriptionSendMessage(self) -> None:
-        while self.transcription_access_status is False:
+        while self.device_access_status is False:
             sleep(1)
-        self.transcription_access_status = False
+        self.device_access_status = False
         model.startMicTranscript(self.micMessage)
-        self.transcription_access_status = True
+        self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -1450,11 +1426,11 @@ class Controller:
         th_stopTranscriptionSendMessage.join()
 
     def startTranscriptionReceiveMessage(self) -> None:
-        while self.transcription_access_status is False:
+        while self.device_access_status is False:
             sleep(1)
-        self.transcription_access_status = False
+        self.device_access_status = False
         model.startSpeakerTranscript(self.speakerMessage)
-        self.transcription_access_status = True
+        self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
@@ -1519,6 +1495,48 @@ class Controller:
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = engine
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], engines)
+
+    def startCheckMicEnergy(self) -> None:
+        while self.device_access_status is False:
+            sleep(1)
+        self.device_access_status = False
+        model.startCheckMicEnergy(self.progressBarMicEnergy)
+        self.device_access_status = True
+
+    def startThreadingCheckMicEnergy(self) -> None:
+        th_startCheckMicEnergy = Thread(target=self.startCheckMicEnergy)
+        th_startCheckMicEnergy.daemon = True
+        th_startCheckMicEnergy.start()
+
+    def stopCheckMicEnergy(self) -> None:
+        model.stopCheckMicEnergy()
+
+    def stopThreadingCheckMicEnergy(self) -> None:
+        th_stopCheckMicEnergy = Thread(target=self.stopCheckMicEnergy)
+        th_stopCheckMicEnergy.daemon = True
+        th_stopCheckMicEnergy.start()
+        th_stopCheckMicEnergy.join()
+
+    def startCheckSpeakerEnergy(self) -> None:
+        while self.device_access_status is False:
+            sleep(1)
+        self.device_access_status = False
+        model.startCheckSpeakerEnergy(self.progressBarSpeakerEnergy)
+        self.device_access_status = True
+
+    def startThreadingCheckSpeakerEnergy(self) -> None:
+        th_startCheckSpeakerEnergy = Thread(target=self.startCheckSpeakerEnergy)
+        th_startCheckSpeakerEnergy.daemon = True
+        th_startCheckSpeakerEnergy.start()
+
+    def stopCheckSpeakerEnergy(self) -> None:
+        model.stopCheckSpeakerEnergy()
+
+    def stopThreadingCheckSpeakerEnergy(self) -> None:
+        th_stopCheckSpeakerEnergy = Thread(target=self.stopCheckSpeakerEnergy)
+        th_stopCheckSpeakerEnergy.daemon = True
+        th_stopCheckSpeakerEnergy.start()
+        th_stopCheckSpeakerEnergy.join()
 
     @staticmethod
     def startThreadingDownloadCtranslate2Weight(callback:Callable[[float], None]) -> None:
