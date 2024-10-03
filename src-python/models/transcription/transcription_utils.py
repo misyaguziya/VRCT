@@ -140,7 +140,6 @@ class DeviceManager:
         self.default_speaker_device = buffer_default_speaker_device
 
     def checkUpdate(self):
-        printLog("checkUpdate")
         if self.prev_default_mic_device["device"]["name"] != self.default_mic_device["device"]["name"]:
             printLog("checkUpdate: default_mic_device")
             self.update_flag_default_mic_device = True
@@ -176,34 +175,26 @@ class DeviceManager:
             while self.monitoring_flag is True:
                 try:
                     comtypes.CoInitialize()
-                    self.cb = Client()
-                    self.enumerator = AudioUtilities.GetDeviceEnumerator()
-                    self.enumerator.RegisterEndpointNotificationCallback(self.cb)
-                    while self.cb.loop is True:
-                        printLog("Monitoring Loop")
+                    cb = Client()
+                    enumerator = AudioUtilities.GetDeviceEnumerator()
+                    enumerator.RegisterEndpointNotificationCallback(cb)
+                    while cb.loop is True:
                         sleep(1)
-                    self.enumerator.UnregisterEndpointNotificationCallback(self.cb)
+                    enumerator.UnregisterEndpointNotificationCallback(cb)
+                    comtypes.CoUninitialize()
+                    self.runProcessBeforeUpdateDevices()
+                    sleep(2)
+                    self.update()
+                    self.checkUpdate()
+                    self.noticeUpdateDevices()
+                    self.runProcessAfterUpdateDevices()
                 except Exception as e:
                     printLog("Device Monitoring: ", e)
                 finally:
                     printLog("Device Monitoring Finally Init")
-                    comtypes.CoUninitialize()
-
-                printLog("Run Process Before Update Devices")
-                self.runProcessBeforeUpdateDevices()
-                while True:
-                    sleep(2)
-                    self.update()
-                    if self.checkUpdate() is True:
-                        break
-                printLog("Notice Update Devices")
-                self.noticeUpdateDevices()
-                printLog("Run Process After Update Devices")
-                self.runProcessAfterUpdateDevices()
-
         except Exception as e:
-            printLog("Device Monitoring Exception: ", e)
-        printLog("Device Monitoring End")
+            printLog("Device Monitoring End Exception: ", e)
+
 
     def startMonitoring(self):
         self.monitoring_flag = True

@@ -76,9 +76,9 @@ class Controller:
 
     def stopAccessDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            model.stopMicTranscript()
+            self.stopThreadingTranscriptionSendMessage()
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            model.stopSpeakerTranscript()
+            self.stopThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
