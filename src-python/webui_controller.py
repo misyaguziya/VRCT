@@ -3,10 +3,10 @@ from time import sleep
 from subprocess import Popen
 from threading import Thread
 import re
+from device_manager import device_manager
 from config import config
 from model import model
 from utils import isUniqueStrings, printLog
-from models.transcription.transcription_utils import device_manager
 
 class Controller:
     def __init__(self) -> None:

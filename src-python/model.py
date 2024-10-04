@@ -12,12 +12,15 @@ from queue import Queue
 from threading import Thread
 from requests import get as requests_get
 import webbrowser
-
 from typing import Callable
+
 from flashtext import KeywordProcessor
 from pykakasi import kakasi
+
+from device_manager import device_manager
+from config import config
+
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import device_manager
 from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
@@ -28,8 +31,6 @@ from models.translation.translation_utils import checkCTranslate2Weight, downloa
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
-
-from config import config
 
 import utils
 
