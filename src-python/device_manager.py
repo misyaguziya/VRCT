@@ -257,7 +257,7 @@ class DeviceManager:
         if self.callback_default_speaker_device is not None and self.update_flag_default_speaker_device is True:
             self.setSpeakerDefaultDevice()
         if self.callback_host_list is not None and self.update_flag_host_list is True:
-            self.setMicHost()
+            self.setMicHostList()
         if self.callback_mic_device_list is not None and self.update_flag_mic_device_list is True:
             self.setMicDeviceList()
         if self.callback_speaker_device_list is not None and self.update_flag_speaker_device_list is True:
@@ -275,7 +275,7 @@ class DeviceManager:
     def setSpeakerDefaultDevice(self):
         self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
 
-    def setMicHost(self):
+    def setMicHostList(self):
         self.callback_host_list()
 
     def setMicDeviceList(self):
@@ -295,6 +295,17 @@ class DeviceManager:
 
     def getDefaultSpeakerDevice(self):
         return self.default_speaker_device
+
+    def forceUpdateAndSetMicDevices(self):
+        self.update()
+        self.setMicHostList()
+        self.setMicDeviceList()
+        self.setMicDefaultDevice()
+
+    def forceUpdateAndSetSpeakerDevices(self):
+        self.update()
+        self.setSpeakerDeviceList()
+        self.setSpeakerDefaultDevice()
 
 device_manager = DeviceManager()
 
