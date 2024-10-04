@@ -12,12 +12,15 @@ from queue import Queue
 from threading import Thread
 from requests import get as requests_get
 import webbrowser
-
 from typing import Callable
+
 from flashtext import KeywordProcessor
 from pykakasi import kakasi
+
+from device_manager import device_manager
+from config import config
+
 from models.translation.translation_translator import Translator
-from models.transcription.transcription_utils import device_manager
 from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
@@ -28,8 +31,6 @@ from models.translation.translation_utils import checkCTranslate2Weight, downloa
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
-
-from config import config
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
@@ -424,13 +425,8 @@ class Model:
         return result
 
     def startMicTranscript(self, fnc):
-        if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultMicDevice()
-            mic_host_name = default_device["host"]["name"]
-            mic_device_name = default_device["device"]["name"]
-        else:
-            mic_host_name = config.SELECTED_MIC_HOST
-            mic_device_name = config.SELECTED_MIC_DEVICE
+        mic_host_name = config.SELECTED_MIC_HOST
+        mic_device_name = config.SELECTED_MIC_DEVICE
 
         mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
@@ -451,7 +447,7 @@ class Model:
             device=mic_device,
             energy_threshold=config.MIC_THRESHOLD,
             dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
-            record_timeout=record_timeout,
+            phrase_time_limit=record_timeout,
         )
         # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
         self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
@@ -558,13 +554,8 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_mic_energy_fnc = fnc
 
-        if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultMicDevice()
-            mic_host_name = default_device["host"]["name"]
-            mic_device_name = default_device["device"]["name"]
-        else:
-            mic_host_name = config.SELECTED_MIC_HOST
-            mic_device_name = config.SELECTED_MIC_DEVICE
+        mic_host_name = config.SELECTED_MIC_HOST
+        mic_device_name = config.SELECTED_MIC_DEVICE
 
         mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
@@ -600,14 +591,8 @@ class Model:
             self.mic_energy_recorder = None
 
     def startSpeakerTranscript(self, fnc):
-        if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultSpeakerDevice()
-            speaker_device_name = default_device["device"]["name"]
-        else:
-            speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-
         speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+        selected_speaker_device = [device for device in speaker_device_list if device["name"] == config.SELECTED_SPEAKER_DEVICE]
 
         if len(selected_speaker_device) == 0:
             return False
@@ -624,7 +609,7 @@ class Model:
             device=speaker_device,
             energy_threshold=config.SPEAKER_THRESHOLD,
             dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
-            record_timeout=record_timeout,
+            phrase_time_limit=record_timeout,
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
         self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
@@ -692,14 +677,8 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_speaker_energy_fnc = fnc
 
-        if config.AUTO_SPEAKER_SELECT is True:
-            default_device = device_manager.getDefaultSpeakerDevice()
-            speaker_device_name = default_device["device"]["name"]
-        else:
-            speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-
         speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+        selected_speaker_device = [device for device in speaker_device_list if device["name"] == config.SELECTED_SPEAKER_DEVICE]
 
         if len(selected_speaker_device) == 0:
             return False
