@@ -426,13 +426,8 @@ class Model:
         return result
 
     def startMicTranscript(self, fnc):
-        if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultMicDevice()
-            mic_host_name = default_device["host"]["name"]
-            mic_device_name = default_device["device"]["name"]
-        else:
-            mic_host_name = config.SELECTED_MIC_HOST
-            mic_device_name = config.SELECTED_MIC_DEVICE
+        mic_host_name = config.SELECTED_MIC_HOST
+        mic_device_name = config.SELECTED_MIC_DEVICE
 
         mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
@@ -453,7 +448,7 @@ class Model:
             device=mic_device,
             energy_threshold=config.MIC_THRESHOLD,
             dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
-            record_timeout=record_timeout,
+            phrase_time_limit=record_timeout,
         )
         # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
         self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
@@ -560,13 +555,8 @@ class Model:
         if isinstance(fnc, Callable):
             self.check_mic_energy_fnc = fnc
 
-        if config.AUTO_MIC_SELECT is True:
-            default_device = device_manager.getDefaultMicDevice()
-            mic_host_name = default_device["host"]["name"]
-            mic_device_name = default_device["device"]["name"]
-        else:
-            mic_host_name = config.SELECTED_MIC_HOST
-            mic_device_name = config.SELECTED_MIC_DEVICE
+        mic_host_name = config.SELECTED_MIC_HOST
+        mic_device_name = config.SELECTED_MIC_DEVICE
 
         mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
         selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
@@ -620,7 +610,7 @@ class Model:
             device=speaker_device,
             energy_threshold=config.SPEAKER_THRESHOLD,
             dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
-            record_timeout=record_timeout,
+            phrase_time_limit=record_timeout,
         )
         # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
         self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
