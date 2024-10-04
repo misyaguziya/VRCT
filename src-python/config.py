@@ -3,7 +3,8 @@ import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
-from models.transcription.transcription_utils import device_manager
+
+from device_manager import device_manager
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
 
