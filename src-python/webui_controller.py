@@ -608,8 +608,7 @@ class Controller:
         device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-        device_manager.noticeUpdateDevices()
-        device_manager.setMicDefaultDevice()
+        device_manager.forceUpdateAndSetMicDevices()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -793,8 +792,8 @@ class Controller:
         device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-        device_manager.noticeUpdateDevices()
-        device_manager.setSpeakerDefaultDevice()
+        device_manager.forceUpdateAndSetSpeakerDevices()
+
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
@@ -1599,15 +1598,15 @@ class Controller:
             model.startCheckMuteSelfStatus()
 
         # init Auto device selection
+        device_manager.setCallbackHostList(self.updateMicHostList)
+        device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
+        device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
+
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
             self.setEnableAutoMicSelect()
 
         if config.AUTO_SPEAKER_SELECT is True:
             self.setEnableAutoSpeakerSelect()
-
-        device_manager.setCallbackHostList(self.updateMicHostList)
-        device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
-        device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
 
         printLog("End Initialization")
