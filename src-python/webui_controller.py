@@ -58,18 +58,14 @@ class Controller:
 
     def restartAccessDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
-            printLog("Restart Access Devices", "Start Mic Transcript")
             self.startThreadingTranscriptionSendMessage()
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            printLog("Restart Access Devices", "Start Speaker Transcript")
             self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
-            printLog("Restart Access Devices", "Start Check Mic Energy")
             model.startCheckMicEnergy(
                 self.progressBarMicEnergy,
             )
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
-            printLog("Restart Access Devices", "Start Check Speaker Energy")
             model.startCheckSpeakerEnergy(
                 self.progressBarSpeakerEnergy,
             )
