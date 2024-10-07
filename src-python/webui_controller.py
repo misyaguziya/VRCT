@@ -21,20 +21,6 @@ class Controller:
         self.run = run
 
     # response functions
-    def downloadSoftwareProgressBar(self, progress) -> None:
-        self.run(
-            200,
-            self.run_mapping["download_software"],
-            progress,
-        )
-
-    def updateSoftwareProgressBar(self, progress) -> None:
-        self.run(
-            200,
-            self.run_mapping["update_software"],
-            progress,
-        )
-
     def updateMicHostList(self) -> None:
         self.run(
             200,
@@ -331,6 +317,14 @@ class Controller:
     @staticmethod
     def getVersion(*args, **kwargs) -> dict:
         return {"status":200, "result":config.VERSION}
+
+    def checkSoftwareUpdated(self) -> dict:
+        update_flag =  model.checkSoftwareUpdated()
+        self.run(
+            200,
+            self.run_mapping["update_software_flag"],
+            update_flag,
+        )
 
     @staticmethod
     def getTransparencyRange(*args, **kwargs) -> dict:
@@ -1289,16 +1283,6 @@ class Controller:
         config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
-    # def updateSoftware(*args, **kwargs) -> dict:
-    #     printLog("Update callbackUpdateSoftware")
-    #     model.updateSoftware(restart=True, download=self.downloadSoftwareProgressBar, update=self.updateSoftwareProgressBar)
-    #     return {"status":200, "result":True}
-
-    # def restartSoftware(*args, **kwargs) -> dict:
-    #     printLog("Restart callbackRestartSoftware")
-    #     model.reStartSoftware()
-    #     return {"status":200, "result":True}
-
     @staticmethod
     def openFilepathLogs(*args, **kwargs) -> dict:
         Popen(['explorer', config.PATH_LOGS.replace('/', '\\')], shell=True)
@@ -1368,13 +1352,19 @@ class Controller:
                 }
             }
 
+    def updateSoftware(self, *args, **kwargs) -> dict:
+        th_start_update_software = Thread(target=model.updateSoftware)
+        th_start_update_software.daemon = True
+        th_start_update_software.start()
+        return {"status":200, "result":True}
+
     def downloadCtranslate2Weight(self, *args, **kwargs) -> dict:
         self.startThreadingDownloadCtranslate2Weight(self.downloadCTranslate2ProgressBar)
-        return {"status":200}
+        return {"status":200, "result":True}
 
     def downloadWhisperWeight(self, *args, **kwargs) -> dict:
         self.startThreadingDownloadWhisperWeight(self.downloadWhisperProgressBar)
-        return {"status":200}
+        return {"status":200, "result":True}
 
     @staticmethod
     def messageFormatter(format_type:str, translation:list, message:list) -> str:
@@ -1583,8 +1573,7 @@ class Controller:
 
         # check Software Updated
         printLog("Check Software Updated")
-        if model.checkSoftwareUpdated() is True:
-            pass
+        self.checkSoftwareUpdated()
 
         # init logger
         printLog("Init Logger")
