@@ -352,25 +352,25 @@ class Model:
 
     @staticmethod
     def updateSoftware():
-        try:
-            program_name = "updater.exe"
-            release_url = "https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest"
-            current_directory = config.PATH_LOCAL
-            res = requests_get(release_url)
-            assets = res.json()['assets']
-            url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
-
-            res = requests_get(url, stream=True)
-            with open(os_path.join(current_directory, program_name), 'wb') as file:
-                for chunk in res.iter_content(chunk_size=1024*5):
-                    file.write(chunk)
-        except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
-
-        command = [current_directory, program_name]
-        Popen(command, cwd=current_directory)
+        # try to update at most 5 times
+        for _ in range(5):
+            try:
+                program_name = "update.exe"
+                current_directory = config.PATH_LOCAL
+                res = requests_get(config.UPDATER_URL)
+                assets = res.json()['assets']
+                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
+                res = requests_get(url, stream=True)
+                with open(os_path.join(current_directory, program_name), 'wb') as file:
+                    for chunk in res.iter_content(chunk_size=1024*5):
+                        file.write(chunk)
+                break
+            except Exception:
+                import traceback
+                with open('error.log', 'a') as f:
+                    traceback.print_exc(file=f)
+        # run updater
+        Popen(program_name, cwd=current_directory)
 
     def getListMicHost(self):
         result = [host for host in device_manager.getMicDevices().keys()]
