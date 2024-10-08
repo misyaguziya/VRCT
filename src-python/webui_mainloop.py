@@ -10,9 +10,6 @@ from utils import printLog, printResponse, encodeBase64
 controller = Controller()
 
 run_mapping = {
-    "download_software":"/run/download_software",
-    "update_software":"/run/update_software",
-
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
 
@@ -35,6 +32,8 @@ run_mapping = {
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
+
+    "update_software_flag":"/run/update_software_flag",
 }
 
 controller.setRunMapping(run_mapping)
@@ -84,6 +83,8 @@ mapping = {
     "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
 
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
+
+    "/run/update_software": {"status": True, "variable":controller.updateSoftware},
 
     # Config Window
     # Appearance
@@ -304,9 +305,6 @@ mapping = {
     "/set/data/osc_port": {"status": True, "variable":controller.setOscPort},
 
     "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
-
-    # "/run/update_software": {"status": True, "variable":controller.updateSoftware},
-    # "/run/restart_software": {"status": True, "variable":controller.restartSoftware},
 }
 
 class Main:
