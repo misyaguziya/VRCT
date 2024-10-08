@@ -316,51 +316,25 @@ class Model:
 
     @staticmethod
     def updateSoftware(restart:bool=True, func=None):
-        def updateSoftwareTask():
-            filename = 'VRCT.zip'
-            program_name = 'VRCT.exe'
-            folder_name = '_internal'
-            tmp_directory_name = 'tmp'
-            batch_name = 'update.bat'
-            current_directory = config.PATH_LOCAL
-
+        # try to update at most 5 times
+        for _ in range(5):
             try:
-                res = requests_get(config.GITHUB_URL)
+                program_name = "update.exe"
+                current_directory = config.PATH_LOCAL
+                res = requests_get("https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest")
                 assets = res.json()['assets']
-                url = [i["browser_download_url"] for i in assets if i["name"] == filename][0]
-                with tempfile.TemporaryDirectory() as tmp_path:
-                    res = requests_get(url, stream=True)
-                    file_size = int(res.headers.get('content-length', 0))
-                    total_chunk = 0
-                    with open(os_path.join(tmp_path, filename), 'wb') as file:
-                        for chunk in res.iter_content(chunk_size=1024*5):
-                            file.write(chunk)
-                            total_chunk += len(chunk)
-                            if isinstance(func, Callable):
-                                func(progress=total_chunk/file_size, progress_type="downloading")
-                            print(f"downloaded {total_chunk}/{file_size}")
-
-                    with ZipFile(os_path.join(tmp_path, filename)) as zf:
-                        total_files = len(zf.infolist())
-                        extracted_files = 0
-                        for file_info in zf.infolist():
-                            extracted_files += 1
-                            zf.extract(file_info, os_path.join(current_directory, tmp_directory_name))
-                            if isinstance(func, Callable):
-                                func(progress=extracted_files/total_files, progress_type="extracting")
-                            print(f"extracted {extracted_files}/{total_files}")
-
-                copyfile(os_path.join(current_directory, folder_name, "batch", batch_name), os_path.join(current_directory, batch_name))
-                command = [os_path.join(current_directory, batch_name), program_name, folder_name, tmp_directory_name, str(restart)]
-                Popen(command, cwd=current_directory)
+                url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
+                res = requests_get(url, stream=True)
+                with open(os_path.join(current_directory, program_name), 'wb') as file:
+                    for chunk in res.iter_content(chunk_size=1024*5):
+                        file.write(chunk)
+                break
             except Exception:
                 import traceback
                 with open('error.log', 'a') as f:
                     traceback.print_exc(file=f)
-                webbrowser.open(config.BOOTH_URL, new=2, autoraise=True)
-        th_update_software = Thread(target=updateSoftwareTask)
-        th_update_software.daemon = True
-        th_update_software.start()
+        # run updater
+        Popen(program_name, cwd=current_directory)
 
     @staticmethod
     def reStartSoftware():
