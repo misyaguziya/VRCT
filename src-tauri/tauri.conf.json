@@ -13,8 +13,15 @@
     "allowlist": {
       "all": false,
       "window": {
+        "all": false,
         "setAlwaysOnTop": true,
-        "setDecorations": true
+        "setDecorations": true,
+        "close": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
     },
     "shell": {
         "all": false,
