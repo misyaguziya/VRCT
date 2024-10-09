@@ -60,6 +60,10 @@ class Config:
         return self._GITHUB_URL
 
     @property
+    def UPDATER_URL(self):
+        return self._UPDATER_URL
+
+    @property
     def BOOTH_URL(self):
         return self._BOOTH_URL
 
@@ -949,7 +953,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.7"
+        self._VERSION = "2.2.8"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
@@ -957,6 +961,7 @@ class Config:
         self._PATH_LOGS = os_path.join(self._PATH_LOCAL, "logs")
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+        self._UPDATER_URL = "https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest"
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
         self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
