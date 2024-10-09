@@ -321,7 +321,7 @@ class Model:
             try:
                 program_name = "update.exe"
                 current_directory = config.PATH_LOCAL
-                res = requests_get("https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest")
+                res = requests_get(config.UPDATER_URL)
                 assets = res.json()['assets']
                 url = [i["browser_download_url"] for i in assets if i["name"] == program_name][0]
                 res = requests_get(url, stream=True)
