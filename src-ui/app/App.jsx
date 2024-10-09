@@ -1,7 +1,5 @@
-import { getCurrent } from "@tauri-apps/api/window";
 import { useEffect, useRef } from "react";
 import { useStartPython } from "@logics/useStartPython";
-// import { useConfig } from "@logics/useConfig";
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
@@ -53,7 +51,6 @@ import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
-    const main_page = getCurrent();
     const { asyncFetchFonts } = useAsyncFetchFonts();
 
     const { getMicHostList } = useMicHostList();
