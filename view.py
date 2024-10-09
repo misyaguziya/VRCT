@@ -1784,10 +1784,11 @@ class View():
 
         self._hideConfirmationModal()
         vrct_gui.withdraw()
-        vrct_gui.updating_window.showUpdatingWindow()
+        # vrct_gui.updating_window.showUpdatingWindow()
 
         def func(**kwargs):
-            vrct_gui.updating_window.updateDownloadProgress(**kwargs)
+            pass
+        #     vrct_gui.updating_window.updateDownloadProgress(**kwargs)
         callFunctionIfCallable(self.view_variable.CALLBACK_UPDATE_SOFTWARE, func)
 
 
