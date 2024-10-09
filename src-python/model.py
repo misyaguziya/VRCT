@@ -89,7 +89,7 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
             config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
             config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
             config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
             config.OVERLAY_SETTINGS["opacity"],
