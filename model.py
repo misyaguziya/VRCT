@@ -1,6 +1,4 @@
 import gc
-import tempfile
-from zipfile import ZipFile
 from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
@@ -11,9 +9,7 @@ from time import sleep
 from queue import Queue
 from threading import Thread
 from requests import get as requests_get
-import webbrowser
 
-from typing import Callable
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices
@@ -335,6 +331,8 @@ class Model:
                     traceback.print_exc(file=f)
         # run updater
         Popen(program_name, cwd=current_directory)
+        while True:
+            sleep(1)
 
     @staticmethod
     def reStartSoftware():
