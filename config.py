@@ -974,7 +974,8 @@ class Config:
             "en": "English",
             "ja": "日本語",
             "ko": "한국어",
-            "zh-Hant": "繁體中文"
+            "zh-Hant": "繁體中文",
+            "zh-Hans": "简体中文"
             # If you want to add a new language and key, please append it here.
         }
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
