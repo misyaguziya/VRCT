@@ -11,7 +11,7 @@ export const Logo = () => {
 
 import vrct_logo from "@images/vrct_logo_for_dark_mode.png";
 import chato_img from "@images/chato_white.png";
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
+import { useIsMainPageCompactMode } from "@logics_main";
 
 export const LogoBox = () => {
     const { currentIsMainPageCompactMode } = useIsMainPageCompactMode();

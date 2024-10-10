@@ -3,6 +3,10 @@ import {
     useStore_MicVolume,
     useStore_SpeakerVolume,
 } from "@store";
+import {
+    useMicThreshold,
+    useSpeakerThreshold,
+} from "@logics_configs";
 
 export const SliderAndMeter = (props) => {
     return (
@@ -17,7 +21,6 @@ export const SliderAndMeter = (props) => {
     );
 };
 
-import { useMicThreshold } from "@logics_configs/useMicThreshold";
 const ThresholdVolumeMeter_Mic = (props) => {
     const { currentMicVolume } = useStore_MicVolume();
 
@@ -44,7 +47,6 @@ const ThresholdVolumeMeter_Mic = (props) => {
     );
 };
 
-import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 const ThresholdVolumeMeter_Speaker = (props) => {
     const { currentSpeakerVolume } = useStore_SpeakerVolume();
 
