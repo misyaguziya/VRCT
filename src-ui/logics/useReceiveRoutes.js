@@ -82,6 +82,7 @@ export const useReceiveRoutes = () => {
 
 
     const routes = {
+        "/run/feed_watchdog": () => {},
         // Main Page
         // Page Controls
         "/get/data/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,

@@ -31,6 +31,7 @@ from models.translation.translation_utils import checkCTranslate2Weight, downloa
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
+from models.watchdog.watchdog import Watchdog
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
@@ -102,6 +103,7 @@ class Model:
         self.mic_mute_status = None
         self.mic_mute_status_check = None
         self.kks = kakasi()
+        self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
 
     def checkCTranslatorCTranslate2ModelWeight(self):
         return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
@@ -722,5 +724,22 @@ class Model:
 
     def shutdownOverlay(self):
         self.overlay.shutdownOverlay()
+
+    def startWatchdog(self):
+        self.th_watchdog = threadFnc(self.watchdog.start)
+        self.th_watchdog.daemon = True
+        self.th_watchdog.start()
+
+    def feedWatchdog(self):
+        self.watchdog.feed()
+
+    def setWatchdogCallback(self, callback):
+        self.watchdog.setCallback(callback)
+
+    def stopWatchdog(self):
+        if isinstance(self.th_watchdog, threadFnc):
+            self.th_watchdog.stop()
+            self.th_watchdog.join()
+            self.th_watchdog = None
 
 model = Model()

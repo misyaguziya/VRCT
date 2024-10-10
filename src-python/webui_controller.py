@@ -1535,6 +1535,25 @@ class Controller:
         th_download.daemon = True
         th_download.start()
 
+    @staticmethod
+    def startWatchdog(*args, **kwargs) -> dict:
+        model.startWatchdog()
+        return {"status":200, "result":True}
+
+    @staticmethod
+    def feedWatchdog(*args, **kwargs) -> dict:
+        model.feedWatchdog()
+        return {"status":200, "result":True}
+
+    @staticmethod
+    def setWatchdogCallback(callback) -> dict:
+        model.setWatchdogCallback(callback)
+
+    @staticmethod
+    def stopWatchdog(*args, **kwargs) -> dict:
+        model.stopWatchdog()
+        return {"status":200, "result":True}
+
     def init(self, *args, **kwargs) -> None:
         printLog("Start Initialization")
 
@@ -1599,3 +1618,5 @@ class Controller:
             self.setEnableAutoSpeakerSelect()
 
         printLog("End Initialization")
+
+        self.startWatchdog()

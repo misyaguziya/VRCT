@@ -91,6 +91,8 @@ const StartPythonFacadeComponent = () => {
     useEffect(() => {
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
+                startFeedingToWatchDog();
+
                 getUiLanguage();
                 getUiScaling();
                 getMessageLogUiScaling();
@@ -245,4 +247,12 @@ const TransparencyController = () => {
     }, [currentTransparency.data]);
 
     return null;
+};
+
+import { useStdoutToPython } from "@logics/useStdoutToPython";
+const startFeedingToWatchDog = () => {
+    const { asyncStdoutToPython } = useStdoutToPython();
+    setInterval(() => {
+        asyncStdoutToPython("/run/feed_watchdog");
+    }, 20000); // 20000ミリ秒 = 20秒
 };
