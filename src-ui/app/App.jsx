@@ -13,6 +13,7 @@ export const App = () => {
             <ConfigPageCloseTrigger />
             <UiSizeController />
             <FontFamilyController />
+            <TransparencyController />
 
             <WindowTitleBar />
             <div className={styles.pages_wrapper}>
@@ -38,6 +39,7 @@ import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useUiScaling } from "@logics_configs/useUiScaling";
 import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
 import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
+import { useTransparency } from "@logics_configs/useTransparency";
 
 import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
 import { useLanguageSettings } from "@logics_main/useLanguageSettings";
@@ -72,6 +74,7 @@ const StartPythonFacadeComponent = () => {
     const { getUiScaling } = useUiScaling();
     const { getMessageLogUiScaling } = useMessageLogUiScaling();
     const { getSelectedFontFamily } = useSelectedFontFamily();
+    const { getTransparency } = useTransparency();
 
     const {
         getSelectedPresetTabNumber,
@@ -93,6 +96,7 @@ const StartPythonFacadeComponent = () => {
                 getMessageLogUiScaling();
                 getIsMainPageCompactMode();
                 getMessageInputBoxRatio();
+                getTransparency();
 
                 asyncFetchFonts();
                 getSelectedFontFamily();
@@ -231,4 +235,14 @@ const useAsyncFetchFonts = () => {
         }
     };
     return { asyncFetchFonts };
+};
+
+
+const TransparencyController = () => {
+    const { currentTransparency } = useTransparency();
+    useEffect(() => {
+        document.documentElement.style.setProperty("opacity", `${currentTransparency.data / 100}`);
+    }, [currentTransparency.data]);
+
+    return null;
 };

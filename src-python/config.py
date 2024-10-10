@@ -347,7 +347,7 @@ class Config:
 
     @TRANSPARENCY.setter
     def TRANSPARENCY(self, value):
-        if isinstance(value, int) and self.TRANSPARENCY_RANGE[0] <= value <= self.TRANSPARENCY_RANGE[1]:
+        if isinstance(value, int):
             self._TRANSPARENCY = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

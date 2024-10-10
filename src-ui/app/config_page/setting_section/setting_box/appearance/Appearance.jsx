@@ -26,6 +26,7 @@ export const Appearance = () => {
             <UiScalingContainer />
             <MessageLogUiScalingContainer />
             <FontFamilyContainer />
+            <TransparencyContainer />
 
 
 
@@ -207,6 +208,48 @@ const FontFamilyContainer = () => {
             list={currentSelectableFontFamilyList.data}
             selectFunction={selectFunction}
             state={currentSelectedFontFamily.state}
+        />
+    );
+};
+
+import { useTransparency } from "@logics_configs/useTransparency";
+
+const TransparencyContainer = () => {
+    const { t } = useTranslation();
+    const { currentTransparency, setTransparency } = useTransparency();
+    const [ui_message_log_ui_scaling, setUiTransparency] = useState(currentTransparency.data);
+
+    const onchangeFunction = (value) => {
+        setUiTransparency(value);
+    };
+    const onchangeCommittedFunction = (value) => {
+        setTransparency(value);
+    };
+    useEffect(() => {
+        setUiTransparency(currentTransparency.data);
+    }, [currentTransparency.data]);
+
+    const createMarks = (min, max) => {
+        const marks = [];
+        for (let value = min; value <= max; value += 10) {
+            marks.push({ value, label: `${value}` });
+        }
+        return marks;
+    };
+
+    const marks = createMarks(40, 100);
+
+    return (
+        <SliderContainer
+            label={t("config_page.transparency.label") + " (%)"}
+            min="40"
+            max="100"
+            onchangeCommittedFunction={onchangeCommittedFunction}
+            onchangeFunction={onchangeFunction}
+            variable={ui_message_log_ui_scaling}
+            marks={marks}
+            step={null}
+            track={false}
         />
     );
 };
