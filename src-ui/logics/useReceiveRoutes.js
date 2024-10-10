@@ -30,6 +30,7 @@ import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
 import { useUiLanguage } from "@logics_configs/useUiLanguage";
 import { useUiScaling } from "@logics_configs/useUiScaling";
 import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
+import { useTransparency } from "@logics_configs/useTransparency";
 
 export const useReceiveRoutes = () => {
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
@@ -77,6 +78,7 @@ export const useReceiveRoutes = () => {
 
     const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { updateSelectedFontFamily } = useSelectedFontFamily();
+    const { updateTransparency } = useTransparency();
 
 
     const routes = {
@@ -212,6 +214,9 @@ export const useReceiveRoutes = () => {
 
         "/get/data/font_family": updateSelectedFontFamily,
         "/set/data/font_family": updateSelectedFontFamily,
+
+        "/get/data/transparency": updateTransparency,
+        "/set/data/transparency": updateTransparency,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
