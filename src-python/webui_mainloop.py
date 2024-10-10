@@ -305,11 +305,16 @@ mapping = {
     "/set/data/osc_port": {"status": True, "variable":controller.setOscPort},
 
     "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
+
+    # "/run/start_watchdog": {"status": True, "variable":controller.startWatchdog},
+    "/run/feed_watchdog": {"status": True, "variable":controller.feedWatchdog},
+    # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
 
 class Main:
     def __init__(self) -> None:
         self.queue = Queue()
+        self.main_loop = True
 
     def receiver(self) -> None:
         while True:
@@ -328,7 +333,7 @@ class Main:
         th_receiver.daemon = True
         th_receiver.start()
 
-    def handleRequest(self, endpoint, data=None):
+    def handleRequest(self, endpoint, data=None) -> tuple:
         handler = mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
@@ -371,15 +376,19 @@ class Main:
         th_handler.daemon = True
         th_handler.start()
 
-    def loop(self) -> None:
-        while True:
+    def start(self) -> None:
+        while self.main_loop:
             time.sleep(1)
+
+    def stop(self) -> None:
+        self.main_loop = False
 
 if __name__ == "__main__":
     main = Main()
     main.startReceiver()
     main.startHandler()
 
+    controller.setWatchdogCallback(main.stop)
     controller.init()
 
     # mappingのすべてのstatusをTrueにする
@@ -389,7 +398,7 @@ if __name__ == "__main__":
     process = "main"
     match process:
         case "main":
-            main.loop()
+            main.start()
 
         case "test":
             for _ in range(100):

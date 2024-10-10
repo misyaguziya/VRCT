@@ -109,6 +109,14 @@ class Config:
     def MAX_SPEAKER_THRESHOLD(self):
         return self._MAX_SPEAKER_THRESHOLD
 
+    @property
+    def WATCHDOG_TIMEOUT(self):
+        return self._WATCHDOG_TIMEOUT
+
+    @property
+    def WATCHDOG_INTERVAL(self):
+        return self._WATCHDOG_INTERVAL
+
     # Read Write
     @property
     def ENABLE_SPEAKER2CHATBOX(self):
@@ -993,6 +1001,8 @@ class Config:
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
+        self._WATCHDOG_TIMEOUT = 60
+        self._WATCHDOG_INTERVAL = 20
 
         # Read Write
         self._ENABLE_TRANSLATION = False
