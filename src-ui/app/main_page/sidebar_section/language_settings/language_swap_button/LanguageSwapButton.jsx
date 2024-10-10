@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./LanguageSwapButton.module.scss";
 
 import NarrowArrowDownSvg from "@images/narrow_arrow_down.svg?react";
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import { useLanguageSettings } from "@logics_main";
 
 export const LanguageSwapButton = () => {
     const [isHovered, setIsHovered] = useState(false);

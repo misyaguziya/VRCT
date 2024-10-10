@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import styles from "./SidebarCompactModeButton.module.scss";
 
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
+import { useIsMainPageCompactMode } from "@logics_main";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 
 export const SidebarCompactModeButton = () => {

@@ -3,7 +3,7 @@ import styles from "./LogBox.module.scss";
 import { store } from "@store";
 import { MessageContainer } from "./message_container/MessageContainer";
 import { scrollToBottom } from "@utils/scrollToBottom";
-import { useMessage } from "@logics_common/useMessage";
+import { useMessage } from "@logics_common";
 
 export const LogBox = () => {
     const { currentMessageLogs } = useMessage();
@@ -49,7 +49,7 @@ export const LogBox = () => {
     );
 };
 
-import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
+import { useMessageLogUiScaling } from "@logics_configs";
 const MessageLogUiSizeController = () => {
     const { currentMessageLogUiScaling } = useMessageLogUiScaling();
     const font_size = currentMessageLogUiScaling.data / 100;

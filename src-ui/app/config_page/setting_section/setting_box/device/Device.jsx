@@ -13,14 +13,18 @@ export const Device = () => {
     );
 };
 
-import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
-
-import { useMicHostList } from "@logics_configs/useMicHostList";
-import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
-
-import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
-import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
-import { useMicThreshold } from "@logics_configs/useMicThreshold";
+import {
+    useEnableAutoMicSelect,
+    useMicHostList,
+    useSelectedMicHost,
+    useMicDeviceList,
+    useSelectedMicDevice,
+    useMicThreshold,
+    useEnableAutoSpeakerSelect,
+    useSpeakerDeviceList,
+    useSelectedSpeakerDevice,
+    useSpeakerThreshold,
+} from "@logics_configs";
 
 import { LabelComponent } from "../components/label_component/LabelComponent";
 import { DropdownMenu } from "../components/dropdown_menu/DropdownMenu";
@@ -126,11 +130,6 @@ const Mic_Container = () => {
         </div>
     );
 };
-import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
-
-import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
-import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
-import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
 
 const Speaker_Container = () => {
     const { t } = useTranslation();

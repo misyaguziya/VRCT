@@ -1,36 +1,39 @@
 import { translator_status } from "@data";
-
 import { arrayToObject } from "@utils/arrayToObject";
 
-import { useMessage } from "@logics_common/useMessage";
-import { useVolume } from "@logics_common/useVolume";
+import {
+    useMessage,
+    useVolume,
+} from "@logics_common";
 
-import { useMainFunction } from "@logics_main/useMainFunction";
-import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
-import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
+import {
+    useMainFunction,
+    useSelectableLanguageList,
+    useLanguageSettings,
+    useIsMainPageCompactMode,
+    useMessageInputBoxRatio,
+} from "@logics_main";
 
-
-import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
-import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
-import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
-import { useMicHostList } from "@logics_configs/useMicHostList";
-import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
-import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
-import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
-import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
-import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
-import { useMicThreshold } from "@logics_configs/useMicThreshold";
-import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
-import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
-import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
-import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
-
-import { useUiLanguage } from "@logics_configs/useUiLanguage";
-import { useUiScaling } from "@logics_configs/useUiScaling";
-import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
-import { useTransparency } from "@logics_configs/useTransparency";
+import {
+    useSoftwareVersion,
+    useEnableAutoMicSelect,
+    useEnableAutoSpeakerSelect,
+    useMicHostList,
+    useSelectedMicHost,
+    useMicDeviceList,
+    useSelectedMicDevice,
+    useSpeakerDeviceList,
+    useSelectedSpeakerDevice,
+    useMicThreshold,
+    useSpeakerThreshold,
+    useEnableAutoClearMessageBox,
+    useSendMessageButtonType,
+    useSelectedFontFamily,
+    useUiLanguage,
+    useUiScaling,
+    useMessageLogUiScaling,
+    useTransparency,
+} from "@logics_configs";
 
 export const useReceiveRoutes = () => {
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();

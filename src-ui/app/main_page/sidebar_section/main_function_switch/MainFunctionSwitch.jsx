@@ -5,9 +5,10 @@ import TranslationSvg from "@images/translation.svg?react";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import ForegroundSvg from "@images/foreground.svg?react";
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
-
-import { useMainFunction } from "@logics_main/useMainFunction";
+import {
+    useIsMainPageCompactMode,
+    useMainFunction,
+} from "@logics_main";
 
 export const MainFunctionSwitch = () => {
     const { t } = useTranslation();

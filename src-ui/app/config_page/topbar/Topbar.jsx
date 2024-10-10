@@ -1,7 +1,7 @@
 import clsx from "clsx";
 
 import styles from "./Topbar.module.scss";
-import { useIsOpenedConfigPage } from "@logics_common/useIsOpenedConfigPage";
+import { useIsOpenedConfigPage } from "@logics_common";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 
 import { TitleBox } from "./title_box/TitleBox";
