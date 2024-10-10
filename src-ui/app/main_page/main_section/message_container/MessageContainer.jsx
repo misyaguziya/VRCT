@@ -49,8 +49,8 @@ export const MessageContainer = () => {
         const container_height = container_ref.current.offsetHeight;
         const container_padding_bottom = parseFloat(window.getComputedStyle(container_ref.current).paddingBottom);
         const total_height = container_height - container_padding_bottom;
-
-        return ((ratio / 100) * total_height / 10) | 0; // 10px = 1rem
+        if (total_height === 0) return 0;
+        return ((ratio / 100) * total_height / 10); // 10px = 1rem
     };
 
 
