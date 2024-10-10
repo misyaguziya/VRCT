@@ -1,7 +1,6 @@
-import { getCurrent } from "@tauri-apps/api/window";
 import { useEffect, useRef } from "react";
 import { useStartPython } from "@logics/useStartPython";
-// import { useConfig } from "@logics/useConfig";
+import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
 import styles from "./App.module.scss";
@@ -12,10 +11,14 @@ export const App = () => {
             <StartPythonFacadeComponent />
             <UiLanguageController />
             <ConfigPageCloseTrigger />
-            <ConfigPage />
-            <MainPage />
             <UiSizeController />
             <FontFamilyController />
+
+            <WindowTitleBar />
+            <div className={styles.pages_wrapper}>
+                <ConfigPage />
+                <MainPage />
+            </div>
         </div>
     );
 };
@@ -48,7 +51,6 @@ import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
-    const main_page = getCurrent();
     const { asyncFetchFonts } = useAsyncFetchFonts();
 
     const { getMicHostList } = useMicHostList();
@@ -84,7 +86,6 @@ const StartPythonFacadeComponent = () => {
 
 
     useEffect(() => {
-        main_page.setDecorations(true);
         if (!hasRunRef.current) {
             asyncStartPython().then((result) => {
                 getUiLanguage();
