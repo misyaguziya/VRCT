@@ -5,6 +5,7 @@ import { MessageContainer } from "./message_container/MessageContainer";
 import { LanguageSelector } from "./language_selector/LanguageSelector";
 
 import { useStore_IsOpenedLanguageSelector } from "@store";
+import { useLanguageSettings } from "@logics_main";
 
 export const MainSection = () => {
 
@@ -18,7 +19,6 @@ export const MainSection = () => {
 };
 
 
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
 const HandleLanguageSelector = () => {
     const { currentIsOpenedLanguageSelector, updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const {

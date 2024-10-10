@@ -2,11 +2,17 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import styles from "./Appearance.module.scss";
 import { useSettingBox } from "../components/useSettingBox";
-import { useStore_SelectedMicDevice, useStore_MicDeviceList } from "@store";
+
+import {
+    useUiLanguage,
+    useUiScaling,
+    useMessageLogUiScaling,
+    useSelectedFontFamily,
+    useTransparency,
+} from "@logics_configs";
+
 export const Appearance = () => {
     const { t } = useTranslation();
-    // const { currentSelectedMicDevice, updateSelectedMicDevice } = useStore_SelectedMicDevice();
-    // const { currentMicDeviceList } = useStore_MicDeviceList();
     const {
         DropdownMenuContainer,
         // SliderContainer,
@@ -53,7 +59,6 @@ export const Appearance = () => {
 };
 
 import { LabelComponent } from "../components/label_component/LabelComponent";
-import { useUiLanguage } from "@logics_configs/useUiLanguage";
 
 const UiLanguageContainer = () => {
     const { t } = useTranslation();
@@ -100,7 +105,6 @@ const UiLanguageContainer = () => {
 };
 
 
-import { useUiScaling } from "@logics_configs/useUiScaling";
 import { SliderContainer } from "../components/useSettingBox";
 
 import { useEffect, useState } from "react";
@@ -145,7 +149,6 @@ const UiScalingContainer = () => {
     );
 };
 
-import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
 
 const MessageLogUiScalingContainer = () => {
     const { t } = useTranslation();
@@ -189,7 +192,6 @@ const MessageLogUiScalingContainer = () => {
 };
 import { useStore_SelectableFontFamilyList } from "@store";
 import { DropdownMenuContainer } from "../components/useSettingBox";
-import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
 const FontFamilyContainer = () => {
     const { t } = useTranslation();
     const { currentSelectedFontFamily, setSelectedFontFamily } = useSelectedFontFamily();
@@ -212,7 +214,6 @@ const FontFamilyContainer = () => {
     );
 };
 
-import { useTransparency } from "@logics_configs/useTransparency";
 
 const TransparencyContainer = () => {
     const { t } = useTranslation();

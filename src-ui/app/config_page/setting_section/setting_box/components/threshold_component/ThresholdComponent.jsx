@@ -3,7 +3,14 @@ import styles from "./ThresholdComponent.module.scss";
 import { SliderAndMeter } from "./slider_and_meter/SliderAndMeter";
 import { ThresholdEntry } from "./threshold_entry/ThresholdEntry";
 import { VolumeCheckButton } from "./volume_check_button/VolumeCheckButton";
-import { useVolume } from "@logics_common/useVolume";
+import { useVolume } from "@logics_common";
+import MicSvg from "@images/mic.svg?react";
+import HeadphonesSvg from "@images/headphones.svg?react";
+import {
+    useMicThreshold,
+    useSpeakerThreshold,
+} from "@logics_configs";
+
 export const ThresholdComponent = (props) => {
     return (
         <div className={styles.container}>
@@ -14,8 +21,7 @@ export const ThresholdComponent = (props) => {
         </div>
     );
 };
-import MicSvg from "@images/mic.svg?react";
-import { useMicThreshold } from "@logics_configs/useMicThreshold";
+
 const MicComponent = (props) => {
     const {
         currentMicThreshold,
@@ -72,8 +78,7 @@ const MicComponent = (props) => {
         </>
     );
 };
-import HeadphonesSvg from "@images/headphones.svg?react";
-import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
+
 const SpeakerComponent = (props) => {
     const {
         currentSpeakerThreshold,

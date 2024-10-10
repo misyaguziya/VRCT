@@ -2,7 +2,7 @@ import clsx from "clsx";
 
 import styles from "./SidebarSection.module.scss";
 import { useStore_IsOpenedLanguageSelector } from "@store";
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
+import { useIsMainPageCompactMode } from "@logics_main";
 
 import { Logo } from "./logo/Logo";
 import { MainFunctionSwitch } from "./main_function_switch/MainFunctionSwitch";

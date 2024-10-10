@@ -4,7 +4,7 @@ import styles from "./MessageContainer.module.scss";
 import { appWindow } from "@tauri-apps/api/window"; // Tauriのwindow APIをインポート
 import { LogBox } from "./log_box/LogBox";
 import { MessageInputBox } from "./message_input_box/MessageInputBox";
-import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
+import { useMessageInputBoxRatio } from "@logics_main";
 
 export const MessageContainer = () => {
     const { currentMessageInputBoxRatio, setMessageInputBoxRatio } = useMessageInputBoxRatio();
