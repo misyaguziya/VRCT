@@ -1,11 +1,13 @@
 import { useState } from "react";
 import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
-import { useMessage } from "@logics_common/useMessage";
+import { useMessage } from "@logics_common";
 import { store } from "@store";
 import { scrollToBottom } from "@utils/scrollToBottom";
-import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
-import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
+import {
+    useSendMessageButtonType,
+    useEnableAutoClearMessageBox,
+} from "@logics_configs";
 
 export const MessageInputBox = () => {
     const [inputValue, setInputValue] = useState("");

@@ -25,30 +25,34 @@ export const App = () => {
 };
 
 
-import { useSoftwareVersion } from "@logics_configs/useSoftwareVersion";
-import { useEnableAutoMicSelect } from "@logics_configs/useEnableAutoMicSelect";
-import { useEnableAutoSpeakerSelect } from "@logics_configs/useEnableAutoSpeakerSelect";
-import { useSelectedMicHost } from "@logics_configs/useSelectedMicHost";
-import { useSelectedMicDevice } from "@logics_configs/useSelectedMicDevice";
-import { useSelectedSpeakerDevice } from "@logics_configs/useSelectedSpeakerDevice";
-import { useMicThreshold } from "@logics_configs/useMicThreshold";
-import { useSpeakerThreshold } from "@logics_configs/useSpeakerThreshold";
-import { useEnableAutoClearMessageBox } from "@logics_configs/useEnableAutoClearMessageBox";
-import { useSendMessageButtonType } from "@logics_configs/useSendMessageButtonType";
-import { useUiLanguage } from "@logics_configs/useUiLanguage";
-import { useUiScaling } from "@logics_configs/useUiScaling";
-import { useMessageLogUiScaling } from "@logics_configs/useMessageLogUiScaling";
-import { useSelectedFontFamily } from "@logics_configs/useSelectedFontFamily";
-import { useTransparency } from "@logics_configs/useTransparency";
+import {
+    useSoftwareVersion,
+    useEnableAutoMicSelect,
+    useEnableAutoSpeakerSelect,
+    useSelectedMicHost,
+    useSelectedMicDevice,
+    useSelectedSpeakerDevice,
+    useMicThreshold,
+    useSpeakerThreshold,
+    useEnableAutoClearMessageBox,
+    useSendMessageButtonType,
+    useUiLanguage,
+    useUiScaling,
+    useMessageLogUiScaling,
+    useSelectedFontFamily,
+    useTransparency,
+    useMicHostList,
+    useMicDeviceList,
+    useSpeakerDeviceList,
+} from "@logics_configs";
 
-import { useIsMainPageCompactMode } from "@logics_main/useIsMainPageCompactMode";
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
-import { useSelectableLanguageList } from "@logics_main/useSelectableLanguageList";
-import { useMessageInputBoxRatio } from "@logics_main/useMessageInputBoxRatio";
-
-import { useMicHostList } from "@logics_configs/useMicHostList";
-import { useMicDeviceList } from "@logics_configs/useMicDeviceList";
-import { useSpeakerDeviceList } from "@logics_configs/useSpeakerDeviceList";
+import {
+    useMainFunction,
+    useIsMainPageCompactMode,
+    useLanguageSettings,
+    useSelectableLanguageList,
+    useMessageInputBoxRatio,
+} from "@logics_main";
 
 const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
@@ -90,7 +94,7 @@ const StartPythonFacadeComponent = () => {
 
     useEffect(() => {
         if (!hasRunRef.current) {
-            asyncStartPython().then((result) => {
+            asyncStartPython().then(() => {
                 startFeedingToWatchDog();
 
                 getUiLanguage();
@@ -152,9 +156,11 @@ const UiLanguageController = () => {
 };
 
 import { useStore_MainFunctionsStateMemory } from "@store";
-import { useVolume } from "@logics_common/useVolume";
-import { useIsOpenedConfigPage } from "@logics_common/useIsOpenedConfigPage";
-import { useMainFunction } from "@logics_main/useMainFunction";
+import {
+    useVolume,
+    useIsOpenedConfigPage,
+} from "@logics_common";
+
 const ConfigPageCloseTrigger = () => {
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const { currentMainFunctionsStateMemory, updateMainFunctionsStateMemory} = useStore_MainFunctionsStateMemory();

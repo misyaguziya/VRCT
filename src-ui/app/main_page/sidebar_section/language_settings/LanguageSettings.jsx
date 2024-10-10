@@ -23,8 +23,10 @@ export const LanguageSettings = () => {
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import { useStore_IsOpenedLanguageSelector } from "@store";
-import { useMainFunction } from "@logics_main/useMainFunction";
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import {
+    useMainFunction,
+    useLanguageSettings,
+} from "@logics_main";
 
 // 言語セレクターをトグルする処理を関数化
 const toggleSelector = (selector, currentStatus, updateSelector) => {

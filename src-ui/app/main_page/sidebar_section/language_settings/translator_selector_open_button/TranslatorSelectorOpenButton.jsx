@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
 import { useStore_IsOpenedTranslatorSelector } from "@store";
-import { useLanguageSettings } from "@logics_main/useLanguageSettings";
+import { useLanguageSettings } from "@logics_main";
 
 export const TranslatorSelectorOpenButton = () => {
     const { t } = useTranslation();

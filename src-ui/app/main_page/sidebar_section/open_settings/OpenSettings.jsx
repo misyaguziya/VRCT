@@ -1,5 +1,5 @@
 import styles from "./OpenSettings.module.scss";
-import { useIsOpenedConfigPage } from "@logics_common/useIsOpenedConfigPage";
+import { useIsOpenedConfigPage } from "@logics_common";
 import ConfigurationSvg from "@images/configuration.svg?react";
 
 export const OpenSettings = () => {
