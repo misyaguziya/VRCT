@@ -174,6 +174,7 @@ export const { atomInstance: Atom_UiScaling, useHook: useStore_UiScaling } = cre
 export const { atomInstance: Atom_MessageLogUiScaling, useHook: useStore_MessageLogUiScaling } = createAtomWithHook(100, "MessageLogUiScaling");
 export const { atomInstance: Atom_SelectedFontFamily, useHook: useStore_SelectedFontFamily } = createAtomWithHook("Yu Gothic UI", "SelectedFontFamily");
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");
+export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency } = createAtomWithHook(100, "Transparency");
 
 
 export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
