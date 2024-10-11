@@ -1,14 +1,17 @@
 import { useResizable } from "react-resizable-layout";
 import { useRef, useEffect, useState } from "react";
 import styles from "./MessageContainer.module.scss";
-import { appWindow } from "@tauri-apps/api/window"; // Tauriのwindow APIをインポート
+import { appWindow } from "@tauri-apps/api/window";
 import { LogBox } from "./log_box/LogBox";
 import { MessageInputBox } from "./message_input_box/MessageInputBox";
 import { useMessageInputBoxRatio } from "@logics_main";
+import { useUiScaling } from "@logics_configs";
 
 export const MessageContainer = () => {
     const { currentMessageInputBoxRatio, setMessageInputBoxRatio } = useMessageInputBoxRatio();
+    const { currentUiScaling } = useUiScaling();
     const [message_box_height_in_rem, setMessageBoxHeightInRem] = useState(10);
+    const FONT_SIZE_STANDARD = 10 * currentUiScaling.data / 100;  // 10px = 1rem
 
     const container_ref = useRef(null);
     const log_box_ref = useRef(null);
@@ -37,7 +40,9 @@ export const MessageContainer = () => {
     });
 
     useEffect(() => {
-        setMessageBoxHeightInRem((position / 10) - 1.5);
+        // Note: I thought the part "1.4" is message box bottom padding + (message box separator height/2)
+        // but it should be fixed at 1.4. Idk why, tho.
+        setMessageBoxHeightInRem((position / FONT_SIZE_STANDARD) - 1.4);
     }, [position]);
 
 
@@ -49,8 +54,8 @@ export const MessageContainer = () => {
         const container_height = container_ref.current.offsetHeight;
         const container_padding_bottom = parseFloat(window.getComputedStyle(container_ref.current).paddingBottom);
         const total_height = container_height - container_padding_bottom;
-
-        return ((ratio / 100) * total_height / 10) | 0; // 10px = 1rem
+        if (total_height === 0) return 0;
+        return ((ratio / 100) * total_height / FONT_SIZE_STANDARD);
     };
 
 
