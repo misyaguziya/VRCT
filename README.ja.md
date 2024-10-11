@@ -3,8 +3,10 @@
 ![](docs/vrct_logo.png)
 [![GitHub release](https://img.shields.io/github/v/release/misyaguziya/VRCT.svg)](https://github.com/misyaguziya/VRCT/releases)
 [![Downloads](https://img.shields.io/github/downloads/misyaguziya/VRCT/total)](https://github.com/misyaguziya/VRCT/releases)
-[![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)
+[![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)  
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
+[![Github Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://github.com/sponsors/misyaguziya)
+[![pixivFANBOX](https://img.shields.io/badge/pixivFANBOX-red?logo=pixiv&logoColor=white)](https://vrct-dev.fanbox.cc/)
 
 | [English](./README.md) | **日本語** | [한국어](./README.ko.md) | [繁體中文](./README.zh-Hant.md) |
 
@@ -57,7 +59,7 @@ VRCTはあなたの会話を以下でサポートをします。
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (メイン開発)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI多言語対応)
-- [レラ](https://github.com/soumt-r) (翻訳:韓国語)
+- [レラ](https://github.com/soumt-r) (テクニカルサポート)
 - [どね](https://twitter.com/done_vrc) (ロゴデザイン)
 
 ---
