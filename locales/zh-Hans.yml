@@ -1,260 +1,261 @@
 main_window:
-  translation: "翻訳"
-  transcription_send: "音声認識（マイク）"
-  transcription_receive: "音声認識（スピーカー）"
-  foreground: "最前面表示"
+  translation: "翻译"
+  transcription_send: "你的语音转文字"
+  transcription_receive: "他人语音转文字"
+  foreground: "顶层显示"
 
-  language_settings: "言語設定"
-  your_language: "あなたの言語"
-  translate_each_other_label: "双方向に翻訳"
-  swap_button_label: "言語を入れ替え"
-  target_language: "相手の言語"
-  translator: "翻訳エンジン"
-  translator_ctranslate2: "オフライン翻訳 (Default)"
+  language_settings: "语言设定"
+  your_language: "你的语言"
+  translate_each_other_label: "双向翻译"
+  swap_button_label: "互换"
+  target_language: "目标语言"
+  translator: "翻译器"
+  translator_ctranslate2: "离线翻译(默认)"
 
-  textbox_tab_all: "全て"
-  textbox_tab_sent: "送信"
-  textbox_tab_received: "受信"
-  textbox_tab_system: "システム"
+  textbox_tab_all: "全部"
+  textbox_tab_sent: "发送"
+  textbox_tab_received: "接受"
+  textbox_tab_system: "系统"
 
   textbox_system_message:
-    enabled_translation: "翻訳機能をONにしました。"
-    disabled_translation: "翻訳機能をOFFしました。"
-    enabled_voice2chatbox: "マイクからの音声入力、文字起こしを開始します。"
-    disabled_voice2chatbox: "マイクからの音声入力、文字起こしを終了しました。"
-    enabled_speaker2log: "スピーカーからの音声聞き取り、文字起こしを開始します。"
-    disabled_speaker2log: "スピーカーからの音声聞き取り、文字起こしを終了しました。"
-    enabled_foreground: "画面を常に最前面へ固定します。"
-    disabled_foreground: "最前面への固定を解除しました。"
+    enabled_translation: "翻译已启动."
+    disabled_translation: "翻译已关闭."
+    enabled_voice2chatbox: "正在翻译你的语音并转成文字."
+    disabled_voice2chatbox: "你的语音翻译结束了."
+    enabled_speaker2log: "正在翻译他人语音并转成文字."
+    disabled_speaker2log: "第三者的语音翻译结束了."
+    enabled_foreground: "顶层显示开启."
+    disabled_foreground: "顶层显示关闭."
 
-    auth_key_success: "認証キーの更新が完了しました。"
-    auth_key_error: "認証キーが間違っているか、API使用制限が上限に達しています。"
+    auth_key_success: "授权密匙更新完毕"
+    auth_key_error: "授权密匙错误或已达到翻译API(翻译器决定)使用次数上限."
 
-    no_mic_device_detected_error: "マイクデバイスが検出されませんでした。"
-    no_speaker_device_detected_error: "スピーカーデバイスが検出されませんでした。"
-    translation_engine_limit_error: "翻訳エンジンを自動的に変更しました。対象翻訳エンジンへのリクエストが多すぎるため、一時的にアクセスが制限されています。同じ翻訳エンジンを使用したい場合はしばらく待ってから、VRCTの再起動をしてもう一度試してみてください。"
+    no_mic_device_detected_error: "未检测到你的麦克风."
+    no_speaker_device_detected_error: "未检测到他人语音输入."
+    translation_engine_limit_error: "自动更换了翻译器.原因是对该翻译器请求太频繁,它暂时拒绝了接收翻译请求.如仍想使用原本翻译器,请稍等片刻后在重启VRCT."
 
-    detected_by_word_filter: "ワードフィルターに登録されている単語 %{detected_message} が検出されたため送信しませんでした。"
+    detected_by_word_filter: "该单词 %{detected_message} 被单词过滤器检测出所以没有发送."
 
-    selected_your_language: "「あなたの言語」 を %{your_language} に設定しました。"
-    selected_target_language: "「相手の言語」 を %{target_language} に設定しました。"
-    switched_language_preset_tab: "言語プリセット番号 %{tab_no} に切り替わりました。"
-    latest_language_setting: "現在「あなたの言語」は %{your_language}、「相手の言語」は %{target_language} に設定されています。"
+    selected_your_language: "[你的语言]设定为 %{your_language} "
+    selected_target_language: "[目标语言]设定为 %{target_language} "
+    switched_language_preset_tab: "已切换为第 %{tab_no} 号语言设定"
+    latest_language_setting: "现在,你的语言是 %{your_language},目标语言是 %{target_language} ."
 
-    opened_web_page_booth: "お使いのブラウザで、Boothのページを開きました。"
-    opened_web_page_vrct_documents: "お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。\n不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！"
+    opened_web_page_booth: "在你的默认浏览器上打开了Booth页面"
+    opened_web_page_vrct_documents: "在你的默认浏览器上打开了VRCT文档,有着关于VRCT的使用方法\n其他问题、请求、查询等请通过文档底部的链接或X (Twitter) 联系我们！"
 
-  update_available: "新しいバージョンが出ました！"
-  state_text_enabled: "有効"
-  state_text_disabled: "無効"
+  update_available: "有新版本可供使用！"
+  state_text_enabled: "启用"
+  state_text_disabled: "停用"
 
-  cover_message: "設定画面が閉じられるまで、一時的に機能を停止しています。"
+  cover_message: "在设置窗口关闭前,VRCT的功能暂时停用"
 
   confirmation_message:
-    update_software: "新しいバージョンをダウンロードしてアプリを再起動します。\n少し時間がかかります。今すぐ行いますか？"
-    deny_update_software: "後でする"
-    accept_update_software: "アップデートして再起動"
-    updating: "アップデート中..."
+    update_software: "下载新版本并自动启动\n会花少许时间,现在更新吗?"
+    deny_update_software: "稍后再说"
+    accept_update_software: "更新后自动启动"
+    updating: "更新中..."
 
-    detected_over_ui_size: "現在のUI サイズ: %{current_ui_size}\nVRCTのウィンドウサイズが、お使いのディスプレイサイズより大きい可能性があります。\n※ディスプレイサイズによっては、何度か再設定が必要な場合があります。"
-    deny_adjust_ui_size: "このサイズのままで良い"
-    accept_adjust_ui_size: "小さく設定して再起動"
+    detected_over_ui_size: "现在的界面大小: %{current_ui_size}\nVRCT的窗口大小有可能会大于显示器\n请根据你的屏幕大小设置合适的VRCT的大小"
+    deny_adjust_ui_size: "现在界面大小是合适的"
+    accept_adjust_ui_size: "缩小界面大小并重新启动"
 
 
 selectable_language_window:
-  title_your_language: "あなたの言語"
-  title_target_language: "相手の言語"
-  go_back_button: "戻る"
+  title_your_language: "你的语言"
+  title_target_language: "目标语言"
+  go_back_button: "返回"
 
 
 overlay_settings:
-  restore_default_settings: "初期値に戻す"
+  restore_default_settings: "恢复默认设置"
   opacity: "透明度"
-  ui_scaling: "サイズ"
-  x_position: "X軸（左右）"
-  y_position: "Y軸（上下）"
-  z_position: "Z軸（前後）"
-  x_rotation: "X軸の回転"
-  y_rotation: "Y軸の回転"
-  z_rotation: "Z軸の回転"
-  display_duration: "表示時間"
-  fadeout_duration: "フェードアウト時間"
+  ui_scaling: "大小"
+  x_position: "X轴(左右)"
+  y_position: "Y轴(上下)"
+  z_position: "Z轴(前后)"
+  x_rotation: "X轴旋转"
+  y_rotation: "Y轴旋转"
+  z_rotation: "Z轴旋转"
+  display_duration: "显示持续时间"
+  fadeout_duration: "渐隐持续时间"
 
 
 config_window:
-  config_title: "設定"
-  compact_mode: "コンパクトモード"
-  version: "バージョン %{version}"
-  restart_message: "再起動して変更を適用する。"
+  config_title: "设定"
+  compact_mode: "精简模式"
+  version: "版本 %{version}"
+  restart_message: "重启并应用设定"
   common_error_message:
-    invalid_value: "無効な値です。"
+    invalid_value: "无效的值"
 
   side_menu_labels:
-    appearance: "デザイン"
-    translation: "翻訳"
-    transcription: "音声認識"
-    transcription_mic: "マイク"
-    transcription_speaker: "スピーカー"
-    transcription_internal_model: "音声認識モデル"
-    others: "その他"
+    appearance: "外观"
+    translation: "翻译"
+    transcription: "转录"
+    transcription_mic: "你的麦克风"
+    transcription_speaker: "他人声音"
+    transcription_internal_model: "转录模型"
+    others: "其他"
     # others_send_message_formats: "メッセージフォーマット (送信)"
     # others_received_message_formats: "メッセージフォーマット (XSOverlay & Speaker2Chatbox)"
-    advanced_settings: "高度な設定"
+    advanced_settings: "高级设置"
 
 
   transparency:
     label: "透明度"
-    desc: "メイン画面の透明度を変更できます。"
+    desc: "更改主视窗透明度"
 
   appearance_theme:
-    label: "外観テーマ"
-    desc: "カラーテーマを変更できます。"
+    label: "主题"
+    desc: "更改主题配色"
 
   ui_size:
-    label: "UIサイズ"
+    label: "界面大小"
 
   textbox_ui_size:
-    label: "テキストボックス フォントサイズ"
-    desc: "ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。"
+    label: "文本框字体大小"
+    desc: "你可以根据用户界面大小调整文本框中使用的字体大小。"
 
   message_box_ratio:
-    label: "メッセージ入力欄のサイズ"
-    desc: "メッセージ入力欄のサイズを変更できます。テキストボックスとの比率となっています。\n※厳密な計算はしていません。"
+    label: "文本框大小"
+    desc: "你可以根据界面比例调整文本框大小\n※可能不准确"
 
   font_family:
-    label: "使用フォント"
+    label: "字体"
 
   ui_language:
-    label: "UIの言語 / UI Language"
+    label: "界面语言"
 
   to_restore_main_window_geometry:
-    label: "メイン画面の位置を記憶する"
-    desc: "起動時、前回の画面の位置とサイズを復元します。"
+    label: "记录主界面位置"
+    desc: "启动时,按照上次的大小和位置启动"
 
   use_translation_feature:
-    label: "翻訳機能を使用する"
-    desc: "オフにしている間は、翻訳機能を使わない代わり、VRCTの起動が少し速くなります。\n翻訳機能を必要とせず、VRCTをチャット送信と文字起こしツールとしてのみ使用するユーザー用です。"
+    label: "启用翻译功能"
+    desc: "关闭此功能时,无法使用翻译功能.VRCT的启动速度会变得更快一些.这适用于不需要翻译功能,只将VRCT用作聊天框和转录工具的用户."
 
   ctranslate2_weight_type:
-    label: "オフライン翻訳のタイプ"
-    desc: "翻訳エンジン（オフライン翻訳）で翻訳する際に、使用する翻訳モデルを選択できます。"
-    small: "通常モデル (%{capacity})"
-    large: "高精度モデル (%{capacity})"
+    label: "选择离线翻译模型"
+    desc: "可以选择用于离线翻译的翻译模型"
+    small: "普通模型 (%{capacity})"
+    large: "高精度模型 (%{capacity})"
 
   deepl_auth_key:
-    label: "DeepL 認証キー"
-    desc: "使用の際は、メイン画面にある %{translator} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
-    open_auth_key_webpage: "DeepLアカウントページを開く"
-    auth_key_success: "認証キーの更新が完了しました。"
-    auth_key_error: "認証キーが間違っているか、API使用制限が上限に達しています。"
+    label: "DeepL 授权密匙"
+    desc: "在使用的时候,使用时请在主屏幕上通过 DeepL_API 选择 %{translator} \n※某些语言可能不支持"
+    open_auth_key_webpage: "打开DeepL账号页面"
+    auth_key_success: "授权密匙认证完成。"
+    auth_key_error: "授权密匙错误或已达API使用上限"
 
   mic_host:
-    label: "マイク（ホスト/ドライバー）"
+    label: "麦克风(host/driver)"
 
   mic_device:
-    label: "マイク （デバイス）"
+    label: "麦克风 (设备)"
 
   mic_dynamic_energy_threshold:
-    label_for_automatic: "マイク入力感度の調整 (現在の設定: 自動)"
-    desc_for_automatic: "マイクの入力感度を自動的に調節する。"
-    label_for_manual: "マイク入力感度の調整 (現在の設定: 手動)"
-    desc_for_manual: "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。"
-    error_message: "0 から %{max} までの数値で設定できます。"
+    label_for_automatic: "麦克风输入阈值(当前设置:自动)"
+    desc_for_automatic: "自动调整麦克风输入阈值"
+    label_for_manual: "麦克风输入阈值(当前设置:手动)"
+    desc_for_manual: "使用滑杆手动确定麦克风输入灵敏度。按下麦克风图标输入语音，并在监控音量的同时调节灵敏度。"
+    error_message: "数值应为 0 至 %{max} 之间。"
 
   mic_record_timeout:
-    label: "入力が終了したとみなす無音時間"
-    desc: "無音を検出し、設定された秒数経過すると、音声入力が終了したとみなします。"
-    error_message: "0 以上で 「%{mic_phrase_timeout_label}」より大きくすることはできません。"
+    label: "语音输入结束后的静音时间"
+    desc: "当检测到静音并经过设定的秒数后，语音输入即被视为完成。"
+    error_message: "数值应为 0 至 [%{mic_phrase_timeout_label}]"
 
   mic_phrase_timeout:
-    label: "一度に文字起こしする時間の長さ"
-    desc: "設定された秒数ごとに文字起こし処理が行われます。"
-    error_message: "0 以上で 「%{mic_record_timeout_label}」より小さくすることはできません。"
+    label: "转录间隔"
+    desc: "在经过设定的时间后执行转录"
+    error_message: "转录间隔时间大于0秒且不能小于「%{mic_record_timeout_label}」"
 
   mic_max_phrase:
-    label: "送信するまでに保持する単語数"
-    desc: "文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をVRChatへ送信し、ログに表示します。"
-    error_message: "0以上の数値を設定できます。"
+    label: "麦克风发送时的最小单词数"
+    desc: "转录字数的下限,只有超过这个数字,才会记录翻译结果并发送到VRC"
+    error_message: "数值应为 0 以上"
 
   mic_word_filter:
-    label: "ワードフィルター"
-    desc: "登録された単語を検出すると、その文章は送信されません。\n「,」カンマで区切ると、まとめて複数の単語を追加できます。\n※重複した単語は登録されません。"
-    add_button_label: "追加"
-    count_desc: "現在登録されている単語数: %{count}"
+    label: "单词过滤器"
+    desc: "检测出被记录的单词时,不会发送这段话\n如要添加多个单词,可以用逗号来分割\n※不会记录重复的单词"
+    add_button_label: "添加"
+    count_desc: "现在被记录的单词数: %{count}"
 
 
   speaker_device:
-    label: "スピーカー （デバイス）"
+    label: "他人语音 （设备）"
 
   speaker_dynamic_energy_threshold:
-    label_for_automatic: "スピーカー入力感度の調整 (現在の設定: 自動)"
-    desc_for_automatic: "スピーカーの入力感度を自動的に調節する。"
-    label_for_manual: "スピーカー入力感度の調整 (現在の設定: 手動)"
-    desc_for_manual: "スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。"
-    error_message: "0 から %{max} までの数値で設定できます。"
-    no_device_error_message: "スピーカーデバイスが検出されませんでした。"
+    label_for_automatic: "他人语音接收阈值(当前设置:自动)"
+    desc_for_automatic: "自动调节他人语音接收阈值"
+    label_for_manual: "他人语音接收阈值(当前设置:手动)"
+    desc_for_manual: "使用滑杆手动调整他人语音接收阈值.在按下耳机按钮时,请根据实际听到的声音调整该大小"
+    error_message: "设定的数值从 0 到 %{max} "
+    no_device_error_message: "未检测到他人语音"
 
   speaker_record_timeout:
-    label: "入力が終了したとみなす無音時間"
-    desc: "無音を検出し、設定された秒数経過すると、音声入力が終了したとみなします。"
-    error_message: "0 以上で 「%{speaker_phrase_timeout_label}」より大きくすることはできません。"
+    label: "语音接收结束后的静音时间"
+    desc: "当检测到静音并经过设定的秒数后，语音接收即被视为完成。"
+    error_message: "数值应为 0 至 「%{speaker_phrase_timeout_label}」"
 
   speaker_phrase_timeout:
-    label: "一度に文字起こしする時間の長さ"
-    desc: "設定された秒数ごとに文字起こし処理が行われます。"
-    error_message: "0 以上で 「%{speaker_record_timeout_label}」より小さくすることはできません。"
+    label: "转录间隔"
+    desc: "在经过设定的时间后执行转录"
+    error_message: "转录间隔时间大于0秒且不能小于「%{speaker_record_timeout_label}」"
+
 
   speaker_max_phrase:
-    label: "ログとして表示するまでに保持する単語数"
-    desc: "文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。"
-    error_message: "0以上の数値を設定できます。"
+    label: "语音接收时的最小单词数"
+    desc: "转录字数的下限,只有超过这个数字,才会记录转录结果"
+    error_message: "数值应为 0 以上"
 
   use_whisper_feature:
-    label: "音声認識にWhisperモデルを使用する"
-    desc: "一部の言語では、音声認識の精度が向上するかもしれません。音声認識使用中、CPUの使用率が上がるので、お使いのPCスペックと相談してこの機能を使用してください。"
+    label: "使用Whisper模型翻译"
+    desc: "在某些语言中,语音识别的准确性可能会提高.语音识别的过程中,CPU占有率可能会提高,请根据你的pc性能来决定是否使用它."
 
   whisper_weight_type:
-    label: "Whisperモデルのタイプ"
-    desc: "基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。\n※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。"
-    model_template: "%{model_name} モデル (%{capacity})"
-    recommended_model_template: "%{model_name} モデル (%{capacity}) (推奨)"
+    label: "选择某个Whisper模型"
+    desc: "通常来说,容量越大的模型精度也会越高,但也会增加文字显示所需要的时间和CPU的使用率。请浏览各个模型的文档\n※特别是大于medium容量的模型、因CPU性能原因甚至无法使用。"
+    model_template: "%{model_name} 模型 (%{capacity})"
+    recommended_model_template: "%{model_name} 模型 (%{capacity}) (推荐)"
 
 
   enable_overlay_small_log:
-    label: "Overlay機能を有効"
+    label: "可使用Overlay"
     # desc:
-    open_overlay_settings: "Overlay詳細設定を開く"
+    open_overlay_settings: "打开Overlay进阶设置"
 
 
 
   auto_clear_the_message_box:
-    label: "送信後はチャットボックスを空にする"
+    label: "发言后自动清空chatbox"
 
   send_only_translated_messages:
-    label: "翻訳後のメッセージのみ送信する"
+    label: "只发送翻译后的信息"
 
   send_message_button_type:
-    label: "メッセージ送信ボタン"
-    hide: "非表示 (エンターキーを使って送信)"
-    show: "表示"
-    show_and_disable_enter_key: "表示し、エンターキーでの送信を無効"
+    label: "发送信息按钮"
+    hide: "隐藏 (可使用回车发送信息)"
+    show: "显示"
+    show_and_disable_enter_key: "显示,并且停用‘回车发送信息’"
 
   # notice_xsoverlay:
   #   label: "XSOverlayでの通知受け取り機能を有効"
   #   desc: "文字起こし (受信) されたメッセージをXSOverlayの機能を使って通知として受け取れます。"
 
   auto_export_message_logs:
-    label: "会話ログを自動的に保存する"
-    desc: "テキストファイルとしてログがlogsフォルダ内に保存されます。"
+    label: "自动导出聊天记录"
+    desc: "以文本文件的形式在logs文件夹中保存。"
 
   vrc_mic_mute_sync:
-    label: "VRCマイクミュート同期"
-    desc: "VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。\n※若干の遅延はあります。また、Push-To-Talkは非対応です。"
+    label: "与VRC中的麦克风静音同步"
+    desc: "当VRChat的麦克风处于静音时,不在VRChat中发送信息\n※存在少许延迟且不支持按键发言."
 
 
   send_message_to_vrc:
-    label: "VRChatにメッセージを送信する"
-    desc: "サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。"
+    label: "发送信息至VRChat"
+    desc: "不发送信息至VRChat的情况下也能使用它,但该功能现在并未完成.在想要发送信息时,请不要忘记打开这个功能."
 
 
   # send_message_format:
@@ -283,10 +284,10 @@ config_window:
 
 
   osc_ip_address:
-    label: "OSC IP Address"
+    label: "OSC IP 地址"
 
   osc_port:
-    label: "OSC Port"
+    label: "OSC 端口"
 
   open_config_filepath:
-    label: "設定ファイルを開く"
+    label: "打开设置文件"
