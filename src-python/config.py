@@ -399,7 +399,7 @@ class Config:
 
     @MESSAGE_BOX_RATIO.setter
     def MESSAGE_BOX_RATIO(self, value):
-        if isinstance(value, int) and self.MESSAGE_BOX_RATIO_RANGE[0] <= value <= self.MESSAGE_BOX_RATIO_RANGE[1]:
+        if isinstance(value, float):
             self._MESSAGE_BOX_RATIO = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 

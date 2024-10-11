@@ -549,7 +549,7 @@ class Controller:
 
     @staticmethod
     def setMessageBoxRatio(data, *args, **kwargs) -> dict:
-        config.MESSAGE_BOX_RATIO = int(data)
+        config.MESSAGE_BOX_RATIO = float(data)
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
