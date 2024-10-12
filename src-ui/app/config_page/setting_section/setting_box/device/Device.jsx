@@ -1,4 +1,3 @@
-import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
 import {
@@ -13,13 +12,17 @@ import {
     useSelectedSpeakerDevice,
     useSpeakerThreshold,
 } from "@logics_configs";
+
 import {
     useOnMouseLeaveDropdownMenu,
-} from "../components/useSettingBox";
-import { LabelComponent } from "../components/label_component/LabelComponent";
-import { DropdownMenu } from "../components/dropdown_menu/DropdownMenu";
-import { ThresholdComponent } from "../components/threshold_component/ThresholdComponent";
-import { Switchbox } from "../components/switchbox/Switchbox";
+} from "../_templates/Templates";
+
+import {
+    LabelComponent,
+    DropdownMenu,
+    ThresholdComponent,
+    SwitchBox,
+} from "../_components/";
 
 export const Device = () => {
     return (
@@ -74,7 +77,7 @@ const Mic_Container = () => {
 
                     <div className={styles.device_auto_select_wrapper}>
                         <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_auto_select")}</p>
-                        <Switchbox
+                        <SwitchBox
                             variable={currentEnableAutoMicSelect}
                             toggleFunction={toggleEnableAutoMicSelect}
                         />
@@ -111,7 +114,7 @@ const Mic_Container = () => {
             <div className={styles.threshold_container}>
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()} />
-                    <Switchbox
+                    <SwitchBox
                         variable={currentEnableAutomaticMicThreshold}
                         toggleFunction={toggleEnableAutomaticMicThreshold}
                     />
@@ -165,7 +168,7 @@ const Speaker_Container = () => {
 
                     <div className={styles.device_auto_select_wrapper}>
                         <p className={styles.device_secondary_label}>{t("config_page.speaker_device.label_auto_select")}</p>
-                        <Switchbox
+                        <SwitchBox
                             variable={currentEnableAutoSpeakerSelect}
                             toggleFunction={toggleEnableAutoSpeakerSelect}
                         />
@@ -188,7 +191,7 @@ const Speaker_Container = () => {
             <div className={styles.threshold_container}>
                 <div className={styles.threshold_switch_section}>
                     <LabelComponent {...getLabels()}/>
-                    <Switchbox
+                    <SwitchBox
                         variable={currentEnableAutomaticSpeakerThreshold}
                         toggleFunction={toggleEnableAutomaticSpeakerThreshold}
                     />
