@@ -2,11 +2,6 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Appearance.module.scss";
-import { LabelComponent } from "../components/label_component/LabelComponent";
-import {
-    SliderContainer,
-    DropdownMenuContainer,
-} from "../components/useSettingBox";
 import { useStore_SelectableFontFamilyList } from "@store";
 import {
     useUiLanguage,
@@ -15,6 +10,15 @@ import {
     useSelectedFontFamily,
     useTransparency,
 } from "@logics_configs";
+
+import {
+    LabelComponent
+} from "../_components/";
+
+import {
+    SliderContainer,
+    DropdownMenuContainer,
+} from "../_templates/Templates";
 
 export const Appearance = () => {
     return (
