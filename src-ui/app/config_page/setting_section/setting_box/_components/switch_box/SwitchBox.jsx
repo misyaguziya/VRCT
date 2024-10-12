@@ -1,8 +1,8 @@
 import clsx from "clsx";
 import { useState } from "react";
-import styles from "./Switchbox.module.scss";
+import styles from "./SwitchBox.module.scss";
 
-export const Switchbox = (props) => {
+export const SwitchBox = (props) => {
     const [is_hovered, setIsHovered] = useState(false);
     const [is_mouse_down, setIsMouseDown] = useState(false);
 

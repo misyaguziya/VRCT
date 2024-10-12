@@ -1,9 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useSettingBox } from "../components/useSettingBox";
-// import {
-//     useStore_EnableAutoClearMessageBox,
-// } from "@store";
-
+import { useSettingBox } from "../_components/useSettingBox";
 import { useConfig } from "@logics/useConfig";
 
 export const Others = () => {
