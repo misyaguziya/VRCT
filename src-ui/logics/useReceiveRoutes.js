@@ -34,7 +34,6 @@ import {
     useUiScaling,
     useMessageLogUiScaling,
     useTransparency,
-    // useRestoreWindowGeometry,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -85,8 +84,6 @@ export const useReceiveRoutes = () => {
     const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { updateSelectedFontFamily } = useSelectedFontFamily();
     const { updateTransparency } = useTransparency();
-    // const { updateRestoreWindowGeometry } = useRestoreWindowGeometry();
-
 
     const routes = {
         // Common
@@ -229,10 +226,6 @@ export const useReceiveRoutes = () => {
 
         "/get/data/transparency": updateTransparency,
         "/set/data/transparency": updateTransparency,
-
-        // "/get/data/restore_main_window_geometry": updateRestoreWindowGeometry,
-        // "/set/enable/restore_main_window_geometry": updateRestoreWindowGeometry,
-        // "/set/disable/restore_main_window_geometry": updateRestoreWindowGeometry,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
