@@ -2,6 +2,7 @@ import { translator_status } from "@data";
 import { arrayToObject } from "@utils/arrayToObject";
 
 import {
+    useWindow,
     useMessage,
     useVolume,
 } from "@logics_common";
@@ -33,9 +34,11 @@ import {
     useUiScaling,
     useMessageLogUiScaling,
     useTransparency,
+    // useRestoreWindowGeometry,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { restoreWindowGeometry } = useWindow();
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
     const {
         updateTranslationStatus,
@@ -82,10 +85,15 @@ export const useReceiveRoutes = () => {
     const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { updateSelectedFontFamily } = useSelectedFontFamily();
     const { updateTransparency } = useTransparency();
+    // const { updateRestoreWindowGeometry } = useRestoreWindowGeometry();
 
 
     const routes = {
+        // Common
         "/run/feed_watchdog": () => {},
+        "/get/data/main_window_geometry": restoreWindowGeometry,
+        "/set/data/main_window_geometry": () => {},
+
         // Main Page
         // Page Controls
         "/get/data/main_window_sidebar_compact_mode": updateIsMainPageCompactMode,
@@ -221,6 +229,10 @@ export const useReceiveRoutes = () => {
 
         "/get/data/transparency": updateTransparency,
         "/set/data/transparency": updateTransparency,
+
+        // "/get/data/restore_main_window_geometry": updateRestoreWindowGeometry,
+        // "/set/enable/restore_main_window_geometry": updateRestoreWindowGeometry,
+        // "/set/disable/restore_main_window_geometry": updateRestoreWindowGeometry,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
