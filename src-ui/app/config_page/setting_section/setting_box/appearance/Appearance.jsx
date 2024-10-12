@@ -1,32 +1,22 @@
 import clsx from "clsx";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Appearance.module.scss";
-import { useSettingBox } from "../components/useSettingBox";
-
+import { LabelComponent } from "../components/label_component/LabelComponent";
+import {
+    SliderContainer,
+    DropdownMenuContainer,
+} from "../components/useSettingBox";
+import { useStore_SelectableFontFamilyList } from "@store";
 import {
     useUiLanguage,
     useUiScaling,
     useMessageLogUiScaling,
     useSelectedFontFamily,
     useTransparency,
-    // useRestoreWindowGeometry,
 } from "@logics_configs";
 
 export const Appearance = () => {
-    const { t } = useTranslation();
-    const {
-        // DropdownMenuContainer,
-        // SliderContainer,
-        // CheckboxContainer,
-        // SwitchboxContainer,
-        // EntryContainer,
-        // ThresholdContainer,
-        // RadioButtonContainer,
-        // DeeplAuthKeyContainer,
-        // WordFilterContainer,
-        // ActionButtonContainer,
-    } = useSettingBox();
-
     return (
         <>
             <UiLanguageContainer />
@@ -34,45 +24,19 @@ export const Appearance = () => {
             <MessageLogUiScalingContainer />
             <FontFamilyContainer />
             <TransparencyContainer />
-            {/* <RestoreWindowGeometryContainer /> */}
-
-
-
-            {/* <DropdownMenuContainer dropdown_id="mic_device" label="Mic Device" desc="description" selected_id={currentSelectedMicDevice.data} list={currentMicDeviceList} selectFunction={selectFunction} state={currentSelectedMicDevice.state} />
-
-            <SliderContainer label="Transparent" desc="description" min="0" max="3000"/>
-            <CheckboxContainer label="Transparent" desc="description" checkbox_id="checkbox_id_1"/>
-            <SwitchboxContainer label="Transparent" desc="description" switchbox_id="switchbox_id_1"/>
-
-            <RadioButtonContainer label="Transparent" desc="description" switchbox_id="radiobutton_id_1"/>
-
-            <EntryContainer width="20rem" label="Transparent" desc="description" switchbox_id="entry_id_1"/>
-
-            <ThresholdContainer label="Transparent" desc="description" id="mic_threshold"  min="0" max="3000"/>
-
-            <DeeplAuthKeyContainer label={t(`config_page.deepl_auth_key.label`)} desc={t(`config_page.deepl_auth_key.desc`)}/>
-
-            <WordFilterContainer label={t(`config_page.mic_word_filter.label`)} desc={t(`config_page.mic_word_filter.desc`)}/>
-
-            <ActionButtonContainer label={t(`config_page.open_config_filepath.label`)} IconComponent={FolderOpenSvg} OnclickFunction={()=>{}}/> */}
-
         </>
     );
 };
 
-import { LabelComponent } from "../components/label_component/LabelComponent";
-
 const UiLanguageContainer = () => {
     const { t } = useTranslation();
     const { currentUiLanguage, setUiLanguage } = useUiLanguage();
-
     const SELECTABLE_UI_LANGUAGES_DICT = {
         en: "English",
         ja: "日本語",
         ko: "한국어",
         "zh-Hant": "繁體中文",
     };
-
 
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
@@ -106,10 +70,6 @@ const UiLanguageContainer = () => {
     );
 };
 
-
-import { SliderContainer } from "../components/useSettingBox";
-
-import { useEffect, useState } from "react";
 const UiScalingContainer = () => {
     const { t } = useTranslation();
     const { currentUiScaling, setUiScaling } = useUiScaling();
@@ -192,8 +152,7 @@ const MessageLogUiScalingContainer = () => {
         />
     );
 };
-import { useStore_SelectableFontFamilyList } from "@store";
-import { DropdownMenuContainer } from "../components/useSettingBox";
+
 const FontFamilyContainer = () => {
     const { t } = useTranslation();
     const { currentSelectedFontFamily, setSelectedFontFamily } = useSelectedFontFamily();
@@ -215,7 +174,6 @@ const FontFamilyContainer = () => {
         />
     );
 };
-
 
 const TransparencyContainer = () => {
     const { t } = useTranslation();
@@ -256,19 +214,3 @@ const TransparencyContainer = () => {
         />
     );
 };
-
-// import { CheckboxContainer } from "../components/useSettingBox";
-
-// const RestoreWindowGeometryContainer = () => {
-//     const { t } = useTranslation();
-//     const { currentRestoreWindowGeometry, toggleRestoreWindowGeometry } = useRestoreWindowGeometry();
-
-//     return (
-//         <CheckboxContainer
-//             label={t("config_page.to_restore_main_page_geometry.label")}
-//             desc={t("config_page.to_restore_main_page_geometry.desc")}
-//             variable={currentRestoreWindowGeometry}
-//             toggleFunction={toggleRestoreWindowGeometry}
-//         />
-//     );
-// };

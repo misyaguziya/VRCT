@@ -2,18 +2,6 @@ import clsx from "clsx";
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
 import {
-    useOnMouseLeaveDropdownMenu,
-} from "../components/useSettingBox";
-export const Device = () => {
-    return (
-        <>
-            <Mic_Container />
-            <Speaker_Container />
-        </>
-    );
-};
-
-import {
     useEnableAutoMicSelect,
     useMicHostList,
     useSelectedMicHost,
@@ -25,17 +13,28 @@ import {
     useSelectedSpeakerDevice,
     useSpeakerThreshold,
 } from "@logics_configs";
-
+import {
+    useOnMouseLeaveDropdownMenu,
+} from "../components/useSettingBox";
 import { LabelComponent } from "../components/label_component/LabelComponent";
 import { DropdownMenu } from "../components/dropdown_menu/DropdownMenu";
 import { ThresholdComponent } from "../components/threshold_component/ThresholdComponent";
 import { Switchbox } from "../components/switchbox/Switchbox";
 
+export const Device = () => {
+    return (
+        <>
+            <Mic_Container />
+            <Speaker_Container />
+        </>
+    );
+};
+
 const Mic_Container = () => {
     const { t } = useTranslation();
     const { currentEnableAutoMicSelect, toggleEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
-    const { currentMicHostList, getMicHostList } = useMicHostList();
+    const { currentMicHostList } = useMicHostList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
     const { currentEnableAutomaticMicThreshold, toggleEnableAutomaticMicThreshold } = useMicThreshold();
 
@@ -47,7 +46,7 @@ const Mic_Container = () => {
     const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
 
     const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
-    const { currentMicDeviceList, getMicDeviceList } = useMicDeviceList();
+    const { currentMicDeviceList } = useMicDeviceList();
 
     const selectFunction_device = (selected_data) => {
         setSelectedMicDevice(selected_data.selected_id);
@@ -89,7 +88,6 @@ const Mic_Container = () => {
                                 selected_id={currentSelectedMicHost.data}
                                 list={currentMicHostList.data}
                                 selectFunction={selectFunction_host}
-                                // openListFunction={getMicHostList}
                                 state={currentSelectedMicHost.state}
                                 style={{ maxWidth: "20rem", minWidth: "10rem" }}
                                 is_disabled={is_disabled_selector}
@@ -103,7 +101,6 @@ const Mic_Container = () => {
                                 selected_id={currentSelectedMicDevice.data}
                                 list={currentMicDeviceList.data}
                                 selectFunction={selectFunction_device}
-                                // openListFunction={getMicDeviceList}
                                 state={currentSelectedMicDevice.state}
                                 is_disabled={is_disabled_selector}
                             />
@@ -135,7 +132,7 @@ const Speaker_Container = () => {
     const { t } = useTranslation();
     const { currentEnableAutoSpeakerSelect, toggleEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
     const { currentSelectedSpeakerDevice, setSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-    const { currentSpeakerDeviceList, getSpeakerDeviceList } = useSpeakerDeviceList();
+    const { currentSpeakerDeviceList } = useSpeakerDeviceList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
     const { currentEnableAutomaticSpeakerThreshold, toggleEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
 
@@ -182,7 +179,6 @@ const Speaker_Container = () => {
                             selected_id={currentSelectedSpeakerDevice.data}
                             list={currentSpeakerDeviceList.data}
                             selectFunction={selectFunction}
-                            // openListFunction={getSpeakerDeviceList}
                             state={currentSelectedSpeakerDevice.state}
                             is_disabled={is_disabled_selector}
                         />
