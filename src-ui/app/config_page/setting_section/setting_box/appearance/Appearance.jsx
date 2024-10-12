@@ -9,12 +9,13 @@ import {
     useMessageLogUiScaling,
     useSelectedFontFamily,
     useTransparency,
+    // useRestoreWindowGeometry,
 } from "@logics_configs";
 
 export const Appearance = () => {
     const { t } = useTranslation();
     const {
-        DropdownMenuContainer,
+        // DropdownMenuContainer,
         // SliderContainer,
         // CheckboxContainer,
         // SwitchboxContainer,
@@ -33,6 +34,7 @@ export const Appearance = () => {
             <MessageLogUiScalingContainer />
             <FontFamilyContainer />
             <TransparencyContainer />
+            {/* <RestoreWindowGeometryContainer /> */}
 
 
 
@@ -254,3 +256,19 @@ const TransparencyContainer = () => {
         />
     );
 };
+
+// import { CheckboxContainer } from "../components/useSettingBox";
+
+// const RestoreWindowGeometryContainer = () => {
+//     const { t } = useTranslation();
+//     const { currentRestoreWindowGeometry, toggleRestoreWindowGeometry } = useRestoreWindowGeometry();
+
+//     return (
+//         <CheckboxContainer
+//             label={t("config_page.to_restore_main_page_geometry.label")}
+//             desc={t("config_page.to_restore_main_page_geometry.desc")}
+//             variable={currentRestoreWindowGeometry}
+//             toggleFunction={toggleRestoreWindowGeometry}
+//         />
+//     );
+// };

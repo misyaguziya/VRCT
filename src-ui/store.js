@@ -99,6 +99,7 @@ const createAtomWithHook = (initialValue, base_name, options) => {
 
 
 // Common
+// export const { atomInstance: Atom_RestoreWindowGeometry, useHook: useStore_RestoreWindowGeometry } = createAtomWithHook(true, "RestoreWindowGeometry");
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_MainFunctionsStateMemory } = createAtomWithHook({
     transcription_send: false,

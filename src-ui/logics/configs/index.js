@@ -10,6 +10,7 @@ export { useSpeakerDeviceList } from "./device/useSpeakerDeviceList";
 export { useSpeakerThreshold } from "./device/useSpeakerThreshold";
 
 export { useMessageLogUiScaling } from "./appearance/useMessageLogUiScaling";
+// export { useRestoreWindowGeometry } from "./appearance/useRestoreWindowGeometry";
 export { useSelectedFontFamily } from "./appearance/useSelectedFontFamily";
 export { useSendMessageButtonType } from "./appearance/useSendMessageButtonType";
 export { useTransparency } from "./appearance/useTransparency";

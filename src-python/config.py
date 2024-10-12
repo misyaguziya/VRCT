@@ -445,7 +445,7 @@ class Config:
     def MAIN_WINDOW_GEOMETRY(self, value):
         if isinstance(value, dict) and set(value.keys()) == set(self.MAIN_WINDOW_GEOMETRY.keys()):
             for key, value in value.items():
-                if isinstance(value, str):
+                if isinstance(value, int):
                     self._MAIN_WINDOW_GEOMETRY[key] = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
@@ -1106,10 +1106,10 @@ class Config:
         self._UI_LANGUAGE = "en"
         self._RESTORE_MAIN_WINDOW_GEOMETRY = True
         self._MAIN_WINDOW_GEOMETRY = {
-            "x_pos": "0",
-            "y_pos": "0",
-            "width": "870",
-            "height": "654",
+            "x_pos": 0,
+            "y_pos": 0,
+            "width": 870,
+            "height": 654,
         }
         self._AUTO_MIC_SELECT = True
         self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
