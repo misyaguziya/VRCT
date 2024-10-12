@@ -6,6 +6,7 @@ import { ConfigPage } from "./config_page/ConfigPage";
 import styles from "./App.module.scss";
 
 export const App = () => {
+    const { WindowGeometryController } = useWindow();
     return (
         <div className={styles.container}>
             <StartPythonFacadeComponent />
@@ -14,6 +15,7 @@ export const App = () => {
             <UiSizeController />
             <FontFamilyController />
             <TransparencyController />
+            <WindowGeometryController />
 
             <WindowTitleBar />
             <div className={styles.pages_wrapper}>
@@ -24,6 +26,11 @@ export const App = () => {
     );
 };
 
+import {
+    useWindow,
+    useVolume,
+    useIsOpenedConfigPage,
+} from "@logics_common";
 
 import {
     useSoftwareVersion,
@@ -58,6 +65,8 @@ const StartPythonFacadeComponent = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const { asyncFetchFonts } = useAsyncFetchFonts();
+
+    const { fetchAndUpdateWindowGeometry } = useWindow();
 
     const { getMicHostList } = useMicHostList();
     const { getMicDeviceList } = useMicDeviceList();
@@ -96,6 +105,8 @@ const StartPythonFacadeComponent = () => {
         if (!hasRunRef.current) {
             asyncStartPython().then(() => {
                 startFeedingToWatchDog();
+
+                fetchAndUpdateWindowGeometry();
 
                 getUiLanguage();
                 getUiScaling();
@@ -156,10 +167,6 @@ const UiLanguageController = () => {
 };
 
 import { useStore_MainFunctionsStateMemory } from "@store";
-import {
-    useVolume,
-    useIsOpenedConfigPage,
-} from "@logics_common";
 
 const ConfigPageCloseTrigger = () => {
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();

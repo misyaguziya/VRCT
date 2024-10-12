@@ -17,6 +17,8 @@
         "setAlwaysOnTop": true,
         "setDecorations": true,
         "close": true,
+        "setPosition": true,
+        "setSize": true,
         "maximize": true,
         "minimize": true,
         "unmaximize": true,

@@ -45,17 +45,16 @@ export const SliderContainer = (props) => {
     );
 };
 
+export const CheckboxContainer = (props) => {
+    return (
+        <div className={styles.container}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <Checkbox {...props}/>
+        </div>
+    );
+};
+
 export const useSettingBox = () => {
-
-    const CheckboxContainer = (props) => {
-        return (
-            <div className={styles.container}>
-                <LabelComponent label={props.label} desc={props.desc} />
-                <Checkbox {...props}/>
-            </div>
-        );
-    };
-
     const SwitchboxContainer = (props) => {
         return (
             <div className={styles.container}>
