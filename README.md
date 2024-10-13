@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)  
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 [![Github Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://github.com/sponsors/misyaguziya)
-[![pixivFANBOX](https://img.shields.io/badge/pixivFANBOX-red?logo=pixiv&logoColor=white)](https://vrct-dev.fanbox.cc/)
+[![PIXIV FANBOX](https://img.shields.io/badge/PIXIV%20FANBOX-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://vrct-dev.fanbox.cc/)
 
 | **English** | [日本語](./README.ja.md) | [한국어](./README.ko.md) | [繁體中文](./README.zh-Hant.md) |
 
