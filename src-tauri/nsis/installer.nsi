@@ -1,24 +1,28 @@
-﻿!define PRODUCT_VERSION "1.0.0.0"
-!define VERSION "1.0.0.0"
-VIProductVersion "${PRODUCT_VERSION}"
-VIFileVersion "${VERSION}"
-VIAddVersionKey "FileVersion" "${VERSION}"
-VIAddVersionKey "ProductName" "VRCT"
-VIAddVersionKey "ProductVersion" "${PRODUCT_VERSION}"
-VIAddVersionKey "LegalCopyright" "Copyright m's software"
-VIAddVersionKey "FileDescription" "Communication tool with translation & transcription for VRChat"
-
-; Modern UI
-!include MUI2.nsh
-; nsDialogs
+﻿!include MUI2.nsh
 !include nsDialogs.nsh
-; LogicLib
 !include LogicLib.nsh
-; FileFunc
 !include FileFunc.nsh
 
-!define MUI_ICON "..\img\vrct_logo_mark_black.ico"
-!define MUI_UNICON "..\img\vrct_logo_mark_black.ico"
+!define MANUFACTURER "vrct"
+!define PRODUCTNAME "VRCT"
+!define VERSION "0.0.0"
+!define PRODUCT_VERSION "1.0.0.0"
+!define SHORTDESCRIPTION "Communication tool with translation & transcription for VRChat"
+!define UNINSTKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCTNAME}"
+!define COPYRIGHT "Copyright m's software"
+!define MAINBINARYNAME "VRCT"
+!define ESTIMATEDSIZE "0x0b304b"
+
+VIProductVersion "${PRODUCT_VERSION}"
+VIFileVersion "${VERSION}"
+VIAddVersionKey "ProductName" "${PRODUCTNAME}"
+VIAddVersionKey "FileDescription" "${SHORTDESCRIPTION}"
+VIAddVersionKey "LegalCopyright" "${COPYRIGHT}"
+VIAddVersionKey "FileVersion" "${VERSION}"
+VIAddVersionKey "ProductVersion" "${PRODUCT_VERSION}"
+
+!define MUI_ICON "icons/icon.ico"
+!define MUI_UNICON "icons/icon.ico"
 
 Unicode true
 ; アプリケーション名
@@ -169,20 +173,22 @@ Section
     nsExec::ExecToStack "taskkill /IM VRCT.exe"
   ${EndIf}
 
-  ; ディレクトリを削除
-  RMDir /r "$INSTDIR"
-  ; スタート メニューから削除
-  Delete "$SMPROGRAMS\VRCT\VRCT.lnk"
-  RMDir "$SMPROGRAMS\VRCT"
-  ; デスクトップ ショートカットを削除
-  Delete "$DESKTOP\VRCT.lnk"
-  ; レジストリ キーを削除
-  DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT"
+  ; ; ディレクトリを削除
+  ; RMDir /r "$INSTDIR"
+  ; ; スタート メニューから削除
+  ; Delete "$SMPROGRAMS\VRCT\VRCT.lnk"
+  ; RMDir "$SMPROGRAMS\VRCT"
+  ; ; デスクトップ ショートカットを削除
+  ; Delete "$DESKTOP\VRCT.lnk"
+  ; ; レジストリ キーを削除
+  ; DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT"
 
   ; 出力先を指定します。
   SetOutPath "$INSTDIR"
   ; インストールされるファイル
-  File /r "..\dist\VRCT\"
+  File /a "target\release\VRCT.exe"
+  File /a "target\release\backend.exe"
+  File /r "target\release\_internal\"
 
   ; アンインストーラを出力
   WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -217,9 +223,15 @@ Section
   SetOutPath "$INSTDIR"
   CreateShortcut "$SMPROGRAMS\VRCT\VRCT.lnk" "$INSTDIR\VRCT.exe" ""
   ; レジストリに登録
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayName" "VRCT"
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-  WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRCT" "DisplayIcon" '"$INSTDIR\_internal\img\vrct_logo_mark_black.ico"'
+  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayName" "${PRODUCTNAME}"
+  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayIcon" "$\"$INSTDIR\${MAINBINARYNAME}.exe$\""
+  WriteRegStr SHCTX "${UNINSTKEY}" "DisplayVersion" "${VERSION}"
+  WriteRegStr SHCTX "${UNINSTKEY}" "Publisher" "${MANUFACTURER}"
+  WriteRegStr SHCTX "${UNINSTKEY}" "InstallLocation" "$\"$INSTDIR$\""
+  WriteRegStr SHCTX "${UNINSTKEY}" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+  WriteRegDWORD SHCTX "${UNINSTKEY}" "NoModify" "1"
+  WriteRegDWORD SHCTX "${UNINSTKEY}" "NoRepair" "1"
+  WriteRegDWORD SHCTX "${UNINSTKEY}" "EstimatedSize" "${ESTIMATEDSIZE}"
 SectionEnd
 
 ; アンインストーラ
