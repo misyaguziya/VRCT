@@ -13,7 +13,8 @@
     "tauri-dev": "tauri dev",
     "dev": "npm run build-python && npm run dev-ui",
     "dev-ui": "npm-run-all --parallel vite tauri-dev",
-    "build": "npm run build-python && npm run vite-build && npm run tauri build"
+    "build": "npm run build-python && npm run vite-build && npm run tauri build",
+    "build-ui": "npm run vite-build && npm run tauri build"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
