@@ -72,8 +72,8 @@
         "nsis": {
           "template": "nsis/template.nsi",
           "license": "../LICENSE",
-          "displayLanguageSelector": true,
-          "compression": "lzma"
+          "installMode": "both",
+          "displayLanguageSelector": true
         }
       }
     }
