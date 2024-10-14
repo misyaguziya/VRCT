@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "VRCT",
-    "version": "0.0.0"
+    "version": "3.0.0"
   },
   "tauri": {
     "allowlist": {
@@ -50,8 +50,11 @@
     },
     "bundle": {
       "active": true,
-      "targets": "all",
+      "targets": "nsis",
       "identifier": "com.vrct.dev",
+      "publisher": "m's software",
+      "copyright": "Copyright m's software",
+      "shortDescription": "Communication tool with translation & transcription for VRChat",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -64,6 +67,14 @@
       ],
       "resources":{
         "bin/_internal": "_internal"
+      },
+      "windows": {
+        "nsis": {
+          "template": "nsis/template.nsi",
+          "license": "../LICENSE",
+          "displayLanguageSelector": true,
+          "compression": "lzma"
+        }
       }
     }
   }
