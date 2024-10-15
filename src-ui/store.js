@@ -180,6 +180,14 @@ export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency }
 export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
 export const { atomInstance: Atom_WordFilterList, useHook: useStore_WordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
 
+// Transcription
+export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
+export const { atomInstance: Atom_MicPhraseTimeout, useHook: useStore_MicPhraseTimeout } = createAtomWithHook(0, "MicPhraseTimeout");
+export const { atomInstance: Atom_MicMaxWords, useHook: useStore_MicMaxWords } = createAtomWithHook(0, "MicMaxWords");
+
+export const { atomInstance: Atom_SpeakerRecordTimeout, useHook: useStore_SpeakerRecordTimeout } = createAtomWithHook(0, "SpeakerRecordTimeout");
+export const { atomInstance: Atom_SpeakerPhraseTimeout, useHook: useStore_SpeakerPhraseTimeout } = createAtomWithHook(0, "SpeakerPhraseTimeout");
+export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxWords } = createAtomWithHook(0, "SpeakerMaxWords");
 
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useStore_EnableAutoClearMessageBox } = createAtomWithHook(true, "EnableAutoClearMessageBox");

@@ -19,4 +19,12 @@ export { useUiScaling } from "./appearance/useUiScaling";
 
 export { useEnableAutoClearMessageBox } from "./others/useEnableAutoClearMessageBox";
 
+export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
+export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";
+export { useMicMaxWords } from "./transcription/useMicMaxWords";
+
+export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout";
+export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";
+export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
+
 export { useSoftwareVersion } from "./useSoftwareVersion";
