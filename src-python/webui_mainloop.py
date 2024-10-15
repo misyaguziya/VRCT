@@ -290,9 +290,6 @@ mapping = {
     "/get/data/received_message_format_with_t": {"status": True, "variable":controller.getReceivedMessageFormatWithT},
     "/set/data/received_message_format_with_t": {"status": True, "variable":controller.setReceivedMessageFormatWithT},
 
-    "/get/data/speaker2chatbox_pass": {"status": True, "variable":controller.getSpeaker2ChatboxPass},
-    "/set/data/speaker2chatbox_pass": {"status": True, "variable":controller.setSpeaker2ChatboxPass},
-
     "/get/data/send_received_message_to_vrc": {"status": True, "variable":controller.getSendReceivedMessageToVrc},
     "/set/enable/send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
     "/set/disable/send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
