@@ -88,7 +88,10 @@ class Controller:
             self.run(
                 400,
                 self.run_mapping["error_device"],
-                {"message":"No mic device detected."},
+                {
+                    "message":"No mic device detected",
+                    "data": None
+                },
             )
         else:
             self.run(
@@ -102,7 +105,10 @@ class Controller:
             self.run(
                 400,
                 self.run_mapping["error_device"],
-                {"message":"No mic device detected."},
+                {
+                    "message":"No mic device detected",
+                    "data": None
+                },
             )
         else:
             self.run(
@@ -132,7 +138,10 @@ class Controller:
             self.run(
                 400,
                 self.run_mapping["error_device"],
-                {"message":"No mic device detected."},
+                {
+                    "message":"No mic device detected",
+                    "data": None
+                },
             )
 
         elif isinstance(message, str) and len(message) > 0:
@@ -156,7 +165,10 @@ class Controller:
                     self.run(
                         400,
                         self.run_mapping["error_translation_engine"],
-                        {"message":"translation engine limit error"},
+                        {
+                            "message":"Translation engine limit error",
+                            "data": None
+                        },
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
@@ -198,7 +210,10 @@ class Controller:
             self.run(
                 400,
                 self.run_mapping["error_device"],
-                {"message":"No mic device detected."},
+                {
+                    "message":"No speaker device detected",
+                    "data": None
+                },
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
@@ -214,7 +229,10 @@ class Controller:
                     self.run(
                         400,
                         self.run_mapping["error_translation_engine"],
-                        {"message":"translation engine limit error"},
+                        {
+                            "message":"Translation engine limit error",
+                            "data": None
+                        },
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
@@ -275,7 +293,10 @@ class Controller:
                     self.run(
                         400,
                         self.run_mapping["error_translation_engine"],
-                        {"message":"translation engine limit error"},
+                        {
+                            "message":"Translation engine limit error",
+                            "data": None
+                        },
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
@@ -647,12 +668,24 @@ class Controller:
 
     @staticmethod
     def setMicThreshold(data, *args, **kwargs) -> dict:
-        status = 400
-        data = int(data)
-        if 0 <= data <= config.MAX_MIC_THRESHOLD:
-            config.MIC_THRESHOLD = data
-            status = 200
-        return {"status": status, "result": config.MIC_THRESHOLD}
+        try:
+            data = int(data)
+            if 0 <= data <= config.MAX_MIC_THRESHOLD:
+                config.MIC_THRESHOLD = data
+                status = 200
+            else:
+                raise ValueError()
+        except Exception:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Speaker energy threshold value is out of range",
+                    "data": config.MIC_THRESHOLD
+                }
+            }
+        else:
+            response = {"status":status, "result":config.MIC_THRESHOLD}
+        return response
 
     @staticmethod
     def getMicAutomaticThreshold(*args, **kwargs) -> dict:
@@ -682,7 +715,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Mic Record Timeout"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Mic record timeout value is out of range",
+                    "data": config.MIC_RECORD_TIMEOUT
+                }
+            }
         else:
             response = {"status":200, "result":config.MIC_RECORD_TIMEOUT}
         return response
@@ -700,7 +739,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Mic Phrase Timeout"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Mic phrase timeout value is out of range",
+                    "data": config.MIC_PHRASE_TIMEOUT
+                }
+            }
         else:
             response = {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
         return response
@@ -718,7 +763,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Mic Max Phrases"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Mic max phrases value is out of range",
+                    "data": config.MIC_MAX_PHRASES
+                }
+            }
         else:
             response = {"status":200, "result":config.MIC_MAX_PHRASES}
         return response
@@ -823,7 +874,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Set Speaker Energy Threshold"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Speaker energy threshold value is out of range",
+                    "data": config.SPEAKER_THRESHOLD
+                }
+            }
         else:
             response = {"status":200, "result":config.SPEAKER_THRESHOLD}
         return response
@@ -855,7 +912,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Speaker Record Timeout"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Speaker record timeout value is out of range",
+                    "data": config.SPEAKER_RECORD_TIMEOUT
+                }
+            }
         else:
             response = {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
         return response
@@ -873,7 +936,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Speaker Phrase Timeout"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Speaker phrase timeout value is out of range",
+                    "data": config.SPEAKER_PHRASE_TIMEOUT
+                }
+            }
         else:
             response = {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
         return response
@@ -892,7 +961,13 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {"status":400, "result":{"message":"Error Speaker Max Phrases"}}
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Speaker max phrases value is out of range",
+                    "data": config.SPEAKER_MAX_PHRASES
+                }
+            }
         else:
             response = {"status":200, "result":config.SPEAKER_MAX_PHRASES}
         return response
@@ -939,19 +1014,42 @@ class Controller:
 
     def setDeeplAuthKey(self, data, *args, **kwargs) -> dict:
         printLog("Set DeepL Auth Key", data)
-        status = 400
-        if len(data) == 36 or len(data) == 39:
-            result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
-            if result is True:
-                key = data
-                status = 200
+        try:
+            data = str(data)
+            if len(data) == 36 or len(data) == 39:
+                result = model.authenticationTranslatorDeepLAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys["DeepL_API"] = key
+                    config.AUTH_KEYS = auth_keys
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"DeepL auth key length is not correct",
+                            "data": config.AUTH_KEYS["DeepL_API"]
+                        }
+                    }
             else:
-                key = None
-            auth_keys = config.AUTH_KEYS
-            auth_keys["DeepL_API"] = key
-            config.AUTH_KEYS = auth_keys
-            self.updateTranslationEngineAndEngineList()
-        return {"status":status, "result":config.AUTH_KEYS["DeepL_API"]}
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Authentication failure of deepL auth key",
+                        "data": config.AUTH_KEYS["DeepL_API"]
+                    }
+                }
+        except Exception as e:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":f"Error {e}",
+                        "data": config.AUTH_KEYS["DeepL_API"]
+                    }
+                }
+        return response
 
     def delDeeplAuthKey(self, *args, **kwargs) -> dict:
         auth_keys = config.AUTH_KEYS
