@@ -780,34 +780,9 @@ class Controller:
 
     @staticmethod
     def setMicWordFilter(data, *args, **kwargs) -> dict:
-        data = str(data)
-        data = [w.strip() for w in data.split(",") if len(w.strip()) > 0]
-        # Copy the list
-        new_mic_word_filter_list = config.MIC_WORD_FILTER
-        new_added_value = []
-        for value in data:
-            if value in new_mic_word_filter_list:
-                # If the value is already in the list, do nothing.
-                pass
-            else:
-                new_mic_word_filter_list.append(value)
-                new_added_value.append(value)
-        config.MIC_WORD_FILTER = new_mic_word_filter_list
-
+        config.MIC_WORD_FILTER = sorted(set(data), key=data.index)
         model.resetKeywordProcessor()
         model.addKeywords()
-        return {"status":200, "result":config.MIC_WORD_FILTER}
-
-    @staticmethod
-    def delMicWordFilter(data, *args, **kwargs) -> dict:
-        try:
-            new_mic_word_filter_list = config.MIC_WORD_FILTER
-            new_mic_word_filter_list.remove(str(data))
-            config.MIC_WORD_FILTER = new_mic_word_filter_list
-            model.resetKeywordProcessor()
-            model.addKeywords()
-        except Exception:
-            printLog("Delete Mic Word Filter", "There was no the target word in config.MIC_WORD_FILTER")
         return {"status":200, "result":config.MIC_WORD_FILTER}
 
     @staticmethod

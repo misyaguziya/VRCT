@@ -37,6 +37,7 @@ import {
     useMicRecordTimeout,
     useMicPhraseTimeout,
     useMicMaxWords,
+    useMicWordFilterList,
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
@@ -94,6 +95,7 @@ export const useReceiveRoutes = () => {
     const { updateMicRecordTimeout } = useMicRecordTimeout();
     const { updateMicPhraseTimeout } = useMicPhraseTimeout();
     const { updateMicMaxWords } = useMicMaxWords();
+    const { currentMicWordFilterList, updateMicWordFilterList } = useMicWordFilterList();
 
     const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
@@ -250,6 +252,35 @@ export const useReceiveRoutes = () => {
 
         "/get/data/mic_max_phrases": updateMicMaxWords,
         "/set/data/mic_max_phrases": updateMicMaxWords,
+
+        "/get/data/mic_word_filter": (payload) => {
+            updateMicWordFilterList((prev_list) => {
+                const updated_list = [...prev_list.data];
+                for (const value of payload) {
+                    const existing_item = updated_list.find(item => item.value === value);
+                    if (existing_item) {
+                        existing_item.is_redoable = false;
+                    } else {
+                        updated_list.push({ value, is_redoable: false });
+                    }
+                }
+                return updated_list;
+            });
+        },
+        "/set/data/mic_word_filter": (payload) => {
+            updateMicWordFilterList((prev_list) => {
+                const updated_list = [...prev_list.data];
+                for (const value of payload) {
+                    const existing_item = updated_list.find(item => item.value === value);
+                    if (existing_item) {
+                        existing_item.is_redoable = false;
+                    } else {
+                        updated_list.push({ value, is_redoable: false });
+                    }
+                }
+                return updated_list;
+            });
+        },
 
         "/get/data/speaker_record_timeout": updateSpeakerRecordTimeout,
         "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
