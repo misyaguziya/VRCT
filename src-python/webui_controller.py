@@ -247,13 +247,9 @@ class Controller:
                     # overlay_image = model.createOverlayImageLong("receive", message, translation)
                     # model.updateOverlay(overlay_image)
 
-                # ------------Speaker2Chatbox------------
-                if config.ENABLE_SPEAKER2CHATBOX is True:
-                    # send OSC message
-                    if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                        osc_message = self.messageFormatter("RECEIVED", translation, [message])
-                        model.oscSendMessage(osc_message)
-                # ------------Speaker2Chatbox------------
+                if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
+                    osc_message = self.messageFormatter("RECEIVED", translation, [message])
+                    model.oscSendMessage(osc_message)
 
                 # update textbox message log (Received)
                 self.run(
@@ -1278,15 +1274,6 @@ class Controller:
             if isUniqueStrings(["[message]", "[translation]"], data) is True:
                 config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
-
-    @staticmethod
-    def getSpeaker2ChatboxPass(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SPEAKER2CHATBOX_PASS}
-
-    @staticmethod
-    def setSpeaker2ChatboxPass(data, *args, **kwargs) -> dict:
-        config.SPEAKER2CHATBOX_PASS = data
-        return {"status":200, "result":config.SPEAKER2CHATBOX_PASS}
 
     @staticmethod
     def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
