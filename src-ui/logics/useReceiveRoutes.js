@@ -45,6 +45,8 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useOscIpAddress,
+    useOscPort,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -111,13 +113,16 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
+    const { updateOscIpAddress } = useOscIpAddress();
+    const { updateOscPort } = useOscPort();
+
     const routes = {
         // Common
         "/run/feed_watchdog": () => {},
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
-        "/run/open_filepath_logs": () => {console.log("Opened Directory, Message Logs");
-        },
+        "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
+        "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
 
         // Main Page
         // Page Controls
@@ -326,6 +331,13 @@ export const useReceiveRoutes = () => {
         "/get/data/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/disable/send_message_to_vrc": updateEnableSendMessageToVrc,
+
+        // Advanced Settings
+        "/get/data/osc_ip_address": updateOscIpAddress,
+        "/set/data/osc_ip_address": updateOscIpAddress,
+
+        "/get/data/osc_port": updateOscPort,
+        "/set/data/osc_port": updateOscPort,
     };
 
     const error_routes = {
