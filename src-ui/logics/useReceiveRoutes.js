@@ -27,7 +27,7 @@ import {
     useSelectedSpeakerDevice,
     useMicThreshold,
     useSpeakerThreshold,
-    useEnableAutoClearMessageBox,
+    useEnableAutoClearMessageInputBox,
     useSendMessageButtonType,
     useSelectedFontFamily,
     useUiLanguage,
@@ -76,7 +76,7 @@ export const useReceiveRoutes = () => {
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { updateMicThreshold, updateEnableAutomaticMicThreshold } = useMicThreshold();
     const { updateSpeakerThreshold, updateEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-    const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
+    const { updateEnableAutoClearMessageInputBox }  = useEnableAutoClearMessageInputBox();
     const { updateSendMessageButtonType } = useSendMessageButtonType();
     const { updateUiLanguage } = useUiLanguage();
     const { updateUiScaling } = useUiScaling();
@@ -292,9 +292,9 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
 
         // Others Tab
-        "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/disable/auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
+        "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
+        "/set/disable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
 
         "/get/data/send_message_button_type": updateSendMessageButtonType,
         "/set/data/send_message_button_type": updateSendMessageButtonType,

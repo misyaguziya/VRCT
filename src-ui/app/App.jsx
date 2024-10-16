@@ -41,7 +41,7 @@ import {
     useSelectedSpeakerDevice,
     useMicThreshold,
     useSpeakerThreshold,
-    useEnableAutoClearMessageBox,
+    useEnableAutoClearMessageInputBox,
     useSendMessageButtonType,
     useUiLanguage,
     useUiScaling,
@@ -88,7 +88,7 @@ const StartPythonFacadeComponent = () => {
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { getMicThreshold, getEnableAutomaticMicThreshold } = useMicThreshold();
     const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-    const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
+    const { getEnableAutoClearMessageInputBox }  = useEnableAutoClearMessageInputBox();
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
     const { getUiScaling } = useUiScaling();
@@ -168,7 +168,7 @@ const StartPythonFacadeComponent = () => {
                 getSpeakerPhraseTimeout();
                 getSpeakerMaxWords();
 
-                getEnableAutoClearMessageBox();
+                getEnableAutoClearMessageInputBox();
                 getSendMessageButtonType();
             }).catch((err) => {
                 console.error(err);
