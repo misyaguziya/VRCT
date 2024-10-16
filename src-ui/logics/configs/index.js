@@ -12,11 +12,11 @@ export { useSpeakerThreshold } from "./device/useSpeakerThreshold";
 export { useMessageLogUiScaling } from "./appearance/useMessageLogUiScaling";
 export { useSelectedFontFamily } from "./appearance/useSelectedFontFamily";
 export { useTransparency } from "./appearance/useTransparency";
+export { useSendMessageButtonType } from "./others/useSendMessageButtonType";
 export { useUiLanguage } from "./appearance/useUiLanguage";
 export { useUiScaling } from "./appearance/useUiScaling";
 
 export { useEnableAutoClearMessageInputBox } from "./others/useEnableAutoClearMessageInputBox";
-export { useSendMessageButtonType } from "./others/useSendMessageButtonType";
 
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";

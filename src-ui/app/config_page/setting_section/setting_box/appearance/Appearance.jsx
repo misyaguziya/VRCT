@@ -7,6 +7,7 @@ import {
     useUiLanguage,
     useUiScaling,
     useMessageLogUiScaling,
+    useSendMessageButtonType,
     useSelectedFontFamily,
     useTransparency,
 } from "@logics_configs";
@@ -18,6 +19,7 @@ import {
 import {
     SliderContainer,
     DropdownMenuContainer,
+    RadioButtonContainer,
 } from "../_templates/Templates";
 
 export const Appearance = () => {
@@ -26,6 +28,7 @@ export const Appearance = () => {
             <UiLanguageContainer />
             <UiScalingContainer />
             <MessageLogUiScalingContainer />
+            <SendMessageButtonTypeContainer />
             <FontFamilyContainer />
             <TransparencyContainer />
         </>
@@ -153,6 +156,24 @@ const MessageLogUiScalingContainer = () => {
             marks={marks}
             step={null}
             track={false}
+        />
+    );
+};
+
+const SendMessageButtonTypeContainer = () => {
+    const { t } = useTranslation();
+    const { currentSendMessageButtonType, setSendMessageButtonType } = useSendMessageButtonType();
+
+    return (
+        <RadioButtonContainer
+            label={t("config_page.send_message_button_type.label")}
+            selectFunction={setSendMessageButtonType}
+            options={[
+                { radio_button_id: "hide", label: t("config_page.send_message_button_type.hide") },
+                { radio_button_id: "show", label: t("config_page.send_message_button_type.show") },
+                { radio_button_id: "show_and_disable_enter_key", label: t("config_page.send_message_button_type.show_and_disable_enter_key") },
+            ]}
+            checked_variable={currentSendMessageButtonType}
         />
     );
 };
