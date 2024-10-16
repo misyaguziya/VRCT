@@ -22,6 +22,7 @@ export { useEnableAutoClearMessageBox } from "./others/useEnableAutoClearMessage
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";
 export { useMicMaxWords } from "./transcription/useMicMaxWords";
+export { useMicWordFilterList } from "./transcription/useMicWordFilterList";
 
 export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout";
 export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";

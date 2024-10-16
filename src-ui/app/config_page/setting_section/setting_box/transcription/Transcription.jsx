@@ -14,6 +14,7 @@ import {
 
 import {
     EntryContainer,
+    WordFilterContainer,
 } from "../_templates/Templates";
 
 export const Transcription = () => {
@@ -32,6 +33,7 @@ const Mic_Container = () => {
             <MicRecordTimeout_Box />
             <MicPhraseTimeout_Box />
             <MicMaxWords_Box />
+            <MicWordFilter_Box />
         </>
     );
 };
@@ -118,6 +120,16 @@ const MicMaxWords_Box = () => {
     );
 };
 
+const MicWordFilter_Box = () => {
+    const { t } = useTranslation();
+
+    return (
+        <WordFilterContainer
+            label={t("config_page.mic_word_filter.label")}
+            desc={t("config_page.mic_word_filter.desc")}
+        />
+    );
+};
 
 
 

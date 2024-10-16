@@ -54,6 +54,7 @@ import {
     useMicRecordTimeout,
     useMicPhraseTimeout,
     useMicMaxWords,
+    useMicWordFilterList,
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
@@ -109,6 +110,7 @@ const StartPythonFacadeComponent = () => {
     const { getMicRecordTimeout } = useMicRecordTimeout();
     const { getMicPhraseTimeout } = useMicPhraseTimeout();
     const { getMicMaxWords } = useMicMaxWords();
+    const { getMicWordFilterList } = useMicWordFilterList();
 
     const { getSpeakerRecordTimeout } = useSpeakerRecordTimeout();
     const { getSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
@@ -160,6 +162,7 @@ const StartPythonFacadeComponent = () => {
                 getMicRecordTimeout();
                 getMicPhraseTimeout();
                 getMicMaxWords();
+                getMicWordFilterList();
 
                 getSpeakerRecordTimeout();
                 getSpeakerPhraseTimeout();
