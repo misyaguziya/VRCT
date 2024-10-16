@@ -9,16 +9,18 @@ export const RadioButton = (props) => {
                         ? <>
                             { props.checked_variable.state === "pending" && <span className={styles.loader}></span> }
                             <input
+                                className={styles.radio_button_input}
                                 type="radio"
-                                name="radio"
+                                name={props.name}
                                 value={option.radio_button_id}
                                 onChange={() => props.selectFunction(option.radio_button_id)}
                                 checked
                             />
                         </>
                         : <input
+                            className={styles.radio_button_input}
                             type="radio"
-                            name="radio"
+                            name={props.name}
                             value={option.radio_button_id}
                             onChange={() => props.selectFunction(option.radio_button_id)}
                         />

@@ -10,14 +10,17 @@ export { useSpeakerDeviceList } from "./device/useSpeakerDeviceList";
 export { useSpeakerThreshold } from "./device/useSpeakerThreshold";
 
 export { useMessageLogUiScaling } from "./appearance/useMessageLogUiScaling";
-// export { useRestoreWindowGeometry } from "./appearance/useRestoreWindowGeometry";
 export { useSelectedFontFamily } from "./appearance/useSelectedFontFamily";
-export { useSendMessageButtonType } from "./appearance/useSendMessageButtonType";
 export { useTransparency } from "./appearance/useTransparency";
+export { useSendMessageButtonType } from "./others/useSendMessageButtonType";
 export { useUiLanguage } from "./appearance/useUiLanguage";
 export { useUiScaling } from "./appearance/useUiScaling";
 
-export { useEnableAutoClearMessageBox } from "./others/useEnableAutoClearMessageBox";
+export { useEnableAutoClearMessageInputBox } from "./others/useEnableAutoClearMessageInputBox";
+export { useEnableAutoExportMessageLogs } from "./others/useEnableAutoExportMessageLogs";
+export { useEnableSendMessageToVrc } from "./others/useEnableSendMessageToVrc";
+export { useEnableSendOnlyTranslatedMessages } from "./others/useEnableSendOnlyTranslatedMessages";
+export { useEnableVrcMicMuteSync } from "./others/useEnableVrcMicMuteSync";
 
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";
@@ -27,5 +30,8 @@ export { useMicWordFilterList } from "./transcription/useMicWordFilterList";
 export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout";
 export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";
 export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
+
+export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
+export { useOscPort } from "./advanced_settings/useOscPort";
 
 export { useSoftwareVersion } from "./useSoftwareVersion";

@@ -27,12 +27,16 @@ import {
     useSelectedSpeakerDevice,
     useMicThreshold,
     useSpeakerThreshold,
-    useEnableAutoClearMessageBox,
-    useSendMessageButtonType,
+    useEnableAutoClearMessageInputBox,
+    useEnableSendOnlyTranslatedMessages,
+    useEnableAutoExportMessageLogs,
+    useEnableVrcMicMuteSync,
+    useEnableSendMessageToVrc,
     useSelectedFontFamily,
     useUiLanguage,
     useUiScaling,
     useMessageLogUiScaling,
+    useSendMessageButtonType,
     useTransparency,
     useMicRecordTimeout,
     useMicPhraseTimeout,
@@ -41,6 +45,8 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useOscIpAddress,
+    useOscPort,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -76,7 +82,13 @@ export const useReceiveRoutes = () => {
     const { updateSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { updateMicThreshold, updateEnableAutomaticMicThreshold } = useMicThreshold();
     const { updateSpeakerThreshold, updateEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-    const { updateEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
+
+    const { updateEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
+    const { updateEnableSendOnlyTranslatedMessages } = useEnableSendOnlyTranslatedMessages();
+    const { updateEnableAutoExportMessageLogs } = useEnableAutoExportMessageLogs();
+    const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+    const { updateEnableSendMessageToVrc } = useEnableSendMessageToVrc();
+
     const { updateSendMessageButtonType } = useSendMessageButtonType();
     const { updateUiLanguage } = useUiLanguage();
     const { updateUiScaling } = useUiScaling();
@@ -95,17 +107,22 @@ export const useReceiveRoutes = () => {
     const { updateMicRecordTimeout } = useMicRecordTimeout();
     const { updateMicPhraseTimeout } = useMicPhraseTimeout();
     const { updateMicMaxWords } = useMicMaxWords();
-    const { currentMicWordFilterList, updateMicWordFilterList } = useMicWordFilterList();
+    const { updateMicWordFilterList } = useMicWordFilterList();
 
     const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
+
+    const { updateOscIpAddress } = useOscIpAddress();
+    const { updateOscPort } = useOscPort();
 
     const routes = {
         // Common
         "/run/feed_watchdog": () => {},
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
+        "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
+        "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
 
         // Main Page
         // Page Controls
@@ -237,6 +254,9 @@ export const useReceiveRoutes = () => {
         "/get/data/textbox_ui_scaling": updateMessageLogUiScaling,
         "/set/data/textbox_ui_scaling": updateMessageLogUiScaling,
 
+        "/get/data/send_message_button_type": updateSendMessageButtonType,
+        "/set/data/send_message_button_type": updateSendMessageButtonType,
+
         "/get/data/font_family": updateSelectedFontFamily,
         "/set/data/font_family": updateSelectedFontFamily,
 
@@ -292,12 +312,32 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
 
         // Others Tab
-        "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageBox,
-        "/set/disable/auto_clear_message_box": updateEnableAutoClearMessageBox,
+        "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
+        "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
+        "/set/disable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
 
-        "/get/data/send_message_button_type": updateSendMessageButtonType,
-        "/set/data/send_message_button_type": updateSendMessageButtonType,
+        "/get/data/send_only_translated_messages": updateEnableSendOnlyTranslatedMessages,
+        "/set/enable/send_only_translated_messages": updateEnableSendOnlyTranslatedMessages,
+        "/set/disable/send_only_translated_messages": updateEnableSendOnlyTranslatedMessages,
+
+        "/get/data/logger_feature": updateEnableAutoExportMessageLogs,
+        "/set/enable/logger_feature": updateEnableAutoExportMessageLogs,
+        "/set/disable/logger_feature": updateEnableAutoExportMessageLogs,
+
+        "/get/data/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
+        "/set/enable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
+        "/set/disable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
+
+        "/get/data/send_message_to_vrc": updateEnableSendMessageToVrc,
+        "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,
+        "/set/disable/send_message_to_vrc": updateEnableSendMessageToVrc,
+
+        // Advanced Settings
+        "/get/data/osc_ip_address": updateOscIpAddress,
+        "/set/data/osc_ip_address": updateOscIpAddress,
+
+        "/get/data/osc_port": updateOscPort,
+        "/set/data/osc_port": updateOscPort,
     };
 
     const error_routes = {
