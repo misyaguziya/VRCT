@@ -42,6 +42,10 @@ import {
     useMicThreshold,
     useSpeakerThreshold,
     useEnableAutoClearMessageInputBox,
+    useEnableSendOnlyTranslatedMessages,
+    useEnableAutoExportMessageLogs,
+    useEnableVrcMicMuteSync,
+    useEnableSendMessageToVrc,
     useSendMessageButtonType,
     useUiLanguage,
     useUiScaling,
@@ -88,7 +92,13 @@ const StartPythonFacadeComponent = () => {
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { getMicThreshold, getEnableAutomaticMicThreshold } = useMicThreshold();
     const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
+
     const { getEnableAutoClearMessageInputBox }  = useEnableAutoClearMessageInputBox();
+    const { getEnableSendOnlyTranslatedMessages }  = useEnableSendOnlyTranslatedMessages();
+    const { getEnableAutoExportMessageLogs }  = useEnableAutoExportMessageLogs();
+    const { getEnableVrcMicMuteSync }  = useEnableVrcMicMuteSync();
+    const { getEnableSendMessageToVrc }  = useEnableSendMessageToVrc();
+
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
     const { getUiScaling } = useUiScaling();
@@ -170,6 +180,11 @@ const StartPythonFacadeComponent = () => {
 
                 getEnableAutoClearMessageInputBox();
                 getSendMessageButtonType();
+
+                getEnableSendOnlyTranslatedMessages();
+                getEnableAutoExportMessageLogs();
+                getEnableVrcMicMuteSync();
+                getEnableSendMessageToVrc();
             }).catch((err) => {
                 console.error(err);
             });
