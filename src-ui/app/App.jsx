@@ -62,6 +62,8 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useOscIpAddress,
+    useOscPort,
 } from "@logics_configs";
 
 import {
@@ -126,6 +128,8 @@ const StartPythonFacadeComponent = () => {
     const { getSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { getSpeakerMaxWords } = useSpeakerMaxWords();
 
+    const { getOscIpAddress } = useOscIpAddress();
+    const { getOscPort } = useOscPort();
 
     useEffect(() => {
         if (!hasRunRef.current) {
@@ -185,6 +189,9 @@ const StartPythonFacadeComponent = () => {
                 getEnableAutoExportMessageLogs();
                 getEnableVrcMicMuteSync();
                 getEnableSendMessageToVrc();
+
+                getOscIpAddress();
+                getOscPort();
             }).catch((err) => {
                 console.error(err);
             });
