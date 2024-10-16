@@ -41,7 +41,11 @@ import {
     useSelectedSpeakerDevice,
     useMicThreshold,
     useSpeakerThreshold,
-    useEnableAutoClearMessageBox,
+    useEnableAutoClearMessageInputBox,
+    useEnableSendOnlyTranslatedMessages,
+    useEnableAutoExportMessageLogs,
+    useEnableVrcMicMuteSync,
+    useEnableSendMessageToVrc,
     useSendMessageButtonType,
     useUiLanguage,
     useUiScaling,
@@ -58,6 +62,8 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useOscIpAddress,
+    useOscPort,
 } from "@logics_configs";
 
 import {
@@ -88,7 +94,13 @@ const StartPythonFacadeComponent = () => {
     const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
     const { getMicThreshold, getEnableAutomaticMicThreshold } = useMicThreshold();
     const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-    const { getEnableAutoClearMessageBox }  = useEnableAutoClearMessageBox();
+
+    const { getEnableAutoClearMessageInputBox }  = useEnableAutoClearMessageInputBox();
+    const { getEnableSendOnlyTranslatedMessages }  = useEnableSendOnlyTranslatedMessages();
+    const { getEnableAutoExportMessageLogs }  = useEnableAutoExportMessageLogs();
+    const { getEnableVrcMicMuteSync }  = useEnableVrcMicMuteSync();
+    const { getEnableSendMessageToVrc }  = useEnableSendMessageToVrc();
+
     const { getSendMessageButtonType } = useSendMessageButtonType();
     const { getUiLanguage } = useUiLanguage();
     const { getUiScaling } = useUiScaling();
@@ -116,6 +128,8 @@ const StartPythonFacadeComponent = () => {
     const { getSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { getSpeakerMaxWords } = useSpeakerMaxWords();
 
+    const { getOscIpAddress } = useOscIpAddress();
+    const { getOscPort } = useOscPort();
 
     useEffect(() => {
         if (!hasRunRef.current) {
@@ -168,8 +182,16 @@ const StartPythonFacadeComponent = () => {
                 getSpeakerPhraseTimeout();
                 getSpeakerMaxWords();
 
-                getEnableAutoClearMessageBox();
+                getEnableAutoClearMessageInputBox();
                 getSendMessageButtonType();
+
+                getEnableSendOnlyTranslatedMessages();
+                getEnableAutoExportMessageLogs();
+                getEnableVrcMicMuteSync();
+                getEnableSendMessageToVrc();
+
+                getOscIpAddress();
+                getOscPort();
             }).catch((err) => {
                 console.error(err);
             });
