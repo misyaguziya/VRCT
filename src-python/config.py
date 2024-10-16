@@ -38,10 +38,6 @@ class Config:
         return self._VERSION
 
     @property
-    def SPEAKER2CHATBOX_PASS_CONFIRMATION(self):
-        return self._SPEAKER2CHATBOX_PASS_CONFIRMATION
-
-    @property
     def PATH_LOCAL(self):
         return self._PATH_LOCAL
 
@@ -118,15 +114,6 @@ class Config:
         return self._WATCHDOG_INTERVAL
 
     # Read Write
-    @property
-    def ENABLE_SPEAKER2CHATBOX(self):
-        return self._ENABLE_SPEAKER2CHATBOX
-
-    @ENABLE_SPEAKER2CHATBOX.setter
-    def ENABLE_SPEAKER2CHATBOX(self, value):
-        if isinstance(value, bool):
-            self._ENABLE_SPEAKER2CHATBOX = value
-
     @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
@@ -909,18 +896,6 @@ class Config:
             self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
-    # Speaker2Chatbox------------------
-    @property
-    @json_serializable('SPEAKER2CHATBOX_PASS')
-    def SPEAKER2CHATBOX_PASS(self):
-        return self._SPEAKER2CHATBOX_PASS
-
-    @SPEAKER2CHATBOX_PASS.setter
-    def SPEAKER2CHATBOX_PASS(self, value):
-        if isinstance(value, str):
-            self._SPEAKER2CHATBOX_PASS = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-
     @property
     @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
     def SEND_RECEIVED_MESSAGE_TO_VRC(self):
@@ -929,14 +904,8 @@ class Config:
     @SEND_RECEIVED_MESSAGE_TO_VRC.setter
     def SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
-            if self._ENABLE_SPEAKER2CHATBOX is True:
-                self._SEND_RECEIVED_MESSAGE_TO_VRC = value
-            else:
-                self._SEND_RECEIVED_MESSAGE_TO_VRC = False
+            self._SEND_RECEIVED_MESSAGE_TO_VRC = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
-    # Speaker2Chatbox------------------
-
-
 
     @property
     @json_serializable('LOGGER_FEATURE')
@@ -963,8 +932,6 @@ class Config:
     def init_config(self):
         # Read Only
         self._VERSION = "2.2.5"
-        self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
-        self._SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1165,8 +1132,7 @@ class Config:
         }
         self._OVERLAY_UI_TYPE = "default"
         self._SEND_MESSAGE_TO_VRC = True
-        self._SEND_RECEIVED_MESSAGE_TO_VRC = False # Speaker2Chatbox
-        self._SPEAKER2CHATBOX_PASS = "000000000"
+        self._SEND_RECEIVED_MESSAGE_TO_VRC = False
         self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
 
@@ -1180,10 +1146,6 @@ class Config:
                 if key == "MESSAGE_FORMAT":
                     old_message_format = config[key]
                 setattr(self, key, config[key])
-
-                if key == "SPEAKER2CHATBOX_PASS":
-                    if self.SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
-                        self.ENABLE_SPEAKER2CHATBOX = True
 
             if old_message_format is not None:
                 setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
