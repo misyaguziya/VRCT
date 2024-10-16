@@ -28,11 +28,11 @@ import {
     useMicThreshold,
     useSpeakerThreshold,
     useEnableAutoClearMessageInputBox,
-    useSendMessageButtonType,
     useSelectedFontFamily,
     useUiLanguage,
     useUiScaling,
     useMessageLogUiScaling,
+    useSendMessageButtonType,
     useTransparency,
     useMicRecordTimeout,
     useMicPhraseTimeout,
@@ -237,6 +237,9 @@ export const useReceiveRoutes = () => {
         "/get/data/textbox_ui_scaling": updateMessageLogUiScaling,
         "/set/data/textbox_ui_scaling": updateMessageLogUiScaling,
 
+        "/get/data/send_message_button_type": updateSendMessageButtonType,
+        "/set/data/send_message_button_type": updateSendMessageButtonType,
+
         "/get/data/font_family": updateSelectedFontFamily,
         "/set/data/font_family": updateSelectedFontFamily,
 
@@ -295,9 +298,6 @@ export const useReceiveRoutes = () => {
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
         "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
         "/set/disable/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
-
-        "/get/data/send_message_button_type": updateSendMessageButtonType,
-        "/set/data/send_message_button_type": updateSendMessageButtonType,
     };
 
     const error_routes = {
