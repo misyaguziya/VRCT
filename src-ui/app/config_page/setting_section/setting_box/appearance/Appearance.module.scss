@@ -41,18 +41,18 @@
     }
 }
 
-input[type="radio"] {
+.radio_button_input {
     appearance: none;
     margin: 0;
-    width: 1.6rem;
-    height: 1.6rem;
-    border: 0.2rem solid var(--dark_600_color);
+    width: 2rem;
+    height: 2rem;
+    border: 0.3rem solid var(--dark_600_color);
     border-radius: 50%;
     transition: border-color .1s ease, border-width .1s ease;
     cursor: inherit;
     &:checked {
         border-color: var(--primary_400_color);
-        border-width: 0.4rem;
+        border-width: 0.6rem;
     }
 }
 

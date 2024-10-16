@@ -63,8 +63,9 @@ const UiLanguageContainer = () => {
                 {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
                     <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
                         <input
+                            className={styles.radio_button_input}
                             type="radio"
-                            name="radio"
+                            name="ui_language"
                             value={key}
                             onChange={() => setUiLanguage(key)}
                             checked={currentUiLanguage.data === key}
@@ -168,6 +169,7 @@ const SendMessageButtonTypeContainer = () => {
         <RadioButtonContainer
             label={t("config_page.send_message_button_type.label")}
             selectFunction={setSendMessageButtonType}
+            name="send_message_button_type"
             options={[
                 { radio_button_id: "hide", label: t("config_page.send_message_button_type.hide") },
                 { radio_button_id: "show", label: t("config_page.send_message_button_type.show") },
