@@ -191,6 +191,10 @@ export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxW
 
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
+export const { atomInstance: Atom_EnableSendOnlyTranslatedMessages, useHook: useStore_EnableSendOnlyTranslatedMessages } = createAtomWithHook(false, "EnableSendOnlyTranslatedMessages");
+export const { atomInstance: Atom_EnableAutoExportMessageLogs, useHook: useStore_EnableAutoExportMessageLogs } = createAtomWithHook(false, "EnableAutoExportMessageLogs");
+export const { atomInstance: Atom_EnableVrcMicMuteSync, useHook: useStore_EnableVrcMicMuteSync } = createAtomWithHook(false, "EnableVrcMicMuteSync");
+export const { atomInstance: Atom_EnableSendMessageToVrc, useHook: useStore_EnableSendMessageToVrc } = createAtomWithHook(true, "EnableSendMessageToVrc");
 
 export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useStore_IsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
 

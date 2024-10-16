@@ -17,6 +17,10 @@ export { useUiLanguage } from "./appearance/useUiLanguage";
 export { useUiScaling } from "./appearance/useUiScaling";
 
 export { useEnableAutoClearMessageInputBox } from "./others/useEnableAutoClearMessageInputBox";
+export { useEnableAutoExportMessageLogs } from "./others/useEnableAutoExportMessageLogs";
+export { useEnableSendMessageToVrc } from "./others/useEnableSendMessageToVrc";
+export { useEnableSendOnlyTranslatedMessages } from "./others/useEnableSendOnlyTranslatedMessages";
+export { useEnableVrcMicMuteSync } from "./others/useEnableVrcMicMuteSync";
 
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";
