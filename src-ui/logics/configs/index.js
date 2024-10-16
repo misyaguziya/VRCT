@@ -10,14 +10,13 @@ export { useSpeakerDeviceList } from "./device/useSpeakerDeviceList";
 export { useSpeakerThreshold } from "./device/useSpeakerThreshold";
 
 export { useMessageLogUiScaling } from "./appearance/useMessageLogUiScaling";
-// export { useRestoreWindowGeometry } from "./appearance/useRestoreWindowGeometry";
 export { useSelectedFontFamily } from "./appearance/useSelectedFontFamily";
-export { useSendMessageButtonType } from "./appearance/useSendMessageButtonType";
 export { useTransparency } from "./appearance/useTransparency";
 export { useUiLanguage } from "./appearance/useUiLanguage";
 export { useUiScaling } from "./appearance/useUiScaling";
 
-export { useEnableAutoClearMessageBox } from "./others/useEnableAutoClearMessageBox";
+export { useEnableAutoClearMessageInputBox } from "./others/useEnableAutoClearMessageInputBox";
+export { useSendMessageButtonType } from "./others/useSendMessageButtonType";
 
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";

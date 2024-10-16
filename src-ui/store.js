@@ -189,7 +189,7 @@ export const { atomInstance: Atom_SpeakerPhraseTimeout, useHook: useStore_Speake
 export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxWords } = createAtomWithHook(0, "SpeakerMaxWords");
 
 // Others
-export const { atomInstance: Atom_EnableAutoClearMessageBox, useHook: useStore_EnableAutoClearMessageBox } = createAtomWithHook(true, "EnableAutoClearMessageBox");
+export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
 export const { atomInstance: Atom_SendMessageButtonType, useHook: useStore_SendMessageButtonType } = createAtomWithHook("show", "SendMessageButtonType");
 
 

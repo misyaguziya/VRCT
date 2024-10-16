@@ -6,21 +6,21 @@ import { store } from "@store";
 import { scrollToBottom } from "@utils/scrollToBottom";
 import {
     useSendMessageButtonType,
-    useEnableAutoClearMessageBox,
+    useEnableAutoClearMessageInputBox,
 } from "@logics_configs";
 
 export const MessageInputBox = () => {
     const [inputValue, setInputValue] = useState("");
     const { sendMessage } = useMessage();
 
-    const { currentEnableAutoClearMessageBox } = useEnableAutoClearMessageBox();
+    const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
     const { currentSendMessageButtonType } = useSendMessageButtonType();
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
         sendMessage(inputValue);
 
-        if (currentEnableAutoClearMessageBox.data) setInputValue("");
+        if (currentEnableAutoClearMessageInputBox.data) setInputValue("");
 
         setTimeout(() => {
             scrollToBottom(store.log_box_ref);
