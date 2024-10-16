@@ -51,6 +51,12 @@ import {
     useMicHostList,
     useMicDeviceList,
     useSpeakerDeviceList,
+    useMicRecordTimeout,
+    useMicPhraseTimeout,
+    useMicMaxWords,
+    useSpeakerRecordTimeout,
+    useSpeakerPhraseTimeout,
+    useSpeakerMaxWords,
 } from "@logics_configs";
 
 import {
@@ -100,6 +106,14 @@ const StartPythonFacadeComponent = () => {
     const { getSelectableLanguageList } = useSelectableLanguageList();
     const { getMessageInputBoxRatio } = useMessageInputBoxRatio();
 
+    const { getMicRecordTimeout } = useMicRecordTimeout();
+    const { getMicPhraseTimeout } = useMicPhraseTimeout();
+    const { getMicMaxWords } = useMicMaxWords();
+
+    const { getSpeakerRecordTimeout } = useSpeakerRecordTimeout();
+    const { getSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
+    const { getSpeakerMaxWords } = useSpeakerMaxWords();
+
 
     useEffect(() => {
         if (!hasRunRef.current) {
@@ -142,6 +156,14 @@ const StartPythonFacadeComponent = () => {
                 getSpeakerThreshold();
                 getEnableAutomaticMicThreshold();
                 getEnableAutomaticSpeakerThreshold();
+
+                getMicRecordTimeout();
+                getMicPhraseTimeout();
+                getMicMaxWords();
+
+                getSpeakerRecordTimeout();
+                getSpeakerPhraseTimeout();
+                getSpeakerMaxWords();
 
                 getEnableAutoClearMessageBox();
                 getSendMessageButtonType();

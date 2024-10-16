@@ -34,6 +34,12 @@ import {
     useUiScaling,
     useMessageLogUiScaling,
     useTransparency,
+    useMicRecordTimeout,
+    useMicPhraseTimeout,
+    useMicMaxWords,
+    useSpeakerRecordTimeout,
+    useSpeakerPhraseTimeout,
+    useSpeakerMaxWords,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -84,6 +90,14 @@ export const useReceiveRoutes = () => {
     const { updateMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { updateSelectedFontFamily } = useSelectedFontFamily();
     const { updateTransparency } = useTransparency();
+
+    const { updateMicRecordTimeout } = useMicRecordTimeout();
+    const { updateMicPhraseTimeout } = useMicPhraseTimeout();
+    const { updateMicMaxWords } = useMicMaxWords();
+
+    const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
+    const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
+    const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
     const routes = {
         // Common
@@ -227,6 +241,25 @@ export const useReceiveRoutes = () => {
         "/get/data/transparency": updateTransparency,
         "/set/data/transparency": updateTransparency,
 
+        // Transcription
+        "/get/data/mic_record_timeout": updateMicRecordTimeout,
+        "/set/data/mic_record_timeout": updateMicRecordTimeout,
+
+        "/get/data/mic_phrase_timeout": updateMicPhraseTimeout,
+        "/set/data/mic_phrase_timeout": updateMicPhraseTimeout,
+
+        "/get/data/mic_max_phrases": updateMicMaxWords,
+        "/set/data/mic_max_phrases": updateMicMaxWords,
+
+        "/get/data/speaker_record_timeout": updateSpeakerRecordTimeout,
+        "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
+
+        "/get/data/speaker_phrase_timeout": updateSpeakerPhraseTimeout,
+        "/set/data/speaker_phrase_timeout": updateSpeakerPhraseTimeout,
+
+        "/get/data/speaker_max_phrases": updateSpeakerMaxWords,
+        "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageBox,
         "/set/enable/auto_clear_message_box": updateEnableAutoClearMessageBox,
@@ -236,11 +269,27 @@ export const useReceiveRoutes = () => {
         "/set/data/send_message_button_type": updateSendMessageButtonType,
     };
 
+    const error_routes = {
+        "/set/data/mic_record_timeout": updateMicRecordTimeout,
+        "/set/data/mic_phrase_timeout": updateMicPhraseTimeout,
+        "/set/data/mic_max_phrases": updateMicMaxWords,
+
+        "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
+        "/set/data/speaker_phrase_timeout": updateSpeakerPhraseTimeout,
+        "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+    };
+
     const receiveRoutes = (parsed_data) => {
         switch (parsed_data.status) {
             case 200:
                 const route = routes[parsed_data.endpoint];
                 (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
+                break;
+
+            case 400:
+                const error_route = error_routes[parsed_data.endpoint];
+                (error_route) ? error_route(parsed_data.result.data) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
+                console.error(`status 400: ${JSON.stringify(parsed_data.result)}`);
                 break;
 
             case 348:
