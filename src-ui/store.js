@@ -7,7 +7,6 @@ import {
 import {
     translator_status,
     generateTestData,
-    word_filter_list,
 } from "@data";
 
 export const store = {
@@ -177,8 +176,8 @@ export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_Se
 export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency } = createAtomWithHook(100, "Transparency");
 
 
-export const { atomInstance: Atom_IsOpenedWordFilterList, useHook: useStore_IsOpenedWordFilterList } = createAtomWithHook(false, "IsOpenedWordFilterList");
-export const { atomInstance: Atom_WordFilterList, useHook: useStore_WordFilterList } = createAtomWithHook(word_filter_list, "WordFilterList");
+export const { atomInstance: Atom_IsOpenedMicWordFilterList, useHook: useStore_IsOpenedMicWordFilterList } = createAtomWithHook(false, "IsOpenedMicWordFilterList");
+export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFilterList } = createAtomWithHook([], "MicWordFilterList");
 
 // Transcription
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
