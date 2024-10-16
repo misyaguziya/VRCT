@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
+import styles from "./Others.module.scss";
 
+import { useOpenFolder } from "@logics_common";
 import {
     useEnableAutoClearMessageInputBox,
     useEnableSendOnlyTranslatedMessages,
@@ -12,6 +14,13 @@ import {
     CheckboxContainer,
 } from "../_templates/Templates";
 
+import {
+    LabelComponent,
+    Checkbox,
+    ActionButton,
+} from "../_components/";
+
+import OpenFolderSvg from "@images/open_folder.svg?react";
 
 export const Others = () => {
     return (
@@ -52,14 +61,25 @@ const SendOnlyTranslatedMessagesContainer = () => {
 const AutoExportMessageLogsContainer = () => {
     const { t } = useTranslation();
     const { currentEnableAutoExportMessageLogs, toggleEnableAutoExportMessageLogs } = useEnableAutoExportMessageLogs();
+    const { openFolder_MessageLogs } = useOpenFolder();
 
     return (
-        <CheckboxContainer
-            label={t("config_page.auto_export_message_logs.label")}
-            desc={t("config_page.auto_export_message_logs.desc")}
-            variable={currentEnableAutoExportMessageLogs}
-            toggleFunction={toggleEnableAutoExportMessageLogs}
-        />
+        <div className={styles.container}>
+            <LabelComponent
+                label={t("config_page.auto_export_message_logs.label")}
+                desc={t("config_page.auto_export_message_logs.desc")}
+                />
+            <div className={styles.switch_section_container}>
+                <ActionButton
+                    IconComponent={OpenFolderSvg}
+                    onclickFunction={openFolder_MessageLogs}
+                />
+                <Checkbox
+                    variable={currentEnableAutoExportMessageLogs}
+                    toggleFunction={toggleEnableAutoExportMessageLogs}
+                />
+            </div>
+        </div>
     );
 };
 const VrcMicMuteSyncContainer = () => {
