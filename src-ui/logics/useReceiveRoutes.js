@@ -116,6 +116,8 @@ export const useReceiveRoutes = () => {
         "/run/feed_watchdog": () => {},
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
+        "/run/open_filepath_logs": () => {console.log("Opened Directory, Message Logs");
+        },
 
         // Main Page
         // Page Controls
