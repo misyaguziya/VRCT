@@ -196,7 +196,6 @@ mapping = {
 
     "/get/data/mic_word_filter": {"status": True, "variable":controller.getMicWordFilter},
     "/set/data/mic_word_filter": {"status": True, "variable":controller.setMicWordFilter},
-    "/delete/data/mic_word_filter": {"status": True, "variable":controller.delMicWordFilter},
 
     "/get/data/auto_speaker_select": {"status": True, "variable":controller.getAutoSpeakerSelect},
     "/set/enable/auto_speaker_select": {"status": True, "variable":controller.setEnableAutoSpeakerSelect},
@@ -523,8 +522,6 @@ if __name__ == "__main__":
                         data = 5
                     case "/set//data/mic_word_filter":
                         data = "test0, test1, test2"
-                    case "/delete/data/mic_word_filter":
-                        data = "test1"
                     case "/set/data/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
                     case "/set/data/speaker_threshold":
