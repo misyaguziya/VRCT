@@ -689,6 +689,19 @@ class Model:
         }
         return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
 
+    def createOverlayImage(self, message):
+        ui_language = config.UI_LANGUAGE
+        convert_languages = {
+            "en": "Japanese",
+            "jp": "Japanese",
+            "ko":"Korean",
+            "zh-Hans":"Chinese Simplified",
+            "zh-Hant":"Chinese Traditional",
+        }
+        language = convert_languages.get(ui_language, "Japanese")
+        ui_type = config.OVERLAY_UI_TYPE
+        return self.overlay_image.createOverlayImage(message, language, ui_type)
+
     def clearOverlayImage(self):
         self.overlay.clearImage()
 
