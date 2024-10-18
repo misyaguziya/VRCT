@@ -51,7 +51,7 @@ def checkWhisperWeight(root, weight_type):
     try:
         WhisperModel(
             path,
-            device="cpu",
+            device="cuda",
             device_index=0,
             compute_type="int8",
             cpu_threads=4,
@@ -79,7 +79,7 @@ def getWhisperModel(root, weight_type):
     path = os_path.join(root, "weights", "whisper", weight_type)
     return WhisperModel(
         path,
-        device="cpu",
+        device="cuda",
         device_index=0,
         compute_type="int8",
         cpu_threads=4,

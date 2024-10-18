@@ -37,7 +37,7 @@ class Translator():
         tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
-            device="cpu",
+            device="cuda",
             device_index=0,
             compute_type="int8",
             inter_threads=1,
