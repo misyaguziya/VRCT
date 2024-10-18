@@ -229,3 +229,25 @@ class OverlayImage:
         background = Image.alpha_composite(background, decoration_image)
         img = Image.alpha_composite(background, img)
         return img
+
+    def createOverlayImage(self, message, your_language, ui_type="default"):
+        ui_size = self.getUiSize()
+        height = ui_size["height"]
+        width = ui_size["width"]
+        font_size = ui_size["font_size"]
+
+        ui_colors = self.getUiColors(ui_type)
+        text_color = ui_colors["text_color"]
+        background_color = ui_colors["background_color"]
+        background_outline_color = ui_colors["background_outline_color"]
+
+        img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
+
+        background = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        draw = ImageDraw.Draw(background)
+        draw.rounded_rectangle([(0, 0), img.size], radius=30, fill=background_color, outline=background_outline_color, width=5)
+
+        decoration_image = self.createDecorationImage(ui_type, img.size)
+        background = Image.alpha_composite(background, decoration_image)
+        img = Image.alpha_composite(background, img)
+        return img
