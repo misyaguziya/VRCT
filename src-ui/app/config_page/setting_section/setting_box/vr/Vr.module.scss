@@ -1,0 +1,79 @@
+.app {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-top: 4rem;
+}
+
+.canvas_container {
+    display: flex;
+    position: relative;
+}
+
+.canvas {
+    width: 40rem;
+    height: 30rem;
+    border: 0.1rem solid #fff;
+    background-color: var(--dark_800_color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.chat_box {
+    max-width: 20rem;
+    background-color: #33363a;
+    border-radius: 0.4rem;
+    padding: 1.2rem;
+    position: absolute;
+    transform-origin: center;
+    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+}
+
+.chat_text {
+    font-size: 1.2rem;
+}
+
+.x_position {
+    position: absolute;
+    bottom: -6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+}
+
+.y_position {
+    position: absolute;
+    right: -8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    height: 100%;
+}
+
+.z_position {
+    position: absolute;
+    left: -8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    height: 100%;
+}
+
+.other_controls {
+    margin-top: 10rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+}
+
+.x_rotation, .y_rotation, .z_rotation, .opacity, .ui_scaling {
+    width: 100%;
+}
