@@ -6,6 +6,7 @@ memo.txt
 *.pyc
 logs/
 .venv/
+.venv_cuda/
 weights/
 .vscode
 error.log

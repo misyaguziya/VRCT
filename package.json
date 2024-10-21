@@ -5,15 +5,18 @@
   "type": "module",
   "scripts": {
     "setup-python": "install.bat",
-    "build-python": "pyinstaller backend.spec --distpath src-tauri/bin --clean --noconfirm",
+    "build-python": "build.bat",
+    "build-python-cuda": "build_cuda.bat",
     "vite": "vite",
     "vite-build": "vite build",
     "vite-preview": "vite preview",
     "tauri": "tauri",
     "tauri-dev": "tauri dev",
     "dev": "npm run build-python && npm run dev-ui",
+    "dev-cuda": "npm run build-python-cuda && npm run dev-ui",
     "dev-ui": "npm-run-all --parallel vite tauri-dev",
     "build": "npm run build-python && npm run vite-build && npm run tauri build",
+    "build-cuda": "npm run build-python-cuda && npm run vite-build && npm run tauri build",
     "build-ui": "npm run vite-build && npm run tauri build"
   },
   "dependencies": {

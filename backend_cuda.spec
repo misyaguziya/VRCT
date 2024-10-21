@@ -5,7 +5,7 @@ a = Analysis(
     ['src-python\\webui_mainloop.py'],
     pathex=[],
     binaries=[],
-    datas=[('./fonts', 'fonts/'), ('.venv/Lib/site-packages/zeroconf', 'zeroconf/'), ('.venv/Lib/site-packages/openvr', 'openvr/'), ('.venv/Lib/site-packages/pykakasi', 'pykakasi/'), ('.venv/Lib/site-packages/faster_whisper', 'faster_whisper/')],
+    datas=[('./fonts', 'fonts/'), ('.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'), ('.venv_cuda/Lib/site-packages/openvr', 'openvr/'), ('.venv_cuda/Lib/site-packages/pykakasi', 'pykakasi/'), ('.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
