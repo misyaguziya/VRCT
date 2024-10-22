@@ -715,21 +715,64 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
-  ; Copy main executable
-  File "${MAINBINARYSRCPATH}"
+  ; ; Copy main executable
+  ; File "${MAINBINARYSRCPATH}"
 
-  ; Copy resources
-  {{#each resources_dirs}}
-    CreateDirectory "$INSTDIR\\{{this}}"
-  {{/each}}
-  {{#each resources}}
-    File /a "/oname={{this.[1]}}" "{{unescape-dollar-sign @key}}"
-  {{/each}}
+  ; ; Copy resources
+  ; {{#each resources_dirs}}
+  ;   CreateDirectory "$INSTDIR\\{{this}}"
+  ; {{/each}}
+  ; {{#each resources}}
+  ;   File /a "/oname={{this.[1]}}" "{{unescape-dollar-sign @key}}"
+  ; {{/each}}
 
-  ; Copy external binaries
-  {{#each binaries}}
-    File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
-  {{/each}}
+  ; ; Copy external binaries
+  ; {{#each binaries}}
+  ;   File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
+  ; {{/each}}
+
+  ; 指定のURLからファイルをダウンロード
+  !define SOFTWARE_RELEASE_URL "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+  !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
+  !define SOFTWARE_JSON_FILENAME "response.json"
+  Var /GLOBAL i
+  Var /GLOBAL cmder_dl
+  Var /GLOBAL cmder_version
+
+  DetailPrint "Fetching Latest Release from GitHub (${SOFTWARE_RELEASE_URL})"
+  inetc::get /SILENT "${SOFTWARE_RELEASE_URL}" "$TEMP\${SOFTWARE_JSON_FILENAME}"
+
+  DetailPrint "Parsing JSON..."
+  nsJSON::Set /file "$TEMP\${SOFTWARE_JSON_FILENAME}"
+
+  nsJSON::Get 'tag_name' /end
+  Pop $cmder_version
+  DetailPrint "Found version $cmder_version"
+
+  nsJSON::Get /count 'assets' /end
+  Pop $R0
+
+  ${ForEach} $i 0 $R0 + 1
+    nsJSON::Get 'assets' /index $i 'name' /end
+    Pop $R1
+    StrCmp $R1 "${SOFTWARE_DOWNLOAD_FILENAME}" done
+  ${Next}
+  done:
+
+  nsJSON::Get 'assets' /index $i 'browser_download_url' /end
+  Pop $cmder_dl
+  DetailPrint "Got URL : $cmder_dl"
+
+  DetailPrint "Downloading ${SOFTWARE_DOWNLOAD_FILENAME}..."
+  inetc::get $cmder_dl "$TEMP\${SOFTWARE_DOWNLOAD_FILENAME}"
+  Pop $0
+  StrCmp "$0" "OK" dlok
+  DetailPrint "Download Failed $0"
+  Abort
+
+  dlok:
+  DetailPrint "Extracting ${SOFTWARE_DOWNLOAD_FILENAME}..."
+  nsisunz::UnzipToStack "$TEMP\${SOFTWARE_DOWNLOAD_FILENAME}" $INSTDIR
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
