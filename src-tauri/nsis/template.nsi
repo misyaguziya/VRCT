@@ -731,6 +731,7 @@ Section Install
   ;   File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
   ; {{/each}}
 
+  !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
   !define SOFTWARE_RELEASE_URL "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
