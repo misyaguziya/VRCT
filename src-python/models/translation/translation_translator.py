@@ -29,17 +29,19 @@ class Translator():
             result = False
         return result
 
-    def changeCTranslate2Model(self, path, model_type):
+    def changeCTranslate2Model(self, path, model_type, device="cpu", device_index=0):
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
         weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
         tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
+
+        compute_type = "int8" if device == "cpu" else "float16"
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
-            device="cpu",
-            device_index=0,
-            compute_type="int8",
+            device=device,
+            device_index=device_index,
+            compute_type=compute_type,
             inter_threads=1,
             intra_threads=4
         )
