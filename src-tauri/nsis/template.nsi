@@ -243,7 +243,7 @@ Function PageTranscript
     ${NSD_CreateDropList} 33% 20u 33% 12u ""
     Pop $DropLListTranscriptEngines
     ${NSD_CB_AddString} $DropLListTranscriptEngines "Google"
-    ${NSD_CB_AddString} $DropLListTranscriptEngines "Wishper(USE CPU)"
+    ${NSD_CB_AddString} $DropLListTranscriptEngines "Wishper"
     ${NSD_CB_SelectString} $DropLListTranscriptEngines "Google"
     ${NSD_CreateLabel} 0 52u 33% 12u "Select AI Model Size"
     ${NSD_CreateDropList} 33% 50u 40% 12u ""
@@ -290,10 +290,38 @@ FunctionEnd
 
 Function OnDropListWishperDownloadWeightClick
     ${NSD_GetText} $DropLListTranscriptEngines $0
-    ${If} $0 == "Wishper(USE CPU)"
+    ${If} $0 == "Wishper"
         EnableWindow $DropListWhisperDownloadWeightType 1
     ${Else}
         EnableWindow $DropListWhisperDownloadWeightType 0
+    ${EndIf}
+FunctionEnd
+
+
+Var CheckboxUseCUDA
+Var DialogSelectInstallDeviceVersion
+Page custom PageSelectInstallDeviceVersion PageLeaveSelectInstallDeviceVersion
+Function PageSelectInstallDeviceVersion
+    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Enable GPUs for translation and transcription."
+    nsDialogs::Create 1018
+    Pop $DialogSelectInstallDeviceVersion
+
+    ${If} $DialogSelectInstallDeviceVersion == error
+        Abort
+    ${EndIf}
+
+    ${NSD_CreateLabel} 0 21u 33% 12u "Enable the use of GPUs"
+    ${NSD_CreateCheckBox} 33% 20u 33% 12u ""
+    Pop $CheckboxUseCUDA
+    nsDialogs::Show
+FunctionEnd
+
+Function PageLeaveSelectInstallDeviceVersion
+    ${NSD_GetState} $CheckboxUseCUDA $0
+    ${If} $0 == 1
+        StrCpy $CheckboxUseCUDA "true"
+    ${Else}
+        StrCpy $CheckboxUseCUDA "false"
     ${EndIf}
 FunctionEnd
 
@@ -715,21 +743,73 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
-  ; Copy main executable
-  File "${MAINBINARYSRCPATH}"
+  ; ; Copy main executable
+  ; File "${MAINBINARYSRCPATH}"
 
-  ; Copy resources
-  {{#each resources_dirs}}
-    CreateDirectory "$INSTDIR\\{{this}}"
-  {{/each}}
-  {{#each resources}}
-    File /a "/oname={{this.[1]}}" "{{unescape-dollar-sign @key}}"
-  {{/each}}
+  ; ; Copy resources
+  ; {{#each resources_dirs}}
+  ;   CreateDirectory "$INSTDIR\\{{this}}"
+  ; {{/each}}
+  ; {{#each resources}}
+  ;   File /a "/oname={{this.[1]}}" "{{unescape-dollar-sign @key}}"
+  ; {{/each}}
 
-  ; Copy external binaries
-  {{#each binaries}}
-    File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
-  {{/each}}
+  ; ; Copy external binaries
+  ; {{#each binaries}}
+  ;   File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
+  ; {{/each}}
+
+  !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
+  ; 指定のURLからファイルをダウンロード
+  !define SOFTWARE_RELEASE_URL "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+  !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
+  !define SOFTWARE_CUDA_DOWNLOAD_FILENAME "VRCT_cuda.zip"
+  !define SOFTWARE_JSON_FILENAME "response.json"
+  Var /GLOBAL i
+  Var /GLOBAL cmder_dl
+  Var /GLOBAL cmder_version
+  Var /GLOBAL file_name
+
+  ${If} $CheckboxUseCUDA == "true"
+    StrCpy $file_name "${SOFTWARE_CUDA_DOWNLOAD_FILENAME}"
+  ${Else}
+    StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
+  ${EndIf}
+
+  DetailPrint "Fetching Latest Release from GitHub (${SOFTWARE_RELEASE_URL})"
+  inetc::get /SILENT "${SOFTWARE_RELEASE_URL}" "$TEMP\${SOFTWARE_JSON_FILENAME}"
+
+  DetailPrint "Parsing JSON..."
+  nsJSON::Set /file "$TEMP\${SOFTWARE_JSON_FILENAME}"
+
+  nsJSON::Get 'tag_name' /end
+  Pop $cmder_version
+  DetailPrint "Found version $cmder_version"
+
+  nsJSON::Get /count 'assets' /end
+  Pop $R0
+
+  ${ForEach} $i 0 $R0 + 1
+    nsJSON::Get 'assets' /index $i 'name' /end
+    Pop $R1
+    StrCmp $R1 $file_name done
+  ${Next}
+  done:
+
+  nsJSON::Get 'assets' /index $i 'browser_download_url' /end
+  Pop $cmder_dl
+  DetailPrint "Got URL : $cmder_dl"
+
+  DetailPrint "Downloading $file_name..."
+  inetc::get $cmder_dl "$TEMP\$file_name"
+  Pop $0
+  StrCmp "$0" "OK" dlok
+  DetailPrint "Download Failed $0"
+  Abort
+
+  dlok:
+  DetailPrint "Extracting $file_name ..."
+  nsisunz::UnzipToStack "$TEMP\$file_name" $INSTDIR
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"

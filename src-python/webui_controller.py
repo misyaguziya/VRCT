@@ -7,6 +7,7 @@ from device_manager import device_manager
 from config import config
 from model import model
 from utils import isUniqueStrings, printLog
+import torch
 
 class Controller:
     def __init__(self) -> None:
@@ -364,8 +365,34 @@ class Controller:
         return {"status":200, "result":config.MESSAGE_BOX_RATIO_RANGE}
 
     @staticmethod
+    def getComputeDeviceList(*args, **kwargs) -> dict:
+        device_list = [{"type":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)} for i in range(torch.cuda.device_count())]
+        device_list.append({"type":"cpu", "device_index": 0, "name": "cpu"})
+        return {"status":200, "result":device_list}
+
+    @staticmethod
+    def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
+
+    @staticmethod
+    def setSelectedTranslationComputeDevice(device:str, *args, **kwargs) -> dict:
+        printLog("setSelectedTranslationComputeDevice", device)
+        config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
+        return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
+
+    @staticmethod
     def getSelectableCtranslate2WeightTypeDict(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT}
+
+    @staticmethod
+    def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
+
+    @staticmethod
+    def setSelectedTranscriptionComputeDevice(device:str, *args, **kwargs) -> dict:
+        printLog("setSelectedTranscriptionComputeDevice", device)
+        config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = device
+        return {"status":200,"result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     @staticmethod
     def getSelectableWhisperModelTypeDict(*args, **kwargs) -> dict:
