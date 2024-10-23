@@ -1128,8 +1128,8 @@ class Config:
         self._USE_EXCLUDE_WORDS = True
         self._USE_TRANSLATION_FEATURE = True
         self._USE_WHISPER_FEATURE = False
-        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"type": "cpu", "index": 0, "name":"cpu"}
-        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"type": "cpu", "index": 0, "name":"cpu"}
+        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
+        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._CTRANSLATE2_WEIGHT_TYPE = "Small"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
