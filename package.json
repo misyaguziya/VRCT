@@ -17,7 +17,10 @@
     "dev-ui": "npm-run-all --parallel vite tauri-dev",
     "build": "npm run build-python && npm run vite-build && npm run tauri build",
     "build-cuda": "npm run build-python-cuda && npm run vite-build && npm run tauri build",
-    "build-ui": "npm run vite-build && npm run tauri build"
+    "build-ui": "npm run vite-build && npm run tauri build",
+    "release": "python zip.py --zip_name VRCT.zip",
+    "release-cuda": "python zip.py --zip_name VRCT_cuda.zip",
+    "release-all": "npm run build && npm run release && npm run build-cuda && npm run release-cuda"
   },
   "dependencies": {
     "@emotion/react": "^11.13.0",
