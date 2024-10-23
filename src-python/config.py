@@ -725,6 +725,28 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SELECTED_TRANSLATION_COMPUTE_DEVICE')
+    def SELECTED_TRANSLATION_COMPUTE_DEVICE(self):
+        return self._SELECTED_TRANSLATION_COMPUTE_DEVICE
+
+    @SELECTED_TRANSLATION_COMPUTE_DEVICE.setter
+    def SELECTED_TRANSLATION_COMPUTE_DEVICE(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE')
+    def SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self):
+        return self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE
+
+    @SELECTED_TRANSCRIPTION_COMPUTE_DEVICE.setter
+    def SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self, value):
+        if isinstance(value, dict):
+            self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
     def CTRANSLATE2_WEIGHT_TYPE(self):
         return self._CTRANSLATE2_WEIGHT_TYPE
@@ -1105,8 +1127,10 @@ class Config:
         }
         self._USE_EXCLUDE_WORDS = True
         self._USE_TRANSLATION_FEATURE = True
-        self._CTRANSLATE2_WEIGHT_TYPE = "Small"
         self._USE_WHISPER_FEATURE = False
+        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"type": "cpu", "index": 0, "name":"cpu"}
+        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"type": "cpu", "index": 0, "name":"cpu"}
+        self._CTRANSLATE2_WEIGHT_TYPE = "Small"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
