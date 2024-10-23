@@ -112,7 +112,7 @@ class Model:
         self.translator.changeCTranslate2Model(
             config.PATH_LOCAL,
             config.CTRANSLATE2_WEIGHT_TYPE,
-            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["type"],
+            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
             config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"])
 
     def downloadCTranslate2ModelWeight(self, callbackFunc=None):
@@ -429,7 +429,7 @@ class Model:
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["type"],
+            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
         )
         def sendMicTranscript():
@@ -593,7 +593,7 @@ class Model:
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
             whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["type"],
+            device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
         )
         def sendSpeakerTranscript():
