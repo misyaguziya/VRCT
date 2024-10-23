@@ -1,79 +1,182 @@
-.app {
+.container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     position: relative;
-    margin-top: 4rem;
+    padding: 2rem;
 }
 
-.canvas_container {
+.controller_type_switch {
     display: flex;
-    position: relative;
-}
-
-.canvas {
-    width: 40rem;
-    height: 30rem;
-    border: 0.1rem solid #fff;
-    background-color: var(--dark_800_color);
-    display: flex;
+    border: 0.1rem solid var(--dark_600_color);
+    border-radius: 0.4rem;
+    width: 50%;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    color: var(--dark_600_color);
+    &:hover {
+        color: var(--dark_400_color);
+    }
+}
+.controller_type_switcher {
+    width: 100%;
+    &.is_selected {
+        background-color: var(--dark_850_color);
+    }
+    &.is_selected .controller_switcher_label {
+        color: var(--dark_basic_text_color);
+    }
+}
+.controller_switcher_label {
+    padding: 1rem;
+    font-size: 1.6rem;
+}
+
+.position_rotation_controls_box {
+    margin-top: 14rem;
     position: relative;
+    aspect-ratio: 1 / 1;
+    width: 36%;
+    max-width: 40rem;
+    transform: translate(-10%);
 }
 
-.chat_box {
-    max-width: 20rem;
-    background-color: #33363a;
-    border-radius: 0.4rem;
-    padding: 1.2rem;
-    position: absolute;
-    transform-origin: center;
-    transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-}
+// .position_controls {
+//     background-color: gray;
+// }
 
-.chat_text {
-    font-size: 1.2rem;
-}
+// .position_wrapper {
+//     background-color: gray;
+// }
 
-.x_position {
-    position: absolute;
-    bottom: -6rem;
-    left: 50%;
-    transform: translateX(-50%);
+.slider_label {
+    font-size: 1.6rem;
     width: 100%;
 }
-
-.y_position {
+.x_position_label {
     position: absolute;
-    right: -8rem;
-    top: 50%;
-    transform: translateY(-50%);
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+    bottom: -4rem;
+    right: -30%;
+    text-align: end;
+}
+.y_position_label {
+    position: absolute;
+    top: -27%;
+    left: 10%;
+}
+.z_position_label {
+    position: absolute;
+    top: 30%;
+    left: 80%;
+}
+
+.x_position_slider {
+    position: absolute;
+    bottom: 0;
+    left: 27%;
+    width: 100%;
+    height: 0%;
+}
+
+.y_position_slider {
+    position: absolute;
+    bottom: 27%;
+    left: 0;
+    width: 0%;
     height: 100%;
 }
 
-.z_position {
+.z_position_slider {
     position: absolute;
-    left: -8rem;
-    top: 50%;
-    transform: translateY(-50%);
-    writing-mode: vertical-rl;
-    text-orientation: mixed;
+    bottom: 61%;
+    left: 61%;
+    transform: translate(50%,50%) rotate(45deg);
+    width: 0%;
     height: 100%;
 }
+
+
+
+
+// .rotation_controls {
+//     background-color: gray;
+// }
+
+// .rotation_wrapper {
+//     background-color: gray;
+// }
+
+.x_rotation_label {
+    position: absolute;
+    top: -27%;
+    left: 10%;
+}
+.y_rotation_label {
+    position: absolute;
+    bottom: -4rem;
+    right: -30%;
+    text-align: end;
+}
+.z_rotation_label {
+    position: absolute;
+    top: -10%;
+    right: -110%;
+}
+
+.x_rotation_slider {
+    position: absolute;
+    bottom: 27%;
+    left: 0;
+    width: 0%;
+    height: 100%;
+}
+
+.y_rotation_slider {
+    position: absolute;
+    bottom: 0;
+    left: 27%;
+    width: 100%;
+    height: 0%;
+}
+
+.z_rotation_slider {
+    position: absolute;
+    bottom: 90%;
+    left: 100%;
+    transform: translate(50%,50%) rotate(-45deg);
+    width: 0%;
+    height: 100%;
+}
+
+
+
 
 .other_controls {
     margin-top: 10rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 2rem;
     width: 100%;
+    max-width: 56rem;
 }
 
-.x_rotation, .y_rotation, .z_rotation, .opacity, .ui_scaling {
+.other_controls_wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+}
+.other_controls_slider {
+    margin-left: 18rem;
+}
+
+.other_controls_slider_label {
+    position: absolute;
+    font-size: 1.6rem;
     width: 100%;
 }

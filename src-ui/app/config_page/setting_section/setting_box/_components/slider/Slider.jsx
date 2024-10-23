@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styles from "./Slider.module.scss";
 import MUI_Slider from "@mui/material/Slider";
+import { clsx } from "clsx";
 
 export const Slider = (props) => {
     const [baseColor, setBaseColor] = useState("");
@@ -17,7 +18,7 @@ export const Slider = (props) => {
     }, []);
 
     return (
-        <div className={styles.container}>
+        <div className={clsx(styles.container, props.className)}>
             <MUI_Slider
                 className={styles.range_slider}
                 aria-label="Default"
@@ -31,6 +32,7 @@ export const Slider = (props) => {
                 marks={props.marks}
                 track={props.track}
                 orientation={props.orientation}
+                valueLabelFormat={props.valueLabelFormat ? props.valueLabelFormat : null}
                 sx={{
                     color: baseColor,
                     "& .MuiSlider-thumb": {
@@ -43,18 +45,19 @@ export const Slider = (props) => {
                             backgroundColor: toolTipColor,
                             padding: "0.6rem 1rem",
                             lineHeight: "1.15",
-                            top: "-1.4rem",
-                            "&::before": {
-                                left: "30%",
-                                width: "1rem",
-                                height: "1rem",
-                                clipPath: "polygon(50% 0, 100% 100%, 0 100%)",
-                            },
+                            // top: "-1.4rem",
+                            // "&::before": {
+                            //     left: "30%",
+                            //     width: "1rem",
+                            //     height: "1rem",
+                            //     clipPath: "polygon(50% 0, 100% 100%, 0 100%)",
+                            // },
                         },
                     },
                     "& .MuiSlider-markLabel": {
                         fontSize: "1.4rem",
                         color: "white",
+                        whiteSpace: "nowrap",
                     },
                     "& .MuiSlider-markLabelActive": {
                         color: activeColor,
