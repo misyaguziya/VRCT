@@ -32,7 +32,7 @@ export const Slider = (props) => {
                 marks={props.marks}
                 track={props.track}
                 orientation={props.orientation}
-                valueLabelFormat={props.valueLabelFormat ? props.valueLabelFormat : null}
+                valueLabelFormat={`${props.valueLabelFormat ? props.valueLabelFormat : props.variable}`}
                 sx={{
                     color: baseColor,
                     "& .MuiSlider-thumb": {
