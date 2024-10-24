@@ -386,7 +386,7 @@ class Config:
 
     @MESSAGE_BOX_RATIO.setter
     def MESSAGE_BOX_RATIO(self, value):
-        if isinstance(value, float):
+        if isinstance(value, (int, float)):
             self._MESSAGE_BOX_RATIO = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -542,7 +542,7 @@ class Config:
 
     @MIC_AVG_LOGPROB.setter
     def MIC_AVG_LOGPROB(self, value):
-        if isinstance(value, float) or isinstance(value, int):
+        if isinstance(value, (int, float)):
             self._MIC_AVG_LOGPROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -553,7 +553,7 @@ class Config:
 
     @MIC_NO_SPEECH_PROB.setter
     def MIC_NO_SPEECH_PROB(self, value):
-        if isinstance(value, float) or isinstance(value, int):
+        if isinstance(value, (int, float)):
             self._MIC_NO_SPEECH_PROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -641,7 +641,7 @@ class Config:
 
     @SPEAKER_AVG_LOGPROB.setter
     def SPEAKER_AVG_LOGPROB(self, value):
-        if isinstance(value, float) or isinstance(value, int):
+        if isinstance(value, (int, float)):
             self._SPEAKER_AVG_LOGPROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -652,7 +652,7 @@ class Config:
 
     @SPEAKER_NO_SPEECH_PROB.setter
     def SPEAKER_NO_SPEECH_PROB(self, value):
-        if isinstance(value, float) or isinstance(value, int):
+        if isinstance(value, (int, float)):
             self._SPEAKER_NO_SPEECH_PROB = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
@@ -811,8 +811,8 @@ class Config:
     def OVERLAY_SETTINGS(self, value):
         if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SETTINGS.keys()):
             for key, value in value.items():
-                if isinstance(value, float):
-                    self._OVERLAY_SETTINGS[key] = value
+                if isinstance(value, (int, float)):
+                    self._OVERLAY_SETTINGS[key] = float(value)
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
 
     @property
@@ -837,8 +837,8 @@ class Config:
             for key, value in value.items():
                 match (key):
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
-                        if isinstance(value, float):
-                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+                        if isinstance(value, (int, float)):
+                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = float(value)
                     case "display_duration" | "fadeout_duration":
                         if isinstance(value, int):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
