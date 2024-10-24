@@ -189,6 +189,22 @@ export const { atomInstance: Atom_SpeakerRecordTimeout, useHook: useStore_Speake
 export const { atomInstance: Atom_SpeakerPhraseTimeout, useHook: useStore_SpeakerPhraseTimeout } = createAtomWithHook(0, "SpeakerPhraseTimeout");
 export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxWords } = createAtomWithHook(0, "SpeakerMaxWords");
 
+// VR
+export const { atomInstance: Atom_OverlaySettings, useHook: useStore_OverlaySettings } = createAtomWithHook({
+    opacity: 1.0,
+    ui_scaling: 1.0,
+}, "OverlaySettings");
+export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_OverlaySmallLogSettings } = createAtomWithHook({
+    x_pos: 0.0,
+    y_pos: 0.0,
+    z_pos: 0.0,
+    x_rotation: 0.0,
+    y_rotation: 0.0,
+    z_rotation: 0.0,
+    display_duration: 5,
+    fadeout_duration: 2,
+}, "OverlaySmallLogSettings");
+
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
 export const { atomInstance: Atom_EnableSendOnlyTranslatedMessages, useHook: useStore_EnableSendOnlyTranslatedMessages } = createAtomWithHook(false, "EnableSendOnlyTranslatedMessages");

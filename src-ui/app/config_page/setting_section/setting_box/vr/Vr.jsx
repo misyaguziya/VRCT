@@ -3,14 +3,42 @@ import { useTranslation } from "react-i18next";
 import styles from "./Vr.module.scss";
 import { Slider } from "../_components/";
 import { clsx } from "clsx";
+import {
+    useOverlaySettings,
+    useOverlaySmallLogSettings,
+} from "@logics_configs";
 
 export const Vr = () => {
     const { t } = useTranslation();
     const [is_opened_position_controller, setIsOpenedPositionController] = useState(true);
-
     const toggleController = () => {
         setIsOpenedPositionController(!is_opened_position_controller);
     };
+
+    const { currentOverlaySmallLogSettings, setOverlaySmallLogSettings } = useOverlaySmallLogSettings();
+
+
+    const [settings, setSettings] = useState({
+        x_pos: 0,
+        y_pos: 0,
+        z_pos: 0,
+        x_rotation: 0,
+        y_rotation: 0,
+        z_rotation: 0,
+        display_duration: 5,
+        fadeout_duration: 2,
+    });
+
+    const onchangeFunction = (key, value) => {
+        setSettings((prev) => {
+            const new_data = { ...prev, [key]: value };
+            setOverlaySmallLogSettings(new_data);
+            return new_data;
+        });
+    };
+
+
+
 
     const toggle_button_class_names__position = clsx(styles.controller_type_switcher, {
         [styles.is_selected]: is_opened_position_controller
@@ -21,6 +49,7 @@ export const Vr = () => {
 
     return (
         <div className={styles.container}>
+            <CommonControls />
             <div className={styles.controller_type_switch} onClick={toggleController}>
                 <div className={toggle_button_class_names__position}>
                     <p className={styles.controller_switcher_label}>Position</p>
@@ -31,23 +60,17 @@ export const Vr = () => {
             </div>
             <div className={styles.position_rotation_controls_box}>
                 {is_opened_position_controller
-                ? <PositionControls />
-                : <RotationControls />
-            }
+                    ? <PositionControls settings={settings} onchangeFunction={onchangeFunction} />
+                    : <RotationControls settings={settings} onchangeFunction={onchangeFunction} />
+                }
             </div>
-            <OtherControls />
-
+            <OtherControls settings={settings} onchangeFunction={onchangeFunction} />
         </div>
     );
 };
 
-const PositionControls = () => {
+const PositionControls = ({settings, onchangeFunction}) => {
     const { t } = useTranslation();
-    const [position, setPosition] = useState({ x: 0, y: 0, z: 0 });
-
-    const handlePositionChange = (axis, value) => {
-        setPosition((prev) => ({ ...prev, [axis]: value }));
-    };
 
     return (
         <div className={styles.position_controls}>
@@ -55,22 +78,22 @@ const PositionControls = () => {
                 <label className={clsx(styles.slider_label, styles.x_position_label)}>{t("overlay_settings.x_position")}</label>
                 <Slider
                     className={styles.x_position_slider}
-                    variable={position.x}
-                    step={1}
-                    min={-100}
-                    max={100}
-                    onchangeFunction={(value) => handlePositionChange("x", value)}
+                    variable={settings.x_pos}
+                    step={0.05}
+                    min={-0.5}
+                    max={0.5}
+                    onchangeFunction={(value) => onchangeFunction("x_pos", value)}
                 />
             </div>
             <div className={styles.position_wrapper}>
                 <label className={clsx(styles.slider_label, styles.y_position_label)}>{t("overlay_settings.y_position")}</label>
                 <Slider
                     className={styles.y_position_slider}
-                    variable={position.y}
-                    step={1}
-                    min={-100}
-                    max={100}
-                    onchangeFunction={(value) => handlePositionChange("y", value)}
+                    variable={settings.y_pos}
+                    step={0.05}
+                    min={-0.8}
+                    max={0.8}
+                    onchangeFunction={(value) => onchangeFunction("y_pos", value)}
                     orientation="vertical"
                 />
             </div>
@@ -78,25 +101,20 @@ const PositionControls = () => {
                 <label className={clsx(styles.slider_label, styles.z_position_label)}>{t("overlay_settings.z_position")}</label>
                 <Slider
                     className={styles.z_position_slider}
-                    variable={position.z}
-                    step={1}
-                    min={-100}
-                    max={100}
-                    onchangeFunction={(value) => handlePositionChange("z", value)}
+                    variable={settings.z_pos}
+                    step={0.05}
+                    min={-0.5}
+                    max={1.5}
+                    onchangeFunction={(value) => onchangeFunction("z_pos", value)}
                     orientation="vertical"
                 />
             </div>
         </div>
     );
 };
-const RotationControls = () => {
+
+const RotationControls = ({settings, onchangeFunction}) => {
     const { t } = useTranslation();
-    const [rotation, setRotation] = useState({ rotate_x: 0, rotate_y: 0, rotate_z: 0 });
-
-    const handleRotationChange = (axis, value) => {
-        setRotation((prev) => ({ ...prev, [axis]: value }));
-    };
-
 
     return (
         <div className={styles.rotation_controls}>
@@ -104,12 +122,12 @@ const RotationControls = () => {
                 <label className={clsx(styles.slider_label, styles.x_rotation_label)}>{t("overlay_settings.x_rotation")}</label>
                 <Slider
                     className={styles.x_rotation_slider}
-                    variable={-rotation.rotate_x}
-                    valueLabelFormat={rotation.rotate_x}
-                    step={10}
+                    variable={-settings.x_rotation}
+                    valueLabelFormat={settings.x_rotation}
+                    step={5}
                     min={-180}
                     max={180}
-                    onchangeFunction={(value) => handleRotationChange("rotate_x", -value)}
+                    onchangeFunction={(value) => onchangeFunction("x_rotation", -value)}
                     orientation="vertical"
                 />
             </div>
@@ -117,22 +135,22 @@ const RotationControls = () => {
                 <label className={clsx(styles.slider_label, styles.y_rotation_label)}>{t("overlay_settings.y_rotation")}</label>
                 <Slider
                     className={styles.y_rotation_slider}
-                    variable={rotation.rotate_y}
-                    step={10}
+                    variable={settings.y_rotation}
+                    step={5}
                     min={-180}
                     max={180}
-                    onchangeFunction={(value) => handleRotationChange("rotate_y", value)}
+                    onchangeFunction={(value) => onchangeFunction("y_rotation", value)}
                 />
             </div>
             <div className={styles.rotation_wrapper}>
                 <label className={clsx(styles.slider_label, styles.z_rotation_label)}>{t("overlay_settings.z_rotation")}</label>
                 <Slider
                     className={styles.z_rotation_slider}
-                    variable={rotation.rotate_z}
-                    step={15}
+                    variable={settings.z_rotation}
+                    step={5}
                     min={-180}
                     max={180}
-                    onchangeFunction={(value) => handleRotationChange("rotate_z", value)}
+                    onchangeFunction={(value) => onchangeFunction("z_rotation", value)}
                     orientation="vertical"
                 />
             </div>
@@ -141,39 +159,34 @@ const RotationControls = () => {
 };
 
 
-const OtherControls = () => {
+const CommonControls = () => {
     const { t } = useTranslation();
+    const { currentOverlaySettings, setOverlaySettings } = useOverlaySettings();
     const [opacity, setOpacity] = useState(1);
-    const [ui_scaling, setUiScaling] = useState(100);
+    const [ui_scaling, setUiScaling] = useState(1);
 
     const handleOpacityChange = (value) => {
         setOpacity(value / 100);
+        const set_data = { opacity: (value / 100), ui_scaling: ui_scaling };
+        setOverlaySettings(set_data);
     };
 
     const handleUiScalingChange = (value) => {
-        setUiScaling(value);
+        setUiScaling(value / 100);
+        const set_data = { opacity: opacity, ui_scaling: (value / 100) };
+        setOverlaySettings(set_data);
     };
 
     const ui_variable_opacity = (opacity * 100).toFixed(0);
-
-    const [display_duration, setDisplayDuration] = useState(5);
-    const [fadeout_duration, setFadeoutDuration] = useState(2);
-
-    const handleDisplayDurationChange = (value) => {
-        setDisplayDuration(value);
-    };
-
-    const handleFadeoutDurationChange = (value) => {
-        setFadeoutDuration(value);
-    };
+    const ui_variable_ui_scaling = (ui_scaling * 100).toFixed(0);
 
 
     return(
-        <div className={styles.other_controls}>
-            <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.opacity_label)}>{t("overlay_settings.opacity")}</label>
+        <div className={styles.common_controls}>
+            <div className={styles.common_controls_wrapper}>
+                <label className={clsx(styles.common_controls_slider_label, styles.opacity_label)}>{t("overlay_settings.opacity")}</label>
                 <Slider
-                    className={clsx(styles.other_controls_slider, styles.opacity_slider)}
+                    className={clsx(styles.common_controls_slider, styles.opacity_slider)}
                     variable={(opacity * 100)}
                     valueLabelFormat={`${ui_variable_opacity}%`}
                     step={5}
@@ -182,40 +195,48 @@ const OtherControls = () => {
                     onchangeFunction={handleOpacityChange}
                 />
             </div>
-            <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.ui_scaling_label)}>{t("overlay_settings.ui_scaling")}</label>
+            <div className={styles.common_controls_wrapper}>
+                <label className={clsx(styles.common_controls_slider_label, styles.ui_scaling_label)}>{t("overlay_settings.ui_scaling")}</label>
                 <Slider
-                    className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
-                    variable={ui_scaling}
-                    valueLabelFormat={`${ui_scaling}%`}
+                    className={clsx(styles.common_controls_slider, styles.ui_scaling_slider)}
+                    variable={(ui_scaling * 100)}
+                    valueLabelFormat={`${ui_variable_ui_scaling}%`}
                     step={10}
                     min={40}
                     max={200}
                     onchangeFunction={handleUiScalingChange}
                 />
             </div>
+        </div>
+    );
+};
+const OtherControls = ({settings, onchangeFunction}) => {
+    const { t } = useTranslation();
+
+    return(
+        <div className={styles.other_controls}>
             <div className={styles.other_controls_wrapper}>
                 <label className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("overlay_settings.display_duration")}</label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.display_duration_slider)}
-                    variable={display_duration}
-                    valueLabelFormat={`${display_duration} second(s)`}
+                    variable={settings.display_duration}
+                    valueLabelFormat={`${settings.display_duration} second(s)`}
                     step={1}
                     min={1}
                     max={60}
-                    onchangeFunction={handleDisplayDurationChange}
+                    onchangeFunction={(value) => onchangeFunction("display_duration", value)}
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
                 <label className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("overlay_settings.fadeout_duration")}</label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.fadeout_duration_slider)}
-                    variable={fadeout_duration}
-                    valueLabelFormat={`${fadeout_duration} second(s)`}
+                    variable={settings.fadeout_duration}
+                    valueLabelFormat={`${settings.fadeout_duration} second(s)`}
                     step={1}
                     min={0}
                     max={5}
-                    onchangeFunction={handleFadeoutDurationChange}
+                    onchangeFunction={(value) => onchangeFunction("fadeout_duration", value)}
                 />
             </div>
         </div>
