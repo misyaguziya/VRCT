@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Vr.module.scss";
 import { Slider } from "../_components/";
@@ -28,28 +28,26 @@ export const Vr = () => {
         fadeout_duration: 2,
     });
 
+    const [timeout_id, setTimeoutId] = useState(null);
+
     const onchangeFunction = (key, value) => {
         setSettings((prev) => {
             const new_data = { ...prev, [key]: value };
             return new_data;
         });
-    };
 
-    useEffect(() => {
-        let settings_timeout;
-
-        if (settings_timeout) {
-            clearTimeout(settings_timeout);
+        if (timeout_id) {
+            clearTimeout(timeout_id);
         }
 
-        settings_timeout = setTimeout(() => {
-            setOverlaySmallLogSettings(settings);
+        const newTimeoutId = setTimeout(() => {
+            let new_data = settings;
+            new_data[key] = value;
+            setOverlaySmallLogSettings(new_data);
         }, 50);
 
-        return () => {
-            clearTimeout(settings_timeout);
-        };
-    }, [settings]);
+        setTimeoutId(newTimeoutId);
+    };
 
     const toggle_button_class_names__position = clsx(styles.controller_type_switcher, {
         [styles.is_selected]: is_opened_position_controller,
@@ -80,9 +78,6 @@ export const Vr = () => {
     );
 };
 
-
-
-
 const CommonControls = () => {
     const { t } = useTranslation();
     const { currentOverlaySettings, setOverlaySettings } = useOverlaySettings();
@@ -92,25 +87,26 @@ const CommonControls = () => {
         ui_scaling: 1,
     });
 
+    const [timeout_id, setTimeoutId] = useState(null);
+
     const onchangeFunction = (key, value) => {
         setSettings((prev) => {
             const new_data = { ...prev, [key]: value };
             return new_data;
         });
-    };
 
+        if (timeout_id) {
+            clearTimeout(timeout_id);
+        }
 
-    useEffect(() => {
-        let settings_timeout;
-
-        settings_timeout = setTimeout(() => {
+        const newTimeoutId = setTimeout(() => {
+            let new_data = settings;
+            new_data[key] = value;
             setOverlaySettings(settings);
         }, 50);
 
-        return () => {
-            clearTimeout(settings_timeout);
-        };
-    }, [settings]);
+        setTimeoutId(newTimeoutId);
+    };
 
     const ui_variable_opacity = (settings.opacity * 100).toFixed(0);
     const ui_variable_ui_scaling = (settings.ui_scaling * 100).toFixed(0);
