@@ -31,6 +31,9 @@ export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout
 export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";
 export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
 
+export { useOverlaySettings } from "./vr/useOverlaySettings";
+export { useOverlaySmallLogSettings } from "./vr/useOverlaySmallLogSettings";
+
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
 
