@@ -22,12 +22,6 @@ def makeEven(number, minus:bool=False):
         return number if isEven(number) else number - 1
     return number if isEven(number) else number + 1
 
-def generatePercentageStringsList(start:int, end:int, step:int):
-    strings = []
-    for percent in range(start, end + 1, step):
-        strings.append(f"{percent}%")
-    return strings
-
 def intToPctStr(value:int):
     return f"{value}%"
 
