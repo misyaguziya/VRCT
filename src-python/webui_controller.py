@@ -11,15 +11,44 @@ import torch
 
 class Controller:
     def __init__(self) -> None:
+        self.init_mapping = {}
         self.run_mapping = {}
         self.run = None
         self.device_access_status = True
+
+    def setInitMapping(self, init_mapping:dict) -> None:
+        self.init_mapping = init_mapping
 
     def setRunMapping(self, run_mapping:dict) -> None:
         self.run_mapping = run_mapping
 
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
+
+    # configの初期値を設定
+    def sendConfigStatusTrueData(self) -> None:
+        for endpoint, dict_data in self.init_mapping.items():
+            if dict_data["status"] is True:
+                response = dict_data["variable"](None)
+                status = response.get("status", None)
+                result = response.get("result", None)
+                self.run(
+                    status,
+                    endpoint,
+                    result,
+                )
+
+    def sendConfigStatusFalseData(self) -> None:
+        for endpoint, dict_data in self.init_mapping.items():
+            if dict_data["status"] is False:
+                response = dict_data["variable"](None)
+                status = response.get("status", None)
+                result = response.get("result", None)
+                self.run(
+                    status,
+                    endpoint,
+                    result,
+                )
 
     # response functions
     def updateMicHostList(self) -> None:
@@ -353,8 +382,8 @@ class Controller:
         return {"status":200, "result":config.APPEARANCE_THEME_LIST}
 
     @staticmethod
-    def getUiScalingList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_SCALING_LIST}
+    def getUiScalingRange(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.UI_SCALING_RANGE}
 
     @staticmethod
     def getTextboxUiScalingRange(*args, **kwargs) -> dict:
@@ -381,8 +410,8 @@ class Controller:
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
-    def getSelectableCtranslate2WeightTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT}
+    def getSelectableCtranslate2WeightTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST}
 
     @staticmethod
     def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
@@ -395,8 +424,8 @@ class Controller:
         return {"status":200,"result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     @staticmethod
-    def getSelectableWhisperModelTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
+    def getSelectableWhisperWeightTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST}
 
     @staticmethod
     def getMaxMicThreshold(*args, **kwargs) -> dict:

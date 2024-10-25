@@ -138,60 +138,60 @@ const StartPythonFacadeComponent = () => {
 
                 fetchAndUpdateWindowGeometry();
 
-                getUiLanguage();
-                getUiScaling();
-                getMessageLogUiScaling();
-                getIsMainPageCompactMode();
-                getMessageInputBoxRatio();
-                getTransparency();
+                // getUiLanguage();
+                // getUiScaling();
+                // getMessageLogUiScaling();
+                // getIsMainPageCompactMode();
+                // getMessageInputBoxRatio();
+                // getTransparency();
 
                 asyncFetchFonts();
-                getSelectedFontFamily();
+                // getSelectedFontFamily();
 
-                getSoftwareVersion();
+                // getSoftwareVersion();
 
-                getSelectedPresetTabNumber();
-                getEnableMultiTranslation();
-                getSelectedYourLanguages();
-                getSelectedTargetLanguages();
-                getSelectableLanguageList();
-                getTranslationEngines();
-                getSelectedTranslationEngines();
+                // getSelectedPresetTabNumber();
+                // getEnableMultiTranslation();
+                // getSelectedYourLanguages();
+                // getSelectedTargetLanguages();
+                // getSelectableLanguageList();
+                // getTranslationEngines();
+                // getSelectedTranslationEngines();
 
-                getMicHostList();
-                getMicDeviceList();
-                getSpeakerDeviceList();
+                // getMicHostList();
+                // getMicDeviceList();
+                // getSpeakerDeviceList();
 
-                getEnableAutoMicSelect();
-                getEnableAutoSpeakerSelect();
-                getSelectedMicHost();
-                getSelectedMicDevice();
-                getSelectedSpeakerDevice();
+                // getEnableAutoMicSelect();
+                // getEnableAutoSpeakerSelect();
+                // getSelectedMicHost();
+                // getSelectedMicDevice();
+                // getSelectedSpeakerDevice();
 
-                getMicThreshold();
-                getSpeakerThreshold();
-                getEnableAutomaticMicThreshold();
-                getEnableAutomaticSpeakerThreshold();
+                // getMicThreshold();
+                // getSpeakerThreshold();
+                // getEnableAutomaticMicThreshold();
+                // getEnableAutomaticSpeakerThreshold();
 
-                getMicRecordTimeout();
-                getMicPhraseTimeout();
-                getMicMaxWords();
-                getMicWordFilterList();
+                // getMicRecordTimeout();
+                // getMicPhraseTimeout();
+                // getMicMaxWords();
+                // getMicWordFilterList();
 
-                getSpeakerRecordTimeout();
-                getSpeakerPhraseTimeout();
-                getSpeakerMaxWords();
+                // getSpeakerRecordTimeout();
+                // getSpeakerPhraseTimeout();
+                // getSpeakerMaxWords();
 
-                getEnableAutoClearMessageInputBox();
-                getSendMessageButtonType();
+                // getEnableAutoClearMessageInputBox();
+                // getSendMessageButtonType();
 
-                getEnableSendOnlyTranslatedMessages();
-                getEnableAutoExportMessageLogs();
-                getEnableVrcMicMuteSync();
-                getEnableSendMessageToVrc();
+                // getEnableSendOnlyTranslatedMessages();
+                // getEnableAutoExportMessageLogs();
+                // getEnableVrcMicMuteSync();
+                // getEnableSendMessageToVrc();
 
-                getOscIpAddress();
-                getOscPort();
+                // getOscIpAddress();
+                // getOscPort();
             }).catch((err) => {
                 console.error(err);
             });

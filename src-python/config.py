@@ -6,7 +6,7 @@ from json import dump as json_dump
 
 from device_manager import device_manager
 from models.transcription.transcription_languages import transcription_lang
-from utils import generatePercentageStringsList, isUniqueStrings
+from utils import isUniqueStrings
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -78,8 +78,8 @@ class Config:
         return self._APPEARANCE_THEME_LIST
 
     @property
-    def UI_SCALING_LIST(self):
-        return self._UI_SCALING_LIST
+    def UI_SCALING_RANGE(self):
+        return self._UI_SCALING_RANGE
 
     @property
     def TEXTBOX_UI_SCALING_RANGE(self):
@@ -90,12 +90,12 @@ class Config:
         return self._MESSAGE_BOX_RATIO_RANGE
 
     @property
-    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self):
-        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
+    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
+        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST
 
     @property
-    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self):
-        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_LIST(self):
+        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST
 
     @property
     def MAX_MIC_THRESHOLD(self):
@@ -753,7 +753,7 @@ class Config:
 
     @CTRANSLATE2_WEIGHT_TYPE.setter
     def CTRANSLATE2_WEIGHT_TYPE(self, value):
-        # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT:
+        # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST:
         if isinstance(value, str):
             self._CTRANSLATE2_WEIGHT_TYPE = value
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
@@ -966,27 +966,25 @@ class Config:
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
         self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
-        self._TRANSPARENCY_RANGE = (50, 100)
+        self._TRANSPARENCY_RANGE = (40, 100)
         self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
-        self._UI_SCALING_LIST = generatePercentageStringsList(start=40, end=200, step=10)
-        self._TEXTBOX_UI_SCALING_RANGE = (50, 200)
+        self._UI_SCALING_RANGE = (40, 200)
+        self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
-            # {Save json str}: {i18n_placeholder} pairs
-            "Small": "Small",
-            "Large": "Large",
-        }
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = [
+            "Small",
+            "Large",
+        ]
 
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
-            # {Save json str}: {i18n_placeholder} pairs
-            "tiny": "tiny",
-            "base": "base",
-            "small": "small",
-            "medium": "medium",
-            "large-v1": "large-v1",
-            "large-v2": "large-v2",
-            "large-v3": "large-v3",
-        }
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = [
+            "tiny",
+            "base",
+            "small",
+            "medium",
+            "large-v1",
+            "large-v2",
+            "large-v3",
+        ]
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
@@ -1165,14 +1163,8 @@ class Config:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 config = json_load(fp)
 
-            old_message_format = None
             for key in config.keys():
-                if key == "MESSAGE_FORMAT":
-                    old_message_format = config[key]
                 setattr(self, key, config[key])
-
-            if old_message_format is not None:
-                setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             config = {}
