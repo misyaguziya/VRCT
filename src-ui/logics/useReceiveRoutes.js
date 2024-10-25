@@ -45,6 +45,8 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useOverlaySettings,
+    useOverlaySmallLogSettings,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -112,6 +114,9 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
+
+    const { updateOverlaySettings } = useOverlaySettings();
+    const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -310,6 +315,13 @@ export const useReceiveRoutes = () => {
 
         "/get/data/speaker_max_phrases": updateSpeakerMaxWords,
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
+        // VR
+        "/get/data/overlay_settings": updateOverlaySettings,
+        "/set/data/overlay_settings": updateOverlaySettings,
+
+        "/get/data/overlay_small_log_settings": updateOverlaySmallLogSettings,
+        "/set/data/overlay_small_log_settings": updateOverlaySmallLogSettings,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,

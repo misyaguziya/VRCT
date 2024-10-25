@@ -1,0 +1,215 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+}
+
+.controller_type_switch {
+    margin-top: 6rem;
+    display: flex;
+    border: 0.1rem solid var(--dark_600_color);
+    border-radius: 0.4rem;
+    width: 50%;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--dark_600_color);
+    &:hover {
+        color: var(--dark_400_color);
+    }
+}
+.controller_type_switcher {
+    width: 100%;
+    &.is_selected {
+        background-color: var(--dark_850_color);
+    }
+    &.is_selected .controller_switcher_label {
+        color: var(--dark_basic_text_color);
+    }
+}
+.controller_switcher_label {
+    padding: 1rem;
+    font-size: 1.6rem;
+}
+
+.position_rotation_controls_box {
+    margin-top: 8rem;
+    position: relative;
+    aspect-ratio: 1 / 1;
+    width: 36%;
+    max-width: 36rem;
+    transform: translate(-10%);
+}
+
+// .position_controls {
+//     background-color: gray;
+// }
+
+// .position_wrapper {
+//     background-color: gray;
+// }
+
+.slider_label {
+    font-size: 1.6rem;
+    width: 100%;
+}
+.x_position_label {
+    position: absolute;
+    bottom: -4rem;
+    right: -30%;
+    text-align: end;
+}
+.y_position_label {
+    position: absolute;
+    top: -27%;
+    left: 10%;
+}
+.z_position_label {
+    position: absolute;
+    top: 30%;
+    left: 80%;
+}
+
+.x_position_slider {
+    position: absolute;
+    bottom: 0;
+    left: 27%;
+    width: 100%;
+    height: 0%;
+}
+
+.y_position_slider {
+    position: absolute;
+    bottom: 27%;
+    left: 0;
+    width: 0%;
+    height: 100%;
+}
+
+.z_position_slider {
+    position: absolute;
+    bottom: 61%;
+    left: 61%;
+    transform: translate(50%,50%) rotate(45deg);
+    width: 0%;
+    height: 100%;
+}
+
+
+
+
+// .rotation_controls {
+//     background-color: gray;
+// }
+
+// .rotation_wrapper {
+//     background-color: gray;
+// }
+
+.x_rotation_label {
+    position: absolute;
+    top: -27%;
+    left: 10%;
+}
+.y_rotation_label {
+    position: absolute;
+    bottom: -4rem;
+    right: -30%;
+    text-align: end;
+}
+.z_rotation_label {
+    position: absolute;
+    top: -10%;
+    right: -110%;
+}
+
+.x_rotation_slider {
+    position: absolute;
+    bottom: 27%;
+    left: 0;
+    width: 0%;
+    height: 100%;
+}
+
+.y_rotation_slider {
+    position: absolute;
+    bottom: 0;
+    left: 27%;
+    width: 100%;
+    height: 0%;
+}
+
+.z_rotation_slider {
+    position: absolute;
+    bottom: 90%;
+    left: 100%;
+    transform: translate(50%,50%) rotate(-45deg);
+    width: 0%;
+    height: 100%;
+}
+
+
+
+
+.common_controls {
+    padding-top: 4rem;
+    padding-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    max-width: 56rem;
+    border-bottom: 0.1rem solid var(--dark_700_color);
+}
+
+.common_controls_wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+}
+.common_controls_slider {
+    margin-left: 18rem;
+}
+
+.common_controls_slider_label {
+    position: absolute;
+    font-size: 1.6rem;
+    width: 100%;
+}
+
+
+
+.other_controls {
+    margin-top: 6rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2rem;
+    width: 100%;
+    max-width: 56rem;
+}
+
+.other_controls_wrapper {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    position: relative;
+}
+.other_controls_slider {
+    margin-left: 18rem;
+}
+
+.other_controls_slider_label {
+    position: absolute;
+    font-size: 1.6rem;
+    width: 100%;
+}
