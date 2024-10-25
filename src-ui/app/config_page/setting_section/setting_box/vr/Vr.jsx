@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Vr.module.scss";
 import { Slider } from "../_components/";
@@ -17,7 +17,6 @@ export const Vr = () => {
 
     const { currentOverlaySmallLogSettings, setOverlaySmallLogSettings } = useOverlaySmallLogSettings();
 
-
     const [settings, setSettings] = useState({
         x_pos: 0,
         y_pos: 0,
@@ -32,19 +31,31 @@ export const Vr = () => {
     const onchangeFunction = (key, value) => {
         setSettings((prev) => {
             const new_data = { ...prev, [key]: value };
-            setOverlaySmallLogSettings(new_data);
             return new_data;
         });
     };
 
+    useEffect(() => {
+        let settings_timeout;
 
+        if (settings_timeout) {
+            clearTimeout(settings_timeout);
+        }
 
+        settings_timeout = setTimeout(() => {
+            setOverlaySmallLogSettings(settings);
+        }, 50);
+
+        return () => {
+            clearTimeout(settings_timeout);
+        };
+    }, [settings]);
 
     const toggle_button_class_names__position = clsx(styles.controller_type_switcher, {
-        [styles.is_selected]: is_opened_position_controller
+        [styles.is_selected]: is_opened_position_controller,
     });
     const toggle_button_class_names__rotation = clsx(styles.controller_type_switcher, {
-        [styles.is_selected]: !is_opened_position_controller
+        [styles.is_selected]: !is_opened_position_controller,
     });
 
     return (
@@ -68,6 +79,78 @@ export const Vr = () => {
         </div>
     );
 };
+
+
+
+
+const CommonControls = () => {
+    const { t } = useTranslation();
+    const { currentOverlaySettings, setOverlaySettings } = useOverlaySettings();
+
+    const [settings, setSettings] = useState({
+        opacity: 1,
+        ui_scaling: 1,
+    });
+
+    const onchangeFunction = (key, value) => {
+        setSettings((prev) => {
+            const new_data = { ...prev, [key]: value };
+            return new_data;
+        });
+    };
+
+
+    useEffect(() => {
+        let settings_timeout;
+
+        settings_timeout = setTimeout(() => {
+            setOverlaySettings(settings);
+        }, 50);
+
+        return () => {
+            clearTimeout(settings_timeout);
+        };
+    }, [settings]);
+
+    const ui_variable_opacity = (settings.opacity * 100).toFixed(0);
+    const ui_variable_ui_scaling = (settings.ui_scaling * 100).toFixed(0);
+
+    return (
+        <div className={styles.common_controls}>
+            <div className={styles.common_controls_wrapper}>
+                <label className={clsx(styles.common_controls_slider_label, styles.opacity_label)}>
+                    {t("overlay_settings.opacity")}
+                </label>
+                <Slider
+                    className={clsx(styles.common_controls_slider, styles.opacity_slider)}
+                    variable={settings.opacity * 100}
+                    valueLabelFormat={`${ui_variable_opacity}%`}
+                    step={5}
+                    min={10}
+                    max={100}
+                    onchangeFunction={(value) => onchangeFunction("opacity", value / 100)}
+                />
+            </div>
+            <div className={styles.common_controls_wrapper}>
+                <label className={clsx(styles.common_controls_slider_label, styles.ui_scaling_label)}>
+                    {t("overlay_settings.ui_scaling")}
+                </label>
+                <Slider
+                    className={clsx(styles.common_controls_slider, styles.ui_scaling_slider)}
+                    variable={settings.ui_scaling * 100}
+                    valueLabelFormat={`${ui_variable_ui_scaling}%`}
+                    step={10}
+                    min={40}
+                    max={200}
+                    onchangeFunction={(value) => onchangeFunction("ui_scaling", value / 100)}
+                />
+            </div>
+        </div>
+    );
+};
+
+
+
 
 const PositionControls = ({settings, onchangeFunction}) => {
     const { t } = useTranslation();
@@ -158,58 +241,6 @@ const RotationControls = ({settings, onchangeFunction}) => {
     );
 };
 
-
-const CommonControls = () => {
-    const { t } = useTranslation();
-    const { currentOverlaySettings, setOverlaySettings } = useOverlaySettings();
-    const [opacity, setOpacity] = useState(1);
-    const [ui_scaling, setUiScaling] = useState(1);
-
-    const handleOpacityChange = (value) => {
-        setOpacity(value / 100);
-        const set_data = { opacity: (value / 100), ui_scaling: ui_scaling };
-        setOverlaySettings(set_data);
-    };
-
-    const handleUiScalingChange = (value) => {
-        setUiScaling(value / 100);
-        const set_data = { opacity: opacity, ui_scaling: (value / 100) };
-        setOverlaySettings(set_data);
-    };
-
-    const ui_variable_opacity = (opacity * 100).toFixed(0);
-    const ui_variable_ui_scaling = (ui_scaling * 100).toFixed(0);
-
-
-    return(
-        <div className={styles.common_controls}>
-            <div className={styles.common_controls_wrapper}>
-                <label className={clsx(styles.common_controls_slider_label, styles.opacity_label)}>{t("overlay_settings.opacity")}</label>
-                <Slider
-                    className={clsx(styles.common_controls_slider, styles.opacity_slider)}
-                    variable={(opacity * 100)}
-                    valueLabelFormat={`${ui_variable_opacity}%`}
-                    step={5}
-                    min={10}
-                    max={100}
-                    onchangeFunction={handleOpacityChange}
-                />
-            </div>
-            <div className={styles.common_controls_wrapper}>
-                <label className={clsx(styles.common_controls_slider_label, styles.ui_scaling_label)}>{t("overlay_settings.ui_scaling")}</label>
-                <Slider
-                    className={clsx(styles.common_controls_slider, styles.ui_scaling_slider)}
-                    variable={(ui_scaling * 100)}
-                    valueLabelFormat={`${ui_variable_ui_scaling}%`}
-                    step={10}
-                    min={40}
-                    max={200}
-                    onchangeFunction={handleUiScalingChange}
-                />
-            </div>
-        </div>
-    );
-};
 const OtherControls = ({settings, onchangeFunction}) => {
     const { t } = useTranslation();
 
