@@ -25,31 +25,6 @@ class Controller:
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
 
-    # configの初期値を設定
-    def sendConfigStatusTrueData(self) -> None:
-        for endpoint, dict_data in self.init_mapping.items():
-            if dict_data["status"] is True:
-                response = dict_data["variable"](None)
-                status = response.get("status", None)
-                result = response.get("result", None)
-                self.run(
-                    status,
-                    endpoint,
-                    result,
-                )
-
-    def sendConfigStatusFalseData(self) -> None:
-        for endpoint, dict_data in self.init_mapping.items():
-            if dict_data["status"] is False:
-                response = dict_data["variable"](None)
-                status = response.get("status", None)
-                result = response.get("result", None)
-                self.run(
-                    status,
-                    endpoint,
-                    result,
-                )
-
     # response functions
     def updateMicHostList(self) -> None:
         self.run(
@@ -70,6 +45,18 @@ class Controller:
             200,
             self.run_mapping["speaker_device_list"],
             model.getListSpeakerDevice(),
+        )
+
+    def updateConfigSettings(self) -> None:
+        settings = {}
+        for endpoint, dict_data in self.init_mapping.items():
+            response = dict_data["variable"](None)
+            result = response.get("result", None)
+            settings[endpoint] = result
+        self.run(
+            200,
+            self.run_mapping["initialization_complete"],
+            settings,
         )
 
     def restartAccessDevices(self) -> None:
@@ -1732,6 +1719,8 @@ class Controller:
 
         if config.AUTO_SPEAKER_SELECT is True:
             self.setEnableAutoSpeakerSelect()
+
+        self.updateConfigSettings()
 
         printLog("End Initialization")
 
