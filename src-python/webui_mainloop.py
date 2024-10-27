@@ -34,6 +34,8 @@ run_mapping = {
     "speaker_device_list":"/run/speaker_device_list",
 
     "update_software_flag":"/run/update_software_flag",
+
+    "initialization_complete":"run/initialization_complete",
 }
 
 controller.setRunMapping(run_mapping)
@@ -395,14 +397,8 @@ if __name__ == "__main__":
     main.startReceiver()
     main.startHandler()
 
-    # mappingのget/data/*でかつstatus:Trueのendpointを実行する
-    controller.sendConfigStatusTrueData()
-
     controller.setWatchdogCallback(main.stop)
     controller.init()
-
-    # mappingのget/data/*でかつstatus:Falseのendpointを実行する
-    controller.sendConfigStatusFalseData()
 
     # mappingのすべてのstatusをTrueにする
     for key in mapping.keys():
