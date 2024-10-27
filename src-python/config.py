@@ -3,7 +3,7 @@ import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
-from asyncio import new_event_loop
+import threading
 from device_manager import device_manager
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -15,17 +15,11 @@ def json_serializable(var_name):
         return func
     return decorator
 
-config_data = {}
-def saveJsonData(path, key, value):
-    config_data[key] = value
-    with open(path, "w", encoding="utf-8") as fp:
-        json_dump(config_data, fp, indent=4, ensure_ascii=False)
-
-def saveJson(path, key, value):
-    new_event_loop().run_in_executor(None, saveJsonData, path, key, value)
-
 class Config:
     _instance = None
+    config_data = {}
+    timer = None
+    debounce_time = 2
 
     def __new__(cls):
         if cls._instance is None:
@@ -33,6 +27,19 @@ class Config:
             cls._instance.init_config()
             cls._instance.load_config()
         return cls._instance
+
+    def saveConfigToFile(self):
+        with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
+            json_dump(self.config_data, fp, indent=4, ensure_ascii=False)
+
+    def saveConfig(self, key, value):
+        self.config_data[key] = value
+
+        if isinstance(self.timer, threading.Timer) and self.timer.is_alive():
+            self.timer.cancel()
+        timer = threading.Timer(self.debounce_time, self.saveConfigToFile)
+        timer.daemon = True
+        timer.start()
 
     # Read Only
     @property
@@ -226,7 +233,7 @@ class Config:
     def SELECTED_TAB_NO(self, value):
         if isinstance(value, str):
             self._SELECTED_TAB_NO = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSLATION_ENGINES')
@@ -237,7 +244,7 @@ class Config:
     def SELECTED_TRANSLATION_ENGINES(self, value):
         if isinstance(value, dict):
             self._SELECTED_TRANSLATION_ENGINES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_YOUR_LANGUAGES')
@@ -258,7 +265,7 @@ class Config:
                 self._SELECTED_YOUR_LANGUAGES = value
         except Exception:
             pass
-        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TARGET_LANGUAGES')
@@ -279,7 +286,7 @@ class Config:
                 self._SELECTED_TARGET_LANGUAGES = value
         except Exception:
             pass
-        saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+        self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
@@ -290,7 +297,7 @@ class Config:
     def SELECTED_TRANSCRIPTION_ENGINE(self, value):
         if isinstance(value, str):
             self._SELECTED_TRANSCRIPTION_ENGINE = value
-            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            # self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MULTI_LANGUAGE_TRANSLATION')
@@ -301,7 +308,7 @@ class Config:
     def MULTI_LANGUAGE_TRANSLATION(self, value):
         if isinstance(value, bool):
             self._MULTI_LANGUAGE_TRANSLATION = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CONVERT_MESSAGE_TO_ROMAJI')
@@ -312,7 +319,7 @@ class Config:
     def CONVERT_MESSAGE_TO_ROMAJI(self, value):
         if isinstance(value, bool):
             self._CONVERT_MESSAGE_TO_ROMAJI = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CONVERT_MESSAGE_TO_HIRAGANA')
@@ -323,7 +330,7 @@ class Config:
     def CONVERT_MESSAGE_TO_HIRAGANA(self, value):
         if isinstance(value, bool):
             self._CONVERT_MESSAGE_TO_HIRAGANA = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
@@ -334,7 +341,7 @@ class Config:
     def MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self, value):
         if isinstance(value, bool):
             self._MAIN_WINDOW_SIDEBAR_COMPACT_MODE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     ## Config Window
     @property
@@ -346,7 +353,7 @@ class Config:
     def TRANSPARENCY(self, value):
         if isinstance(value, int):
             self._TRANSPARENCY = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('APPEARANCE_THEME')
@@ -357,7 +364,7 @@ class Config:
     def APPEARANCE_THEME(self, value):
         if value in self.APPEARANCE_THEME_LIST:
             self._APPEARANCE_THEME = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('UI_SCALING')
@@ -368,7 +375,7 @@ class Config:
     def UI_SCALING(self, value):
         if isinstance(value, int):
             self._UI_SCALING = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('TEXTBOX_UI_SCALING')
@@ -379,7 +386,7 @@ class Config:
     def TEXTBOX_UI_SCALING(self, value):
         if isinstance(value, int):
             self._TEXTBOX_UI_SCALING = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MESSAGE_BOX_RATIO')
@@ -390,7 +397,7 @@ class Config:
     def MESSAGE_BOX_RATIO(self, value):
         if isinstance(value, (int, float)):
             self._MESSAGE_BOX_RATIO = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('FONT_FAMILY')
@@ -401,7 +408,7 @@ class Config:
     def FONT_FAMILY(self, value):
         if isinstance(value, str):
             self._FONT_FAMILY = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('UI_LANGUAGE')
@@ -412,7 +419,7 @@ class Config:
     def UI_LANGUAGE(self, value):
         if isinstance(value, str):
             self._UI_LANGUAGE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('RESTORE_MAIN_WINDOW_GEOMETRY')
@@ -423,7 +430,7 @@ class Config:
     def RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
         if isinstance(value, bool):
             self._RESTORE_MAIN_WINDOW_GEOMETRY = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MAIN_WINDOW_GEOMETRY')
@@ -436,7 +443,7 @@ class Config:
             for key, value in value.items():
                 if isinstance(value, int):
                     self._MAIN_WINDOW_GEOMETRY[key] = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
 
     @property
     @json_serializable('AUTO_MIC_SELECT')
@@ -447,7 +454,7 @@ class Config:
     def AUTO_MIC_SELECT(self, value):
         if isinstance(value, bool):
             self._AUTO_MIC_SELECT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_MIC_HOST')
@@ -458,7 +465,7 @@ class Config:
     def SELECTED_MIC_HOST(self, value):
         if value in [host for host in device_manager.getMicDevices().keys()]:
             self._SELECTED_MIC_HOST = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_MIC_DEVICE')
@@ -469,7 +476,7 @@ class Config:
     def SELECTED_MIC_DEVICE(self, value):
         if value in [device["name"] for device in device_manager.getMicDevices()[self.SELECTED_MIC_HOST]]:
             self._SELECTED_MIC_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_THRESHOLD')
@@ -480,7 +487,7 @@ class Config:
     def MIC_THRESHOLD(self, value):
         if isinstance(value, int):
             self._MIC_THRESHOLD = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_AUTOMATIC_THRESHOLD')
@@ -491,7 +498,7 @@ class Config:
     def MIC_AUTOMATIC_THRESHOLD(self, value):
         if isinstance(value, bool):
             self._MIC_AUTOMATIC_THRESHOLD = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_RECORD_TIMEOUT')
@@ -502,7 +509,7 @@ class Config:
     def MIC_RECORD_TIMEOUT(self, value):
         if isinstance(value, int):
             self._MIC_RECORD_TIMEOUT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_PHRASE_TIMEOUT')
@@ -513,7 +520,7 @@ class Config:
     def MIC_PHRASE_TIMEOUT(self, value):
         if isinstance(value, int):
             self._MIC_PHRASE_TIMEOUT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_MAX_PHRASES')
@@ -524,7 +531,7 @@ class Config:
     def MIC_MAX_PHRASES(self, value):
         if isinstance(value, int):
             self._MIC_MAX_PHRASES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_WORD_FILTER')
@@ -535,7 +542,7 @@ class Config:
     def MIC_WORD_FILTER(self, value):
         if isinstance(value, list):
             self._MIC_WORD_FILTER = sorted(set(value), key=value.index)
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_AVG_LOGPROB')
@@ -546,7 +553,7 @@ class Config:
     def MIC_AVG_LOGPROB(self, value):
         if isinstance(value, (int, float)):
             self._MIC_AVG_LOGPROB = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MIC_NO_SPEECH_PROB')
@@ -557,7 +564,7 @@ class Config:
     def MIC_NO_SPEECH_PROB(self, value):
         if isinstance(value, (int, float)):
             self._MIC_NO_SPEECH_PROB = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('AUTO_SPEAKER_SELECT')
@@ -568,7 +575,7 @@ class Config:
     def AUTO_SPEAKER_SELECT(self, value):
         if isinstance(value, bool):
             self._AUTO_SPEAKER_SELECT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_SPEAKER_DEVICE')
@@ -579,7 +586,7 @@ class Config:
     def SELECTED_SPEAKER_DEVICE(self, value):
         if value in [device["name"] for device in device_manager.getSpeakerDevices()]:
             self._SELECTED_SPEAKER_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_THRESHOLD')
@@ -590,7 +597,7 @@ class Config:
     def SPEAKER_THRESHOLD(self, value):
         if isinstance(value, int):
             self._SPEAKER_THRESHOLD = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_AUTOMATIC_THRESHOLD')
@@ -601,7 +608,7 @@ class Config:
     def SPEAKER_AUTOMATIC_THRESHOLD(self, value):
         if isinstance(value, bool):
             self._SPEAKER_AUTOMATIC_THRESHOLD = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_RECORD_TIMEOUT')
@@ -612,7 +619,7 @@ class Config:
     def SPEAKER_RECORD_TIMEOUT(self, value):
         if isinstance(value, int):
             self._SPEAKER_RECORD_TIMEOUT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_PHRASE_TIMEOUT')
@@ -623,7 +630,7 @@ class Config:
     def SPEAKER_PHRASE_TIMEOUT(self, value):
         if isinstance(value, int):
             self._SPEAKER_PHRASE_TIMEOUT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_MAX_PHRASES')
@@ -634,7 +641,7 @@ class Config:
     def SPEAKER_MAX_PHRASES(self, value):
         if isinstance(value, int):
             self._SPEAKER_MAX_PHRASES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_AVG_LOGPROB')
@@ -645,7 +652,7 @@ class Config:
     def SPEAKER_AVG_LOGPROB(self, value):
         if isinstance(value, (int, float)):
             self._SPEAKER_AVG_LOGPROB = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SPEAKER_NO_SPEECH_PROB')
@@ -656,7 +663,7 @@ class Config:
     def SPEAKER_NO_SPEECH_PROB(self, value):
         if isinstance(value, (int, float)):
             self._SPEAKER_NO_SPEECH_PROB = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('OSC_IP_ADDRESS')
@@ -667,7 +674,7 @@ class Config:
     def OSC_IP_ADDRESS(self, value):
         if isinstance(value, str):
             self._OSC_IP_ADDRESS = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('OSC_PORT')
@@ -678,7 +685,7 @@ class Config:
     def OSC_PORT(self, value):
         if isinstance(value, int):
             self._OSC_PORT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('AUTH_KEYS')
@@ -691,7 +698,7 @@ class Config:
             for key, value in value.items():
                 if isinstance(value, str):
                     self._AUTH_KEYS[key] = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.AUTH_KEYS)
 
     @property
     @json_serializable('USE_EXCLUDE_WORDS')
@@ -702,7 +709,7 @@ class Config:
     def USE_EXCLUDE_WORDS(self, value):
         if isinstance(value, bool):
             self._USE_EXCLUDE_WORDS = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('USE_TRANSLATION_FEATURE')
@@ -713,7 +720,7 @@ class Config:
     def USE_TRANSLATION_FEATURE(self, value):
         if isinstance(value, bool):
             self._USE_TRANSLATION_FEATURE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('USE_WHISPER_FEATURE')
@@ -724,7 +731,7 @@ class Config:
     def USE_WHISPER_FEATURE(self, value):
         if isinstance(value, bool):
             self._USE_WHISPER_FEATURE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSLATION_COMPUTE_DEVICE')
@@ -735,7 +742,7 @@ class Config:
     def SELECTED_TRANSLATION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
             self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE')
@@ -746,7 +753,7 @@ class Config:
     def SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
             self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
@@ -758,7 +765,7 @@ class Config:
         # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT:
         if isinstance(value, str):
             self._CTRANSLATE2_WEIGHT_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('WHISPER_WEIGHT_TYPE')
@@ -769,7 +776,7 @@ class Config:
     def WHISPER_WEIGHT_TYPE(self, value):
         if isinstance(value, str):
             self._WHISPER_WEIGHT_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
@@ -780,7 +787,7 @@ class Config:
     def AUTO_CLEAR_MESSAGE_BOX(self, value):
         if isinstance(value, bool):
             self._AUTO_CLEAR_MESSAGE_BOX = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_ONLY_TRANSLATED_MESSAGES')
@@ -791,7 +798,7 @@ class Config:
     def SEND_ONLY_TRANSLATED_MESSAGES(self, value):
         if isinstance(value, bool):
             self._SEND_ONLY_TRANSLATED_MESSAGES = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
@@ -802,7 +809,7 @@ class Config:
     def SEND_MESSAGE_BUTTON_TYPE(self, value):
         if isinstance(value, str):
             self._SEND_MESSAGE_BUTTON_TYPE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('OVERLAY_SETTINGS')
@@ -815,7 +822,7 @@ class Config:
             for key, value in value.items():
                 if isinstance(value, (int, float)):
                     self._OVERLAY_SETTINGS[key] = float(value)
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
 
     @property
     @json_serializable('OVERLAY_SMALL_LOG')
@@ -826,7 +833,7 @@ class Config:
     def OVERLAY_SMALL_LOG(self, value):
         if isinstance(value, bool):
             self._OVERLAY_SMALL_LOG = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('OVERLAY_SMALL_LOG_SETTINGS')
@@ -844,7 +851,7 @@ class Config:
                     case "display_duration" | "fadeout_duration":
                         if isinstance(value, int):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
 
     @property
     @json_serializable('OVERLAY_UI_TYPE')
@@ -855,7 +862,7 @@ class Config:
     def OVERLAY_UI_TYPE(self, value):
         if isinstance(value, str):
             self._OVERLAY_UI_TYPE = value
-            # saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            # self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_MESSAGE_TO_VRC')
@@ -866,7 +873,7 @@ class Config:
     def SEND_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
             self._SEND_MESSAGE_TO_VRC = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_MESSAGE_FORMAT')
@@ -879,7 +886,7 @@ class Config:
             if isUniqueStrings(["[message]"], value) is False:
                 value = "[message]"
             self._SEND_MESSAGE_FORMAT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
@@ -892,7 +899,7 @@ class Config:
             if isUniqueStrings(["[message]", "[translation]"], value) is False:
                 value = "[message]([translation])"
             self._SEND_MESSAGE_FORMAT_WITH_T = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('RECEIVED_MESSAGE_FORMAT')
@@ -905,7 +912,7 @@ class Config:
             if isUniqueStrings(["[message]"], value) is False:
                 value = "[message]"
             self._RECEIVED_MESSAGE_FORMAT = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
@@ -918,7 +925,7 @@ class Config:
             if isUniqueStrings(["[message]", "[translation]"], value) is False:
                 value = "[message]([translation])"
             self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
@@ -929,7 +936,7 @@ class Config:
     def SEND_RECEIVED_MESSAGE_TO_VRC(self, value):
         if isinstance(value, bool):
             self._SEND_RECEIVED_MESSAGE_TO_VRC = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('LOGGER_FEATURE')
@@ -940,7 +947,7 @@ class Config:
     def LOGGER_FEATURE(self, value):
         if isinstance(value, bool):
             self._LOGGER_FEATURE = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('VRC_MIC_MUTE_SYNC')
@@ -951,7 +958,7 @@ class Config:
     def VRC_MIC_MUTE_SYNC(self, value):
         if isinstance(value, bool):
             self._VRC_MIC_MUTE_SYNC = value
-            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     def init_config(self):
         # Read Only
@@ -1167,14 +1174,14 @@ class Config:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 if fp.readable() and fp.seek(0, 2) > 0:
                     fp.seek(0)
-                    config_data = json_load(fp)
+                    self.config_data = json_load(fp)
 
-                    for key, value in config_data.items():
+                    for key, value in self.config_data.items():
                         setattr(self, key, value)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():
-                config_data[var_name] = var_func(self)
-            json_dump(config_data, fp, indent=4, ensure_ascii=False)
+                self.config_data[var_name] = var_func(self)
+            json_dump(self.config_data, fp, indent=4, ensure_ascii=False)
 
 config = Config()
