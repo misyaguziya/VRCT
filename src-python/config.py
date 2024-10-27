@@ -3,7 +3,7 @@ import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
-
+from asyncio import new_event_loop
 from device_manager import device_manager
 from models.transcription.transcription_languages import transcription_lang
 from utils import generatePercentageStringsList, isUniqueStrings
@@ -15,12 +15,14 @@ def json_serializable(var_name):
         return func
     return decorator
 
-def saveJson(path, key, value):
-    with open(path, "r", encoding="utf-8") as fp:
-        json_data = json_load(fp)
-    json_data[key] = value
+config_data = {}
+def saveJsonData(path, key, value):
+    config_data[key] = value
     with open(path, "w", encoding="utf-8") as fp:
-        json_dump(json_data, fp, indent=4, ensure_ascii=False)
+        json_dump(config_data, fp, indent=4, ensure_ascii=False)
+
+def saveJson(path, key, value):
+    new_event_loop().run_in_executor(None, saveJsonData, path, key, value)
 
 class Config:
     _instance = None
@@ -1163,21 +1165,16 @@ class Config:
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
-                config = json_load(fp)
+                if fp.readable() and fp.seek(0, 2) > 0:
+                    fp.seek(0)
+                    config_data = json_load(fp)
 
-            old_message_format = None
-            for key in config.keys():
-                if key == "MESSAGE_FORMAT":
-                    old_message_format = config[key]
-                setattr(self, key, config[key])
-
-            if old_message_format is not None:
-                setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
+                    for key, value in config_data.items():
+                        setattr(self, key, value)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
-            config = {}
             for var_name, var_func in json_serializable_vars.items():
-                config[var_name] = var_func(self)
-            json_dump(config, fp, indent=4, ensure_ascii=False)
+                config_data[var_name] = var_func(self)
+            json_dump(config_data, fp, indent=4, ensure_ascii=False)
 
 config = Config()
