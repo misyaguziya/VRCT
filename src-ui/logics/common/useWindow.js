@@ -51,9 +51,6 @@ export const useWindow = () => {
         }
     };
 
-    const fetchAndUpdateWindowGeometry = () => {
-        asyncStdoutToPython("/get/data/main_window_geometry");
-    };
 
     const WindowGeometryController = () => {
         useEffect(() => {
@@ -86,7 +83,6 @@ export const useWindow = () => {
     return {
         WindowGeometryController,
         asyncSaveWindowGeometry,
-        fetchAndUpdateWindowGeometry,
         restoreWindowGeometry,
     };
 };
