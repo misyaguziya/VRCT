@@ -17,9 +17,9 @@ def json_serializable(var_name):
 
 class Config:
     _instance = None
-    config_data = {}
-    timer = None
-    debounce_time = 2
+    _config_data = {}
+    _timer = None
+    _debounce_time = 2
 
     def __new__(cls):
         if cls._instance is None:
@@ -30,16 +30,16 @@ class Config:
 
     def saveConfigToFile(self):
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
-            json_dump(self.config_data, fp, indent=4, ensure_ascii=False)
+            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
 
     def saveConfig(self, key, value):
-        self.config_data[key] = value
+        self._config_data[key] = value
 
-        if isinstance(self.timer, threading.Timer) and self.timer.is_alive():
-            self.timer.cancel()
-        timer = threading.Timer(self.debounce_time, self.saveConfigToFile)
-        timer.daemon = True
-        timer.start()
+        if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
+            self._timer.cancel()
+        self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
+        self._timer.daemon = True
+        self._timer.start()
 
     # Read Only
     @property
@@ -1172,14 +1172,14 @@ class Config:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 if fp.readable() and fp.seek(0, 2) > 0:
                     fp.seek(0)
-                    self.config_data = json_load(fp)
+                    self._config_data = json_load(fp)
 
-                    for key, value in self.config_data.items():
+                    for key, value in self._config_data.items():
                         setattr(self, key, value)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():
-                self.config_data[var_name] = var_func(self)
-            json_dump(self.config_data, fp, indent=4, ensure_ascii=False)
+                self._config_data[var_name] = var_func(self)
+            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
 
 config = Config()
