@@ -35,7 +35,7 @@ run_mapping = {
 
     "update_software_flag":"/run/update_software_flag",
 
-    "initialization_complete":"run/initialization_complete",
+    "initialization_complete":"/run/initialization_complete",
 }
 
 controller.setRunMapping(run_mapping)

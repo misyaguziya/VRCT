@@ -362,9 +362,21 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
     };
 
+
     const receiveRoutes = (parsed_data) => {
+        const initDataSyncProcess = (payload) => {
+            for (const [endpoint, value] of Object.entries(payload)) {
+                const route = routes[endpoint];
+                (route) ? route(value) : console.error(`Invalid endpoint: ${endpoint}\vvalue: ${JSON.stringify(value)}`);
+            }
+        };
+
         switch (parsed_data.status) {
             case 200:
+                if (parsed_data.endpoint === "/run/initialization_complete") {
+                    initDataSyncProcess(parsed_data.result);
+                    break;
+                };
                 const route = routes[parsed_data.endpoint];
                 (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
                 break;

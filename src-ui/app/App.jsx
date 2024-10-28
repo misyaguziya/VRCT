@@ -33,45 +33,14 @@ import {
 } from "@logics_common";
 
 import {
-    useSoftwareVersion,
-    useEnableAutoMicSelect,
-    useEnableAutoSpeakerSelect,
-    useSelectedMicHost,
-    useSelectedMicDevice,
-    useSelectedSpeakerDevice,
-    useMicThreshold,
-    useSpeakerThreshold,
-    useEnableAutoClearMessageInputBox,
-    useEnableSendOnlyTranslatedMessages,
-    useEnableAutoExportMessageLogs,
-    useEnableVrcMicMuteSync,
-    useEnableSendMessageToVrc,
-    useSendMessageButtonType,
     useUiLanguage,
     useUiScaling,
-    useMessageLogUiScaling,
     useSelectedFontFamily,
     useTransparency,
-    useMicHostList,
-    useMicDeviceList,
-    useSpeakerDeviceList,
-    useMicRecordTimeout,
-    useMicPhraseTimeout,
-    useMicMaxWords,
-    useMicWordFilterList,
-    useSpeakerRecordTimeout,
-    useSpeakerPhraseTimeout,
-    useSpeakerMaxWords,
-    useOscIpAddress,
-    useOscPort,
 } from "@logics_configs";
 
 import {
     useMainFunction,
-    useIsMainPageCompactMode,
-    useLanguageSettings,
-    useSelectableLanguageList,
-    useMessageInputBoxRatio,
 } from "@logics_main";
 
 const StartPythonFacadeComponent = () => {
@@ -79,119 +48,11 @@ const StartPythonFacadeComponent = () => {
     const hasRunRef = useRef(false);
     const { asyncFetchFonts } = useAsyncFetchFonts();
 
-    const { fetchAndUpdateWindowGeometry } = useWindow();
-
-    const { getMicHostList } = useMicHostList();
-    const { getMicDeviceList } = useMicDeviceList();
-    const { getSpeakerDeviceList } = useSpeakerDeviceList();
-
-    const { getIsMainPageCompactMode } = useIsMainPageCompactMode();
-    const { getSoftwareVersion } = useSoftwareVersion();
-    const { getEnableAutoMicSelect } = useEnableAutoMicSelect();
-    const { getEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
-    const { getSelectedMicHost } = useSelectedMicHost();
-    const { getSelectedMicDevice } = useSelectedMicDevice();
-    const { getSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-    const { getMicThreshold, getEnableAutomaticMicThreshold } = useMicThreshold();
-    const { getSpeakerThreshold, getEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
-
-    const { getEnableAutoClearMessageInputBox }  = useEnableAutoClearMessageInputBox();
-    const { getEnableSendOnlyTranslatedMessages }  = useEnableSendOnlyTranslatedMessages();
-    const { getEnableAutoExportMessageLogs }  = useEnableAutoExportMessageLogs();
-    const { getEnableVrcMicMuteSync }  = useEnableVrcMicMuteSync();
-    const { getEnableSendMessageToVrc }  = useEnableSendMessageToVrc();
-
-    const { getSendMessageButtonType } = useSendMessageButtonType();
-    const { getUiLanguage } = useUiLanguage();
-    const { getUiScaling } = useUiScaling();
-    const { getMessageLogUiScaling } = useMessageLogUiScaling();
-    const { getSelectedFontFamily } = useSelectedFontFamily();
-    const { getTransparency } = useTransparency();
-
-    const {
-        getSelectedPresetTabNumber,
-        getEnableMultiTranslation,
-        getSelectedYourLanguages,
-        getSelectedTargetLanguages,
-        getTranslationEngines,
-        getSelectedTranslationEngines,
-    } = useLanguageSettings();
-    const { getSelectableLanguageList } = useSelectableLanguageList();
-    const { getMessageInputBoxRatio } = useMessageInputBoxRatio();
-
-    const { getMicRecordTimeout } = useMicRecordTimeout();
-    const { getMicPhraseTimeout } = useMicPhraseTimeout();
-    const { getMicMaxWords } = useMicMaxWords();
-    const { getMicWordFilterList } = useMicWordFilterList();
-
-    const { getSpeakerRecordTimeout } = useSpeakerRecordTimeout();
-    const { getSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
-    const { getSpeakerMaxWords } = useSpeakerMaxWords();
-
-    const { getOscIpAddress } = useOscIpAddress();
-    const { getOscPort } = useOscPort();
-
     useEffect(() => {
         if (!hasRunRef.current) {
             asyncStartPython().then(() => {
                 startFeedingToWatchDog();
-
-                fetchAndUpdateWindowGeometry();
-
-                // getUiLanguage();
-                // getUiScaling();
-                // getMessageLogUiScaling();
-                // getIsMainPageCompactMode();
-                // getMessageInputBoxRatio();
-                // getTransparency();
-
                 asyncFetchFonts();
-                // getSelectedFontFamily();
-
-                // getSoftwareVersion();
-
-                // getSelectedPresetTabNumber();
-                // getEnableMultiTranslation();
-                // getSelectedYourLanguages();
-                // getSelectedTargetLanguages();
-                // getSelectableLanguageList();
-                // getTranslationEngines();
-                // getSelectedTranslationEngines();
-
-                // getMicHostList();
-                // getMicDeviceList();
-                // getSpeakerDeviceList();
-
-                // getEnableAutoMicSelect();
-                // getEnableAutoSpeakerSelect();
-                // getSelectedMicHost();
-                // getSelectedMicDevice();
-                // getSelectedSpeakerDevice();
-
-                // getMicThreshold();
-                // getSpeakerThreshold();
-                // getEnableAutomaticMicThreshold();
-                // getEnableAutomaticSpeakerThreshold();
-
-                // getMicRecordTimeout();
-                // getMicPhraseTimeout();
-                // getMicMaxWords();
-                // getMicWordFilterList();
-
-                // getSpeakerRecordTimeout();
-                // getSpeakerPhraseTimeout();
-                // getSpeakerMaxWords();
-
-                // getEnableAutoClearMessageInputBox();
-                // getSendMessageButtonType();
-
-                // getEnableSendOnlyTranslatedMessages();
-                // getEnableAutoExportMessageLogs();
-                // getEnableVrcMicMuteSync();
-                // getEnableSendMessageToVrc();
-
-                // getOscIpAddress();
-                // getOscPort();
             }).catch((err) => {
                 console.error(err);
             });
