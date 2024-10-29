@@ -1435,6 +1435,14 @@ class Controller:
             model.oscStopSendTyping()
         return {"status":200, "result":True}
 
+    @staticmethod
+    def sendTextOverlaySmallLog(data, *args, **kwargs) -> dict:
+        if config.OVERLAY_SMALL_LOG is True:
+            if model.overlay.initialized is True:
+                overlay_image = model.createOverlayImage(data)
+                model.updateOverlay(overlay_image)
+        return {"status":200, "result":data}
+
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:
         your_languages = config.SELECTED_YOUR_LANGUAGES
         your_language_primary = your_languages[config.SELECTED_TAB_NO]["primary"]
