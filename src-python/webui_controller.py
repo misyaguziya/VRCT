@@ -1080,31 +1080,17 @@ class Controller:
     def setEnableUseTranslationFeature(*args, **kwargs) -> dict:
         config.USE_TRANSLATION_FEATURE = True
         if model.checkCTranslatorCTranslate2ModelWeight():
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
             def callback():
                 model.changeTranslatorCTranslate2Model()
             th_callback = Thread(target=callback)
             th_callback.daemon = True
             th_callback.start()
-        else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-        return {"status":200,
-                "result":{
-                    "feature":config.USE_TRANSLATION_FEATURE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
-                    },
-                }
+        return {"status":200, "result":config.USE_TRANSLATION_FEATURE}
 
     @staticmethod
     def setDisableUseTranslationFeature(*args, **kwargs) -> dict:
         config.USE_TRANSLATION_FEATURE = False
-        config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-        return {"status":200,
-                "result":{
-                    "feature":config.USE_TRANSLATION_FEATURE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
-                    },
-                }
+        return {"status":200, "result": config.USE_TRANSLATION_FEATURE}
 
     @staticmethod
     def getUseWhisperFeature(*args, **kwargs) -> dict:
@@ -1114,29 +1100,24 @@ class Controller:
     def setEnableUseWhisperFeature(*args, **kwargs) -> dict:
         config.USE_WHISPER_FEATURE = True
         if model.checkTranscriptionWhisperModelWeight() is True:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
         return {"status":200,
                 "result":{
                     "feature":config.USE_WHISPER_FEATURE,
                     "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
                     },
                 }
 
     @staticmethod
     def setDisableUseWhisperFeature(*args, **kwargs) -> dict:
         config.USE_WHISPER_FEATURE = False
-        config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
         config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
         return {"status":200,
                 "result":{
                     "feature":config.USE_WHISPER_FEATURE,
                     "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
                     },
                 }
 
@@ -1148,20 +1129,12 @@ class Controller:
     def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
         config.CTRANSLATE2_WEIGHT_TYPE = str(data)
         if model.checkCTranslatorCTranslate2ModelWeight():
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
             def callback():
                 model.changeTranslatorCTranslate2Model()
             th_callback = Thread(target=callback)
             th_callback.daemon = True
             th_callback.start()
-        else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = True
-        return {"status":200,
-                "result":{
-                    "feature":config.CTRANSLATE2_WEIGHT_TYPE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION,
-                    },
-                }
+        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
     def getWhisperWeightType(*args, **kwargs) -> dict:
@@ -1171,16 +1144,13 @@ class Controller:
     def setWhisperWeightType(data, *args, **kwargs) -> dict:
         config.WHISPER_WEIGHT_TYPE = str(data)
         if model.checkTranscriptionWhisperModelWeight() is True:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
             config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         else:
-            config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = True
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
         return {"status":200,
                 "result":{
                     "weight_type":config.WHISPER_WEIGHT_TYPE,
                     "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-                    "reset":config.IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER,
                 }
             }
 
