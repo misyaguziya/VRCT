@@ -34,6 +34,8 @@ run_mapping = {
     "speaker_device_list":"/run/speaker_device_list",
 
     "update_software_flag":"/run/update_software_flag",
+
+    "initialization_complete":"/run/initialization_complete",
 }
 
 controller.setRunMapping(run_mapping)
@@ -94,11 +96,11 @@ mapping = {
     "/get/data/transparency": {"status": True, "variable":controller.getTransparency},
     "/set/data/transparency": {"status": True, "variable":controller.setTransparency},
 
-    "/get/data/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
-    "/get/data/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
-    "/set/data/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
+    # "/get/data/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
+    # "/get/data/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
+    # "/set/data/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
 
-    "/get/data/ui_scaling_list": {"status": True, "variable":controller.getUiScalingList},
+    "/get/data/ui_scaling_range": {"status": True, "variable":controller.getUiScalingRange},
     "/get/data/ui_scaling": {"status": True, "variable":controller.getUiScaling},
     "/set/data/ui_scaling": {"status": True, "variable":controller.setUiScaling},
 
@@ -128,11 +130,11 @@ mapping = {
     "/set/enable/use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
     "/set/disable/use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
 
-    "/get/data/translation_compute_device_dict": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
 
-    "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
+    "/get/data/selectable_ctranslate2_weight_type_list": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeList},
 
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
@@ -233,11 +235,11 @@ mapping = {
     "/set/enable/check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
-    "/get/data/transcription_compute_device_dict": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
     "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
-    "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperModelTypeDict},
+    "/get/data/selectable_whisper_weight_type_list": {"status": True, "variable":controller.getSelectableWhisperWeightTypeList},
 
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
@@ -314,6 +316,9 @@ mapping = {
     "/run/feed_watchdog": {"status": True, "variable":controller.feedWatchdog},
     # "/run/stop_watchdog": {"status": True, "variable":controller.stopWatchdog},
 }
+
+init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
+controller.setInitMapping(init_mapping)
 
 class Main:
     def __init__(self) -> None:
