@@ -101,8 +101,8 @@ class Model:
         self.kks = kakasi()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
 
-    def checkCTranslatorCTranslate2ModelWeight(self):
-        return checkCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE)
+    def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
+        return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
 
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(
@@ -111,17 +111,17 @@ class Model:
             config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
             config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"])
 
-    def downloadCTranslate2ModelWeight(self, callbackFunc=None):
-        return downloadCTranslate2Weight(config.PATH_LOCAL, config.CTRANSLATE2_WEIGHT_TYPE, callbackFunc)
+    def downloadCTranslate2ModelWeight(self, weight_type, callback=None, end_callback=None):
+        return downloadCTranslate2Weight(config.PATH_LOCAL, weight_type, callback, end_callback)
 
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
 
-    def checkTranscriptionWhisperModelWeight(self):
-        return checkWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE)
+    def checkTranscriptionWhisperModelWeight(self, weight_type:str):
+        return checkWhisperWeight(config.PATH_LOCAL, weight_type)
 
-    def downloadWhisperModelWeight(self, callbackFunc=None):
-        return downloadWhisperWeight(config.PATH_LOCAL, config.WHISPER_WEIGHT_TYPE, callbackFunc)
+    def downloadWhisperModelWeight(self, weight_type, callback=None, end_callback=None):
+        return downloadWhisperWeight(config.PATH_LOCAL, weight_type, callback, end_callback)
 
     def resetKeywordProcessor(self):
         del self.keyword_processor
