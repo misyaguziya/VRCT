@@ -11,9 +11,13 @@ import torch
 
 class Controller:
     def __init__(self) -> None:
+        self.init_mapping = {}
         self.run_mapping = {}
         self.run = None
         self.device_access_status = True
+
+    def setInitMapping(self, init_mapping:dict) -> None:
+        self.init_mapping = init_mapping
 
     def setRunMapping(self, run_mapping:dict) -> None:
         self.run_mapping = run_mapping
@@ -41,6 +45,18 @@ class Controller:
             200,
             self.run_mapping["speaker_device_list"],
             model.getListSpeakerDevice(),
+        )
+
+    def updateConfigSettings(self) -> None:
+        settings = {}
+        for endpoint, dict_data in self.init_mapping.items():
+            response = dict_data["variable"](None)
+            result = response.get("result", None)
+            settings[endpoint] = result
+        self.run(
+            200,
+            self.run_mapping["initialization_complete"],
+            settings,
         )
 
     def restartAccessDevices(self) -> None:
@@ -353,8 +369,8 @@ class Controller:
         return {"status":200, "result":config.APPEARANCE_THEME_LIST}
 
     @staticmethod
-    def getUiScalingList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_SCALING_LIST}
+    def getUiScalingRange(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.UI_SCALING_RANGE}
 
     @staticmethod
     def getTextboxUiScalingRange(*args, **kwargs) -> dict:
@@ -381,8 +397,8 @@ class Controller:
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
-    def getSelectableCtranslate2WeightTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT}
+    def getSelectableCtranslate2WeightTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST}
 
     @staticmethod
     def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
@@ -395,8 +411,8 @@ class Controller:
         return {"status":200,"result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     @staticmethod
-    def getSelectableWhisperModelTypeDict(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
+    def getSelectableWhisperWeightTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST}
 
     @staticmethod
     def getMaxMicThreshold(*args, **kwargs) -> dict:
@@ -1703,6 +1719,8 @@ class Controller:
 
         if config.AUTO_SPEAKER_SELECT is True:
             self.setEnableAutoSpeakerSelect()
+
+        self.updateConfigSettings()
 
         printLog("End Initialization")
 

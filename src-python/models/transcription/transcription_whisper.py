@@ -1,7 +1,6 @@
 from os import path as os_path, makedirs as os_makedirs
 from requests import get as requests_get
 from typing import Callable
-import torch
 import huggingface_hub
 from faster_whisper import WhisperModel
 import logging
