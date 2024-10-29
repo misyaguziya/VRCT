@@ -21,7 +21,7 @@ run_mapping = {
     "word_filter":"/run/word_filter",
 
     "download_ctranslate2_weight":"/run/download_ctranslate2_weight",
-    "downloaded_ctranslate2_weight":"/run/download_ctranslate2_weight",
+    "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
     "download_whisper_weight":"/run/download_whisper_weight",
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
 
@@ -131,10 +131,6 @@ mapping = {
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
 
     # Translation
-    "/get/data/use_translation_feature": {"status": True, "variable":controller.getUseTranslationFeature},
-    "/set/enable/use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
-    "/set/disable/use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
-
     "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
