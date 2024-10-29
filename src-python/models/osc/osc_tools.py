@@ -1,11 +1,9 @@
 from time import sleep
-from pythonosc import osc_message_builder
-from pythonosc import udp_client
-from pythonosc import dispatcher
-from pythonosc import osc_server
+from pythonosc import osc_message_builder, udp_client, dispatcher, osc_server
 from tinyoscquery.queryservice import OSCQueryService
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
+from psutil import process_iter
 
 # send OSC message typing
 def sendTyping(flag=False, ip_address="127.0.0.1", port=9000):
@@ -65,19 +63,30 @@ def getOSCParameterValue(address, server_name="VRChat-Client"):
         pass
     return value
 
+def checkVRChatRunning() -> bool:
+    _proc_name = "VRChat.exe"
+    return _proc_name in (p.name() for p in process_iter())
+
 def receiveOscParameters(dict_filter_and_target, ip_address="127.0.0.1", title="VRCT"):
-    osc_port = get_open_udp_port()
-    http_port = get_open_tcp_port()
-    osc_dispatcher = dispatcher.Dispatcher()
-    for filter, target in dict_filter_and_target.items():
-        osc_dispatcher.map(filter, target)
-    osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
+    while True:
+        if not checkVRChatRunning():
+            sleep(1)
+        else:
+            try:
+                osc_port = get_open_udp_port()
+                http_port = get_open_tcp_port()
+                osc_dispatcher = dispatcher.Dispatcher()
+                for filter, target in dict_filter_and_target.items():
+                    osc_dispatcher.map(filter, target)
+                osc_udp_server = osc_server.ThreadingOSCUDPServer((ip_address, osc_port), osc_dispatcher)
 
-    osc_client = OSCQueryService(title, http_port, osc_port)
-    for filter, target in dict_filter_and_target.items():
-        osc_client.advertise_endpoint(filter)
+                osc_client = OSCQueryService(title, http_port, osc_port)
+                for filter, target in dict_filter_and_target.items():
+                    osc_client.advertise_endpoint(filter)
 
-    osc_udp_server.serve_forever()
+                osc_udp_server.serve_forever()
+            except Exception:
+                pass
 
 if __name__ == "__main__":
     osc_parameter_prefix = "/avatar/parameters/"
