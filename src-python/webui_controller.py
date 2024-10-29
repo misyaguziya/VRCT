@@ -1093,35 +1093,6 @@ class Controller:
         return {"status":200, "result": config.USE_TRANSLATION_FEATURE}
 
     @staticmethod
-    def getUseWhisperFeature(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.USE_WHISPER_FEATURE}
-
-    @staticmethod
-    def setEnableUseWhisperFeature(*args, **kwargs) -> dict:
-        config.USE_WHISPER_FEATURE = True
-        if model.checkTranscriptionWhisperModelWeight() is True:
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
-        else:
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        return {"status":200,
-                "result":{
-                    "feature":config.USE_WHISPER_FEATURE,
-                    "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-                    },
-                }
-
-    @staticmethod
-    def setDisableUseWhisperFeature(*args, **kwargs) -> dict:
-        config.USE_WHISPER_FEATURE = False
-        config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        return {"status":200,
-                "result":{
-                    "feature":config.USE_WHISPER_FEATURE,
-                    "transcription_engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-                    },
-                }
-
-    @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
@@ -1650,22 +1621,9 @@ class Controller:
         printLog("Set Translation Engine")
         self.updateTranslationEngineAndEngineList()
 
-        # check Downloaded CTranslate2 Model Weight
-        printLog("Check Downloaded CTranslate2 Model Weight")
-        if config.USE_TRANSLATION_FEATURE is True and model.checkCTranslatorCTranslate2ModelWeight() is False:
-            self.startThreadingDownloadCtranslate2Weight(self.downloadCTranslate2ProgressBar)
-
         # set Transcription Engine
-        printLog("Set Transcription Engine")
-        if config.USE_WHISPER_FEATURE is True:
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
-        else:
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-
-        # check Downloaded Whisper Model Weight
-        printLog("Check Downloaded Whisper Model Weight")
-        if config.USE_WHISPER_FEATURE is True and model.checkTranscriptionWhisperModelWeight() is False:
-            self.startThreadingDownloadWhisperWeight(self.downloadWhisperProgressBar)
+        # printLog("Set Transcription Engine")
+        # self.updateTranscriptionEngineAndEngineList()
 
         # set word filter
         printLog("Set Word Filter")
