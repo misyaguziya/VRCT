@@ -677,17 +677,6 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('USE_TRANSLATION_FEATURE')
-    def USE_TRANSLATION_FEATURE(self):
-        return self._USE_TRANSLATION_FEATURE
-
-    @USE_TRANSLATION_FEATURE.setter
-    def USE_TRANSLATION_FEATURE(self, value):
-        if isinstance(value, bool):
-            self._USE_TRANSLATION_FEATURE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('SELECTED_TRANSLATION_COMPUTE_DEVICE')
     def SELECTED_TRANSLATION_COMPUTE_DEVICE(self):
         return self._SELECTED_TRANSLATION_COMPUTE_DEVICE
@@ -1033,7 +1022,7 @@ class Config:
                 },
             },
         }
-        self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
+        self._SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
         self._MULTI_LANGUAGE_TRANSLATION = False
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False
@@ -1080,7 +1069,6 @@ class Config:
             "DeepL_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
-        self._USE_TRANSLATION_FEATURE = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._CTRANSLATE2_WEIGHT_TYPE = "Small"

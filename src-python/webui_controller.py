@@ -547,21 +547,8 @@ class Controller:
 
     @staticmethod
     def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
-        engine = data["engine"]
-        weight_type = data["weight_type"]
-        if engine == "Whisper" and config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] is False:
-            config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-            config.WHISPER_WEIGHT_TYPE = None
-        else:
-            config.SELECTED_TRANSCRIPTION_ENGINE = engine
-            config.WHISPER_WEIGHT_TYPE = weight_type
-        return {
-            "status":200,
-            "result":{
-                "engine": config.SELECTED_TRANSCRIPTION_ENGINE,
-                "weight_type": config.WHISPER_WEIGHT_TYPE,
-            }
-        }
+        config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     @staticmethod
     def getMultiLanguageTranslation(*args, **kwargs) -> dict:
@@ -1125,26 +1112,6 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
     @staticmethod
-    def getUseTranslationFeature(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.USE_TRANSLATION_FEATURE}
-
-    @staticmethod
-    def setEnableUseTranslationFeature(*args, **kwargs) -> dict:
-        config.USE_TRANSLATION_FEATURE = True
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-        return {"status":200, "result":config.USE_TRANSLATION_FEATURE}
-
-    @staticmethod
-    def setDisableUseTranslationFeature(*args, **kwargs) -> dict:
-        config.USE_TRANSLATION_FEATURE = False
-        return {"status":200, "result": config.USE_TRANSLATION_FEATURE}
-
-    @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
@@ -1702,25 +1669,25 @@ class Controller:
                 auth_keys["DeepL_API"] = None
                 config.AUTH_KEYS = auth_keys
 
+        # download CTranslate2 Model Weight
+        printLog("Download CTranslate2 Model Weight")
+        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is False:
+            self.downloadCtranslate2Weight(config.CTRANSLATE2_WEIGHT_TYPE)
+
         # set Translation Engine
         printLog("Set Translation Engine")
         self.updateDownloadedCTranslate2ModelWeight()
         self.updateTranslationEngineAndEngineList()
 
-        # download CTranslate2 Model Weight
-        printLog("Download CTranslate2 Model Weight")
-        if config.USE_TRANSLATION_FEATURE is True and model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is False:
-            self.downloadCtranslate2Weight(config.CTRANSLATE2_WEIGHT_TYPE)
+        # download Whisper Model Weight
+        printLog("Download Whisper Model Weight")
+        if model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is False:
+            self.downloadWhisperWeight(config.WHISPER_WEIGHT_TYPE)
 
         # set Transcription Engine
         printLog("Set Transcription Engine")
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
-
-        # download Whisper Model Weight
-        printLog("Download Whisper Model Weight")
-        if model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is False:
-            self.downloadWhisperWeight(config.WHISPER_WEIGHT_TYPE)
 
         # set word filter
         printLog("Set Word Filter")

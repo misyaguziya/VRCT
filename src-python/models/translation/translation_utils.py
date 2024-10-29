@@ -39,7 +39,7 @@ def calculate_file_hash(file_path, block_size=65536):
 
     return hash_object.hexdigest()
 
-def checkCTranslate2Weight(path, weight_type="Small"):
+def checkCTranslate2Weight(root, weight_type="Small"):
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     hash_data = ctranslate2_weights[weight_type]["hash"]
     files = [
@@ -47,6 +47,7 @@ def checkCTranslate2Weight(path, weight_type="Small"):
         "sentencepiece.model",
         "shared_vocabulary.txt"
     ]
+    path = os_path.join(root, "weights", "ctranslate2")
 
     # check already downloaded
     already_downloaded = False
@@ -66,7 +67,7 @@ def downloadCTranslate2Weight(root, weight_type="Small", callback=None, end_call
     path = os_path.join(root, "weights", "ctranslate2")
     os_makedirs(path, exist_ok=True)
 
-    if checkCTranslate2Weight(path, weight_type) is False:
+    if checkCTranslate2Weight(root, weight_type) is False:
         try:
             with tempfile.TemporaryDirectory() as tmp_path:
                 res = requests_get(url, stream=True)
