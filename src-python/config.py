@@ -99,14 +99,6 @@ class Config:
         return self._MESSAGE_BOX_RATIO_RANGE
 
     @property
-    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
-        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST
-
-    @property
-    def SELECTABLE_WHISPER_WEIGHT_TYPE_LIST(self):
-        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST
-
-    @property
     def MAX_MIC_THRESHOLD(self):
         return self._MAX_MIC_THRESHOLD
 
@@ -176,6 +168,24 @@ class Config:
     def ENABLE_CHECK_ENERGY_RECEIVE(self, value):
         if isinstance(value, bool):
             self._ENABLE_CHECK_ENERGY_RECEIVE = value
+
+    @property
+    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self):
+        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
+
+    @SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT.setter
+    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self, value):
+        if isinstance(value, dict):
+            self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = value
+
+    @property
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self):
+        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
+
+    @SELECTABLE_WHISPER_WEIGHT_TYPE_DICT.setter
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self, value):
+        if isinstance(value, dict):
+            self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = value
 
     # Save Json Data
     ## Main Window
@@ -252,7 +262,7 @@ class Config:
     def SELECTED_TRANSCRIPTION_ENGINE(self, value):
         if isinstance(value, str):
             self._SELECTED_TRANSCRIPTION_ENGINE = value
-            # self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MULTI_LANGUAGE_TRANSLATION')
@@ -706,7 +716,6 @@ class Config:
 
     @CTRANSLATE2_WEIGHT_TYPE.setter
     def CTRANSLATE2_WEIGHT_TYPE(self, value):
-        # if isinstance(value, str) and value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST:
         if isinstance(value, str):
             self._CTRANSLATE2_WEIGHT_TYPE = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
@@ -924,20 +933,20 @@ class Config:
         self._UI_SCALING_RANGE = (40, 200)
         self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = [
-            "Small",
-            "Large",
-        ]
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
+            "Small": False,
+            "Large": False,
+        }
 
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = [
-            "tiny",
-            "base",
-            "small",
-            "medium",
-            "large-v1",
-            "large-v2",
-            "large-v3",
-        ]
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
+            "tiny": False,
+            "base": False,
+            "small": False,
+            "medium": False,
+            "large-v1": False,
+            "large-v2": False,
+            "large-v3": False,
+        }
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
