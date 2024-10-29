@@ -246,10 +246,6 @@ mapping = {
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
-    "/get/data/use_whisper_feature": {"status": True, "variable":controller.getUseWhisperFeature},
-    "/set/enable/use_whisper_feature": {"status": True, "variable":controller.setEnableUseWhisperFeature},
-    "/set/disable/use_whisper_feature": {"status": True, "variable":controller.setDisableUseWhisperFeature},
-
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR
