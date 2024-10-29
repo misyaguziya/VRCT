@@ -177,51 +177,6 @@ class Config:
         if isinstance(value, bool):
             self._ENABLE_CHECK_ENERGY_RECEIVE = value
 
-    # @property
-    # def SENT_MESSAGES_LOG(self):
-    #     return self._SENT_MESSAGES_LOG
-
-    # @SENT_MESSAGES_LOG.setter
-    # def SENT_MESSAGES_LOG(self, value):
-    #     if isinstance(value, list):
-    #         self._SENT_MESSAGES_LOG = value
-
-    # @property
-    # def CURRENT_SENT_MESSAGES_LOG_INDEX(self):
-    #     return self._CURRENT_SENT_MESSAGES_LOG_INDEX
-
-    # @CURRENT_SENT_MESSAGES_LOG_INDEX.setter
-    # def CURRENT_SENT_MESSAGES_LOG_INDEX(self, value):
-    #     if isinstance(value, int):
-    #         self._CURRENT_SENT_MESSAGES_LOG_INDEX = value
-
-    @property
-    def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self):
-        return self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION
-
-    @IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION.setter
-    def IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION(self, value):
-        if isinstance(value, bool):
-            self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = value
-
-    @property
-    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self):
-        return self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER
-
-    @IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER.setter
-    def IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER(self, value):
-        if isinstance(value, bool):
-            self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = value
-
-    # @property
-    # def IS_EASTER_EGG_ENABLED(self):
-    #     return self._IS_EASTER_EGG_ENABLED
-
-    # @IS_EASTER_EGG_ENABLED.setter
-    # def IS_EASTER_EGG_ENABLED(self, value):
-    #     if isinstance(value, bool):
-    #         self._IS_EASTER_EGG_ENABLED = value
-
     # Save Json Data
     ## Main Window
     @property
@@ -1007,12 +962,6 @@ class Config:
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
-
-        # self._SENT_MESSAGES_LOG = []
-        # self._CURRENT_SENT_MESSAGES_LOG_INDEX = 0
-        self._IS_RESET_BUTTON_DISPLAYED_FOR_TRANSLATION = False
-        self._IS_RESET_BUTTON_DISPLAYED_FOR_WHISPER = False
-        # self._IS_EASTER_EGG_ENABLED = False
 
         # Save Json Data
         ## Main Window
