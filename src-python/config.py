@@ -937,7 +937,7 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
-        self._SELECTED_TRANSLATION_ENGINES= {
+        self._SELECTED_TRANSLATION_ENGINES = {
             "1":"CTranslate2",
             "2":"CTranslate2",
             "3":"CTranslate2",
