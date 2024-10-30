@@ -923,8 +923,8 @@ class Config:
         self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
-            "Small": False,
-            "Large": False,
+            "small": False,
+            "large": False,
         }
 
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
@@ -1071,7 +1071,7 @@ class Config:
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
-        self._CTRANSLATE2_WEIGHT_TYPE = "Small"
+        self._CTRANSLATE2_WEIGHT_TYPE = "small"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"

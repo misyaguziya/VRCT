@@ -70,7 +70,7 @@ def downloadWhisperWeight(root, weight_type, callback=None, end_callback=None):
         for filename in _FILENAMES:
             file_path = os_path.join(path, filename)
             url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
-            downloadFile(url, file_path, func=callback)
+            downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
     if isinstance(end_callback, Callable):
         end_callback()
 
