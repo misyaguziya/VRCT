@@ -1,12 +1,14 @@
 import { useStore_SelectedConfigTabId } from "@store";
 
-import { Device } from "./device/Device";
-import { Appearance } from "./appearance/Appearance";
-import { Transcription } from "./transcription/Transcription";
-import { Others } from "./others/Others";
-import { AdvancedSettings } from "./advanced_settings/AdvancedSettings";
-import { Vr } from "./vr/Vr";
-// import { AboutVrct } from "./about_vrct/AboutVrct";
+import {
+    Device,
+    Appearance,
+    Transcription,
+    Others,
+    AdvancedSettings,
+    Vr,
+    // AboutVrct,
+} from "@setting_box";
 
 export const SettingBox = () => {
     const { currentSelectedConfigTabId } = useStore_SelectedConfigTabId();

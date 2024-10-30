@@ -43,6 +43,8 @@ export default defineConfig(async () => ({
             "@logics_common": path.resolve(__dirname, "src-ui/logics/common"),
             "@logics_main": path.resolve(__dirname, "src-ui/logics/main"),
             "@logics_configs": path.resolve(__dirname, "src-ui/logics/configs"),
+
+            "@setting_box": path.resolve(__dirname, "src-ui/app/config_page/setting_section/setting_box/index.js"),
         },
     },
 
