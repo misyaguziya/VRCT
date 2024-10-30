@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { clsx } from "clsx";
 import styles from "./Vr.module.scss";
 import { Slider } from "../_components/";
-import { clsx } from "clsx";
 import {
+    SwitchBoxContainer,
+} from "../_templates/Templates";
+import {
+    useIsEnabledOverlaySmallLog,
     useOverlaySettings,
     useOverlaySmallLogSettings,
 } from "@logics_configs";
@@ -58,6 +62,7 @@ export const Vr = () => {
 
     return (
         <div className={styles.container}>
+            <EnableOverlaySmallLogContainer />
             <CommonControls />
             <div className={styles.controller_type_switch} onClick={toggleController}>
                 <div className={toggle_button_class_names__position}>
@@ -75,6 +80,19 @@ export const Vr = () => {
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} />
         </div>
+    );
+};
+
+const EnableOverlaySmallLogContainer = () => {
+    const { t } = useTranslation();
+    const { currentIsEnabledOverlaySmallLog, toggleIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
+
+    return (
+        <SwitchBoxContainer
+            label={t("config_page.enable_overlay_small_log.label")}
+            variable={currentIsEnabledOverlaySmallLog}
+            toggleFunction={toggleIsEnabledOverlaySmallLog}
+        />
     );
 };
 
