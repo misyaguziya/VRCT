@@ -63,17 +63,16 @@ def checkWhisperWeight(root, weight_type):
         pass
     return result
 
-def downloadWhisperWeight(root, weight_type, callbackFunc):
+def downloadWhisperWeight(root, weight_type, callback=None, end_callback=None):
     path = os_path.join(root, "weights", "whisper", weight_type)
     os_makedirs(path, exist_ok=True)
-    if checkWhisperWeight(root, weight_type) is True:
-        callbackFunc(1)
-        return
-
-    for filename in _FILENAMES:
-        file_path = os_path.join(path, filename)
-        url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
-        downloadFile(url, file_path, func=callbackFunc)
+    if checkWhisperWeight(root, weight_type) is False:
+        for filename in _FILENAMES:
+            file_path = os_path.join(path, filename)
+            url = huggingface_hub.hf_hub_url(_MODELS[weight_type], filename)
+            downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
+    if isinstance(end_callback, Callable):
+        end_callback()
 
 def getWhisperModel(root, weight_type, device="cpu", device_index=0):
     path = os_path.join(root, "weights", "whisper", weight_type)
@@ -93,10 +92,14 @@ if __name__ == "__main__":
         print(value)
         pass
 
-    downloadWhisperWeight("./", "tiny", callback)
-    downloadWhisperWeight("./", "base", callback)
-    downloadWhisperWeight("./", "small", callback)
-    downloadWhisperWeight("./", "medium", callback)
-    downloadWhisperWeight("./", "large-v1", callback)
-    downloadWhisperWeight("./", "large-v2", callback)
-    downloadWhisperWeight("./", "large-v3", callback)
+    def end_callback():
+        print("end")
+        pass
+
+    downloadWhisperWeight("./", "tiny", callback, end_callback)
+    downloadWhisperWeight("./", "base", callback, end_callback)
+    downloadWhisperWeight("./", "small", callback, end_callback)
+    downloadWhisperWeight("./", "medium", callback, end_callback)
+    downloadWhisperWeight("./", "large-v1", callback, end_callback)
+    downloadWhisperWeight("./", "large-v2", callback, end_callback)
+    downloadWhisperWeight("./", "large-v3", callback, end_callback)
