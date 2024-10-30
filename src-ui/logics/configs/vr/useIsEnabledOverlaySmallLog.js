@@ -6,7 +6,7 @@ export const useIsEnabledOverlaySmallLog = () => {
     const { currentIsEnabledOverlaySmallLog, updateIsEnabledOverlaySmallLog, pendingIsEnabledOverlaySmallLog } = useStore_IsEnabledOverlaySmallLog();
 
     const getIsEnabledOverlaySmallLog = () => {
-        // pendingIsEnabledOverlaySmallLog();
+        pendingIsEnabledOverlaySmallLog();
         asyncStdoutToPython("/get/data/overlay_settings");
     };
 
