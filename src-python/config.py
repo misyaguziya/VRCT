@@ -83,10 +83,6 @@ class Config:
         return self._TRANSPARENCY_RANGE
 
     @property
-    def APPEARANCE_THEME_LIST(self):
-        return self._APPEARANCE_THEME_LIST
-
-    @property
     def UI_SCALING_RANGE(self):
         return self._UI_SCALING_RANGE
 
@@ -318,17 +314,6 @@ class Config:
     def TRANSPARENCY(self, value):
         if isinstance(value, int):
             self._TRANSPARENCY = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('APPEARANCE_THEME')
-    def APPEARANCE_THEME(self):
-        return self._APPEARANCE_THEME
-
-    @APPEARANCE_THEME.setter
-    def APPEARANCE_THEME(self, value):
-        if value in self.APPEARANCE_THEME_LIST:
-            self._APPEARANCE_THEME = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -918,7 +903,6 @@ class Config:
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
         self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
         self._TRANSPARENCY_RANGE = (40, 100)
-        self._APPEARANCE_THEME_LIST = ["Light", "Dark", "System"]
         self._UI_SCALING_RANGE = (40, 200)
         self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
@@ -953,7 +937,7 @@ class Config:
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
-        self._SELECTED_TRANSLATION_ENGINES= {
+        self._SELECTED_TRANSLATION_ENGINES = {
             "1":"CTranslate2",
             "2":"CTranslate2",
             "3":"CTranslate2",
@@ -1030,7 +1014,6 @@ class Config:
 
         ## Config Window
         self._TRANSPARENCY = 100
-        self._APPEARANCE_THEME = "Dark"
         self._UI_SCALING = 100
         self._TEXTBOX_UI_SCALING = 100
         self._MESSAGE_BOX_RATIO = 10
@@ -1043,7 +1026,7 @@ class Config:
             "width": 870,
             "height": 654,
         }
-        self._AUTO_MIC_SELECT = True
+        self._AUTO_MIC_SELECT = False
         self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
         self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
         self._MIC_THRESHOLD = 300
@@ -1052,17 +1035,17 @@ class Config:
         self._MIC_PHRASE_TIMEOUT = 3
         self._MIC_MAX_PHRASES = 10
         self._MIC_WORD_FILTER = []
-        self._MIC_AVG_LOGPROB=-0.8
-        self._MIC_NO_SPEECH_PROB=0.6
-        self._AUTO_SPEAKER_SELECT = True
+        self._MIC_AVG_LOGPROB = -0.8
+        self._MIC_NO_SPEECH_PROB = 0.6
+        self._AUTO_SPEAKER_SELECT = False
         self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
         self._SPEAKER_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
         self._SPEAKER_RECORD_TIMEOUT = 3
         self._SPEAKER_PHRASE_TIMEOUT = 3
         self._SPEAKER_MAX_PHRASES = 10
-        self._SPEAKER_AVG_LOGPROB=-0.8
-        self._SPEAKER_NO_SPEECH_PROB=0.6
+        self._SPEAKER_AVG_LOGPROB = -0.8
+        self._SPEAKER_NO_SPEECH_PROB = 0.6
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
