@@ -514,13 +514,33 @@ class Controller:
 
     @staticmethod
     def getSelectedTranslationEngines(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
+        data = {
+            "engines":config.SELECTED_TRANSLATION_ENGINES,
+            "weight_type":config.CTRANSLATE2_WEIGHT_TYPE,
+        }
+        return {"status":200, "result":data}
 
     @staticmethod
-    def setSelectedTranslationEngines(engines:dict, *args, **kwargs) -> dict:
-        printLog("setSelectedTranslationEngines", engines)
-        config.SELECTED_TRANSLATION_ENGINES = engines
-        return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
+    def setSelectedTranslationEngines(data:dict, *args, **kwargs) -> dict:
+        config.SELECTED_TRANSLATION_ENGINES = data.get("engines", {
+            "1":"CTranslate2",
+            "2":"CTranslate2",
+            "3":"CTranslate2",
+        })
+        config.CTRANSLATE2_WEIGHT_TYPE = data.get("weight_type", "small")
+
+        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
+            def callback():
+                model.changeTranslatorCTranslate2Model()
+            th_callback = Thread(target=callback)
+            th_callback.daemon = True
+            th_callback.start()
+
+        data = {
+            "engines":config.SELECTED_TRANSLATION_ENGINES,
+            "weight_type":config.CTRANSLATE2_WEIGHT_TYPE,
+        }
+        return {"status":200,"result":data}
 
     @staticmethod
     def getSelectedYourLanguages(*args, **kwargs) -> dict:
@@ -542,12 +562,21 @@ class Controller:
 
     @staticmethod
     def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+        data = {
+            "engine":config.SELECTED_TRANSCRIPTION_ENGINE,
+            "weight_type":config.WHISPER_WEIGHT_TYPE,
+        }
+        return {"status":200, "result":data}
 
     @staticmethod
-    def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
-        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
+    def setSelectedTranscriptionEngine(data:dict, *args, **kwargs) -> dict:
+        config.SELECTED_TRANSCRIPTION_ENGINE = data.get("engine", "Google")
+        config.WHISPER_WEIGHT_TYPE = data.get("weight_type", "base")
+        data = {
+            "engine":config.SELECTED_TRANSCRIPTION_ENGINE,
+            "weight_type":config.WHISPER_WEIGHT_TYPE,
+        }
+        return {"status":200, "result":data}
 
     @staticmethod
     def getMultiLanguageTranslation(*args, **kwargs) -> dict:
@@ -1102,30 +1131,6 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
     @staticmethod
-    def getCtranslate2WeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
-
-    @staticmethod
-    def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
-        config.CTRANSLATE2_WEIGHT_TYPE = str(data)
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
-
-    @staticmethod
-    def getWhisperWeightType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
-
-    @staticmethod
-    def setWhisperWeightType(data, *args, **kwargs) -> dict:
-        config.WHISPER_WEIGHT_TYPE = str(data)
-        return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
-
-    @staticmethod
     def getAutoClearMessageBox(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
@@ -1633,9 +1638,9 @@ class Controller:
     def updateComputeDeviceSettings() -> None:
         if torch.cuda.is_available() is False:
             if config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"] != "cpu":
-                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device":"cpu", "device_id":0, "device_name":"cpu"}
+                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device":"cpu", "device_index":0, "device_name":"cpu"}
             if config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"] != "cpu":
-                config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device":"cpu", "device_id":0, "device_name":"cpu"}
+                config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device":"cpu", "device_index":0, "device_name":"cpu"}
 
     @staticmethod
     def startWatchdog(*args, **kwargs) -> dict:
