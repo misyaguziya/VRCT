@@ -512,7 +512,7 @@ if __name__ == "__main__":
                     case "/set/data/ui_language":
                         data = "ja"
                     case "/set/data/ctranslate2_weight_type":
-                        data = "Small"
+                        data = "small"
                     case "/set/data/deepl_auth_key":
                         data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
                     case "/set/data/selected_mic_host":
