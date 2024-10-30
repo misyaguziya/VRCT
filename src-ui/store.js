@@ -103,6 +103,7 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
     transcription_send: false,
     transcription_receive: false,
 }, "MainFunctionsStateMemory");
+export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
 
 // Main Page
 // Functions
@@ -204,6 +205,7 @@ export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_Ove
     display_duration: 5,
     fadeout_duration: 2,
 }, "OverlaySmallLogSettings");
+export const { atomInstance: Atom_IsEnabledOverlaySmallLog, useHook: useStore_IsEnabledOverlaySmallLog } = createAtomWithHook(false, "IsEnabledOverlaySmallLog");
 
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
