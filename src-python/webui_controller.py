@@ -399,10 +399,6 @@ class Controller:
         return {"status":200, "result":config.TRANSPARENCY_RANGE}
 
     @staticmethod
-    def getAppearanceThemesList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.APPEARANCE_THEME_LIST}
-
-    @staticmethod
     def getUiScalingRange(*args, **kwargs) -> dict:
         return {"status":200, "result":config.UI_SCALING_RANGE}
 
@@ -416,8 +412,11 @@ class Controller:
 
     @staticmethod
     def getComputeDeviceList(*args, **kwargs) -> dict:
-        device_list = [{"type":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)} for i in range(torch.cuda.device_count())]
-        device_list.append({"type":"cpu", "device_index": 0, "name": "cpu"})
+        device_list = []
+        if torch.cuda.is_available():
+            for i in range(torch.cuda.device_count()):
+                device_list.append({"device":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)})
+        device_list.append({"device":"cpu", "device_index": 0, "name": "cpu"})
         return {"status":200, "result":device_list}
 
     @staticmethod
@@ -614,15 +613,6 @@ class Controller:
     def setTransparency(data, *args, **kwargs) -> dict:
         config.TRANSPARENCY = int(data)
         return {"status":200, "result":config.TRANSPARENCY}
-
-    @staticmethod
-    def getAppearanceTheme(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.APPEARANCE_THEME}
-
-    @staticmethod
-    def setAppearanceTheme(data, *args, **kwargs) -> dict:
-        config.APPEARANCE_THEME = data
-        return {"status":200, "result":config.APPEARANCE_THEME}
 
     @staticmethod
     def getUiScaling(*args, **kwargs) -> dict:
@@ -1640,6 +1630,14 @@ class Controller:
         th_download.start()
 
     @staticmethod
+    def updateComputeDeviceSettings() -> None:
+        if torch.cuda.is_available() is False:
+            if config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"] != "cpu":
+                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device":"cpu", "device_id":0, "device_name":"cpu"}
+            if config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"] != "cpu":
+                config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device":"cpu", "device_id":0, "device_name":"cpu"}
+
+    @staticmethod
     def startWatchdog(*args, **kwargs) -> dict:
         model.startWatchdog()
         return {"status":200, "result":True}
@@ -1688,6 +1686,10 @@ class Controller:
         printLog("Set Transcription Engine")
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
+
+        # set Compute CPU or CUDA
+        printLog("Set Compute CPU or CUDA")
+        self.updateComputeDeviceSettings()
 
         # set word filter
         printLog("Set Word Filter")
