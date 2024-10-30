@@ -20,8 +20,10 @@ run_mapping = {
     "error_translation_engine":"/run/error_translation_engine",
     "word_filter":"/run/word_filter",
 
-    "download_ctranslate2":"/run/download_ctranslate2_weight",
-    "download_whisper":"/run/download_whisper_weight",
+    "download_ctranslate2_weight":"/run/download_ctranslate2_weight",
+    "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
+    "download_whisper_weight":"/run/download_whisper_weight",
+    "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
 
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
@@ -79,6 +81,7 @@ mapping = {
     "/set/data/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
 
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
+    "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
     "/run/send_message_box": {"status": False, "variable":controller.sendMessageBox},
     "/run/typing_message_box": {"status": False, "variable":controller.typingMessageBox},
@@ -128,15 +131,11 @@ mapping = {
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
 
     # Translation
-    "/get/data/use_translation_feature": {"status": True, "variable":controller.getUseTranslationFeature},
-    "/set/enable/use_translation_feature": {"status": True, "variable":controller.setEnableUseTranslationFeature},
-    "/set/disable/use_translation_feature": {"status": True, "variable":controller.setDisableUseTranslationFeature},
-
     "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
 
-    "/get/data/selectable_ctranslate2_weight_type_list": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeList},
+    "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
 
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
@@ -241,14 +240,10 @@ mapping = {
     "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
     "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
-    "/get/data/selectable_whisper_weight_type_list": {"status": True, "variable":controller.getSelectableWhisperWeightTypeList},
+    "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
 
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
-
-    "/get/data/use_whisper_feature": {"status": True, "variable":controller.getUseWhisperFeature},
-    "/set/enable/use_whisper_feature": {"status": True, "variable":controller.setEnableUseWhisperFeature},
-    "/set/disable/use_whisper_feature": {"status": True, "variable":controller.setDisableUseWhisperFeature},
 
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
@@ -517,7 +512,7 @@ if __name__ == "__main__":
                     case "/set/data/ui_language":
                         data = "ja"
                     case "/set/data/ctranslate2_weight_type":
-                        data = "Small"
+                        data = "small"
                     case "/set/data/deepl_auth_key":
                         data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
                     case "/set/data/selected_mic_host":
