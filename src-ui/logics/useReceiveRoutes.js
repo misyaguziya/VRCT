@@ -46,6 +46,7 @@ import {
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
     useOverlaySettings,
+    useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
     useOscIpAddress,
     useOscPort,
@@ -117,6 +118,7 @@ export const useReceiveRoutes = () => {
 
     const { updateOverlaySettings } = useOverlaySettings();
     const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
+    const { updateIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -319,6 +321,10 @@ export const useReceiveRoutes = () => {
         // VR
         "/get/data/overlay_settings": updateOverlaySettings,
         "/set/data/overlay_settings": updateOverlaySettings,
+
+        "/get/data/overlay_small_log": updateIsEnabledOverlaySmallLog,
+        "/set/enable/overlay_small_log": updateIsEnabledOverlaySmallLog,
+        "/set/disable/overlay_small_log": updateIsEnabledOverlaySmallLog,
 
         "/get/data/overlay_small_log_settings": updateOverlaySmallLogSettings,
         "/set/data/overlay_small_log_settings": updateOverlaySmallLogSettings,

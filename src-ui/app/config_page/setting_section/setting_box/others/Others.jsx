@@ -82,7 +82,7 @@ const AutoExportMessageLogsContainer = () => {
         </div>
     );
 };
-const VrcMicMuteSyncContainer = () => {
+export const VrcMicMuteSyncContainer = () => {
     const { t } = useTranslation();
     const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
 

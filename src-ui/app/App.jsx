@@ -3,6 +3,7 @@ import { useStartPython } from "@logics/useStartPython";
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
+import { ModalController } from "./modal_controller/ModalController";
 import styles from "./App.module.scss";
 
 export const App = () => {
@@ -21,6 +22,7 @@ export const App = () => {
             <div className={styles.pages_wrapper}>
                 <ConfigPage />
                 <MainPage />
+                <ModalController />
             </div>
         </div>
     );
