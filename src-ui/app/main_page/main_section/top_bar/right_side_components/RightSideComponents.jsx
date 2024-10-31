@@ -2,13 +2,13 @@ import styles from "./RightSideComponents.module.scss";
 import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
-import { useIsEnabledOverlaySmallLog } from "@logics_configs";
+import { useIsEnabledOverlaySmallLog, useEnableVrcMicMuteSync } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
 export const RightSideComponents = () => {
     return (
         <div className={styles.container}>
-            <p>VRC mic mute sync</p>
+            <OpenVrcMicMuteSyncQuickSetting />
             <OpenOverlayQuickSetting />
             <a
             className={styles.help_and_info_button}
@@ -23,7 +23,7 @@ export const RightSideComponents = () => {
 };
 
 const OpenOverlayQuickSetting = () => {
-    const { currentOpenedQuickSetting, updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
 
     const onClickFunction = () => {
@@ -34,6 +34,23 @@ const OpenOverlayQuickSetting = () => {
         <OpenQuickSettingButton
             label="Overlay(VR)"
             variable={currentIsEnabledOverlaySmallLog.data}
+            onClickFunction={onClickFunction}
+        />
+    );
+};
+
+const OpenVrcMicMuteSyncQuickSetting = () => {
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const { currentEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+
+    const onClickFunction = () => {
+        updateOpenedQuickSetting("vrc_mic_mute_sync");
+    };
+
+    return (
+        <OpenQuickSettingButton
+            label="VRC mic mute sync"
+            variable={currentEnableVrcMicMuteSync.data}
             onClickFunction={onClickFunction}
         />
     );
