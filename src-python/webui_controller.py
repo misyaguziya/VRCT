@@ -570,8 +570,8 @@ class Controller:
 
     @staticmethod
     def setSelectedTranscriptionEngine(data:dict, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSCRIPTION_ENGINE = data.get("engine", "Google")
-        config.WHISPER_WEIGHT_TYPE = data.get("weight_type", "base")
+        config.SELECTED_TRANSCRIPTION_ENGINE = data["engine"]
+        config.WHISPER_WEIGHT_TYPE = data["weight_type"]
         data = {
             "engine":config.SELECTED_TRANSCRIPTION_ENGINE,
             "weight_type":config.WHISPER_WEIGHT_TYPE,
@@ -1432,16 +1432,19 @@ class Controller:
 
     def downloadWhisperWeight(self, data:str, *args, **kwargs) -> dict:
         weight_type = str(data)
-        download_whisper = self.DownloadWhisper(
-            self.run_mapping,
-            weight_type,
-            self.run
-        )
-        self.startThreadingDownloadWhisperWeight(
-            weight_type,
-            download_whisper.progressBar,
-            download_whisper.downloaded,
+        if weight_type == "none":
+            pass
+        else:
+            download_whisper = self.DownloadWhisper(
+                self.run_mapping,
+                weight_type,
+                self.run
             )
+            self.startThreadingDownloadWhisperWeight(
+                weight_type,
+                download_whisper.progressBar,
+                download_whisper.downloaded,
+                )
         return {"status":200, "result":True}
 
     @staticmethod
@@ -1577,8 +1580,9 @@ class Controller:
     def updateTranscriptionEngine(self):
         weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
         weight_type = config.WHISPER_WEIGHT_TYPE
-        if config.SELECTED_TRANSCRIPTION_ENGINE == "Whisper" and weight_type_dict[weight_type] is False:
+        if config.SELECTED_TRANSCRIPTION_ENGINE == "Whisper" and (weight_type == "none" or weight_type_dict[weight_type] is False):
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
+            config.WHISPER_WEIGHT_TYPE = "none"
 
     def startCheckMicEnergy(self) -> None:
         while self.device_access_status is False:
@@ -1674,8 +1678,9 @@ class Controller:
 
         # download CTranslate2 Model Weight
         printLog("Download CTranslate2 Model Weight")
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is False:
-            self.downloadCtranslate2Weight(config.CTRANSLATE2_WEIGHT_TYPE)
+        weight_type = config.CTRANSLATE2_WEIGHT_TYPE
+        if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:
+            self.downloadCtranslate2Weight(weight_type)
 
         # set Translation Engine
         printLog("Set Translation Engine")
@@ -1684,8 +1689,9 @@ class Controller:
 
         # download Whisper Model Weight
         printLog("Download Whisper Model Weight")
-        if model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is False:
-            self.downloadWhisperWeight(config.WHISPER_WEIGHT_TYPE)
+        weight_type = config.WHISPER_WEIGHT_TYPE
+        if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
+            self.downloadWhisperWeight(weight_type)
 
         # set Transcription Engine
         printLog("Set Transcription Engine")
