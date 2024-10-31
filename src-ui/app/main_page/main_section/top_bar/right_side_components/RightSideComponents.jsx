@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import styles from "./RightSideComponents.module.scss";
 import HelpSvg from "@images/help.svg?react";
 
@@ -23,6 +24,7 @@ export const RightSideComponents = () => {
 };
 
 const OpenOverlayQuickSetting = () => {
+    // const { t } = useTranslation();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
 
@@ -40,6 +42,7 @@ const OpenOverlayQuickSetting = () => {
 };
 
 const OpenVrcMicMuteSyncQuickSetting = () => {
+    const { t } = useTranslation();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
 
@@ -49,7 +52,7 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
 
     return (
         <OpenQuickSettingButton
-            label="VRC mic mute sync"
+            label={t("config_page.vrc_mic_mute_sync.label")}
             variable={currentEnableVrcMicMuteSync.data}
             onClickFunction={onClickFunction}
         />
