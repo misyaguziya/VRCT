@@ -136,10 +136,6 @@ mapping = {
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
 
     "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
-
-    "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
-    "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
-
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
     "/get/data/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
@@ -241,10 +237,6 @@ mapping = {
     "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
-
-    "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
-    "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
-
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR
