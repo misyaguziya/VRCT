@@ -5,10 +5,9 @@ import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 
-export const DeeplAuthKey = () => {
+export const DeeplAuthKey = (props) => {
     const { t } = useTranslation();
     const [is_editable, seIsEditable] = useState(false);
-    const [input_value, seInputValue] = useState("");
     const entryRef = useRef(null);
 
     const revealEditAuthKey = () => {
@@ -17,16 +16,16 @@ export const DeeplAuthKey = () => {
     };
 
     const onchangeEntryAuthKey = (e) => {
-        seInputValue(e.target.value);
+        props.onChangeFunction(e.target.value);
     };
     const saveAuthKey = () => {
-        console.log(input_value);
+        props.saveFunction();
     };
 
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry ref={entryRef} width="30rem" onChange={onchangeEntryAuthKey}/>
+                <_Entry ref={entryRef} width="30rem" onChange={onchangeEntryAuthKey} ui_variable={props.variable}/>
                 <button className={styles.save_button} onClick={saveAuthKey}>Save</button>
                 {is_editable
                 ? null

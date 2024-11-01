@@ -181,6 +181,9 @@ export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency }
 export const { atomInstance: Atom_IsOpenedMicWordFilterList, useHook: useStore_IsOpenedMicWordFilterList } = createAtomWithHook(false, "IsOpenedMicWordFilterList");
 export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFilterList } = createAtomWithHook([], "MicWordFilterList");
 
+// Translation
+export const { atomInstance: Atom_DeepLAuthKey, useHook: useStore_DeepLAuthKey } = createAtomWithHook(null, "DeepLAuthKey");
+
 // Transcription
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
 export const { atomInstance: Atom_MicPhraseTimeout, useHook: useStore_MicPhraseTimeout } = createAtomWithHook(0, "MicPhraseTimeout");

@@ -45,6 +45,7 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+    useDeepLAuthKey,
     useOverlaySettings,
     useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
@@ -115,6 +116,8 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
+
+    const { updateDeepLAuthKey } = useDeepLAuthKey();
 
     const { updateOverlaySettings } = useOverlaySettings();
     const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
@@ -270,6 +273,11 @@ export const useReceiveRoutes = () => {
         "/get/data/transparency": updateTransparency,
         "/set/data/transparency": updateTransparency,
 
+        // Translation
+        "/get/data/deepl_auth_key": updateDeepLAuthKey,
+        "/set/data/deepl_auth_key": updateDeepLAuthKey,
+        "/delete/data/deepl_auth_key": () => updateDeepLAuthKey(""),
+
         // Transcription
         "/get/data/mic_record_timeout": updateMicRecordTimeout,
         "/set/data/mic_record_timeout": updateMicRecordTimeout,
@@ -366,6 +374,8 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
         "/set/data/speaker_phrase_timeout": updateSpeakerPhraseTimeout,
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
+        "/set/data/deepl_auth_key": updateDeepLAuthKey,
     };
 
 

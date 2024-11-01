@@ -38,22 +38,20 @@ const Mic_Container = () => {
     const { currentEnableAutoMicSelect, toggleEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
     const { currentMicHostList } = useMicHostList();
+    const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
+    const { currentMicDeviceList } = useMicDeviceList();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
     const { currentEnableAutomaticMicThreshold, toggleEnableAutomaticMicThreshold } = useMicThreshold();
-
 
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
     };
 
-    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
-
-    const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
-    const { currentMicDeviceList } = useMicDeviceList();
-
     const selectFunction_device = (selected_data) => {
         setSelectedMicDevice(selected_data.selected_id);
     };
+
+    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending" || currentSelectedMicHost.data === "NoHost" || currentSelectedMicDevice.data === "NoDevice";
 
     const getLabels = () => {
         if (currentEnableAutomaticMicThreshold.data === true) {
@@ -143,7 +141,7 @@ const Speaker_Container = () => {
         setSelectedSpeakerDevice(selected_data.selected_id);
     };
 
-    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "pending";
+    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "pending" || currentSelectedSpeakerDevice.data === "NoDevice";
 
     const getLabels = () => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {

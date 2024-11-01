@@ -3,6 +3,7 @@ import { useStore_SelectedConfigTabId } from "@store";
 import {
     Device,
     Appearance,
+    Translation,
     Transcription,
     Others,
     AdvancedSettings,
@@ -17,6 +18,8 @@ export const SettingBox = () => {
             return <Device />;
         case "appearance":
             return <Appearance />;
+        case "translation":
+            return <Translation />;
         case "transcription":
             return <Transcription />;
         case "others":
