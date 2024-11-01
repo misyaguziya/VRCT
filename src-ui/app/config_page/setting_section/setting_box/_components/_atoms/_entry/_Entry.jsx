@@ -19,7 +19,7 @@ const _Entry = forwardRef((props, ref) => {
                 <input
                     ref={inputRef}
                     className={styles.entry_input_area}
-                    value={props.ui_variable}
+                    value={props.ui_variable === null ? "" : props.ui_variable}
                     onChange={(e) => props.onChange(e)}
                 />
             </div>
