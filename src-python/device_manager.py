@@ -1,3 +1,4 @@
+from typing import Callable
 from time import sleep
 from threading import Thread
 import comtypes
@@ -36,10 +37,10 @@ class DeviceManager:
         return cls._instance
 
     def init(self):
-        self.mic_devices = {"NoHost": [{"name": "NoDevice"}]}
-        self.default_mic_device = {"host": {"name": "NoHost"}, "device": {"name": "NoDevice"}}
-        self.speaker_devices = [{"name": "NoDevice"}]
-        self.default_speaker_device = {"device": {"name": "NoDevice"}}
+        self.mic_devices = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
+        self.default_mic_device = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
+        self.speaker_devices = [{"index": -1, "name": "NoDevice"}]
+        self.default_speaker_device = {"device": {"index": -1, "name": "NoDevice"}}
 
         self.update()
 
@@ -68,9 +69,9 @@ class DeviceManager:
 
     def update(self):
         buffer_mic_devices = {}
-        buffer_default_mic_device = {"host": {"name": "NoHost"}, "device": {"name": "NoDevice"}}
+        buffer_default_mic_device = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
         buffer_speaker_devices = []
-        buffer_default_speaker_device = {"device": {"name": "NoDevice"}}
+        buffer_default_speaker_device = {"device": {"index": -1, "name": "NoDevice"}}
 
         with PyAudio() as p:
             for host_index in range(p.get_host_api_count()):
@@ -81,7 +82,7 @@ class DeviceManager:
                     if device.get("maxInputChannels", 0) > 0 and not device.get("isLoopbackDevice", True):
                         buffer_mic_devices.setdefault(host["name"], []).append(device)
             if not buffer_mic_devices:
-                buffer_mic_devices = {"NoHost": [{"name": "NoDevice"}]}
+                buffer_mic_devices = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
 
             api_info = p.get_default_host_api_info()
             default_mic_device = api_info["defaultInputDevice"]
@@ -111,7 +112,7 @@ class DeviceManager:
                             for loopback in p.get_loopback_device_info_generator():
                                 if device["name"] in loopback["name"]:
                                     speaker_devices.append(loopback)
-            speaker_devices = [dict(t) for t in {tuple(d.items()) for d in speaker_devices}] or [{"name": "NoDevice"}]
+            speaker_devices = [dict(t) for t in {tuple(d.items()) for d in speaker_devices}] or [{"index": -1, "name": "NoDevice"}]
             buffer_speaker_devices = sorted(speaker_devices, key=lambda d: d['index'])
 
             wasapi_info = p.get_host_api_info_by_type(paWASAPI)
@@ -240,7 +241,8 @@ class DeviceManager:
         self.callback_process_before_update_devices = None
 
     def runProcessBeforeUpdateDevices(self):
-        self.callback_process_before_update_devices()
+        if isinstance(self.callback_process_before_update_devices, Callable):
+            self.callback_process_before_update_devices()
 
     def setCallbackProcessAfterUpdateDevices(self, callback):
         self.callback_process_after_update_devices = callback
@@ -249,18 +251,19 @@ class DeviceManager:
         self.callback_process_after_update_devices = None
 
     def runProcessAfterUpdateDevices(self):
-        self.callback_process_after_update_devices()
+        if isinstance(self.callback_process_after_update_devices, Callable):
+            self.callback_process_after_update_devices()
 
     def noticeUpdateDevices(self):
-        if self.callback_default_mic_device is not None and self.update_flag_default_mic_device is True:
+        if self.update_flag_default_mic_device is True:
             self.setMicDefaultDevice()
-        if self.callback_default_speaker_device is not None and self.update_flag_default_speaker_device is True:
+        if self.update_flag_default_speaker_device is True:
             self.setSpeakerDefaultDevice()
-        if self.callback_host_list is not None and self.update_flag_host_list is True:
+        if self.update_flag_host_list is True:
             self.setMicHostList()
-        if self.callback_mic_device_list is not None and self.update_flag_mic_device_list is True:
+        if self.update_flag_mic_device_list is True:
             self.setMicDeviceList()
-        if self.callback_speaker_device_list is not None and self.update_flag_speaker_device_list is True:
+        if self.update_flag_speaker_device_list is True:
             self.setSpeakerDeviceList()
 
         self.update_flag_default_mic_device = False
@@ -270,19 +273,24 @@ class DeviceManager:
         self.update_flag_speaker_device_list = False
 
     def setMicDefaultDevice(self):
-        self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
+        if isinstance(self.callback_default_mic_device, Callable):
+            self.callback_default_mic_device(self.default_mic_device["host"]["name"], self.default_mic_device["device"]["name"])
 
     def setSpeakerDefaultDevice(self):
-        self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
+        if isinstance(self.callback_default_speaker_device, Callable):
+            self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
 
     def setMicHostList(self):
-        self.callback_host_list()
+        if isinstance(self.callback_host_list, Callable):
+            self.callback_host_list()
 
     def setMicDeviceList(self):
-        self.callback_mic_device_list()
+        if isinstance(self.callback_mic_device_list, Callable):
+            self.callback_mic_device_list()
 
     def setSpeakerDeviceList(self):
-        self.callback_speaker_device_list()
+        if isinstance(self.callback_speaker_device_list, Callable):
+            self.callback_speaker_device_list()
 
     def getMicDevices(self):
         return self.mic_devices
