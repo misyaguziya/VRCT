@@ -100,7 +100,7 @@ export const useLanguageSettings = () => {
     const setSelectedTranslationEngines = (selected_translator) => {
         pendingSelectedTranslationEngines();
         let send_obj = currentSelectedTranslationEngines.data;
-        send_obj[currentSelectedPresetTabNumber.data] = selected_translator;
+        send_obj.engines[currentSelectedPresetTabNumber.data] = selected_translator;
         asyncStdoutToPython("/set/data/selected_translation_engines", send_obj);
     };
 

@@ -1568,7 +1568,11 @@ class Controller:
         engines[config.SELECTED_TAB_NO] = engine
         config.SELECTED_TRANSLATION_ENGINES = engines
 
-        self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
+        data = {
+            "engines":config.SELECTED_TRANSLATION_ENGINES,
+            "weight_type":config.CTRANSLATE2_WEIGHT_TYPE,
+        }
+        self.run(200, self.run_mapping["selected_translation_engines"], data)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def updateDownloadedWhisperModelWeight(self) -> None:

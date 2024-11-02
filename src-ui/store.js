@@ -123,7 +123,10 @@ export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_Sel
 
 
 export const { atomInstance: Atom_TranslationEngines, useHook: useStore_TranslationEngines } = createAtomWithHook(translator_status, "TranslationEngines");
-export const { atomInstance: Atom_SelectedTranslationEngines, useHook: useStore_SelectedTranslationEngines } = createAtomWithHook({}, "SelectedTranslationEngines");
+export const { atomInstance: Atom_SelectedTranslationEngines, useHook: useStore_SelectedTranslationEngines } = createAtomWithHook({
+    engines: {1:"", 2:"", 3:""},
+    weight_type: "small",
+}, "SelectedTranslationEngines");
 
 
 // Designs
