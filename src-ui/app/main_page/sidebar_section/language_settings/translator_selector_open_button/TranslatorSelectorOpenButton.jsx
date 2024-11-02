@@ -16,7 +16,7 @@ export const TranslatorSelectorOpenButton = () => {
     const selected_translator_name = (currentTranslationEngines.state === "pending")
     ? "Loading..."
     : currentTranslationEngines.data.find(
-        translator_data => translator_data.translator_id === currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data]
+        translator_data => translator_data.translator_id === currentSelectedTranslationEngines.data.engines[currentSelectedPresetTabNumber.data]
     )?.translator_name;
 
 
