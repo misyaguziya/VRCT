@@ -17,7 +17,7 @@ from device_manager import device_manager
 from config import config
 
 from models.translation.translation_translator import Translator
-from models.osc.osc_tools import OSCHandler
+from models.osc.osc import OSCHandler
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
