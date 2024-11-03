@@ -17,7 +17,7 @@ from device_manager import device_manager
 from config import config
 
 from models.translation.translation_translator import Translator
-from models.osc.osc_tools import sendTyping, sendMessage, receiveOscParameters, getOSCParameterValue
+from models.osc.osc_tools import OSCHandler
 from models.transcription.transcription_recorder import SelectedMicEnergyAndAudioRecorder, SelectedSpeakerEnergyAndAudioRecorder
 from models.transcription.transcription_recorder import SelectedMicEnergyRecorder, SelectedSpeakerEnergyRecorder
 from models.transcription.transcription_transcriber import AudioTranscriber
@@ -100,6 +100,7 @@ class Model:
         self.mic_mute_status_check = None
         self.kks = kakasi()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
+        self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
 
     def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
@@ -286,28 +287,26 @@ class Model:
             filtered_list.append(filtered_item)
         return filtered_list
 
-    @staticmethod
-    def oscStartSendTyping():
-        sendTyping(True, config.OSC_IP_ADDRESS, config.OSC_PORT)
+    def setOscIpAddress(self, ip_address):
+        self.osc_handler.setOscIpAddress(ip_address)
 
-    @staticmethod
-    def oscStopSendTyping():
-        sendTyping(False, config.OSC_IP_ADDRESS, config.OSC_PORT)
+    def setOscPort(self, port):
+        self.osc_handler.setOscPort(port)
 
-    @staticmethod
-    def oscSendMessage(message):
-        sendMessage(message, config.OSC_IP_ADDRESS, config.OSC_PORT)
+    def oscStartSendTyping(self):
+        self.osc_handler.sendTyping(flag=True)
 
-    @staticmethod
-    def getMuteSelfStatus():
-        return getOSCParameterValue(address="/avatar/parameters/MuteSelf")
+    def oscStopSendTyping(self):
+        self.osc_handler.sendTyping(flag=False)
+
+    def oscSendMessage(self, message, notification=True):
+        self.osc_handler.sendMessage(message=message, notification=notification)
+
+    def getMuteSelfStatus(self):
+        return self.osc_handler.getOSCParameterMuteSelf()
 
     def startCheckMuteSelfStatus(self):
         def checkMuteSelfStatus():
-            if self.mic_mute_status is not None:
-                self.changeMicTranscriptStatus()
-                self.stopCheckMuteSelfStatus()
-
             status = self.getMuteSelfStatus()
             if status is not None:
                 self.mic_mute_status = status
@@ -325,10 +324,7 @@ class Model:
             self.mic_mute_status_check = None
 
     def startReceiveOSC(self):
-        osc_parameter_prefix = "/avatar/parameters/"
-        param_MuteSelf = "MuteSelf"
-
-        def change_handler_mute(address, osc_arguments):
+        def changeHandlerMute(address, osc_arguments):
             if osc_arguments is True and self.mic_mute_status is False:
                 self.mic_mute_status = osc_arguments
                 self.changeMicTranscriptStatus()
@@ -337,12 +333,12 @@ class Model:
                 self.changeMicTranscriptStatus()
 
         dict_filter_and_target = {
-            osc_parameter_prefix + param_MuteSelf: change_handler_mute,
+            self.osc_handler.osc_parameter_muteself: changeHandlerMute,
         }
+        self.osc_handler.receiveOscParameters(dict_filter_and_target)
 
-        th_osc_server = Thread(target=receiveOscParameters, args=(dict_filter_and_target,))
-        th_osc_server.daemon = True
-        th_osc_server.start()
+    def stopReceiveOSC(self):
+        self.osc_handler.oscServerStop()
 
     @staticmethod
     def checkSoftwareUpdated():
