@@ -1069,6 +1069,7 @@ class Controller:
     @staticmethod
     def setOscIpAddress(data, *args, **kwargs) -> dict:
         config.OSC_IP_ADDRESS = data
+        model.setOscIpAddress(config.OSC_IP_ADDRESS)
         return {"status":200, "result":config.OSC_IP_ADDRESS}
 
     @staticmethod
@@ -1078,6 +1079,7 @@ class Controller:
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
         config.OSC_PORT = int(data)
+        model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
     @staticmethod
