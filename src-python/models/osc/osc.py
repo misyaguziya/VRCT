@@ -75,7 +75,7 @@ class OSCHandler:
             self.osc_query_service.advertise_endpoint(filter, access=OSCAccess.READWRITE_VALUE)
 
     def oscServerServe(self) -> None:
-        self.osc_server.serve_forever(100)
+        self.osc_server.serve_forever(2)
 
     def oscServerStop(self) -> None:
         if isinstance(self.osc_server, osc_server.ThreadingOSCUDPServer):

@@ -97,7 +97,6 @@ class Model:
         self.th_overlay = None
         self.mic_audio_queue = None
         self.mic_mute_status = None
-        self.mic_mute_status_check = None
         self.kks = kakasi()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
@@ -305,32 +304,18 @@ class Model:
     def getMuteSelfStatus(self):
         return self.osc_handler.getOSCParameterMuteSelf()
 
-    def startCheckMuteSelfStatus(self):
-        def checkMuteSelfStatus():
-            status = self.getMuteSelfStatus()
-            if status is not None:
-                self.mic_mute_status = status
-                self.changeMicTranscriptStatus()
-                self.stopCheckMuteSelfStatus()
-
-        if not isinstance(self.mic_mute_status_check, threadFnc):
-            self.mic_mute_status_check = threadFnc(checkMuteSelfStatus)
-            self.mic_mute_status_check.daemon = True
-            self.mic_mute_status_check.start()
-
-    def stopCheckMuteSelfStatus(self):
-        if isinstance(self.mic_mute_status_check, threadFnc):
-            self.mic_mute_status_check.stop()
-            self.mic_mute_status_check = None
+    def setMuteSelfStatus(self):
+        self.mic_mute_status = self.getMuteSelfStatus()
 
     def startReceiveOSC(self):
         def changeHandlerMute(address, osc_arguments):
-            if osc_arguments is True and self.mic_mute_status is False:
-                self.mic_mute_status = osc_arguments
-                self.changeMicTranscriptStatus()
-            elif osc_arguments is False and self.mic_mute_status is True:
-                self.mic_mute_status = osc_arguments
-                self.changeMicTranscriptStatus()
+            if config.ENABLE_TRANSCRIPTION_SEND is True:
+                if osc_arguments is True and self.mic_mute_status is False:
+                    self.mic_mute_status = osc_arguments
+                    self.changeMicTranscriptStatus()
+                elif osc_arguments is False and self.mic_mute_status is True:
+                    self.mic_mute_status = osc_arguments
+                    self.changeMicTranscriptStatus()
 
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
