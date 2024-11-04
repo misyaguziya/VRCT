@@ -1069,6 +1069,7 @@ class Controller:
     @staticmethod
     def setOscIpAddress(data, *args, **kwargs) -> dict:
         config.OSC_IP_ADDRESS = data
+        model.setOscIpAddress(config.OSC_IP_ADDRESS)
         return {"status":200, "result":config.OSC_IP_ADDRESS}
 
     @staticmethod
@@ -1078,6 +1079,7 @@ class Controller:
     @staticmethod
     def setOscPort(data, *args, **kwargs) -> dict:
         config.OSC_PORT = int(data)
+        model.setOscPort(config.OSC_PORT)
         return {"status":200, "result":config.OSC_PORT}
 
     @staticmethod
@@ -1301,14 +1303,13 @@ class Controller:
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
         config.VRC_MIC_MUTE_SYNC = True
-        model.startCheckMuteSelfStatus()
+        model.setMuteSelfStatus()
         model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
         config.VRC_MIC_MUTE_SYNC = False
-        model.stopCheckMuteSelfStatus()
         model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
@@ -1723,7 +1724,7 @@ class Controller:
         printLog("Init OSC Receive")
         model.startReceiveOSC()
         if config.VRC_MIC_MUTE_SYNC is True:
-            model.startCheckMuteSelfStatus()
+            self.setEnableVrcMicMuteSync()
 
         # init Auto device selection
         device_manager.setCallbackHostList(self.updateMicHostList)
