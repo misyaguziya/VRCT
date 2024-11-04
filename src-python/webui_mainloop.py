@@ -92,6 +92,7 @@ mapping = {
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 
     "/run/update_software": {"status": True, "variable":controller.updateSoftware},
+    "/run/update_cuda_software": {"status": True, "variable":controller.updateCudaSoftware},
 
     # Config Window
     # Appearance

@@ -1416,6 +1416,12 @@ class Controller:
         th_start_update_software.start()
         return {"status":200, "result":True}
 
+    def updateCudaSoftware(self, *args, **kwargs) -> dict:
+        th_start_update_cuda_software = Thread(target=model.updateCudaSoftware)
+        th_start_update_cuda_software.daemon = True
+        th_start_update_cuda_software.start()
+        return {"status":200, "result":True}
+
     def downloadCtranslate2Weight(self, data:str, *args, **kwargs) -> dict:
         weight_type = str(data)
         download_ctranslate2 = self.DownloadCTranslate2(
