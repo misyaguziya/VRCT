@@ -98,7 +98,7 @@ mapping = {
     # Appearance
     "/get/data/version": {"status": True, "variable":controller.getVersion},
 
-    "/get/data/transparency_range": {"status": True, "variable":controller.getTransparencyRange},
+    # "/get/data/transparency_range": {"status": True, "variable":controller.getTransparencyRange},
     "/get/data/transparency": {"status": True, "variable":controller.getTransparency},
     "/set/data/transparency": {"status": True, "variable":controller.setTransparency},
 
@@ -106,15 +106,15 @@ mapping = {
     # "/get/data/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
     # "/set/data/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
 
-    "/get/data/ui_scaling_range": {"status": True, "variable":controller.getUiScalingRange},
+    # "/get/data/ui_scaling_range": {"status": True, "variable":controller.getUiScalingRange},
     "/get/data/ui_scaling": {"status": True, "variable":controller.getUiScaling},
     "/set/data/ui_scaling": {"status": True, "variable":controller.setUiScaling},
 
-    "/get/data/textbox_ui_scaling_range": {"status": True, "variable":controller.getTextboxUiScalingRange},
+    # "/get/data/textbox_ui_scaling_range": {"status": True, "variable":controller.getTextboxUiScalingRange},
     "/get/data/textbox_ui_scaling": {"status": True, "variable":controller.getTextboxUiScaling},
     "/set/data/textbox_ui_scaling": {"status": True, "variable":controller.setTextboxUiScaling},
 
-    "/get/data/message_box_ratio_range": {"status": True, "variable":controller.getMessageBoxRatioRange},
+    # "/get/data/message_box_ratio_range": {"status": True, "variable":controller.getMessageBoxRatioRange},
     "/get/data/message_box_ratio": {"status": True, "variable":controller.getMessageBoxRatio},
     "/set/data/message_box_ratio": {"status": True, "variable":controller.setMessageBoxRatio},
 
@@ -124,9 +124,9 @@ mapping = {
     "/get/data/ui_language": {"status": True, "variable":controller.getUiLanguage},
     "/set/data/ui_language": {"status": True, "variable":controller.setUiLanguage},
 
-    "/get/data/restore_main_window_geometry": {"status": True, "variable":controller.getRestoreMainWindowGeometry},
-    "/set/enable/restore_main_window_geometry": {"status": True, "variable":controller.setEnableRestoreMainWindowGeometry},
-    "/set/disable/restore_main_window_geometry": {"status": True, "variable":controller.setDisableRestoreMainWindowGeometry},
+    # "/get/data/restore_main_window_geometry": {"status": True, "variable":controller.getRestoreMainWindowGeometry},
+    # "/set/enable/restore_main_window_geometry": {"status": True, "variable":controller.setEnableRestoreMainWindowGeometry},
+    # "/set/disable/restore_main_window_geometry": {"status": True, "variable":controller.setDisableRestoreMainWindowGeometry},
 
     "/get/data/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
@@ -160,8 +160,8 @@ mapping = {
     "/get/data/mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
     "/get/data/speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
-    "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
-    "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
+    # "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
+    # "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
 
     "/get/data/auto_mic_select": {"status": True, "variable":controller.getAutoMicSelect},
     "/set/enable/auto_mic_select": {"status": True, "variable":controller.setEnableAutoMicSelect},
@@ -277,17 +277,17 @@ mapping = {
     "/set/enable/send_message_to_vrc": {"status": True, "variable":controller.setEnableSendMessageToVrc},
     "/set/disable/send_message_to_vrc": {"status": True, "variable":controller.setDisableSendMessageToVrc},
 
-    "/get/data/send_message_format": {"status": True, "variable":controller.getSendMessageFormat},
-    "/set/data/send_message_format": {"status": True, "variable":controller.setSendMessageFormat},
+    # "/get/data/send_message_format": {"status": True, "variable":controller.getSendMessageFormat},
+    # "/set/data/send_message_format": {"status": True, "variable":controller.setSendMessageFormat},
 
-    "/get/data/send_message_format_with_t": {"status": True, "variable":controller.getSendMessageFormatWithT},
-    "/set/data/send_message_format_with_t": {"status": True, "variable":controller.setSendMessageFormatWithT},
+    # "/get/data/send_message_format_with_t": {"status": True, "variable":controller.getSendMessageFormatWithT},
+    # "/set/data/send_message_format_with_t": {"status": True, "variable":controller.setSendMessageFormatWithT},
 
-    "/get/data/received_message_format": {"status": True, "variable":controller.getReceivedMessageFormat},
-    "/set/data/received_message_format": {"status": True, "variable":controller.setReceivedMessageFormat},
+    # "/get/data/received_message_format": {"status": True, "variable":controller.getReceivedMessageFormat},
+    # "/set/data/received_message_format": {"status": True, "variable":controller.setReceivedMessageFormat},
 
-    "/get/data/received_message_format_with_t": {"status": True, "variable":controller.getReceivedMessageFormatWithT},
-    "/set/data/received_message_format_with_t": {"status": True, "variable":controller.setReceivedMessageFormatWithT},
+    # "/get/data/received_message_format_with_t": {"status": True, "variable":controller.getReceivedMessageFormatWithT},
+    # "/set/data/received_message_format_with_t": {"status": True, "variable":controller.setReceivedMessageFormatWithT},
 
     "/get/data/send_received_message_to_vrc": {"status": True, "variable":controller.getSendReceivedMessageToVrc},
     "/set/enable/send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
