@@ -63,8 +63,10 @@ def getRightHandBaseMatrix():
     return arr
 
 class Overlay:
-    def __init__(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
+    def __init__(self, key, name, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
         self.initialized = False
+        self.key = key
+        self.name = name
         settings = {
             "color": [1, 1, 1],
             "opacity": opacity,
@@ -92,7 +94,7 @@ class Overlay:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
-            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "Overlay_Speaker2log_UI")
+            self.handle = self.overlay.createOverlay(self.key, self.name)
             self.overlay.showOverlay(self.handle)
             self.initialized = True
 
@@ -281,7 +283,7 @@ if __name__ == "__main__":
     # time.sleep(1)
 
     # # Example usage
-    # img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    # img = overlay_image.createOverlayImageSmall("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
     # overlay.updateImage(img)
     # time.sleep(100000)
     
@@ -292,11 +294,11 @@ if __name__ == "__main__":
     #     time.sleep(1)
 
     #     # Example usage
-    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
+    #     img = overlay_image.createOverlayImageSmall("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
     #     overlay.updateImage(img)
     #     time.sleep(0.5)
 
-    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    #     img = overlay_image.createOverlayImageSmall("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
     #    overlay.updateImage(img)
     #    time.sleep(0.5)
 
