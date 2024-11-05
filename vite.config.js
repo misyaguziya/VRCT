@@ -33,8 +33,9 @@ export default defineConfig(async () => ({
     resolve: {
         alias: {
             "@root": path.resolve(__dirname),
-            "@data": path.resolve(__dirname, "./data.js"),
+            "@test_data": path.resolve(__dirname, "./test_data.js"),
 
+            "@ui_configs": path.resolve(__dirname, "src-ui/ui_configs.js"),
             "@scss_mixins": path.resolve(__dirname, "src-ui/utils/mixins.scss"),
             "@store": path.resolve(__dirname, "src-ui/store.js"),
             "@images": path.resolve(__dirname, "src-ui/assets"),
