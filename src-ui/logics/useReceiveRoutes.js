@@ -1,4 +1,4 @@
-import { translator_status } from "@data";
+import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils/arrayToObject";
 
 import {
