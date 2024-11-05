@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Appearance.module.scss";
+import { ui_configs } from "@ui_configs";
 import { useStore_SelectableFontFamilyList } from "@store";
 import {
     useUiLanguage,
@@ -38,12 +39,6 @@ export const Appearance = () => {
 const UiLanguageContainer = () => {
     const { t } = useTranslation();
     const { currentUiLanguage, setUiLanguage } = useUiLanguage();
-    const SELECTABLE_UI_LANGUAGES_DICT = {
-        en: "English",
-        ja: "日本語",
-        ko: "한국어",
-        "zh-Hant": "繁體中文",
-    };
 
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
@@ -60,7 +55,7 @@ const UiLanguageContainer = () => {
             </div>
             <div className={styles.ui_language_selector_container}>
                 {currentUiLanguage.state === "pending" && <span className={styles.loader}></span>}
-                {Object.entries(SELECTABLE_UI_LANGUAGES_DICT).map(([key, value]) => (
+                {Object.entries(ui_configs.selectable_ui_languages).map(([key, value]) => (
                     <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
                         <input
                             className={styles.radio_button_input}

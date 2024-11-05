@@ -5,9 +5,11 @@ import {
 } from "jotai";
 
 import {
-    translator_status,
     generateTestData,
-} from "@data";
+} from "@test_data";
+import {
+    translator_status,
+} from "@ui_configs";
 
 export const store = {
     backend_subprocess: null,
