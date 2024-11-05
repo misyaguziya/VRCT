@@ -41,6 +41,8 @@
         "title": "VRCT",
         "width": 870,
         "height": 654,
+        "minWidth": 400,
+        "minHeight": 200,
         "transparent": true,
         "decorations": false
     }

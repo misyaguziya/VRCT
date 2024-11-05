@@ -8,7 +8,7 @@ import { useMessageInputBoxRatio } from "@logics_main";
 import { useUiScaling } from "@logics_configs";
 
 export const MessageContainer = () => {
-    const { currentMessageInputBoxRatio, setMessageInputBoxRatio } = useMessageInputBoxRatio();
+    const { currentMessageInputBoxRatio, asyncSetMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { currentUiScaling } = useUiScaling();
     const [message_box_height_in_rem, setMessageBoxHeightInRem] = useState(10);
     const FONT_SIZE_STANDARD = 10 * currentUiScaling.data / 100;  // 10px = 1rem
@@ -16,6 +16,12 @@ export const MessageContainer = () => {
     const container_ref = useRef(null);
     const log_box_ref = useRef(null);
     const message_box_wrapper_ref = useRef(null);
+
+    const asyncSetMessageBoxHeightInRem = async (data) => {
+        const minimized = await appWindow.isMinimized();
+        if (minimized === true) return; // don't save while the window is minimized.
+        setMessageBoxHeightInRem(data);
+    };
 
     const calculateMessageBoxRatioAndHeight = () => {
         if (log_box_ref.current && message_box_wrapper_ref.current) {
@@ -26,10 +32,10 @@ export const MessageContainer = () => {
             const message_box_height = message_box_wrapper_ref.current.offsetHeight;
             const message_box_ratio = (message_box_height / total_height) * 100;
 
-            setMessageInputBoxRatio(message_box_ratio);
+            asyncSetMessageInputBoxRatio(message_box_ratio);
 
             const height_in_rem = convertRatioToRem(message_box_ratio);
-            setMessageBoxHeightInRem(height_in_rem);
+            asyncSetMessageBoxHeightInRem(height_in_rem);
         }
     };
 
@@ -42,12 +48,12 @@ export const MessageContainer = () => {
     useEffect(() => {
         // Note: I thought the part "1.4" is message box bottom padding + (message box separator height/2)
         // but it should be fixed at 1.4. Idk why, tho.
-        setMessageBoxHeightInRem((position / FONT_SIZE_STANDARD) - 1.4);
+        asyncSetMessageBoxHeightInRem((position / FONT_SIZE_STANDARD) - 1.4);
     }, [position]);
 
 
     useEffect(() => {
-        setMessageBoxHeightInRem(convertRatioToRem(currentMessageInputBoxRatio.data));
+        asyncSetMessageBoxHeightInRem(convertRatioToRem(currentMessageInputBoxRatio.data));
     }, [currentMessageInputBoxRatio.data]);
 
     const convertRatioToRem = (ratio) => {
