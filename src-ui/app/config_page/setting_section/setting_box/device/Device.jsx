@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
+import { ui_configs } from "@ui_configs";
 import {
     useEnableAutoMicSelect,
     useMicHostList,
@@ -120,8 +121,8 @@ const Mic_Container = () => {
                 <div className={styles.threshold_section}>
                     <ThresholdComponent
                         id="mic_threshold"
-                        min="0"
-                        max="2000"
+                        min={ui_configs.mic_threshold_min}
+                        max={ui_configs.mic_threshold_max}
                     />
                 </div>
             </div>
@@ -197,8 +198,8 @@ const Speaker_Container = () => {
                 <div className={styles.threshold_section}>
                     <ThresholdComponent
                         id="speaker_threshold"
-                        min="0"
-                        max="4000"
+                        min={ui_configs.speaker_threshold_min}
+                        max={ui_configs.speaker_threshold_max}
                     />
                 </div>
             </div>
