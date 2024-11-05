@@ -80,7 +80,9 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
-        self.overlay = Overlay(
+        self.overlay_small_log = Overlay(
+            "VRCT_SMALL_LOG",
+            "VRCT_SMALL_LOG",
             config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
@@ -89,8 +91,8 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
             config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
             config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
-            config.OVERLAY_SETTINGS["opacity"],
-            config.OVERLAY_SETTINGS["ui_scaling"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["opacity"],
+            config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"],
         )
         self.overlay_image = OverlayImage()
         self.pre_overlay_message = None
@@ -685,18 +687,16 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageShort(self, message, translation):
+    def createOverlayImageSmall(self, message, translation):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        ui_type = config.OVERLAY_UI_TYPE
         self.pre_overlay_message = {
             "message" : message,
             "your_language" : your_language,
             "translation" : translation,
             "target_language" : target_language,
-            "ui_type" : ui_type,
         }
-        return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
+        return self.overlay_image.createOverlayImageSmall(message, your_language, translation, target_language)
 
     def createOverlayImage(self, message):
         ui_language = config.UI_LANGUAGE
@@ -708,20 +708,19 @@ class Model:
             "zh-Hant":"Chinese Traditional",
         }
         language = convert_languages.get(ui_language, "Japanese")
-        ui_type = config.OVERLAY_UI_TYPE
-        return self.overlay_image.createOverlayImage(message, language, ui_type)
+        return self.overlay_image.createOverlayImage(message, language)
 
-    def clearOverlayImage(self):
-        self.overlay.clearImage()
+    def clearOverlayImageSmall(self):
+        self.overlay_small_log.clearImage()
 
-    def updateOverlay(self, img):
-        self.overlay.updateImage(img)
+    def updateOverlaySmall(self, img):
+        self.overlay_small_log.updateImage(img)
 
-    def startOverlay(self):
-        self.overlay.startOverlay()
+    def startOverlaySmall(self):
+        self.overlay_small_log.startOverlay()
 
-    def updateOverlayPosition(self):
-        self.overlay.updatePosition(
+    def updateOverlaySmallLogSettings(self):
+        self.overlay_small_log.updatePosition(
             config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
             config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
@@ -729,23 +728,13 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
             config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
         )
+        self.overlay_small_log.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
+        self.overlay_small_log.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"])
+        self.overlay_small_log.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], with_fade=True)
+        self.overlay_small_log.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"])
 
-    def updateOverlayTimes(self):
-        display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
-        self.overlay.updateDisplayDuration(display_duration)
-        fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
-        self.overlay.updateFadeoutDuration(fadeout_duration)
-
-    def updateOverlayImageOpacity(self):
-        opacity = config.OVERLAY_SETTINGS["opacity"]
-        self.overlay.updateOpacity(opacity, with_fade=True)
-
-    def updateOverlayImageUiScaling(self):
-        ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-        self.overlay.updateUiScaling(ui_scaling)
-
-    def shutdownOverlay(self):
-        self.overlay.shutdownOverlay()
+    def shutdownOverlaySmall(self):
+        self.overlay_small_log.shutdownOverlay()
 
     def startWatchdog(self):
         self.th_watchdog = threadFnc(self.watchdog.start)
