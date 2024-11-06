@@ -118,8 +118,6 @@ class Model:
         return self.translator.isLoadedCTranslate2Model()
 
     def checkTranscriptionWhisperModelWeight(self, weight_type:str):
-        if weight_type == "none":
-            return True
         return checkWhisperWeight(config.PATH_LOCAL, weight_type)
 
     def downloadWhisperModelWeight(self, weight_type, callback=None, end_callback=None):
@@ -429,7 +427,7 @@ class Model:
             max_phrases=config.MIC_MAX_PHRASES,
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
-            whisper_weight_type=config.WHISPER_WEIGHT_TYPE if config.WHISPER_WEIGHT_TYPE != "none" else None,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
         )
@@ -593,7 +591,7 @@ class Model:
             max_phrases=config.SPEAKER_MAX_PHRASES,
             transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
             root=config.PATH_LOCAL,
-            whisper_weight_type=config.WHISPER_WEIGHT_TYPE if config.WHISPER_WEIGHT_TYPE != "none" else None,
+            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
             device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
         )
