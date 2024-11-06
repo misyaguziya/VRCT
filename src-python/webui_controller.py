@@ -514,33 +514,12 @@ class Controller:
 
     @staticmethod
     def getSelectedTranslationEngines(*args, **kwargs) -> dict:
-        data = {
-            "engines":config.SELECTED_TRANSLATION_ENGINES,
-            "weight_type":config.CTRANSLATE2_WEIGHT_TYPE,
-        }
-        return {"status":200, "result":data}
+        return {"status":200, "result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
     def setSelectedTranslationEngines(data:dict, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSLATION_ENGINES = data.get("engines", {
-            "1":"CTranslate2",
-            "2":"CTranslate2",
-            "3":"CTranslate2",
-        })
-        config.CTRANSLATE2_WEIGHT_TYPE = data.get("weight_type", "small")
-
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-
-        data = {
-            "engines":config.SELECTED_TRANSLATION_ENGINES,
-            "weight_type":config.CTRANSLATE2_WEIGHT_TYPE,
-        }
-        return {"status":200,"result":data}
+        config.SELECTED_TRANSLATION_ENGINES = data
+        return {"status":200,"result":config.SELECTED_TRANSLATION_ENGINES}
 
     @staticmethod
     def getSelectedYourLanguages(*args, **kwargs) -> dict:
@@ -562,21 +541,12 @@ class Controller:
 
     @staticmethod
     def getSelectedTranscriptionEngine(*args, **kwargs) -> dict:
-        data = {
-            "engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-            "weight_type":config.WHISPER_WEIGHT_TYPE,
-        }
-        return {"status":200, "result":data}
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     @staticmethod
-    def setSelectedTranscriptionEngine(data:dict, *args, **kwargs) -> dict:
-        config.SELECTED_TRANSCRIPTION_ENGINE = data["engine"]
-        config.WHISPER_WEIGHT_TYPE = data["weight_type"]
-        data = {
-            "engine":config.SELECTED_TRANSCRIPTION_ENGINE,
-            "weight_type":config.WHISPER_WEIGHT_TYPE,
-        }
-        return {"status":200, "result":data}
+    def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
+        config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
 
     @staticmethod
     def getMultiLanguageTranslation(*args, **kwargs) -> dict:
@@ -1133,6 +1103,30 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
     @staticmethod
+    def getCtranslate2WeightType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
+
+    @staticmethod
+    def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
+        config.CTRANSLATE2_WEIGHT_TYPE = str(data)
+        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
+            def callback():
+                model.changeTranslatorCTranslate2Model()
+            th_callback = Thread(target=callback)
+            th_callback.daemon = True
+            th_callback.start()
+        return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
+
+    @staticmethod
+    def getWhisperWeightType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
+
+    @staticmethod
+    def setWhisperWeightType(data, *args, **kwargs) -> dict:
+        config.WHISPER_WEIGHT_TYPE = str(data)
+        return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
+
+    @staticmethod
     def getAutoClearMessageBox(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
@@ -1439,19 +1433,16 @@ class Controller:
 
     def downloadWhisperWeight(self, data:str, *args, **kwargs) -> dict:
         weight_type = str(data)
-        if weight_type == "none":
-            pass
-        else:
-            download_whisper = self.DownloadWhisper(
-                self.run_mapping,
-                weight_type,
-                self.run
+        download_whisper = self.DownloadWhisper(
+            self.run_mapping,
+            weight_type,
+            self.run
+        )
+        self.startThreadingDownloadWhisperWeight(
+            weight_type,
+            download_whisper.progressBar,
+            download_whisper.downloaded,
             )
-            self.startThreadingDownloadWhisperWeight(
-                weight_type,
-                download_whisper.progressBar,
-                download_whisper.downloaded,
-                )
         return {"status":200, "result":True}
 
     @staticmethod
@@ -1591,9 +1582,8 @@ class Controller:
     def updateTranscriptionEngine(self):
         weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
         weight_type = config.WHISPER_WEIGHT_TYPE
-        if config.SELECTED_TRANSCRIPTION_ENGINE == "Whisper" and (weight_type == "none" or weight_type_dict[weight_type] is False):
+        if config.SELECTED_TRANSCRIPTION_ENGINE == "Whisper" and weight_type_dict[weight_type] is False:
             config.SELECTED_TRANSCRIPTION_ENGINE = "Google"
-            config.WHISPER_WEIGHT_TYPE = "none"
 
     def startCheckMicEnergy(self) -> None:
         while self.device_access_status is False:
