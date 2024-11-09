@@ -109,6 +109,7 @@ class Overlay:
                 self.settings["x_rotation"],
                 self.settings["y_rotation"],
                 self.settings["z_rotation"],
+                self.settings["tracker"]
             )
 
         except Exception as e:
