@@ -80,35 +80,11 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
-        self.overlay_small_log = Overlay(
-            "VRCT_SMALL_LOG",
-            "VRCT_SMALL_LOG",
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["opacity"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"],
+        self.overlay = Overlay(
+            config.OVERLAY_SMALL_LOG_SETTINGS,
+            config.OVERLAY_LARGE_LOG_SETTINGS
         )
         self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
-        self.overlay_large_log = Overlay(
-            "VRCT_LARGE_LOG",
-            "VRCT_LARGE_LOG",
-            config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["opacity"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"],
-        )
         self.overlay_large_log_pre_settings = config.OVERLAY_LARGE_LOG_SETTINGS
         self.overlay_image = OverlayImage()
         self.mic_audio_queue = None
@@ -719,20 +695,17 @@ class Model:
         return self.overlay_image.createOverlayImageSmall(message, language)
 
     def clearOverlayImageSmall(self):
-        self.overlay_small_log.clearImage()
+        self.overlay.clearImage("small")
 
     def updateOverlaySmall(self, img):
-        self.overlay_small_log.updateImage(img)
-
-    def startOverlaySmall(self):
-        self.overlay_small_log.startOverlay()
+        self.overlay.updateImage(img, "small")
 
     def updateOverlaySmallLogSettings(self):
         for key in self.overlay_small_log_pre_settings.keys():
             if self.overlay_small_log_pre_settings[key] != config.OVERLAY_SMALL_LOG_SETTINGS[key]:
                 match (key):
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation" | "tracker":
-                        self.overlay_small_log.updatePosition(
+                        self.overlay.updatePosition(
                             config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
                             config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
                             config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
@@ -740,22 +713,20 @@ class Model:
                             config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
                             config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
                             config.OVERLAY_SMALL_LOG_SETTINGS["tracker"],
+                            "small",
                         )
                     case "display_duration":
-                        self.overlay_small_log.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"])
+                        self.overlay.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"], "small")
                     case "fadeout_duration":
-                        self.overlay_small_log.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"])
+                        self.overlay.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"], "small")
                     case "opacity":
-                        self.overlay_small_log.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], with_fade=True)
+                        self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], True, "small")
                     case "ui_scaling":
-                        self.overlay_small_log.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"])
+                        self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], "small")
                     case _:
                         pass
                 break
         self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
-
-    def shutdownOverlaySmall(self):
-        self.overlay_small_log.shutdownOverlay()
 
     def createOverlayImageLarge(self, message_type:str, message:str, translation:str):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
@@ -763,20 +734,17 @@ class Model:
         return self.overlay_image.createOverlayImageLarge(message_type, message, your_language, translation, target_language)
 
     def clearOverlayImageLarge(self):
-        self.overlay_large_log.clearImage()
+        self.overlay.clearImage("large")
 
     def updateOverlayLarge(self, img):
-        self.overlay_large_log.updateImage(img)
-
-    def startOverlayLarge(self):
-        self.overlay_large_log.startOverlay()
+        self.overlay.updateImage(img, "large")
 
     def updateOverlayLargeLogSettings(self):
         for key in self.overlay_large_log_pre_settings.keys():
             if self.overlay_large_log_pre_settings[key] != config.OVERLAY_LARGE_LOG_SETTINGS[key]:
                 match (key):
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation" | "tracker":
-                        self.overlay_large_log.updatePosition(
+                        self.overlay.updatePosition(
                             config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
                             config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
                             config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
@@ -784,22 +752,26 @@ class Model:
                             config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
                             config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
                             config.OVERLAY_LARGE_LOG_SETTINGS["tracker"],
+                            "large",
                         )
                     case "display_duration":
-                        self.overlay_large_log.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"])
+                        self.overlay.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"], "large")
                     case "fadeout_duration":
-                        self.overlay_large_log.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"])
+                        self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], "large")
                     case "opacity":
-                        self.overlay_large_log.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], with_fade=True)
+                        self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], True, "large")
                     case "ui_scaling":
-                        self.overlay_large_log.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"])
+                        self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"], "large")
                     case _:
                         pass
                 break
         self.overlay_large_log_pre_settings = config.OVERLAY_LARGE_LOG_SETTINGS
 
-    def shutdownOverlayLarge(self):
-        self.overlay_large_log.shutdownOverlay()
+    def startOverlay(self):
+        self.overlay.startOverlay()
+
+    def shutdownOverlay(self):
+        self.overlay.shutdownOverlay()
 
     def startWatchdog(self):
         self.th_watchdog = threadFnc(self.watchdog.start)

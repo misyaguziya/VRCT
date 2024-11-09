@@ -1175,8 +1175,8 @@ class Controller:
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = True
-        if model.overlay_small_log.initialized is False and model.overlay_small_log.checkSteamvrRunning() is True:
-            model.startOverlaySmall()
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1184,7 +1184,8 @@ class Controller:
         config.OVERLAY_SMALL_LOG = False
         if config.OVERLAY_SMALL_LOG is False:
             model.clearOverlayImageSmall()
-            model.shutdownOverlaySmall()
+            if config.OVERLAY_LARGE_LOG is False:
+                model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1204,8 +1205,8 @@ class Controller:
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = True
-        if model.overlay_large_log.initialized is False and model.overlay_large_log.checkSteamvrRunning() is True:
-            model.startOverlayLarge()
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1213,7 +1214,8 @@ class Controller:
         config.OVERLAY_LARGE_LOG = False
         if config.OVERLAY_LARGE_LOG is False:
             model.clearOverlayImageLarge()
-            model.shutdownOverlayLarge()
+            if config.OVERLAY_SMALL_LOG is False:
+                model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1363,9 +1365,9 @@ class Controller:
         self.startThreadingTranscriptionSendMessage()
         config.ENABLE_TRANSCRIPTION_SEND = True
         if (config.OVERLAY_LARGE_LOG is True and
-            model.overlay_large_log.initialized is False and
-            model.overlay_large_log.checkSteamvrRunning() is True):
-                model.startOverlayLarge()
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
+                model.startOverlay()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -1376,13 +1378,13 @@ class Controller:
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionReceiveMessage()
         if (config.OVERLAY_SMALL_LOG is True and
-            model.overlay_small_log.initialized is False and
-            model.overlay_small_log.checkSteamvrRunning() is True):
-                model.startOverlaySmall()
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
+                model.startOverlay()
         if (config.OVERLAY_LARGE_LOG is True and
-            model.overlay_large_log.initialized is False and
-            model.overlay_large_log.checkSteamvrRunning() is True):
-                model.startOverlayLarge()
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
+                model.startOverlay()
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
