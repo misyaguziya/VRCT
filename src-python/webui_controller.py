@@ -250,11 +250,9 @@ class Controller:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
 
-                # if config.OVERLAY_SMALL_LOG is True:
-                #     overlay_image = model.createOverlayImageSmall(message, translation)
-                #     model.updateOverlay(overlay_image)
-                #     overlay_image = model.createOverlayImageLong("send", message, translation)
-                #     model.updateOverlay(overlay_image)
+                if config.OVERLAY_LARGE_LOG is True:
+                    overlay_image = model.createOverlayImageLarge("send", message, translation)
+                    model.updateOverlayLarge(overlay_image)
 
     def speakerMessage(self, message) -> None:
         if isinstance(message, bool) and message is False:
@@ -295,8 +293,11 @@ class Controller:
                     if model.overlay_small_log.initialized is True:
                         overlay_image = model.createOverlayImageSmall(message, translation)
                         model.updateOverlaySmall(overlay_image)
-                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                    # model.updateOverlay(overlay_image)
+
+                if config.OVERLAY_LARGE_LOG is True:
+                    if model.overlay_large_log.initialized is True:
+                        overlay_image = model.createOverlayImageLarge("receive", message, translation)
+                        model.updateOverlayLarge(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
