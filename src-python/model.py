@@ -94,9 +94,21 @@ class Model:
             config.OVERLAY_SMALL_LOG_SETTINGS["opacity"],
             config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"],
         )
+        self.overlay_large_log = Overlay(
+            "VRCT_LARGE_LOG",
+            "VRCT_LARGE_LOG",
+            config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["opacity"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"],
+        )
         self.overlay_image = OverlayImage()
-        self.pre_overlay_message = None
-        self.th_overlay = None
         self.mic_audio_queue = None
         self.mic_mute_status = None
         self.kks = kakasi()
@@ -690,15 +702,9 @@ class Model:
     def createOverlayImageSmall(self, message, translation):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        self.pre_overlay_message = {
-            "message" : message,
-            "your_language" : your_language,
-            "translation" : translation,
-            "target_language" : target_language,
-        }
         return self.overlay_image.createOverlayImageSmall(message, your_language, translation, target_language)
 
-    def createOverlayImage(self, message):
+    def createOverlayImageSystemMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
             "en": "Japanese",
@@ -708,7 +714,7 @@ class Model:
             "zh-Hant":"Chinese Traditional",
         }
         language = convert_languages.get(ui_language, "Japanese")
-        return self.overlay_image.createOverlayImage(message, language)
+        return self.overlay_image.createOverlayImageSmall(message, language)
 
     def clearOverlayImageSmall(self):
         self.overlay_small_log.clearImage()
@@ -735,6 +741,37 @@ class Model:
 
     def shutdownOverlaySmall(self):
         self.overlay_small_log.shutdownOverlay()
+
+    def createOverlayImageLarge(self, message, translation):
+        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        return self.overlay_image.createOverlayImageLarge(message, your_language, translation, target_language)
+
+    def clearOverlayImageLarge(self):
+        self.overlay_large_log.clearImage()
+
+    def updateOverlayLarge(self, img):
+        self.overlay_large_log.updateImage(img)
+
+    def startOverlayLarge(self):
+        self.overlay_large_log.startOverlay()
+
+    def updateOverlayLargeLogSettings(self):
+        self.overlay_large_log.updatePosition(
+            config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
+            config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
+        )
+        self.overlay_large_log.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"])
+        self.overlay_large_log.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"])
+        self.overlay_large_log.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], with_fade=True)
+        self.overlay_large_log.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"])
+
+    def shutdownOverlayLarge(self):
+        self.overlay_large_log.shutdownOverlay()
 
     def startWatchdog(self):
         self.th_watchdog = threadFnc(self.watchdog.start)
