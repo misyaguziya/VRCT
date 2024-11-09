@@ -58,7 +58,11 @@ class OverlayImage:
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf"), font_size)
+        try:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf"), font_size)
+        except Exception:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", f"{font_family}.ttf"), font_size)
+
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
         character_line_num = int((base_width) // character_width) - 12
@@ -142,7 +146,10 @@ class OverlayImage:
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf"), font_size)
+        try:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf"), font_size)
+        except Exception:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", f"{font_family}.ttf"), font_size)
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
         character_line_num = int(width // character_width)
@@ -172,7 +179,10 @@ class OverlayImage:
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf"), font_size)
+        try:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf"), font_size)
+        except Exception:
+            font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", "NotoSansJP-Regular.ttf"), font_size)
         text_height = font_size*2
         text_width = draw.textlength(date_time, font)
         character_width = text_width // len(date_time)
@@ -236,3 +246,12 @@ class OverlayImage:
         draw.rounded_rectangle([(0, 0), (width, height)], radius=15, fill=background_color, outline=background_outline_color, width=5)
         img = Image.alpha_composite(background, img)
         return img
+
+if __name__ == "__main__":
+    overlay = OverlayImage()
+    img = overlay.createOverlayImageSmall("Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img.save("overlay_small.png")
+    img = overlay.createOverlayImageLarge("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img.save("overlay_large0.png")
+    img = overlay.createOverlayImageLarge("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
+    img.save("overlay_large1.png")
