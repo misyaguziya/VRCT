@@ -742,10 +742,10 @@ class Model:
     def shutdownOverlaySmall(self):
         self.overlay_small_log.shutdownOverlay()
 
-    def createOverlayImageLarge(self, message, translation):
+    def createOverlayImageLarge(self, message_type:str, message:str, translation:str):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        return self.overlay_image.createOverlayImageLarge(message, your_language, translation, target_language)
+        return self.overlay_image.createOverlayImageLarge(message_type, message, your_language, translation, target_language)
 
     def clearOverlayImageLarge(self):
         self.overlay_large_log.clearImage()
