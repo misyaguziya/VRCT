@@ -241,15 +241,19 @@ mapping = {
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR
-    "/get/data/overlay_settings": {"status": True, "variable":controller.getOverlaySettings},
-    "/set/data/overlay_settings": {"status": True, "variable":controller.setOverlaySettings},
+    "/get/data/overlay_small_log": {"status": True, "variable":controller.getOverlaySmallLog},
+    "/set/enable/overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
+    "/set/disable/overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
 
     "/get/data/overlay_small_log_settings": {"status": True, "variable":controller.getOverlaySmallLogSettings},
     "/set/data/overlay_small_log_settings": {"status": True, "variable":controller.setOverlaySmallLogSettings},
 
-    "/get/data/overlay_small_log": {"status": True, "variable":controller.getOverlaySmallLog},
-    "/set/enable/overlay_small_log": {"status": True, "variable":controller.setEnableOverlaySmallLog},
-    "/set/disable/overlay_small_log": {"status": True, "variable":controller.setDisableOverlaySmallLog},
+    "/get/data/overlay_large_log": {"status": True, "variable":controller.getOverlayLargeLog},
+    "/set/enable/overlay_large_log": {"status": True, "variable":controller.setEnableOverlayLargeLog},
+    "/set/disable/overlay_large_log": {"status": True, "variable":controller.setDisableOverlayLargeLog},
+
+    "/get/data/overlay_large_log_settings": {"status": True, "variable":controller.getOverlayLargeLogSettings},
+    "/set/data/overlay_large_log_settings": {"status": True, "variable":controller.setOverlayLargeLogSettings},
 
     # Others
     "/get/data/auto_clear_message_box": {"status": True, "variable":controller.getAutoClearMessageBox},
