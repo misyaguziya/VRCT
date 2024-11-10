@@ -1103,7 +1103,7 @@ class Config:
             "display_duration": 5,
             "fadeout_duration": 2,
             "opacity": 1.0,
-            "ui_scaling": 1.0,
+            "ui_scaling": 0.5,
             "tracker": "LeftHand",
         }
         self._SEND_MESSAGE_TO_VRC = True
