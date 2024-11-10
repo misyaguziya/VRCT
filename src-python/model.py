@@ -81,8 +81,10 @@ class Model:
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.overlay = Overlay(
-            config.OVERLAY_SMALL_LOG_SETTINGS,
-            config.OVERLAY_LARGE_LOG_SETTINGS
+            {
+                "small": config.OVERLAY_SMALL_LOG_SETTINGS,
+                "large": config.OVERLAY_LARGE_LOG_SETTINGS,
+            }
         )
         self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
         self.overlay_large_log_pre_settings = config.OVERLAY_LARGE_LOG_SETTINGS
@@ -677,10 +679,10 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmall(self, message, translation):
+    def createOverlayImageSmallLog(self, message, translation):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        return self.overlay_image.createOverlayImageSmall(message, your_language, translation, target_language)
+        return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
 
     def createOverlayImageSystemMessage(self, message):
         ui_language = config.UI_LANGUAGE
@@ -692,12 +694,12 @@ class Model:
             "zh-Hant":"Chinese Traditional",
         }
         language = convert_languages.get(ui_language, "Japanese")
-        return self.overlay_image.createOverlayImageSmall(message, language)
+        return self.overlay_image.createOverlayImageSmallLog(message, language)
 
-    def clearOverlayImageSmall(self):
+    def clearOverlayImageSmallLog(self):
         self.overlay.clearImage("small")
 
-    def updateOverlaySmall(self, img):
+    def updateOverlaySmallLog(self, img):
         self.overlay.updateImage(img, "small")
 
     def updateOverlaySmallLogSettings(self):
@@ -720,7 +722,7 @@ class Model:
                     case "fadeout_duration":
                         self.overlay.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"], "small")
                     case "opacity":
-                        self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], True, "small")
+                        self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], "small", True)
                     case "ui_scaling":
                         self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], "small")
                     case _:
@@ -728,15 +730,15 @@ class Model:
                 break
         self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
 
-    def createOverlayImageLarge(self, message_type:str, message:str, translation:str):
+    def createOverlayImageLargeLog(self, message_type:str, message:str, translation:str):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        return self.overlay_image.createOverlayImageLarge(message_type, message, your_language, translation, target_language)
+        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
 
-    def clearOverlayImageLarge(self):
+    def clearOverlayImageLargeLog(self):
         self.overlay.clearImage("large")
 
-    def updateOverlayLarge(self, img):
+    def updateOverlayLargeLog(self, img):
         self.overlay.updateImage(img, "large")
 
     def updateOverlayLargeLogSettings(self):
@@ -759,7 +761,7 @@ class Model:
                     case "fadeout_duration":
                         self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], "large")
                     case "opacity":
-                        self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], True, "large")
+                        self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], "large", True)
                     case "ui_scaling":
                         self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"], "large")
                     case _:

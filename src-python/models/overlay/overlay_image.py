@@ -31,7 +31,7 @@ class OverlayImage:
         return result
 
     @staticmethod
-    def getUiSizeSmall():
+    def getUiSizeSmallLog():
         return {
             "width": int(960*4),
             "height": int(23*4),
@@ -39,7 +39,7 @@ class OverlayImage:
         }
 
     @staticmethod
-    def getUiColorSmall(ui_type):
+    def getUiColorSmallLog(ui_type):
         background_color = (41, 42, 45)
         background_outline_color = (41, 42, 45)
         text_color = (223, 223, 223)
@@ -54,7 +54,7 @@ class OverlayImage:
             "text_color": text_color
         }
 
-    def createTextboxSmall(self, text, language, text_color, base_width, base_height, font_size):
+    def createTextboxSmallLog(self, text, language, text_color, base_width, base_height, font_size):
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
@@ -77,20 +77,20 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor="mm", stroke_width=0, font=font, align="center")
         return img
 
-    def createOverlayImageSmall(self, message, your_language, translation="", target_language=None, ui_type="default"):
-        ui_size = self.getUiSizeSmall()
+    def createOverlayImageSmallLog(self, message, your_language, translation="", target_language=None, ui_type="default"):
+        ui_size = self.getUiSizeSmallLog()
         height = ui_size["height"]
         width = ui_size["width"]
         font_size = ui_size["font_size"]
 
-        ui_colors = self.getUiColorSmall(ui_type)
+        ui_colors = self.getUiColorSmallLog(ui_type)
         text_color = ui_colors["text_color"]
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        img = self.createTextboxSmall(message, your_language, text_color, width, height, font_size)
+        img = self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
         if len(translation) > 0 and target_language is not None:
-            translation_img = self.createTextboxSmall(translation, target_language, text_color, width, height, font_size)
+            translation_img = self.createTextboxSmallLog(translation, target_language, text_color, width, height, font_size)
             img = self.concatenateImagesVertically(img, translation_img)
 
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
@@ -101,7 +101,7 @@ class OverlayImage:
         return img
 
     @staticmethod
-    def getUiSizeLarge():
+    def getUiSizeLargeLog():
         return {
             "width": int(960*2),
             "font_size_large": int(23*4),
@@ -109,7 +109,7 @@ class OverlayImage:
         }
 
     @staticmethod
-    def getUiColorLarge():
+    def getUiColorLargeLog():
         background_color = (41, 42, 45)
         background_outline_color = (41, 42, 45)
         text_color_large = (223, 223, 223)
@@ -127,13 +127,13 @@ class OverlayImage:
             "text_color_time": text_color_time
         }
 
-    def createTextImageLarge(self, message_type, size, text, language):
-        ui_size = self.getUiSizeLarge()
+    def createTextImageLargeLog(self, message_type, size, text, language):
+        ui_size = self.getUiSizeLargeLog()
         font_size_large = ui_size["font_size_large"]
         font_size_small = ui_size["font_size_small"]
         width = ui_size["width"]
 
-        ui_color = self.getUiColorLarge()
+        ui_color = self.getUiColorLargeLog()
         text_color_large = ui_color["text_color_large"]
         text_color_small = ui_color["text_color_small"]
 
@@ -164,11 +164,11 @@ class OverlayImage:
         return img
 
     def createTextImageMessageType(self, message_type, date_time):
-        ui_size = self.getUiSizeLarge()
+        ui_size = self.getUiSizeLargeLog()
         width = ui_size["width"]
         font_size = ui_size["font_size_small"]
 
-        ui_color = self.getUiColorLarge()
+        ui_color = self.getUiColorLargeLog()
         text_color_send = ui_color["text_color_send"]
         text_color_receive = ui_color["text_color_receive"]
         text_color_time = ui_color["text_color_time"]
@@ -195,18 +195,18 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font)
         return img
 
-    def createTextboxLarge(self, message_type, message, your_language, translation, target_language, date_time):
+    def createTextboxLargeLog(self, message_type, message, your_language, translation, target_language, date_time):
         message_type_img = self.createTextImageMessageType(message_type, date_time)
         if len(translation) > 0 and target_language is not None:
-            img = self.createTextImageLarge(message_type, "small", message, your_language)
-            translation_img = self.createTextImageLarge(message_type, "large",translation, target_language)
+            img = self.createTextImageLargeLog(message_type, "small", message, your_language)
+            translation_img = self.createTextImageLargeLog(message_type, "large",translation, target_language)
             img = self.concatenateImagesVertically(img, translation_img)
         else:
-            img = self.createTextImageLarge(message_type, "large", message, your_language)
+            img = self.createTextImageLargeLog(message_type, "large", message, your_language)
         return self.concatenateImagesVertically(message_type_img, img)
 
-    def createOverlayImageLarge(self, message_type, message, your_language, translation="", target_language=None):
-        ui_color = self.getUiColorLarge()
+    def createOverlayImageLargeLog(self, message_type, message, your_language, translation="", target_language=None):
+        ui_color = self.getUiColorLargeLog()
         background_color = ui_color["background_color"]
         background_outline_color = ui_color["background_outline_color"]
 
@@ -232,7 +232,7 @@ class OverlayImage:
             translation = log["translation"]
             target_language = log["target_language"]
             date_time = log["datetime"]
-            img = self.createTextboxLarge(message_type, message, your_language, translation, target_language, date_time)
+            img = self.createTextboxLargeLog(message_type, message, your_language, translation, target_language, date_time)
             imgs.append(img)
 
         img = imgs[0]
@@ -249,9 +249,9 @@ class OverlayImage:
 
 if __name__ == "__main__":
     overlay = OverlayImage()
-    img = overlay.createOverlayImageSmall("Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageSmallLog("Hello, World!", "English", "こんにちは、世界！", "Japanese")
     img.save("overlay_small.png")
-    img = overlay.createOverlayImageLarge("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
     img.save("overlay_large0.png")
-    img = overlay.createOverlayImageLarge("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
     img.save("overlay_large1.png")

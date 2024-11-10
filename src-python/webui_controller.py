@@ -250,9 +250,9 @@ class Controller:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay_large_log.initialized is True:
-                    overlay_image = model.createOverlayImageLarge("send", message, translation)
-                    model.updateOverlayLarge(overlay_image)
+                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                    overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                    model.updateOverlayLargeLog(overlay_image)
 
     def speakerMessage(self, message) -> None:
         if isinstance(message, bool) and message is False:
@@ -289,13 +289,13 @@ class Controller:
                         transliteration = model.convertMessageToTransliteration(message)
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True and model.overlay_small_log.initialized is True:
-                        overlay_image = model.createOverlayImageSmall(message, translation)
-                        model.updateOverlaySmall(overlay_image)
+                if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                        overlay_image = model.createOverlayImageSmallLog(message, translation)
+                        model.updateOverlaySmallLog(overlay_image)
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay_large_log.initialized is True:
-                        overlay_image = model.createOverlayImageLarge("receive", message, translation)
-                        model.updateOverlayLarge(overlay_image)
+                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation)
+                        model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
@@ -360,11 +360,9 @@ class Controller:
                     osc_message = self.messageFormatter("SEND", translation, [message])
                 model.oscSendMessage(osc_message)
 
-            # if config.OVERLAY_SMALL_LOG is True:
-            #     overlay_image = model.createOverlayImageSmall(message, translation)
-            #     model.updateOverlay(overlay_image)
-            #     overlay_image = model.createOverlayImageLong("send", message, translation)
-            #     model.updateOverlay(overlay_image)
+            if config.OVERLAY_LARGE_LOG is True:
+                overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                model.updateOverlayLargeLog(overlay_image)
 
             # update textbox message log (Sent)
             if config.LOGGER_FEATURE is True:
@@ -1183,7 +1181,7 @@ class Controller:
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = False
         if config.OVERLAY_SMALL_LOG is False:
-            model.clearOverlayImageSmall()
+            model.clearOverlayImageSmallLog()
             if config.OVERLAY_LARGE_LOG is False:
                 model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
@@ -1213,7 +1211,7 @@ class Controller:
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = False
         if config.OVERLAY_LARGE_LOG is False:
-            model.clearOverlayImageLarge()
+            model.clearOverlayImageLargeLog()
             if config.OVERLAY_SMALL_LOG is False:
                 model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
@@ -1412,9 +1410,9 @@ class Controller:
     @staticmethod
     def sendTextOverlaySmallLog(data, *args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is True:
-            if model.overlay_small_log.initialized is True:
+            if model.overlay.initialized is True:
                 overlay_image = model.createOverlayImageSystemMessage(data)
-                model.updateOverlaySmall(overlay_image)
+                model.updateOverlaySmallLog(overlay_image)
         return {"status":200, "result":data}
 
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:
