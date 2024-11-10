@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)  
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 [![Github Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://github.com/sponsors/misyaguziya)
-[![PIXIV FANBOX](https://img.shields.io/badge/PIXIV%20FANBOX-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://vrct-dev.fanbox.cc/)
+[![PIXIV FANBOX](https://img.shields.io/badge/PIXIV%20FANBOX-30363D?)](https://vrct-dev.fanbox.cc/)
 
 | [English](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md) | **繁體中文** |
 
@@ -60,6 +60,11 @@ VRCT 可以：
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI 多語系支援)
 - [レラ](https://github.com/soumt-r) (技術支援)
 - [どね](https://twitter.com/done_vrc) (Logo 設計)
+
+## Thanks to our contributors
+<a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />
+</a>
 
 ---
 
