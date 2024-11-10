@@ -6,7 +6,7 @@
 [![Licence](https://img.shields.io/github/license/misyaguziya/VRCT)](https://github.com/misyaguziya/VRCT/blob/master/LICENSE)  
 [![Booth](https://img.shields.io/badge/Store-Booth.pm-red)](https://misyaguziya.booth.pm/items/5155325)
 [![Github Sponsors](https://img.shields.io/badge/GitHub%20Sponsors-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://github.com/sponsors/misyaguziya)
-[![PIXIV FANBOX](https://img.shields.io/badge/PIXIV%20FANBOX-30363D?&logo=GitHub-Sponsors&logoColor=EA4AAA)](https://vrct-dev.fanbox.cc/)
+[![PIXIV FANBOX](https://img.shields.io/badge/PIXIV%20FANBOX-30363D?)](https://vrct-dev.fanbox.cc/)
 
 | **English** | [日本語](./README.ja.md) | [한국어](./README.ko.md) | [繁體中文](./README.zh-Hant.md) |
 
@@ -61,6 +61,11 @@ Initial setup, basic functions, and other features are also described.
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
 - [レラ](https://github.com/soumt-r) (Technical Support)
 - [どね](https://twitter.com/done_vrc) (Logo Design)
+
+## Thanks to our contributors
+<a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />
+</a>
 
 ---
 
