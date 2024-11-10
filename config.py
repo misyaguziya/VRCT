@@ -953,7 +953,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.8"
+        self._VERSION = "2.2.9"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
