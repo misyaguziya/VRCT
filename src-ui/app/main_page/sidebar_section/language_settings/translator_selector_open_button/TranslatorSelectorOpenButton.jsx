@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-
+import { updateLabelsById } from "@utils/updateLabelsById";
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
 import { useStore_IsOpenedTranslatorSelector } from "@store";
@@ -13,11 +13,22 @@ export const TranslatorSelectorOpenButton = () => {
         currentSelectedTranslationEngines,
     } = useLanguageSettings();
 
-    const selected_label = (currentTranslationEngines.state === "pending")
-    ? "Loading..."
-    : currentTranslationEngines.data.find(
-        translator_data => translator_data.id === currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data]
-    )?.label;
+    const new_labels = [
+        {id: "CTranslate2", label: t("main_page.translator_ctranslate2")}
+    ];
+
+    const translation_engines = updateLabelsById(currentTranslationEngines.data, new_labels);
+
+    const getSelectedLabel = () => {
+        const selected_engine_id = currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data];
+        const selected_engine = translation_engines.find(
+            d => d.id === selected_engine_id
+        );
+        return selected_engine?.label;
+    };
+
+    const is_loading = currentTranslationEngines.state === "pending";
+    const selected_label = is_loading ? "Loading..." : getSelectedLabel();
 
 
     const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
@@ -35,7 +46,7 @@ export const TranslatorSelectorOpenButton = () => {
             {currentIsOpenedTranslatorSelector.data &&
                 <TranslatorSelector
                     selected_id={currentSelectedTranslationEngines}
-                    translation_engines={currentTranslationEngines}
+                    translation_engines={translation_engines}
                 />
             }
         </div>
