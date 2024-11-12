@@ -6,7 +6,7 @@ import { useStore_IsOpenedTranslatorSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 
 export const TranslatorSelector = ({selected_id, translation_engines}) => {
-    const columns = (translation_engines.data !== undefined) ? chunkArray(translation_engines.data, 2) : [];
+    const columns = chunkArray(translation_engines, 2);
 
     return (
         <div className={styles.container}>
