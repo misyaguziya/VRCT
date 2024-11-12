@@ -75,18 +75,12 @@ class AboutVrctManager():
 
         if ui_language == "ja":
             self.image_file.SPECIAL_THANKS_MESSAGE = "special_thanks_message_ja.png"
-            self.image_file.SPECIAL_THANKS_TELL_US_MESSAGE = "special_thanks_tell_us_message_ja.png"
-
             self.image_file.POSTER_IMAGES_AUTHOR = "poster_images_authors_ja.png"
             self.image_file.POSTER_IMAGES_AUTHOR_M = "poster_images_authors_m_ja.png"
-            self.image_file.POSTER_TELL_US_MESSAGE = "poster_tell_us_message_ja.png"
         else:
             self.image_file.SPECIAL_THANKS_MESSAGE = "special_thanks_message_en.png"
-            self.image_file.SPECIAL_THANKS_TELL_US_MESSAGE = "special_thanks_tell_us_message_en.png"
-
             self.image_file.POSTER_IMAGES_AUTHOR = "poster_images_authors_en.png"
             self.image_file.POSTER_IMAGES_AUTHOR_M = "poster_images_authors_m_en.png"
-            self.image_file.POSTER_TELL_US_MESSAGE = "poster_tell_us_message_en.png"
 
 
         poster_showcase_pagination_button_image = getImageFileFromUiUtils_AboutVrct("poster_showcase_pagination_button.png")
