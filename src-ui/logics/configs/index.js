@@ -31,7 +31,9 @@ export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout
 export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";
 export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
 
+export { useCTranslate2WeightTypeStatus } from "./translation/useCTranslate2WeightTypeStatus";
 export { useDeepLAuthKey } from "./translation/useDeepLAuthKey";
+export { useSelectedCTranslate2WeightType } from "./translation/useSelectedCTranslate2WeightType";
 
 export { useIsEnabledOverlaySmallLog } from "./vr/useIsEnabledOverlaySmallLog";
 export { useOverlaySettings } from "./vr/useOverlaySettings";
