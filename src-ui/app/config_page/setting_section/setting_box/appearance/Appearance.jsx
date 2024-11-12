@@ -14,10 +14,6 @@ import {
 } from "@logics_configs";
 
 import {
-    LabelComponent
-} from "../_components/";
-
-import {
     SliderContainer,
     DropdownMenuContainer,
     RadioButtonContainer,
@@ -42,34 +38,14 @@ const UiLanguageContainer = () => {
 
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
-        <div className={styles.ui_language_container}>
-            <div className={styles.ui_language_label_wrapper}>
-                {is_not_en_lang
-                ?
-                    <>
-                        <LabelComponent label="UI Language" desc={t("config_page.ui_language.label")}/>
-                    </>
-                :
-                    <LabelComponent label={t("config_page.ui_language.label")}/>
-                }
-            </div>
-            <div className={styles.ui_language_selector_container}>
-                {currentUiLanguage.state === "pending" && <span className={styles.loader}></span>}
-                {Object.entries(ui_configs.selectable_ui_languages).map(([key, value]) => (
-                    <label key={key} className={clsx(styles.radio_button_wrapper, { [styles.is_selected]: currentUiLanguage.data === key } )}>
-                        <input
-                            className={styles.radio_button_input}
-                            type="radio"
-                            name="ui_language"
-                            value={key}
-                            onChange={() => setUiLanguage(key)}
-                            checked={currentUiLanguage.data === key}
-                        />
-                        <p className={styles.radio_button_label}>{value}</p>
-                    </label>
-                ))}
-            </div>
-        </div>
+        <RadioButtonContainer
+            label={is_not_en_lang ? "UI Language" : t("config_page.ui_language.label")}
+            desc={is_not_en_lang ? t("config_page.ui_language.label") : false}
+            selectFunction={setUiLanguage}
+            name="ui_language"
+            options={ui_configs.selectable_ui_languages}
+            checked_variable={currentUiLanguage}
+        />
     );
 };
 
@@ -166,11 +142,12 @@ const SendMessageButtonTypeContainer = () => {
             selectFunction={setSendMessageButtonType}
             name="send_message_button_type"
             options={[
-                { radio_button_id: "hide", label: t("config_page.send_message_button_type.hide") },
-                { radio_button_id: "show", label: t("config_page.send_message_button_type.show") },
-                { radio_button_id: "show_and_disable_enter_key", label: t("config_page.send_message_button_type.show_and_disable_enter_key") },
+                { id: "hide", label: t("config_page.send_message_button_type.hide") },
+                { id: "show", label: t("config_page.send_message_button_type.show") },
+                { id: "show_and_disable_enter_key", label: t("config_page.send_message_button_type.show_and_disable_enter_key") },
             ]}
             checked_variable={currentSendMessageButtonType}
+            column={true}
         />
     );
 };

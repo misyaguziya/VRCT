@@ -9,6 +9,7 @@ import {
 } from "@test_data";
 import {
     translator_status,
+    ctranslate2_weight_type_status,
 } from "@ui_configs";
 
 export const store = {
@@ -185,6 +186,8 @@ export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFi
 
 // Translation
 export const { atomInstance: Atom_DeepLAuthKey, useHook: useStore_DeepLAuthKey } = createAtomWithHook(null, "DeepLAuthKey");
+export const { atomInstance: Atom_SelectedCTranslate2WeightType, useHook: useStore_SelectedCTranslate2WeightType } = createAtomWithHook("", "SelectedCTranslate2WeightType");
+export const { atomInstance: Atom_CTranslate2WeightTypeStatus, useHook: useStore_CTranslate2WeightTypeStatus } = createAtomWithHook(ctranslate2_weight_type_status, "CTranslate2WeightTypeStatus");
 
 // Transcription
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
