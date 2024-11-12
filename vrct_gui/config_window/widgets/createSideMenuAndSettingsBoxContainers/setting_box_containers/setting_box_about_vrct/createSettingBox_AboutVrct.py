@@ -73,20 +73,6 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         )
         return frame
 
-    def createTellUsButton(parent_frame, image_file_name, callback):
-        tell_us_button_frame = settings.about_vrct.embedImageButtonCTkLabel(
-            parent_frame=parent_frame,
-            image_file_name=image_file_name,
-            callback=callback,
-            corner_radius=about_vrct_uism.TELL_US_BUTTON_CORNER_RADIUS,
-        )
-        tell_us_button_frame.img_label.grid(padx=about_vrct_uism.TELL_US_BUTTON_PADX, pady=about_vrct_uism.TELL_US_BUTTON_PADY, sticky="nsew")
-
-        tell_us_button_frame.configure(border_width=about_vrct_uism.TELL_US_BUTTON_BORDER_WIDTH, border_color=settings.ctm.ABOUT_VRCT_TELL_US_BUTTON_BORDER_COLOR)
-
-        return tell_us_button_frame
-
-
 
 
     section_row=0
@@ -278,17 +264,6 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
 
     special_thanks_message = settings.about_vrct.embedImageCTkLabel(special_thanks_contents_wrapper, settings.about_vrct.image_file.SPECIAL_THANKS_MESSAGE)
     special_thanks_message.grid(column=0, row=1, padx=0, pady=(0,about_vrct_uism.SPECIAL_THANKS_MESSAGE_BOTTOM_PADY), sticky="nsew")
-
-    # special_thanks_message_and_you = settings.about_vrct.embedImageCTkLabel(special_thanks_contents_wrapper, "special_thanks_message_and_you.png")
-    # special_thanks_message_and_you.grid(column=0, row=2, padx=0, pady=(0,about_vrct_uism.SPECIAL_THANKS_MESSAGE_AND_YOU_BOTTOM_PADY), sticky="nsw")
-
-    # special_thanks_tell_us_message = createTellUsButton(
-    #     parent_frame=special_thanks_contents_wrapper,
-    #     image_file_name=settings.about_vrct.image_file.SPECIAL_THANKS_TELL_US_MESSAGE,
-    #     callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "SUPPORTER_REGISTRATION"),
-    # )
-    # special_thanks_tell_us_message.grid(column=0, row=3)
-
 
 
 
@@ -596,26 +571,6 @@ def createSettingBox_AboutVrct(setting_box_wrapper, config_window, settings, vie
         clicked_color=settings.ctm.ABOUT_VRCT_BUTTON_CLICKED_BG_COLOR,
         buttonReleasedFunction=None,
     )
-
-
-
-
-
-
-
-
-    poster_tell_us_message = createTellUsButton(
-        parent_frame=poster_showcase_contents_wrapper,
-        image_file_name=settings.about_vrct.image_file.POSTER_TELL_US_MESSAGE,
-        callback=lambda _e: callFunctionIfCallable(view_variable.CALLBACK_OPEN_WEBPAGE_ABOUT_VRCT, "POSTER_CONTACT_US"),
-    )
-    poster_tell_us_message.grid(column=0, row=1, columnspan=2, padx=0, pady=(about_vrct_uism.POSTER_TELL_US_MESSAGE_TOP_PADY,0), sticky="nse")
-
-
-
-
-
-
 
 
 

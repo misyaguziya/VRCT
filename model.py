@@ -8,8 +8,9 @@ from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
 from threading import Thread
-from requests import get as requests_get
+from packaging.version import parse
 
+from requests import get as requests_get
 from flashtext import KeywordProcessor
 from models.translation.translation_translator import Translator
 from models.transcription.transcription_utils import getInputDevices, getOutputDevices
@@ -304,10 +305,16 @@ class Model:
         # check update
         update_flag = False
         response = requests_get(config.GITHUB_URL)
-        new_version = response.json()["name"]
-        if new_version != config.VERSION:
-            update_flag = True
-        print("software version", "now:", config.VERSION, "new:", new_version)
+        json_data = response.json()
+
+        version = json_data.get("name", None)
+        if isinstance(version, str):
+            new_version = parse(version)
+            current_version = parse(config.VERSION)
+            if new_version > current_version:
+                update_flag = True
+        print("software version", "now:", config.VERSION, "new:", version)
+
         return update_flag
 
     @staticmethod

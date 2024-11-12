@@ -953,7 +953,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "2.2.8"
+        self._VERSION = "2.2.9"
         self._ENABLE_SPEAKER2CHATBOX = False # Speaker2Chatbox
         self._ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION = "VRCT=0YEN"
         self._PATH_LOCAL = os_path.dirname(sys.argv[0])
@@ -1142,9 +1142,8 @@ class Config:
                     old_message_format = config[key]
                 setattr(self, key, config[key])
 
-                if key == "ENABLE_SPEAKER2CHATBOX_PASS":
-                    if self.ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
-                        self.ENABLE_SPEAKER2CHATBOX = True
+                # Force to Enable Speaker2Chatbox
+                self.ENABLE_SPEAKER2CHATBOX = True
 
             if old_message_format is not None:
                 setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
