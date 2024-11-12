@@ -10,11 +10,15 @@ import {
     useSpeakerRecordTimeout,
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
+
+    useWhisperWeightTypeStatus,
+    useSelectedWhisperWeightType,
 } from "@logics_configs";
 
 import {
     EntryContainer,
     WordFilterContainer,
+    DownloadModelsContainer,
 } from "../_templates/Templates";
 
 export const Transcription = () => {
@@ -22,6 +26,7 @@ export const Transcription = () => {
         <>
             <Mic_Container />
             <Speaker_Container />
+            <WhisperWeightType_Box />
         </>
     );
 };
@@ -223,5 +228,42 @@ const SpeakerMaxWords_Box = () => {
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
+    );
+};
+
+
+const WhisperWeightType_Box = () => {
+    const { t } = useTranslation();
+    const {
+        currentWhisperWeightTypeStatus,
+        pendingWhisperWeightType,
+        downloadWhisperWeight,
+    } = useWhisperWeightTypeStatus();
+    const { currentSelectedWhisperWeightType, setSelectedWhisperWeightType } = useSelectedWhisperWeightType();
+
+    const selectFunction = (id) => {
+        setSelectedWhisperWeightType(id);
+    };
+
+    const downloadStartFunction = (id) => {
+        pendingWhisperWeightType(id);
+        downloadWhisperWeight(id);
+    };
+
+    return (
+        <>
+            <DownloadModelsContainer
+                label={t("config_page.whisper_weight_type.label")}
+                desc={t(
+                    "config_page.whisper_weight_type.desc",
+                    {translator: t("main_page.translator")}
+                )}
+                name="whisper_weight_type"
+                options={currentWhisperWeightTypeStatus.data}
+                checked_variable={currentSelectedWhisperWeightType}
+                selectFunction={selectFunction}
+                downloadStartFunction={downloadStartFunction}
+            />
+        </>
     );
 };
