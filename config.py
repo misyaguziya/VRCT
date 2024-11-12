@@ -1142,9 +1142,8 @@ class Config:
                     old_message_format = config[key]
                 setattr(self, key, config[key])
 
-                if key == "ENABLE_SPEAKER2CHATBOX_PASS":
-                    if self.ENABLE_SPEAKER2CHATBOX_PASS_CONFIRMATION == config[key]:
-                        self.ENABLE_SPEAKER2CHATBOX = True
+                # Force to Enable Speaker2Chatbox
+                self.ENABLE_SPEAKER2CHATBOX = True
 
             if old_message_format is not None:
                 setattr(self, "SEND_MESSAGE_FORMAT_WITH_T", old_message_format)
