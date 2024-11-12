@@ -14,6 +14,7 @@ import {
     ActionButton,
     WordFilter,
     WordFilterListToggleComponent,
+    DownloadModels,
 } from "../_components/";
 
 export const useOnMouseLeaveDropdownMenu = () => {
@@ -116,6 +117,15 @@ export const WordFilterContainer = (props) => {
             <div className={styles.word_filter_section}>
                 <WordFilter {...props}/>
             </div>
+        </div>
+    );
+};
+
+export const DownloadModelsContainer = (props) => {
+    return (
+        <div className={styles.container}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <DownloadModels {...props}/>
         </div>
     );
 };
