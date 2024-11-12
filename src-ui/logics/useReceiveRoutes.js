@@ -46,6 +46,10 @@ import {
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
     useDeepLAuthKey,
+    useCTranslate2WeightTypeStatus,
+    useSelectedCTranslate2WeightType,
+    useSelectedWhisperWeightType,
+    useWhisperWeightTypeStatus,
     useOverlaySettings,
     useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
@@ -118,6 +122,19 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
     const { updateDeepLAuthKey } = useDeepLAuthKey();
+    const { updateSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
+    const {
+        updateDownloadedCTranslate2WeightTypeStatus,
+        updateDownloadProgressCTranslate2WeightTypeStatus,
+        downloadedCTranslate2WeightType,
+    } = useCTranslate2WeightTypeStatus();
+
+    const { updateSelectedWhisperWeightType } = useSelectedWhisperWeightType();
+    const {
+        updateDownloadedWhisperWeightTypeStatus,
+        updateDownloadProgressWhisperWeightTypeStatus,
+        downloadedWhisperWeightType,
+    } = useWhisperWeightTypeStatus();
 
     const { updateOverlaySettings } = useOverlaySettings();
     const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
@@ -278,6 +295,14 @@ export const useReceiveRoutes = () => {
         "/set/data/deepl_auth_key": updateDeepLAuthKey,
         "/delete/data/deepl_auth_key": () => updateDeepLAuthKey(""),
 
+        "/get/data/ctranslate2_weight_type": updateSelectedCTranslate2WeightType,
+        "/set/data/ctranslate2_weight_type": updateSelectedCTranslate2WeightType,
+
+        "/get/data/selectable_ctranslate2_weight_type_dict": updateDownloadedCTranslate2WeightTypeStatus,
+
+        "/run/download_ctranslate2_weight": updateDownloadProgressCTranslate2WeightTypeStatus,
+        "/run/downloaded_ctranslate2_weight": downloadedCTranslate2WeightType,
+
         // Transcription
         "/get/data/mic_record_timeout": updateMicRecordTimeout,
         "/set/data/mic_record_timeout": updateMicRecordTimeout,
@@ -325,6 +350,14 @@ export const useReceiveRoutes = () => {
 
         "/get/data/speaker_max_phrases": updateSpeakerMaxWords,
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
+        "/get/data/whisper_weight_type": updateSelectedWhisperWeightType,
+        "/set/data/whisper_weight_type": updateSelectedWhisperWeightType,
+
+        "/get/data/selectable_whisper_weight_type_dict": updateDownloadedWhisperWeightTypeStatus,
+
+        "/run/download_whisper_weight": updateDownloadProgressWhisperWeightTypeStatus,
+        "/run/downloaded_whisper_weight": downloadedWhisperWeightType,
 
         // VR
         "/get/data/overlay_settings": updateOverlaySettings,

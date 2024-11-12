@@ -4,13 +4,61 @@ import styles from "./Translation.module.scss";
 
 import {
     useDeepLAuthKey,
+    useCTranslate2WeightTypeStatus,
+    useSelectedCTranslate2WeightType,
 } from "@logics_configs";
 
 import {
+    DownloadModelsContainer,
     DeeplAuthKeyContainer,
 } from "../_templates/Templates";
 
 export const Translation = () => {
+    return (
+        <>
+            <CTranslate2WeightType_Box />
+            <DeeplAuthKey_Box />
+        </>
+    );
+};
+
+const CTranslate2WeightType_Box = () => {
+    const { t } = useTranslation();
+    const {
+        currentCTranslate2WeightTypeStatus,
+        pendingCTranslate2WeightType,
+        downloadCTranslate2Weight,
+    } = useCTranslate2WeightTypeStatus();
+    const { currentSelectedCTranslate2WeightType, setSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
+
+    const selectFunction = (id) => {
+        setSelectedCTranslate2WeightType(id);
+    };
+
+    const downloadStartFunction = (id) => {
+        pendingCTranslate2WeightType(id);
+        downloadCTranslate2Weight(id);
+    };
+
+    return (
+        <>
+            <DownloadModelsContainer
+                label={t("config_page.ctranslate2_weight_type.label")}
+                desc={t(
+                    "config_page.ctranslate2_weight_type.desc",
+                    {translator: t("main_page.translator")}
+                )}
+                name="ctransalte2_weight_type"
+                options={currentCTranslate2WeightTypeStatus.data}
+                checked_variable={currentSelectedCTranslate2WeightType}
+                selectFunction={selectFunction}
+                downloadStartFunction={downloadStartFunction}
+            />
+        </>
+    );
+};
+
+const DeeplAuthKey_Box = () => {
     const [input_value, seInputValue] = useState("");
     const { t } = useTranslation();
     const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useDeepLAuthKey();
