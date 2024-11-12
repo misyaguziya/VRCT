@@ -48,6 +48,8 @@ import {
     useDeepLAuthKey,
     useCTranslate2WeightTypeStatus,
     useSelectedCTranslate2WeightType,
+    useSelectedWhisperWeightType,
+    useWhisperWeightTypeStatus,
     useOverlaySettings,
     useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
@@ -126,6 +128,13 @@ export const useReceiveRoutes = () => {
         updateDownloadProgressCTranslate2WeightTypeStatus,
         downloadedCTranslate2WeightType,
     } = useCTranslate2WeightTypeStatus();
+
+    const { updateSelectedWhisperWeightType } = useSelectedWhisperWeightType();
+    const {
+        updateDownloadedWhisperWeightTypeStatus,
+        updateDownloadProgressWhisperWeightTypeStatus,
+        downloadedWhisperWeightType,
+    } = useWhisperWeightTypeStatus();
 
     const { updateOverlaySettings } = useOverlaySettings();
     const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
@@ -341,6 +350,14 @@ export const useReceiveRoutes = () => {
 
         "/get/data/speaker_max_phrases": updateSpeakerMaxWords,
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
+        "/get/data/whisper_weight_type": updateSelectedWhisperWeightType,
+        "/set/data/whisper_weight_type": updateSelectedWhisperWeightType,
+
+        "/get/data/selectable_whisper_weight_type_dict": updateDownloadedWhisperWeightTypeStatus,
+
+        "/run/download_whisper_weight": updateDownloadProgressWhisperWeightTypeStatus,
+        "/run/downloaded_whisper_weight": downloadedWhisperWeightType,
 
         // VR
         "/get/data/overlay_settings": updateOverlaySettings,

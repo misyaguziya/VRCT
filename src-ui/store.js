@@ -10,6 +10,7 @@ import {
 import {
     translator_status,
     ctranslate2_weight_type_status,
+    whisper_weight_type_status,
 } from "@ui_configs";
 
 export const store = {
@@ -197,6 +198,10 @@ export const { atomInstance: Atom_MicMaxWords, useHook: useStore_MicMaxWords } =
 export const { atomInstance: Atom_SpeakerRecordTimeout, useHook: useStore_SpeakerRecordTimeout } = createAtomWithHook(0, "SpeakerRecordTimeout");
 export const { atomInstance: Atom_SpeakerPhraseTimeout, useHook: useStore_SpeakerPhraseTimeout } = createAtomWithHook(0, "SpeakerPhraseTimeout");
 export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxWords } = createAtomWithHook(0, "SpeakerMaxWords");
+
+export const { atomInstance: Atom_SelectedWhisperWeightType, useHook: useStore_SelectedWhisperWeightType } = createAtomWithHook("", "SelectedWhisperWeightType");
+export const { atomInstance: Atom_WhisperWeightTypeStatus, useHook: useStore_WhisperWeightTypeStatus } = createAtomWithHook(whisper_weight_type_status, "WhisperWeightTypeStatus");
+
 
 // VR
 export const { atomInstance: Atom_OverlaySettings, useHook: useStore_OverlaySettings } = createAtomWithHook({
