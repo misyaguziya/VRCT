@@ -13,11 +13,11 @@ export const TranslatorSelectorOpenButton = () => {
         currentSelectedTranslationEngines,
     } = useLanguageSettings();
 
-    const selected_translator_name = (currentTranslationEngines.state === "pending")
+    const selected_label = (currentTranslationEngines.state === "pending")
     ? "Loading..."
     : currentTranslationEngines.data.find(
-        translator_data => translator_data.translator_id === currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data]
-    )?.translator_name;
+        translator_data => translator_data.id === currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data]
+    )?.label;
 
 
     const { currentIsOpenedTranslatorSelector, updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
@@ -30,11 +30,11 @@ export const TranslatorSelectorOpenButton = () => {
         <div className={styles.container}>
             <div className={styles.translator_selector_button} onClick={openTranslatorSelector}>
                 <p className={styles.label}>{t("main_page.translator")}: </p>
-                <p className={styles.label}>{selected_translator_name}</p>
+                <p className={styles.label}>{selected_label}</p>
             </div>
             {currentIsOpenedTranslatorSelector.data &&
                 <TranslatorSelector
-                    selected_translator_id={currentSelectedTranslationEngines}
+                    selected_id={currentSelectedTranslationEngines}
                     translation_engines={currentTranslationEngines}
                 />
             }

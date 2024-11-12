@@ -177,7 +177,7 @@ export const useReceiveRoutes = () => {
             const updateTranslatorAvailability = (keys) => {
                 return translator_status.map(translator => ({
                     ...translator,
-                    is_available: keys.includes(translator.translator_id),
+                    is_available: keys.includes(translator.id),
                 }));
             };
             const updated_list = updateTranslatorAvailability(payload);
@@ -187,7 +187,7 @@ export const useReceiveRoutes = () => {
             const updateTranslatorAvailability = (keys) => {
                 return translator_status.map(translator => ({
                     ...translator,
-                    is_available: keys.includes(translator.translator_id),
+                    is_available: keys.includes(translator.id),
                 }));
             };
             const updated_list = updateTranslatorAvailability(payload);
