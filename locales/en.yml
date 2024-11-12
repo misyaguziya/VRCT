@@ -286,7 +286,7 @@ config_window:
   # Speaker2Chatbox
   send_received_message_to_vrc:
     label: "Send Received Message To VRChat"
-    desc: "Send the message you received from the speaker's sound to VRChat's chatbox. However, this feature is intended for users who genuinely need it. Please consult with the developer."
+    desc: "Send the message you received from the speaker's sound to VRChat's chatbox."
   # Speaker2Chatbox
 
 
