@@ -31,6 +31,7 @@ export { useSpeakerRecordTimeout } from "./transcription/useSpeakerRecordTimeout
 export { useSpeakerPhraseTimeout } from "./transcription/useSpeakerPhraseTimeout";
 export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
 
+export { useSelectedTranscriptionEngine } from "./transcription/useSelectedTranscriptionEngine";
 export { useWhisperWeightTypeStatus } from "./transcription/useWhisperWeightTypeStatus";
 export { useSelectedWhisperWeightType } from "./transcription/useSelectedWhisperWeightType";
 
