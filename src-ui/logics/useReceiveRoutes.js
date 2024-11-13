@@ -32,6 +32,7 @@ import {
     useEnableAutoExportMessageLogs,
     useEnableVrcMicMuteSync,
     useEnableSendMessageToVrc,
+    useEnableSendReceivedMessageToVrc,
     useSelectedFontFamily,
     useUiLanguage,
     useUiScaling,
@@ -97,6 +98,7 @@ export const useReceiveRoutes = () => {
     const { updateEnableAutoExportMessageLogs } = useEnableAutoExportMessageLogs();
     const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
     const { updateEnableSendMessageToVrc } = useEnableSendMessageToVrc();
+    const { updateEnableSendReceivedMessageToVrc } = useEnableSendReceivedMessageToVrc();
 
     const { updateSendMessageButtonType } = useSendMessageButtonType();
     const { updateUiLanguage } = useUiLanguage();
@@ -395,6 +397,10 @@ export const useReceiveRoutes = () => {
         "/get/data/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/disable/send_message_to_vrc": updateEnableSendMessageToVrc,
+
+        "/get/data/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+        "/set/enable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+        "/set/disable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
 
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,
