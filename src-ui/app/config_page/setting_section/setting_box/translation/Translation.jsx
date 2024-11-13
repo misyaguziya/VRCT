@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Translation.module.scss";
+import { updateLabelsById } from "@utils";
 
 import {
     useDeepLAuthKey,
@@ -40,6 +41,13 @@ const CTranslate2WeightType_Box = () => {
         downloadCTranslate2Weight(id);
     };
 
+    const new_labels = [
+        { id: "small", label: t("config_page.ctranslate2_weight_type.small", {capacity: "418MB"}) },
+        { id: "large", label: t("config_page.ctranslate2_weight_type.large", {capacity: "1.2GB"}) },
+    ];
+
+    const c_translate2_weight_types = updateLabelsById(currentCTranslate2WeightTypeStatus.data, new_labels);
+
     return (
         <>
             <DownloadModelsContainer
@@ -49,7 +57,7 @@ const CTranslate2WeightType_Box = () => {
                     {translator: t("main_page.translator")}
                 )}
                 name="ctransalte2_weight_type"
-                options={currentCTranslate2WeightTypeStatus.data}
+                options={c_translate2_weight_types}
                 checked_variable={currentSelectedCTranslate2WeightType}
                 selectFunction={selectFunction}
                 downloadStartFunction={downloadStartFunction}

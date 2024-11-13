@@ -1,5 +1,5 @@
 import { translator_status } from "@ui_configs";
-import { arrayToObject } from "@utils/arrayToObject";
+import { arrayToObject } from "@utils";
 
 import {
     useWindow,
@@ -48,6 +48,7 @@ import {
     useDeepLAuthKey,
     useCTranslate2WeightTypeStatus,
     useSelectedCTranslate2WeightType,
+    useSelectedTranscriptionEngine,
     useSelectedWhisperWeightType,
     useWhisperWeightTypeStatus,
     useOverlaySettings,
@@ -129,6 +130,7 @@ export const useReceiveRoutes = () => {
         downloadedCTranslate2WeightType,
     } = useCTranslate2WeightTypeStatus();
 
+    const { updateSelectedTranscriptionEngine } = useSelectedTranscriptionEngine();
     const { updateSelectedWhisperWeightType } = useSelectedWhisperWeightType();
     const {
         updateDownloadedWhisperWeightTypeStatus,
@@ -177,7 +179,7 @@ export const useReceiveRoutes = () => {
             const updateTranslatorAvailability = (keys) => {
                 return translator_status.map(translator => ({
                     ...translator,
-                    is_available: keys.includes(translator.translator_id),
+                    is_available: keys.includes(translator.id),
                 }));
             };
             const updated_list = updateTranslatorAvailability(payload);
@@ -187,7 +189,7 @@ export const useReceiveRoutes = () => {
             const updateTranslatorAvailability = (keys) => {
                 return translator_status.map(translator => ({
                     ...translator,
-                    is_available: keys.includes(translator.translator_id),
+                    is_available: keys.includes(translator.id),
                 }));
             };
             const updated_list = updateTranslatorAvailability(payload);
@@ -350,6 +352,9 @@ export const useReceiveRoutes = () => {
 
         "/get/data/speaker_max_phrases": updateSpeakerMaxWords,
         "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+
+        "/get/data/selected_transcription_engine": updateSelectedTranscriptionEngine,
+        "/set/data/selected_transcription_engine": updateSelectedTranscriptionEngine,
 
         "/get/data/whisper_weight_type": updateSelectedWhisperWeightType,
         "/set/data/whisper_weight_type": updateSelectedWhisperWeightType,
