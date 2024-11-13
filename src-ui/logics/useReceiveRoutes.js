@@ -1,5 +1,5 @@
 import { translator_status } from "@ui_configs";
-import { arrayToObject } from "@utils/arrayToObject";
+import { arrayToObject } from "@utils";
 
 import {
     useWindow,

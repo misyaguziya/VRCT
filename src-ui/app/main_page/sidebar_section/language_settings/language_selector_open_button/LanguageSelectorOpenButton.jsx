@@ -1,17 +1,14 @@
 import clsx from "clsx";
 import styles from "./LanguageSelectorOpenButton.module.scss";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
-import { useSvg } from "@utils/useSvg";
 
 export const LanguageSelectorOpenButton = ({ title, onClickFunction, is_opened, TurnedOnSvgComponent, is_turned_on, variable }) => {
-    const classNames = clsx(styles.arrow_left_svg, {
+    const arrow_class_names = clsx(styles.arrow_left_svg, {
         [styles.reverse]: is_opened,
     });
 
-    const SvgComponent = useSvg(TurnedOnSvgComponent, {
-        className: clsx(styles.category_svg, {
-            [styles.is_turned_on]: is_turned_on,
-        }),
+    const category_class_names = clsx(styles.category_svg, {
+        [styles.is_turned_on]: is_turned_on,
     });
 
     const languageText = variable?.language ?? "Loading...";
@@ -20,13 +17,13 @@ export const LanguageSelectorOpenButton = ({ title, onClickFunction, is_opened, 
     return (
         <div className={styles.container}>
             <div className={styles.title_container}>
-                {SvgComponent}
+                <TurnedOnSvgComponent className={category_class_names} />
                 <p className={styles.title}>{title}</p>
             </div>
             <div className={styles.dropdown_menu_container} onClick={onClickFunction}>
                 <p className={styles.selected_language}>{languageText}</p>
                 <p className={styles.selected_language}>({countryText})</p>
-                <ArrowLeftSvg className={classNames} />
+                <ArrowLeftSvg className={arrow_class_names} />
             </div>
         </div>
     );

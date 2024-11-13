@@ -145,7 +145,7 @@ const FontFamilyController = () => {
 };
 
 import { useStore_SelectableFontFamilyList } from "@store";
-import { arrayToObject } from "@utils/arrayToObject";
+import { arrayToObject } from "@utils";
 
 import { invoke } from "@tauri-apps/api/tauri";
 const useAsyncFetchFonts = () => {

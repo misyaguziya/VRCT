@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { updateLabelsById } from "@utils/updateLabelsById";
+import { updateLabelsById } from "@utils";
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
 import { useStore_IsOpenedTranslatorSelector } from "@store";

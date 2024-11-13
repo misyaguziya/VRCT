@@ -3,7 +3,7 @@ import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics_common";
 import { store } from "@store";
-import { scrollToBottom } from "@utils/scrollToBottom";
+import { scrollToBottom } from "@utils";
 import {
     useSendMessageButtonType,
     useEnableAutoClearMessageInputBox,

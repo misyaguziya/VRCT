@@ -9,7 +9,7 @@ const getImageByFileName = (file_name) => {
 };
 
 import poster_showcase_worlds_settings from "./poster_showcase_worlds_settings";
-import { chunkArray } from "@utils/chunkArray";
+import { chunkArray } from "@utils";
 
 export const PosterShowcaseWorldsContents = () => {
     const { currentPosterShowcaseWorldPageIndex } = useStore_PosterShowcaseWorldPageIndex();
@@ -57,7 +57,7 @@ export const PosterShowcaseWorldsContents = () => {
 
 import chat_white_square from "@images/chato_white_square.png";
 import { useEffect } from "react";
-import { randomIntMinMax } from "@utils/randomIntMinMax";
+import { randomIntMinMax } from "@utils";
 const PosterShowcaseWorldsPagination = ({ page_length }) => {
     const { currentPosterShowcaseWorldPageIndex, updatePosterShowcaseWorldPageIndex } = useStore_PosterShowcaseWorldPageIndex();
 
