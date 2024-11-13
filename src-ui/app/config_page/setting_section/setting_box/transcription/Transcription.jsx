@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Transcription.module.scss";
+import { updateLabelsById } from "@utils";
 
 import {
     useMicRecordTimeout,
@@ -250,6 +251,18 @@ const WhisperWeightType_Box = () => {
         downloadWhisperWeight(id);
     };
 
+    const new_labels = [
+        { id: "tiny", label: t("config_page.whisper_weight_type.model_template", {model_name: "tiny", capacity: "74.5MB"}) },
+        { id: "base", label: t("config_page.whisper_weight_type.recommended_model_template", {model_name: "base", capacity: "141MB"}) },
+        { id: "small", label: t("config_page.whisper_weight_type.model_template", {model_name: "small", capacity: "463MB"}) },
+        { id: "medium", label: t("config_page.whisper_weight_type.model_template", {model_name: "medium", capacity: "1.42GB"}) },
+        { id: "large-v1", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v1", capacity: "2.87GB"}) },
+        { id: "large-v2", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v2", capacity: "2.87GB"}) },
+        { id: "large-v3", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v3", capacity: "2.87GB"}) },
+    ];
+
+    const whisper_weight_types = updateLabelsById(currentWhisperWeightTypeStatus.data, new_labels);
+
     return (
         <>
             <DownloadModelsContainer
@@ -259,7 +272,7 @@ const WhisperWeightType_Box = () => {
                     {translator: t("main_page.translator")}
                 )}
                 name="whisper_weight_type"
-                options={currentWhisperWeightTypeStatus.data}
+                options={whisper_weight_types}
                 checked_variable={currentSelectedWhisperWeightType}
                 selectFunction={selectFunction}
                 downloadStartFunction={downloadStartFunction}
