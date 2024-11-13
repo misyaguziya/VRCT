@@ -10,7 +10,11 @@ try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
-from utils import printLog
+try:
+    from utils import printLog
+except ImportError:
+    def printLog(*args):
+        print(*args)
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
@@ -94,7 +98,7 @@ class Overlay:
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
                 self.updateColor([1, 1, 1], size)
                 self.updateOpacity(self.settings[size]["opacity"], size, True)
-                self.updateUiScaling(self.settings[size]["ui_scaling"], size, True)
+                self.updateUiScaling(self.settings[size]["ui_scaling"], size)
                 self.updatePosition(
                     self.settings[size]["x_pos"],
                     self.settings[size]["y_pos"],
@@ -102,7 +106,8 @@ class Overlay:
                     self.settings[size]["x_rotation"],
                     self.settings[size]["y_rotation"],
                     self.settings[size]["z_rotation"],
-                    self.settings[size]["tracker"]
+                    self.settings[size]["tracker"],
+                    size
                 )
 
         except Exception as e:
@@ -272,16 +277,67 @@ class Overlay:
         return _proc_name in (p.name() for p in process_iter())
 
 if __name__ == "__main__":
-    x_pos = 0
-    y_pos = 0
-    z_pos = 0
-    x_rotation = 0
-    y_rotation = 0
-    z_rotation = 0
+    from overlay_image import OverlayImage
 
-    base_matrix = getLeftHandBaseMatrix()
-    translation = (x_pos * z_pos, y_pos * z_pos, z_pos)
-    rotation = (x_rotation, y_rotation, z_rotation)
-    transform = utils.transform_matrix(base_matrix, translation, rotation)
-    transform = mat34Id(transform)
-    print(transform)
+    small_settings = {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 0.5,
+        "tracker": "HMD",
+    }
+
+    large_settings = {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 0,
+        "opacity": 1.0,
+        "ui_scaling": 0.5,
+        "tracker": "LeftHand",
+    }
+
+    settings_dict = {
+        "small": small_settings,
+        "large": large_settings
+    }
+
+    overlay_image = OverlayImage()
+    overlay = Overlay(settings_dict)
+    overlay.startOverlay()
+    time.sleep(1)
+
+    # Example usage
+    img = overlay_image.createOverlayImageLargeLog("send", "こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "large")
+
+    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "small")
+    time.sleep(10)
+
+    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら2", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "small")
+    time.sleep(10)
+
+    for i in range(100):
+        print(i)
+        # Example usage
+        img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
+        overlay.updateImage(img, "small")
+        time.sleep(10)
+
+        # img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+        # overlay.updateImage(img, "small")
+        # time.sleep(0.5)
+
+    overlay.shutdownOverlay()
