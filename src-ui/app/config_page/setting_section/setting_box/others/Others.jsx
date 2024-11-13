@@ -8,6 +8,7 @@ import {
     useEnableAutoExportMessageLogs,
     useEnableVrcMicMuteSync,
     useEnableSendMessageToVrc,
+    useEnableSendReceivedMessageToVrc,
 } from "@logics_configs";
 
 import {
@@ -18,19 +19,26 @@ import {
     LabelComponent,
     Checkbox,
     ActionButton,
+    SectionLabelComponent,
 } from "../_components/";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
 
 export const Others = () => {
     return (
-        <>
-            <AutoClearMessageInputBoxContainer />
-            <SendOnlyTranslatedMessagesContainer />
-            <AutoExportMessageLogsContainer />
-            <VrcMicMuteSyncContainer />
-            <SendMessageToVrcContainer />
-        </>
+        <div className={styles.container}>
+            <div>
+                <AutoClearMessageInputBoxContainer />
+                <SendOnlyTranslatedMessagesContainer />
+                <AutoExportMessageLogsContainer />
+                <VrcMicMuteSyncContainer />
+                <SendMessageToVrcContainer />
+            </div>
+            <div>
+                <SectionLabelComponent label="Speaker2Chatbox" />
+                <SendReceivedMessageToVrcContainer />
+            </div>
+        </div>
     );
 };
 
@@ -64,12 +72,12 @@ const AutoExportMessageLogsContainer = () => {
     const { openFolder_MessageLogs } = useOpenFolder();
 
     return (
-        <div className={styles.container}>
+        <div className={styles.auto_export_message_logs_container}>
             <LabelComponent
                 label={t("config_page.auto_export_message_logs.label")}
                 desc={t("config_page.auto_export_message_logs.desc")}
                 />
-            <div className={styles.switch_section_container}>
+            <div className={styles.auto_export_message_logs_switch_section_container}>
                 <ActionButton
                     IconComponent={OpenFolderSvg}
                     onclickFunction={openFolder_MessageLogs}
@@ -105,6 +113,21 @@ const SendMessageToVrcContainer = () => {
             desc={t("config_page.send_message_to_vrc.desc")}
             variable={currentEnableSendMessageToVrc}
             toggleFunction={toggleEnableSendMessageToVrc}
+        />
+    );
+};
+
+
+const SendReceivedMessageToVrcContainer = () => {
+    const { t } = useTranslation();
+    const { currentEnableSendReceivedMessageToVrc, toggleEnableSendReceivedMessageToVrc } = useEnableSendReceivedMessageToVrc();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.send_received_message_to_vrc.label")}
+            desc={t("config_page.send_received_message_to_vrc.desc")}
+            variable={currentEnableSendReceivedMessageToVrc}
+            toggleFunction={toggleEnableSendReceivedMessageToVrc}
         />
     );
 };

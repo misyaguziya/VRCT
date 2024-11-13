@@ -19,6 +19,7 @@ export { useUiScaling } from "./appearance/useUiScaling";
 export { useEnableAutoClearMessageInputBox } from "./others/useEnableAutoClearMessageInputBox";
 export { useEnableAutoExportMessageLogs } from "./others/useEnableAutoExportMessageLogs";
 export { useEnableSendMessageToVrc } from "./others/useEnableSendMessageToVrc";
+export { useEnableSendReceivedMessageToVrc } from "./others/useEnableSendReceivedMessageToVrc";
 export { useEnableSendOnlyTranslatedMessages } from "./others/useEnableSendOnlyTranslatedMessages";
 export { useEnableVrcMicMuteSync } from "./others/useEnableVrcMicMuteSync";
 
