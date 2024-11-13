@@ -427,7 +427,7 @@ export const useReceiveRoutes = () => {
         const initDataSyncProcess = (payload) => {
             for (const [endpoint, value] of Object.entries(payload)) {
                 const route = routes[endpoint];
-                (route) ? route(value) : console.error(`Invalid endpoint: ${endpoint}\vvalue: ${JSON.stringify(value)}`);
+                (route) ? route(value) : console.error(`Invalid endpoint: ${endpoint}\nvalue: ${JSON.stringify(value)}`);
             }
         };
 
