@@ -66,7 +66,7 @@ const PresetContainer = () => {
         title: t("main_page.your_language"),
         is_opened: currentIsOpenedLanguageSelector.data.your_language,
         onClickFunction: () => toggleSelector("your_language", currentIsOpenedLanguageSelector.data.your_language, updateIsOpenedLanguageSelector),
-        TurnedOnSvgComponent: <MicSvg />,
+        TurnedOnSvgComponent: MicSvg,
         is_turned_on: currentTranscriptionSendStatus.data,
         variable: your_language_data?.primary,
     };
@@ -75,7 +75,7 @@ const PresetContainer = () => {
         title: t("main_page.target_language"),
         is_opened: currentIsOpenedLanguageSelector.data.target_language,
         onClickFunction: () => toggleSelector("target_language", currentIsOpenedLanguageSelector.data.target_language, updateIsOpenedLanguageSelector),
-        TurnedOnSvgComponent: <HeadphonesSvg />,
+        TurnedOnSvgComponent: HeadphonesSvg,
         is_turned_on: currentTranscriptionReceiveStatus.data,
         variable: target_language_data?.primary,
     };

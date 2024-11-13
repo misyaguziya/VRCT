@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import styles from "./TranslatorSelector.module.scss";
-import { chunkArray } from "@utils/chunkArray";
+import { chunkArray } from "@utils";
 
 import { useStore_IsOpenedTranslatorSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";

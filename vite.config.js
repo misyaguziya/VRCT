@@ -36,10 +36,10 @@ export default defineConfig(async () => ({
             "@test_data": path.resolve(__dirname, "./test_data.js"),
 
             "@ui_configs": path.resolve(__dirname, "src-ui/ui_configs.js"),
-            "@scss_mixins": path.resolve(__dirname, "src-ui/utils/mixins.scss"),
+            "@scss_mixins": path.resolve(__dirname, "src-ui/common_css/mixins.scss"),
             "@store": path.resolve(__dirname, "src-ui/store.js"),
             "@images": path.resolve(__dirname, "src-ui/assets"),
-            "@utils": path.resolve(__dirname, "src-ui/utils"),
+            "@utils": path.resolve(__dirname, "src-ui/utils.js"),
             "@logics": path.resolve(__dirname, "src-ui/logics"),
             "@logics_common": path.resolve(__dirname, "src-ui/logics/common"),
             "@logics_main": path.resolve(__dirname, "src-ui/logics/main"),

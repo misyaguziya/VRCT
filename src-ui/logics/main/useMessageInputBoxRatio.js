@@ -1,7 +1,7 @@
 import { appWindow } from "@tauri-apps/api/window";
 import { useStore_MessageInputBoxRatio } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
-import { clampMinMax } from "@utils/clampMinMax";
+import { clampMinMax } from "@utils";
 export const useMessageInputBoxRatio = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentMessageInputBoxRatio, updateMessageInputBoxRatio } = useStore_MessageInputBoxRatio();
