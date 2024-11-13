@@ -203,9 +203,8 @@
             "desc": "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.",
             "error_message": "You can set a number equal to or greater than 0."
         },
-        "use_whisper_feature": {
-            "label": "Use Whisper Model As Transcription",
-            "desc": "In some languages, the accuracy of speech recognition may improve. During speech recognition usage, CPU usage increases, so please consider your PC specs before using this feature."
+        "select_transcription_engine": {
+            "label": "Select Transcription Engine"
         },
         "whisper_weight_type": {
             "label": "Select Whisper Model",

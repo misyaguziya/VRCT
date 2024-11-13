@@ -12,6 +12,7 @@ import {
     useSpeakerPhraseTimeout,
     useSpeakerMaxWords,
 
+    useSelectedTranscriptionEngine,
     useWhisperWeightTypeStatus,
     useSelectedWhisperWeightType,
 } from "@logics_configs";
@@ -20,6 +21,7 @@ import {
     EntryContainer,
     WordFilterContainer,
     DownloadModelsContainer,
+    RadioButtonContainer,
 } from "../_templates/Templates";
 
 export const Transcription = () => {
@@ -27,7 +29,7 @@ export const Transcription = () => {
         <>
             <Mic_Container />
             <Speaker_Container />
-            <WhisperWeightType_Box />
+            <TranscriptionEngine_Container />
         </>
     );
 };
@@ -232,6 +234,34 @@ const SpeakerMaxWords_Box = () => {
     );
 };
 
+
+
+const TranscriptionEngine_Container = () => {
+    return (
+        <>
+            <TranscriptionEngine_Box />
+            <WhisperWeightType_Box />
+        </>
+    );
+};
+
+const TranscriptionEngine_Box = () => {
+    const { t } = useTranslation();
+    const { currentSelectedTranscriptionEngine, setSelectedTranscriptionEngine } = useSelectedTranscriptionEngine();
+
+    return (
+        <RadioButtonContainer
+            label={t("config_page.select_transcription_engine.label")}
+            selectFunction={setSelectedTranscriptionEngine}
+            name="select_transcription_engine"
+            options={[
+                { id: "Google", label: "Google" },
+                { id: "Whisper", label: "Whisper" },
+            ]}
+            checked_variable={currentSelectedTranscriptionEngine}
+        />
+    );
+};
 
 const WhisperWeightType_Box = () => {
     const { t } = useTranslation();

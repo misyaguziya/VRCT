@@ -201,6 +201,7 @@ export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxW
 
 export const { atomInstance: Atom_SelectedWhisperWeightType, useHook: useStore_SelectedWhisperWeightType } = createAtomWithHook("", "SelectedWhisperWeightType");
 export const { atomInstance: Atom_WhisperWeightTypeStatus, useHook: useStore_WhisperWeightTypeStatus } = createAtomWithHook(whisper_weight_type_status, "WhisperWeightTypeStatus");
+export const { atomInstance: Atom_SelectedTranscriptionEngine, useHook: useStore_SelectedTranscriptionEngine } = createAtomWithHook(whisper_weight_type_status, "SelectedTranscriptionEngine");
 
 
 // VR
