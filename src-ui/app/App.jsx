@@ -3,11 +3,15 @@ import { useStartPython } from "@logics/useStartPython";
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
+import { SplashComponent } from "./splash_component/SplashComponent";
 import { ModalController } from "./modal_controller/ModalController";
 import styles from "./App.module.scss";
+import { useIsBackendReady } from "@logics_common";
 
 export const App = () => {
+    const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
+
     return (
         <div className={styles.container}>
             <StartPythonFacadeComponent />
@@ -18,13 +22,24 @@ export const App = () => {
             <TransparencyController />
             <WindowGeometryController />
 
+            {currentIsBackendReady.data === false
+            ? <SplashComponent />
+            : <Contents />
+            }
+        </div>
+    );
+};
+
+const Contents = () => {
+    return (
+        <>
             <WindowTitleBar />
             <div className={styles.pages_wrapper}>
                 <ConfigPage />
                 <MainPage />
                 <ModalController />
             </div>
-        </div>
+        </>
     );
 };
 

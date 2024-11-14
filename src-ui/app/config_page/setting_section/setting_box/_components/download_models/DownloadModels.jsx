@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import clsx from "clsx";
-import CircularProgress from '@mui/material/CircularProgress';
+import CircularProgress from "@mui/material/CircularProgress";
 import styles from "./DownloadModels.module.scss";
 import {
     RadioButton,
