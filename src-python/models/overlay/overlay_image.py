@@ -95,7 +95,7 @@ class OverlayImage:
 
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
-        draw.rounded_rectangle([(0, 0), img.size], radius=30, fill=background_color, outline=background_outline_color, width=5)
+        draw.rounded_rectangle([(0, 0), img.size], radius=50, fill=background_color, outline=background_outline_color, width=5)
 
         img = Image.alpha_composite(background, img)
         return img
@@ -103,9 +103,9 @@ class OverlayImage:
     @staticmethod
     def getUiSizeLargeLog():
         return {
-            "width": int(960*2),
-            "font_size_large": int(23*4),
-            "font_size_small": int(23*4*2/3),
+            "width": int(960),
+            "font_size_large": int(15*2),
+            "font_size_small": int(15*2*2/3),
         }
 
     @staticmethod
@@ -152,11 +152,11 @@ class OverlayImage:
             font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", f"{font_family}.ttf"), font_size)
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
-        character_line_num = int(width // character_width)
+        character_line_num = int(width // character_width) - 1
         if len(text) > character_line_num:
             text = "\n".join([text[i:i+character_line_num] for i in range(0, len(text), character_line_num)])
         n_num = len(text.split("\n")) - 1
-        text_height =  int(font_size*(n_num+2))
+        text_height =  int(font_size*(n_num+1.5))
         img = Image.new("RGBA", (width, text_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         text_y = text_height // 2
@@ -183,7 +183,7 @@ class OverlayImage:
             font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf"), font_size)
         except Exception:
             font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", "NotoSansJP-Regular.ttf"), font_size)
-        text_height = font_size*2
+        text_height = int(font_size*1.2)
         text_width = draw.textlength(date_time, font)
         character_width = text_width // len(date_time)
         img = Image.new("RGBA", (width, text_height), (0, 0, 0, 0))
@@ -238,12 +238,12 @@ class OverlayImage:
         img = imgs[0]
         for i in imgs[1:]:
             img = self.concatenateImagesVertically(img, i)
-        img = self.addImageMargin(img, 0, 20, 0, 20, (0, 0, 0, 0))
+        img = self.addImageMargin(img, 25, 25, 25, 25, (0, 0, 0, 0))
 
         width, height = img.size
         background = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
-        draw.rounded_rectangle([(0, 0), (width, height)], radius=15, fill=background_color, outline=background_outline_color, width=5)
+        draw.rounded_rectangle([(0, 0), (width, height)], radius=25, fill=background_color, outline=background_outline_color, width=5)
         img = Image.alpha_composite(background, img)
         return img
 
@@ -252,6 +252,15 @@ if __name__ == "__main__":
     img = overlay.createOverlayImageSmallLog("Hello, World!", "English", "こんにちは、世界！", "Japanese")
     img.save("overlay_small.png")
     img = overlay.createOverlayImageLargeLog("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
-    img.save("overlay_large0.png")
     img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
-    img.save("overlay_large1.png")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English", "aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああこんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "Japanese", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English", "aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああこんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "Japanese", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!", "English", "こんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！", "Japanese", "Hello, World!", "English")
+    img = overlay.createOverlayImageLargeLog("send", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English", "aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああこんにちは、世界！", "Japanese")
+    img = overlay.createOverlayImageLargeLog("receive", "こんにちは、世界！aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "Japanese", "Hello, World!aaaaaaaaaaaaaaaaaあああああああああああああああaaaaaaaaaaaaaaaaaあああああああああああああああ", "English")
+    img.save("overlay_large.png")
