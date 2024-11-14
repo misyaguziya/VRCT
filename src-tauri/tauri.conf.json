@@ -39,8 +39,9 @@
 "windows": [
     {
         "title": "VRCT",
-        "width": 870,
-        "height": 654,
+        "center": true,
+        "width": 400,
+        "height": 400,
         "minWidth": 400,
         "minHeight": 200,
         "transparent": true,

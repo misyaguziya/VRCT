@@ -1,3 +1,4 @@
+export { useIsBackendReady } from "./useIsBackendReady";
 export { useWindow } from "./useWindow";
 export { useIsOpenedConfigPage } from "./useIsOpenedConfigPage";
 export { useIsSoftwareUpdateAvailable } from "./useIsSoftwareUpdateAvailable";
