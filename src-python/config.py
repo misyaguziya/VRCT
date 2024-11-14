@@ -739,19 +739,6 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('OVERLAY_SETTINGS')
-    def OVERLAY_SETTINGS(self):
-        return self._OVERLAY_SETTINGS
-
-    @OVERLAY_SETTINGS.setter
-    def OVERLAY_SETTINGS(self, value):
-        if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SETTINGS.keys()):
-            for key, value in value.items():
-                if isinstance(value, (int, float)):
-                    self._OVERLAY_SETTINGS[key] = float(value)
-            self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_SETTINGS)
-
-    @property
     @json_serializable('OVERLAY_SMALL_LOG')
     def OVERLAY_SMALL_LOG(self):
         return self._OVERLAY_SMALL_LOG
@@ -778,18 +765,46 @@ class Config:
                     case "display_duration" | "fadeout_duration":
                         if isinstance(value, int):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+                    case "opacity" | "ui_scaling":
+                        if isinstance(value, (int, float)):
+                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = float(value)
             self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
 
     @property
-    @json_serializable('OVERLAY_UI_TYPE')
-    def OVERLAY_UI_TYPE(self):
-        return self._OVERLAY_UI_TYPE
+    @json_serializable('OVERLAY_LARGE_LOG')
+    def OVERLAY_LARGE_LOG(self):
+        return self._OVERLAY_LARGE_LOG
 
-    @OVERLAY_UI_TYPE.setter
-    def OVERLAY_UI_TYPE(self, value):
-        if isinstance(value, str):
-            self._OVERLAY_UI_TYPE = value
-            # self.saveConfig(inspect.currentframe().f_code.co_name, value)
+    @OVERLAY_LARGE_LOG.setter
+    def OVERLAY_LARGE_LOG(self, value):
+        if isinstance(value, bool):
+            self._OVERLAY_LARGE_LOG = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('OVERLAY_LARGE_LOG_SETTINGS')
+    def OVERLAY_LARGE_LOG_SETTINGS(self):
+        return self._OVERLAY_LARGE_LOG_SETTINGS
+
+    @OVERLAY_LARGE_LOG_SETTINGS.setter
+    def OVERLAY_LARGE_LOG_SETTINGS(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_LARGE_LOG_SETTINGS.keys()):
+            for key, value in value.items():
+                match (key):
+                    case "tracker":
+                        if isinstance(value, str):
+                            # "HMD", "LeftHand", "RightHand"
+                            self._OVERLAY_LARGE_LOG_SETTINGS[key] = value
+                    case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
+                        if isinstance(value, (int, float)):
+                            self._OVERLAY_LARGE_LOG_SETTINGS[key] = float(value)
+                    case "display_duration" | "fadeout_duration":
+                        if isinstance(value, int):
+                            self._OVERLAY_LARGE_LOG_SETTINGS[key] = value
+                    case "opacity" | "ui_scaling":
+                        if isinstance(value, (int, float)):
+                            self._OVERLAY_LARGE_LOG_SETTINGS[key] = float(value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_LARGE_LOG_SETTINGS)
 
     @property
     @json_serializable('SEND_MESSAGE_TO_VRC')
@@ -1063,10 +1078,6 @@ class Config:
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
-        self._OVERLAY_SETTINGS = {
-            "opacity": 1.0,
-            "ui_scaling": 1.0,
-        }
         self._OVERLAY_SMALL_LOG = False
         self._OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
@@ -1077,8 +1088,24 @@ class Config:
             "z_rotation": 0.0,
             "display_duration": 5,
             "fadeout_duration": 2,
+            "opacity": 1.0,
+            "ui_scaling": 1.0,
+            "tracker": "HMD",
         }
-        self._OVERLAY_UI_TYPE = "default"
+        self._OVERLAY_LARGE_LOG = False
+        self._OVERLAY_LARGE_LOG_SETTINGS = {
+            "x_pos": 0.0,
+            "y_pos": 0.0,
+            "z_pos": 0.0,
+            "x_rotation": 0.0,
+            "y_rotation": 0.0,
+            "z_rotation": 0.0,
+            "display_duration": 5,
+            "fadeout_duration": 2,
+            "opacity": 1.0,
+            "ui_scaling": 0.5,
+            "tracker": "LeftHand",
+        }
         self._SEND_MESSAGE_TO_VRC = True
         self._SEND_RECEIVED_MESSAGE_TO_VRC = False
         self._LOGGER_FEATURE = False

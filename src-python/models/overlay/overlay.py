@@ -10,7 +10,11 @@ try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
-from utils import printLog
+try:
+    from utils import printLog
+except ImportError:
+    def printLog(*args):
+        print(*args)
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
@@ -63,114 +67,111 @@ def getRightHandBaseMatrix():
     return arr
 
 class Overlay:
-    def __init__(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, display_duration, fadeout_duration, opacity, ui_scaling):
-        self.initialized = False
-        settings = {
-            "color": [1, 1, 1],
-            "opacity": opacity,
-            "x_pos": x_pos,
-            "y_pos": y_pos,
-            "z_pos": z_pos,
-            "x_rotation": x_rotation,
-            "y_rotation": y_rotation,
-            "z_rotation": z_rotation,
-            "display_duration": display_duration,
-            "fadeout_duration": fadeout_duration,
-            "ui_scaling": ui_scaling,
-        }
-        self.settings = settings
+    def __init__(self, settings_dict):
         self.system = None
         self.overlay = None
         self.handle = None
-        self.lastUpdate = time.monotonic()
-        self.thread_overlay = None
-        self.fadeRatio = 1
+        self.initialized = False
         self.loop = True
+        self.thread_overlay = None
+
+        self.settings = {}
+        self.lastUpdate = {}
+        self.fadeRatio = {}
+        for key, value in settings_dict.items():
+                self.settings[key] = value
+                self.lastUpdate[key] = time.monotonic()
+                self.fadeRatio[key] = 1
 
     def init(self):
         try:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
             self.overlay_system = openvr.IVRSystem()
-            self.handle = self.overlay.createOverlay("Overlay_Speaker2log", "Overlay_Speaker2log_UI")
-            self.overlay.showOverlay(self.handle)
+            self.handle = {}
+            for i, size in enumerate(self.settings.keys()):
+                self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
+                self.overlay.showOverlay(self.handle[size])
             self.initialized = True
 
-            self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
-            self.updateColor(self.settings["color"])
-            self.updateOpacity(self.settings["opacity"])
-            self.updateUiScaling(self.settings["ui_scaling"])
-            self.updatePosition(
-                self.settings["x_pos"],
-                self.settings["y_pos"],
-                self.settings["z_pos"],
-                self.settings["x_rotation"],
-                self.settings["y_rotation"],
-                self.settings["z_rotation"],
-            )
+            for size in self.settings.keys():
+                self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
+                self.updateColor([1, 1, 1], size)
+                self.updateOpacity(self.settings[size]["opacity"], size, True)
+                self.updateUiScaling(self.settings[size]["ui_scaling"], size)
+                self.updatePosition(
+                    self.settings[size]["x_pos"],
+                    self.settings[size]["y_pos"],
+                    self.settings[size]["z_pos"],
+                    self.settings[size]["x_rotation"],
+                    self.settings[size]["y_rotation"],
+                    self.settings[size]["z_rotation"],
+                    self.settings[size]["tracker"],
+                    size
+                )
 
         except Exception as e:
             printLog("error:Could not initialise OpenVR", e)
 
-    def updateImage(self, img):
+    def updateImage(self, img, size):
         if self.initialized is True:
             width, height = img.size
             img = img.tobytes()
             img = (ctypes.c_char * len(img)).from_buffer_copy(img)
 
             try:
-                self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
+                self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
             except Exception as e:
                 printLog("error:Could not update image", e)
                 self.initialized = False
                 self.reStartOverlay()
                 while self.initialized is False:
                     time.sleep(0.1)
-                self.overlay.setOverlayRaw(self.handle, img, width, height, 4)
-            self.updateOpacity(self.settings["opacity"])
-            self.lastUpdate = time.monotonic()
+                self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+            self.updateOpacity(self.settings[size]["opacity"], size, True)
+            self.lastUpdate[size] = time.monotonic()
 
-    def clearImage(self):
+    def clearImage(self, size):
         if self.initialized is True:
-            self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)))
+            self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
 
-    def updateColor(self, col):
+    def updateColor(self, col, size):
         """
         col is a 3-tuple representing (r, g, b)
         """
-        self.settings["color"] = col
         if self.initialized is True:
-            r, g, b = self.settings["color"]
-            self.overlay.setOverlayColor(self.handle, r, g, b)
+            r, g, b = col
+            self.overlay.setOverlayColor(self.handle[size], r, g, b)
 
-    def updateOpacity(self, opacity, with_fade=False):
-        self.settings["opacity"] = opacity
+    def updateOpacity(self, opacity, size, with_fade=True):
+        self.settings[size]["opacity"] = opacity
 
         if self.initialized is True:
             if with_fade is True:
-                if self.fadeRatio > 0:
-                    self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
+                if self.fadeRatio[size] > 0:
+                    self.overlay.setOverlayAlpha(self.handle[size], self.fadeRatio[size] * self.settings[size]["opacity"])
             else:
-                self.overlay.setOverlayAlpha(self.handle, self.settings["opacity"])
+                self.overlay.setOverlayAlpha(self.handle[size], self.settings[size]["opacity"])
 
-    def updateUiScaling(self, ui_scaling):
-        self.settings["ui_scaling"] = ui_scaling
+    def updateUiScaling(self, ui_scaling, size):
+        self.settings[size]["ui_scaling"] = ui_scaling
         if self.initialized is True:
-            self.overlay.setOverlayWidthInMeters(self.handle, self.settings["ui_scaling"])
+            self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
 
-    def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker="HMD"):
+    def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker, size):
         """
         x_pos, y_pos, z_pos are floats representing the position of overlay
         x_rotation, y_rotation, z_rotation are floats representing the rotation of overlay
         tracker is a string representing the tracker to use ("HMD", "LeftHand", "RightHand")
         """
 
-        self.settings["x_pos"] = x_pos
-        self.settings["y_pos"] = y_pos
-        self.settings["z_pos"] = z_pos
-        self.settings["x_rotation"] = x_rotation
-        self.settings["y_rotation"] = y_rotation
-        self.settings["z_rotation"] = z_rotation
+        self.settings[size]["x_pos"] = x_pos
+        self.settings[size]["y_pos"] = y_pos
+        self.settings[size]["z_pos"] = z_pos
+        self.settings[size]["x_rotation"] = x_rotation
+        self.settings[size]["y_rotation"] = y_rotation
+        self.settings[size]["z_rotation"] = z_rotation
+        self.settings[size]["tracker"] = tracker
 
         match tracker:
             case "HMD":
@@ -186,23 +187,23 @@ class Overlay:
                 base_matrix = getHMDBaseMatrix()
                 trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
 
-        translation = (self.settings["x_pos"], self.settings["y_pos"], - self.settings["z_pos"])
-        rotation = (self.settings["x_rotation"], self.settings["y_rotation"], self.settings["z_rotation"])
+        translation = (self.settings[size]["x_pos"], self.settings[size]["y_pos"], - self.settings[size]["z_pos"])
+        rotation = (self.settings[size]["x_rotation"], self.settings[size]["y_rotation"], self.settings[size]["z_rotation"])
         transform = utils.transform_matrix(base_matrix, translation, rotation)
-        self.transform = mat34Id(transform)
+        transform = mat34Id(transform)
 
         if self.initialized is True:
             self.overlay.setOverlayTransformTrackedDeviceRelative(
-                self.handle,
+                self.handle[size],
                 trackerIndex,
-                self.transform
+                transform
             )
 
-    def updateDisplayDuration(self, display_duration):
-        self.settings["display_duration"] = display_duration
+    def updateDisplayDuration(self, display_duration, size):
+        self.settings[size]["display_duration"] = display_duration
 
-    def updateFadeoutDuration(self, fadeout_duration):
-        self.settings["fadeout_duration"] = fadeout_duration
+    def updateFadeoutDuration(self, fadeout_duration, size):
+        self.settings[size]["fadeout_duration"] = fadeout_duration
 
     def checkActive(self):
         try:
@@ -216,26 +217,27 @@ class Overlay:
             printLog("error:Could not check SteamVR running", e)
             return False
 
-    def evaluateOpacityFade(self, lastUpdate, currentTime):
-        if (currentTime - lastUpdate) > self.settings["display_duration"]:
-            timeThroughInterval = currentTime - lastUpdate - self.settings["display_duration"]
-            self.fadeRatio = 1 - timeThroughInterval / self.settings["fadeout_duration"]
-            if self.fadeRatio < 0:
-                self.fadeRatio = 0
-            self.overlay.setOverlayAlpha(self.handle, self.fadeRatio * self.settings["opacity"])
+    def evaluateOpacityFade(self, lastUpdate, currentTime, size):
+        if (currentTime - lastUpdate) > self.settings[size]["display_duration"]:
+            timeThroughInterval = currentTime - lastUpdate - self.settings[size]["display_duration"]
+            self.fadeRatio[size] = 1 - timeThroughInterval / self.settings[size]["fadeout_duration"]
+            if self.fadeRatio[size] < 0:
+                self.fadeRatio[size] = 0
+            self.overlay.setOverlayAlpha(self.handle[size], self.fadeRatio[size] * self.settings[size]["opacity"])
 
-    def update(self):
+    def update(self, size):
         currTime = time.monotonic()
-        if self.settings["fadeout_duration"] != 0:
-            self.evaluateOpacityFade(self.lastUpdate, currTime)
+        if self.settings[size]["fadeout_duration"] != 0:
+            self.evaluateOpacityFade(self.lastUpdate[size], currTime, size)
         else:
-            self.updateOpacity(self.settings["opacity"])
+            self.updateOpacity(self.settings[size]["opacity"], size, True)
 
     def mainloop(self):
         self.loop = True
         while self.checkActive() is True and self.loop is True:
             startTime = time.monotonic()
-            self.update()
+            for size in self.settings.keys():
+                self.update(size)
             sleepTime = (1 / 16) - (time.monotonic() - startTime)
             if sleepTime > 0:
                 time.sleep(sleepTime)
@@ -255,8 +257,10 @@ class Overlay:
             self.loop = False
             self.thread_overlay.join()
             self.thread_overlay = None
-        if isinstance(self.overlay, openvr.IVROverlay) and isinstance(self.handle, int):
-            self.overlay.destroyOverlay(self.handle)
+        if isinstance(self.overlay, openvr.IVROverlay):
+            for size in self.settings.keys():
+                if isinstance(self.handle[size], int):
+                    self.overlay.destroyOverlay(self.handle[size])
             self.overlay = None
         if isinstance(self.system, openvr.IVRSystem):
             openvr.shutdown()
@@ -273,45 +277,67 @@ class Overlay:
         return _proc_name in (p.name() for p in process_iter())
 
 if __name__ == "__main__":
-    # from overlay_image import OverlayImage
-    # overlay_image = OverlayImage()
+    from overlay_image import OverlayImage
 
-    # overlay = Overlay(0, 0, 1, 1, 0, 1, 1)
-    # overlay.startOverlay()
-    # time.sleep(1)
+    small_settings = {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 0.5,
+        "tracker": "HMD",
+    }
 
-    # # Example usage
-    # img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-    # overlay.updateImage(img)
-    # time.sleep(100000)
-    
-    # for i in range(100):
-    #     print(i)
-    #     overlay = Overlay(0, 0, 1, 1, 1, 1, 1)
-    #     overlay.startOverlay()
-    #     time.sleep(1)
+    large_settings = {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 0,
+        "opacity": 1.0,
+        "ui_scaling": 0.5,
+        "tracker": "LeftHand",
+    }
 
-    #     # Example usage
-    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese", ui_type="sakura")
-    #     overlay.updateImage(img)
-    #     time.sleep(0.5)
+    settings_dict = {
+        "small": small_settings,
+        "large": large_settings
+    }
 
-    #     img = overlay_image.createOverlayImageShort("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-    #    overlay.updateImage(img)
-    #    time.sleep(0.5)
+    overlay_image = OverlayImage()
+    overlay = Overlay(settings_dict)
+    overlay.startOverlay()
+    time.sleep(1)
 
-    #    overlay.shutdownOverlay()
+    # Example usage
+    img = overlay_image.createOverlayImageLargeLog("send", "こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "large")
 
-    x_pos = 0
-    y_pos = 0
-    z_pos = 0
-    x_rotation = 0
-    y_rotation = 0
-    z_rotation = 0
+    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "small")
+    time.sleep(10)
 
-    base_matrix = getLeftHandBaseMatrix()
-    translation = (x_pos * z_pos, y_pos * z_pos, z_pos)
-    rotation = (x_rotation, y_rotation, z_rotation)
-    transform = utils.transform_matrix(base_matrix, translation, rotation)
-    transform = mat34Id(transform)
-    print(transform)
+    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら2", "Japanese", "Hello,World!Goodbye", "Japanese")
+    overlay.updateImage(img, "small")
+    time.sleep(10)
+
+    for i in range(100):
+        print(i)
+        # Example usage
+        img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
+        overlay.updateImage(img, "small")
+        time.sleep(10)
+
+        # img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
+        # overlay.updateImage(img, "small")
+        # time.sleep(0.5)
+
+    overlay.shutdownOverlay()
