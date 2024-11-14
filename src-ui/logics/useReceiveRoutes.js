@@ -2,6 +2,7 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useIsBackendReady,
     useWindow,
     useMessage,
     useVolume,
@@ -61,6 +62,7 @@ import {
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { updateIsBackendReady } = useIsBackendReady();
     const { restoreWindowGeometry } = useWindow();
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
     const {
@@ -438,6 +440,7 @@ export const useReceiveRoutes = () => {
             case 200:
                 if (parsed_data.endpoint === "/run/initialization_complete") {
                     initDataSyncProcess(parsed_data.result);
+                    updateIsBackendReady(true);
                     break;
                 };
                 const route = routes[parsed_data.endpoint];
