@@ -15,8 +15,9 @@ class OverlayImage:
         self.message_log = []
 
     @staticmethod
-    def concatenateImagesVertically(img1: Image, img2: Image) -> Image:
-        dst = Image.new("RGBA", (img1.width, img1.height + img2.height))
+    def concatenateImagesVertically(img1: Image, img2: Image, margin:int=0) -> Image:
+        total_height = img1.height + img2.height + margin
+        dst = Image.new("RGBA", (img1.width, total_height))
         dst.paste(img1, (0, 0))
         dst.paste(img2, (0, img1.height))
         return dst
@@ -106,6 +107,10 @@ class OverlayImage:
             "width": int(960),
             "font_size_large": int(15*2),
             "font_size_small": int(15*2*2/3),
+            "margin": 25,
+            "radius": 25,
+            "padding": 10,
+            "clause_margin": 20,
         }
 
     @staticmethod
@@ -114,8 +119,8 @@ class OverlayImage:
         background_outline_color = (41, 42, 45)
         text_color_large = (223, 223, 223)
         text_color_small = (190, 190, 190)
-        text_color_send = (70, 161, 146)
-        text_color_receive = (220, 20, 60)
+        text_color_send = (97, 151, 180)
+        text_color_receive = (168, 97, 180)
         text_color_time = (120, 120, 120)
         return {
             "background_color": background_color,
@@ -131,7 +136,8 @@ class OverlayImage:
         ui_size = self.getUiSizeLargeLog()
         font_size_large = ui_size["font_size_large"]
         font_size_small = ui_size["font_size_small"]
-        width = ui_size["width"]
+        ui_width = ui_size["width"]
+        ui_padding = ui_size["padding"]
 
         ui_color = self.getUiColorLargeLog()
         text_color_large = ui_color["text_color_large"]
@@ -140,7 +146,7 @@ class OverlayImage:
         font_size = font_size_large if size == "large" else font_size_small
         text_color = text_color_large if size == "large" else text_color_small
         anchor = "lm" if message_type == "receive" else "rm"
-        text_x = 0 if message_type == "receive" else width
+        text_x = 0 if message_type == "receive" else ui_width
         align = "left" if message_type == "receive" else "right"
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
 
@@ -152,12 +158,12 @@ class OverlayImage:
             font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", f"{font_family}.ttf"), font_size)
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
-        character_line_num = int(width // character_width) - 1
+        character_line_num = int(ui_width // character_width) - 1 # 1 is for margin
         if len(text) > character_line_num:
             text = "\n".join([text[i:i+character_line_num] for i in range(0, len(text), character_line_num)])
-        n_num = len(text.split("\n")) - 1
-        text_height =  int(font_size*(n_num+1.5))
-        img = Image.new("RGBA", (width, text_height), (0, 0, 0, 0))
+        n_num = len(text.split("\n"))
+        text_height =  int(font_size*n_num) + ui_padding
+        img = Image.new("RGBA", (ui_width, text_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         text_y = text_height // 2
         draw.multiline_text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font, align=align)
@@ -165,8 +171,9 @@ class OverlayImage:
 
     def createTextImageMessageType(self, message_type, date_time):
         ui_size = self.getUiSizeLargeLog()
-        width = ui_size["width"]
+        ui_width = ui_size["width"]
         font_size = ui_size["font_size_small"]
+        ui_padding = ui_size["padding"]
 
         ui_color = self.getUiColorLargeLog()
         text_color_send = ui_color["text_color_send"]
@@ -183,14 +190,14 @@ class OverlayImage:
             font = ImageFont.truetype(os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf"), font_size)
         except Exception:
             font = ImageFont.truetype(os_path.join(os_path.dirname(__file__), "..",  "..",  "..", "fonts", "NotoSansJP-Regular.ttf"), font_size)
-        text_height = int(font_size*1.2)
+        text_height = int(font_size) + ui_padding
         text_width = draw.textlength(date_time, font)
         character_width = text_width // len(date_time)
-        img = Image.new("RGBA", (width, text_height), (0, 0, 0, 0))
+        img = Image.new("RGBA", (ui_width, text_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
         text_y = text_height // 2
-        text_time_x = 0 if message_type == "receive" else width - (text_width + character_width)
-        text_x = (text_width + character_width) if message_type == "receive" else width
+        text_time_x = 0 if message_type == "receive" else ui_width - (text_width + character_width)
+        text_x = (text_width + character_width) if message_type == "receive" else ui_width
         draw.text((text_time_x, text_y), date_time, text_color_time, anchor=anchor, stroke_width=0, font=font)
         draw.text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font)
         return img
@@ -209,6 +216,11 @@ class OverlayImage:
         ui_color = self.getUiColorLargeLog()
         background_color = ui_color["background_color"]
         background_outline_color = ui_color["background_outline_color"]
+
+        ui_size = self.getUiSizeLargeLog()
+        ui_margin = ui_size["margin"]
+        ui_radius = ui_size["radius"]
+        ui_clause_margin = ui_size["clause_margin"]
 
         self.message_log.append(
             {
@@ -237,13 +249,13 @@ class OverlayImage:
 
         img = imgs[0]
         for i in imgs[1:]:
-            img = self.concatenateImagesVertically(img, i)
-        img = self.addImageMargin(img, 25, 25, 25, 25, (0, 0, 0, 0))
+            img = self.concatenateImagesVertically(img, i, ui_clause_margin)
+        img = self.addImageMargin(img, ui_margin, ui_margin, ui_margin, ui_margin, (0, 0, 0, 0))
 
         width, height = img.size
         background = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
-        draw.rounded_rectangle([(0, 0), (width, height)], radius=25, fill=background_color, outline=background_outline_color, width=5)
+        draw.rounded_rectangle([(0, 0), (width, height)], radius=ui_radius, fill=background_color, outline=background_outline_color, width=5)
         img = Image.alpha_composite(background, img)
         return img
 
