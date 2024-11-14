@@ -5,6 +5,7 @@ import {
     useWindow,
     useMessage,
     useVolume,
+    useIsSoftwareUpdateAvailable,
 } from "@logics_common";
 
 import {
@@ -32,6 +33,7 @@ import {
     useEnableAutoExportMessageLogs,
     useEnableVrcMicMuteSync,
     useEnableSendMessageToVrc,
+    useEnableSendReceivedMessageToVrc,
     useSelectedFontFamily,
     useUiLanguage,
     useUiScaling,
@@ -80,6 +82,7 @@ export const useReceiveRoutes = () => {
         addSentMessageLog,
         addReceivedMessageLog,
     } = useMessage();
+    const { updateIsSoftwareUpdateAvailable } = useIsSoftwareUpdateAvailable();
     const { updateSoftwareVersion } = useSoftwareVersion();
     const { updateEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { updateEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
@@ -97,6 +100,7 @@ export const useReceiveRoutes = () => {
     const { updateEnableAutoExportMessageLogs } = useEnableAutoExportMessageLogs();
     const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
     const { updateEnableSendMessageToVrc } = useEnableSendMessageToVrc();
+    const { updateEnableSendReceivedMessageToVrc } = useEnableSendReceivedMessageToVrc();
 
     const { updateSendMessageButtonType } = useSendMessageButtonType();
     const { updateUiLanguage } = useUiLanguage();
@@ -152,6 +156,7 @@ export const useReceiveRoutes = () => {
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
+        "/run/update_software_flag": updateIsSoftwareUpdateAvailable,
 
         // Main Page
         // Page Controls
@@ -396,6 +401,10 @@ export const useReceiveRoutes = () => {
         "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/disable/send_message_to_vrc": updateEnableSendMessageToVrc,
 
+        "/get/data/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+        "/set/enable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+        "/set/disable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,
         "/set/data/osc_ip_address": updateOscIpAddress,
@@ -421,7 +430,7 @@ export const useReceiveRoutes = () => {
         const initDataSyncProcess = (payload) => {
             for (const [endpoint, value] of Object.entries(payload)) {
                 const route = routes[endpoint];
-                (route) ? route(value) : console.error(`Invalid endpoint: ${endpoint}\vvalue: ${JSON.stringify(value)}`);
+                (route) ? route(value) : console.error(`Invalid endpoint: ${endpoint}\nvalue: ${JSON.stringify(value)}`);
             }
         };
 
