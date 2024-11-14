@@ -5,6 +5,7 @@ import {
     useWindow,
     useMessage,
     useVolume,
+    useIsSoftwareUpdateAvailable,
 } from "@logics_common";
 
 import {
@@ -81,6 +82,7 @@ export const useReceiveRoutes = () => {
         addSentMessageLog,
         addReceivedMessageLog,
     } = useMessage();
+    const { updateIsSoftwareUpdateAvailable } = useIsSoftwareUpdateAvailable();
     const { updateSoftwareVersion } = useSoftwareVersion();
     const { updateEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { updateEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
@@ -154,6 +156,7 @@ export const useReceiveRoutes = () => {
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
+        "/run/update_software_flag": updateIsSoftwareUpdateAvailable,
 
         // Main Page
         // Page Controls

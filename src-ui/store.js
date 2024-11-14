@@ -108,6 +108,7 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
     transcription_receive: false,
 }, "MainFunctionsStateMemory");
 export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
+export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_IsSoftwareUpdateAvailable } = createAtomWithHook(false, "IsSoftwareUpdateAvailable");
 
 // Main Page
 // Functions
