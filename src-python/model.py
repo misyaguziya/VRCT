@@ -9,6 +9,7 @@ from queue import Queue
 from threading import Thread
 from requests import get as requests_get
 from typing import Callable
+from packaging.version import parse
 
 from flashtext import KeywordProcessor
 from pykakasi import kakasi
@@ -322,9 +323,13 @@ class Model:
         # check update
         update_flag = False
         response = requests_get(config.GITHUB_URL)
-        new_version = response.json()["name"]
-        if new_version != config.VERSION:
-            update_flag = True
+        json_data = response.json()
+        version = json_data.get("name", None)
+        if isinstance(version, str):
+            new_version = parse(version)
+            current_version = parse(config.VERSION)
+            if new_version > current_version:
+                update_flag = True
         return update_flag
 
     @staticmethod
