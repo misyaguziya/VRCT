@@ -250,11 +250,9 @@ class Controller:
                         translation = " (" + "/".join(translation) + ")"
                     model.logger.info(f"[SENT] {message}{translation}")
 
-                # if config.OVERLAY_SMALL_LOG is True:
-                #     overlay_image = model.createOverlayImageShort(message, translation)
-                #     model.updateOverlay(overlay_image)
-                #     overlay_image = model.createOverlayImageLong("send", message, translation)
-                #     model.updateOverlay(overlay_image)
+                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                    overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                    model.updateOverlayLargeLog(overlay_image)
 
     def speakerMessage(self, message) -> None:
         if isinstance(message, bool) and message is False:
@@ -291,12 +289,13 @@ class Controller:
                         transliteration = model.convertMessageToTransliteration(message)
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True:
-                    if model.overlay.initialized is True:
-                        overlay_image = model.createOverlayImageShort(message, translation)
-                        model.updateOverlay(overlay_image)
-                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                    # model.updateOverlay(overlay_image)
+                if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                        overlay_image = model.createOverlayImageSmallLog(message, translation)
+                        model.updateOverlaySmallLog(overlay_image)
+
+                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation)
+                        model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
@@ -361,11 +360,9 @@ class Controller:
                     osc_message = self.messageFormatter("SEND", translation, [message])
                 model.oscSendMessage(osc_message)
 
-            # if config.OVERLAY_SMALL_LOG is True:
-            #     overlay_image = model.createOverlayImageShort(message, translation)
-            #     model.updateOverlay(overlay_image)
-            #     overlay_image = model.createOverlayImageLong("send", message, translation)
-            #     model.updateOverlay(overlay_image)
+            if config.OVERLAY_LARGE_LOG is True:
+                overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                model.updateOverlayLargeLog(overlay_image)
 
             # update textbox message log (Sent)
             if config.LOGGER_FEATURE is True:
@@ -1164,15 +1161,24 @@ class Controller:
         return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
-    def getOverlaySettings(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SETTINGS}
+    def getOverlaySmallLog(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
-    def setOverlaySettings(data, *args, **kwargs) -> dict:
-        config.OVERLAY_SETTINGS = data
-        model.updateOverlayImageOpacity()
-        model.updateOverlayImageUiScaling()
-        return {"status":200, "result":config.OVERLAY_SETTINGS}
+    def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
+        config.OVERLAY_SMALL_LOG = True
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
+        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
+
+    @staticmethod
+    def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
+        config.OVERLAY_SMALL_LOG = False
+        if config.OVERLAY_SMALL_LOG is False:
+            model.clearOverlayImageSmallLog()
+            if config.OVERLAY_LARGE_LOG is False:
+                model.shutdownOverlay()
+        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def getOverlaySmallLogSettings(*args, **kwargs) -> dict:
@@ -1181,28 +1187,38 @@ class Controller:
     @staticmethod
     def setOverlaySmallLogSettings(data, *args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG_SETTINGS = data
-        model.updateOverlayPosition()
+        model.updateOverlaySmallLogSettings()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG_SETTINGS}
 
     @staticmethod
-    def getOverlaySmallLog(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
+    def getOverlayLargeLog(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
-    def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = True
-        if config.OVERLAY_SMALL_LOG is True and config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
-                model.startOverlay()
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
+    def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
+        config.OVERLAY_LARGE_LOG = True
+        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+            model.startOverlay()
+        return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
-    def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = False
-        if config.OVERLAY_SMALL_LOG is False:
-            model.clearOverlayImage()
-            model.shutdownOverlay()
-        return {"status":200, "result":config.OVERLAY_SMALL_LOG}
+    def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
+        config.OVERLAY_LARGE_LOG = False
+        if config.OVERLAY_LARGE_LOG is False:
+            model.clearOverlayImageLargeLog()
+            if config.OVERLAY_SMALL_LOG is False:
+                model.shutdownOverlay()
+        return {"status":200, "result":config.OVERLAY_LARGE_LOG}
+
+    @staticmethod
+    def getOverlayLargeLogSettings(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
+
+    @staticmethod
+    def setOverlayLargeLogSettings(data, *args, **kwargs) -> dict:
+        config.OVERLAY_LARGE_LOG_SETTINGS = data
+        model.updateOverlayLargeLogSettings()
+        return {"status":200, "result":config.OVERLAY_LARGE_LOG_SETTINGS}
 
     @staticmethod
     def getSendMessageToVrc(*args, **kwargs) -> dict:
@@ -1340,6 +1356,10 @@ class Controller:
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionSendMessage()
         config.ENABLE_TRANSCRIPTION_SEND = True
+        if (config.OVERLAY_LARGE_LOG is True and
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
+                model.startOverlay()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -1349,8 +1369,13 @@ class Controller:
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionReceiveMessage()
-        if config.OVERLAY_SMALL_LOG is True:
-            if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
+        if (config.OVERLAY_SMALL_LOG is True and
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
+                model.startOverlay()
+        if (config.OVERLAY_LARGE_LOG is True and
+            model.overlay.initialized is False and
+            model.overlay.checkSteamvrRunning() is True):
                 model.startOverlay()
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
@@ -1380,8 +1405,8 @@ class Controller:
     def sendTextOverlaySmallLog(data, *args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is True:
             if model.overlay.initialized is True:
-                overlay_image = model.createOverlayImage(data)
-                model.updateOverlay(overlay_image)
+                overlay_image = model.createOverlayImageSystemMessage(data)
+                model.updateOverlaySmallLog(overlay_image)
         return {"status":200, "result":data}
 
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:

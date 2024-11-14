@@ -81,20 +81,14 @@ class Model:
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
         self.overlay = Overlay(
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"],
-            config.OVERLAY_SETTINGS["opacity"],
-            config.OVERLAY_SETTINGS["ui_scaling"],
+            {
+                "small": config.OVERLAY_SMALL_LOG_SETTINGS,
+                "large": config.OVERLAY_LARGE_LOG_SETTINGS,
+            }
         )
+        self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+        self.overlay_large_log_pre_settings = config.OVERLAY_LARGE_LOG_SETTINGS
         self.overlay_image = OverlayImage()
-        self.pre_overlay_message = None
-        self.th_overlay = None
         self.mic_audio_queue = None
         self.mic_mute_status = None
         self.kks = kakasi()
@@ -683,20 +677,12 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageShort(self, message, translation):
+    def createOverlayImageSmallLog(self, message, translation):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
         target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        ui_type = config.OVERLAY_UI_TYPE
-        self.pre_overlay_message = {
-            "message" : message,
-            "your_language" : your_language,
-            "translation" : translation,
-            "target_language" : target_language,
-            "ui_type" : ui_type,
-        }
-        return self.overlay_image.createOverlayImageShort(message, your_language, translation, target_language, ui_type)
+        return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
 
-    def createOverlayImage(self, message):
+    def createOverlayImageSystemMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
             "en": "Japanese",
@@ -706,41 +692,83 @@ class Model:
             "zh-Hant":"Chinese Traditional",
         }
         language = convert_languages.get(ui_language, "Japanese")
-        ui_type = config.OVERLAY_UI_TYPE
-        return self.overlay_image.createOverlayImage(message, language, ui_type)
+        return self.overlay_image.createOverlayImageSmallLog(message, language)
 
-    def clearOverlayImage(self):
-        self.overlay.clearImage()
+    def clearOverlayImageSmallLog(self):
+        self.overlay.clearImage("small")
 
-    def updateOverlay(self, img):
-        self.overlay.updateImage(img)
+    def updateOverlaySmallLog(self, img):
+        self.overlay.updateImage(img, "small")
+
+    def updateOverlaySmallLogSettings(self):
+        for key in self.overlay_small_log_pre_settings.keys():
+            if self.overlay_small_log_pre_settings[key] != config.OVERLAY_SMALL_LOG_SETTINGS[key]:
+                match (key):
+                    case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation" | "tracker":
+                        self.overlay.updatePosition(
+                            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
+                            config.OVERLAY_SMALL_LOG_SETTINGS["tracker"],
+                            "small",
+                        )
+                    case "display_duration":
+                        self.overlay.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"], "small")
+                    case "fadeout_duration":
+                        self.overlay.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"], "small")
+                    case "opacity":
+                        self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], "small", True)
+                    case "ui_scaling":
+                        self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], "small")
+                    case _:
+                        pass
+                break
+        self.overlay_small_log_pre_settings = config.OVERLAY_SMALL_LOG_SETTINGS
+
+    def createOverlayImageLargeLog(self, message_type:str, message:str, translation:str):
+        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
+
+    def clearOverlayImageLargeLog(self):
+        self.overlay.clearImage("large")
+
+    def updateOverlayLargeLog(self, img):
+        self.overlay.updateImage(img, "large")
+
+    def updateOverlayLargeLogSettings(self):
+        for key in self.overlay_large_log_pre_settings.keys():
+            if self.overlay_large_log_pre_settings[key] != config.OVERLAY_LARGE_LOG_SETTINGS[key]:
+                match (key):
+                    case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation" | "tracker":
+                        self.overlay.updatePosition(
+                            config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
+                            config.OVERLAY_LARGE_LOG_SETTINGS["tracker"],
+                            "large",
+                        )
+                    case "display_duration":
+                        self.overlay.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"], "large")
+                    case "fadeout_duration":
+                        self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], "large")
+                    case "opacity":
+                        self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], "large", True)
+                    case "ui_scaling":
+                        self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"], "large")
+                    case _:
+                        pass
+                break
+        self.overlay_large_log_pre_settings = config.OVERLAY_LARGE_LOG_SETTINGS
 
     def startOverlay(self):
         self.overlay.startOverlay()
-
-    def updateOverlayPosition(self):
-        self.overlay.updatePosition(
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
-        )
-
-    def updateOverlayTimes(self):
-        display_duration = config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]
-        self.overlay.updateDisplayDuration(display_duration)
-        fadeout_duration = config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]
-        self.overlay.updateFadeoutDuration(fadeout_duration)
-
-    def updateOverlayImageOpacity(self):
-        opacity = config.OVERLAY_SETTINGS["opacity"]
-        self.overlay.updateOpacity(opacity, with_fade=True)
-
-    def updateOverlayImageUiScaling(self):
-        ui_scaling = config.OVERLAY_SETTINGS["ui_scaling"]
-        self.overlay.updateUiScaling(ui_scaling)
 
     def shutdownOverlay(self):
         self.overlay.shutdownOverlay()
