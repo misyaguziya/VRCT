@@ -1006,7 +1006,7 @@ class Config:
                 },
             },
         }
-        self._SELECTED_TRANSCRIPTION_ENGINE = "Whisper"
+        self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._MULTI_LANGUAGE_TRANSLATION = False
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False
