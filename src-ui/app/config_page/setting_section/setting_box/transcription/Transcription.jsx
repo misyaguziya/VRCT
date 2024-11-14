@@ -24,25 +24,30 @@ import {
     RadioButtonContainer,
 } from "../_templates/Templates";
 
+import {
+    SectionLabelComponent,
+} from "../_components/";
+
 export const Transcription = () => {
     return (
-        <>
+        <div className={styles.container}>
             <Mic_Container />
             <Speaker_Container />
             <TranscriptionEngine_Container />
-        </>
+        </div>
     );
 };
 
 
 const Mic_Container = () => {
     return (
-        <>
+        <div>
+            <SectionLabelComponent label="Mic" />
             <MicRecordTimeout_Box />
             <MicPhraseTimeout_Box />
             <MicMaxWords_Box />
             <MicWordFilter_Box />
-        </>
+        </div>
     );
 };
 
@@ -144,11 +149,12 @@ const MicWordFilter_Box = () => {
 
 const Speaker_Container = () => {
     return (
-        <>
+        <div>
+            <SectionLabelComponent label="Speaker" />
             <SpeakerRecordTimeout_Box />
             <SpeakerPhraseTimeout_Box />
             <SpeakerMaxWords_Box />
-        </>
+        </div>
     );
 };
 
@@ -238,10 +244,11 @@ const SpeakerMaxWords_Box = () => {
 
 const TranscriptionEngine_Container = () => {
     return (
-        <>
+        <div>
+            <SectionLabelComponent label="Transcription Engines" />
             <TranscriptionEngine_Box />
             <WhisperWeightType_Box />
-        </>
+        </div>
     );
 };
 
