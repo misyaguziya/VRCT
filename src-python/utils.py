@@ -65,7 +65,7 @@ def splitList(lst:list, split_count:int, to_shuffle:bool=False):
 def encodeBase64(data:str) -> dict:
     return json.loads(base64.b64decode(data).decode('utf-8'))
 
-def removeLogFiles():
+def removeLog():
     with open('process.log', 'w', encoding="utf-8") as f:
         f.write("")
 
