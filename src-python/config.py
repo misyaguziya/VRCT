@@ -759,6 +759,10 @@ class Config:
         if isinstance(value, dict) and set(value.keys()) == set(self.OVERLAY_SMALL_LOG_SETTINGS.keys()):
             for key, value in value.items():
                 match (key):
+                    case "tracker":
+                        if isinstance(value, str):
+                            # "HMD", "LeftHand", "RightHand"
+                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
                         if isinstance(value, (int, float)):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = float(value)
