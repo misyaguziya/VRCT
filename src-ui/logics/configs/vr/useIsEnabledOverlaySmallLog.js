@@ -7,7 +7,7 @@ export const useIsEnabledOverlaySmallLog = () => {
 
     const getIsEnabledOverlaySmallLog = () => {
         pendingIsEnabledOverlaySmallLog();
-        asyncStdoutToPython("/get/data/overlay_settings");
+        asyncStdoutToPython("/get/data/overlay_small_log");
     };
 
     const toggleIsEnabledOverlaySmallLog = () => {

@@ -41,8 +41,9 @@ export { useCTranslate2WeightTypeStatus } from "./translation/useCTranslate2Weig
 export { useSelectedCTranslate2WeightType } from "./translation/useSelectedCTranslate2WeightType";
 
 export { useIsEnabledOverlaySmallLog } from "./vr/useIsEnabledOverlaySmallLog";
-export { useOverlaySettings } from "./vr/useOverlaySettings";
 export { useOverlaySmallLogSettings } from "./vr/useOverlaySmallLogSettings";
+export { useIsEnabledOverlayLargeLog } from "./vr/useIsEnabledOverlayLargeLog";
+export { useOverlayLargeLogSettings } from "./vr/useOverlayLargeLogSettings";
 
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
