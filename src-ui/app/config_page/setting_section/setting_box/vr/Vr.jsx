@@ -4,6 +4,7 @@ import { clsx } from "clsx";
 import styles from "./Vr.module.scss";
 import { Slider } from "../_components/";
 import {
+    RadioButtonContainer,
     SwitchBoxContainer,
 } from "../_templates/Templates";
 import {
@@ -25,7 +26,6 @@ export const Vr = () => {
 
     const { currentOverlayLargeLogSettings, setOverlayLargeLogSettings } = useOverlayLargeLogSettings();
     const { currentIsEnabledOverlayLargeLog, toggleIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
-
     return (
         <div className={styles.container}>
             <div className={styles.wrapper}>
@@ -37,6 +37,7 @@ export const Vr = () => {
                     />
                 {is_opened_small_settings ? (
                     <OverlaySettingsContainer
+                    id="overlay_settings_small"
                     current_overlay_settings={currentOverlaySmallLogSettings.data}
                     set_overlay_settings={setOverlaySmallLogSettings}
                     current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
@@ -44,6 +45,7 @@ export const Vr = () => {
                     />
                 ) : (
                     <OverlaySettingsContainer
+                    id="overlay_settings_large"
                     current_overlay_settings={currentOverlayLargeLogSettings.data}
                     set_overlay_settings={setOverlayLargeLogSettings}
                     current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
@@ -60,6 +62,7 @@ const OverlaySettingsContainer = ({
     set_overlay_settings,
     current_is_enabled_overlay,
     toggle_is_enabled_overlay,
+    id
 }) => {
 
     const { t } = useTranslation();
@@ -88,6 +91,12 @@ const OverlaySettingsContainer = ({
         setTimeoutId(newTimeoutId);
     };
 
+    const selectTrackerFunction = (value) => {
+        const new_data = { ...settings, tracker: value };
+        set_overlay_settings(new_data);
+    };
+
+
     return (
         <>
             <SwitchBoxContainer
@@ -110,6 +119,18 @@ const OverlaySettingsContainer = ({
                 )}
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} />
+            <RadioButtonContainer
+                label={t("overlay_settings.tracker")}
+                selectFunction={selectTrackerFunction}
+                name={id}
+                options={[
+                    { id: "HMD", label: "HMD" },
+                    { id: "LeftHand", label: "LeftHand" },
+                    { id: "RightHand", label: "RightHand" },
+                ]}
+                checked_variable={{data: settings.tracker}}
+                column={true}
+            />
         </>
     );
 };

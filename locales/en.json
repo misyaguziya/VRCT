@@ -72,7 +72,8 @@
         "opacity": "Opacity",
         "ui_scaling": "UI Scaling",
         "display_duration": "Display duration",
-        "fadeout_duration": "Fadeout duration"
+        "fadeout_duration": "Fadeout duration",
+        "tracker": "Tracker"
     },
     "config_page": {
         "config_title": "Settings",

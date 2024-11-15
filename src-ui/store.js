@@ -216,6 +216,7 @@ export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_Ove
     z_rotation: 0.0,
     display_duration: 5,
     fadeout_duration: 2,
+    tracker: "HMD",
 }, "OverlaySmallLogSettings");
 export const { atomInstance: Atom_IsEnabledOverlaySmallLog, useHook: useStore_IsEnabledOverlaySmallLog } = createAtomWithHook(false, "IsEnabledOverlaySmallLog");
 export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_OverlayLargeLogSettings } = createAtomWithHook({
@@ -227,6 +228,7 @@ export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_Ove
     z_rotation: 0.0,
     display_duration: 5,
     fadeout_duration: 2,
+    tracker: "HMD",
 }, "OverlayLargeLogSettings");
 export const { atomInstance: Atom_IsEnabledOverlayLargeLog, useHook: useStore_IsEnabledOverlayLargeLog } = createAtomWithHook(false, "IsEnabledOverlayLargeLog");
 
