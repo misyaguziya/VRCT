@@ -54,9 +54,10 @@ import {
     useSelectedTranscriptionEngine,
     useSelectedWhisperWeightType,
     useWhisperWeightTypeStatus,
-    useOverlaySettings,
     useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
+    useIsEnabledOverlayLargeLog,
+    useOverlayLargeLogSettings,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -144,9 +145,10 @@ export const useReceiveRoutes = () => {
         downloadedWhisperWeightType,
     } = useWhisperWeightTypeStatus();
 
-    const { updateOverlaySettings } = useOverlaySettings();
     const { updateOverlaySmallLogSettings } = useOverlaySmallLogSettings();
     const { updateIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
+    const { updateOverlayLargeLogSettings } = useOverlayLargeLogSettings();
+    const { updateIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -372,15 +374,19 @@ export const useReceiveRoutes = () => {
         "/run/downloaded_whisper_weight": downloadedWhisperWeightType,
 
         // VR
-        "/get/data/overlay_settings": updateOverlaySettings,
-        "/set/data/overlay_settings": updateOverlaySettings,
-
         "/get/data/overlay_small_log": updateIsEnabledOverlaySmallLog,
         "/set/enable/overlay_small_log": updateIsEnabledOverlaySmallLog,
         "/set/disable/overlay_small_log": updateIsEnabledOverlaySmallLog,
 
         "/get/data/overlay_small_log_settings": updateOverlaySmallLogSettings,
         "/set/data/overlay_small_log_settings": updateOverlaySmallLogSettings,
+
+        "/get/data/overlay_large_log": updateIsEnabledOverlayLargeLog,
+        "/set/enable/overlay_large_log": updateIsEnabledOverlayLargeLog,
+        "/set/disable/overlay_large_log": updateIsEnabledOverlayLargeLog,
+
+        "/get/data/overlay_large_log_settings": updateOverlayLargeLogSettings,
+        "/set/data/overlay_large_log_settings": updateOverlayLargeLogSettings,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,
