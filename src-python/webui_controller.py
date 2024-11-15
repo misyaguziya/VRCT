@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import isUniqueStrings, printLog
+from utils import isUniqueStrings, removeLog, printLog
 import torch
 
 class Controller:
@@ -1694,6 +1694,7 @@ class Controller:
         return {"status":200, "result":True}
 
     def init(self, *args, **kwargs) -> None:
+        removeLog()
         printLog("Start Initialization")
 
         printLog("Start check DeepL API Key")
@@ -1707,19 +1708,30 @@ class Controller:
         # download CTranslate2 Model Weight
         printLog("Download CTranslate2 Model Weight")
         weight_type = config.CTRANSLATE2_WEIGHT_TYPE
+        th_download_ctranslate2 = None
         if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:
-            self.downloadCtranslate2Weight(weight_type, False)
+            th_download_ctranslate2 = Thread(target=self.downloadCtranslate2Weight, args=(weight_type, False))
+            th_download_ctranslate2.daemon = True
+            th_download_ctranslate2.start()
+
+        # download Whisper Model Weight
+        printLog("Download Whisper Model Weight")
+        weight_type = config.WHISPER_WEIGHT_TYPE
+        th_download_whisper = None
+        if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
+            th_download_whisper = Thread(target=self.downloadWhisperWeight, args=(weight_type, False))
+            th_download_whisper.daemon = True
+            th_download_whisper.start()
+
+        if isinstance(th_download_ctranslate2, Thread):
+            th_download_ctranslate2.join()
+        if isinstance(th_download_whisper, Thread):
+            th_download_whisper.join()
 
         # set Translation Engine
         printLog("Set Translation Engine")
         self.updateDownloadedCTranslate2ModelWeight()
         self.updateTranslationEngineAndEngineList()
-
-        # download Whisper Model Weight
-        printLog("Download Whisper Model Weight")
-        weight_type = config.WHISPER_WEIGHT_TYPE
-        if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
-            self.downloadWhisperWeight(weight_type, False)
 
         # set Transcription Engine
         printLog("Set Transcription Engine")
