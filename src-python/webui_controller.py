@@ -251,7 +251,7 @@ class Controller:
                     model.logger.info(f"[SENT] {message}{translation}")
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                    overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                     model.updateOverlayLargeLog(overlay_image)
 
     def speakerMessage(self, message) -> None:
@@ -290,11 +290,11 @@ class Controller:
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
-                        overlay_image = model.createOverlayImageSmallLog(message, translation)
+                        overlay_image = model.createOverlayImageSmallLog(message, translation[0] if len(translation) > 0 else "")
                         model.updateOverlaySmallLog(overlay_image)
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation)
+                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation[0] if len(translation) > 0 else "")
                         model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
@@ -361,7 +361,7 @@ class Controller:
                 model.oscSendMessage(osc_message)
 
             if config.OVERLAY_LARGE_LOG is True:
-                overlay_image = model.createOverlayImageLargeLog("send", message, translation)
+                overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                 model.updateOverlayLargeLog(overlay_image)
 
             # update textbox message log (Sent)
@@ -1167,8 +1167,7 @@ class Controller:
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = True
-        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
-            model.startOverlay()
+        model.startOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1197,8 +1196,7 @@ class Controller:
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = True
-        if model.overlay.initialized is False and model.overlay.checkSteamvrRunning() is True:
-            model.startOverlay()
+        model.startOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1356,10 +1354,8 @@ class Controller:
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionSendMessage()
         config.ENABLE_TRANSCRIPTION_SEND = True
-        if (config.OVERLAY_LARGE_LOG is True and
-            model.overlay.initialized is False and
-            model.overlay.checkSteamvrRunning() is True):
-                model.startOverlay()
+        if config.OVERLAY_LARGE_LOG is True:
+            model.startOverlay()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -1369,14 +1365,8 @@ class Controller:
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionReceiveMessage()
-        if (config.OVERLAY_SMALL_LOG is True and
-            model.overlay.initialized is False and
-            model.overlay.checkSteamvrRunning() is True):
-                model.startOverlay()
-        if (config.OVERLAY_LARGE_LOG is True and
-            model.overlay.initialized is False and
-            model.overlay.checkSteamvrRunning() is True):
-                model.startOverlay()
+        if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
+            model.startOverlay()
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
