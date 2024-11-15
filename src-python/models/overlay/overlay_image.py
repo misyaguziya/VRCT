@@ -51,10 +51,12 @@ class OverlayImage:
         font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+
         try:
+            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -126,10 +128,12 @@ class OverlayImage:
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+
         try:
+            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -158,10 +162,12 @@ class OverlayImage:
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
-        font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", "NotoSansJP-Regular.ttf")
+
         try:
+            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", "NotoSansJP-Regular.ttf")
             font = ImageFont.truetype(font_path, font_size)
 
         text_height = font_size + ui_padding
