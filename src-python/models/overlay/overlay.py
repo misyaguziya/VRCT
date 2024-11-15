@@ -92,7 +92,6 @@ class Overlay:
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
                 self.overlay.showOverlay(self.handle[size])
-            self.initialized = True
 
             for size in self.settings.keys():
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
@@ -109,6 +108,7 @@ class Overlay:
                     self.settings[size]["tracker"],
                     size
                 )
+            self.initialized = True
 
         except Exception as e:
             printLog("error:Could not initialise OpenVR", e)
@@ -248,9 +248,10 @@ class Overlay:
             self.mainloop()
 
     def startOverlay(self):
-        self.thread_overlay = Thread(target=self.main)
-        self.thread_overlay.daemon = True
-        self.thread_overlay.start()
+        if self.checkSteamvrRunning() and self.initialized is False:
+            self.thread_overlay = Thread(target=self.main)
+            self.thread_overlay.daemon = True
+            self.thread_overlay.start()
 
     def shutdownOverlay(self):
         if isinstance(self.thread_overlay, Thread):
@@ -315,7 +316,9 @@ if __name__ == "__main__":
     overlay_image = OverlayImage()
     overlay = Overlay(settings_dict)
     overlay.startOverlay()
-    time.sleep(1)
+
+    while overlay.initialized is False:
+        time.sleep(1)
 
     # Example usage
     img = overlay_image.createOverlayImageLargeLog("send", "こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
