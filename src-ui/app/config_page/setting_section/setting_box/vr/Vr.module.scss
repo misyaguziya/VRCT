@@ -5,14 +5,25 @@
     justify-content: center;
     position: relative;
     padding: 2rem;
+    width: 100%;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 56rem;
+    gap: 2rem;
 }
 
 .controller_type_switch {
-    margin-top: 6rem;
+    margin-top: 2rem;
     display: flex;
     border: 0.1rem solid var(--dark_600_color);
     border-radius: 0.4rem;
-    width: 50%;
+    width: 80%;
     align-items: center;
     justify-content: center;
     cursor: pointer;
@@ -151,41 +162,6 @@
     height: 100%;
 }
 
-
-
-
-.common_controls {
-    padding-top: 4rem;
-    padding-bottom: 2rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    width: 100%;
-    max-width: 56rem;
-    border-bottom: 0.1rem solid var(--dark_700_color);
-}
-
-.common_controls_wrapper {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    position: relative;
-}
-.common_controls_slider {
-    margin-left: 18rem;
-}
-
-.common_controls_slider_label {
-    position: absolute;
-    font-size: 1.6rem;
-    width: 100%;
-}
-
-
-
 .other_controls {
     margin-top: 6rem;
     display: flex;
@@ -193,7 +169,6 @@
     align-items: center;
     gap: 2rem;
     width: 100%;
-    max-width: 56rem;
 }
 
 .other_controls_wrapper {
