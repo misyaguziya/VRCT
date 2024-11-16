@@ -71,6 +71,7 @@ class Overlay:
         self.system = None
         self.overlay = None
         self.handle = None
+        self.init_process = False
         self.initialized = False
         self.loop = True
         self.thread_overlay = None
@@ -109,6 +110,7 @@ class Overlay:
                     size
                 )
             self.initialized = True
+            self.init_process = False
 
         except Exception as e:
             printLog("error:Could not initialise OpenVR", e)
@@ -243,12 +245,15 @@ class Overlay:
                 time.sleep(sleepTime)
 
     def main(self):
+        while self.checkSteamvrRunning() is False:
+            time.sleep(10)
         self.init()
         if self.initialized is True:
             self.mainloop()
 
     def startOverlay(self):
-        if self.checkSteamvrRunning() and self.initialized is False:
+        if self.initialized is False and self.init_process is False:
+            self.init_process = True
             self.thread_overlay = Thread(target=self.main)
             self.thread_overlay.daemon = True
             self.thread_overlay.start()
