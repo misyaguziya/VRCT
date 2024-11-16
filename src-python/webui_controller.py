@@ -1354,8 +1354,6 @@ class Controller:
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionSendMessage()
         config.ENABLE_TRANSCRIPTION_SEND = True
-        if config.OVERLAY_LARGE_LOG is True:
-            model.startOverlay()
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
@@ -1365,8 +1363,6 @@ class Controller:
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
         self.startThreadingTranscriptionReceiveMessage()
-        if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
-            model.startOverlay()
         config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
@@ -1762,6 +1758,10 @@ class Controller:
 
         if config.AUTO_SPEAKER_SELECT is True:
             self.setEnableAutoSpeakerSelect()
+
+        printLog("Init Overlay")
+        if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
+            model.startOverlay()
 
         self.updateConfigSettings()
 
