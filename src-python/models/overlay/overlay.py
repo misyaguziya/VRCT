@@ -93,6 +93,7 @@ class Overlay:
             for i, size in enumerate(self.settings.keys()):
                 self.handle[size] = self.overlay.createOverlay(f"VRCT{i}", f"VRCT{i}")
                 self.overlay.showOverlay(self.handle[size])
+            self.initialized = True
 
             for size in self.settings.keys():
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
@@ -109,7 +110,6 @@ class Overlay:
                     self.settings[size]["tracker"],
                     size
                 )
-            self.initialized = True
             self.init_process = False
 
         except Exception as e:
