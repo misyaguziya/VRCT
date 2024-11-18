@@ -80,9 +80,9 @@ class Overlay:
         self.lastUpdate = {}
         self.fadeRatio = {}
         for key, value in settings_dict.items():
-                self.settings[key] = value
-                self.lastUpdate[key] = time.monotonic()
-                self.fadeRatio[key] = 1
+            self.settings[key] = value
+            self.lastUpdate[key] = time.monotonic()
+            self.fadeRatio[key] = 1
 
     def init(self):
         try:
@@ -110,6 +110,8 @@ class Overlay:
                     self.settings[size]["tracker"],
                     size
                 )
+                self.updateDisplayDuration(self.settings[size]["display_duration"], size)
+                self.updateFadeoutDuration(self.settings[size]["fadeout_duration"], size)
             self.init_process = False
 
         except Exception as e:
@@ -329,23 +331,16 @@ if __name__ == "__main__":
     img = overlay_image.createOverlayImageLargeLog("send", "こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
     overlay.updateImage(img, "large")
 
-    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-    overlay.updateImage(img, "small")
-    time.sleep(10)
-
-    img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら2", "Japanese", "Hello,World!Goodbye", "Japanese")
-    overlay.updateImage(img, "small")
-    time.sleep(10)
-
     for i in range(100):
         print(i)
         # Example usage
         img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
         overlay.updateImage(img, "small")
-        time.sleep(10)
+        time.sleep(5)
 
-        # img = overlay_image.createOverlayImageSmallLog("こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-        # overlay.updateImage(img, "small")
-        # time.sleep(0.5)
+        if i%2 == 0:
+            overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "HMD", "small")
+        else:
+            overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "RightHand", "small")
 
     overlay.shutdownOverlay()
