@@ -19,8 +19,10 @@ export const TranslatorSelectorOpenButton = () => {
 
     const translation_engines = updateLabelsById(currentTranslationEngines.data, new_labels);
 
+    const selected_engine_id = currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data];
+
     const getSelectedLabel = () => {
-        const selected_engine_id = currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data];
+
         const selected_engine = translation_engines.find(
             d => d.id === selected_engine_id
         );
@@ -45,7 +47,7 @@ export const TranslatorSelectorOpenButton = () => {
             </div>
             {currentIsOpenedTranslatorSelector.data &&
                 <TranslatorSelector
-                    selected_id={currentSelectedTranslationEngines}
+                    selected_id={selected_engine_id}
                     translation_engines={translation_engines}
                 />
             }
