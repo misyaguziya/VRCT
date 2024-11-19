@@ -16,7 +16,7 @@ export const RadioButton = (props) => {
 
                 const labelClass = clsx(styles.radio_button_wrapper, {
                     [styles.is_selected]: props.checked_variable.data === option.id,
-                    [styles.disabled]: option.disabled === true,
+                    [styles.disabled]: option.disabled === true || props.checked_variable.state === "pending",
                 });
 
                 return (
@@ -29,7 +29,7 @@ export const RadioButton = (props) => {
                                 value={option.id}
                                 onChange={() => props.selectFunction(option.id)}
                                 checked={props.checked_variable.data === option.id}
-                                disabled={option.disabled === true}
+                                disabled={option.disabled === true || props.checked_variable.state === "pending"}
                             />
                             <p className={styles.radio_button_label}>{option.label}</p>
                         </label>
