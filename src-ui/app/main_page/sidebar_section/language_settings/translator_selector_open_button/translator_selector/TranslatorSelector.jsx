@@ -30,17 +30,19 @@ export const TranslatorSelector = ({selected_id, translation_engines}) => {
 };
 
 const TranslatorBox = (props) => {
-    const { currentSelectedPresetTabNumber, currentSelectedTranslationEngines, setSelectedTranslationEngines} = useLanguageSettings();
+    const { setSelectedTranslationEngines} = useLanguageSettings();
     const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 
     const box_class_name = clsx(
         styles.box,
-        { [styles["is_selected"]]: (currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data] === props.id) ? true : false },
-        { [styles["is_available"]]: (props.is_available === true) ? true : false }
+        { [styles.is_selected]: props.is_selected },
+        { [styles.is_available]: props.is_available }
     );
 
     const selectTranslator = () => {
-        setSelectedTranslationEngines(props.id);
+        if (props.is_selected === false) {
+            setSelectedTranslationEngines(props.id);
+        }
         updateIsOpenedTranslatorSelector(false);
     };
     return (
