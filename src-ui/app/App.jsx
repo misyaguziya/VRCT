@@ -143,7 +143,6 @@ const UiSizeController = () => {
 
     useEffect(() => {
         document.documentElement.style.setProperty("font-size", `${font_size}%`);
-        document.documentElement.style.setProperty("font-family", `Yu Gothic UI`);
     }, [currentUiScaling.data]);
 
     return null;
@@ -153,7 +152,7 @@ const UiSizeController = () => {
 const FontFamilyController = () => {
     const { currentSelectedFontFamily } = useSelectedFontFamily();
     useEffect(() => {
-        document.documentElement.style.setProperty("font-family", `${currentSelectedFontFamily.data}`);
+        document.documentElement.style.setProperty("--font_family", currentSelectedFontFamily.data);
     }, [currentSelectedFontFamily.data]);
 
     return null;

@@ -4,7 +4,6 @@
 :root {
     font-size: 62.5%;
     color: #F2F2F2;
-    font-family: "Yu Gothic UI";
 }
 
 * {
@@ -24,7 +23,7 @@
 
 html, body {
     height: 100%;
-    font-family: "Yu Gothic UI"; /* If not found the font family where 'root:' that is selected by user*/
+    font-family: var(--font_family); /* If not found the font family where 'root:' that is selected by user*/
     border-radius: 1.8rem;
 }
 
