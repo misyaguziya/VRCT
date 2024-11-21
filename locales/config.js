@@ -5,6 +5,7 @@ import translation_en from "./en.json";
 import translation_ja from "./ja.json";
 import translation_ko from "./ko.json";
 import translation_zh_Hant from "./zh-Hant.json";
+import translation_zh_Hans from "./zh-Hans.json";
 
 
 const resources = {
@@ -12,6 +13,7 @@ const resources = {
     ja: { translation: translation_ja },
     ko: { translation: translation_ko },
     "zh-Hant": { translation: translation_zh_Hant },
+    "zh-Hans": { translation: translation_zh_Hans },
 };
 
 i18n
