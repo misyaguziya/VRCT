@@ -21,6 +21,7 @@ export const LogBox = () => {
     useEffect(() => {
         const handleScroll = () => {
             const element = log_container_ref.current;
+            if (!element) return;
             const currentScrollTop = element.scrollTop;
             const at_bottom = element.scrollHeight - currentScrollTop === element.clientHeight;
 
