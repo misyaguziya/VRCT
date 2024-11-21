@@ -37,6 +37,7 @@ run_mapping = {
 
     "update_software_flag":"/run/update_software_flag",
 
+    "initialization_progress":"/run/initialization_progress",
     "initialization_complete":"/run/initialization_complete",
 }
 
