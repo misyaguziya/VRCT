@@ -1,4 +1,6 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
+
 import { useStartPython } from "@logics/useStartPython";
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
 import { MainPage } from "./main_page/MainPage";
@@ -11,6 +13,7 @@ import { useIsBackendReady } from "@logics_common";
 export const App = () => {
     const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
+    const { i18n } = useTranslation();
 
     return (
         <div className={styles.container}>
@@ -24,7 +27,7 @@ export const App = () => {
 
             {currentIsBackendReady.data === false
             ? <SplashComponent />
-            : <Contents />
+            : <Contents  key={i18n.language}/>
             }
         </div>
     );
@@ -80,12 +83,13 @@ const StartPythonFacadeComponent = () => {
     return null;
 };
 
-import { useTranslation } from "react-i18next";
 const UiLanguageController = () => {
     const { currentUiLanguage } = useUiLanguage();
     const { i18n } = useTranslation();
 
     useEffect(() => {
+        console.log(currentUiLanguage.data);
+
         i18n.changeLanguage(currentUiLanguage.data);
     }, [currentUiLanguage.data]);
     return null;
