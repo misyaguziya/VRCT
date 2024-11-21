@@ -144,7 +144,7 @@ class Controller:
             printLog("CTranslate2 Weight Download Progress", progress)
             self.run(
                 200,
-                self.run_mapping["download_ctranslate2_weight"],
+                self.run_mapping["download_progress_ctranslate2_weight"],
                 {"weight_type": self.weight_type, "progress": progress},
             )
 
@@ -169,7 +169,7 @@ class Controller:
             printLog("Whisper Weight Download Progress", progress)
             self.run(
                 200,
-                self.run_mapping["download_whisper_weight"],
+                self.run_mapping["download_progress_whisper_weight"],
                 {"weight_type": self.weight_type, "progress": progress},
             )
 
