@@ -20,9 +20,9 @@ run_mapping = {
     "error_translation_engine":"/run/error_translation_engine",
     "word_filter":"/run/word_filter",
 
-    "download_ctranslate2_weight":"/run/download_ctranslate2_weight",
+    "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
     "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
-    "download_whisper_weight":"/run/download_whisper_weight",
+    "download_progress_whisper_weight":"/run/download_progress_whisper_weight",
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
 
     "selected_mic_device":"/run/selected_mic_device",
