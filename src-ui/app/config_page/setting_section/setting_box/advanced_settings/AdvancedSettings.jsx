@@ -86,8 +86,7 @@ const OpenConfigFolderContainer = () => {
     return (
         <>
             <ActionButtonContainer
-                label={t("config_page.auto_export_message_logs.label")}
-                desc={t("config_page.auto_export_message_logs.desc")}
+                label={t("config_page.open_config_filepath.label")}
                 IconComponent={OpenFolderSvg}
                 onclickFunction={openFolder_ConfigFile}
             />
