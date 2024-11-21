@@ -1045,7 +1045,7 @@ class Config:
             "width": 870,
             "height": 654,
         }
-        self._AUTO_MIC_SELECT = False
+        self._AUTO_MIC_SELECT = True
         self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
         self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
         self._MIC_THRESHOLD = 300
@@ -1056,7 +1056,7 @@ class Config:
         self._MIC_WORD_FILTER = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
-        self._AUTO_SPEAKER_SELECT = False
+        self._AUTO_SPEAKER_SELECT = True
         self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
         self._SPEAKER_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
