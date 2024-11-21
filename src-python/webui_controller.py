@@ -144,7 +144,7 @@ class Controller:
             printLog("CTranslate2 Weight Download Progress", progress)
             self.run(
                 200,
-                self.run_mapping["download_ctranslate2_weight"],
+                self.run_mapping["download_progress_ctranslate2_weight"],
                 {"weight_type": self.weight_type, "progress": progress},
             )
 
@@ -169,7 +169,7 @@ class Controller:
             printLog("Whisper Weight Download Progress", progress)
             self.run(
                 200,
-                self.run_mapping["download_whisper_weight"],
+                self.run_mapping["download_progress_whisper_weight"],
                 {"weight_type": self.weight_type, "progress": progress},
             )
 
@@ -1679,9 +1679,12 @@ class Controller:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
+    def initializationProgress(self, progress):
+        self.run(200, self.run_mapping["initialization_progress"], progress)
+
     def init(self, *args, **kwargs) -> None:
-        removeLog()
         printLog("Start Initialization")
+        removeLog()
 
         printLog("Start check DeepL API Key")
         if config.AUTH_KEYS["DeepL_API"] is not None:
@@ -1690,6 +1693,8 @@ class Controller:
                 auth_keys = config.AUTH_KEYS
                 auth_keys["DeepL_API"] = None
                 config.AUTH_KEYS = auth_keys
+
+        self.initializationProgress(1)
 
         # download CTranslate2 Model Weight
         printLog("Download CTranslate2 Model Weight")
@@ -1714,6 +1719,8 @@ class Controller:
         if isinstance(th_download_whisper, Thread):
             th_download_whisper.join()
 
+        self.initializationProgress(2)
+
         # set Translation Engine
         printLog("Set Translation Engine")
         self.updateDownloadedCTranslate2ModelWeight()
@@ -1723,6 +1730,8 @@ class Controller:
         printLog("Set Transcription Engine")
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
+
+        self.initializationProgress(3)
 
         # set Compute CPU or CUDA
         printLog("Set Compute CPU or CUDA")
@@ -1748,6 +1757,7 @@ class Controller:
             self.setEnableVrcMicMuteSync()
 
         # init Auto device selection
+        printLog("Init Device Manager")
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
         device_manager.setCallbackSpeakerDeviceList(self.updateSpeakerDeviceList)
@@ -1755,7 +1765,6 @@ class Controller:
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
             self.setEnableAutoMicSelect()
-
         if config.AUTO_SPEAKER_SELECT is True:
             self.setEnableAutoSpeakerSelect()
 
@@ -1763,8 +1772,10 @@ class Controller:
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
             model.startOverlay()
 
+        self.initializationProgress(4)
+
+        printLog("Update settings")
         self.updateConfigSettings()
 
         printLog("End Initialization")
-
         self.startWatchdog()
