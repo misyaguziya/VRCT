@@ -96,13 +96,13 @@ class OverlayImage:
     @staticmethod
     def getUiSizeLargeLog() -> dict:
         return {
-            "width": 960,
-            "font_size_large": 30,
-            "font_size_small": 20,
-            "margin": 25,
-            "radius": 25,
-            "padding": 10,
-            "clause_margin": 20,
+            "width": 960*4,
+            "font_size_large": 30*4,
+            "font_size_small": 20*4,
+            "margin": 25*4,
+            "radius": 25*4,
+            "padding": 10*4,
+            "clause_margin": 20*4,
         }
 
     @staticmethod
