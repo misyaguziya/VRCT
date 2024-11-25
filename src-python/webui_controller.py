@@ -1310,8 +1310,11 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        config.VRC_MIC_MUTE_SYNC = True
-        model.setMuteSelfStatus()
+        if config.RECEIVE_OSC_RUNNING is True:
+            config.VRC_MIC_MUTE_SYNC = True
+            model.setMuteSelfStatus()
+        else:
+            config.VRC_MIC_MUTE_SYNC = False
         model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
@@ -1752,7 +1755,7 @@ class Controller:
 
         # init OSC receive
         printLog("Init OSC Receive")
-        model.startReceiveOSC()
+        config.RECEIVE_OSC_RUNNING = model.startReceiveOSC()
         if config.VRC_MIC_MUTE_SYNC is True:
             self.setEnableVrcMicMuteSync()
 
