@@ -183,6 +183,15 @@ class Config:
         if isinstance(value, dict):
             self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = value
 
+    @property
+    def RECEIVE_OSC_RUNNING(self):
+        return self._RECEIVE_OSC_RUNNING
+
+    @RECEIVE_OSC_RUNNING.setter
+    def RECEIVE_OSC_RUNNING(self, value):
+        if isinstance(value, bool):
+            self._RECEIVE_OSC_RUNNING = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -925,21 +934,6 @@ class Config:
         self._UI_SCALING_RANGE = (40, 200)
         self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
         self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
-            "small": False,
-            "large": False,
-        }
-
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
-            "tiny": False,
-            "base": False,
-            "small": False,
-            "medium": False,
-            "large-v1": False,
-            "large-v2": False,
-            "large-v3": False,
-        }
-
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
         self._WATCHDOG_TIMEOUT = 60
@@ -952,6 +946,20 @@ class Config:
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
+            "small": False,
+            "large": False,
+        }
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
+            "tiny": False,
+            "base": False,
+            "small": False,
+            "medium": False,
+            "large-v1": False,
+            "large-v2": False,
+            "large-v3": False,
+        }
+        self._RECEIVE_OSC_RUNNING = False
 
         # Save Json Data
         ## Main Window
