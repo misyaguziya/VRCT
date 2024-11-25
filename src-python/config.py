@@ -183,15 +183,6 @@ class Config:
         if isinstance(value, dict):
             self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = value
 
-    @property
-    def RECEIVE_OSC_RUNNING(self):
-        return self._RECEIVE_OSC_RUNNING
-
-    @RECEIVE_OSC_RUNNING.setter
-    def RECEIVE_OSC_RUNNING(self, value):
-        if isinstance(value, bool):
-            self._RECEIVE_OSC_RUNNING = value
-
     # Save Json Data
     ## Main Window
     @property
@@ -959,7 +950,6 @@ class Config:
             "large-v2": False,
             "large-v3": False,
         }
-        self._RECEIVE_OSC_RUNNING = False
 
         # Save Json Data
         ## Main Window

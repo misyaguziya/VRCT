@@ -70,17 +70,14 @@ class OSCHandler:
         self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher, asyncio.get_event_loop())
         Thread(target=self.oscServerServe, daemon=True).start()
 
-        receive_osc_running = False
-        for _ in range(10):
+        while True:
             try:
                 self.osc_query_service = OSCQueryService(self.osc_query_service_name, self.http_port, self.osc_server_port)
                 for filter, target in dict_filter_and_target.items():
                     self.osc_query_service.advertise_endpoint(filter, access=OSCAccess.READWRITE_VALUE)
-                receive_osc_running = True
                 break
             except Exception:
                 sleep(1)
-        return receive_osc_running
 
     def oscServerServe(self) -> None:
         self.osc_server.serve_forever(2)
