@@ -47,12 +47,12 @@ def getHMDBaseMatrix():
     return arr
 
 def getLeftHandBaseMatrix():
-    x_pos = 0.0
-    y_pos = -0.06
-    z_pos = -0.14
-    x_rotation = -62.0
-    y_rotation = 154.0
-    z_rotation = 71.0
+    x_pos = 0.1
+    y_pos = 0.1
+    z_pos = -0.2
+    x_rotation = -65.0
+    y_rotation = 165.0
+    z_rotation = 115.0
     arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
@@ -160,7 +160,10 @@ class Overlay:
     def updateUiScaling(self, ui_scaling, size):
         self.settings[size]["ui_scaling"] = ui_scaling
         if self.initialized is True:
-            self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
+            if "large" == size:
+                self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"]*0.25)
+            else:
+                self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
 
     def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker, size):
         """
