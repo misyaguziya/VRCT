@@ -40,8 +40,8 @@
     {
         "title": "VRCT",
         "center": true,
-        "width": 400,
-        "height": 400,
+        "width": 450,
+        "height": 220,
         "minWidth": 400,
         "minHeight": 200,
         "transparent": true,

@@ -1,0 +1,167 @@
+{
+    "SELECTED_TAB_NO": "1",
+    "SELECTED_TRANSLATION_ENGINES": {
+        "1": "CTranslate2",
+        "2": "CTranslate2",
+        "3": "CTranslate2"
+    },
+    "SELECTED_YOUR_LANGUAGES": {
+        "1": {
+            "primary": {
+                "language": "Japanese",
+                "country": "Japan"
+            }
+        },
+        "2": {
+            "primary": {
+                "language": "Japanese",
+                "country": "Japan"
+            }
+        },
+        "3": {
+            "primary": {
+                "language": "Japanese",
+                "country": "Japan"
+            }
+        }
+    },
+    "SELECTED_TARGET_LANGUAGES": {
+        "1": {
+            "primary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "secondary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "tertiary": {
+                "language": "English",
+                "country": "United States"
+            }
+        },
+        "2": {
+            "primary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "secondary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "tertiary": {
+                "language": "English",
+                "country": "United States"
+            }
+        },
+        "3": {
+            "primary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "secondary": {
+                "language": "English",
+                "country": "United States"
+            },
+            "tertiary": {
+                "language": "English",
+                "country": "United States"
+            }
+        }
+    },
+    "SELECTED_TRANSCRIPTION_ENGINE": "Google",
+    "MULTI_LANGUAGE_TRANSLATION": false,
+    "CONVERT_MESSAGE_TO_ROMAJI": false,
+    "CONVERT_MESSAGE_TO_HIRAGANA": false,
+    "MAIN_WINDOW_SIDEBAR_COMPACT_MODE": false,
+    "TRANSPARENCY": 100,
+    "UI_SCALING": 100,
+    "TEXTBOX_UI_SCALING": 100,
+    "MESSAGE_BOX_RATIO": 10,
+    "FONT_FAMILY": "Yu Gothic UI",
+    "UI_LANGUAGE": "en",
+    "RESTORE_MAIN_WINDOW_GEOMETRY": true,
+    "MAIN_WINDOW_GEOMETRY": {
+        "x_pos": 0,
+        "y_pos": 0,
+        "width": 870,
+        "height": 654
+    },
+    "AUTO_MIC_SELECT": true,
+    "SELECTED_MIC_HOST": "MME",
+    "SELECTED_MIC_DEVICE": "Headset Microphone (Oculus Virt",
+    "MIC_THRESHOLD": 300,
+    "MIC_AUTOMATIC_THRESHOLD": false,
+    "MIC_RECORD_TIMEOUT": 3,
+    "MIC_PHRASE_TIMEOUT": 3,
+    "MIC_MAX_PHRASES": 10,
+    "MIC_WORD_FILTER": [],
+    "MIC_AVG_LOGPROB": -0.8,
+    "MIC_NO_SPEECH_PROB": 0.6,
+    "AUTO_SPEAKER_SELECT": true,
+    "SELECTED_SPEAKER_DEVICE": "ヘッドホン (Oculus Virtual Audio Device) [Loopback]",
+    "SPEAKER_THRESHOLD": 300,
+    "SPEAKER_AUTOMATIC_THRESHOLD": false,
+    "SPEAKER_RECORD_TIMEOUT": 3,
+    "SPEAKER_PHRASE_TIMEOUT": 3,
+    "SPEAKER_MAX_PHRASES": 10,
+    "SPEAKER_AVG_LOGPROB": -0.8,
+    "SPEAKER_NO_SPEECH_PROB": 0.6,
+    "OSC_IP_ADDRESS": "127.0.0.1",
+    "OSC_PORT": 9000,
+    "AUTH_KEYS": {
+        "DeepL_API": null
+    },
+    "USE_EXCLUDE_WORDS": true,
+    "SELECTED_TRANSLATION_COMPUTE_DEVICE": {
+        "device": "cpu",
+        "device_index": 0,
+        "device_name": "cpu"
+    },
+    "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE": {
+        "device": "cpu",
+        "device_index": 0,
+        "device_name": "cpu"
+    },
+    "CTRANSLATE2_WEIGHT_TYPE": "small",
+    "WHISPER_WEIGHT_TYPE": "base",
+    "AUTO_CLEAR_MESSAGE_BOX": true,
+    "SEND_ONLY_TRANSLATED_MESSAGES": false,
+    "SEND_MESSAGE_BUTTON_TYPE": "show",
+    "OVERLAY_SMALL_LOG": false,
+    "OVERLAY_SMALL_LOG_SETTINGS": {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 1.0,
+        "tracker": "HMD"
+    },
+    "OVERLAY_LARGE_LOG": false,
+    "OVERLAY_LARGE_LOG_SETTINGS": {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 0.015625,
+        "tracker": "LeftHand"
+    },
+    "SEND_MESSAGE_TO_VRC": true,
+    "SEND_MESSAGE_FORMAT": "[message]",
+    "SEND_MESSAGE_FORMAT_WITH_T": "[message]([translation])",
+    "RECEIVED_MESSAGE_FORMAT": "[message]",
+    "RECEIVED_MESSAGE_FORMAT_WITH_T": "[message]([translation])",
+    "SEND_RECEIVED_MESSAGE_TO_VRC": false,
+    "LOGGER_FEATURE": false,
+    "VRC_MIC_MUTE_SYNC": false
+}
