@@ -1750,6 +1750,8 @@ class Controller:
         if config.LOGGER_FEATURE is True:
             model.startLogger()
 
+        self.initializationProgress(4)
+
         # init OSC receive
         printLog("Init OSC Receive")
         model.startReceiveOSC()
@@ -1771,8 +1773,6 @@ class Controller:
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
             model.startOverlay()
-
-        self.initializationProgress(4)
 
         printLog("Update settings")
         self.updateConfigSettings()

@@ -1,0 +1,100 @@
+$progress_ease: cubic-bezier(0, 1, 0.75, 1);
+
+.container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+}
+
+.progress_bar_wrapper {
+    position: absolute;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 36px;
+}
+
+.progress_bar {
+    width: 60px;
+    height: 2px;
+    position: relative;
+}
+
+.progress_bar::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0;
+    height: 100%;
+    background-color: var(--dark_200_color);
+    transition: width 0.3s $progress_ease;
+}
+
+.progress_bar.progressed::before {
+    width: 100%;
+}
+
+.progress_bar:last-child::before {
+    background-color: var(--primary_400_color);
+}
+
+
+.chato_box {
+    position: relative;
+    top: 0;
+    transform: translateY(-100%);
+    width: 100%;
+    height: 8rem;
+    overflow: hidden;
+}
+
+.chato_img {
+    position: absolute;
+    top: 150%;
+    left: 51%;
+    transform: translate(-50%, -50%) rotate(-90deg);
+    width: 2.8rem;
+    transition: all 0.3s $progress_ease 0.2s;
+}
+
+.progress_bar.progressed .chato_img {
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(30deg);
+    animation: infinite-rotation 20s linear infinite 0.5s;
+}
+
+@keyframes infinite-rotation {
+    from {
+        transform: translate(-50%, -50%) rotate(30deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(390deg);
+    }
+}
+
+.labels_wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.vrct_starting_up_img {
+    position: absolute;
+    top: 68%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    // transform: translate(-50%, 50%);
+}
+.vrct_explanation_img {
+    position: absolute;
+    bottom: 4px;
+    right: 10px;
+    width: 280px;
+    // transform: translate(-50%, 50%);
+}

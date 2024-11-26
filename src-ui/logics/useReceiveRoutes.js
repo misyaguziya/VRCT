@@ -2,6 +2,7 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useInitProgress,
     useIsBackendReady,
     useWindow,
     useMessage,
@@ -63,6 +64,7 @@ import {
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
     const { restoreWindowGeometry } = useWindow();
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
@@ -156,6 +158,7 @@ export const useReceiveRoutes = () => {
     const routes = {
         // Common
         "/run/feed_watchdog": () => {},
+        "/run/initialization_progress": updateInitProgress,
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
@@ -311,8 +314,9 @@ export const useReceiveRoutes = () => {
 
         "/get/data/selectable_ctranslate2_weight_type_dict": updateDownloadedCTranslate2WeightTypeStatus,
 
-        "/run/download_ctranslate2_weight": updateDownloadProgressCTranslate2WeightTypeStatus,
         "/run/downloaded_ctranslate2_weight": downloadedCTranslate2WeightType,
+        "/run/download_ctranslate2_weight": () => {},
+        "/run/download_progress_ctranslate2_weight": updateDownloadProgressCTranslate2WeightTypeStatus,
 
         // Transcription
         "/get/data/mic_record_timeout": updateMicRecordTimeout,
@@ -370,8 +374,9 @@ export const useReceiveRoutes = () => {
 
         "/get/data/selectable_whisper_weight_type_dict": updateDownloadedWhisperWeightTypeStatus,
 
-        "/run/download_whisper_weight": updateDownloadProgressWhisperWeightTypeStatus,
         "/run/downloaded_whisper_weight": downloadedWhisperWeightType,
+        "/run/download_whisper_weight": () => {},
+        "/run/download_progress_whisper_weight": updateDownloadProgressWhisperWeightTypeStatus,
 
         // VR
         "/get/data/overlay_small_log": updateIsEnabledOverlaySmallLog,
