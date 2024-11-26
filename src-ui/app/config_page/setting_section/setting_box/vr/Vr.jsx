@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { clsx } from "clsx";
 import styles from "./Vr.module.scss";
+import { ui_configs } from "@ui_configs";
 import { Slider } from "../_components/";
 import {
     RadioButtonContainer,
@@ -38,6 +39,7 @@ export const Vr = () => {
                 {is_opened_small_settings ? (
                     <OverlaySettingsContainer
                     id="overlay_settings_small"
+                    ui_configs={ui_configs.overlay_small_log}
                     current_overlay_settings={currentOverlaySmallLogSettings.data}
                     set_overlay_settings={setOverlaySmallLogSettings}
                     current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
@@ -46,6 +48,7 @@ export const Vr = () => {
                 ) : (
                     <OverlaySettingsContainer
                     id="overlay_settings_large"
+                    ui_configs={ui_configs.overlay_large_log}
                     current_overlay_settings={currentOverlayLargeLogSettings.data}
                     set_overlay_settings={setOverlayLargeLogSettings}
                     current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
@@ -62,6 +65,7 @@ const OverlaySettingsContainer = ({
     set_overlay_settings,
     current_is_enabled_overlay,
     toggle_is_enabled_overlay,
+    ui_configs,
     id
 }) => {
 
@@ -113,12 +117,12 @@ const OverlaySettingsContainer = ({
 
             <div className={styles.position_rotation_controls_box}>
                 {is_opened_position_controller ? (
-                    <PositionControls settings={settings} onchangeFunction={onchangeFunction} />
+                    <PositionControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
                 ) : (
-                    <RotationControls settings={settings} onchangeFunction={onchangeFunction} />
+                    <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
                 )}
             </div>
-            <OtherControls settings={settings} onchangeFunction={onchangeFunction} />
+            <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
                 label={t("overlay_settings.tracker")}
                 selectFunction={selectTrackerFunction}
@@ -156,7 +160,7 @@ const PageSwitcherContainer = (props) => {
     );
 };
 
-const PositionControls = ({settings, onchangeFunction}) => {
+const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
     const { t } = useTranslation();
 
     return (
@@ -166,9 +170,9 @@ const PositionControls = ({settings, onchangeFunction}) => {
                 <Slider
                     className={styles.x_position_slider}
                     variable={settings.x_pos}
-                    step={0.05}
-                    min={-0.5}
-                    max={0.5}
+                    step={ui_configs.x_pos.step}
+                    min={ui_configs.x_pos.min}
+                    max={ui_configs.x_pos.max}
                     onchangeFunction={(value) => onchangeFunction("x_pos", value)}
                 />
             </div>
@@ -177,9 +181,9 @@ const PositionControls = ({settings, onchangeFunction}) => {
                 <Slider
                     className={styles.y_position_slider}
                     variable={settings.y_pos}
-                    step={0.05}
-                    min={-0.8}
-                    max={0.8}
+                    step={ui_configs.y_pos.step}
+                    min={ui_configs.y_pos.min}
+                    max={ui_configs.y_pos.max}
                     onchangeFunction={(value) => onchangeFunction("y_pos", value)}
                     orientation="vertical"
                 />
@@ -189,9 +193,9 @@ const PositionControls = ({settings, onchangeFunction}) => {
                 <Slider
                     className={styles.z_position_slider}
                     variable={settings.z_pos}
-                    step={0.05}
-                    min={-0.5}
-                    max={1.5}
+                    step={ui_configs.z_pos.step}
+                    min={ui_configs.z_pos.min}
+                    max={ui_configs.z_pos.max}
                     onchangeFunction={(value) => onchangeFunction("z_pos", value)}
                     orientation="vertical"
                 />
@@ -245,7 +249,7 @@ const RotationControls = ({settings, onchangeFunction}) => {
     );
 };
 
-const OtherControls = ({settings, onchangeFunction}) => {
+const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
     const { t } = useTranslation();
 
     const ui_variable_opacity = (settings.opacity * 100).toFixed(0);
@@ -275,9 +279,9 @@ const OtherControls = ({settings, onchangeFunction}) => {
                     className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
                     variable={settings.ui_scaling * 100}
                     valueLabelFormat={`${ui_variable_ui_scaling}%`}
-                    step={10}
-                    min={40}
-                    max={200}
+                    step={ui_configs.ui_scaling.step}
+                    min={ui_configs.ui_scaling.min}
+                    max={ui_configs.ui_scaling.max}
                     onchangeFunction={(value) => onchangeFunction("ui_scaling", value / 100)}
                 />
             </div>
