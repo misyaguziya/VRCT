@@ -26,6 +26,9 @@ export const MessageInputBox = () => {
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
+
+        if (!input_value.trim()) return setInputValue("");
+
         sendMessage(input_value);
 
         if (currentEnableAutoClearMessageInputBox.data) setInputValue("");
