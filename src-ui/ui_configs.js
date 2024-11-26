@@ -3,6 +3,18 @@ export const ui_configs = {
     mic_threshold_max: 2000,
     speaker_threshold_min: 0,
     speaker_threshold_max: 4000,
+    overlay_small_log: {
+        x_pos: { step: 0.05, min: -0.5, max: 0.5 },
+        y_pos: { step: 0.05, min: -0.8, max: 0.8 },
+        z_pos: { step: 0.05, min: -0.5, max: 1.5 },
+        ui_scaling: { step: 10, min: 40, max: 200 },
+    },
+    overlay_large_log: {
+        x_pos: { step: 0.05, min: -0.5, max: 0.5 },
+        y_pos: { step: 0.05, min: -0.8, max: 0.8 },
+        z_pos: { step: 0.05, min: -0.5, max: 1.5 },
+        ui_scaling: { step: 10, min: 40, max: 200 },
+    },
     selectable_ui_languages: [
         {id: "en", label: "English"},
         {id: "ja", label: "日本語"},
