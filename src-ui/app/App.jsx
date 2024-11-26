@@ -88,8 +88,6 @@ const UiLanguageController = () => {
     const { i18n } = useTranslation();
 
     useEffect(() => {
-        console.log(currentUiLanguage.data);
-
         i18n.changeLanguage(currentUiLanguage.data);
     }, [currentUiLanguage.data]);
     return null;
