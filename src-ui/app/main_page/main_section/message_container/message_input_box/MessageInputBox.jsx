@@ -7,10 +7,14 @@ import { store } from "@store";
 import { scrollToBottom } from "@utils";
 
 export const MessageInputBox = () => {
-    const [input_value, setInputValue] = useState("");
     const [message_history, setMessageHistory] = useState([]);
     const [history_index, setHistoryIndex] = useState(-1);
-    const { sendMessage, currentMessageLogs } = useMessage();
+    const {
+        sendMessage,
+        currentMessageLogs,
+        currentMessageInputValue,
+        updateMessageInputValue,
+    } = useMessage();
 
     const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
     const { currentSendMessageButtonType } = useSendMessageButtonType();
@@ -27,11 +31,11 @@ export const MessageInputBox = () => {
     const onSubmitFunction = (e) => {
         e.preventDefault();
 
-        if (!input_value.trim()) return setInputValue("");
+        if (!currentMessageInputValue.data.trim()) return updateMessageInputValue("");
 
-        sendMessage(input_value);
+        sendMessage(currentMessageInputValue.data);
 
-        if (currentEnableAutoClearMessageInputBox.data) setInputValue("");
+        if (currentEnableAutoClearMessageInputBox.data) updateMessageInputValue("");
 
         setTimeout(() => {
             scrollToBottom(store.log_box_ref);
@@ -41,7 +45,7 @@ export const MessageInputBox = () => {
     };
 
     const onChangeFunction = (e) => {
-        setInputValue(e.currentTarget.value);
+        updateMessageInputValue(e.currentTarget.value);
     };
 
     const onKeyDownFunction = (e) => {
@@ -57,7 +61,7 @@ export const MessageInputBox = () => {
             if (history_index + 1 < message_history.length) {
                 const new_index = history_index + 1;
                 setHistoryIndex(new_index);
-                setInputValue(message_history[message_history.length - 1 - new_index]);
+                updateMessageInputValue(message_history[message_history.length - 1 - new_index]);
             }
         }
 
@@ -83,7 +87,7 @@ export const MessageInputBox = () => {
                     className={styles.message_box_input_area}
                     onChange={onChangeFunction}
                     placeholder="Input Textfield"
-                    value={input_value}
+                    value={currentMessageInputValue.data}
                     onKeyDown={onKeyDownFunction}
                 />
             </div>
