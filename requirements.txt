@@ -11,7 +11,7 @@ pyinstaller==6.2.0
 numpy==1.26.4
 torch==2.2.2
 transformers==4.37.2
-sentencepiece==0.1.99
+sentencepiece==0.2.0
 ctranslate2==4.1.0
 faster-whisper==1.0.3
 openvr==1.26.701
