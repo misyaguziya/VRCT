@@ -47,9 +47,9 @@ def getHMDBaseMatrix():
     return arr
 
 def getLeftHandBaseMatrix():
-    x_pos = 0.1
+    x_pos = 0.3
     y_pos = 0.1
-    z_pos = -0.2
+    z_pos = -0.31
     x_rotation = -65.0
     y_rotation = 165.0
     z_rotation = 115.0
@@ -57,12 +57,12 @@ def getLeftHandBaseMatrix():
     return arr
 
 def getRightHandBaseMatrix():
-    x_pos = 0.0
-    y_pos = -0.06
-    z_pos = -0.14
-    x_rotation = -62.0
-    y_rotation = -154.0
-    z_rotation = -71.0
+    x_pos = -0.3
+    y_pos = 0.1
+    z_pos = -0.31
+    x_rotation = -65.0
+    y_rotation = -165.0
+    z_rotation = -115.0
     arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
@@ -160,7 +160,7 @@ class Overlay:
     def updateUiScaling(self, ui_scaling, size):
         self.settings[size]["ui_scaling"] = ui_scaling
         if self.initialized is True:
-            if "large" == size:
+            if size == "large":
                 self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"]*0.25)
             else:
                 self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
@@ -289,6 +289,9 @@ class Overlay:
 
 if __name__ == "__main__":
     from overlay_image import OverlayImage
+    import logging
+
+    logging.basicConfig(level=logging.DEBUG)
 
     small_settings = {
         "x_pos": 0.0,
@@ -297,10 +300,10 @@ if __name__ == "__main__":
         "x_rotation": 0.0,
         "y_rotation": 0.0,
         "z_rotation": 0.0,
-        "display_duration": 5,
-        "fadeout_duration": 2,
+        "display_duration": 0,
+        "fadeout_duration": 100,
         "opacity": 1.0,
-        "ui_scaling": 0.5,
+        "ui_scaling": 1.0,
         "tracker": "HMD",
     }
 
@@ -311,17 +314,20 @@ if __name__ == "__main__":
         "x_rotation": 0.0,
         "y_rotation": 0.0,
         "z_rotation": 0.0,
-        "display_duration": 5,
-        "fadeout_duration": 0,
+        "display_duration": 0,
+        "fadeout_duration": 100,
         "opacity": 1.0,
-        "ui_scaling": 0.5,
-        "tracker": "LeftHand",
+        "ui_scaling": 1.0,
+        "tracker": "RightHand",
     }
 
     settings_dict = {
         "small": small_settings,
         "large": large_settings
     }
+
+    # オーバーレイの初期化設定を確認
+    logging.debug(f"Settings Dict: {settings_dict}")
 
     overlay_image = OverlayImage()
     overlay = Overlay(settings_dict)
@@ -331,19 +337,31 @@ if __name__ == "__main__":
         time.sleep(1)
 
     # Example usage
-    img = overlay_image.createOverlayImageLargeLog("send", "こんにちは、世界！さようなら", "Japanese", "Hello,World!Goodbye", "Japanese")
-    overlay.updateImage(img, "large")
-
     for i in range(100):
-        print(i)
-        # Example usage
-        img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
-        overlay.updateImage(img, "small")
-        time.sleep(5)
+        try:
+            img = overlay_image.createOverlayImageLargeLog("send", f"こんにちは、世界！さようなら {i}", "Japanese", "Hello,World!Goodbye", "Japanese")
+            logging.debug(f"Generated Image: {img}")
+            overlay.updateImage(img, "large")
+            img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
+            overlay.updateImage(img, "small")
+            time.sleep(1)
+        except openvr.error_code.OverlayError_InvalidParameter as e:
+            logging.error(f"OverlayError_InvalidParameter: {e}")
+            break
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            break
 
-        if i%2 == 0:
-            overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "HMD", "small")
-        else:
-            overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "RightHand", "small")
+    # for i in range(100):
+    #     print(i)
+    #     # Example usage
+    #     img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
+    #     overlay.updateImage(img, "small")
+    #     time.sleep(5)
+
+    #     if i%2 == 0:
+    #         overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "HMD", "small")
+    #     else:
+    #         overlay.updatePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, "RightHand", "small")
 
     overlay.shutdownOverlay()
