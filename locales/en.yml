@@ -234,6 +234,9 @@ config_window:
   send_only_translated_messages:
     label: "Send Only Translated Messages"
 
+  send_only_translated_messages_overlay:
+    label: "Send Only Translated Messages To Overlay"
+
   send_message_button_type:
     label: "Send Message Button"
     hide: "Hide (Use enter key to send)"

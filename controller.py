@@ -160,10 +160,14 @@ def receiveSpeakerMessage(message):
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
             if config.ENABLE_OVERLAY_SMALL_LOG is True:
                 if model.overlay.initialized is True:
-                    overlay_image = model.createOverlayImageShort(message, translation)
-                    model.updateOverlay(overlay_image)
-                # overlay_image = model.createOverlayImageLong("receive", message, translation)
-                # model.updateOverlay(overlay_image)
+                    if config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY is True:
+                        overlay_image = model.createOverlayImageShort("", translation)
+                        model.updateOverlay(overlay_image)
+                    else:
+                        overlay_image = model.createOverlayImageShort(message, translation)                        
+                        model.updateOverlay(overlay_image)
+                    # overlay_image = model.createOverlayImageLong("receive", message, translation)
+                    # model.updateOverlay(overlay_image)
 
             # ------------Speaker2Chatbox------------
             if config.ENABLE_SPEAKER2CHATBOX is True:
@@ -907,6 +911,10 @@ def callbackSetEnableSendOnlyTranslatedMessages(value):
     print("callbackSetEnableSendOnlyTranslatedMessages", value)
     config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = value
 
+def callbackSetEnableSendOnlyTranslatedMessagesOverlay(value):
+    print("callbackSetEnableSendOnlyTranslatedMessagesOverlay", value)
+    config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY = value
+
 def callbackSetSendMessageButtonType(value):
     print("callbackSetSendMessageButtonType", value)
     config.SEND_MESSAGE_BUTTON_TYPE = value
@@ -1158,6 +1166,7 @@ def createMainWindow(splash):
             # Others Tab
             "callback_set_enable_auto_clear_chatbox": callbackSetEnableAutoClearMessageBox,
             "callback_set_send_only_translated_messages": callbackSetEnableSendOnlyTranslatedMessages,
+            "callback_set_send_only_translated_messages_overlay": callbackSetEnableSendOnlyTranslatedMessagesOverlay,
             "callback_set_send_message_button_type": callbackSetSendMessageButtonType,
             "callback_set_enable_auto_export_message_logs": callbackSetEnableAutoExportMessageLogs,
             "callback_set_enable_vrc_mic_mute_sync": callbackSetEnableVrcMicMuteSync,

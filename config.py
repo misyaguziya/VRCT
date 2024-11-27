@@ -763,6 +763,17 @@ class Config:
             saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY')
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY(self):
+        return self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY
+
+    @ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY.setter
+    def ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY(self, value):
+        if isinstance(value, bool):
+            self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY = value
+            saveJson(self.PATH_CONFIG, inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
     def SEND_MESSAGE_BUTTON_TYPE(self):
         return self._SEND_MESSAGE_BUTTON_TYPE
@@ -1107,6 +1118,7 @@ class Config:
         self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._ENABLE_AUTO_CLEAR_MESSAGE_BOX = True
         self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES = False
+        self._ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._OVERLAY_SETTINGS = {
             "opacity": 1.0,
