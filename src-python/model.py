@@ -82,11 +82,13 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
+        overlay_small_log_settings = copy.deepcopy(config.OVERLAY_SMALL_LOG_SETTINGS)
+        overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
+        overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
         overlay_settings = {
-            "small": config.OVERLAY_SMALL_LOG_SETTINGS,
-            "large": config.OVERLAY_LARGE_LOG_SETTINGS,
+            "small": overlay_small_log_settings,
+            "large": overlay_large_log_settings,
         }
-        overlay_settings["large"]["ui_scaling"] = copy.copy(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]*0.25)
         self.overlay = Overlay(overlay_settings)
         self.overlay_image = OverlayImage()
         self.mic_audio_queue = None
@@ -747,7 +749,7 @@ class Model:
         self.overlay.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"], size)
         self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], size)
         self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
-        self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]*0.25, size)
+        self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
 
     def startOverlay(self):
         self.overlay.startOverlay()
