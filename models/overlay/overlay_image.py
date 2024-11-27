@@ -2,6 +2,7 @@ from os import path as os_path
 # from datetime import datetime
 from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
+from config import config
 
 class OverlayImage:
     # TEXT_COLOR_LARGE = (223, 223, 223)
@@ -216,10 +217,19 @@ class OverlayImage:
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
-        if len(translation) > 0 and target_language is not None:
+        print("TEST")
+        print(message, your_language, translation, target_language)
+
+        if len(message) > 0 and len(translation) > 0 and target_language is not None:
+            img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
             translation_img = self.createTextboxShort(translation, target_language, text_color, width, height, font_size)
             img = self.concatenateImagesVertically(img, translation_img)
+        else: 
+            if len(message) > 0 and len(translation) == 0 :
+                img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
+            else: 
+                if len(translation) > 0 and target_language is not None:
+                    img = self.createTextboxShort(translation, target_language, text_color, width, height, font_size)
 
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)

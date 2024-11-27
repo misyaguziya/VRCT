@@ -15,6 +15,9 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
     def checkboxSendOnlyTranslatedMessagesCallback(checkbox_box_widget):
         callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES, checkbox_box_widget.get())
 
+    def checkboxSendOnlyTranslatedMessagesOverlayCallback(checkbox_box_widget):
+        callFunctionIfCallable(view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY, checkbox_box_widget.get())
+
     def checkboxSendMessageButtonTypeCallback():
         callFunctionIfCallable(view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE, view_variable.VAR_SEND_MESSAGE_BUTTON_TYPE.get())
 
@@ -51,6 +54,16 @@ def createSettingBox_Others(setting_box_wrapper, config_window, settings, view_v
         variable=view_variable.VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES,
     )
     config_window.sb__send_only_translated_messages.grid(row=row)
+    row+=1
+
+    config_window.sb__send_only_translated_messages_overlay = createSettingBoxCheckbox(
+        for_var_label_text=view_variable.VAR_LABEL_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY,
+        for_var_desc_text=view_variable.VAR_DESC_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY,
+        checkbox_attr_name="sb__checkbox_send_only_translated_messages_overlay",
+        command=lambda: checkboxSendOnlyTranslatedMessagesOverlayCallback(config_window.sb__checkbox_send_only_translated_messages_overlay),
+        variable=view_variable.VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY,
+    )
+    config_window.sb__send_only_translated_messages_overlay.grid(row=row)
     row+=1
 
     config_window.sb__send_message_button_type = createSettingBoxRadioButtons(

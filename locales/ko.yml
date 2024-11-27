@@ -233,6 +233,9 @@ config_window:
   send_only_translated_messages:
     label: "번역된 메시지만 전송"
 
+  send_only_translated_messages_overlay:
+    label: "번역된 메시지만 전송 (Overlay)"
+
   send_message_button_type:
     label: "메시지 전송 버튼"
     hide: "숨김 (Enter 키를 사용하여 전송)"

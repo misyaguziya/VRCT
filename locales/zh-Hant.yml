@@ -227,6 +227,9 @@ config_window:
   send_only_translated_messages:
     label: "僅發送翻譯訊息"
 
+  send_only_translated_messages_overlay:
+    label: "僅發送翻譯訊息 (Overlay)"
+
   send_message_button_type:
     label: "發送訊息按鈕"
     hide: "隱藏（使用 Enter 鍵發送）"
