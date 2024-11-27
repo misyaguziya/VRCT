@@ -217,9 +217,6 @@ class OverlayImage:
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        print("TEST")
-        print(message, your_language, translation, target_language)
-
         if len(message) > 0 and len(translation) > 0 and target_language is not None:
             img = self.createTextboxShort(message, your_language, text_color, width, height, font_size)
             translation_img = self.createTextboxShort(translation, target_language, text_color, width, height, font_size)
