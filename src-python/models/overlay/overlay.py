@@ -160,10 +160,7 @@ class Overlay:
     def updateUiScaling(self, ui_scaling, size):
         self.settings[size]["ui_scaling"] = ui_scaling
         if self.initialized is True:
-            if size == "large":
-                self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"]*0.25)
-            else:
-                self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
+            self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
 
     def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker, size):
         """
