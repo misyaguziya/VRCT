@@ -4,13 +4,14 @@ import clsx from "clsx";
 import styles from "./MessageContainer.module.scss";
 import { MessageSubMenuContainer } from "./message_sub_menu_container/MessageSubMenuContainer";
 import { useMessage } from "@logics_common";
+import { useIsVisibleResendButton } from "@logics_main";
 export const MessageContainer = ({ messages, status, category, created_at }) => {
     const { t } = useTranslation();
     const {
         sendMessage,
         updateMessageInputValue,
     } = useMessage();
-
+    const { currentIsVisibleResendButton } = useIsVisibleResendButton();
     const [is_hovered, setIsHovered] = useState(false);
     const [is_locked, setIsLocked] = useState(false);
 
@@ -45,6 +46,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
 
     const message_type_class_name = clsx({
         [styles.sent_message]: is_sent_message,
+        [styles.is_shown_resend_button]: currentIsVisibleResendButton.data,
         [styles.received_message]: !is_sent_message,
     });
 
@@ -67,7 +69,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                     }
                 </div>
             </div>
-            {is_sent_message && is_hovered ? (
+            {currentIsVisibleResendButton.data && is_sent_message && is_hovered ? (
                 <MessageSubMenuContainer
                     setIsHovered={lockHoverState}
                     resendFunction={resendFunction}

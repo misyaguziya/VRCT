@@ -3,13 +3,14 @@ import { useRef, useEffect, useState } from "react";
 import styles from "./MessageContainer.module.scss";
 import { appWindow } from "@tauri-apps/api/window";
 import { LogBox } from "./log_box/LogBox";
+import { MessageLogSettingsContainer } from "./message_log_settings_container/MessageLogSettingsContainer";
 import { MessageInputBox } from "./message_input_box/MessageInputBox";
 import { useMessageInputBoxRatio } from "@logics_main";
 import { useUiScaling } from "@logics_configs";
-
 export const MessageContainer = () => {
     const { currentMessageInputBoxRatio, asyncSetMessageInputBoxRatio } = useMessageInputBoxRatio();
     const { currentUiScaling } = useUiScaling();
+    const [is_hovered, setIsHovered] = useState(false);
     const [message_box_height_in_rem, setMessageBoxHeightInRem] = useState(10);
     const FONT_SIZE_STANDARD = 10 * currentUiScaling.data / 100;  // 10px = 1rem
 
@@ -84,8 +85,13 @@ export const MessageContainer = () => {
 
     return (
         <div className={styles.container} ref={container_ref}>
-            <div ref={log_box_ref} className={styles.log_box_resize_wrapper}>
+            <div className={styles.log_box_resize_wrapper}
+                ref={log_box_ref}
+                onMouseOver={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
                 <LogBox />
+                <MessageLogSettingsContainer to_visible_toggle_bar={is_hovered}/>
             </div>
             <Separator {...separatorProps} onDragStart={calculateMessageBoxRatioAndHeight} />
             <div
