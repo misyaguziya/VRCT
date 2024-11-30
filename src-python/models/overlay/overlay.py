@@ -73,7 +73,7 @@ class Overlay:
         self.handle = None
         self.init_process = False
         self.initialized = False
-        self.loop = True
+        self.loop = False
         self.thread_overlay = None
 
         self.settings = {}
@@ -132,6 +132,7 @@ class Overlay:
                 while self.initialized is False:
                     time.sleep(0.1)
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+            self.fadeRatio[size] = 1
             self.updateOpacity(self.settings[size]["opacity"], size, True)
             self.lastUpdate[size] = time.monotonic()
 
@@ -221,18 +222,18 @@ class Overlay:
             printLog("error:Could not check SteamVR running", e)
             return False
 
-    def evaluateOpacityFade(self, lastUpdate, currentTime, size):
-        if (currentTime - lastUpdate) > self.settings[size]["display_duration"]:
-            timeThroughInterval = currentTime - lastUpdate - self.settings[size]["display_duration"]
+    def evaluateOpacityFade(self, size):
+        currentTime = time.monotonic()
+        if (currentTime - self.lastUpdate[size]) > self.settings[size]["display_duration"]:
+            timeThroughInterval = currentTime - self.lastUpdate[size] - self.settings[size]["display_duration"]
             self.fadeRatio[size] = 1 - timeThroughInterval / self.settings[size]["fadeout_duration"]
             if self.fadeRatio[size] < 0:
                 self.fadeRatio[size] = 0
             self.overlay.setOverlayAlpha(self.handle[size], self.fadeRatio[size] * self.settings[size]["opacity"])
 
     def update(self, size):
-        currTime = time.monotonic()
         if self.settings[size]["fadeout_duration"] != 0:
-            self.evaluateOpacityFade(self.lastUpdate[size], currTime, size)
+            self.evaluateOpacityFade(size)
         else:
             self.updateOpacity(self.settings[size]["opacity"], size, True)
 
@@ -297,8 +298,8 @@ if __name__ == "__main__":
         "x_rotation": 0.0,
         "y_rotation": 0.0,
         "z_rotation": 0.0,
-        "display_duration": 0,
-        "fadeout_duration": 100,
+        "display_duration": 5,
+        "fadeout_duration": 2,
         "opacity": 1.0,
         "ui_scaling": 1.0,
         "tracker": "HMD",
@@ -311,11 +312,11 @@ if __name__ == "__main__":
         "x_rotation": 0.0,
         "y_rotation": 0.0,
         "z_rotation": 0.0,
-        "display_duration": 0,
-        "fadeout_duration": 100,
+        "display_duration": 5,
+        "fadeout_duration": 2,
         "opacity": 1.0,
-        "ui_scaling": 1.0,
-        "tracker": "RightHand",
+        "ui_scaling": 0.25,
+        "tracker": "LeftHand",
     }
 
     settings_dict = {
@@ -341,7 +342,7 @@ if __name__ == "__main__":
             overlay.updateImage(img, "large")
             img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
             overlay.updateImage(img, "small")
-            time.sleep(1)
+            time.sleep(15)
         except openvr.error_code.OverlayError_InvalidParameter as e:
             logging.error(f"OverlayError_InvalidParameter: {e}")
             break
