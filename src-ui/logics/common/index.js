@@ -5,4 +5,5 @@ export { useIsOpenedConfigPage } from "./useIsOpenedConfigPage";
 export { useIsSoftwareUpdateAvailable } from "./useIsSoftwareUpdateAvailable";
 export { useOpenFolder } from "./useOpenFolder";
 export { useMessage } from "./useMessage";
+export { useUpdateSoftware } from "./useUpdateSoftware";
 export { useVolume } from "./useVolume";
