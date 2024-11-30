@@ -234,6 +234,9 @@ config_window:
   send_only_translated_messages:
     label: "只发送翻译后的信息"
 
+  send_only_translated_messages_overlay:
+    label: "只发送翻译后的信息 (Overlay)"
+
   send_message_button_type:
     label: "发送信息按钮"
     hide: "隐藏 (可使用回车发送信息)"
