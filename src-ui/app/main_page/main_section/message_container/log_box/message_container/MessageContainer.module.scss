@@ -1,12 +1,26 @@
 @import "@scss_mixins";
 
+// *******************                           *******************
+// ******************* Express in "em" not "rem" *******************
+// *******************                           *******************
 .container {
-    margin-bottom: 1em;
+    width: 100%;
+    display: flex;
+    user-select: text;
+    gap: 0.6rem;
+    &.sent_message.is_shown_resend_button:hover {
+        background-color: var(--dark_950_color);
+    }
+}
+
+.message_wrapper {
+    display: flex;
     width: 100%;
     flex-direction: column;
-    display: flex;
     justify-content: center;
+    align-items: end;
     user-select: text;
+    padding: 0.6em 0;
     &.sent_message {
         align-items: end;
     }

@@ -17,6 +17,7 @@ export const store = {
     backend_subprocess: null,
     config_page: null,
     log_box_ref: null,
+    is_applied_init_message_box_height: false,
 };
 
 const generatePropertyNames = (base_name) => ({
@@ -120,6 +121,9 @@ export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_
 export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAtomWithHook(false, "ForegroundStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs");
+export const { atomInstance: Atom_MessageInputValue, useHook: useStore_MessageInputValue } = createAtomWithHook("", "MessageInputValue");
+export const { atomInstance: Atom_IsVisibleResendButton, useHook: useStore_IsVisibleResendButton } = createAtomWithHook(false, "IsVisibleResendButton");
+export const { atomInstance: Atom_IsAppliedInitMessageBoxHeight, useHook: useStore_IsAppliedInitMessageBoxHeight } = createAtomWithHook(false, "IsAppliedInitMessageBoxHeight");
 
 export const { atomInstance: Atom_SelectableLanguageList, useHook: useStore_SelectableLanguageList } = createAtomWithHook([], "SelectableLanguageList");
 
