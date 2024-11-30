@@ -708,20 +708,33 @@ class Model:
 
     def updateOverlaySmallLogSettings(self):
         size = "small"
-        self.overlay.updatePosition(
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
-            config.OVERLAY_SMALL_LOG_SETTINGS["tracker"],
-            size,
-        )
-        self.overlay.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"], size)
-        self.overlay.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"], size)
-        self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], size, True)
-        self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
+
+        if (self.overlay.settings[size]["x_pos"] != config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"] or
+            self.overlay.settings[size]["y_pos"] != config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"] or
+            self.overlay.settings[size]["z_pos"] != config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"] or
+            self.overlay.settings[size]["x_rotation"] != config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"] or
+            self.overlay.settings[size]["y_rotation"] != config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"] or
+            self.overlay.settings[size]["z_rotation"] != config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"] or
+            self.overlay.settings[size]["tracker"] != config.OVERLAY_SMALL_LOG_SETTINGS["tracker"]):
+            self.overlay.updatePosition(
+                config.OVERLAY_SMALL_LOG_SETTINGS["x_pos"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["y_pos"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["z_pos"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["x_rotation"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["y_rotation"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["z_rotation"],
+                config.OVERLAY_SMALL_LOG_SETTINGS["tracker"],
+                size,
+            )
+        if (self.overlay.settings[size]["display_duration"] != config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"]):
+            self.overlay.updateDisplayDuration(config.OVERLAY_SMALL_LOG_SETTINGS["display_duration"], size)
+        if (self.overlay.settings[size]["fadeout_duration"] != config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"]):
+            self.overlay.updateFadeoutDuration(config.OVERLAY_SMALL_LOG_SETTINGS["fadeout_duration"], size)
+        if (self.overlay.settings[size]["opacity"] != config.OVERLAY_SMALL_LOG_SETTINGS["opacity"]):
+            self.overlay.updateOpacity(config.OVERLAY_SMALL_LOG_SETTINGS["opacity"], size, True)
+        if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"]):
+            self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
+
 
     def createOverlayImageLargeLog(self, message_type:str, message:str, translation:str):
         your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
@@ -736,20 +749,31 @@ class Model:
 
     def updateOverlayLargeLogSettings(self):
         size = "large"
-        self.overlay.updatePosition(
-            config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
-            config.OVERLAY_LARGE_LOG_SETTINGS["tracker"],
-            size,
-        )
-        self.overlay.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"], size)
-        self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], size)
-        self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
-        self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
+        if (self.overlay.settings[size]["x_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"] or
+            self.overlay.settings[size]["y_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"] or
+            self.overlay.settings[size]["z_pos"] != config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"] or
+            self.overlay.settings[size]["x_rotation"] != config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"] or
+            self.overlay.settings[size]["y_rotation"] != config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"] or
+            self.overlay.settings[size]["z_rotation"] != config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"] or
+            self.overlay.settings[size]["tracker"] != config.OVERLAY_LARGE_LOG_SETTINGS["tracker"]):
+            self.overlay.updatePosition(
+                config.OVERLAY_LARGE_LOG_SETTINGS["x_pos"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["y_pos"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["z_pos"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["x_rotation"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["y_rotation"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["z_rotation"],
+                config.OVERLAY_LARGE_LOG_SETTINGS["tracker"],
+                size,
+            )
+        if (self.overlay.settings[size]["display_duration"] != config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"]):
+            self.overlay.updateDisplayDuration(config.OVERLAY_LARGE_LOG_SETTINGS["display_duration"], size)
+        if (self.overlay.settings[size]["fadeout_duration"] != config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"]):
+            self.overlay.updateFadeoutDuration(config.OVERLAY_LARGE_LOG_SETTINGS["fadeout_duration"], size)
+        if (self.overlay.settings[size]["opacity"] != config.OVERLAY_LARGE_LOG_SETTINGS["opacity"]):
+            self.overlay.updateOpacity(config.OVERLAY_LARGE_LOG_SETTINGS["opacity"], size, True)
+        if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"]):
+            self.overlay.updateUiScaling(config.OVERLAY_LARGE_LOG_SETTINGS["ui_scaling"] * 0.25, size)
 
     def startOverlay(self):
         self.overlay.startOverlay()
