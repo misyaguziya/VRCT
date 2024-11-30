@@ -1,0 +1,45 @@
+// *******************                           *******************
+// ******************* Express in "em" not "rem" *******************
+// *******************                           *******************
+.container {
+}
+.resend_button {
+    background-color: var(--dark_825_color);
+    position: relative;
+    height: 100%;
+    width: 3.8em;
+}
+
+.send_message_svg {
+    position: absolute;
+    top: 58%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2.2em;
+    color: var(--dark_400_color);
+}
+.refresh_svg {
+    position: absolute;
+    top: 36%;
+    left: 42%;
+    transform: translate(-50%, -50%);
+    width: 1.8em;
+    color: var(--sent_400_color);
+    filter: drop-shadow(0.2em 0.2em 0 var(--dark_825_color));
+}
+
+.tooltip_title {
+    font-size: 1.2rem;
+    color: var(--dark_basic_text_color);
+}
+
+.hold_progress_bar {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0%;
+    height: 0.4em;
+    background-color: var(--sent_400_color);
+    transition: none;
+}

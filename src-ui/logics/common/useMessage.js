@@ -1,11 +1,13 @@
 import {
     useStore_MessageLogs,
+    useStore_MessageInputValue,
 } from "@store";
 
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMessage = () => {
     const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
+    const { currentMessageInputValue, updateMessageInputValue } = useStore_MessageInputValue();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const sendMessage = (message) => {
@@ -46,6 +48,9 @@ export const useMessage = () => {
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,
+
+        currentMessageInputValue,
+        updateMessageInputValue,
     };
 };
 

@@ -67,8 +67,10 @@ const SoftwareUpdateAvailableButton = () => {
     const { t } = useTranslation();
     if (currentIsSoftwareUpdateAvailable.data === false) return null;
 
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+
     return (
-        <button className={styles.software_update_button}>
+        <button className={styles.software_update_button} onClick={()=>updateOpenedQuickSetting("update_software")}>
             <RefreshSvg className={styles.refresh_svg}/>
             <p className={styles.software_update_label}>{t("main_page.update_available")}</p>
         </button>

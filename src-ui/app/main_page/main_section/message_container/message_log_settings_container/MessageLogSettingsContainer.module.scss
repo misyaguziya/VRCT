@@ -1,0 +1,49 @@
+$container_height: 18rem;
+.container {
+    position: absolute;
+    top: -#{$container_height};
+    left: 0;
+    height: $container_height;
+    width: 100%;
+    background-color:  (#555555cc);
+    backdrop-filter: blur(0.6rem);
+    transition: top 0.3s ease;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    &.to_visible_toggle_bar {
+        top: calc(-#{$container_height} + 1rem);
+    }
+    &.is_hovered {
+        top: calc(-#{$container_height} + 2rem);
+    }
+    &.is_opened {
+        top: 0;
+    }
+    &:not(.is_opened) {
+        cursor: pointer;
+    }
+}
+
+.others_wrapper {
+    width: 100%;
+    display: flex;
+}
+
+.resend_checkbox_toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    gap: 1rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+}
+
+.resend_checkbox_label {
+    font-size: 1.4rem;
+}

@@ -91,7 +91,7 @@ const UiScalingContainer = () => {
 };
 
 
-const MessageLogUiScalingContainer = () => {
+export const MessageLogUiScalingContainer = () => {
     const { t } = useTranslation();
     const { currentMessageLogUiScaling, setMessageLogUiScaling } = useMessageLogUiScaling();
     const [ui_message_log_ui_scaling, setUiMessageLogUiScaling] = useState(currentMessageLogUiScaling.data);
