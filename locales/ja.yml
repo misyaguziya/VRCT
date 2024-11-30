@@ -233,6 +233,9 @@ config_window:
   send_only_translated_messages:
     label: "翻訳後のメッセージのみ送信する"
 
+  send_only_translated_messages_overlay:
+    label: "翻訳後のメッセージのみ送信する (Overlay)"
+
   send_message_button_type:
     label: "メッセージ送信ボタン"
     hide: "非表示 (エンターキーを使って送信)"
