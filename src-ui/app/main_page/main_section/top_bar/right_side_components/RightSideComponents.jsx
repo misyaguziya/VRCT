@@ -5,7 +5,7 @@ import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
 import { useIsSoftwareUpdateAvailable } from "@logics_common";
-import { useIsEnabledOverlaySmallLog, useEnableVrcMicMuteSync } from "@logics_configs";
+import { useIsEnabledOverlaySmallLog, useIsEnabledOverlayLargeLog, useEnableVrcMicMuteSync } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
 export const RightSideComponents = () => {
@@ -30,15 +30,18 @@ const OpenOverlayQuickSetting = () => {
     // const { t } = useTranslation();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { currentIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
+    const { currentIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
 
     const onClickFunction = () => {
         updateOpenedQuickSetting("overlay");
     };
 
+    const is_enable = currentIsEnabledOverlaySmallLog.data === true || currentIsEnabledOverlayLargeLog.data === true;
+
     return (
         <OpenQuickSettingButton
             label="Overlay(VR)"
-            variable={currentIsEnabledOverlaySmallLog.data}
+            variable={is_enable}
             onClickFunction={onClickFunction}
         />
     );
