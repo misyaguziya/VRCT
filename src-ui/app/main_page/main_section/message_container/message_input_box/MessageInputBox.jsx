@@ -14,6 +14,8 @@ export const MessageInputBox = () => {
         currentMessageLogs,
         currentMessageInputValue,
         updateMessageInputValue,
+        startTyping,
+        stopTyping,
     } = useMessage();
 
     const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
@@ -45,7 +47,9 @@ export const MessageInputBox = () => {
     };
 
     const onChangeFunction = (e) => {
-        updateMessageInputValue(e.currentTarget.value);
+        const value = e.currentTarget.value;
+        updateMessageInputValue(value);
+        value.trim() ? startTyping() : stopTyping();
     };
 
     const onKeyDownFunction = (e) => {
@@ -86,6 +90,7 @@ export const MessageInputBox = () => {
                 <textarea
                     className={styles.message_box_input_area}
                     onChange={onChangeFunction}
+                    onBlur={stopTyping}
                     placeholder="Input Textfield"
                     value={currentMessageInputValue.data}
                     onKeyDown={onKeyDownFunction}
