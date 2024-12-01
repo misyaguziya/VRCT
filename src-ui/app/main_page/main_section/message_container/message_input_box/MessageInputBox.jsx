@@ -53,12 +53,6 @@ export const MessageInputBox = () => {
     };
 
     const onKeyDownFunction = (e) => {
-        if (currentSendMessageButtonType.data === "show_and_disable_enter_key") return;
-
-        if (e.keyCode === 13 && !e.shiftKey) {
-            onSubmitFunction(e);
-        }
-
         if (e.key === "ArrowUp" && e.shiftKey) {
             e.preventDefault();
 
@@ -82,6 +76,13 @@ export const MessageInputBox = () => {
                 );
             }
         }
+
+        if (currentSendMessageButtonType.data === "show_and_disable_enter_key") return;
+
+        if (e.keyCode === 13 && !e.shiftKey) {
+            onSubmitFunction(e);
+        }
+
     };
 
     return (
