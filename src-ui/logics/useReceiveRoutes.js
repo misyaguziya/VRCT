@@ -426,6 +426,11 @@ export const useReceiveRoutes = () => {
 
         "/get/data/osc_port": updateOscPort,
         "/set/data/osc_port": updateOscPort,
+
+        "/get/data/mic_avg_logprob": ()=>{}, // Not implemented on UI yet
+        "/get/data/mic_no_speech_prob": ()=>{}, // Not implemented on UI yet
+        "/get/data/speaker_avg_logprob": ()=>{}, // Not implemented on UI yet
+        "/get/data/speaker_no_speech_prob": ()=>{}, // Not implemented on UI yet
     };
 
     const error_routes = {
