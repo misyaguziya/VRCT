@@ -222,6 +222,8 @@ export const useReceiveRoutes = () => {
 
         // Message
         "/run/send_message_box": updateSentMessageLogById,
+        "/run/typing_message_box": ()=>{},
+        "/run/stop_typing_message_box": ()=>{},
         "/run/transcription_send_mic_message": addSentMessageLog,
         "/run/transcription_receive_speaker_message": addReceivedMessageLog,
 
