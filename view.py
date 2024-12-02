@@ -529,6 +529,11 @@ class View():
             CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=None,
             VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=BooleanVar(value=config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES),
 
+            VAR_LABEL_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY=StringVar(value=i18n.t("config_window.send_only_translated_messages_overlay.label")),
+            VAR_DESC_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY=None,
+            CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY=None,
+            VAR_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY=BooleanVar(value=config.ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY),
+
             VAR_LABEL_SEND_MESSAGE_BUTTON_TYPE=StringVar(value=i18n.t("config_window.send_message_button_type.label")),
             VAR_DESC_SEND_MESSAGE_BUTTON_TYPE=None,
             CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE=None,
@@ -798,6 +803,7 @@ class View():
             # Others Tab
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_CLEAR_MESSAGE_BOX=config_window_registers.get("callback_set_enable_auto_clear_chatbox", None)
             self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES=config_window_registers.get("callback_set_send_only_translated_messages", None)
+            self.view_variable.CALLBACK_SET_ENABLE_SEND_ONLY_TRANSLATED_MESSAGES_OVERLAY=config_window_registers.get("callback_set_send_only_translated_messages_overlay", None)
             self.view_variable.CALLBACK_SET_SEND_MESSAGE_BUTTON_TYPE=config_window_registers.get("callback_set_send_message_button_type", None)
             self.view_variable.CALLBACK_SET_ENABLE_AUTO_EXPORT_MESSAGE_LOGS=config_window_registers.get("callback_set_enable_auto_export_message_logs", None)
 
