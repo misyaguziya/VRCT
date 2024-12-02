@@ -133,6 +133,7 @@ mapping = {
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
 
     # Translation
+    "/get/data/compute_mode": {"status": True, "variable":controller.getComputeMode},
     "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
