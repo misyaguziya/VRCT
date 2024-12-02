@@ -132,12 +132,13 @@ mapping = {
     "/get/data/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
 
-    # Translation
+    # Compute device
     "/get/data/compute_mode": {"status": True, "variable":controller.getComputeMode},
     "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
 
+    # Translation
     "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
 
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
@@ -262,6 +263,10 @@ mapping = {
 
     "/get/data/overlay_large_log_settings": {"status": True, "variable":controller.getOverlayLargeLogSettings},
     "/set/data/overlay_large_log_settings": {"status": True, "variable":controller.setOverlayLargeLogSettings},
+
+    "/get/data/overlay_show_only_translated_messages": {"status": True, "variable":controller.getOverlayShowOnlyTranslatedMessages},
+    "/set/enable/overlay_show_only_translated_messages": {"status": True, "variable":controller.setEnableOverlayShowOnlyTranslatedMessages},
+    "/set/disable/overlay_show_only_translated_messages": {"status": True, "variable":controller.setDisableOverlayShowOnlyTranslatedMessages},
 
     # Others
     "/get/data/auto_clear_message_box": {"status": True, "variable":controller.getAutoClearMessageBox},
