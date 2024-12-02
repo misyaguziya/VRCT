@@ -1607,14 +1607,6 @@ class Controller:
         th_download.start()
 
     @staticmethod
-    def updateComputeDeviceSettings() -> None:
-        if config.COMPUTE_MODE == "cpu":
-            if config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"] != "cpu":
-                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device":"cpu", "device_index":0, "device_name":"cpu"}
-            if config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"] != "cpu":
-                config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device":"cpu", "device_index":0, "device_name":"cpu"}
-
-    @staticmethod
     def startWatchdog(*args, **kwargs) -> dict:
         model.startWatchdog()
         return {"status":200, "result":True}
@@ -1686,10 +1678,6 @@ class Controller:
         self.updateTranscriptionEngine()
 
         self.initializationProgress(3)
-
-        # set Compute CPU or CUDA
-        printLog("Set Compute CPU or CUDA")
-        self.updateComputeDeviceSettings()
 
         # set word filter
         printLog("Set Word Filter")
