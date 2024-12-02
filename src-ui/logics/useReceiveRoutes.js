@@ -222,6 +222,8 @@ export const useReceiveRoutes = () => {
 
         // Message
         "/run/send_message_box": updateSentMessageLogById,
+        "/run/typing_message_box": ()=>{},
+        "/run/stop_typing_message_box": ()=>{},
         "/run/transcription_send_mic_message": addSentMessageLog,
         "/run/transcription_receive_speaker_message": addReceivedMessageLog,
 
@@ -424,6 +426,11 @@ export const useReceiveRoutes = () => {
 
         "/get/data/osc_port": updateOscPort,
         "/set/data/osc_port": updateOscPort,
+
+        "/get/data/mic_avg_logprob": ()=>{}, // Not implemented on UI yet
+        "/get/data/mic_no_speech_prob": ()=>{}, // Not implemented on UI yet
+        "/get/data/speaker_avg_logprob": ()=>{}, // Not implemented on UI yet
+        "/get/data/speaker_no_speech_prob": ()=>{}, // Not implemented on UI yet
     };
 
     const error_routes = {
