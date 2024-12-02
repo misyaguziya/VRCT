@@ -408,6 +408,14 @@ class Controller:
         return {"status":200, "result":config.MESSAGE_BOX_RATIO_RANGE}
 
     @staticmethod
+    def getComputeMode(*args, **kwargs) -> dict:
+        if torch.cuda.is_available():
+            compute_mode = "cuda"
+        else:
+            compute_mode = "cpu"
+        return {"status":200, "result":compute_mode}
+
+    @staticmethod
     def getComputeDeviceList(*args, **kwargs) -> dict:
         device_list = []
         if torch.cuda.is_available():
