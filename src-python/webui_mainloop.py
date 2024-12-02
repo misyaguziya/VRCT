@@ -103,10 +103,6 @@ mapping = {
     "/get/data/transparency": {"status": True, "variable":controller.getTransparency},
     "/set/data/transparency": {"status": True, "variable":controller.setTransparency},
 
-    # "/get/data/appearance_theme_list": {"status": True, "variable":controller.getAppearanceThemesList},
-    # "/get/data/appearance_theme": {"status": True, "variable":controller.getAppearanceTheme},
-    # "/set/data/appearance_theme": {"status": True, "variable":controller.setAppearanceTheme},
-
     # "/get/data/ui_scaling_range": {"status": True, "variable":controller.getUiScalingRange},
     "/get/data/ui_scaling": {"status": True, "variable":controller.getUiScaling},
     "/set/data/ui_scaling": {"status": True, "variable":controller.setUiScaling},
@@ -124,10 +120,6 @@ mapping = {
 
     "/get/data/ui_language": {"status": True, "variable":controller.getUiLanguage},
     "/set/data/ui_language": {"status": True, "variable":controller.setUiLanguage},
-
-    # "/get/data/restore_main_window_geometry": {"status": True, "variable":controller.getRestoreMainWindowGeometry},
-    # "/set/enable/restore_main_window_geometry": {"status": True, "variable":controller.setEnableRestoreMainWindowGeometry},
-    # "/set/disable/restore_main_window_geometry": {"status": True, "variable":controller.setDisableRestoreMainWindowGeometry},
 
     "/get/data/main_window_geometry": {"status": True, "variable":controller.getMainWindowGeometry},
     "/set/data/main_window_geometry": {"status": True, "variable":controller.setMainWindowGeometry},
