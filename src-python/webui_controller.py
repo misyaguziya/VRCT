@@ -1167,7 +1167,8 @@ class Controller:
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = True
-        model.startOverlay()
+        if config.OVERLAY_LARGE_LOG is False:
+            model.startOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1196,7 +1197,8 @@ class Controller:
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = True
-        model.startOverlay()
+        if config.OVERLAY_SMALL_LOG is False:
+            model.startOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
