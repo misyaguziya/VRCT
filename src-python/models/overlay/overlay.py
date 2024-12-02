@@ -98,7 +98,7 @@ class Overlay:
             for size in self.settings.keys():
                 self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
                 self.updateColor([1, 1, 1], size)
-                self.updateOpacity(self.settings[size]["opacity"], size, True)
+                self.updateOpacity(self.settings[size]["opacity"], size)
                 self.updateUiScaling(self.settings[size]["ui_scaling"], size)
                 self.updatePosition(
                     self.settings[size]["x_pos"],
@@ -132,8 +132,7 @@ class Overlay:
                 while self.initialized is False:
                     time.sleep(0.1)
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
-            self.fadeRatio[size] = 1
-            self.updateOpacity(self.settings[size]["opacity"], size, True)
+            self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
 
     def clearImage(self, size):
@@ -148,7 +147,7 @@ class Overlay:
             r, g, b = col
             self.overlay.setOverlayColor(self.handle[size], r, g, b)
 
-    def updateOpacity(self, opacity, size, with_fade=True):
+    def updateOpacity(self, opacity, size, with_fade=False):
         self.settings[size]["opacity"] = opacity
 
         if self.initialized is True:
@@ -235,7 +234,7 @@ class Overlay:
         if self.settings[size]["fadeout_duration"] != 0:
             self.evaluateOpacityFade(size)
         else:
-            self.updateOpacity(self.settings[size]["opacity"], size, True)
+            self.updateOpacity(self.settings[size]["opacity"], size)
 
     def mainloop(self):
         self.loop = True
