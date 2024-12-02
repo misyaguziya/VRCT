@@ -10,7 +10,6 @@ from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
-from utils import isUniqueStrings
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -82,29 +81,13 @@ class Config:
     def DEEPL_AUTH_KEY_PAGE_URL(self):
         return self._DEEPL_AUTH_KEY_PAGE_URL
 
-    # @property
-    # def TRANSPARENCY_RANGE(self):
-    #     return self._TRANSPARENCY_RANGE
+    @property
+    def MAX_MIC_THRESHOLD(self):
+        return self._MAX_MIC_THRESHOLD
 
-    # @property
-    # def UI_SCALING_RANGE(self):
-    #     return self._UI_SCALING_RANGE
-
-    # @property
-    # def TEXTBOX_UI_SCALING_RANGE(self):
-    #     return self._TEXTBOX_UI_SCALING_RANGE
-
-    # @property
-    # def MESSAGE_BOX_RATIO_RANGE(self):
-    #     return self._MESSAGE_BOX_RATIO_RANGE
-
-    # @property
-    # def MAX_MIC_THRESHOLD(self):
-    #     return self._MAX_MIC_THRESHOLD
-
-    # @property
-    # def MAX_SPEAKER_THRESHOLD(self):
-    #     return self._MAX_SPEAKER_THRESHOLD
+    @property
+    def MAX_SPEAKER_THRESHOLD(self):
+        return self._MAX_SPEAKER_THRESHOLD
 
     @property
     def WATCHDOG_TIMEOUT(self):
@@ -149,6 +132,22 @@ class Config:
     @property
     def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
         return self._SEND_MESSAGE_BUTTON_TYPE_LIST
+
+    @property
+    def SEND_MESSAGE_FORMAT(self):
+        return self._SEND_MESSAGE_FORMAT
+
+    @property
+    def SEND_MESSAGE_FORMAT_WITH_T(self):
+        return self._SEND_MESSAGE_FORMAT_WITH_T
+
+    @property
+    def RECEIVED_MESSAGE_FORMAT(self):
+        return self._RECEIVED_MESSAGE_FORMAT
+
+    @property
+    def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
+        return self._RECEIVED_MESSAGE_FORMAT_WITH_T
 
     # Read Write
     @property
@@ -867,58 +866,6 @@ class Config:
             self._SEND_MESSAGE_TO_VRC = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    # @property
-    # @json_serializable('SEND_MESSAGE_FORMAT')
-    # def SEND_MESSAGE_FORMAT(self):
-    #     return self._SEND_MESSAGE_FORMAT
-
-    # @SEND_MESSAGE_FORMAT.setter
-    # def SEND_MESSAGE_FORMAT(self, value):
-    #     if isinstance(value, str):
-    #         if isUniqueStrings(["[message]"], value) is False:
-    #             value = "[message]"
-    #         self._SEND_MESSAGE_FORMAT = value
-    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    # @property
-    # @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
-    # def SEND_MESSAGE_FORMAT_WITH_T(self):
-    #     return self._SEND_MESSAGE_FORMAT_WITH_T
-
-    # @SEND_MESSAGE_FORMAT_WITH_T.setter
-    # def SEND_MESSAGE_FORMAT_WITH_T(self, value):
-    #     if isinstance(value, str):
-    #         if isUniqueStrings(["[message]", "[translation]"], value) is False:
-    #             value = "[message]([translation])"
-    #         self._SEND_MESSAGE_FORMAT_WITH_T = value
-    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    # @property
-    # @json_serializable('RECEIVED_MESSAGE_FORMAT')
-    # def RECEIVED_MESSAGE_FORMAT(self):
-    #     return self._RECEIVED_MESSAGE_FORMAT
-
-    # @RECEIVED_MESSAGE_FORMAT.setter
-    # def RECEIVED_MESSAGE_FORMAT(self, value):
-    #     if isinstance(value, str):
-    #         if isUniqueStrings(["[message]"], value) is False:
-    #             value = "[message]"
-    #         self._RECEIVED_MESSAGE_FORMAT = value
-    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    # @property
-    # @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
-    # def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
-    #     return self._RECEIVED_MESSAGE_FORMAT_WITH_T
-
-    # @RECEIVED_MESSAGE_FORMAT_WITH_T.setter
-    # def RECEIVED_MESSAGE_FORMAT_WITH_T(self, value):
-    #     if isinstance(value, str):
-    #         if isUniqueStrings(["[message]", "[translation]"], value) is False:
-    #             value = "[message]([translation])"
-    #         self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
-    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
     @property
     @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
     def SEND_RECEIVED_MESSAGE_TO_VRC(self):
@@ -967,10 +914,7 @@ class Config:
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
         self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
-        # self._TRANSPARENCY_RANGE = (40, 100)
-        # self._UI_SCALING_RANGE = (40, 200)
-        # self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
-        # self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
+
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
         self._WATCHDOG_TIMEOUT = 60
@@ -989,6 +933,10 @@ class Config:
                 self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)})
         self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "name": "cpu"})
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
+        self._SEND_MESSAGE_FORMAT = "[message]"
+        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        self._RECEIVED_MESSAGE_FORMAT = "[message]"
+        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
 
         # Read Write
         self._ENABLE_TRANSLATION = False
@@ -1083,10 +1031,6 @@ class Config:
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._CTRANSLATE2_WEIGHT_TYPE = "small"
         self._WHISPER_WEIGHT_TYPE = "base"
-        # self._SEND_MESSAGE_FORMAT = "[message]"
-        # self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
-        # self._RECEIVED_MESSAGE_FORMAT = "[message]"
-        # self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
@@ -1132,7 +1076,10 @@ class Config:
                     self._config_data = json_load(fp)
 
                     for key, value in self._config_data.items():
-                        setattr(self, key, value)
+                        try:
+                            setattr(self, key, value)
+                        except:
+                            pass
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():
