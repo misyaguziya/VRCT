@@ -251,7 +251,10 @@ class Controller:
                     model.logger.info(f"[SENT] {message}{translation}")
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE is True and len(translation) > 0:
+                        overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
+                    else:
+                        overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                     model.updateOverlayLargeLog(overlay_image)
 
     def speakerMessage(self, message) -> None:
@@ -290,12 +293,18 @@ class Controller:
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE is True and len(translation) > 0:
+                        overlay_image = model.createOverlayImageSmallLog(translation[0], "")
+                    else:
                         overlay_image = model.createOverlayImageSmallLog(message, translation[0] if len(translation) > 0 else "")
-                        model.updateOverlaySmallLog(overlay_image)
+                    model.updateOverlaySmallLog(overlay_image)
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE is True and len(translation) > 0:
+                        overlay_image = model.createOverlayImageLargeLog("receive", translation[0], "")
+                    else:
                         overlay_image = model.createOverlayImageLargeLog("receive", message, translation[0] if len(translation) > 0 else "")
-                        model.updateOverlayLargeLog(overlay_image)
+                    model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
@@ -361,7 +370,10 @@ class Controller:
                 model.oscSendMessage(osc_message)
 
             if config.OVERLAY_LARGE_LOG is True:
-                overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE is True and len(translation) > 0:
+                    overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
+                else:
+                    overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                 model.updateOverlayLargeLog(overlay_image)
 
             # update textbox message log (Sent)

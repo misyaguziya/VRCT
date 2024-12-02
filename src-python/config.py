@@ -811,6 +811,17 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_LARGE_LOG_SETTINGS)
 
     @property
+    @json_serializable('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE')
+    def OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE(self):
+        return self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE
+
+    @OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE.setter
+    def OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE(self, value):
+        if isinstance(value, bool):
+            self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('SEND_MESSAGE_TO_VRC')
     def SEND_MESSAGE_TO_VRC(self):
         return self._SEND_MESSAGE_TO_VRC
@@ -1108,6 +1119,7 @@ class Config:
             "ui_scaling": 1.0,
             "tracker": "LeftHand",
         }
+        self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGE = False
         self._SEND_MESSAGE_TO_VRC = True
         self._SEND_RECEIVED_MESSAGE_TO_VRC = False
         self._LOGGER_FEATURE = False

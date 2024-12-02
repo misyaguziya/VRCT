@@ -9,7 +9,7 @@ deepl == 1.15.0
 flashtext ==2.7
 pyinstaller==6.10.0
 numpy==1.26.4
-sentencepiece==0.1.99
+sentencepiece==0.2.0
 openvr==1.26.701
 pydub==0.25.1
 psutil==5.9.8
