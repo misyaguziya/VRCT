@@ -4,8 +4,12 @@ from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import threading
+import torch
 from device_manager import device_manager
+from models.translation.translation_languages import translation_lang
+from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
+from models.transcription.transcription_whisper import _MODELS as whisper_models
 from utils import isUniqueStrings
 
 json_serializable_vars = {}
@@ -78,29 +82,29 @@ class Config:
     def DEEPL_AUTH_KEY_PAGE_URL(self):
         return self._DEEPL_AUTH_KEY_PAGE_URL
 
-    @property
-    def TRANSPARENCY_RANGE(self):
-        return self._TRANSPARENCY_RANGE
+    # @property
+    # def TRANSPARENCY_RANGE(self):
+    #     return self._TRANSPARENCY_RANGE
 
-    @property
-    def UI_SCALING_RANGE(self):
-        return self._UI_SCALING_RANGE
+    # @property
+    # def UI_SCALING_RANGE(self):
+    #     return self._UI_SCALING_RANGE
 
-    @property
-    def TEXTBOX_UI_SCALING_RANGE(self):
-        return self._TEXTBOX_UI_SCALING_RANGE
+    # @property
+    # def TEXTBOX_UI_SCALING_RANGE(self):
+    #     return self._TEXTBOX_UI_SCALING_RANGE
 
-    @property
-    def MESSAGE_BOX_RATIO_RANGE(self):
-        return self._MESSAGE_BOX_RATIO_RANGE
+    # @property
+    # def MESSAGE_BOX_RATIO_RANGE(self):
+    #     return self._MESSAGE_BOX_RATIO_RANGE
 
-    @property
-    def MAX_MIC_THRESHOLD(self):
-        return self._MAX_MIC_THRESHOLD
+    # @property
+    # def MAX_MIC_THRESHOLD(self):
+    #     return self._MAX_MIC_THRESHOLD
 
-    @property
-    def MAX_SPEAKER_THRESHOLD(self):
-        return self._MAX_SPEAKER_THRESHOLD
+    # @property
+    # def MAX_SPEAKER_THRESHOLD(self):
+    #     return self._MAX_SPEAKER_THRESHOLD
 
     @property
     def WATCHDOG_TIMEOUT(self):
@@ -109,6 +113,42 @@ class Config:
     @property
     def WATCHDOG_INTERVAL(self):
         return self._WATCHDOG_INTERVAL
+
+    @property
+    def SELECTABLE_TAB_NO_LIST(self):
+        return self._SELECTABLE_TAB_NO_LIST
+
+    @property
+    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
+        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST
+
+    @property
+    def SELECTABLE_WHISPER_WEIGHT_TYPE_LIST(self):
+        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST
+
+    @property
+    def SELECTABLE_TRANSLATION_ENGINE_LIST(self):
+        return self._SELECTABLE_TRANSLATION_ENGINE_LIST
+
+    @property
+    def SELECTABLE_TRANSCRIPTION_ENGINE_LIST(self):
+        return self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST
+
+    @property
+    def SELECTABLE_UI_LANGUAGE_LIST(self):
+        return self._SELECTABLE_UI_LANGUAGE_LIST
+
+    @property
+    def COMPUTE_MODE(self):
+        return self._COMPUTE_MODE
+
+    @property
+    def SELECTABLE_COMPUTE_DEVICE_LIST(self):
+        return self._SELECTABLE_COMPUTE_DEVICE_LIST
+
+    @property
+    def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
+        return self._SEND_MESSAGE_BUTTON_TYPE_LIST
 
     # Read Write
     @property
@@ -193,8 +233,9 @@ class Config:
     @SELECTED_TAB_NO.setter
     def SELECTED_TAB_NO(self, value):
         if isinstance(value, str):
-            self._SELECTED_TAB_NO = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_TAB_NO_LIST:
+                self._SELECTED_TAB_NO = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSLATION_ENGINES')
@@ -204,6 +245,10 @@ class Config:
     @SELECTED_TRANSLATION_ENGINES.setter
     def SELECTED_TRANSLATION_ENGINES(self, value):
         if isinstance(value, dict):
+            old_value = self.SELECTED_TRANSLATION_ENGINES
+            for k, v in value.items():
+                if v not in self.SELECTABLE_TRANSLATION_ENGINE_LIST:
+                    value[k] = old_value[k]
             self._SELECTED_TRANSLATION_ENGINES = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
@@ -214,19 +259,16 @@ class Config:
 
     @SELECTED_YOUR_LANGUAGES.setter
     def SELECTED_YOUR_LANGUAGES(self, value):
-        try:
-            if isinstance(value, dict):
-                value_old = self.SELECTED_YOUR_LANGUAGES
-                for k0, v0 in value.items():
-                    for k1, v1 in v0.items():
-                        language = v1["language"]
-                        country = v1["country"]
-                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                            value[k0][k1] = value_old[k0][k1]
-                self._SELECTED_YOUR_LANGUAGES = value
-        except Exception:
-            pass
-        self.saveConfig(inspect.currentframe().f_code.co_name, value)
+        if isinstance(value, dict):
+            value_old = self.SELECTED_YOUR_LANGUAGES
+            for k0, v0 in value.items():
+                for k1, v1 in v0.items():
+                    language = v1["language"]
+                    country = v1["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                        value[k0][k1] = value_old[k0][k1]
+            self._SELECTED_YOUR_LANGUAGES = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TARGET_LANGUAGES')
@@ -235,19 +277,16 @@ class Config:
 
     @SELECTED_TARGET_LANGUAGES.setter
     def SELECTED_TARGET_LANGUAGES(self, value):
-        try:
-            if isinstance(value, dict):
-                value_old = self.SELECTED_TARGET_LANGUAGES
-                for k0, v0 in value.items():
-                    for k1, v1 in v0.items():
-                        language = v1["language"]
-                        country = v1["country"]
-                        if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
-                            value[k0][k1] = value_old[k0][k1]
-                self._SELECTED_TARGET_LANGUAGES = value
-        except Exception:
-            pass
-        self.saveConfig(inspect.currentframe().f_code.co_name, value)
+        if isinstance(value, dict):
+            value_old = self.SELECTED_TARGET_LANGUAGES
+            for k0, v0 in value.items():
+                for k1, v1 in v0.items():
+                    language = v1["language"]
+                    country = v1["country"]
+                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                        value[k0][k1] = value_old[k0][k1]
+            self._SELECTED_TARGET_LANGUAGES = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
@@ -257,8 +296,9 @@ class Config:
     @SELECTED_TRANSCRIPTION_ENGINE.setter
     def SELECTED_TRANSCRIPTION_ENGINE(self, value):
         if isinstance(value, str):
-            self._SELECTED_TRANSCRIPTION_ENGINE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
+                self._SELECTED_TRANSCRIPTION_ENGINE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MULTI_LANGUAGE_TRANSLATION')
@@ -368,19 +408,9 @@ class Config:
     @UI_LANGUAGE.setter
     def UI_LANGUAGE(self, value):
         if isinstance(value, str):
-            self._UI_LANGUAGE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('RESTORE_MAIN_WINDOW_GEOMETRY')
-    def RESTORE_MAIN_WINDOW_GEOMETRY(self):
-        return self._RESTORE_MAIN_WINDOW_GEOMETRY
-
-    @RESTORE_MAIN_WINDOW_GEOMETRY.setter
-    def RESTORE_MAIN_WINDOW_GEOMETRY(self, value):
-        if isinstance(value, bool):
-            self._RESTORE_MAIN_WINDOW_GEOMETRY = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_UI_LANGUAGE_LIST:
+                self._UI_LANGUAGE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('MAIN_WINDOW_GEOMETRY')
@@ -669,8 +699,9 @@ class Config:
     @SELECTED_TRANSLATION_COMPUTE_DEVICE.setter
     def SELECTED_TRANSLATION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_COMPUTE_DEVICE_LIST:
+                self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE')
@@ -680,8 +711,9 @@ class Config:
     @SELECTED_TRANSCRIPTION_COMPUTE_DEVICE.setter
     def SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
-            self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_COMPUTE_DEVICE_LIST:
+                self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
@@ -691,8 +723,9 @@ class Config:
     @CTRANSLATE2_WEIGHT_TYPE.setter
     def CTRANSLATE2_WEIGHT_TYPE(self, value):
         if isinstance(value, str):
-            self._CTRANSLATE2_WEIGHT_TYPE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST:
+                self._CTRANSLATE2_WEIGHT_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('WHISPER_WEIGHT_TYPE')
@@ -702,8 +735,9 @@ class Config:
     @WHISPER_WEIGHT_TYPE.setter
     def WHISPER_WEIGHT_TYPE(self, value):
         if isinstance(value, str):
-            self._WHISPER_WEIGHT_TYPE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST:
+                self._WHISPER_WEIGHT_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
@@ -735,8 +769,9 @@ class Config:
     @SEND_MESSAGE_BUTTON_TYPE.setter
     def SEND_MESSAGE_BUTTON_TYPE(self, value):
         if isinstance(value, str):
-            self._SEND_MESSAGE_BUTTON_TYPE = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            if value in self.SEND_MESSAGE_BUTTON_TYPE_LIST:
+                self._SEND_MESSAGE_BUTTON_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('OVERLAY_SMALL_LOG')
@@ -761,8 +796,8 @@ class Config:
                 match (key):
                     case "tracker":
                         if isinstance(value, str):
-                            # "HMD", "LeftHand", "RightHand"
-                            self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
+                            if value in ["HMD", "LeftHand", "RightHand"]:
+                                self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
                         if isinstance(value, (int, float)):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = float(value)
@@ -797,8 +832,8 @@ class Config:
                 match (key):
                     case "tracker":
                         if isinstance(value, str):
-                            # "HMD", "LeftHand", "RightHand"
-                            self._OVERLAY_LARGE_LOG_SETTINGS[key] = value
+                            if value in ["HMD", "LeftHand", "RightHand"]:
+                                self._OVERLAY_LARGE_LOG_SETTINGS[key] = value
                     case "x_pos" | "y_pos" | "z_pos" | "x_rotation" | "y_rotation" | "z_rotation":
                         if isinstance(value, (int, float)):
                             self._OVERLAY_LARGE_LOG_SETTINGS[key] = float(value)
@@ -832,57 +867,57 @@ class Config:
             self._SEND_MESSAGE_TO_VRC = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('SEND_MESSAGE_FORMAT')
-    def SEND_MESSAGE_FORMAT(self):
-        return self._SEND_MESSAGE_FORMAT
+    # @property
+    # @json_serializable('SEND_MESSAGE_FORMAT')
+    # def SEND_MESSAGE_FORMAT(self):
+    #     return self._SEND_MESSAGE_FORMAT
 
-    @SEND_MESSAGE_FORMAT.setter
-    def SEND_MESSAGE_FORMAT(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]"], value) is False:
-                value = "[message]"
-            self._SEND_MESSAGE_FORMAT = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+    # @SEND_MESSAGE_FORMAT.setter
+    # def SEND_MESSAGE_FORMAT(self, value):
+    #     if isinstance(value, str):
+    #         if isUniqueStrings(["[message]"], value) is False:
+    #             value = "[message]"
+    #         self._SEND_MESSAGE_FORMAT = value
+    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
-    def SEND_MESSAGE_FORMAT_WITH_T(self):
-        return self._SEND_MESSAGE_FORMAT_WITH_T
+    # @property
+    # @json_serializable('SEND_MESSAGE_FORMAT_WITH_T')
+    # def SEND_MESSAGE_FORMAT_WITH_T(self):
+    #     return self._SEND_MESSAGE_FORMAT_WITH_T
 
-    @SEND_MESSAGE_FORMAT_WITH_T.setter
-    def SEND_MESSAGE_FORMAT_WITH_T(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
-            self._SEND_MESSAGE_FORMAT_WITH_T = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+    # @SEND_MESSAGE_FORMAT_WITH_T.setter
+    # def SEND_MESSAGE_FORMAT_WITH_T(self, value):
+    #     if isinstance(value, str):
+    #         if isUniqueStrings(["[message]", "[translation]"], value) is False:
+    #             value = "[message]([translation])"
+    #         self._SEND_MESSAGE_FORMAT_WITH_T = value
+    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('RECEIVED_MESSAGE_FORMAT')
-    def RECEIVED_MESSAGE_FORMAT(self):
-        return self._RECEIVED_MESSAGE_FORMAT
+    # @property
+    # @json_serializable('RECEIVED_MESSAGE_FORMAT')
+    # def RECEIVED_MESSAGE_FORMAT(self):
+    #     return self._RECEIVED_MESSAGE_FORMAT
 
-    @RECEIVED_MESSAGE_FORMAT.setter
-    def RECEIVED_MESSAGE_FORMAT(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]"], value) is False:
-                value = "[message]"
-            self._RECEIVED_MESSAGE_FORMAT = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+    # @RECEIVED_MESSAGE_FORMAT.setter
+    # def RECEIVED_MESSAGE_FORMAT(self, value):
+    #     if isinstance(value, str):
+    #         if isUniqueStrings(["[message]"], value) is False:
+    #             value = "[message]"
+    #         self._RECEIVED_MESSAGE_FORMAT = value
+    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    @property
-    @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
-    def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
-        return self._RECEIVED_MESSAGE_FORMAT_WITH_T
+    # @property
+    # @json_serializable('RECEIVED_MESSAGE_FORMAT_WITH_T')
+    # def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
+    #     return self._RECEIVED_MESSAGE_FORMAT_WITH_T
 
-    @RECEIVED_MESSAGE_FORMAT_WITH_T.setter
-    def RECEIVED_MESSAGE_FORMAT_WITH_T(self, value):
-        if isinstance(value, str):
-            if isUniqueStrings(["[message]", "[translation]"], value) is False:
-                value = "[message]([translation])"
-            self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+    # @RECEIVED_MESSAGE_FORMAT_WITH_T.setter
+    # def RECEIVED_MESSAGE_FORMAT_WITH_T(self, value):
+    #     if isinstance(value, str):
+    #         if isUniqueStrings(["[message]", "[translation]"], value) is False:
+    #             value = "[message]([translation])"
+    #         self._RECEIVED_MESSAGE_FORMAT_WITH_T = value
+    #         self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
@@ -932,14 +967,28 @@ class Config:
         self._BOOTH_URL = "https://misyaguziya.booth.pm/"
         self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
         self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
-        self._TRANSPARENCY_RANGE = (40, 100)
-        self._UI_SCALING_RANGE = (40, 200)
-        self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
-        self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
+        # self._TRANSPARENCY_RANGE = (40, 100)
+        # self._UI_SCALING_RANGE = (40, 200)
+        # self._TEXTBOX_UI_SCALING_RANGE = (40, 200)
+        # self._MESSAGE_BOX_RATIO_RANGE = (1, 99)
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
         self._WATCHDOG_TIMEOUT = 60
         self._WATCHDOG_INTERVAL = 20
+
+        self._SELECTABLE_TAB_NO_LIST = ["1", "2", "3"]
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = ctranslate2_weights.keys()
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = whisper_models.keys()
+        self._SELECTABLE_TRANSLATION_ENGINE_LIST = translation_lang.keys()
+        self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = translation_lang.keys()
+        self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
+        self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
+        self._SELECTABLE_COMPUTE_DEVICE_LIST = []
+        if torch.cuda.is_available():
+            for i in range(torch.cuda.device_count()):
+                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)})
+        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "name": "cpu"})
+        self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
 
         # Read Write
         self._ENABLE_TRANSLATION = False
@@ -948,92 +997,43 @@ class Config:
         self._ENABLE_FOREGROUND = False
         self._ENABLE_CHECK_ENERGY_SEND = False
         self._ENABLE_CHECK_ENERGY_RECEIVE = False
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {
-            "small": False,
-            "large": False,
-        }
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {
-            "tiny": False,
-            "base": False,
-            "small": False,
-            "medium": False,
-            "large-v1": False,
-            "large-v2": False,
-            "large-v3": False,
-        }
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = {}
+        for weight_type in self.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST:
+            self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[weight_type] = False
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {}
+        for weight_type in self.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST:
+            self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = False
 
         # Save Json Data
         ## Main Window
         self._SELECTED_TAB_NO = "1"
-        self._SELECTED_TRANSLATION_ENGINES = {
-            "1":"CTranslate2",
-            "2":"CTranslate2",
-            "3":"CTranslate2",
-        }
-        self._SELECTED_YOUR_LANGUAGES = {
-            "1":{
-                "primary":{
-                    "language":"Japanese",
-                    "country":"Japan"
+        self._SELECTED_TRANSLATION_ENGINES = {}
+        for tab_no in self.SELECTABLE_TAB_NO_LIST:
+            self._SELECTED_TRANSLATION_ENGINES[tab_no] = "CTranslate2"
+        self._SELECTED_YOUR_LANGUAGES = {}
+        for tab_no in self.SELECTABLE_TAB_NO_LIST:
+            self._SELECTED_YOUR_LANGUAGES[tab_no] = {
+                "primary": {
+                    "language": "Japanese",
+                    "country": "Japan",
                 },
-            },
-            "2":{
-                "primary":{
-                    "language":"Japanese",
-                    "country":"Japan"
+            }
+        self._SELECTED_TARGET_LANGUAGES = {}
+        for tab_no in self.SELECTABLE_TAB_NO_LIST:
+            self._SELECTED_TARGET_LANGUAGES[tab_no] = {
+                "primary": {
+                    "language": "English",
+                    "country": "United States",
                 },
-            },
-            "3":{
-                "primary":{
-                    "language":"Japanese",
-                    "country":"Japan"
+                "secondary": {
+                    "language": "English",
+                    "country": "United States",
                 },
-            },
-        }
-        self._SELECTED_TARGET_LANGUAGES = {
-            "1":{
-                "primary":{
-                    "language":"English",
-                    "country":"United States",
+                "tertiary": {
+                    "language": "English",
+                    "country": "United States",
                 },
-                "secondary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-                "tertiary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-            },
-            "2":{
-                "primary":{
-                    "language":"English",
-                    "country":"United States",
-                },
-                "secondary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-                "tertiary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-            },
-            "3":{
-                "primary":{
-                    "language":"English",
-                    "country":"United States",
-                },
-                "secondary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-                "tertiary":{
-                    "language":"English",
-                    "country":"United States"
-                },
-            },
-        }
+            }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._MULTI_LANGUAGE_TRANSLATION = False
         self._CONVERT_MESSAGE_TO_ROMAJI = False
@@ -1047,7 +1047,6 @@ class Config:
         self._MESSAGE_BOX_RATIO = 10
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
-        self._RESTORE_MAIN_WINDOW_GEOMETRY = True
         self._MAIN_WINDOW_GEOMETRY = {
             "x_pos": 0,
             "y_pos": 0,
@@ -1084,10 +1083,10 @@ class Config:
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
         self._CTRANSLATE2_WEIGHT_TYPE = "small"
         self._WHISPER_WEIGHT_TYPE = "base"
-        self._SEND_MESSAGE_FORMAT = "[message]"
-        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
-        self._RECEIVED_MESSAGE_FORMAT = "[message]"
-        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        # self._SEND_MESSAGE_FORMAT = "[message]"
+        # self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        # self._RECEIVED_MESSAGE_FORMAT = "[message]"
+        # self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_BUTTON_TYPE = "show"
