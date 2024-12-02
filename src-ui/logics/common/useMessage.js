@@ -42,6 +42,13 @@ export const useMessage = () => {
         addMessageLogs(message_object);
     };
 
+    const startTyping = () => {
+        asyncStdoutToPython("/run/typing_message_box");
+    };
+    const stopTyping = () => {
+        asyncStdoutToPython("/run/stop_typing_message_box");
+    };
+
     return {
         currentMessageLogs,
         sendMessage,
@@ -51,6 +58,9 @@ export const useMessage = () => {
 
         currentMessageInputValue,
         updateMessageInputValue,
+
+        startTyping,
+        stopTyping,
     };
 };
 
