@@ -7,7 +7,6 @@ from device_manager import device_manager
 from config import config
 from model import model
 from utils import isUniqueStrings, removeLog, printLog
-import torch
 
 class Controller:
     def __init__(self) -> None:
@@ -403,38 +402,29 @@ class Controller:
             update_flag,
         )
 
-    @staticmethod
-    def getTransparencyRange(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TRANSPARENCY_RANGE}
+    # @staticmethod
+    # def getTransparencyRange(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.TRANSPARENCY_RANGE}
 
-    @staticmethod
-    def getUiScalingRange(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.UI_SCALING_RANGE}
+    # @staticmethod
+    # def getUiScalingRange(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.UI_SCALING_RANGE}
 
-    @staticmethod
-    def getTextboxUiScalingRange(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.TEXTBOX_UI_SCALING_RANGE}
+    # @staticmethod
+    # def getTextboxUiScalingRange(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.TEXTBOX_UI_SCALING_RANGE}
 
-    @staticmethod
-    def getMessageBoxRatioRange(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MESSAGE_BOX_RATIO_RANGE}
+    # @staticmethod
+    # def getMessageBoxRatioRange(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.MESSAGE_BOX_RATIO_RANGE}
 
     @staticmethod
     def getComputeMode(*args, **kwargs) -> dict:
-        if torch.cuda.is_available():
-            compute_mode = "cuda"
-        else:
-            compute_mode = "cpu"
-        return {"status":200, "result":compute_mode}
+        return {"status":200, "result":config.COMPUTE_MODE}
 
     @staticmethod
     def getComputeDeviceList(*args, **kwargs) -> dict:
-        device_list = []
-        if torch.cuda.is_available():
-            for i in range(torch.cuda.device_count()):
-                device_list.append({"device":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)})
-        device_list.append({"device":"cpu", "device_index": 0, "name": "cpu"})
-        return {"status":200, "result":device_list}
+        return {"status":200, "result":config.SELECTABLE_COMPUTE_DEVICE_LIST}
 
     @staticmethod
     def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
@@ -464,13 +454,13 @@ class Controller:
     def getSelectableWhisperWeightTypeDict(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
 
-    @staticmethod
-    def getMaxMicThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAX_MIC_THRESHOLD}
+    # @staticmethod
+    # def getMaxMicThreshold(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.MAX_MIC_THRESHOLD}
 
-    @staticmethod
-    def getMaxSpeakerThreshold(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MAX_SPEAKER_THRESHOLD}
+    # @staticmethod
+    # def getMaxSpeakerThreshold(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.MAX_SPEAKER_THRESHOLD}
 
     @staticmethod
     def setEnableTranslation(*args, **kwargs) -> dict:
@@ -674,20 +664,6 @@ class Controller:
     def setUiLanguage(data, *args, **kwargs) -> dict:
         config.UI_LANGUAGE = data
         return {"status":200, "result":config.UI_LANGUAGE}
-
-    @staticmethod
-    def getRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
-
-    @staticmethod
-    def setEnableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-        config.RESTORE_MAIN_WINDOW_GEOMETRY = True
-        return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
-
-    @staticmethod
-    def setDisableRestoreMainWindowGeometry(*args, **kwargs) -> dict:
-        config.RESTORE_MAIN_WINDOW_GEOMETRY = False
-        return {"status":200, "result":config.RESTORE_MAIN_WINDOW_GEOMETRY}
 
     @staticmethod
     def getMainWindowGeometry(*args, **kwargs) -> dict:
@@ -1268,47 +1244,47 @@ class Controller:
         config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
-    @staticmethod
-    def getSendMessageFormat(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
+    # @staticmethod
+    # def getSendMessageFormat(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
 
-    @staticmethod
-    def setSendMessageFormat(data, *args, **kwargs) -> dict:
-        if isUniqueStrings(["[message]"], data) is True:
-            config.SEND_MESSAGE_FORMAT = data
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
+    # @staticmethod
+    # def setSendMessageFormat(data, *args, **kwargs) -> dict:
+    #     if isUniqueStrings(["[message]"], data) is True:
+    #         config.SEND_MESSAGE_FORMAT = data
+    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
 
-    @staticmethod
-    def getSendMessageFormatWithT(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
+    # @staticmethod
+    # def getSendMessageFormatWithT(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
 
-    @staticmethod
-    def setSendMessageFormatWithT(data, *args, **kwargs) -> dict:
-        if len(data) > 0:
-            if isUniqueStrings(["[message]", "[translation]"], data) is True:
-                config.SEND_MESSAGE_FORMAT_WITH_T = data
-        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
+    # @staticmethod
+    # def setSendMessageFormatWithT(data, *args, **kwargs) -> dict:
+    #     if len(data) > 0:
+    #         if isUniqueStrings(["[message]", "[translation]"], data) is True:
+    #             config.SEND_MESSAGE_FORMAT_WITH_T = data
+    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
 
-    @staticmethod
-    def getReceivedMessageFormat(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
+    # @staticmethod
+    # def getReceivedMessageFormat(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
 
-    @staticmethod
-    def setReceivedMessageFormat(data, *args, **kwargs) -> dict:
-        if isUniqueStrings(["[message]"], data) is True:
-            config.RECEIVED_MESSAGE_FORMAT = data
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
+    # @staticmethod
+    # def setReceivedMessageFormat(data, *args, **kwargs) -> dict:
+    #     if isUniqueStrings(["[message]"], data) is True:
+    #         config.RECEIVED_MESSAGE_FORMAT = data
+    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
 
-    @staticmethod
-    def getReceivedMessageFormatWithT(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
+    # @staticmethod
+    # def getReceivedMessageFormatWithT(*args, **kwargs) -> dict:
+    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
 
-    @staticmethod
-    def setReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
-        if len(data) > 0:
-            if isUniqueStrings(["[message]", "[translation]"], data) is True:
-                config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
-        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
+    # @staticmethod
+    # def setReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
+    #     if len(data) > 0:
+    #         if isUniqueStrings(["[message]", "[translation]"], data) is True:
+    #             config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
+    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
 
     @staticmethod
     def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
@@ -1690,7 +1666,7 @@ class Controller:
 
     @staticmethod
     def updateComputeDeviceSettings() -> None:
-        if torch.cuda.is_available() is False:
+        if config.COMPUTE_MODE == "cpu":
             if config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"] != "cpu":
                 config.SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device":"cpu", "device_index":0, "device_name":"cpu"}
             if config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"] != "cpu":
