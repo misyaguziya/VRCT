@@ -930,8 +930,8 @@ class Config:
         self._SELECTABLE_COMPUTE_DEVICE_LIST = []
         if torch.cuda.is_available():
             for i in range(torch.cuda.device_count()):
-                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "name": torch.cuda.get_device_name(i)})
-        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "name": "cpu"})
+                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "device_name": torch.cuda.get_device_name(i)})
+        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
         self._SEND_MESSAGE_FORMAT = "[message]"
         self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
@@ -1078,8 +1078,10 @@ class Config:
                     for key, value in self._config_data.items():
                         try:
                             setattr(self, key, value)
-                        except:
-                            pass
+                        except Exception:
+                            import traceback
+                            with open('error.log', 'a') as f:
+                                traceback.print_exc(file=f)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():
