@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import isUniqueStrings, removeLog, printLog
+from utils import removeLog, printLog
 
 class Controller:
     def __init__(self) -> None:
@@ -401,22 +401,6 @@ class Controller:
             self.run_mapping["update_software_flag"],
             update_flag,
         )
-
-    # @staticmethod
-    # def getTransparencyRange(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.TRANSPARENCY_RANGE}
-
-    # @staticmethod
-    # def getUiScalingRange(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.UI_SCALING_RANGE}
-
-    # @staticmethod
-    # def getTextboxUiScalingRange(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.TEXTBOX_UI_SCALING_RANGE}
-
-    # @staticmethod
-    # def getMessageBoxRatioRange(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.MESSAGE_BOX_RATIO_RANGE}
 
     @staticmethod
     def getComputeMode(*args, **kwargs) -> dict:
@@ -1243,48 +1227,6 @@ class Controller:
     def setDisableSendMessageToVrc(*args, **kwargs) -> dict:
         config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
-
-    # @staticmethod
-    # def getSendMessageFormat(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
-
-    # @staticmethod
-    # def setSendMessageFormat(data, *args, **kwargs) -> dict:
-    #     if isUniqueStrings(["[message]"], data) is True:
-    #         config.SEND_MESSAGE_FORMAT = data
-    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT}
-
-    # @staticmethod
-    # def getSendMessageFormatWithT(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
-
-    # @staticmethod
-    # def setSendMessageFormatWithT(data, *args, **kwargs) -> dict:
-    #     if len(data) > 0:
-    #         if isUniqueStrings(["[message]", "[translation]"], data) is True:
-    #             config.SEND_MESSAGE_FORMAT_WITH_T = data
-    #     return {"status":200, "result":config.SEND_MESSAGE_FORMAT_WITH_T}
-
-    # @staticmethod
-    # def getReceivedMessageFormat(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
-
-    # @staticmethod
-    # def setReceivedMessageFormat(data, *args, **kwargs) -> dict:
-    #     if isUniqueStrings(["[message]"], data) is True:
-    #         config.RECEIVED_MESSAGE_FORMAT = data
-    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT}
-
-    # @staticmethod
-    # def getReceivedMessageFormatWithT(*args, **kwargs) -> dict:
-    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
-
-    # @staticmethod
-    # def setReceivedMessageFormatWithT(data, *args, **kwargs) -> dict:
-    #     if len(data) > 0:
-    #         if isUniqueStrings(["[message]", "[translation]"], data) is True:
-    #             config.RECEIVED_MESSAGE_FORMAT_WITH_T = data
-    #     return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_WITH_T}
 
     @staticmethod
     def getSendReceivedMessageToVrc(*args, **kwargs) -> dict:
