@@ -125,6 +125,9 @@ mapping = {
     "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
+    "/get/data/transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
+    "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
     # Translation
     "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
@@ -227,10 +230,6 @@ mapping = {
 
     "/set/enable/check_speaker_threshold": {"status": True, "variable":controller.setEnableCheckSpeakerThreshold},
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
-
-    "/get/data/transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
-    "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
-    "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
