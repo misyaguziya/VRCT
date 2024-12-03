@@ -84,7 +84,6 @@ const CTranslation2ComputeDevice_Box = () => {
 
     const target_index = findKeyByDeviceValue(currentSelectableCTranslate2ComputeDeviceList.data, currentSelectedCTranslate2ComputeDevice.data);
 
-
     return (
         <DropdownMenuContainer
             dropdown_id="ctranslate2_compute_device"
