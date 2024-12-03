@@ -40,9 +40,9 @@ export { useSelectedWhisperComputeDevice } from "./transcription/useSelectedWhis
 
 export { useDeepLAuthKey } from "./translation/useDeepLAuthKey";
 export { useCTranslate2WeightTypeStatus } from "./translation/useCTranslate2WeightTypeStatus";
+export { useSelectedCTranslate2WeightType } from "./translation/useSelectedCTranslate2WeightType";
 export { useSelectableCTranslate2ComputeDeviceList } from "./translation/useSelectableCTranslate2ComputeDeviceList";
 export { useSelectedCTranslate2ComputeDevice } from "./translation/useSelectedCTranslate2ComputeDevice";
-export { useSelectedCTranslate2WeightType } from "./translation/useSelectedCTranslate2WeightType";
 
 export { useIsEnabledOverlaySmallLog } from "./vr/useIsEnabledOverlaySmallLog";
 export { useOverlaySmallLogSettings } from "./vr/useOverlaySmallLogSettings";
