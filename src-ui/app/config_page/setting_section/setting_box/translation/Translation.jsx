@@ -7,17 +7,21 @@ import {
     useDeepLAuthKey,
     useCTranslate2WeightTypeStatus,
     useSelectedCTranslate2WeightType,
+    useSelectedCTranslate2ComputeDevice,
+    useSelectableCTranslate2ComputeDeviceList,
 } from "@logics_configs";
 
 import {
     DownloadModelsContainer,
     DeeplAuthKeyContainer,
+    DropdownMenuContainer,
 } from "../_templates/Templates";
 
 export const Translation = () => {
     return (
         <>
             <CTranslate2WeightType_Box />
+            <CTranslation2ComputeDevice_Box />
             <DeeplAuthKey_Box />
         </>
     );
@@ -66,6 +70,34 @@ const CTranslate2WeightType_Box = () => {
     );
 };
 
+const CTranslation2ComputeDevice_Box = () => {
+    const { t } = useTranslation();
+    const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useSelectedCTranslate2ComputeDevice();
+    const { currentSelectableCTranslate2ComputeDeviceList } = useSelectableCTranslate2ComputeDeviceList();
+
+    const selectFunction = (selected_data) => {
+        const target_obj = currentSelectableCTranslate2ComputeDeviceList.data[selected_data.selected_id];
+        setSelectedCTranslate2ComputeDevice(target_obj);
+    };
+
+    const list_for_ui = transformDeviceArray(currentSelectableCTranslate2ComputeDeviceList.data);
+
+    const target_index = findKeyByDeviceValue(currentSelectableCTranslate2ComputeDeviceList.data, currentSelectedCTranslate2ComputeDevice.data);
+
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="ctranslate2_compute_device"
+            label={t("config_page.ctranslate2_compute_device.label")}
+            // desc={t("config_page.ctranslate2_compute_device.label")}
+            selected_id={target_index}
+            list={list_for_ui}
+            selectFunction={selectFunction}
+            state={currentSelectedCTranslate2ComputeDevice.state}
+        />
+    );
+};
+
 const DeeplAuthKey_Box = () => {
     const [input_value, seInputValue] = useState("");
     const { t } = useTranslation();
@@ -98,4 +130,44 @@ const DeeplAuthKey_Box = () => {
             />
         </>
     );
+};
+
+// Duplicate
+const transformDeviceArray = (devices) => {
+    const name_counts = Object.values(devices).reduce((counts, device) => {
+        const name = device.device_name;
+        counts[name] = (counts[name] || 0) + 1;
+        return counts;
+    }, {});
+
+    const name_indices = {};
+    const result = {};
+
+    Object.entries(devices).forEach(([key, device]) => {
+        const name = device.device_name;
+
+        if (name_counts[name] > 1) {
+            name_indices[name] = (name_indices[name] || 0);
+            const value = `${name}:${name_indices[name]}`;
+            name_indices[name]++;
+            result[key] = value;
+        } else {
+            result[key] = name;
+        }
+    });
+
+    return result;
+};
+
+const findKeyByDeviceValue = (devices, target_value) => {
+    for (const [key, value] of Object.entries(devices)) {
+        if (
+            value.device === target_value.device &&
+            value.device_index === target_value.device_index &&
+            value.device_name === target_value.device_name
+        ) {
+            return parseInt(key);
+        }
+    }
+    return null;
 };

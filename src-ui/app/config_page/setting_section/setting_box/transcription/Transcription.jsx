@@ -15,6 +15,9 @@ import {
     useSelectedTranscriptionEngine,
     useWhisperWeightTypeStatus,
     useSelectedWhisperWeightType,
+
+    useSelectedWhisperComputeDevice,
+    useSelectableWhisperComputeDeviceList,
 } from "@logics_configs";
 
 import {
@@ -22,6 +25,7 @@ import {
     WordFilterContainer,
     DownloadModelsContainer,
     RadioButtonContainer,
+    DropdownMenuContainer,
 } from "../_templates/Templates";
 
 import {
@@ -248,6 +252,7 @@ const TranscriptionEngine_Container = () => {
             <SectionLabelComponent label="Transcription Engines" />
             <TranscriptionEngine_Box />
             <WhisperWeightType_Box />
+            <WhisperComputeDevice_Box />
         </div>
     );
 };
@@ -316,4 +321,72 @@ const WhisperWeightType_Box = () => {
             />
         </>
     );
+};
+
+const WhisperComputeDevice_Box = () => {
+    const { t } = useTranslation();
+    const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useSelectedWhisperComputeDevice();
+    const { currentSelectableWhisperComputeDeviceList } = useSelectableWhisperComputeDeviceList();
+
+    const selectFunction = (selected_data) => {
+        const target_obj = currentSelectableWhisperComputeDeviceList.data[selected_data.selected_id];
+        setSelectedWhisperComputeDevice(target_obj);
+    };
+
+    const list_for_ui = transformDeviceArray(currentSelectableWhisperComputeDeviceList.data);
+
+    const target_index = findKeyByDeviceValue(currentSelectableWhisperComputeDeviceList.data, currentSelectedWhisperComputeDevice.data);
+
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="whisper_compute_device"
+            label={t("config_page.whisper_compute_device.label")}
+            // desc={t("config_page.whisper_compute_device.label")}
+            selected_id={target_index}
+            list={list_for_ui}
+            selectFunction={selectFunction}
+            state={currentSelectedWhisperComputeDevice.state}
+        />
+    );
+};
+
+// Duplicate
+const transformDeviceArray = (devices) => {
+    const name_counts = Object.values(devices).reduce((counts, device) => {
+        const name = device.device_name;
+        counts[name] = (counts[name] || 0) + 1;
+        return counts;
+    }, {});
+
+    const name_indices = {};
+    const result = {};
+
+    Object.entries(devices).forEach(([key, device]) => {
+        const name = device.device_name;
+
+        if (name_counts[name] > 1) {
+            name_indices[name] = (name_indices[name] || 0);
+            const value = `${name}:${name_indices[name]}`;
+            name_indices[name]++;
+            result[key] = value;
+        } else {
+            result[key] = name;
+        }
+    });
+
+    return result;
+};
+
+const findKeyByDeviceValue = (devices, target_value) => {
+    for (const [key, value] of Object.entries(devices)) {
+        if (
+            value.device === target_value.device &&
+            value.device_index === target_value.device_index &&
+            value.device_name === target_value.device_name
+        ) {
+            return parseInt(key);
+        }
+    }
+    return null;
 };

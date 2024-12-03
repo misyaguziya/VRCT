@@ -39,7 +39,7 @@ export const DropdownMenu = (props) => {
 
     const getSelectedText = () => {
         if (props.state !== "ok") return;
-        return props.selected_id;
+        return props.list[props.selected_id];
     };
     const list = (props.list === undefined) ? {} : props.list;
 

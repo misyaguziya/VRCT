@@ -35,9 +35,13 @@ export { useSpeakerMaxWords } from "./transcription/useSpeakerMaxWords";
 export { useSelectedTranscriptionEngine } from "./transcription/useSelectedTranscriptionEngine";
 export { useWhisperWeightTypeStatus } from "./transcription/useWhisperWeightTypeStatus";
 export { useSelectedWhisperWeightType } from "./transcription/useSelectedWhisperWeightType";
+export { useSelectableWhisperComputeDeviceList } from "./transcription/useSelectableWhisperComputeDeviceList";
+export { useSelectedWhisperComputeDevice } from "./transcription/useSelectedWhisperComputeDevice";
 
 export { useDeepLAuthKey } from "./translation/useDeepLAuthKey";
 export { useCTranslate2WeightTypeStatus } from "./translation/useCTranslate2WeightTypeStatus";
+export { useSelectableCTranslate2ComputeDeviceList } from "./translation/useSelectableCTranslate2ComputeDeviceList";
+export { useSelectedCTranslate2ComputeDevice } from "./translation/useSelectedCTranslate2ComputeDevice";
 export { useSelectedCTranslate2WeightType } from "./translation/useSelectedCTranslate2WeightType";
 
 export { useIsEnabledOverlaySmallLog } from "./vr/useIsEnabledOverlaySmallLog";
