@@ -6,7 +6,6 @@ import { SettingSection } from "./setting_section/SettingSection.jsx";
 
 import { useSoftwareVersion } from "@logics_configs";
 import { useComputeMode } from "@logics_common";
-
 import { useTranslation } from "react-i18next";
 
 export const ConfigPage = () => {
