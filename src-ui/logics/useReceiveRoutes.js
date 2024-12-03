@@ -2,6 +2,7 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useComputeMode,
     useInitProgress,
     useIsBackendReady,
     useWindow,
@@ -51,6 +52,10 @@ import {
     useSpeakerMaxWords,
     useDeepLAuthKey,
     useCTranslate2WeightTypeStatus,
+    useSelectableCTranslate2ComputeDeviceList,
+    useSelectedCTranslate2ComputeDevice,
+    useSelectableWhisperComputeDeviceList,
+    useSelectedWhisperComputeDevice,
     useSelectedCTranslate2WeightType,
     useSelectedTranscriptionEngine,
     useSelectedWhisperWeightType,
@@ -64,6 +69,7 @@ import {
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { updateComputeMode } = useComputeMode();
     const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
     const { restoreWindowGeometry } = useWindow();
@@ -138,6 +144,10 @@ export const useReceiveRoutes = () => {
         updateDownloadProgressCTranslate2WeightTypeStatus,
         downloadedCTranslate2WeightType,
     } = useCTranslate2WeightTypeStatus();
+    const { updateSelectableCTranslate2ComputeDeviceList } = useSelectableCTranslate2ComputeDeviceList();
+    const { updateSelectedCTranslate2ComputeDevice } = useSelectedCTranslate2ComputeDevice();
+    const { updateSelectableWhisperComputeDeviceList } = useSelectableWhisperComputeDeviceList();
+    const { updateSelectedWhisperComputeDevice } = useSelectedWhisperComputeDevice();
 
     const { updateSelectedTranscriptionEngine } = useSelectedTranscriptionEngine();
     const { updateSelectedWhisperWeightType } = useSelectedWhisperWeightType();
@@ -159,6 +169,7 @@ export const useReceiveRoutes = () => {
         // Common
         "/run/feed_watchdog": () => {},
         "/run/initialization_progress": updateInitProgress,
+        "/get/data/compute_mode": updateComputeMode,
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
@@ -316,6 +327,10 @@ export const useReceiveRoutes = () => {
 
         "/get/data/selectable_ctranslate2_weight_type_dict": updateDownloadedCTranslate2WeightTypeStatus,
 
+        "/get/data/translation_compute_device_list": (payload) => updateSelectableCTranslate2ComputeDeviceList(transformToIndexedArray(payload)),
+        "/get/data/selected_translation_compute_device": updateSelectedCTranslate2ComputeDevice,
+        "/set/data/selected_translation_compute_device": updateSelectedCTranslate2ComputeDevice,
+
         "/run/downloaded_ctranslate2_weight": downloadedCTranslate2WeightType,
         "/run/download_ctranslate2_weight": () => {},
         "/run/download_progress_ctranslate2_weight": updateDownloadProgressCTranslate2WeightTypeStatus,
@@ -379,6 +394,10 @@ export const useReceiveRoutes = () => {
         "/run/downloaded_whisper_weight": downloadedWhisperWeightType,
         "/run/download_whisper_weight": () => {},
         "/run/download_progress_whisper_weight": updateDownloadProgressWhisperWeightTypeStatus,
+
+        "/get/data/transcription_compute_device_list": (payload) => updateSelectableWhisperComputeDeviceList(transformToIndexedArray(payload)),
+        "/get/data/selected_transcription_compute_device": updateSelectedWhisperComputeDevice,
+        "/set/data/selected_transcription_compute_device": updateSelectedWhisperComputeDevice,
 
         // VR
         "/get/data/overlay_small_log": updateIsEnabledOverlaySmallLog,
@@ -487,3 +506,11 @@ export const useReceiveRoutes = () => {
 const style_348 = [
     "color: gray",
 ].join(";");
+
+
+const transformToIndexedArray = (devices) => {
+    return devices.reduce((result, device, index) => {
+        result[index] = device;
+        return result;
+    }, {});
+};

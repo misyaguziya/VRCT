@@ -1,3 +1,4 @@
+export { useComputeMode } from "./useComputeMode";
 export { useInitProgress } from "./useInitProgress";
 export { useIsBackendReady } from "./useIsBackendReady";
 export { useWindow } from "./useWindow";
