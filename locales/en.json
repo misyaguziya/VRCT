@@ -138,6 +138,9 @@
             "small": "Basic model ({{capacity}})",
             "large": "High accuracy model ({{capacity}})"
         },
+        "ctranslate2_compute_device": {
+            "label": "Select Internal Translation Compute Device"
+        },
         "deepl_auth_key": {
             "label": "DeepL Auth Key",
             "desc": "Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported.",
@@ -215,6 +218,9 @@
             "desc": "Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.\n※Larger models, especially those exceeding medium size, can be challenging to run even depending on the CPU's performance.",
             "model_template": "{{model_name}} model ({{capacity}})",
             "recommended_model_template": "{{model_name}} model ({{capacity}}) (Recommended)"
+        },
+        "whisper_compute_device": {
+            "label": "Select Whisper Compute Device"
         },
         "enable_overlay_small_log": {
             "label": "Enable Overlay",
