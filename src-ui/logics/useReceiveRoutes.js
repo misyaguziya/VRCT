@@ -507,7 +507,6 @@ const style_348 = [
     "color: gray",
 ].join(";");
 
-
 const transformToIndexedArray = (devices) => {
     return devices.reduce((result, device, index) => {
         result[index] = device;
