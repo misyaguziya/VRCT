@@ -418,6 +418,7 @@ class Controller:
     def setSelectedTranslationComputeDevice(device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
         config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
+        model.changeTranslatorCTranslate2Model()
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod

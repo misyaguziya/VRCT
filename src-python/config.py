@@ -924,7 +924,7 @@ class Config:
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = ctranslate2_weights.keys()
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = whisper_models.keys()
         self._SELECTABLE_TRANSLATION_ENGINE_LIST = translation_lang.keys()
-        self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = translation_lang.keys()
+        self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = []
