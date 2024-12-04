@@ -31,7 +31,7 @@
         "sidecar": true,
         "scope": [
             {
-                "name": "bin/backend", "sidecar": true,"args": true
+                "name": "bin/VRCT-sidecar", "sidecar": true,"args": true
             }
         ]
     }
@@ -66,7 +66,7 @@
         "icons/icon.ico"
       ],
       "externalBin": [
-        "bin/backend"
+        "bin/VRCT-sidecar"
       ],
       "resources":{
         "bin/_internal": "_internal"
