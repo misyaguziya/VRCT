@@ -1,22 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import styles from "./Slider.module.scss";
 import MUI_Slider from "@mui/material/Slider";
 import { clsx } from "clsx";
 
 export const Slider = (props) => {
-    const [baseColor, setBaseColor] = useState("");
-    const [activeColor, setActiveColor] = useState("");
-    const [toolTipColor, setToolTipColor] = useState("");
-
-    useEffect(() => {
-        const baseColor = getComputedStyle(document.documentElement).getPropertyValue("--dark_700_color");
-        setBaseColor(baseColor.trim());
-        const activeColor = getComputedStyle(document.documentElement).getPropertyValue("--primary_600_color");
-        setActiveColor(activeColor.trim());
-        const toolTipColor = getComputedStyle(document.documentElement).getPropertyValue("--dark_800_color");
-        setToolTipColor(toolTipColor.trim());
-    }, []);
-
     return (
         <div className={clsx(styles.container, props.className)}>
             <MUI_Slider
@@ -34,15 +21,15 @@ export const Slider = (props) => {
                 orientation={props.orientation}
                 valueLabelFormat={`${props.valueLabelFormat ? props.valueLabelFormat : props.variable}`}
                 sx={{
-                    color: baseColor,
+                    color: "var(--dark_700_color)",
                     "& .MuiSlider-thumb": {
-                        backgroundColor: activeColor,
+                        backgroundColor: "var(--primary_600_color)",
                         "&:hover, &.Mui-focusVisible, &.Mui-active": {
-                            boxShadow: `0 0 0 0.8rem ${activeColor}44`,
+                            boxShadow: `0 0 0 0.8rem var(--primary_600_color_44)`,
                         },
                         "& .MuiSlider-valueLabel": {
                             fontSize: "1.4rem",
-                            backgroundColor: toolTipColor,
+                            backgroundColor: "var(--dark_800_color)",
                             padding: "0.6rem 1rem",
                             lineHeight: "1.15",
                             // top: "-1.4rem",
@@ -56,11 +43,11 @@ export const Slider = (props) => {
                     },
                     "& .MuiSlider-markLabel": {
                         fontSize: "1.4rem",
-                        color: "white",
+                        color: "var(--dark_550_color)",
                         whiteSpace: "nowrap",
                     },
                     "& .MuiSlider-markLabelActive": {
-                        color: activeColor,
+                        color: "var(--primary_300_color)",
                     },
                 }}
             />
