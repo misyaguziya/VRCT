@@ -47,6 +47,7 @@ export { useSelectedCTranslate2ComputeDevice } from "./translation/useSelectedCT
 export { useIsEnabledOverlaySmallLog } from "./vr/useIsEnabledOverlaySmallLog";
 export { useOverlaySmallLogSettings } from "./vr/useOverlaySmallLogSettings";
 export { useIsEnabledOverlayLargeLog } from "./vr/useIsEnabledOverlayLargeLog";
+export { useOverlayShowOnlyTranslatedMessages } from "./vr/useOverlayShowOnlyTranslatedMessages";
 export { useOverlayLargeLogSettings } from "./vr/useOverlayLargeLogSettings";
 
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";

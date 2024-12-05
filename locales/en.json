@@ -73,7 +73,10 @@
         "ui_scaling": "UI Scaling",
         "display_duration": "Display duration",
         "fadeout_duration": "Fadeout duration",
-        "tracker": "Tracker"
+        "tracker": "Tracker",
+        "overlay_show_only_translated_messages": {
+            "label": "Show Only Translated Messages"
+        }
     },
     "config_page": {
         "config_title": "Settings",
