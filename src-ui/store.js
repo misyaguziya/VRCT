@@ -113,6 +113,7 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
 export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
 export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_IsSoftwareUpdateAvailable } = createAtomWithHook(false, "IsSoftwareUpdateAvailable");
 export const { atomInstance: Atom_InitProgress, useHook: useStore_InitProgress } = createAtomWithHook(0, "InitProgress");
+export const { atomInstance: Atom_IsBreakPoint, useHook: useStore_IsBreakPoint } = createAtomWithHook(false, "IsBreakPoint");
 
 // Main Page
 // Functions
