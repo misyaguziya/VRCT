@@ -113,6 +113,8 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
 export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
 export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_IsSoftwareUpdateAvailable } = createAtomWithHook(false, "IsSoftwareUpdateAvailable");
 export const { atomInstance: Atom_InitProgress, useHook: useStore_InitProgress } = createAtomWithHook(0, "InitProgress");
+export const { atomInstance: Atom_IsBreakPoint, useHook: useStore_IsBreakPoint } = createAtomWithHook(false, "IsBreakPoint");
+export const { atomInstance: Atom_IsSoftwareUpdating, useHook: useStore_IsSoftwareUpdating } = createAtomWithHook(false, "IsSoftwareUpdating");
 
 // Main Page
 // Functions
@@ -242,6 +244,7 @@ export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_Ove
     tracker: "HMD",
 }, "OverlayLargeLogSettings");
 export const { atomInstance: Atom_IsEnabledOverlayLargeLog, useHook: useStore_IsEnabledOverlayLargeLog } = createAtomWithHook(false, "IsEnabledOverlayLargeLog");
+export const { atomInstance: Atom_OverlayShowOnlyTranslatedMessages, useHook: useStore_OverlayShowOnlyTranslatedMessages } = createAtomWithHook(false, "OverlayShowOnlyTranslatedMessages");
 
 // Others
 export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");

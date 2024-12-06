@@ -4,6 +4,11 @@ import { useTranslation } from "react-i18next";
 import styles from "./Appearance.module.scss";
 import { ui_configs } from "@ui_configs";
 import { useStore_SelectableFontFamilyList } from "@store";
+
+import {
+    useWindow,
+} from "@logics_common";
+
 import {
     useUiLanguage,
     useUiScaling,
@@ -52,6 +57,8 @@ const UiLanguageContainer = () => {
 const UiScalingContainer = () => {
     const { t } = useTranslation();
     const { currentUiScaling, setUiScaling } = useUiScaling();
+    const { asyncUpdateBreakPoint } = useWindow();
+
     const [ui_ui_scaling, setUiUiScaling] = useState(currentUiScaling.data);
 
     const onchangeFunction = (value) => {
@@ -62,6 +69,7 @@ const UiScalingContainer = () => {
     };
     useEffect(() => {
         setUiUiScaling(currentUiScaling.data);
+        asyncUpdateBreakPoint();
     }, [currentUiScaling.data]);
 
     const createMarks = (min, max) => {

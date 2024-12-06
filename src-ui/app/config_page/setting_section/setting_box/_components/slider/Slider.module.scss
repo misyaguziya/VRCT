@@ -1,30 +1,7 @@
 .container {
     display: flex;
     flex-direction: column;
-    align-items: center; // 中央に揃え
+    align-items: center;
     justify-content: center;
     width: 100%;
-    // padding-left: 4rem;
-}
-
-.range_slider {
-    // スライダーの幅を調整（必要に応じて調整）
-    height: 200px; // 縦スライダーの高さ
-    padding: 10px 0; // スライダーの上下のパディング
-
-    & .MuiSlider-thumb {
-        // スライダーのつまみのサイズを調整
-        height: 24px;
-        width: 24px;
-        margin-top: -12px; // つまみが中心に来るように調整
-    }
-
-    & .MuiSlider-track {
-        height: 2px; // トラックの高さを調整
-    }
-
-    & .MuiSlider-vertical {
-        // 縦スライダー用のスタイル
-        height: 100%; // コンテナの高さにフィット
-    }
 }

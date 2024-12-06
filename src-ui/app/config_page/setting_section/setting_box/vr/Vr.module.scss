@@ -6,6 +6,7 @@
     position: relative;
     padding: 2rem;
     width: 100%;
+    gap: 4rem;
 }
 
 .wrapper {
@@ -187,4 +188,12 @@
     position: absolute;
     font-size: 1.6rem;
     width: 100%;
+}
+
+.common_container {
+    width: 100%;
+}
+
+.common_label {
+    font-size: 1.4rem;
 }

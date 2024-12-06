@@ -64,6 +64,7 @@ import {
     useOverlaySmallLogSettings,
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
+    useOverlayShowOnlyTranslatedMessages,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -161,6 +162,7 @@ export const useReceiveRoutes = () => {
     const { updateIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
     const { updateOverlayLargeLogSettings } = useOverlayLargeLogSettings();
     const { updateIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
+    const { updateOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -413,6 +415,10 @@ export const useReceiveRoutes = () => {
 
         "/get/data/overlay_large_log_settings": updateOverlayLargeLogSettings,
         "/set/data/overlay_large_log_settings": updateOverlayLargeLogSettings,
+
+        "/get/data/overlay_show_only_translated_messages": updateOverlayShowOnlyTranslatedMessages,
+        "/set/enable/overlay_show_only_translated_messages": updateOverlayShowOnlyTranslatedMessages,
+        "/set/disable/overlay_show_only_translated_messages": updateOverlayShowOnlyTranslatedMessages,
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,

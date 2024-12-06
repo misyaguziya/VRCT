@@ -1,8 +1,14 @@
-import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useEffect } from "react";
 import { appWindow, currentMonitor, availableMonitors, LogicalPosition, LogicalSize } from "@tauri-apps/api/window";
+import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStore_IsBreakPoint } from "@store";
+import { useUiScaling } from "@logics_configs";
+
 export const useWindow = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { currentUiScaling } = useUiScaling();
+    const { updateIsBreakPoint } = useStore_IsBreakPoint();
+
     const asyncGetWindowGeometry = async () => {
         try {
             const position = await appWindow.outerPosition();
@@ -82,13 +88,23 @@ export const useWindow = () => {
         }
     };
 
+    const asyncUpdateBreakPoint = async () => {
+        const size = await appWindow.innerSize();
+        const dynamicBreakPoint = 800 * (currentUiScaling.data / 100);
+        updateIsBreakPoint(size.width <= dynamicBreakPoint);
+    };
 
     const WindowGeometryController = () => {
         useEffect(() => {
             let resizeTimeout;
+            const asyncFunction = () => {
+                asyncSaveWindowGeometry();
+                asyncUpdateBreakPoint();
+            };
+
             const unlistenResize = appWindow.onResized(() => {
                 clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(asyncSaveWindowGeometry, 200);
+                resizeTimeout = setTimeout(asyncFunction, 200);
             });
 
             return () => {
@@ -115,5 +131,6 @@ export const useWindow = () => {
         WindowGeometryController,
         asyncSaveWindowGeometry,
         restoreWindowGeometry,
+        asyncUpdateBreakPoint,
     };
 };

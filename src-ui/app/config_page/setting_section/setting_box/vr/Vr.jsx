@@ -7,12 +7,19 @@ import { Slider } from "../_components/";
 import {
     RadioButtonContainer,
     SwitchBoxContainer,
+    CheckboxContainer,
 } from "../_templates/Templates";
+
+import {
+    SectionLabelComponent,
+} from "../_components/";
+
 import {
     useIsEnabledOverlaySmallLog,
     useOverlaySmallLogSettings,
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
+    useOverlayShowOnlyTranslatedMessages,
 } from "@logics_configs";
 
 export const Vr = () => {
@@ -56,6 +63,7 @@ export const Vr = () => {
                     />
                 )}
             </div>
+            <CommonSettingsContainer />
         </div>
     );
 };
@@ -309,6 +317,23 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     onchangeFunction={(value) => onchangeFunction("fadeout_duration", value)}
                 />
             </div>
+        </div>
+    );
+};
+
+
+const CommonSettingsContainer = () => {
+    const { t } = useTranslation();
+    const { currentOverlayShowOnlyTranslatedMessages, toggleOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
+
+    return (
+        <div className={styles.common_container}>
+            <SectionLabelComponent label="Common Settings" />
+            <CheckboxContainer
+                label={t("overlay_settings.overlay_show_only_translated_messages.label")}
+                variable={currentOverlayShowOnlyTranslatedMessages}
+                toggleFunction={toggleOverlayShowOnlyTranslatedMessages}
+            />
         </div>
     );
 };
