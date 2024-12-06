@@ -4,6 +4,7 @@ export { useIsBackendReady } from "./useIsBackendReady";
 export { useWindow } from "./useWindow";
 export { useIsOpenedConfigPage } from "./useIsOpenedConfigPage";
 export { useIsSoftwareUpdateAvailable } from "./useIsSoftwareUpdateAvailable";
+export { useIsSoftwareUpdating } from "./useIsSoftwareUpdating";
 export { useOpenFolder } from "./useOpenFolder";
 export { useMessage } from "./useMessage";
 export { useUpdateSoftware } from "./useUpdateSoftware";
