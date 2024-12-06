@@ -5,6 +5,7 @@
     gap: 0.4rem;
     position: relative;
     flex-shrink: 0;
+    flex-wrap: wrap;
     &.column {
         flex-direction: column;
     }
