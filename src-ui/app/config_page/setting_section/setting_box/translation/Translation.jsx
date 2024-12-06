@@ -124,6 +124,7 @@ const DeeplAuthKey_Box = () => {
                     {translator: t("main_page.translator")}
                 )}
                 variable={input_value}
+                state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
             />

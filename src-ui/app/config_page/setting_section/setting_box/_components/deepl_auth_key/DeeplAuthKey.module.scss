@@ -44,17 +44,25 @@
 .save_button {
     padding: 0.8rem 1.2rem;
     background-color: var(--primary_600_color);
-    color: var(--dark_basic_text_color);
-    font-size: 1.4rem;
     border-radius: 0.4rem;
     text-align: center;
     flex-shrink: 0;
+    min-width: 5.4rem;
     &:hover {
         background-color: var(--primary_500_color);
     }
     &:active {
         background-color: var(--primary_700_color);
     }
+    &.is_disabled {
+        pointer-events: none;
+        background-color: var(--primary_800_color);
+    }
+}
+
+.save_button_label {
+    color: var(--dark_basic_text_color);
+    font-size: 1.4rem;
 }
 
 .open_webpage_button_wrapper {
