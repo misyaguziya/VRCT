@@ -7,7 +7,6 @@ export const Slider = (props) => {
     return (
         <div className={clsx(styles.container, props.className)}>
             <MUI_Slider
-                className={styles.range_slider}
                 aria-label="Default"
                 valueLabelDisplay="auto"
                 value={props.variable}
