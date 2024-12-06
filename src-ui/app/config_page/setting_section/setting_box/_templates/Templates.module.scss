@@ -9,6 +9,12 @@
         flex-direction: column;
     }
     border-bottom: solid 0.1rem var(--dark_800_color);
+
+    &.is_break_point {
+        flex-direction: column;
+        gap: 2rem;
+        align-items: start;
+    }
 }
 
 .label_only_section {

@@ -1,6 +1,7 @@
-import styles from "./Templates.module.scss";
-import { useStore_IsOpenedDropdownMenu } from "@store";
+import clsx from "clsx";
 
+import styles from "./Templates.module.scss";
+import { useStore_IsOpenedDropdownMenu, useStore_IsBreakPoint } from "@store";
 import {
     LabelComponent,
     DropdownMenu,
@@ -17,6 +18,13 @@ import {
     DownloadModels,
 } from "../_components/";
 
+const LabeledContainer = ({ children, label, desc, custom_class_name }) => (
+    <div className={clsx(styles.container, custom_class_name)}>
+        <LabelComponent label={label} desc={desc} />
+        {children}
+    </div>
+);
+
 export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
@@ -29,7 +37,6 @@ export const useOnMouseLeaveDropdownMenu = () => {
 
 export const DropdownMenuContainer = (props) => {
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-
     return (
         <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
             <LabelComponent label={props.label} desc={props.desc} />
@@ -38,94 +45,67 @@ export const DropdownMenuContainer = (props) => {
     );
 };
 
+const CommonContainer = ({ Component, ...props }) => {
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
-export const SliderContainer = (props) => {
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: props.add_break_point ?? currentIsBreakPoint.data,
+    });
+
     return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <Slider {...props}/>
-        </div>
+        <LabeledContainer label={props.label} desc={props.desc} custom_class_name={container_class}>
+            <Component {...props} />
+        </LabeledContainer>
     );
 };
+export const SliderContainer = (props) => (
+    <CommonContainer Component={Slider} {...props} />
+);
 
-export const CheckboxContainer = (props) => {
-    return (
-        <div className={styles.container}>
+export const CheckboxContainer = (props) => (
+    <CommonContainer Component={Checkbox} {...props} add_break_point={false} />
+);
+
+export const SwitchBoxContainer = (props) => (
+    <CommonContainer Component={SwitchBox} {...props} />
+);
+
+export const EntryContainer = (props) => (
+    <CommonContainer Component={Entry} {...props} add_break_point={false} />
+);
+
+export const RadioButtonContainer = (props) => (
+    <CommonContainer Component={RadioButton} {...props} />
+);
+
+export const DeeplAuthKeyContainer = (props) => (
+    <div className={styles.container}>
+        <div className={styles.deepl_auth_key_label_section}>
             <LabelComponent label={props.label} desc={props.desc} />
-            <Checkbox {...props}/>
+            <OpenWebpage_DeeplAuthKey />
         </div>
-    );
-};
+        <DeeplAuthKey {...props} />
+    </div>
+);
 
-export const SwitchBoxContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <SwitchBox {...props}/>
-        </div>
-    );
-};
+export const ActionButtonContainer = (props) => (
+    <CommonContainer Component={ActionButton} {...props} add_break_point={false}/>
+);
 
-export const EntryContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <Entry {...props}/>
-        </div>
-    );
-};
-
-export const RadioButtonContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <RadioButton {...props}/>
-        </div>
-    );
-};
-
-export const DeeplAuthKeyContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <div className={styles.deepl_auth_key_label_section}>
+export const WordFilterContainer = (props) => (
+    <div className={styles.word_filter_container}>
+        <div className={styles.word_filter_switch_section}>
+            <div className={styles.word_filter_label_wrapper}>
                 <LabelComponent label={props.label} desc={props.desc} />
-                <OpenWebpage_DeeplAuthKey />
             </div>
-            <DeeplAuthKey {...props}/>
+            <WordFilterListToggleComponent />
         </div>
-    );
-};
+        <div className={styles.word_filter_section}>
+            <WordFilter {...props} />
+        </div>
+    </div>
+);
 
-export const ActionButtonContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <ActionButton {...props}/>
-        </div>
-    );
-};
-
-export const WordFilterContainer = (props) => {
-    return (
-        <div className={styles.word_filter_container}>
-            <div className={styles.word_filter_switch_section}>
-                <div className={styles.word_filter_label_wrapper}>
-                    <LabelComponent label={props.label} desc={props.desc}/>
-                </div>
-                <WordFilterListToggleComponent/>
-            </div>
-            <div className={styles.word_filter_section}>
-                <WordFilter {...props}/>
-            </div>
-        </div>
-    );
-};
-
-export const DownloadModelsContainer = (props) => {
-    return (
-        <div className={styles.container}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <DownloadModels {...props}/>
-        </div>
-    );
-};
+export const DownloadModelsContainer = (props) => (
+    <CommonContainer Component={DownloadModels} {...props} />
+);
