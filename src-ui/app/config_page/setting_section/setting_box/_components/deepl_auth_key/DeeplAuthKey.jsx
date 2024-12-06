@@ -4,6 +4,7 @@ import clsx from "clsx";
 import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
+import { useEffect } from "react";
 
 export const DeeplAuthKey = (props) => {
     const { t } = useTranslation();
@@ -21,6 +22,12 @@ export const DeeplAuthKey = (props) => {
     const saveAuthKey = () => {
         props.saveFunction();
     };
+
+    useEffect(() => {
+        if (props.variable === "" || props.variable === null) {
+            seIsEditable(true);
+        }
+    }, [props.variable]);
 
     return (
         <div className={styles.container}>

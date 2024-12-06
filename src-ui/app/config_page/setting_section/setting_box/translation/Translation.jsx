@@ -98,9 +98,9 @@ const CTranslation2ComputeDevice_Box = () => {
 };
 
 const DeeplAuthKey_Box = () => {
-    const [input_value, seInputValue] = useState("");
     const { t } = useTranslation();
     const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useDeepLAuthKey();
+    const [input_value, seInputValue] = useState(currentDeepLAuthKey.data);
 
     const onChangeFunction = (value) => {
         seInputValue(value);
