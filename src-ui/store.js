@@ -115,6 +115,12 @@ export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_I
 export const { atomInstance: Atom_InitProgress, useHook: useStore_InitProgress } = createAtomWithHook(0, "InitProgress");
 export const { atomInstance: Atom_IsBreakPoint, useHook: useStore_IsBreakPoint } = createAtomWithHook(false, "IsBreakPoint");
 export const { atomInstance: Atom_IsSoftwareUpdating, useHook: useStore_IsSoftwareUpdating } = createAtomWithHook(false, "IsSoftwareUpdating");
+export const { atomInstance: Atom_NotificationStatus, useHook: useStore_NotificationStatus } = createAtomWithHook({
+    status: "",
+    is_open: false,
+    key: 0,
+    message: "",
+}, "NotificationStatus");
 
 // Main Page
 // Functions
