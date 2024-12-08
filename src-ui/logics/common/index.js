@@ -5,6 +5,7 @@ export { useWindow } from "./useWindow";
 export { useIsOpenedConfigPage } from "./useIsOpenedConfigPage";
 export { useIsSoftwareUpdateAvailable } from "./useIsSoftwareUpdateAvailable";
 export { useIsSoftwareUpdating } from "./useIsSoftwareUpdating";
+export { useNotificationStatus } from "./useNotificationStatus";
 export { useOpenFolder } from "./useOpenFolder";
 export { useMessage } from "./useMessage";
 export { useUpdateSoftware } from "./useUpdateSoftware";

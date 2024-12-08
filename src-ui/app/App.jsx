@@ -8,6 +8,7 @@ import { ConfigPage } from "./config_page/ConfigPage";
 import { SplashComponent } from "./splash_component/SplashComponent";
 import { UpdatingComponent } from "./updating_component/UpdatingComponent";
 import { ModalController } from "./modal_controller/ModalController";
+import { SnackbarController } from "./snackbar_controller/SnackbarController";
 import styles from "./App.module.scss";
 import { useIsBackendReady, useIsSoftwareUpdating } from "@logics_common";
 
@@ -45,6 +46,7 @@ const Contents = () => {
                 <ConfigPage />
                 <MainPage />
                 <ModalController />
+                <SnackbarController />
             </div>
             :
             <UpdatingComponent />
