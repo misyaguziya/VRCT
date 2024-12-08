@@ -1,11 +1,9 @@
-import { useState } from "react";
-import Button from "@mui/material/Button";
+import { clsx } from "clsx";
 import Snackbar from "@mui/material/Snackbar";
 import Slide from "@mui/material/Slide";
 
 import styles from "./SnackbarController.module.scss";
 import { useNotificationStatus } from "@logics_common";
-import { clsx } from "clsx";
 
 export const SnackbarController = () => {
     const { currentNotificationStatus, closeNotification } = useNotificationStatus();

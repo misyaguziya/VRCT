@@ -19,9 +19,9 @@ export const App = () => {
 
     return (
         <div className={styles.container}>
-            <StartPythonFacadeComponent />
+            <StartPythonController />
             <UiLanguageController />
-            <ConfigPageCloseTrigger />
+            <ConfigPageCloseTriggerController />
             <UiSizeController />
             <FontFamilyController />
             <TransparencyController />
@@ -72,7 +72,7 @@ import {
     useMainFunction,
 } from "@logics_main";
 
-const StartPythonFacadeComponent = () => {
+const StartPythonController = () => {
     const { asyncStartPython } = useStartPython();
     const hasRunRef = useRef(false);
     const { asyncFetchFonts } = useAsyncFetchFonts();
@@ -80,7 +80,7 @@ const StartPythonFacadeComponent = () => {
     useEffect(() => {
         if (!hasRunRef.current) {
             asyncStartPython().then(() => {
-                startFeedingToWatchDog();
+                startFeedingToWatchDogController();
                 asyncFetchFonts();
             }).catch((err) => {
                 console.error(err);
@@ -104,7 +104,7 @@ const UiLanguageController = () => {
 
 import { useStore_MainFunctionsStateMemory } from "@store";
 
-const ConfigPageCloseTrigger = () => {
+const ConfigPageCloseTriggerController = () => {
     const { currentIsOpenedConfigPage } = useIsOpenedConfigPage();
     const { currentMainFunctionsStateMemory, updateMainFunctionsStateMemory} = useStore_MainFunctionsStateMemory();
     const {
@@ -198,7 +198,7 @@ const TransparencyController = () => {
 };
 
 import { useStdoutToPython } from "@logics/useStdoutToPython";
-const startFeedingToWatchDog = () => {
+const startFeedingToWatchDogController = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     setInterval(() => {
         asyncStdoutToPython("/run/feed_watchdog");
