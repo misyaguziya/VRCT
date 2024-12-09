@@ -6,6 +6,7 @@ import path from "path";
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
     plugins: [react(), svgr()],
+    assetsInclude: ["**/*.yml"],
 
     // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
     //
