@@ -2,6 +2,9 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useNotificationStatus,
+
+
     useComputeMode,
     useInitProgress,
     useIsBackendReady,
@@ -166,6 +169,10 @@ export const useReceiveRoutes = () => {
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
+
+
+
+    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
     const routes = {
         // Common
@@ -494,6 +501,7 @@ export const useReceiveRoutes = () => {
                 const error_route = error_routes[parsed_data.endpoint];
                 (error_route) ? error_route(parsed_data.result.data) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
                 console.error(`status 400: ${JSON.stringify(parsed_data.result)}`);
+                showNotification_Error(parsed_data.result.message);
                 break;
 
             case 348:
