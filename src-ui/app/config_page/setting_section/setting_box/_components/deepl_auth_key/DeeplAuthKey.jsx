@@ -1,9 +1,11 @@
 import styles from "./DeeplAuthKey.module.scss";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
+import CircularProgress from "@mui/material/CircularProgress";
 import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
+import { useEffect } from "react";
 
 export const DeeplAuthKey = (props) => {
     const { t } = useTranslation();
@@ -22,11 +24,28 @@ export const DeeplAuthKey = (props) => {
         props.saveFunction();
     };
 
+    useEffect(() => {
+        if (props.variable === "" || props.variable === null) {
+            seIsEditable(true);
+        }
+    }, [props.variable]);
+
+    const is_disabled = props.state === "pending";
+
+    const save_button_class_names = clsx(styles.save_button, {
+        [styles.is_disabled]: is_disabled
+    });
+
     return (
         <div className={styles.container}>
             <div className={styles.entry_section_wrapper}>
-                <_Entry ref={entryRef} width="30rem" onChange={onchangeEntryAuthKey} ui_variable={props.variable}/>
-                <button className={styles.save_button} onClick={saveAuthKey}>Save</button>
+                <_Entry ref={entryRef} width="30rem" onChange={onchangeEntryAuthKey} ui_variable={props.variable} is_disabled={is_disabled}/>
+                <button className={save_button_class_names} onClick={saveAuthKey}>
+                    {is_disabled
+                    ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
+                    : <p className={styles.save_button_label}>Save</p>
+                }
+                </button>
                 {is_editable
                 ? null
                 :
