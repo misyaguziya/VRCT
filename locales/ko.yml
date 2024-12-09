@@ -34,24 +34,21 @@ main_page:
         switched_language_preset_tab: 언어 프리셋 번호 {{tab_no}}로 전환되었습니다.
         latest_language_setting: 현재 '당신의 언어'는 {{your_language}}, '상대방의 언어'는 {{target_language}}(으)로 설정되어 있습니다.
         opened_web_page_booth: 브라우저에서 Booth 페이지를 열었습니다.
-        opened_web_page_vrct_documents: >-
+        opened_web_page_vrct_documents: |-
             웹 브라우저에서 VRCT 문서 페이지가 열렸습니다.
-
             문제, 요청 또는 문의 사항이 있는 경우 문서 페이지 하단의 링크, '문의 양식' 또는 X(구 트위터)를 통해 언제든지 문의해 주세요!
     update_available: 새로운 버전이 나왔습니다!
     cover_message: 설정 화면이 닫힐 때까지 일시적으로 기능을 정지하고 있습니다.
     confirmation_message:
-        update_software: >-
+        update_software: |-
             새 버전을 다운로드하고 재시작합니다.
-             조금 시간이 걸립니다. 지금 시작할까요?
+            조금 시간이 걸립니다. 지금 시작할까요?
         deny_update_software: 나중에 하기
         accept_update_software: 업데이트 및 재시작
         updating: 업데이트 중...
-        detected_over_ui_size: >-
+        detected_over_ui_size: |-
             현재 UI 크기: {{current_ui_size}}
-
             VRCT의 창 크기가 사용자의 디스플레이 크기보다 클 수 있습니다.
-
             * 디스플레이 크기에 따라 여러 번 재설정해야 할 수도 있습니다.
         deny_adjust_ui_size: 지금 상태를 유지
         accept_adjust_ui_size: 작게 줄이고 재시작
@@ -91,9 +88,8 @@ config_page:
         desc: 로그에 표시되는 글자 크기의 배율을 UI 크기에 따라 변경합니다.
     message_box_ratio:
         label: 메시지 입력란 크기
-        desc: >-
+        desc: |-
             메시지 입력란의 크기를 변경합니다. 텍스트 박스와의 비율로 설정되어 있습니다.
-
             * 정확한 계산은 하지 않았습니다.
     font_family:
         label: 폰트
@@ -104,9 +100,9 @@ config_page:
         desc: 시작 시 이전 화면의 위치와 크기를 복원합니다.
     use_translation_feature:
         label: 번역 기능 사용
-        desc: >-
+        desc: |-
             번역 기능이 꺼져 있는 동안에는 번역을 하지 않는 대신 VRCT가 조금 더 빠르게 실행됩니다.
-             번역 기능이 필요하지 않고 VRCT를 채팅 전송 및 음성 인식 도구로만 사용하는 사용자를 위한 기능입니다.
+            번역 기능이 필요하지 않고 VRCT를 채팅 전송 및 음성 인식 도구로만 사용하는 사용자를 위한 기능입니다.
     ctranslate2_weight_type:
         label: 번역 모델
         desc: 오프라인 번역 시의 번역 모델을 변경합니다.
@@ -114,9 +110,8 @@ config_page:
         large: 정밀 모델 ({{capacity}})
     deepl_auth_key:
         label: DeepL 인증키
-        desc: >-
+        desc: |-
             사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.
-
             지원하지 않는 언어도 있습니다.
         open_auth_key_webpage: DeepL 계정 페이지 열기
         auth_key_success: 인증키 갱신이 완료되었습니다.
@@ -145,9 +140,9 @@ config_page:
         error_message: 0 이상의 숫자만 설정할 수 있습니다.
     mic_word_filter:
         label: 단어 필터
-        desc: >-
+        desc: |-
             등록된 단어가 감지되면 해당 문장은 전송되지 않습니다.
-             ',' 쉼표로 구분하면 여러 단어를 추가할 수 있습니다.
+            ',' 쉼표로 구분하면 여러 단어를 추가할 수 있습니다.
             * 중복된 단어는 등록되지 않습니다.
         add_button_label: 추가
         count_desc: '현재 등록되어 있는 단어 수: {{count}}'
@@ -200,37 +195,31 @@ config_page:
         desc: VRChat에 메시지를 보내지 않고 사용할 수 있는 방법이 있지만 지원되지 않습니다. VRChat에 메시지를 보내려면 이 기능을 활성화하세요.
     send_message_format:
         label: 메시지 형식
-        desc: >-
+        desc: |-
             메시지가 실제로 보이는 형식을 변경합니다.
-
             [message]가 메시지로 대체됩니다.
         example_text: 이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.
         error_message: '[message]라는 문자는 사용할 수 없습니다.'
     send_message_format_with_t:
         label: 메시지 형식 (번역 포함)
-        desc: >-
+        desc: |-
             메시지가 실제로 보이는 형식을 변경합니다.
-
             [message]는 메시지로, [translation]은 번역된 메시지로 대체됩니다.
-
             XSOverlay의 알림에서도 사용됩니다.
         example_text: 예문입니다. 글꼴, 줄 바꿈 등이 실제 표시와 다를 수 있습니다.
         error_message: '[message]와 [translation]이라는 문자는 사용할 수 없습니다.'
     received_message_format:
         label: 메시지 형식
-        desc: >-
+        desc: |-
             메시지가 실제로 보이는 형식을 변경합니다.
-
             [message]가 메시지로 대체됩니다.
         example_text: 이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.
         error_message: '[message]라는 문자는 사용할 수 없습니다.'
     received_message_format_with_t:
         label: 메시지 형식 (번역 포함)
-        desc: >-
+        desc: |-
             메시지가 실제로 보이는 형식을 변경합니다.
-
             [message]는 메시지로, [translation]은 번역된 메시지로 대체됩니다.
-
             XSOverlay의 알림에서도 사용됩니다.
         example_text: 이것은 예문입니다. 폰트, 줄바꿈 등 실제 표시와 다를 수 있습니다.
         error_message: '[message]와 [translation]이라는 문자는 사용할 수 없습니다.'
