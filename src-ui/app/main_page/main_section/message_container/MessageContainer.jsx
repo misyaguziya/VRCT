@@ -14,7 +14,7 @@ export const MessageContainer = () => {
     const { currentUiScaling } = useUiScaling();
     const [is_hovered, setIsHovered] = useState(false);
     const [message_box_height_in_rem, setMessageBoxHeightInRem] = useState(10);
-    const FONT_SIZE_STANDARD = 10 * currentUiScaling.data / 100;  // 10px = 1rem
+    const FONT_SIZE_STANDARD = 10 * currentUiScaling.data / 100; // 10px = 1rem
     const { currentIsAppliedInitMessageBoxHeight, updateIsAppliedInitMessageBoxHeight } = useStore_IsAppliedInitMessageBoxHeight();
 
     const container_ref = useRef(null);
@@ -23,9 +23,10 @@ export const MessageContainer = () => {
 
     const asyncSetMessageBoxHeightInRem = async (data) => {
         const minimized = await appWindow.isMinimized();
-        if (minimized === true) return; // don't save while the window is minimized.
+        if (minimized) return; // don't save while the window is minimized.
         setMessageBoxHeightInRem(data);
     };
+
     const calculateMessageBoxRatioAndHeight = () => {
         if (!currentIsAppliedInitMessageBoxHeight.data) {
             asyncSetMessageInputBoxRatio(currentMessageInputBoxRatio.data);
@@ -33,7 +34,7 @@ export const MessageContainer = () => {
             return;
         }
 
-        if (log_box_ref.current && message_box_wrapper_ref.current) {
+        if (log_box_ref.current && message_box_wrapper_ref.current && container_ref.current) {
             const container_height = container_ref.current.offsetHeight;
             const container_padding_bottom = parseFloat(window.getComputedStyle(container_ref.current).paddingBottom);
             const total_height = container_height - container_padding_bottom;
@@ -43,6 +44,8 @@ export const MessageContainer = () => {
 
             asyncSetMessageInputBoxRatio(message_box_ratio);
             asyncSetMessageBoxHeightInRem(convertRatioToRem(message_box_ratio));
+        } else {
+            console.warn("References not ready for calculation");
         }
     };
 
@@ -53,23 +56,25 @@ export const MessageContainer = () => {
     });
 
     useEffect(() => {
-        // Note: I thought the part "1.4" is message box bottom padding + (message box separator height/2)
-        // but it should be fixed at 1.4. Idk why, tho.
         asyncSetMessageBoxHeightInRem((position / FONT_SIZE_STANDARD) - 1.4);
     }, [position]);
-
 
     useEffect(() => {
         asyncSetMessageBoxHeightInRem(convertRatioToRem(currentMessageInputBoxRatio.data));
     }, [currentMessageInputBoxRatio.data]);
 
     const convertRatioToRem = (ratio) => {
+        if (!container_ref.current) return 0;
         const container_height = container_ref.current.offsetHeight;
         const container_padding_bottom = parseFloat(window.getComputedStyle(container_ref.current).paddingBottom);
         const total_height = container_height - container_padding_bottom;
-        if (total_height === 0) return 0;
-        return ((ratio / 100) * total_height / FONT_SIZE_STANDARD);
+        return total_height === 0 ? 0 : ((ratio / 100) * total_height / FONT_SIZE_STANDARD);
     };
+
+    useEffect(() => {
+        calculateMessageBoxRatioAndHeight();
+        updateIsAppliedInitMessageBoxHeight(true); // Ensure this happens after initial calculation
+    }, []);
 
     useEffect(() => {
         let resizeTimeout;
@@ -86,10 +91,6 @@ export const MessageContainer = () => {
         };
     }, []);
 
-    useEffect(() => {
-        updateIsAppliedInitMessageBoxHeight(true);
-    }, []);
-
     return (
         <div className={styles.container} ref={container_ref}>
             <div className={styles.log_box_resize_wrapper}
@@ -98,7 +99,7 @@ export const MessageContainer = () => {
                 onMouseLeave={() => setIsHovered(false)}
             >
                 <LogBox />
-                <MessageLogSettingsContainer to_visible_toggle_bar={is_hovered}/>
+                <MessageLogSettingsContainer to_visible_toggle_bar={is_hovered} />
             </div>
             <Separator {...separatorProps} onDragStart={calculateMessageBoxRatioAndHeight} />
             <div
@@ -112,10 +113,8 @@ export const MessageContainer = () => {
     );
 };
 
-const Separator = ({ onDragStart, ...props }) => {
-    return (
-        <div tabIndex={0} className={styles.separator} {...props} onDragStart={onDragStart}>
-            <span className={styles.separator_line}></span>
-        </div>
-    );
-};
+const Separator = ({ onDragStart, ...props }) => (
+    <div tabIndex={0} className={styles.separator} {...props} onDragStart={onDragStart}>
+        <span className={styles.separator_line}></span>
+    </div>
+);
