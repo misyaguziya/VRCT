@@ -34,27 +34,23 @@ main_page:
         switched_language_preset_tab: 言語プリセット番号 {{tab_no}} に切り替わりました。
         latest_language_setting: 現在「あなたの言語」は {{your_language}}、「相手の言語」は {{target_language}} に設定されています。
         opened_web_page_booth: お使いのブラウザで、Boothのページを開きました。
-        opened_web_page_vrct_documents: >-
+        opened_web_page_vrct_documents: |-
             お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。
-
             不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！
     update_available: 新しいバージョンが出ました！
     state_text_enabled: 有効
     state_text_disabled: 無効
     cover_message: 設定画面が閉じられるまで、一時的に機能を停止しています。
     confirmation_message:
-        update_software: >-
+        update_software: |-
             新しいバージョンをダウンロードしてアプリを再起動します。
-
             少し時間がかかります。今すぐ行いますか？
         deny_update_software: 後でする
         accept_update_software: アップデートして再起動
         updating: アップデート中...
-        detected_over_ui_size: >-
+        detected_over_ui_size: |-
             現在のUI サイズ: {{current_ui_size}}
-
             VRCTのウィンドウサイズが、お使いのディスプレイサイズより大きい可能性があります。
-
             ※ディスプレイサイズによっては、何度か再設定が必要な場合があります。
         deny_adjust_ui_size: このサイズのままで良い
         accept_adjust_ui_size: 小さく設定して再起動
@@ -106,9 +102,8 @@ config_page:
         desc: ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。
     message_box_ratio:
         label: メッセージ入力欄のサイズ
-        desc: >-
+        desc: |-
             メッセージ入力欄のサイズを変更できます。テキストボックスとの比率となっています。
-
             ※厳密な計算はしていません。
     font_family:
         label: 使用フォント
@@ -119,9 +114,8 @@ config_page:
         desc: 起動時、前回の画面の位置とサイズを復元します。
     use_translation_feature:
         label: 翻訳機能を使用する
-        desc: >-
+        desc: |-
             オフにしている間は、翻訳機能を使わない代わり、VRCTの起動が少し速くなります。
-
             翻訳機能を必要とせず、VRCTをチャット送信と文字起こしツールとしてのみ使用するユーザー用です。
     ctranslate2_weight_type:
         label: オフライン翻訳のタイプ
@@ -130,9 +124,8 @@ config_page:
         large: 高精度モデル ({{capacity}})
     deepl_auth_key:
         label: DeepL 認証キー
-        desc: >-
+        desc: |-
             使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。
-
             ※対応していない言語もあります。
         open_auth_key_webpage: DeepLアカウントページを開く
         auth_key_success: 認証キーの更新が完了しました。
@@ -161,11 +154,9 @@ config_page:
         error_message: 0以上の数値を設定できます。
     mic_word_filter:
         label: ワードフィルター
-        desc: >-
+        desc: |-
             登録された単語を検出すると、その文章は送信されません。
-
             「,」カンマで区切ると、まとめて複数の単語を追加できます。
-
             ※重複した単語は登録されません。
         add_button_label: 追加
         count_desc: '現在登録されている単語数: {{count}}'
@@ -195,9 +186,8 @@ config_page:
         desc: 一部の言語では、音声認識の精度が向上するかもしれません。音声認識使用中、CPUの使用率が上がるので、お使いのPCスペックと相談してこの機能を使用してください。
     whisper_weight_type:
         label: Whisperモデルのタイプ
-        desc: >-
+        desc: |-
             基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。
-
             ※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。
         model_template: '{{model_name}} モデル ({{capacity}})'
         recommended_model_template: '{{model_name}} モデル ({{capacity}}) (推奨)'
@@ -221,46 +211,39 @@ config_page:
         desc: テキストファイルとしてログがlogsフォルダ内に保存されます。
     vrc_mic_mute_sync:
         label: VRCマイクミュート同期
-        desc: >-
+        desc: |-
             VRChatのマイクがミュートされている間は、メッセージをVRChatに送信しません。
-
             ※若干の遅延はあります。また、Push-To-Talkは非対応です。
     send_message_to_vrc:
         label: VRChatにメッセージを送信する
         desc: サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。
     send_message_format:
         label: 送信するメッセージのフォーマット
-        desc: >-
+        desc: |-
             VRChatで相手に実際に見えるフォーマットを変更できます。
-
             [message]がメッセージに置換されます。
         example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
         error_message: '[message]という文字は使えません。'
     send_message_format_with_t:
         label: 送信するメッセージのフォーマット（翻訳付き）
-        desc: >-
+        desc: |-
             VRChatで相手に実際に見えるフォーマットを変更できます。
-
             [message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。
         example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
         error_message: '[message]と[translation]という文字は使えません。'
     received_message_format:
         label: 受信するメッセージのフォーマット
-        desc: >-
+        desc: |-
             XSOverlay通知受け取り機能で使用されます。
-
             [message]がメッセージに置換されます。
-
             ※Speaker2Chatboxでの送信機能にも使われます。
         example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
         error_message: '[message]という文字は使えません。'
     received_message_format_with_t:
         label: 受信するメッセージのフォーマット（翻訳付き）
-        desc: >-
+        desc: |-
             XSOverlay通知受け取り機能で使用されます。
-
             [message]がメッセージに置換され、[translation]が翻訳されたメッセージに置換されます。
-
             ※Speaker2Chatboxでの送信機能にも使われます。
         example_text: これは例文です。フォントや改行箇所など、実際の表示とは異なる場合があります。
         error_message: '[message]と[translation]という文字は使えません。'

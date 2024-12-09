@@ -34,27 +34,23 @@ main_page:
         switched_language_preset_tab: 已切换为第 {{tab_no}} 号语言设定
         latest_language_setting: 现在,你的语言是 {{your_language}},目标语言是 {{target_language}} .
         opened_web_page_booth: 在你的默认浏览器上打开了Booth页面
-        opened_web_page_vrct_documents: >-
+        opened_web_page_vrct_documents: |-
             在你的默认浏览器上打开了VRCT文档,有着关于VRCT的使用方法
-
             其他问题、请求、查询等请通过文档底部的链接或X (Twitter) 联系我们！
     update_available: 有新版本可供使用！
     state_text_enabled: 启用
     state_text_disabled: 停用
     cover_message: 在设置窗口关闭前,VRCT的功能暂时停用
     confirmation_message:
-        update_software: >-
+        update_software: |-
             下载新版本并自动启动
-
             会花少许时间,现在更新吗?
         deny_update_software: 稍后再说
         accept_update_software: 更新后自动启动
         updating: 更新中...
-        detected_over_ui_size: >-
+        detected_over_ui_size: |-
             现在的界面大小: {{current_ui_size}}
-
             VRCT的窗口大小有可能会大于显示器
-
             请根据你的屏幕大小设置合适的VRCT的大小
         deny_adjust_ui_size: 现在界面大小是合适的
         accept_adjust_ui_size: 缩小界面大小并重新启动
@@ -103,9 +99,8 @@ config_page:
         desc: 你可以根据用户界面大小调整文本框中使用的字体大小。
     message_box_ratio:
         label: 文本框大小
-        desc: >-
+        desc: |-
             你可以根据界面比例调整文本框大小
-
             ※可能不准确
     font_family:
         label: 字体
@@ -124,9 +119,8 @@ config_page:
         large: 高精度模型 ({{capacity}})
     deepl_auth_key:
         label: DeepL 授权密匙
-        desc: >-
+        desc: |-
             在使用的时候,使用时请在主屏幕上通过 DeepL_API 选择 {{translator}}
-
             ※某些语言可能不支持
         open_auth_key_webpage: 打开DeepL账号页面
         auth_key_success: 授权密匙认证完成。
@@ -155,11 +149,9 @@ config_page:
         error_message: 数值应为 0 以上
     mic_word_filter:
         label: 单词过滤器
-        desc: >-
+        desc: |-
             检测出被记录的单词时,不会发送这段话
-
             如要添加多个单词,可以用逗号来分割
-
             ※不会记录重复的单词
         add_button_label: 添加
         count_desc: '现在被记录的单词数: {{count}}'
@@ -189,9 +181,8 @@ config_page:
         desc: 在某些语言中,语音识别的准确性可能会提高.语音识别的过程中,CPU占有率可能会提高,请根据你的pc性能来决定是否使用它.
     whisper_weight_type:
         label: 选择某个Whisper模型
-        desc: >-
+        desc: |-
             通常来说,容量越大的模型精度也会越高,但也会增加文字显示所需要的时间和CPU的使用率。请浏览各个模型的文档
-
             ※特别是大于medium容量的模型、因CPU性能原因甚至无法使用。
         model_template: '{{model_name}} 模型 ({{capacity}})'
         recommended_model_template: '{{model_name}} 模型 ({{capacity}}) (推荐)'
@@ -212,9 +203,8 @@ config_page:
         desc: 以文本文件的形式在logs文件夹中保存。
     vrc_mic_mute_sync:
         label: 与VRC中的麦克风静音同步
-        desc: >-
+        desc: |-
             当VRChat的麦克风处于静音时,不在VRChat中发送信息
-
             ※存在少许延迟且不支持按键发言.
     send_message_to_vrc:
         label: 发送信息至VRChat

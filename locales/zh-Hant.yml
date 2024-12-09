@@ -35,25 +35,22 @@ main_page:
         switched_language_preset_tab: 已切換到第 {{tab_no}} 個語言設定。
         latest_language_setting: 目前「你的語言」設為 {{your_language}}，「目標語言」設為 {{target_language}}。
         opened_web_page_booth: 已在瀏覽器中打開 Booth 頁面。
-        opened_web_page_vrct_documents: >-
+        opened_web_page_vrct_documents: |-
             已在瀏覽器中打開VRCT文件頁面。
-
             如有任何問題、請求或查詢，請通過文件頁面底部的連結、「聯絡表單」或 X (Twitter) 聯絡我們！
     update_available: 有新版本可供使用！
     state_text_enabled: 啟用
     state_text_disabled: 停用
     cover_message: VRCT 功能在設定視窗關閉前暫時停用。
     confirmation_message:
-        update_software: >-
+        update_software: |-
             下載新版本並自動更新 VRCT。
-
             會花一些時間，現在更新嗎？
         deny_update_software: 稍後再說
         accept_update_software: 更新
         updating: 正在更新...
-        detected_over_ui_size: >-
+        detected_over_ui_size: |-
             介面大小：{{current_ui_size}}
-
             VRCT 的視窗大小可能超過你的螢幕大小。
         deny_adjust_ui_size: 保持目前大小
         accept_adjust_ui_size: 縮小介面並重新啟動
@@ -106,9 +103,8 @@ config_page:
         desc: 你可以根據介面大小調整記錄中使用的字體大小。
     message_box_ratio:
         label: 訊息框大小
-        desc: >-
+        desc: |-
             你可以依介面比例縮放輸入訊息框。
-
             *可能不準確。
     font_family:
         label: 字型
@@ -155,9 +151,8 @@ config_page:
         error_message: 可以設置為 0 或更高的數值。
     mic_word_filter:
         label: 麥克風單詞過濾器
-        desc: >-
+        desc: |-
             如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。
-
             *重複詞語會被忽略。
         add_button_label: 新增
         count_desc: 當前註冊詞語數量：{{count}}
@@ -187,9 +182,8 @@ config_page:
         desc: 在某些語言中，語音識別的準確性可能會提高。使用語音識別時，CPU使用率會增加，請根據你的PC規格考慮是否使用此功能。
     whisper_weight_type:
         label: 選擇 Whisper 模型
-        desc: >-
+        desc: |-
             一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。
-
             ※特別是超過中等大小的模型，根據CPU性能可能難以運行。
         model_template: '{{model_name}}模型（{{capacity}}）'
         recommended_model_template: '{{model_name}}模型（{{capacity}}）（推薦）'
@@ -213,46 +207,39 @@ config_page:
         desc: 自動將對話訊息匯出為文字文件。
     vrc_mic_mute_sync:
         label: VRC 麥克風靜音同步
-        desc: >-
+        desc: |-
             當 VRChat 的麥克風靜音時，VRCT 將不會向 VRChat 發送訊息。
-
             *存在一些延遲且不支援按鍵發話 (PTT)。
     send_message_to_vrc:
         label: 發送訊息到 VRChat
         desc: 當你打算向 VRChat 發送訊息時啟用此功能。
     send_message_format:
         label: 發送的訊息格式
-        desc: >-
+        desc: |-
             你可以設定要發送的訊息格式。
-
             [message] 將被替換為訊息。
         example_text: 這是一個範例。字體、換行等可能與實際顯示不同。
         error_message: 不能使用 [message] 。
     send_message_format_with_t:
         label: 發送的訊息格式（帶翻譯）
-        desc: >-
+        desc: |-
             你可以設定要發送的訊息格式。
-
             [message] 將被替換為訊息，並且 [translation] 將被替換為翻譯訊息。
         example_text: 這是一個範例。字體、換行等可能與實際顯示不同。
         error_message: 不能使用 [message] 和 [translation] 。
     received_message_format:
         label: 接收的訊息格式
-        desc: >-
+        desc: |-
             用於 XSOverlay 的通知接收功能。
-
             [message] 將被替換為訊息。
-
             ※它也將用於喇叭轉文字功能。
         example_text: 這是一個範例。字體、換行等可能與實際顯示不同。
         error_message: 不能使用 [message] 。
     received_message_format_with_t:
         label: 接收的訊息格式（附翻譯）
-        desc: >-
+        desc: |-
             用於 XSOverlay 的通知接收功能。
-
             [message] 將被替換為訊息，並且 [translation] 將被替換為翻譯訊息。
-
             ※它也將用於喇叭轉文字功能。
         example_text: 這是一個範例。字體、換行等可能與實際顯示不同。
         error_message: 不能使用 [message] 和 [translation] 。

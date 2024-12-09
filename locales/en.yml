@@ -35,9 +35,8 @@ main_page:
         switched_language_preset_tab: Switched to Language Preset Tab No.{{tab_no}}."
         latest_language_setting: Currently, "Your Language" is set to {{your_language}}, and "Target Language" is set to {{target_language}}.
         opened_web_page_booth: Opened Booth page in your web browser.
-        opened_web_page_vrct_documents: >-
+        opened_web_page_vrct_documents: |-
             Opened VRCT Documents page in your web browser.
-
             For any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the "Contact Form," or via X (formerly Twitter)!
     update_available: New version is here!
     state_text_enabled: Enabled
@@ -45,18 +44,15 @@ main_page:
     cover_message: The functionality is temporarily disabled until the settings window is closed.
     close_settings_window: Close the settings window
     confirmation_message:
-        update_software: >-
+        update_software: |-
             Download the new version and automatically restart the app.
-
             It'll take a while. Do it now?
         deny_update_software: Do it later
         accept_update_software: Update and Restart
         updating: Now updating...
-        detected_over_ui_size: >-
+        detected_over_ui_size: |-
             Current UI Size: {{current_ui_size}}
-
             VRCT's window size may be larger than your display size.
-
             * Depending on your display size, you may need to adjust it multiple times.
         deny_adjust_ui_size: Keep it at this size
         accept_adjust_ui_size: Set it smaller and restart
@@ -117,9 +113,8 @@ config_page:
         desc: You can adjust the font size used in the logs relative to the UI size.
     message_box_ratio:
         label: Message Box Size
-        desc: >-
+        desc: |-
             You can change the size of the input message box. It is in ratio to the text box.
-
             *No exact calculations.
     font_family:
         label: Font Family
@@ -169,9 +164,8 @@ config_page:
         error_message: You can set a number equal to or greater than 0.
     mic_word_filter:
         label: Mic Word Filter
-        desc: >-
+        desc: |-
             If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a "," (comma).
-
             *Duplicate words will not be registered.
         add_button_label: Add
         count_desc: 'Current registered word count: {{count}}'
@@ -202,9 +196,8 @@ config_page:
         label: Select Transcription Engine
     whisper_weight_type:
         label: Select Whisper Model
-        desc: >-
+        desc: |-
             Generally, models with larger capacity tend to have higher accuracy, but this also results in longer transcription times and increased CPU usage. Please refer to the documentation for explanations of each model.
-
             ※Larger models, especially those exceeding medium size, can be challenging to run even depending on the CPU's performance.
         model_template: '{{model_name}} model ({{capacity}})'
         recommended_model_template: '{{model_name}} model ({{capacity}}) (Recommended)'
@@ -230,46 +223,39 @@ config_page:
         desc: Automatically export the conversation messages as a text file.
     vrc_mic_mute_sync:
         label: VRC Mic Mute Sync
-        desc: >-
+        desc: |-
             VRCT will not send the message to VRChat while VRChat's mic is muted.
-
             *There is a bit latency and Push-To-Talk is not supported.
     send_message_to_vrc:
         label: Send Message To VRChat
         desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
     send_message_format:
         label: Message Format
-        desc: >-
+        desc: |-
             You can change the decoration of the message you want to send.
-
             [message] will be replaced with the message.
         example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
         error_message: Cannot use the term '[message]'.
     send_message_format_with_t:
         label: Message Format (with Translation)
-        desc: >-
+        desc: |-
             You can change the decoration of the message you want to send.
-
             [message] will be replaced with the message, and [translation] will be replaced with the translated message.
         example_text: This is an example sentence. Fonts, line breaks, etc. may differ from the actual display.
         error_message: Cannot use the terms '[message]' and '[translation]'.
     received_message_format:
         label: Format of Received Messages
-        desc: >-
+        desc: |-
             Used for XSOverlay notification receiving feature.
-
             [message] will be replaced with the message.
-
             ※It will be used in Speaker2Chatbox too.
         example_text: This is an example sentence. Actual display may vary, including font and line breaks.
         error_message: Cannot use the term '[message]'.
     received_message_format_with_t:
         label: Format of Received Messages (with Translation)
-        desc: >-
+        desc: |-
             Used for XSOverlay notification receiving feature.
-
             [message] will be replaced with the message, and [translation] will be replaced with the translated message.
-
             ※It will be used in Speaker2Chatbox too.
         example_text: This is an example sentence. Actual display may vary, including font and line breaks.
         error_message: Cannot use the terms '[message]' and '[translation]'.
