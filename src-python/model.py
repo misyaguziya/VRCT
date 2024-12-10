@@ -164,21 +164,17 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
-    def findTranslationEngines(self, source_lang, target_lang, multi_language_translation=False):
+    def findTranslationEngines(self, source_lang, target_lang):
         compatible_engines = []
         for engine in list(translation_lang.keys()):
             languages = translation_lang.get(engine, {}).get("source", {})
-
-            if multi_language_translation is True:
-                source_langs = [e["language"] for e in list(source_lang.values())]
-                target_langs = [e["language"] for e in list(target_lang.values())]
-            else:
-                source_langs = [source_lang["primary"]["language"]]
-                target_langs = [target_lang["primary"]["language"]]
+            source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
+            target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
             language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
                 compatible_engines.append(engine)
+
         if "DeepL_API" in compatible_engines:
             if config.AUTH_KEYS["DeepL_API"] is None:
                 compatible_engines.remove('DeepL_API')
@@ -218,10 +214,10 @@ class Model:
 
         translations = []
         success_flags = []
-        for key in target_languages.keys():
-            if key == "primary" or config.MULTI_LANGUAGE_TRANSLATION is True:
-                target_language = target_languages[key]["language"]
-                target_country = target_languages[key]["country"]
+        for value in target_languages.values():
+            if value["enable"] is True:
+                target_language = value["language"]
+                target_country = value["country"]
                 if target_language is not None or target_country is not None:
                     translation, success_flag = self.getTranslate(
                         translator_name,
