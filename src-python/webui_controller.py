@@ -484,7 +484,6 @@ class Controller:
         engines = model.findTranslationEngines(
             config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
             config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-            config.MULTI_LANGUAGE_TRANSLATION,
             )
         return {"status":200, "result":engines}
 
@@ -539,20 +538,6 @@ class Controller:
     def setSelectedTranscriptionEngine(data, *args, **kwargs) -> dict:
         config.SELECTED_TRANSCRIPTION_ENGINE = str(data)
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_ENGINE}
-
-    @staticmethod
-    def getMultiLanguageTranslation(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
-
-    @staticmethod
-    def setEnableMultiLanguageTranslation(*args, **kwargs) -> dict:
-        config.MULTI_LANGUAGE_TRANSLATION = True
-        return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
-
-    @staticmethod
-    def setDisableMultiLanguageTranslation(*args, **kwargs) -> dict:
-        config.MULTI_LANGUAGE_TRANSLATION = False
-        return {"status":200, "result":config.MULTI_LANGUAGE_TRANSLATION}
 
     @staticmethod
     def getConvertMessageToRomaji(*args, **kwargs) -> dict:
