@@ -209,7 +209,7 @@ class Model:
 
     def getInputTranslate(self, message):
         translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
         translations = []
@@ -233,9 +233,9 @@ class Model:
 
     def getOutputTranslate(self, message):
         translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_country=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"]
+        source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        target_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        target_country=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"]
 
         translation, success_flag = self.getTranslate(
             translator_name,
@@ -436,8 +436,8 @@ class Model:
             try:
                 res = self.mic_transcriber.transcribeAudioQueue(
                     self.mic_audio_queue,
-                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
-                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"],
                     config.MIC_AVG_LOGPROB,
                     config.MIC_NO_SPEECH_PROB
                 )
@@ -600,8 +600,8 @@ class Model:
             try:
                 res = self.speaker_transcriber.transcribeAudioQueue(
                     speaker_audio_queue,
-                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"],
-                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["country"],
+                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"],
                     config.SPEAKER_AVG_LOGPROB,
                     config.SPEAKER_NO_SPEECH_PROB
                 )
@@ -685,8 +685,8 @@ class Model:
             self.speaker_energy_recorder = None
 
     def createOverlayImageSmallLog(self, message, translation):
-        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
 
     def createOverlayImageSystemMessage(self, message):
@@ -738,8 +738,8 @@ class Model:
 
 
     def createOverlayImageLargeLog(self, message_type:str, message:str, translation:str):
-        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
-        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"]
+        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
 
     def clearOverlayImageLargeLog(self):

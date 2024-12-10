@@ -960,7 +960,7 @@ class Config:
         self._SELECTED_YOUR_LANGUAGES = {}
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
             self._SELECTED_YOUR_LANGUAGES[tab_no] = {
-                "primary": {
+                "1": {
                     "language": "Japanese",
                     "country": "Japan",
                     "enable": True,
@@ -969,17 +969,17 @@ class Config:
         self._SELECTED_TARGET_LANGUAGES = {}
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
             self._SELECTED_TARGET_LANGUAGES[tab_no] = {
-                "primary": {
+                "1": {
                     "language": "English",
                     "country": "United States",
                     "enable": True,
                 },
-                "secondary": {
+                "2": {
                     "language": "English",
                     "country": "United States",
                     "enable": False,
                 },
-                "tertiary": {
+                "3": {
                     "language": "English",
                     "country": "United States",
                     "enable": False,
