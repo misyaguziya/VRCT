@@ -323,14 +323,19 @@ class Model:
     def checkSoftwareUpdated():
         # check update
         update_flag = False
-        response = requests_get(config.GITHUB_URL)
-        json_data = response.json()
-        version = json_data.get("name", None)
-        if isinstance(version, str):
-            new_version = parse(version)
-            current_version = parse(config.VERSION)
-            if new_version > current_version:
-                update_flag = True
+        try:
+            response = requests_get(config.GITHUB_URL)
+            json_data = response.json()
+            version = json_data.get("name", None)
+            if isinstance(version, str):
+                new_version = parse(version)
+                current_version = parse(config.VERSION)
+                if new_version > current_version:
+                    update_flag = True
+        except Exception:
+            import traceback
+            with open('error.log', 'a') as f:
+                traceback.print_exc(file=f)
         return update_flag
 
     @staticmethod
