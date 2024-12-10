@@ -264,7 +264,10 @@ class Config:
                 for k1, v1 in v0.items():
                     language = v1["language"]
                     country = v1["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                    enable = v1["enable"]
+                    if (language not in list(transcription_lang.keys()) or
+                        country not in list(transcription_lang[language].keys()) or
+                        not isinstance(enable, bool)):
                         value[k0][k1] = value_old[k0][k1]
             self._SELECTED_YOUR_LANGUAGES = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
@@ -282,7 +285,10 @@ class Config:
                 for k1, v1 in v0.items():
                     language = v1["language"]
                     country = v1["country"]
-                    if language not in list(transcription_lang.keys()) or country not in list(transcription_lang[language].keys()):
+                    enable = v1["enable"]
+                    if (language not in list(transcription_lang.keys()) or
+                        country not in list(transcription_lang[language].keys()) or
+                        not isinstance(enable, bool)):
                         value[k0][k1] = value_old[k0][k1]
             self._SELECTED_TARGET_LANGUAGES = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
@@ -298,17 +304,6 @@ class Config:
             if value in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
                 self._SELECTED_TRANSCRIPTION_ENGINE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('MULTI_LANGUAGE_TRANSLATION')
-    def MULTI_LANGUAGE_TRANSLATION(self):
-        return self._MULTI_LANGUAGE_TRANSLATION
-
-    @MULTI_LANGUAGE_TRANSLATION.setter
-    def MULTI_LANGUAGE_TRANSLATION(self, value):
-        if isinstance(value, bool):
-            self._MULTI_LANGUAGE_TRANSLATION = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CONVERT_MESSAGE_TO_ROMAJI')
@@ -964,6 +959,7 @@ class Config:
                 "primary": {
                     "language": "Japanese",
                     "country": "Japan",
+                    "enable": True,
                 },
             }
         self._SELECTED_TARGET_LANGUAGES = {}
@@ -972,18 +968,20 @@ class Config:
                 "primary": {
                     "language": "English",
                     "country": "United States",
+                    "enable": True,
                 },
                 "secondary": {
                     "language": "English",
                     "country": "United States",
+                    "enable": False,
                 },
                 "tertiary": {
                     "language": "English",
                     "country": "United States",
+                    "enable": False,
                 },
             }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
-        self._MULTI_LANGUAGE_TRANSLATION = False
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False
         self._MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False

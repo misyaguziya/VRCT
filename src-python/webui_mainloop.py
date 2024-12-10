@@ -141,10 +141,6 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
-    "/get/data/multi_language_translation": {"status": True, "variable":controller.getMultiLanguageTranslation},
-    "/set/enable/multi_language_translation": {"status": True, "variable":controller.setEnableMultiLanguageTranslation},
-    "/set/disable/multi_language_translation": {"status": True, "variable":controller.setDisableMultiLanguageTranslation},
-
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable/convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
@@ -440,43 +436,52 @@ if __name__ == "__main__":
                             "1":{
                                 "primary": {
                                     "language": "Japanese",
-                                    "country": "Japan"
+                                    "country": "Japan",
+                                    "enabled": True,
                                 },
                                 "secondary": {
                                     "language": "English",
-                                    "country": "United States"
+                                    "country": "United States",
+                                    "enabled": True,
                                 },
                                 "tertiary": {
                                     "language": "Chinese Simplified",
-                                    "country": "China"
+                                    "country": "China",
+                                    "enabled": True,
                                 }
                             },
                             "2":{
                                 "primary":{
                                     "language":"English",
                                     "country":"United States",
+                                    "enabled": True,
                                 },
                                 "secondary":{
                                     "language":"English",
-                                    "country":"United States"
+                                    "country":"United States",
+                                    "enabled": True,
                                 },
                                 "tertiary":{
                                     "language":"English",
-                                    "country":"United States"
+                                    "country":"United States",
+                                    "enabled": True,
                                 },
                             },
                             "3":{
                                 "primary":{
                                     "language":"English",
                                     "country":"United States",
+                                    "enabled": True,
                                 },
                                 "secondary":{
                                     "language":"English",
-                                    "country":"United States"
+                                    "country":"United States",
+                                    "enabled": True,
                                 },
                                 "tertiary":{
                                     "language":"English",
-                                    "country":"United States"
+                                    "country":"United States",
+                                    "enabled": True,
                                 },
                             },
                         }
