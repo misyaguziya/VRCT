@@ -413,19 +413,19 @@ if __name__ == "__main__":
                     case "/set/data/selected_your_languages":
                         data = {
                             "1":{
-                                "primary":{
+                                "1":{
                                 "language": "English",
                                 "country": "Hong Kong"
                                 },
                             },
                             "2":{
-                                "primary":{
+                                "1":{
                                     "language":"Japanese",
                                     "country":"Japan"
                                 },
                             },
                             "3":{
-                                "primary":{
+                                "1":{
                                     "language":"Japanese",
                                     "country":"Japan"
                                 },
@@ -434,7 +434,7 @@ if __name__ == "__main__":
                     case "/set/data/selected_target_languages":
                         data ={
                             "1":{
-                                "primary": {
+                                "1": {
                                     "language": "Japanese",
                                     "country": "Japan",
                                     "enabled": True,
@@ -451,7 +451,7 @@ if __name__ == "__main__":
                                 }
                             },
                             "2":{
-                                "primary":{
+                                "1":{
                                     "language":"English",
                                     "country":"United States",
                                     "enabled": True,
@@ -468,7 +468,7 @@ if __name__ == "__main__":
                                 },
                             },
                             "3":{
-                                "primary":{
+                                "1":{
                                     "language":"English",
                                     "country":"United States",
                                     "enabled": True,
