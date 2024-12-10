@@ -144,7 +144,7 @@ export const WordFilterListToggleComponent = (props) => {
 
     return (
         <div className={styles.toggle_button_container}>
-            <p className={styles.words_count_text}>{t("config_page.mic_word_filter.count_desc", {count: word_filter_list_length} )}</p>
+            <p className={styles.words_count_text}>{t("config_page.transcription.mic_word_filter.count_desc", {count: word_filter_list_length} )}</p>
             <button className={styles.toggle_button_wrapper} onClick={OnclickFunction}>
                 <ArrowLeftSvg className={svg_class_names}/>
             </button>

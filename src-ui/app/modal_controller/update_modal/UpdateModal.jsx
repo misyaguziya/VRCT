@@ -17,10 +17,10 @@ export const UpdateModal = () => {
 
     return (
         <div className={styles.container}>
-            <p className={styles.label}>{t("main_page.confirmation_message.update_software")}</p>
+            <p className={styles.label}>{t("main_page.update_software_desc")}</p>
             <div className={styles.button_wrapper}>
-                <button className={styles.deny_button} onClick={() => updateOpenedQuickSetting("")} >{t("main_page.confirmation_message.deny_update_software")}</button>
-                <button className={styles.accept_button} onClick={onClickUpdateSoftware}>{t("main_page.confirmation_message.accept_update_software")}</button>
+                <button className={styles.deny_button} onClick={() => updateOpenedQuickSetting("")} >{t("main_page.deny_update_software")}</button>
+                <button className={styles.accept_button} onClick={onClickUpdateSoftware}>{t("main_page.accept_update_software")}</button>
             </div>
         </div>
     );

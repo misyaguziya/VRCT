@@ -57,13 +57,13 @@ const Mic_Container = () => {
     const getLabels = () => {
         if (currentEnableAutomaticMicThreshold.data === true) {
             return {
-                label: t("config_page.mic_dynamic_energy_threshold.label_for_automatic"),
-                desc: t("config_page.mic_dynamic_energy_threshold.desc_for_automatic"),
+                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_automatic"),
             };
         } else {
             return {
-                label: t("config_page.mic_dynamic_energy_threshold.label_for_manual"),
-                desc: t("config_page.mic_dynamic_energy_threshold.desc_for_manual"),
+                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_manual"),
             };
         }
     };
@@ -71,11 +71,11 @@ const Mic_Container = () => {
     return (
         <div className={styles.mic_container}>
             <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent label={t("config_page.mic_host_device.label")} />
+                <LabelComponent label={t("config_page.device.mic_host_device.label")} />
                 <div className={styles.device_contents}>
 
                     <div className={styles.device_auto_select_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_auto_select")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_auto_select")}</p>
                         <SwitchBox
                             variable={currentEnableAutoMicSelect}
                             toggleFunction={toggleEnableAutoMicSelect}
@@ -84,7 +84,7 @@ const Mic_Container = () => {
 
                     <div className={styles.device_dropdown_wrapper}>
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_host")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_host")}</p>
                             <DropdownMenu
                                 dropdown_id="mic_host"
                                 selected_id={currentSelectedMicHost.data}
@@ -97,7 +97,7 @@ const Mic_Container = () => {
                         </div>
 
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_device")}</p>
                             <DropdownMenu
                                 dropdown_id="mic_device"
                                 selected_id={currentSelectedMicDevice.data}
@@ -147,13 +147,13 @@ const Speaker_Container = () => {
     const getLabels = () => {
         if (currentEnableAutomaticSpeakerThreshold.data === true) {
             return {
-                label: t("config_page.speaker_dynamic_energy_threshold.label_for_automatic"),
-                desc: t("config_page.speaker_dynamic_energy_threshold.desc_for_automatic"),
+                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_automatic"),
             };
         } else {
             return {
-                label: t("config_page.speaker_dynamic_energy_threshold.label_for_manual"),
-                desc: t("config_page.speaker_dynamic_energy_threshold.desc_for_manual"),
+                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_manual"),
             };
         }
 
@@ -162,11 +162,11 @@ const Speaker_Container = () => {
     return (
         <div className={styles.speaker_container}>
             <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent label={t("config_page.speaker_device.label")} />
+                <LabelComponent label={t("config_page.device.speaker_device.label")} />
                 <div className={styles.device_contents}>
 
                     <div className={styles.device_auto_select_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.speaker_device.label_auto_select")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.speaker_device.label_auto_select")}</p>
                         <SwitchBox
                             variable={currentEnableAutoSpeakerSelect}
                             toggleFunction={toggleEnableAutoSpeakerSelect}
@@ -174,10 +174,10 @@ const Speaker_Container = () => {
                     </div>
 
                     <div className={styles.device_dropdown}>
-                        <p className={styles.device_secondary_label}>{t("config_page.mic_host_device.label_device")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_device")}</p>
                         <DropdownMenu
                             dropdown_id="speaker_device"
-                            label={t("config_page.speaker_device.label")}
+                            label={t("config_page.device.speaker_device.label")}
                             selected_id={currentSelectedSpeakerDevice.data}
                             list={currentSpeakerDeviceList.data}
                             selectFunction={selectFunction}

@@ -112,15 +112,15 @@ const OverlaySettingsContainer = ({
     return (
         <>
             <SwitchBoxContainer
-                label={t("overlay_settings.enable")}
+                label={t("config_page.vr.enable")}
                 variable={current_is_enabled_overlay}
                 toggleFunction={toggle_is_enabled_overlay}
             />
             <PageSwitcherContainer
                 toggleFunction={togglePositionRotationController}
                 is_selected={is_opened_position_controller}
-                label_1={t("overlay_settings.position")}
-                label_2={t("overlay_settings.rotation")}
+                label_1={t("config_page.vr.position")}
+                label_2={t("config_page.vr.rotation")}
             />
 
             <div className={styles.position_rotation_controls_box}>
@@ -132,7 +132,7 @@ const OverlaySettingsContainer = ({
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
-                label={t("overlay_settings.tracker")}
+                label={t("config_page.vr.tracker")}
                 selectFunction={selectTrackerFunction}
                 name={id}
                 options={[
@@ -174,7 +174,7 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
     return (
         <div className={styles.position_controls}>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.x_position_label)}>{t("overlay_settings.x_position")}</label>
+                <label className={clsx(styles.slider_label, styles.x_position_label)}>{t("config_page.vr.x_position")}</label>
                 <Slider
                     className={styles.x_position_slider}
                     variable={settings.x_pos}
@@ -185,7 +185,7 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.y_position_label)}>{t("overlay_settings.y_position")}</label>
+                <label className={clsx(styles.slider_label, styles.y_position_label)}>{t("config_page.vr.y_position")}</label>
                 <Slider
                     className={styles.y_position_slider}
                     variable={settings.y_pos}
@@ -197,7 +197,7 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.z_position_label)}>{t("overlay_settings.z_position")}</label>
+                <label className={clsx(styles.slider_label, styles.z_position_label)}>{t("config_page.vr.z_position")}</label>
                 <Slider
                     className={styles.z_position_slider}
                     variable={settings.z_pos}
@@ -218,7 +218,7 @@ const RotationControls = ({settings, onchangeFunction}) => {
     return (
         <div className={styles.rotation_controls}>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.x_rotation_label)}>{t("overlay_settings.x_rotation")}</label>
+                <label className={clsx(styles.slider_label, styles.x_rotation_label)}>{t("config_page.vr.x_rotation")}</label>
                 <Slider
                     className={styles.x_rotation_slider}
                     variable={-settings.x_rotation}
@@ -231,7 +231,7 @@ const RotationControls = ({settings, onchangeFunction}) => {
                 />
             </div>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.y_rotation_label)}>{t("overlay_settings.y_rotation")}</label>
+                <label className={clsx(styles.slider_label, styles.y_rotation_label)}>{t("config_page.vr.y_rotation")}</label>
                 <Slider
                     className={styles.y_rotation_slider}
                     variable={settings.y_rotation}
@@ -242,7 +242,7 @@ const RotationControls = ({settings, onchangeFunction}) => {
                 />
             </div>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.z_rotation_label)}>{t("overlay_settings.z_rotation")}</label>
+                <label className={clsx(styles.slider_label, styles.z_rotation_label)}>{t("config_page.vr.z_rotation")}</label>
                 <Slider
                     className={styles.z_rotation_slider}
                     variable={settings.z_rotation}
@@ -267,7 +267,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
         <div className={styles.other_controls}>
             <div className={styles.other_controls_wrapper}>
                 <label className={clsx(styles.other_controls_slider_label, styles.opacity_label)}>
-                    {t("overlay_settings.opacity")}
+                    {t("config_page.vr.opacity")}
                 </label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.opacity_slider)}
@@ -281,7 +281,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
             </div>
             <div className={styles.other_controls_wrapper}>
                 <label className={clsx(styles.other_controls_slider_label, styles.ui_scaling_label)}>
-                    {t("overlay_settings.ui_scaling")}
+                    {t("config_page.vr.ui_scaling")}
                 </label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
@@ -294,7 +294,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("overlay_settings.display_duration")}</label>
+                <label className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("config_page.vr.display_duration")}</label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.display_duration_slider)}
                     variable={settings.display_duration}
@@ -306,7 +306,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("overlay_settings.fadeout_duration")}</label>
+                <label className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("config_page.vr.fadeout_duration")}</label>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.fadeout_duration_slider)}
                     variable={settings.fadeout_duration}
@@ -330,7 +330,7 @@ const CommonSettingsContainer = () => {
         <div className={styles.common_container}>
             <SectionLabelComponent label="Common Settings" />
             <CheckboxContainer
-                label={t("overlay_settings.overlay_show_only_translated_messages.label")}
+                label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={currentOverlayShowOnlyTranslatedMessages}
                 toggleFunction={toggleOverlayShowOnlyTranslatedMessages}
             />
