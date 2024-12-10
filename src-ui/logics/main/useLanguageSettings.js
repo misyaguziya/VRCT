@@ -61,9 +61,10 @@ export const useLanguageSettings = () => {
         const send_obj = {
             ...currentSelectedYourLanguages.data,
             [currentSelectedPresetTabNumber.data]: {
-                primary: {
+                1: {
                     language: selected_language_data.language,
                     country: selected_language_data.country,
+                    enable: selected_language_data.enable,
                 }
             }
         };
@@ -80,8 +81,9 @@ export const useLanguageSettings = () => {
         pendingSelectedTargetLanguages();
         let send_obj = currentSelectedTargetLanguages.data;
 
-        send_obj[currentSelectedPresetTabNumber.data].primary.language = selected_language_data.language,
-        send_obj[currentSelectedPresetTabNumber.data].primary.country = selected_language_data.country,
+        send_obj[currentSelectedPresetTabNumber.data][1].language = selected_language_data.language,
+        send_obj[currentSelectedPresetTabNumber.data][1].country = selected_language_data.country,
+        send_obj[currentSelectedPresetTabNumber.data][1].enable = selected_language_data.enable,
 
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
