@@ -222,7 +222,7 @@ class Controller:
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(translation[0])
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
@@ -287,7 +287,7 @@ class Controller:
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(message)
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
@@ -354,7 +354,7 @@ class Controller:
                     )
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["primary"]["language"] == "Japanese":
+                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration = model.convertMessageToTransliteration(translation[0])
 
             # send OSC message
@@ -1337,13 +1337,13 @@ class Controller:
 
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:
         your_languages = config.SELECTED_YOUR_LANGUAGES
-        your_language_primary = your_languages[config.SELECTED_TAB_NO]["primary"]
+        your_language_temp = your_languages[config.SELECTED_TAB_NO]["1"]
 
         target_languages = config.SELECTED_TARGET_LANGUAGES
-        target_language_primary = target_languages[config.SELECTED_TAB_NO]["primary"]
+        target_language_temp = target_languages[config.SELECTED_TAB_NO]["1"]
 
-        your_languages[config.SELECTED_TAB_NO]["primary"] = target_language_primary
-        target_languages[config.SELECTED_TAB_NO]["primary"] = your_language_primary
+        your_languages[config.SELECTED_TAB_NO]["1"] = target_language_temp
+        target_languages[config.SELECTED_TAB_NO]["1"] = your_language_temp
 
         self.setSelectedYourLanguages(your_languages)
         self.setSelectedTargetLanguages(target_languages)
