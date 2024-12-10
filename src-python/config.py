@@ -35,14 +35,18 @@ class Config:
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
             json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
 
-    def saveConfig(self, key, value):
+    def saveConfig(self, key, value, immediate_save=False):
         self._config_data[key] = value
 
         if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
             self._timer.cancel()
-        self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
-        self._timer.daemon = True
-        self._timer.start()
+
+        if immediate_save:
+            self.saveConfigToFile()
+        else:
+            self._timer = threading.Timer(self._debounce_time, self.saveConfigToFile)
+            self._timer.daemon = True
+            self._timer.start()
 
     # Read Only
     @property
@@ -381,7 +385,7 @@ class Config:
     def MESSAGE_BOX_RATIO(self, value):
         if isinstance(value, (int, float)):
             self._MESSAGE_BOX_RATIO = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+            self.saveConfig(inspect.currentframe().f_code.co_name, value, immediate_save=True)
 
     @property
     @json_serializable('FONT_FAMILY')
@@ -417,7 +421,7 @@ class Config:
             for key, value in value.items():
                 if isinstance(value, int):
                     self._MAIN_WINDOW_GEOMETRY[key] = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY)
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY, immediate_save=True)
 
     @property
     @json_serializable('AUTO_MIC_SELECT')
