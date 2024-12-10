@@ -44,9 +44,10 @@ export const Transcription = () => {
 
 
 const Mic_Container = () => {
+    const { t } = useTranslation();
     return (
         <div>
-            <SectionLabelComponent label="Mic" />
+            <SectionLabelComponent label={t("config_page.transcription.section_label_mic")} />
             <MicRecordTimeout_Box />
             <MicPhraseTimeout_Box />
             <MicMaxWords_Box />
@@ -75,8 +76,8 @@ const MicRecordTimeout_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.mic_record_timeout.label")}
-            desc={t("config_page.mic_record_timeout.desc")}
+            label={t("config_page.transcription.mic_record_timeout.label")}
+            desc={t("config_page.transcription.mic_record_timeout.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -102,8 +103,8 @@ const MicPhraseTimeout_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.mic_phrase_timeout.label")}
-            desc={t("config_page.mic_phrase_timeout.desc")}
+            label={t("config_page.transcription.mic_phrase_timeout.label")}
+            desc={t("config_page.transcription.mic_phrase_timeout.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -129,8 +130,8 @@ const MicMaxWords_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.mic_max_phrase.label")}
-            desc={t("config_page.mic_max_phrase.desc")}
+            label={t("config_page.transcription.mic_max_phrase.label")}
+            desc={t("config_page.transcription.mic_max_phrase.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -142,8 +143,8 @@ const MicWordFilter_Box = () => {
 
     return (
         <WordFilterContainer
-            label={t("config_page.mic_word_filter.label")}
-            desc={t("config_page.mic_word_filter.desc")}
+            label={t("config_page.transcription.mic_word_filter.label")}
+            desc={t("config_page.transcription.mic_word_filter.desc")}
         />
     );
 };
@@ -152,9 +153,10 @@ const MicWordFilter_Box = () => {
 
 
 const Speaker_Container = () => {
+    const { t } = useTranslation();
     return (
         <div>
-            <SectionLabelComponent label="Speaker" />
+            <SectionLabelComponent label={t("config_page.transcription.section_label_speaker")} />
             <SpeakerRecordTimeout_Box />
             <SpeakerPhraseTimeout_Box />
             <SpeakerMaxWords_Box />
@@ -182,8 +184,8 @@ const SpeakerRecordTimeout_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.speaker_record_timeout.label")}
-            desc={t("config_page.speaker_record_timeout.desc")}
+            label={t("config_page.transcription.speaker_record_timeout.label")}
+            desc={t("config_page.transcription.speaker_record_timeout.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -209,8 +211,8 @@ const SpeakerPhraseTimeout_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.speaker_phrase_timeout.label")}
-            desc={t("config_page.speaker_phrase_timeout.desc")}
+            label={t("config_page.transcription.speaker_phrase_timeout.label")}
+            desc={t("config_page.transcription.speaker_phrase_timeout.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -236,8 +238,8 @@ const SpeakerMaxWords_Box = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.speaker_max_phrase.label")}
-            desc={t("config_page.speaker_max_phrase.desc")}
+            label={t("config_page.transcription.speaker_max_phrase.label")}
+            desc={t("config_page.transcription.speaker_max_phrase.desc")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -247,9 +249,10 @@ const SpeakerMaxWords_Box = () => {
 
 
 const TranscriptionEngine_Container = () => {
+    const { t } = useTranslation();
     return (
         <div>
-            <SectionLabelComponent label="Transcription Engines" />
+            <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
             <WhisperWeightType_Box />
             <WhisperComputeDevice_Box />
@@ -263,7 +266,7 @@ const TranscriptionEngine_Box = () => {
 
     return (
         <RadioButtonContainer
-            label={t("config_page.select_transcription_engine.label")}
+            label={t("config_page.transcription.select_transcription_engine.label")}
             selectFunction={setSelectedTranscriptionEngine}
             name="select_transcription_engine"
             options={[
@@ -294,13 +297,13 @@ const WhisperWeightType_Box = () => {
     };
 
     const new_labels = [
-        { id: "tiny", label: t("config_page.whisper_weight_type.model_template", {model_name: "tiny", capacity: "74.5MB"}) },
-        { id: "base", label: t("config_page.whisper_weight_type.recommended_model_template", {model_name: "base", capacity: "141MB"}) },
-        { id: "small", label: t("config_page.whisper_weight_type.model_template", {model_name: "small", capacity: "463MB"}) },
-        { id: "medium", label: t("config_page.whisper_weight_type.model_template", {model_name: "medium", capacity: "1.42GB"}) },
-        { id: "large-v1", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v1", capacity: "2.87GB"}) },
-        { id: "large-v2", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v2", capacity: "2.87GB"}) },
-        { id: "large-v3", label: t("config_page.whisper_weight_type.model_template", {model_name: "large-v3", capacity: "2.87GB"}) },
+        { id: "tiny", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "tiny", capacity: "74.5MB"}) },
+        { id: "base", label: t("config_page.transcription.whisper_weight_type.recommended_model_template", {model_name: "base", capacity: "141MB"}) },
+        { id: "small", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "small", capacity: "463MB"}) },
+        { id: "medium", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "medium", capacity: "1.42GB"}) },
+        { id: "large-v1", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v1", capacity: "2.87GB"}) },
+        { id: "large-v2", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v2", capacity: "2.87GB"}) },
+        { id: "large-v3", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3", capacity: "2.87GB"}) },
     ];
 
     const whisper_weight_types = updateLabelsById(currentWhisperWeightTypeStatus.data, new_labels);
@@ -308,9 +311,9 @@ const WhisperWeightType_Box = () => {
     return (
         <>
             <DownloadModelsContainer
-                label={t("config_page.whisper_weight_type.label")}
+                label={t("config_page.transcription.whisper_weight_type.label")}
                 desc={t(
-                    "config_page.whisper_weight_type.desc",
+                    "config_page.transcription.whisper_weight_type.desc",
                     {translator: t("main_page.translator")}
                 )}
                 name="whisper_weight_type"
@@ -341,8 +344,8 @@ const WhisperComputeDevice_Box = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="whisper_compute_device"
-            label={t("config_page.whisper_compute_device.label")}
-            // desc={t("config_page.whisper_compute_device.label")}
+            label={t("config_page.transcription.whisper_compute_device.label")}
+            // desc={t("config_page.transcription.whisper_compute_device.label")}
             selected_id={target_index}
             list={list_for_ui}
             selectFunction={selectFunction}

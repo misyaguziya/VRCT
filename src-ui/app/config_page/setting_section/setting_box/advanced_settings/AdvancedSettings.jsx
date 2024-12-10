@@ -46,7 +46,7 @@ const OscIpAddressContainer = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.osc_ip_address.label")}
+            label={t("config_page.advanced_settings.osc_ip_address.label")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -73,7 +73,7 @@ const OscPortContainer = () => {
 
     return (
         <EntryContainer
-            label={t("config_page.osc_port.label")}
+            label={t("config_page.advanced_settings.osc_port.label")}
             ui_variable={ui_variable}
             onChange={onChangeFunction}
         />
@@ -86,7 +86,7 @@ const OpenConfigFolderContainer = () => {
     return (
         <>
             <ActionButtonContainer
-                label={t("config_page.open_config_filepath.label")}
+                label={t("config_page.advanced_settings.open_config_filepath.label")}
                 IconComponent={OpenFolderSvg}
                 onclickFunction={openFolder_ConfigFile}
             />

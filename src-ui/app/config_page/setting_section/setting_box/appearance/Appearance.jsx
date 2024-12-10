@@ -44,8 +44,8 @@ const UiLanguageContainer = () => {
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
         <RadioButtonContainer
-            label={is_not_en_lang ? "UI Language" : t("config_page.ui_language.label")}
-            desc={is_not_en_lang ? t("config_page.ui_language.label") : false}
+            label={is_not_en_lang ? "UI Language" : t("config_page.appearance.ui_language.label")}
+            desc={is_not_en_lang ? t("config_page.appearance.ui_language.label") : false}
             selectFunction={setUiLanguage}
             name="ui_language"
             options={ui_configs.selectable_ui_languages}
@@ -85,7 +85,7 @@ const UiScalingContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.ui_size.label") + " (%)"}
+            label={t("config_page.appearance.ui_size.label") + " (%)"}
             min="40"
             max="200"
             onchangeCommittedFunction={onchangeCommittedFunction}
@@ -127,7 +127,7 @@ export const MessageLogUiScalingContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.textbox_ui_size.label") + " (%)"}
+            label={t("config_page.appearance.textbox_ui_size.label") + " (%)"}
             min="40"
             max="200"
             onchangeCommittedFunction={onchangeCommittedFunction}
@@ -146,13 +146,13 @@ const SendMessageButtonTypeContainer = () => {
 
     return (
         <RadioButtonContainer
-            label={t("config_page.send_message_button_type.label")}
+            label={t("config_page.appearance.send_message_button_type.label")}
             selectFunction={setSendMessageButtonType}
             name="send_message_button_type"
             options={[
-                { id: "hide", label: t("config_page.send_message_button_type.hide") },
-                { id: "show", label: t("config_page.send_message_button_type.show") },
-                { id: "show_and_disable_enter_key", label: t("config_page.send_message_button_type.show_and_disable_enter_key") },
+                { id: "hide", label: t("config_page.appearance.send_message_button_type.hide") },
+                { id: "show", label: t("config_page.appearance.send_message_button_type.show") },
+                { id: "show_and_disable_enter_key", label: t("config_page.appearance.send_message_button_type.show_and_disable_enter_key") },
             ]}
             checked_variable={currentSendMessageButtonType}
             column={true}
@@ -172,8 +172,7 @@ const FontFamilyContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="font_family"
-            label={t("config_page.font_family.label")}
-            desc={t("config_page.font_family.label")}
+            label={t("config_page.appearance.font_family.label")}
             selected_id={currentSelectedFontFamily.data}
             list={currentSelectableFontFamilyList.data}
             selectFunction={selectFunction}
@@ -209,7 +208,7 @@ const TransparencyContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.transparency.label") + " (%)"}
+            label={t("config_page.appearance.transparency.label") + " (%)"}
             min="40"
             max="100"
             onchangeCommittedFunction={onchangeCommittedFunction}

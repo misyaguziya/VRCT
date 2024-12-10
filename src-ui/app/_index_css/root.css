@@ -39,3 +39,7 @@ html, body {
 svg {
     fill: currentColor;
 }
+
+p {
+    white-space: pre-wrap;
+}

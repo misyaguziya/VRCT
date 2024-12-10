@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 
 import styles from "./Topbar.module.scss";
@@ -9,11 +10,11 @@ import { SectionTitleBox } from "./section_title_box/SectionTitleBox";
 import { CompactSwitchBox } from "./compact_switch_box/CompactSwitchBox";
 
 export const Topbar = () => {
+    const { t } = useTranslation();
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
     const closeConfigPage = () => {
         setIsOpenedConfigPage(false);
     };
-
     return (
         <div className={clsx(styles.container, {
             [styles.show_config]: currentIsOpenedConfigPage.data,
@@ -24,7 +25,7 @@ export const Topbar = () => {
                     <ArrowLeftSvg className={styles.arrow_left_svg} />
                 </div>
                 <div className={styles.go_back_text_wrapper}>
-                    <p className={styles.go_back_text}>Go Back</p>
+                    <p className={styles.go_back_text}>{t("common.go_back_button_label")}</p>
                 </div>
 
 
