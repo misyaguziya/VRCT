@@ -46,8 +46,8 @@ const CTranslate2WeightType_Box = () => {
     };
 
     const new_labels = [
-        { id: "small", label: t("config_page.ctranslate2_weight_type.small", {capacity: "418MB"}) },
-        { id: "large", label: t("config_page.ctranslate2_weight_type.large", {capacity: "1.2GB"}) },
+        { id: "small", label: t("config_page.translation.ctranslate2_weight_type.small", {capacity: "418MB"}) },
+        { id: "large", label: t("config_page.translation.ctranslate2_weight_type.large", {capacity: "1.2GB"}) },
     ];
 
     const c_translate2_weight_types = updateLabelsById(currentCTranslate2WeightTypeStatus.data, new_labels);
@@ -55,9 +55,9 @@ const CTranslate2WeightType_Box = () => {
     return (
         <>
             <DownloadModelsContainer
-                label={t("config_page.ctranslate2_weight_type.label")}
+                label={t("config_page.translation.ctranslate2_weight_type.label")}
                 desc={t(
-                    "config_page.ctranslate2_weight_type.desc",
+                    "config_page.translation.ctranslate2_weight_type.desc",
                     {translator: t("main_page.translator")}
                 )}
                 name="ctransalte2_weight_type"
@@ -87,8 +87,8 @@ const CTranslation2ComputeDevice_Box = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="ctranslate2_compute_device"
-            label={t("config_page.ctranslate2_compute_device.label")}
-            // desc={t("config_page.ctranslate2_compute_device.label")}
+            label={t("config_page.translation.ctranslate2_compute_device.label")}
+            // desc={t("config_page.translation.ctranslate2_compute_device.label")}
             selected_id={target_index}
             list={list_for_ui}
             selectFunction={selectFunction}
@@ -118,9 +118,9 @@ const DeeplAuthKey_Box = () => {
     return (
         <>
             <DeeplAuthKeyContainer
-                label={t("config_page.deepl_auth_key.label")}
+                label={t("config_page.translation.deepl_auth_key.label")}
                 desc={t(
-                    "config_page.deepl_auth_key.desc",
+                    "config_page.translation.deepl_auth_key.desc",
                     {translator: t("main_page.translator")}
                 )}
                 variable={input_value}

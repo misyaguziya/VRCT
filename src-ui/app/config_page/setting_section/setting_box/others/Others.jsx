@@ -48,7 +48,7 @@ const AutoClearMessageInputBoxContainer = () => {
 
     return (
         <CheckboxContainer
-            label={t("config_page.auto_clear_the_message_box.label")}
+            label={t("config_page.others.auto_clear_the_message_box.label")}
             variable={currentEnableAutoClearMessageInputBox}
             toggleFunction={toggleEnableAutoClearMessageInputBox}
         />
@@ -60,7 +60,7 @@ const SendOnlyTranslatedMessagesContainer = () => {
 
     return (
         <CheckboxContainer
-            label={t("config_page.send_only_translated_messages.label")}
+            label={t("config_page.others.send_only_translated_messages.label")}
             variable={currentEnableSendOnlyTranslatedMessages}
             toggleFunction={toggleEnableSendOnlyTranslatedMessages}
         />
@@ -74,8 +74,8 @@ const AutoExportMessageLogsContainer = () => {
     return (
         <div className={styles.auto_export_message_logs_container}>
             <LabelComponent
-                label={t("config_page.auto_export_message_logs.label")}
-                desc={t("config_page.auto_export_message_logs.desc")}
+                label={t("config_page.others.auto_export_message_logs.label")}
+                desc={t("config_page.others.auto_export_message_logs.desc")}
                 />
             <div className={styles.auto_export_message_logs_switch_section_container}>
                 <ActionButton
@@ -96,8 +96,8 @@ export const VrcMicMuteSyncContainer = () => {
 
     return (
         <CheckboxContainer
-            label={t("config_page.vrc_mic_mute_sync.label")}
-            desc={t("config_page.vrc_mic_mute_sync.desc")}
+            label={t("config_page.others.vrc_mic_mute_sync.label")}
+            desc={t("config_page.others.vrc_mic_mute_sync.desc")}
             variable={currentEnableVrcMicMuteSync}
             toggleFunction={toggleEnableVrcMicMuteSync}
         />
@@ -109,8 +109,8 @@ const SendMessageToVrcContainer = () => {
 
     return (
         <CheckboxContainer
-            label={t("config_page.send_message_to_vrc.label")}
-            desc={t("config_page.send_message_to_vrc.desc")}
+            label={t("config_page.others.send_message_to_vrc.label")}
+            desc={t("config_page.others.send_message_to_vrc.desc")}
             variable={currentEnableSendMessageToVrc}
             toggleFunction={toggleEnableSendMessageToVrc}
         />
@@ -124,8 +124,8 @@ const SendReceivedMessageToVrcContainer = () => {
 
     return (
         <CheckboxContainer
-            label={t("config_page.send_received_message_to_vrc.label")}
-            desc={t("config_page.send_received_message_to_vrc.desc")}
+            label={t("config_page.others.send_received_message_to_vrc.label")}
+            desc={t("config_page.others.send_received_message_to_vrc.desc")}
             variable={currentEnableSendReceivedMessageToVrc}
             toggleFunction={toggleEnableSendReceivedMessageToVrc}
         />

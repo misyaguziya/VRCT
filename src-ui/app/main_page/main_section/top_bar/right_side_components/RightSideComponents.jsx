@@ -58,7 +58,7 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
 
     return (
         <OpenQuickSettingButton
-            label={t("config_page.vrc_mic_mute_sync.label")}
+            label={t("config_page.others.vrc_mic_mute_sync.label")}
             variable={currentEnableVrcMicMuteSync.data}
             onClickFunction={onClickFunction}
         />

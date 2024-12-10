@@ -8,10 +8,9 @@ export const LanguageSelector = ({ id, onClickFunction }) => {
     const { t } = useTranslation();
     const { currentSelectableLanguageList } = useSelectableLanguageList();
 
-
     const languageTitles = {
-        your_language: t("selectable_language_window.title_your_language"),
-        target_language: t("selectable_language_window.title_target_language")
+        your_language: t("main_page.language_selector.title_your_language"),
+        target_language: t("main_page.language_selector.title_target_language")
     };
 
     const language_selector_title = languageTitles[id] || "";
