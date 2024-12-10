@@ -42,7 +42,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     const is_translated_exist = messages.translated.length >= 1;
     const is_pending = status === "pending";
     const is_sent_message = category === "sent";
-    const category_text = is_sent_message ? t("main_page.textbox_tab_sent") : t("main_page.textbox_tab_received");
+    const category_text = is_sent_message ? t("main_page.message_log.sent") : t("main_page.message_log.received");
 
     const message_type_class_name = clsx({
         [styles.sent_message]: is_sent_message,
