@@ -61,10 +61,10 @@ export const useLanguageSettings = () => {
         const send_obj = {
             ...currentSelectedYourLanguages.data,
             [currentSelectedPresetTabNumber.data]: {
-                1: {
+                1: { // Fixed key 1.
                     language: selected_language_data.language,
                     country: selected_language_data.country,
-                    enable: selected_language_data.enable,
+                    enable: true,
                 }
             }
         };
@@ -80,11 +80,29 @@ export const useLanguageSettings = () => {
     const setSelectedTargetLanguages = (selected_language_data) => {
         pendingSelectedTargetLanguages();
         let send_obj = currentSelectedTargetLanguages.data;
+        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].language = selected_language_data.language,
+        send_obj[currentSelectedPresetTabNumber.data][selected_language_data.target_key].country = selected_language_data.country,
+        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
+    };
 
-        send_obj[currentSelectedPresetTabNumber.data][1].language = selected_language_data.language,
-        send_obj[currentSelectedPresetTabNumber.data][1].country = selected_language_data.country,
-        send_obj[currentSelectedPresetTabNumber.data][1].enable = selected_language_data.enable,
-
+    const addTargetLanguage = () => {
+        pendingSelectedTargetLanguages();
+        let send_obj = currentSelectedTargetLanguages.data;
+        let target_key = "2";
+        if (send_obj[currentSelectedPresetTabNumber.data]["2"].enable === true) {
+            target_key = "3";
+        }
+        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = true,
+        asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
+    };
+    const removeTargetLanguage = () => {
+        pendingSelectedTargetLanguages();
+        let send_obj = currentSelectedTargetLanguages.data;
+        let target_key = "3";
+        if (send_obj[currentSelectedPresetTabNumber.data]["3"].enable === false) {
+            target_key = "2";
+        }
+        send_obj[currentSelectedPresetTabNumber.data][target_key].enable = false,
         asyncStdoutToPython("/set/data/selected_target_languages", send_obj);
     };
 
@@ -133,6 +151,9 @@ export const useLanguageSettings = () => {
         getSelectedTargetLanguages,
         updateSelectedTargetLanguages,
         setSelectedTargetLanguages,
+
+        addTargetLanguage,
+        removeTargetLanguage,
 
         currentTranslationEngines,
         getTranslationEngines,
