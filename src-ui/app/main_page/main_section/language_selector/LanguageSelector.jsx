@@ -4,16 +4,9 @@ import { useSelectableLanguageList } from "@logics_main";
 import styles from "./LanguageSelector.module.scss";
 
 import { LanguageSelectorTopBar } from "./language_selector_top_bar/LanguageSelectorTopBar";
-export const LanguageSelector = ({ id, onClickFunction }) => {
+export const LanguageSelector = ({ title, onClickFunction }) => {
     const { t } = useTranslation();
     const { currentSelectableLanguageList } = useSelectableLanguageList();
-
-    const languageTitles = {
-        your_language: t("main_page.language_selector.title_your_language"),
-        target_language: t("main_page.language_selector.title_target_language")
-    };
-
-    const language_selector_title = languageTitles[id] || "";
 
     const groupLanguagesByFirstLetter = (languages) => {
         return languages.reduce((acc, { language, country }) => {
@@ -30,7 +23,7 @@ export const LanguageSelector = ({ id, onClickFunction }) => {
 
     return (
         <div className={styles.container}>
-            <LanguageSelectorTopBar title={language_selector_title}/>
+            <LanguageSelectorTopBar title={title}/>
             <div className={styles.language_list_scroll_wrapper}>
                 <div className={styles.language_list}>
                     {Object.entries(groupedLanguages).map(([letter, languages]) => (
@@ -46,25 +39,25 @@ const LanguageGroup = ({ onClickFunction, letter, languages }) => {
     return (
         <div className={styles.language_each_letter_box}>
             <p className={styles.language_latter}>{letter}</p>
-            {languages.map((languageData, index) => (
-                <LanguageButton key={index} onClickFunction={onClickFunction} languageData={languageData} />
+            {languages.map((language_data, index) => (
+                <LanguageButton key={index} onClickFunction={onClickFunction} language_data={language_data} />
             ))}
         </div>
     );
 };
 
-const LanguageButton = ({ onClickFunction, languageData }) => {
+const LanguageButton = ({ onClickFunction, language_data }) => {
 
     const adjustedOnClickFunction = () => {
         onClickFunction({
-            language: languageData.language,
-            country: languageData.country
+            language: language_data.language,
+            country: language_data.country,
         });
     };
 
     return (
         <div className={styles.language_button} onClick={adjustedOnClickFunction}>
-            <p className={styles.language_label}>{languageData.language} ({languageData.country})</p>
+            <p className={styles.language_label}>{language_data.language} ({language_data.country})</p>
         </div>
     );
 };
