@@ -43,14 +43,14 @@ export const DeeplAuthKey = (props) => {
                 <button className={save_button_class_names} onClick={saveAuthKey}>
                     {is_disabled
                     ? <CircularProgress size="1.4rem" sx={{ color: "var(--dark_basic_text_color)" }}/>
-                    : <p className={styles.save_button_label}>Save</p>
+                    : <p className={styles.save_button_label}>{t("config_page.translation.deepl_auth_key.save")}</p>
                 }
                 </button>
                 {is_editable
                 ? null
                 :
                     <div className={styles.entry_edit_cover} onClick={revealEditAuthKey}>
-                        <button className={styles.edit_button}>Edit</button>
+                        <button className={styles.edit_button}>{t("config_page.translation.deepl_auth_key.edit")}</button>
                     </div>
                 }
             </div>
@@ -60,10 +60,11 @@ export const DeeplAuthKey = (props) => {
 
 
 export const OpenWebpage_DeeplAuthKey = () => {
+    const { t } = useTranslation();
     return (
         <div className={styles.open_webpage_button_wrapper}>
             <a className={styles.open_webpage_button} href="https://www.deepl.com/ja/your-account/keys" target="_blank" rel="noreferrer" >
-                <p className={styles.open_webpage_text}>Open DeepL Account Webpage</p>
+                <p className={styles.open_webpage_text}>{t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}</p>
                 <ExternalLink className={styles.external_link_svg} />
             </a>
         </div>

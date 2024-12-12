@@ -92,7 +92,7 @@ export const MessageInputBox = () => {
                     className={styles.message_box_input_area}
                     onChange={onChangeFunction}
                     onBlur={stopTyping}
-                    placeholder="Input Textfield"
+                    // placeholder="Input Textfield"
                     value={currentMessageInputValue.data}
                     onKeyDown={onKeyDownFunction}
                 />
