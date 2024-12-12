@@ -9,6 +9,7 @@ export const LanguageSelectorTopBar = (props) => {
         updateIsOpenedLanguageSelector({
             your_language: false,
             target_language: false,
+            target_key: "1"
         });
     };
 
