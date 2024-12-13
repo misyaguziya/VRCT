@@ -23,7 +23,9 @@
     "release-all": "npm run build && npm run release && npm run build-cuda && npm run release-cuda"
   },
   "dependencies": {
-    "@mui/material": "^5.16.6",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/material": "^6.2.0",
     "@tauri-apps/api": "^1",
     "clsx": "^2.1.1",
     "eslint": "^8.57.0",
