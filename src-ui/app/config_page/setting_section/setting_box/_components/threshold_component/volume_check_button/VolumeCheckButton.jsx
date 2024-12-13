@@ -1,8 +1,10 @@
 import React from "react";
-import styles from "./VolumeCheckButton.module.scss";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
+import styles from "./VolumeCheckButton.module.scss";
 
 export const VolumeCheckButton = React.memo((props) => {
+    const { t } = useTranslation();
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_active]: (props.isChecking?.data === true),
         [styles.is_pending]: (props.isChecking.state === "pending"),
@@ -21,7 +23,7 @@ export const VolumeCheckButton = React.memo((props) => {
         <div className={styles.container}>
             <div className={getClassNames(styles.button)} onClick={toggleFunction}>
                 <props.SvgComponent className={styles.button_svg} />
-                <p className={styles.button_text}>Check Volume</p>
+                <p className={styles.button_text}>{t("config_page.device.check_volume")}</p>
             </div>
         </div>
     );

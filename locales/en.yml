@@ -78,6 +78,7 @@ config_page:
         about_vrct: About VRCT
 
     device:
+        check_volume: Check Volume
         mic_host_device:
             label: Mic Device
             label_auto_select: Auto Select
@@ -108,7 +109,7 @@ config_page:
         ui_size:
             label: UI Size
         textbox_ui_size:
-            label: Text Box Font Size
+            label: Message Logs Font Size
             desc: You can adjust the font size used in the logs relative to the UI size.
         send_message_button_type:
             label: Send Message Button
@@ -131,6 +132,8 @@ config_page:
         deepl_auth_key:
             label: DeepL Auth Key
             desc: Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported.
+            save: Save
+            edit: Edit
             open_auth_key_webpage: Open DeepL Account Webpage
             auth_key_success: Auth key update completed.
             auth_key_error: Auth Key is incorrect or Usage limit reached.
@@ -183,8 +186,10 @@ config_page:
             label: Select Whisper Compute Device
 
     vr:
+        single_line: Single line
+        multi_lines: Multi lines
+        overlay_enable: Enable
         restore_default_settings: Restore Default Settings
-        enable: Enable
         position: Position
         rotation: Rotation
         x_position: X-axis (left-right)
@@ -198,6 +203,10 @@ config_page:
         display_duration: Display duration
         fadeout_duration: Fadeout duration
         tracker: Tracker
+        hmd: HMD
+        left_hand: Left hand
+        right_hand: Right hand
+        common_settings: Common Settings
         overlay_show_only_translated_messages:
             label: Show Only Translated Messages
 

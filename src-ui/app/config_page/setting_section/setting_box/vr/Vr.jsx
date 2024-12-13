@@ -40,8 +40,8 @@ export const Vr = () => {
                 <PageSwitcherContainer
                     toggleFunction={toggleIsOpenedSmallSettings}
                     is_selected={is_opened_small_settings}
-                    label_1="Small"
-                    label_2="Large"
+                    label_1={t("config_page.vr.single_line")}
+                    label_2={t("config_page.vr.multi_lines")}
                     />
                 {is_opened_small_settings ? (
                     <OverlaySettingsContainer
@@ -112,7 +112,7 @@ const OverlaySettingsContainer = ({
     return (
         <>
             <SwitchBoxContainer
-                label={t("config_page.vr.enable")}
+                label={t("config_page.vr.overlay_enable")}
                 variable={current_is_enabled_overlay}
                 toggleFunction={toggle_is_enabled_overlay}
             />
@@ -136,9 +136,9 @@ const OverlaySettingsContainer = ({
                 selectFunction={selectTrackerFunction}
                 name={id}
                 options={[
-                    { id: "HMD", label: "HMD" },
-                    { id: "LeftHand", label: "LeftHand" },
-                    { id: "RightHand", label: "RightHand" },
+                    { id: "HMD", label: t("config_page.vr.hmd") },
+                    { id: "LeftHand", label: t("config_page.vr.left_hand") },
+                    { id: "RightHand", label: t("config_page.vr.right_hand") },
                 ]}
                 checked_variable={{data: settings.tracker}}
                 column={true}
@@ -328,7 +328,7 @@ const CommonSettingsContainer = () => {
 
     return (
         <div className={styles.common_container}>
-            <SectionLabelComponent label="Common Settings" />
+            <SectionLabelComponent label={t("config_page.vr.common_settings")} />
             <CheckboxContainer
                 label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={currentOverlayShowOnlyTranslatedMessages}
