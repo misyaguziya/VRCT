@@ -34,6 +34,12 @@ export const Vr = () => {
 
     const { currentOverlayLargeLogSettings, setOverlayLargeLogSettings } = useOverlayLargeLogSettings();
     const { currentIsEnabledOverlayLargeLog, toggleIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
+
+    const restoreDefaultSettings = () => {
+        setOverlaySmallLogSettings(ui_configs.overlay_small_log_default_settings);
+        setOverlayLargeLogSettings(ui_configs.overlay_large_log_default_settings);
+    };
+
     return (
         <div className={styles.container}>
             <div className={styles.wrapper}>
@@ -64,6 +70,12 @@ export const Vr = () => {
                 )}
             </div>
             <CommonSettingsContainer />
+            <button
+                className={styles.restore_default_settings_button}
+                onClick={restoreDefaultSettings}
+            >
+                {t("config_page.vr.restore_default_settings")}
+            </button>
         </div>
     );
 };

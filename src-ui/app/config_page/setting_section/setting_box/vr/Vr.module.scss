@@ -197,3 +197,17 @@
 .common_label {
     font-size: 1.4rem;
 }
+
+.restore_default_settings_button {
+    color: var(--dark_basic_text_color);
+    font-size: 1.2rem;
+    margin-top: 6rem;
+    padding: 0.8rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_775_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
