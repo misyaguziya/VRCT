@@ -75,8 +75,10 @@ config_page:
         advanced_settings: 高度な設定
 
     device:
+        check_volume: 音量チェック
         mic_host_device:
             label: マイク （デバイス）
+            label_auto_select: 自動選択
             label_host: ホスト/ドライバー
             label_device: デバイス
         mic_dynamic_energy_threshold:
@@ -87,6 +89,7 @@ config_page:
             error_message: 0 から {{max}} までの数値で設定できます。
         speaker_device:
             label: スピーカー （デバイス）
+            label_auto_select: 自動選択
         speaker_dynamic_energy_threshold:
             label_for_automatic: 'スピーカー入力感度の調整 (現在の設定: 自動)'
             desc_for_automatic: スピーカーの入力感度を自動的に調節する。
@@ -102,7 +105,7 @@ config_page:
         ui_size:
             label: UIサイズ
         textbox_ui_size:
-            label: テキストボックス フォントサイズ
+            label: ログのフォントサイズ
             desc: ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。
         send_message_button_type:
             label: メッセージ送信ボタン
@@ -120,12 +123,16 @@ config_page:
             desc: 翻訳エンジン（オフライン翻訳）で翻訳する際に、使用する翻訳モデルを選択できます。
             small: 通常モデル ({{capacity}})
             large: 高精度モデル ({{capacity}})
+        ctranslate2_compute_device:
+            label: オフライン翻訳の処理デバイス
         deepl_auth_key:
             label: DeepL 認証キー
             desc: |-
                 使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。
                 ※対応していない言語もあります。
             open_auth_key_webpage: DeepLアカウントページを開く
+            save: 保存
+            edit: 編集
             auth_key_success: 認証キーの更新が完了しました。
             auth_key_error: 認証キーが間違っているか、API使用制限が上限に達しています。
 
@@ -176,7 +183,12 @@ config_page:
             recommended_model_template: '{{model_name}} モデル ({{capacity}}) (推奨)'
 
     vr:
+        single_line: 一行
+        multi_lines: 複数行
+        overlay_enable: 有効にする
         restore_default_settings: 初期値に戻す
+        position: 位置
+        rotation: 回転
         opacity: 透明度
         ui_scaling: サイズ
         x_position: X軸（左右）
@@ -187,6 +199,13 @@ config_page:
         z_rotation: Z軸の回転
         display_duration: 表示時間
         fadeout_duration: フェードアウト時間
+        common_settings: 共通設定
+        hmd: HMD
+        left_hand: 左手
+        right_hand: 右手
+        tracker: 表示するトラッカーの位置
+        overlay_show_only_translated_messages:
+            label: 翻訳後のメッセージのみ表示する
 
     others:
         auto_clear_the_message_box:
