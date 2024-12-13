@@ -60,7 +60,7 @@ export const LanguageSelectorOpenButton = ({ TurnedOnSvgComponent, is_turned_on,
     return (
         <div className={styles.container}>
             <div className={styles.title_container}>
-                <TurnedOnSvgComponent className={category_class_names} />
+                { target_key === "1" ? <TurnedOnSvgComponent className={category_class_names} /> : null }
                 <p className={styles.title}>{title}</p>
             </div>
             <div className={styles.dropdown_menu_container} onClick={toggleSelector}>
