@@ -463,6 +463,8 @@ export const useReceiveRoutes = () => {
         "/get/data/mic_no_speech_prob": ()=>{}, // Not implemented on UI yet
         "/get/data/speaker_avg_logprob": ()=>{}, // Not implemented on UI yet
         "/get/data/speaker_no_speech_prob": ()=>{}, // Not implemented on UI yet
+        "/get/data/convert_message_to_romaji": ()=>{}, // Not implemented on UI yet
+        "/get/data/convert_message_to_hiragana": ()=>{}, // Not implemented on UI yet
     };
 
     const error_routes = {
