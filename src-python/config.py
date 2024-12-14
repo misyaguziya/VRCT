@@ -933,9 +933,9 @@ class Config:
         self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
         self._SEND_MESSAGE_FORMAT = "[message]"
-        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]\n[translation]"
         self._RECEIVED_MESSAGE_FORMAT = "[message]"
-        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]([translation])"
+        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]\n[translation]"
 
         # Read Write
         self._ENABLE_TRANSLATION = False
