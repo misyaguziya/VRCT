@@ -1414,10 +1414,10 @@ class Controller:
             raise ValueError("format_type is not found", format_type)
 
         if len(translation) > 0:
-            osc_message = FORMAT_WITH_T.replace("[message]", "/".join(message))
-            osc_message = osc_message.replace("[translation]", "/".join(translation))
+            osc_message = FORMAT_WITH_T.replace("[message]", "\n".join(message))
+            osc_message = osc_message.replace("[translation]", "\n".join(translation))
         else:
-            osc_message = FORMAT.replace("[message]", "/".join(message))
+            osc_message = FORMAT.replace("[message]", "\n".join(message))
         return osc_message
 
     def changeToCTranslate2Process(self) -> None:
