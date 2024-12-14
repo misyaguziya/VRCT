@@ -177,26 +177,26 @@ class Overlay:
         self.settings[size]["z_rotation"] = z_rotation
         self.settings[size]["tracker"] = tracker
 
-        match tracker:
-            case "HMD":
-                base_matrix = getHMDBaseMatrix()
-                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
-            case "LeftHand":
-                base_matrix = getLeftHandBaseMatrix()
-                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
-            case "RightHand":
-                base_matrix = getRightHandBaseMatrix()
-                trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
-            case _:
-                base_matrix = getHMDBaseMatrix()
-                trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
-
-        translation = (self.settings[size]["x_pos"], self.settings[size]["y_pos"], - self.settings[size]["z_pos"])
-        rotation = (self.settings[size]["x_rotation"], self.settings[size]["y_rotation"], self.settings[size]["z_rotation"])
-        transform = utils.transform_matrix(base_matrix, translation, rotation)
-        transform = mat34Id(transform)
-
         if self.initialized is True:
+            match tracker:
+                case "HMD":
+                    base_matrix = getHMDBaseMatrix()
+                    trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
+                case "LeftHand":
+                    base_matrix = getLeftHandBaseMatrix()
+                    trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_LeftHand)
+                case "RightHand":
+                    base_matrix = getRightHandBaseMatrix()
+                    trackerIndex = self.overlay_system.getTrackedDeviceIndexForControllerRole(openvr.TrackedControllerRole_RightHand)
+                case _:
+                    base_matrix = getHMDBaseMatrix()
+                    trackerIndex = openvr.k_unTrackedDeviceIndex_Hmd
+
+            translation = (self.settings[size]["x_pos"], self.settings[size]["y_pos"], - self.settings[size]["z_pos"])
+            rotation = (self.settings[size]["x_rotation"], self.settings[size]["y_rotation"], self.settings[size]["z_rotation"])
+            transform = utils.transform_matrix(base_matrix, translation, rotation)
+            transform = mat34Id(transform)
+
             self.overlay.setOverlayTransformTrackedDeviceRelative(
                 self.handle[size],
                 trackerIndex,
@@ -261,19 +261,20 @@ class Overlay:
             self.thread_overlay.start()
 
     def shutdownOverlay(self):
-        if isinstance(self.thread_overlay, Thread):
-            self.loop = False
-            self.thread_overlay.join()
-            self.thread_overlay = None
-        if isinstance(self.overlay, openvr.IVROverlay):
-            for size in self.settings.keys():
-                if isinstance(self.handle[size], int):
-                    self.overlay.destroyOverlay(self.handle[size])
-            self.overlay = None
-        if isinstance(self.system, openvr.IVRSystem):
-            openvr.shutdown()
-            self.system = None
-        self.initialized = False
+        if self.initialized is True and self.init_process is False:
+            if isinstance(self.thread_overlay, Thread):
+                self.loop = False
+                self.thread_overlay.join()
+                self.thread_overlay = None
+            if isinstance(self.overlay, openvr.IVROverlay):
+                for size in self.settings.keys():
+                    if isinstance(self.handle[size], int):
+                        self.overlay.destroyOverlay(self.handle[size])
+                self.overlay = None
+            if isinstance(self.system, openvr.IVRSystem):
+                openvr.shutdown()
+                self.system = None
+            self.initialized = False
 
     def reStartOverlay(self):
         self.shutdownOverlay()
