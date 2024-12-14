@@ -7,6 +7,7 @@ import {
 // import React from "react";
 
 import {
+    KeyEventController,
     StartPythonController,
     UiLanguageController,
     ConfigPageCloseTriggerController,
@@ -32,6 +33,7 @@ export const App = () => {
 
     return (
         <div className={styles.container}>
+            <KeyEventController />
             <StartPythonController />
             <UiLanguageController />
             <ConfigPageCloseTriggerController />
