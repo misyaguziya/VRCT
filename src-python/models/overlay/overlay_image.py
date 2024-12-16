@@ -2,6 +2,7 @@ from os import path as os_path
 from datetime import datetime
 from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
+from utils import errorLogging
 
 class OverlayImage:
     LANGUAGES = {
@@ -56,6 +57,7 @@ class OverlayImage:
             font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            errorLogging()
             font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
 
@@ -133,6 +135,7 @@ class OverlayImage:
             font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            errorLogging()
             font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
             font = ImageFont.truetype(font_path, font_size)
 
@@ -167,6 +170,7 @@ class OverlayImage:
             font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf")
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
+            errorLogging()
             font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", "NotoSansJP-Regular.ttf")
             font = ImageFont.truetype(font_path, font_size)
 

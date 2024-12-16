@@ -10,11 +10,7 @@ try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
-try:
-    from utils import printLog
-except ImportError:
-    def printLog(*args):
-        print(*args)
+from utils import errorLogging
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
@@ -114,8 +110,8 @@ class Overlay:
                 self.updateFadeoutDuration(self.settings[size]["fadeout_duration"], size)
             self.init_process = False
 
-        except Exception as e:
-            printLog("error:Could not initialise OpenVR", e)
+        except Exception:
+            errorLogging()
 
     def updateImage(self, img, size):
         if self.initialized is True:
@@ -125,8 +121,8 @@ class Overlay:
 
             try:
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
-            except Exception as e:
-                printLog("error:Could not update image", e)
+            except Exception:
+                errorLogging()
                 self.initialized = False
                 self.reStartOverlay()
                 while self.initialized is False:
@@ -217,8 +213,8 @@ class Overlay:
                     if new_event.eventType == openvr.VREvent_Quit:
                         return False
             return True
-        except Exception as e:
-            printLog("error:Could not check SteamVR running", e)
+        except Exception:
+            errorLogging()
             return False
 
     def evaluateOpacityFade(self, size):
@@ -344,9 +340,11 @@ if __name__ == "__main__":
             overlay.updateImage(img, "small")
             time.sleep(15)
         except openvr.error_code.OverlayError_InvalidParameter as e:
+            errorLogging()
             logging.error(f"OverlayError_InvalidParameter: {e}")
             break
         except Exception as e:
+            errorLogging()
             logging.error(f"Unexpected error: {e}")
             break
 

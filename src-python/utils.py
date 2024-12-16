@@ -96,7 +96,6 @@ def printResponse(status:int, endpoint:str, result:Any=None) -> None:
     response = json.dumps(response)
     print(response, flush=True)
 
-def errorLogging(error:Exception) -> None:
+def errorLogging() -> None:
     with open('error.log', 'a') as f:
-        f.write(f"error: {error}\n")
         traceback.print_exc(file=f)
