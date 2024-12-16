@@ -5,6 +5,7 @@ import clsx from "clsx";
 import { useIsVisibleResendButton } from "@logics_main";
 import { MessageLogUiScalingContainer } from "@setting_box";
 import { Checkbox } from "@common_components";
+import ConfigSvg from "@images/configuration.svg?react";
 
 export const MessageLogSettingsContainer = (props) => {
     const [is_opened, setIsOpened] = useState(false);
@@ -28,6 +29,11 @@ export const MessageLogSettingsContainer = (props) => {
             onMouseLeave={() => {setIsHovered(false); setIsOpened(false);}}
             onClick={() => setIsOpened(true)}
         >
+            <div className={styles.container_relative_wrapper}>
+                <div className={styles.config_svg_wrapper}>
+                    <ConfigSvg className={styles.config_svg}/>
+                </div>
+            </div>
             <MessageLogUiScalingContainer />
             <div className={styles.others_wrapper}>
                 <div className={styles.resend_checkbox_toggle} onClick={toggleVisibleResendButton}>
