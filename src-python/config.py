@@ -228,6 +228,15 @@ class Config:
         if isinstance(value, dict):
             self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = value
 
+    @property
+    def SELECTABLE_TRANSLATION_ENGINE_STATUS(self):
+        return self._SELECTABLE_TRANSLATION_ENGINE_STATUS
+
+    @SELECTABLE_TRANSLATION_ENGINE_STATUS.setter
+    def SELECTABLE_TRANSLATION_ENGINE_STATUS(self, value):
+        if isinstance(value, dict):
+            self._SELECTABLE_TRANSLATION_ENGINE_STATUS = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -952,6 +961,9 @@ class Config:
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = {}
         for weight_type in self.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST:
             self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = False
+        self._SELECTABLE_TRANSLATION_ENGINE_STATUS = {}
+        for engine in self.SELECTABLE_TRANSLATION_ENGINE_LIST:
+            self._SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
 
         # Save Json Data
         ## Main Window

@@ -449,9 +449,9 @@ class Controller:
 
     @staticmethod
     def setEnableTranslation(*args, **kwargs) -> dict:
-        config.ENABLE_TRANSLATION = True
         if model.isLoadedCTranslate2Model() is False:
             model.changeTranslatorCTranslate2Model()
+        config.ENABLE_TRANSLATION = True
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
@@ -484,6 +484,7 @@ class Controller:
         engines = model.findTranslationEngines(
             config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
             config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+            config.SELECTABLE_TRANSLATION_ENGINE_STATUS,
             )
         return {"status":200, "result":engines}
 
@@ -1029,6 +1030,7 @@ class Controller:
 
     def setDeeplAuthKey(self, data, *args, **kwargs) -> dict:
         printLog("Set DeepL Auth Key", data)
+        translator_name = "DeepL_API"
         try:
             data = str(data)
             if len(data) == 36 or len(data) == 39:
@@ -1036,16 +1038,17 @@ class Controller:
                 if result is True:
                     key = data
                     auth_keys = config.AUTH_KEYS
-                    auth_keys["DeepL_API"] = key
+                    auth_keys[translator_name] = key
                     config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                     self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
                     response = {
                         "status":400,
                         "result":{
                             "message":"DeepL auth key length is not correct",
-                            "data": config.AUTH_KEYS["DeepL_API"]
+                            "data": config.AUTH_KEYS[translator_name]
                         }
                     }
             else:
@@ -1053,7 +1056,7 @@ class Controller:
                     "status":400,
                     "result":{
                         "message":"Authentication failure of deepL auth key",
-                        "data": config.AUTH_KEYS["DeepL_API"]
+                        "data": config.AUTH_KEYS[translator_name]
                     }
                 }
         except Exception as e:
@@ -1062,17 +1065,19 @@ class Controller:
                 "status":400,
                 "result":{
                     "message":f"Error {e}",
-                    "data": config.AUTH_KEYS["DeepL_API"]
+                    "data": config.AUTH_KEYS[translator_name]
                 }
             }
         return response
 
     def delDeeplAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "DeepL_API"
         auth_keys = config.AUTH_KEYS
-        auth_keys["DeepL_API"] = None
+        auth_keys[translator_name] = None
         config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
         self.updateTranslationEngineAndEngineList()
-        return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
@@ -1087,6 +1092,7 @@ class Controller:
             th_callback = Thread(target=callback)
             th_callback.daemon = True
             th_callback.start()
+            th_callback.join()
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
@@ -1149,10 +1155,9 @@ class Controller:
     @staticmethod
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = False
-        if config.OVERLAY_SMALL_LOG is False:
-            model.clearOverlayImageSmallLog()
-            if config.OVERLAY_LARGE_LOG is False:
-                model.shutdownOverlay()
+        model.clearOverlayImageSmallLog()
+        if config.OVERLAY_LARGE_LOG is False:
+            model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1179,10 +1184,9 @@ class Controller:
     @staticmethod
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = False
-        if config.OVERLAY_LARGE_LOG is False:
-            model.clearOverlayImageLargeLog()
-            if config.OVERLAY_SMALL_LOG is False:
-                model.shutdownOverlay()
+        model.clearOverlayImageLargeLog()
+        if config.OVERLAY_SMALL_LOG is False:
+            model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1430,8 +1434,12 @@ class Controller:
         return osc_message
 
     def changeToCTranslate2Process(self) -> None:
+        selected_engines = config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[selected_engines] = False
         config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO] = "CTranslate2"
-        self.run(200, self.run_mapping["translation_engines"], "CTranslate2")
+        selectable_engines = self.getTranslationEngines()["result"]
+        self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
+        self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def startTranscriptionSendMessage(self) -> None:
         while self.device_access_status is False:
@@ -1627,13 +1635,22 @@ class Controller:
         printLog("Start Initialization")
         removeLog()
 
-        printLog("Start check DeepL API Key")
-        if config.AUTH_KEYS["DeepL_API"] is not None:
-            if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS["DeepL_API"]) is False:
-                # error update Auth key
-                auth_keys = config.AUTH_KEYS
-                auth_keys["DeepL_API"] = None
-                config.AUTH_KEYS = auth_keys
+        printLog("Init Translation Engine Status")
+        for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
+            match engine:
+                case "DeepL_API":
+                    printLog("Start check DeepL API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                case _:
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
 
         self.initializationProgress(1)
 

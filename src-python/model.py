@@ -165,7 +165,8 @@ class Model:
         languages = sorted(languages, key=lambda x: x['language'])
         return languages
 
-    def findTranslationEngines(self, source_lang, target_lang):
+    def findTranslationEngines(self, source_lang, target_lang, engines_status):
+        selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
             languages = translation_lang.get(engine, {}).get("source", {})
@@ -174,11 +175,9 @@ class Model:
             language_list = list(languages.keys())
 
             if all(e in language_list for e in source_langs) and all(e in language_list for e in target_langs):
-                compatible_engines.append(engine)
+                if engine in selectable_engines:
+                    compatible_engines.append(engine)
 
-        if "DeepL_API" in compatible_engines:
-            if config.AUTH_KEYS["DeepL_API"] is None:
-                compatible_engines.remove('DeepL_API')
         return compatible_engines
 
     def getTranslate(self, translator_name, source_language, target_language, target_country, message):
