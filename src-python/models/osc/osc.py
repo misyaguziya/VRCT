@@ -7,6 +7,7 @@ from tinyoscquery.queryservice import OSCQueryService
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
 from tinyoscquery.shared.node import OSCAccess
+from utils import errorLogging
 
 class OSCHandler:
     def __init__(self, ip_address="127.0.0.1", port=9000) -> None:
@@ -55,7 +56,7 @@ class OSCHandler:
             browser.browser.cancel()
 
         except Exception:
-            pass
+            errorLogging()
         return value
 
     def getOSCParameterMuteSelf(self) -> bool:
@@ -77,6 +78,7 @@ class OSCHandler:
                     self.osc_query_service.advertise_endpoint(filter, access=OSCAccess.READWRITE_VALUE)
                 break
             except Exception:
+                errorLogging()
                 sleep(1)
 
     def oscServerServe(self) -> None:

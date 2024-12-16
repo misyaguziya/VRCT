@@ -5,7 +5,7 @@ from typing import Any
 from threading import Thread
 from queue import Queue
 from webui_controller import Controller
-from utils import printLog, printResponse, encodeBase64
+from utils import printLog, printResponse, errorLogging, encodeBase64
 
 controller = Controller()
 
@@ -334,6 +334,7 @@ class Main:
                 status = response.get("status", None)
                 result = response.get("result", None)
             except Exception as e:
+                errorLogging()
                 result = str(e)
                 status = 500
         return result, status
@@ -345,9 +346,7 @@ class Main:
                     endpoint, data = self.queue.get()
                     result, status = self.handleRequest(endpoint, data)
                 except Exception as e:
-                    import traceback
-                    with open('error.log', 'a') as f:
-                        traceback.print_exc(file=f)
+                    errorLogging()
                     result = str(e)
                     status = 500
 

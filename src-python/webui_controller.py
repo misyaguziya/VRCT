@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog
+from utils import removeLog, printLog, errorLogging
 
 class Controller:
     def __init__(self) -> None:
@@ -706,6 +706,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -745,6 +746,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -769,6 +771,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -793,6 +796,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -879,6 +883,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -917,6 +922,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -941,6 +947,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -966,6 +973,7 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
+            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1049,13 +1057,14 @@ class Controller:
                     }
                 }
         except Exception as e:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":f"Error {e}",
-                        "data": config.AUTH_KEYS["DeepL_API"]
-                    }
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS["DeepL_API"]
                 }
+            }
         return response
 
     def delDeeplAuthKey(self, *args, **kwargs) -> dict:
