@@ -66,6 +66,7 @@ config_page:
     # restart_message: 再起動して変更を適用する。
     # common_error_message:
     #     invalid_value: 無効な値です。
+    model_download_button_label: ダウンロード
     side_menu_labels:
         device: デバイス
         appearance: デザイン
@@ -139,6 +140,7 @@ config_page:
     transcription:
         section_label_mic: マイク
         section_label_speaker: スピーカー
+        section_label_transcription_engines: 音声認識エンジン
         mic_record_timeout:
             label: 入力が終了したとみなす無音時間
             desc: 無音を検出し、設定された秒数経過すると、音声入力が終了したとみなします。
@@ -171,9 +173,8 @@ config_page:
             label: ログとして表示するまでに保持する単語数
             desc: 文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。
             error_message: 0以上の数値を設定できます。
-        use_whisper_feature:
-            label: 音声認識にWhisperモデルを使用する
-            desc: 一部の言語では、音声認識の精度が向上するかもしれません。音声認識使用中、CPUの使用率が上がるので、お使いのPCスペックと相談してこの機能を使用してください。
+        select_transcription_engine:
+            label: 音声認識で使用するエンジン
         whisper_weight_type:
             label: Whisperモデルのタイプ
             desc: |-
@@ -181,6 +182,8 @@ config_page:
                 ※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。
             model_template: '{{model_name}} モデル ({{capacity}})'
             recommended_model_template: '{{model_name}} モデル ({{capacity}}) (推奨)'
+        whisper_compute_device:
+            label: Whisperで使用する処理デバイス
 
     vr:
         single_line: 一行
@@ -223,6 +226,9 @@ config_page:
         send_message_to_vrc:
             label: VRChatにメッセージを送信する
             desc: サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。
+        send_received_message_to_vrc:
+            label: 受信したメッセージをVRChatに送信する
+            desc: スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。
 
     advanced_settings:
         osc_ip_address:

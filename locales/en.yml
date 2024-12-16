@@ -67,6 +67,7 @@ config_page:
     # restart_message: Apply changes with a restart.
     # common_error_message:
     #     invalid_value: Invalid value.
+    model_download_button_label: Download
     side_menu_labels:
         device: Device
         appearance: Appearance
