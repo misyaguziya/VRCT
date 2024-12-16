@@ -5,7 +5,7 @@ from os import makedirs as os_makedirs
 from requests import get as requests_get
 from typing import Callable
 import hashlib
-from utils import printLog
+from utils import errorLogging
 
 ctranslate2_weights = {
     "small": { # M2M-100 418M-parameter model
@@ -79,12 +79,11 @@ def downloadCTranslate2Weight(root, weight_type="small", callback=None, end_call
                         if isinstance(callback, Callable):
                             total_chunk += len(chunk)
                             callback(total_chunk/file_size)
-                        printLog(f"Downloading CTranslate Model: {total_chunk/file_size:.0%}")
 
                 with ZipFile(os_path.join(tmp_path, filename)) as zf:
                     zf.extractall(path)
-        except Exception as e:
-            printLog("warning:downloadCTranslate2Weight()", e)
+        except Exception:
+            errorLogging()
 
     if isinstance(end_callback, Callable):
         end_callback()

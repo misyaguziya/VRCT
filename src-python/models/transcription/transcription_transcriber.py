@@ -3,6 +3,7 @@ from io import BytesIO
 from threading import Event
 import wave
 from speech_recognition import Recognizer, AudioData, AudioFile
+from speech_recognition.exceptions import UnknownValueError
 from datetime import timedelta
 from pyaudiowpatch import get_sample_size, paInt16
 from .transcription_languages import transcription_lang
@@ -11,6 +12,8 @@ from .transcription_whisper import getWhisperModel, checkWhisperWeight
 import torch
 import numpy as np
 from pydub import AudioSegment
+from utils import errorLogging
+
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
 
@@ -74,9 +77,10 @@ class AudioTranscriber:
                         if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
                             continue
                         text += s.text
-
-        except Exception:
+        except UnknownValueError:
             pass
+        except Exception:
+            errorLogging()
         finally:
             pass
 
