@@ -1,4 +1,5 @@
 import sys
+import copy
 import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
@@ -1029,8 +1030,8 @@ class Config:
             "DeepL_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
-        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
-        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = {"device": "cpu", "device_index": 0, "device_name":"cpu"}
+        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
+        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "small"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._AUTO_CLEAR_MESSAGE_BOX = True
