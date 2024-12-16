@@ -334,6 +334,8 @@ class Main:
                 status = response.get("status", None)
                 result = response.get("result", None)
             except Exception as e:
+                from utils import errorLogging
+                errorLogging(e)
                 result = str(e)
                 status = 500
         return result, status
@@ -345,9 +347,8 @@ class Main:
                     endpoint, data = self.queue.get()
                     result, status = self.handleRequest(endpoint, data)
                 except Exception as e:
-                    import traceback
-                    with open('error.log', 'a') as f:
-                        traceback.print_exc(file=f)
+                    from utils import errorLogging
+                    errorLogging(e)
                     result = str(e)
                     status = 500
 

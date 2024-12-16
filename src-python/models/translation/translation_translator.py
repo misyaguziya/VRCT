@@ -138,9 +138,8 @@ class Translator():
                         source_language=source_language,
                         target_language=target_language,
                         )
-        except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
+        except Exception as e:
+            from utils import errorLogging
+            errorLogging(e)
             result = False
         return result
