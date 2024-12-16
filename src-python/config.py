@@ -1081,10 +1081,9 @@ class Config:
                     for key, value in self._config_data.items():
                         try:
                             setattr(self, key, value)
-                        except Exception:
-                            import traceback
-                            with open('error.log', 'a') as f:
-                                traceback.print_exc(file=f)
+                        except Exception as e:
+                            from utils import errorLogging
+                            errorLogging(e)
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():

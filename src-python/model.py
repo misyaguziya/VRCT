@@ -328,10 +328,9 @@ class Model:
                 current_version = parse(config.VERSION)
                 if new_version > current_version:
                     update_flag = True
-        except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
+        except Exception as e:
+            from utils import errorLogging
+            errorLogging(e)
         return update_flag
 
     @staticmethod
@@ -349,10 +348,9 @@ class Model:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
                 break
-            except Exception:
-                import traceback
-                with open('error.log', 'a') as f:
-                    traceback.print_exc(file=f)
+            except Exception as e:
+                from utils import errorLogging
+                errorLogging(e)
         # run updater
         Popen(program_name, cwd=current_directory)
 
@@ -371,10 +369,9 @@ class Model:
                     for chunk in res.iter_content(chunk_size=1024*5):
                         file.write(chunk)
                 break
-            except Exception:
-                import traceback
-                with open('error.log', 'a') as f:
-                    traceback.print_exc(file=f)
+            except Exception as e:
+                from utils import errorLogging
+                errorLogging(e)
         # run updater
         Popen([program_name, "--cuda"], cwd=current_directory)
 
