@@ -449,9 +449,9 @@ class Controller:
 
     @staticmethod
     def setEnableTranslation(*args, **kwargs) -> dict:
-        config.ENABLE_TRANSLATION = True
         if model.isLoadedCTranslate2Model() is False:
             model.changeTranslatorCTranslate2Model()
+        config.ENABLE_TRANSLATION = True
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
@@ -1087,6 +1087,7 @@ class Controller:
             th_callback = Thread(target=callback)
             th_callback.daemon = True
             th_callback.start()
+            th_callback.join()
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
@@ -1149,10 +1150,9 @@ class Controller:
     @staticmethod
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
         config.OVERLAY_SMALL_LOG = False
-        if config.OVERLAY_SMALL_LOG is False:
-            model.clearOverlayImageSmallLog()
-            if config.OVERLAY_LARGE_LOG is False:
-                model.shutdownOverlay()
+        model.clearOverlayImageSmallLog()
+        if config.OVERLAY_LARGE_LOG is False:
+            model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1179,10 +1179,9 @@ class Controller:
     @staticmethod
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
         config.OVERLAY_LARGE_LOG = False
-        if config.OVERLAY_LARGE_LOG is False:
-            model.clearOverlayImageLargeLog()
-            if config.OVERLAY_SMALL_LOG is False:
-                model.shutdownOverlay()
+        model.clearOverlayImageLargeLog()
+        if config.OVERLAY_SMALL_LOG is False:
+            model.shutdownOverlay()
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
