@@ -20,6 +20,9 @@ main_page:
         received: 受信
         system: システム
 
+        show_resend_button: 再送信ボタンを表示する
+        resend_button_on_hover_desc: 長押しで送信
+
     # textbox_system_message:
     #     enabled_translation: 翻訳機能をONにしました。
     #     disabled_translation: 翻訳機能をOFFしました。
