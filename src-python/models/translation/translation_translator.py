@@ -6,7 +6,7 @@ from .translation_utils import ctranslate2_weights
 
 import ctranslate2
 import transformers
-from utils import printLog
+from utils import errorLogging
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,6 +25,7 @@ class Translator():
             self.deepl_client = deepl_Translator(authkey)
             self.deepl_client.translate_text(" ", target_lang="EN-US")
         except Exception:
+            errorLogging()
             self.deepl_client = None
             result = False
         return result
@@ -47,8 +48,8 @@ class Translator():
         )
         try:
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
-        except Exception as e:
-            printLog("error:changeCTranslate2Model()", e)
+        except Exception:
+            errorLogging()
             tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         self.is_loaded_ctranslate2_model = True
@@ -67,7 +68,7 @@ class Translator():
                 target = results[0].hypotheses[0][1:]
                 result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
             except Exception:
-                pass
+                errorLogging()
         return result
 
     @staticmethod
@@ -139,8 +140,6 @@ class Translator():
                         target_language=target_language,
                         )
         except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
+            errorLogging()
             result = False
         return result

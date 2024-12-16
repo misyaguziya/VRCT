@@ -4,6 +4,7 @@ import json
 import random
 from typing import Union
 from os import path as os_path, rename as os_rename
+import traceback
 from PIL.Image import open as Image_open
 
 def getImageFile(file_name):
@@ -94,3 +95,7 @@ def printResponse(status:int, endpoint:str, result:Any=None) -> None:
 
     response = json.dumps(response)
     print(response, flush=True)
+
+def errorLogging() -> None:
+    with open('error.log', 'a') as f:
+        traceback.print_exc(file=f)

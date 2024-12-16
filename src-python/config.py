@@ -11,6 +11,7 @@ from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
+from utils import errorLogging
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -1082,9 +1083,7 @@ class Config:
                         try:
                             setattr(self, key, value)
                         except Exception:
-                            import traceback
-                            with open('error.log', 'a') as f:
-                                traceback.print_exc(file=f)
+                            errorLogging()
 
         with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
             for var_name, var_func in json_serializable_vars.items():

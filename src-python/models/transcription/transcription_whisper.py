@@ -4,7 +4,6 @@ from typing import Callable
 import huggingface_hub
 from faster_whisper import WhisperModel
 import logging
-from utils import printLog
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
@@ -40,10 +39,8 @@ def downloadFile(url, path, func=None):
                 if isinstance(func, Callable):
                     total_chunk += len(chunk)
                     func(total_chunk/file_size)
-                printLog(f"Downloading Whisper Model: {total_chunk/file_size:.0%}")
-
-    except Exception as e:
-        printLog("warning:downloadFile()", e)
+    except Exception:
+        pass
 
 def checkWhisperWeight(root, weight_type):
     path = os_path.join(root, "weights", "whisper", weight_type)

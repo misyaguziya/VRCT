@@ -30,6 +30,7 @@ from models.transcription.transcription_whisper import checkWhisperWeight, downl
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
+from utils import errorLogging
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
@@ -329,9 +330,7 @@ class Model:
                 if new_version > current_version:
                     update_flag = True
         except Exception:
-            import traceback
-            with open('error.log', 'a') as f:
-                traceback.print_exc(file=f)
+            errorLogging()
         return update_flag
 
     @staticmethod
@@ -350,9 +349,7 @@ class Model:
                         file.write(chunk)
                 break
             except Exception:
-                import traceback
-                with open('error.log', 'a') as f:
-                    traceback.print_exc(file=f)
+                errorLogging()
         # run updater
         Popen(program_name, cwd=current_directory)
 
@@ -372,9 +369,7 @@ class Model:
                         file.write(chunk)
                 break
             except Exception:
-                import traceback
-                with open('error.log', 'a') as f:
-                    traceback.print_exc(file=f)
+                errorLogging()
         # run updater
         Popen([program_name, "--cuda"], cwd=current_directory)
 
@@ -445,7 +440,7 @@ class Model:
                     message = self.mic_transcriber.getTranscript()
                     fnc(message)
             except Exception:
-                pass
+                errorLogging()
 
         def endMicTranscript():
             while not self.mic_audio_queue.empty():
@@ -541,7 +536,7 @@ class Model:
                 try:
                     self.check_mic_energy_fnc(energy)
                 except Exception:
-                    pass
+                    errorLogging()
             sleep(0.01)
 
         mic_energy_queue = Queue()
@@ -609,7 +604,7 @@ class Model:
                     message = self.speaker_transcriber.getTranscript()
                     fnc(message)
             except Exception:
-                pass
+                errorLogging()
 
         def endSpeakerTranscript():
             speaker_audio_queue.queue.clear()
@@ -663,7 +658,7 @@ class Model:
                 try:
                     self.check_speaker_energy_fnc(energy)
                 except Exception:
-                    pass
+                    errorLogging()
             sleep(0.01)
 
         speaker_energy_queue = Queue()

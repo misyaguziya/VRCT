@@ -5,7 +5,7 @@ import comtypes
 from pyaudiowpatch import PyAudio, paWASAPI
 from pycaw.callbacks import MMNotificationClient
 from pycaw.utils import AudioUtilities
-from utils import printLog
+from utils import errorLogging
 
 class Client(MMNotificationClient):
     def __init__(self):
@@ -187,12 +187,12 @@ class DeviceManager:
                         sleep(2)
                     self.noticeUpdateDevices()
                     self.runProcessAfterUpdateDevices()
-                except Exception as e:
-                    printLog("Device Monitoring: ", e)
+                except Exception:
+                    errorLogging()
                 finally:
                     pass
-        except Exception as e:
-            printLog("Device Monitoring End Exception: ", e)
+        except Exception:
+            errorLogging()
 
     def startMonitoring(self):
         self.monitoring_flag = True
