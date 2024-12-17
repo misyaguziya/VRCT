@@ -180,9 +180,7 @@ config_page:
             label: 音声認識で使用するエンジン
         whisper_weight_type:
             label: Whisperモデルのタイプ
-            desc: |-
-                基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。
-                ※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。
+            desc: 容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。
             model_template: '{{model_name}} モデル ({{capacity}})'
             recommended_model_template: '{{model_name}} モデル ({{capacity}}) (推奨)'
         whisper_compute_device:

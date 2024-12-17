@@ -168,7 +168,7 @@ config_page:
             desc: 일부 언어에서는 음성 인식의 정확도가 향상될 수 있어요. 음성 인식 중 CPU 사용률이 올라가기 때문에 사용하시는 PC의 사양을 고려하여 이 기능을 사용해주세요.
         whisper_weight_type:
             label: Whisper 모델 타입
-            desc: "기본적으로 용량이 많은 모델일수록 정밀도는 높지만, 음성 인식의 시간이 늘어나며 CPU 사용률도 늘어나요.각 모델의 설명은 문서를 참조해주세요.\n※특히 medium보다 용량이 큰 모델은 CPU의 성능에 따라서는 사용조차 어려울 수 있어요. "
+            # desc: "기본적으로 용량이 많은 모델일수록 정밀도는 높지만, 음성 인식의 시간이 늘어나며 CPU 사용률도 늘어나요.각 모델의 설명은 문서를 참조해주세요.\n※특히 medium보다 용량이 큰 모델은 CPU의 성능에 따라서는 사용조차 어려울 수 있어요. "
             model_template: '{{model_name}} 모델 ({{capacity}})'
             recommended_model_template: '{{model_name}} 모델 ({{capacity}}) (권장)'
 
