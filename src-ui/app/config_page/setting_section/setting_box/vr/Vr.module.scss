@@ -65,19 +65,24 @@
 // }
 
 .slider_label {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
 }
 .x_position_label {
     position: absolute;
-    bottom: -4rem;
-    right: -30%;
-    text-align: end;
+    bottom: -4.6rem;
+    right: -46%;
+    justify-content: end;
 }
 .y_position_label {
     position: absolute;
-    top: -36%;
+    top: -44%;
     left: 10%;
+    justify-content: start;
 }
 .z_position_label {
     position: absolute;
@@ -123,14 +128,14 @@
 
 .x_rotation_label {
     position: absolute;
-    top: -36%;
+    top: -44%;
     left: 10%;
 }
 .y_rotation_label {
     position: absolute;
-    bottom: -4rem;
-    right: -30%;
-    text-align: end;
+    bottom: -4.6rem;
+    right: -46%;
+    justify-content: end;
 }
 .z_rotation_label {
     position: absolute;
@@ -162,6 +167,33 @@
     width: 0%;
     height: 100%;
 }
+
+
+.slider_reset_button {
+    background-color: var(--dark_850_color);
+    padding: 0.6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.4rem;
+    flex-shrink: 0;
+    &:hover {
+        background-color: var(--dark_800_color);
+        & .slider_reset_svg {
+            color: var(--dark_200_color);
+        }
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.slider_reset_svg {
+    width: 1.4rem;
+    color: var(--dark_550_color);
+}
+
+
 
 .other_controls {
     margin-top: 6rem;
