@@ -1,4 +1,5 @@
 import React, { useState, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import styles from "./MessageSubMenuContainer.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
@@ -67,5 +68,6 @@ export const MessageSubMenuContainer = (props) => {
 };
 
 const Title_p = () => {
-    return <p className={styles.tooltip_title}>Press and hold to send</p>;
+    const { t } = useTranslation();
+    return <p className={styles.tooltip_title}>{t("main_page.message_log.resend_button_on_hover_desc")}</p>;
 };
