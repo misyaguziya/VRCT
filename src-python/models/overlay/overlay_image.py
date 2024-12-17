@@ -2,7 +2,12 @@ from os import path as os_path
 from datetime import datetime
 from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
-from utils import errorLogging
+try:
+    from utils import errorLogging
+except ImportError:
+    def errorLogging():
+        import traceback
+        print(traceback.format_exc())
 
 class OverlayImage:
     LANGUAGES = {
