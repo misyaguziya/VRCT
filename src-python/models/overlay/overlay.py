@@ -7,10 +7,16 @@ import openvr
 import numpy as np
 from PIL import Image
 try:
+    from utils import errorLogging
+except ImportError:
+    def errorLogging():
+        import traceback
+        print(traceback.format_exc())
+
+try:
     from . import overlay_utils as utils
 except ImportError:
     import overlay_utils as utils
-from utils import errorLogging
 
 def mat34Id(array):
     arr = openvr.HmdMatrix34_t()
@@ -123,7 +129,6 @@ class Overlay:
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
             except Exception:
                 errorLogging()
-                self.initialized = False
                 self.reStartOverlay()
                 while self.initialized is False:
                     time.sleep(0.1)
@@ -331,14 +336,15 @@ if __name__ == "__main__":
         time.sleep(1)
 
     # Example usage
-    for i in range(100):
+    for i in range(1000):
         try:
+            print(i)
             img = overlay_image.createOverlayImageLargeLog("send", f"こんにちは、世界！さようなら {i}", "Japanese", "Hello,World!Goodbye", "Japanese")
             logging.debug(f"Generated Image: {img}")
             overlay.updateImage(img, "large")
             img = overlay_image.createOverlayImageSmallLog(f"こんにちは、世界！さようなら_{i}", "Japanese", "Hello,World!Goodbye", "Japanese")
             overlay.updateImage(img, "small")
-            time.sleep(15)
+            time.sleep(1)
         except openvr.error_code.OverlayError_InvalidParameter as e:
             errorLogging()
             logging.error(f"OverlayError_InvalidParameter: {e}")
