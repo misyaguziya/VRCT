@@ -606,8 +606,10 @@ class Model:
                 errorLogging()
 
         def endSpeakerTranscript():
-            speaker_audio_queue.queue.clear()
-            # speaker_energy_queue.queue.clear()
+            while not speaker_audio_queue.empty():
+                speaker_audio_queue.get()
+            # while not speaker_energy_queue.empty():
+            #     speaker_energy_queue.get()
             del self.speaker_transcriber
             gc.collect()
 
