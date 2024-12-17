@@ -20,6 +20,9 @@ main_page:
         received: Received
         system: System
 
+        show_resend_button: Show Resend Button
+        resend_button_on_hover_desc: Press and hold to send
+
     # textbox_system_message:
     #     enabled_easter_egg: Whoa! You caught us! There is something...like...easter-egg-ish function has enabled! It'll affect to Overlay(VR) for now;).
     #     enabled_translation: Translation feature is turned on.
@@ -67,6 +70,7 @@ config_page:
     # restart_message: Apply changes with a restart.
     # common_error_message:
     #     invalid_value: Invalid value.
+    model_download_button_label: Download
     side_menu_labels:
         device: Device
         appearance: Appearance

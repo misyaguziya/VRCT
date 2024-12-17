@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
 import styles from "./DownloadModels.module.scss";
@@ -33,6 +34,7 @@ export const DownloadModels = (props) => {
 };
 
 const ModelSelector = ({option, ...props}) => {
+    const { t } = useTranslation();
     const [circular_color, setCircularColor] = useState("");
     const [circular_color_2, setCircularColor2] = useState("");
     useEffect(() => {
@@ -67,7 +69,7 @@ const ModelSelector = ({option, ...props}) => {
                         className={styles.download_button}
                         onClick={() => props.downloadStartFunction(option.id)}
                     >
-                        <p className={styles.download_button_label}>Download</p>
+                        <p className={styles.download_button_label}>{t("config_page.model_download_button_label")}</p>
                     </button>
                 );
             default:
