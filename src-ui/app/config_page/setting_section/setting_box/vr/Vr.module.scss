@@ -170,7 +170,7 @@
 
 
 .slider_reset_button {
-    background-color: var(--dark_850_color);
+    background-color: var(--dark_875_color);
     padding: 0.6rem;
     display: flex;
     justify-content: center;
@@ -178,13 +178,13 @@
     border-radius: 0.4rem;
     flex-shrink: 0;
     &:hover {
-        background-color: var(--dark_800_color);
+        background-color: var(--dark_825_color);
         & .slider_reset_svg {
             color: var(--dark_200_color);
         }
     }
     &:active {
-        background-color: var(--dark_900_color);
+        background-color: var(--dark_925_color);
     }
 }
 
