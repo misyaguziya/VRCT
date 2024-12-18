@@ -67,7 +67,7 @@ export const CheckboxContainer = (props) => (
 );
 
 export const SwitchBoxContainer = (props) => (
-    <CommonContainer Component={SwitchBox} {...props} />
+    <CommonContainer Component={SwitchBox} {...props} add_break_point={false}/>
 );
 
 export const EntryContainer = (props) => (
@@ -78,15 +78,22 @@ export const RadioButtonContainer = (props) => (
     <CommonContainer Component={RadioButton} {...props} />
 );
 
-export const DeeplAuthKeyContainer = (props) => (
-    <div className={styles.container}>
-        <div className={styles.deepl_auth_key_label_section}>
-            <LabelComponent label={props.label} desc={props.desc} />
-            <OpenWebpage_DeeplAuthKey />
+export const DeeplAuthKeyContainer = (props) => {
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
+    return (
+        <div className={container_class}>
+            <div className={styles.deepl_auth_key_label_section}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <OpenWebpage_DeeplAuthKey />
+            </div>
+            <DeeplAuthKey {...props} />
         </div>
-        <DeeplAuthKey {...props} />
-    </div>
-);
+    );
+};
 
 export const ActionButtonContainer = (props) => (
     <CommonContainer Component={ActionButton} {...props} add_break_point={false}/>
