@@ -11,7 +11,7 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    background-color:  (#ffffff22);
+    background-color: var(--dark_550_color_22);
     backdrop-filter: blur(0.2rem);
 }
 
@@ -21,8 +21,8 @@
     left: 50%;
     transform: translate(-50%, -50%);
     overflow-y: auto;
-    background-color: var(--dark_875_color);
-    width: 60%;
+    background-color: var(--dark_900_color);
+    width: 80%;
     height: 96%;
     padding: 2rem;
     border-radius: 0.6rem;

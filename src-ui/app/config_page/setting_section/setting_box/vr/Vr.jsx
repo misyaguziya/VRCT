@@ -20,7 +20,10 @@ import {
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
     useOverlayShowOnlyTranslatedMessages,
+    useSendTextToOverlay,
 } from "@logics_configs";
+
+import RedoSvg from "@images/redo.svg?react";
 
 export const Vr = () => {
     const { t } = useTranslation();
@@ -48,24 +51,26 @@ export const Vr = () => {
                     is_selected={is_opened_small_settings}
                     label_1={t("config_page.vr.single_line")}
                     label_2={t("config_page.vr.multi_lines")}
-                    />
+                />
                 {is_opened_small_settings ? (
                     <OverlaySettingsContainer
-                    id="overlay_settings_small"
-                    ui_configs={ui_configs.overlay_small_log}
-                    current_overlay_settings={currentOverlaySmallLogSettings.data}
-                    set_overlay_settings={setOverlaySmallLogSettings}
-                    current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
-                    toggle_is_enabled_overlay={toggleIsEnabledOverlaySmallLog}
+                        id="overlay_settings_small"
+                        ui_configs={ui_configs.overlay_small_log}
+                        default_ui_configs={ui_configs.overlay_small_log_default_settings}
+                        current_overlay_settings={currentOverlaySmallLogSettings.data}
+                        set_overlay_settings={setOverlaySmallLogSettings}
+                        current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
+                        toggle_is_enabled_overlay={toggleIsEnabledOverlaySmallLog}
                     />
                 ) : (
                     <OverlaySettingsContainer
-                    id="overlay_settings_large"
-                    ui_configs={ui_configs.overlay_large_log}
-                    current_overlay_settings={currentOverlayLargeLogSettings.data}
-                    set_overlay_settings={setOverlayLargeLogSettings}
-                    current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
-                    toggle_is_enabled_overlay={toggleIsEnabledOverlayLargeLog}
+                        id="overlay_settings_large"
+                        ui_configs={ui_configs.overlay_large_log}
+                        default_ui_configs={ui_configs.overlay_large_log_default_settings}
+                        current_overlay_settings={currentOverlayLargeLogSettings.data}
+                        set_overlay_settings={setOverlayLargeLogSettings}
+                        current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
+                        toggle_is_enabled_overlay={toggleIsEnabledOverlayLargeLog}
                     />
                 )}
             </div>
@@ -86,6 +91,7 @@ const OverlaySettingsContainer = ({
     current_is_enabled_overlay,
     toggle_is_enabled_overlay,
     ui_configs,
+    default_ui_configs,
     id
 }) => {
 
@@ -115,8 +121,8 @@ const OverlaySettingsContainer = ({
         setTimeoutId(newTimeoutId);
     };
 
-    const selectTrackerFunction = (value) => {
-        const new_data = { ...settings, tracker: value };
+    const selectFunction = (key, value) => {
+        const new_data = { ...settings, [key]: value };
         set_overlay_settings(new_data);
     };
 
@@ -137,15 +143,16 @@ const OverlaySettingsContainer = ({
 
             <div className={styles.position_rotation_controls_box}>
                 {is_opened_position_controller ? (
-                    <PositionControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
+                    <PositionControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 ) : (
-                    <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
+                    <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 )}
+                <SendSampleTextToggleButton />
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
                 label={t("config_page.vr.tracker")}
-                selectFunction={selectTrackerFunction}
+                selectFunction={(value) => selectFunction("tracker", value)}
                 name={id}
                 options={[
                     { id: "HMD", label: t("config_page.vr.hmd") },
@@ -180,13 +187,16 @@ const PageSwitcherContainer = (props) => {
     );
 };
 
-const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
+const PositionControls = ({settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs}) => {
     const { t } = useTranslation();
 
     return (
         <div className={styles.position_controls}>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.x_position_label)}>{t("config_page.vr.x_position")}</label>
+                <p className={clsx(styles.slider_label, styles.x_position_label)}>
+                    {t("config_page.vr.x_position")}
+                    <ResetButton onClickFunction={() => selectFunction("x_pos", default_ui_configs.x_pos)} />
+                </p>
                 <Slider
                     className={styles.x_position_slider}
                     variable={settings.x_pos}
@@ -197,7 +207,10 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.y_position_label)}>{t("config_page.vr.y_position")}</label>
+                <p className={clsx(styles.slider_label, styles.y_position_label)}>
+                    {t("config_page.vr.y_position")}
+                    <ResetButton onClickFunction={() => selectFunction("y_pos", default_ui_configs.y_pos)} />
+                </p>
                 <Slider
                     className={styles.y_position_slider}
                     variable={settings.y_pos}
@@ -209,7 +222,10 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.position_wrapper}>
-                <label className={clsx(styles.slider_label, styles.z_position_label)}>{t("config_page.vr.z_position")}</label>
+                <p className={clsx(styles.slider_label, styles.z_position_label)}>
+                    {t("config_page.vr.z_position")}
+                    <ResetButton onClickFunction={() => selectFunction("z_pos", default_ui_configs.z_pos)} />
+                </p>
                 <Slider
                     className={styles.z_position_slider}
                     variable={settings.z_pos}
@@ -224,13 +240,16 @@ const PositionControls = ({settings, onchangeFunction, ui_configs}) => {
     );
 };
 
-const RotationControls = ({settings, onchangeFunction}) => {
+const RotationControls = ({settings, onchangeFunction, selectFunction, default_ui_configs}) => {
     const { t } = useTranslation();
 
     return (
         <div className={styles.rotation_controls}>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.x_rotation_label)}>{t("config_page.vr.x_rotation")}</label>
+                <p className={clsx(styles.slider_label, styles.x_rotation_label)}>
+                    {t("config_page.vr.x_rotation")}
+                    <ResetButton onClickFunction={() => selectFunction("x_rotation", default_ui_configs.y_pos)} />
+                </p>
                 <Slider
                     className={styles.x_rotation_slider}
                     variable={-settings.x_rotation}
@@ -243,7 +262,10 @@ const RotationControls = ({settings, onchangeFunction}) => {
                 />
             </div>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.y_rotation_label)}>{t("config_page.vr.y_rotation")}</label>
+                <p className={clsx(styles.slider_label, styles.y_rotation_label)}>
+                    {t("config_page.vr.y_rotation")}
+                    <ResetButton onClickFunction={() => selectFunction("y_rotation", default_ui_configs.y_pos)} />
+                </p>
                 <Slider
                     className={styles.y_rotation_slider}
                     variable={settings.y_rotation}
@@ -254,7 +276,10 @@ const RotationControls = ({settings, onchangeFunction}) => {
                 />
             </div>
             <div className={styles.rotation_wrapper}>
-                <label className={clsx(styles.slider_label, styles.z_rotation_label)}>{t("config_page.vr.z_rotation")}</label>
+                <p className={clsx(styles.slider_label, styles.z_rotation_label)}>
+                    {t("config_page.vr.z_rotation")}
+                    <ResetButton onClickFunction={() => selectFunction("z_rotation", default_ui_configs.y_pos)} />
+                </p>
                 <Slider
                     className={styles.z_rotation_slider}
                     variable={settings.z_rotation}
@@ -278,9 +303,9 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
     return(
         <div className={styles.other_controls}>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.opacity_label)}>
+                <p className={clsx(styles.other_controls_slider_label, styles.opacity_label)}>
                     {t("config_page.vr.opacity")}
-                </label>
+                </p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.opacity_slider)}
                     variable={settings.opacity * 100}
@@ -292,9 +317,9 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.ui_scaling_label)}>
+                <p className={clsx(styles.other_controls_slider_label, styles.ui_scaling_label)}>
                     {t("config_page.vr.ui_scaling")}
-                </label>
+                </p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
                     variable={settings.ui_scaling * 100}
@@ -306,7 +331,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("config_page.vr.display_duration")}</label>
+                <p className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("config_page.vr.display_duration")}</p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.display_duration_slider)}
                     variable={settings.display_duration}
@@ -318,7 +343,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
-                <label className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("config_page.vr.fadeout_duration")}</label>
+                <p className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("config_page.vr.fadeout_duration")}</p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.fadeout_duration_slider)}
                     variable={settings.fadeout_duration}
@@ -346,6 +371,68 @@ const CommonSettingsContainer = () => {
                 variable={currentOverlayShowOnlyTranslatedMessages}
                 toggleFunction={toggleOverlayShowOnlyTranslatedMessages}
             />
+        </div>
+    );
+};
+
+const ResetButton = ({onClickFunction}) => {
+    return (
+        <button className={styles.slider_reset_button} onClick={onClickFunction}>
+            <RedoSvg className={styles.slider_reset_svg}/>
+        </button>
+    );
+};
+
+import SquareSvg from "@images/square.svg?react";
+import TriangleSvg from "@images/triangle.svg?react";
+import { randomIntMinMax } from "@utils";
+
+const SendSampleTextToggleButton = () => {
+    const { t } = useTranslation();
+    const { sendTextToOverlay } = useSendTextToOverlay();
+    const [is_started, setIsStarted] = useState(false);
+
+    useEffect(() => {
+        let interval_id;
+
+        if (is_started) {
+            interval_id = setInterval(() => {
+                const text_data = Array.from(
+                    { length: randomIntMinMax(1, 5) },
+                    () => t("config_page.vr.sample_text_button.sample_text")
+                ).join(" ");
+                sendTextToOverlay(text_data);
+            }, 1000);
+        };
+
+        return () => {
+            if (interval_id) {
+                clearInterval(interval_id);
+            }
+        };
+    }, [is_started]);
+
+    const toggleFunction = () => {
+        setIsStarted(!is_started);
+    };
+
+    const label = is_started
+        ? t("config_page.vr.sample_text_button.stop")
+        : t("config_page.vr.sample_text_button.start");
+
+    return (
+        <div className={styles.sample_text_button_wrapper}>
+            <button
+                className={clsx(styles.sample_text_button, { [styles.is_started]: is_started })}
+                onClick={toggleFunction}
+            >
+                {is_started ? (
+                    <SquareSvg className={styles.sample_text_button_square_svg} />
+                ) : (
+                    <TriangleSvg className={styles.sample_text_button_triangle_svg} />
+                )}
+            </button>
+            <p className={styles.sample_text_button_label}>{label}</p>
         </div>
     );
 };

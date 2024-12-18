@@ -180,9 +180,7 @@ config_page:
             label: 音声認識で使用するエンジン
         whisper_weight_type:
             label: Whisperモデルのタイプ
-            desc: |-
-                基本的に、容量が多いモデルほど精度は高いですが、文字起こしまでの時間が伸び、CPU使用率も増加します。各モデルの説明はドキュメントをご覧ください。
-                ※特にmediumより容量の大きいモデルは、CPUの性能によっては使用すらも困難です。
+            desc: 容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。
             model_template: '{{model_name}} モデル ({{capacity}})'
             recommended_model_template: '{{model_name}} モデル ({{capacity}}) (推奨)'
         whisper_compute_device:
@@ -195,14 +193,20 @@ config_page:
         restore_default_settings: 初期値に戻す
         position: 位置
         rotation: 回転
-        opacity: 透明度
-        ui_scaling: サイズ
         x_position: X軸（左右）
         y_position: Y軸（上下）
         z_position: Z軸（前後）
         x_rotation: X軸の回転
         y_rotation: Y軸の回転
         z_rotation: Z軸の回転
+        sample_text_button:
+            start: |-
+                サンプルテキストを
+                Overlayに送信する
+            stop: 送信を停止
+            sample_text: サンプルテキスト
+        opacity: 透明度
+        ui_scaling: サイズ
         display_duration: 表示時間
         fadeout_duration: フェードアウト時間
         common_settings: 共通設定

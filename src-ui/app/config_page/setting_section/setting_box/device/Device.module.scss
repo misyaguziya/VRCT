@@ -16,6 +16,17 @@
     align-items: center;
     padding: 2rem;
     margin-bottom: 0rem;
+    &.is_break_point {
+        flex-direction: column;
+        gap: 2rem;
+        align-items: start;
+        & .device_contents {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            padding-left: 0rem;
+        }
+    }
 }
 
 .threshold_container {

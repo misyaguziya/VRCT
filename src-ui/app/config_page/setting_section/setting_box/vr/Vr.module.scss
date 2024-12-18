@@ -56,6 +56,54 @@
     transform: translate(-10%);
 }
 
+.sample_text_button_wrapper {
+    position: absolute;
+    bottom: 0;
+    left: -74%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.sample_text_button {
+    background-color: var(--dark_850_color);
+    padding: 1.8rem;
+    border-radius: 50%;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+    &.is_started {
+        background-color: var(--primary_600_color);
+        &:hover {
+            background-color: var(--primary_500_color);
+        }
+        &:active {
+            background-color: var(--primary_700_color);
+        }
+    }
+}
+.sample_text_button_triangle_svg, .sample_text_button_square_svg {
+    width: 2.4rem;
+}
+.sample_text_button_triangle_svg {
+    transform: translateX(10%) rotate(90deg);
+}
+.sample_text_button_label {
+    color: var(--dark_basic_text_color);
+    position: absolute;
+    left: 50%;
+    top: 110%;
+    // bottom: -2rem;
+    transform: translateX(-50%);
+    white-space: pre-wrap;
+    font-size: 1.2rem;
+    width: max-content;
+    text-align: center;
+}
+
 // .position_controls {
 //     background-color: gray;
 // }
@@ -65,19 +113,24 @@
 // }
 
 .slider_label {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
     width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    white-space: nowrap;
 }
 .x_position_label {
     position: absolute;
-    bottom: -4rem;
-    right: -30%;
-    text-align: end;
+    bottom: -4.6rem;
+    right: -46%;
+    justify-content: end;
 }
 .y_position_label {
     position: absolute;
-    top: -36%;
+    top: -44%;
     left: 10%;
+    justify-content: start;
 }
 .z_position_label {
     position: absolute;
@@ -123,14 +176,14 @@
 
 .x_rotation_label {
     position: absolute;
-    top: -36%;
+    top: -44%;
     left: 10%;
 }
 .y_rotation_label {
     position: absolute;
-    bottom: -4rem;
-    right: -30%;
-    text-align: end;
+    bottom: -4.6rem;
+    right: -46%;
+    justify-content: end;
 }
 .z_rotation_label {
     position: absolute;
@@ -162,6 +215,33 @@
     width: 0%;
     height: 100%;
 }
+
+
+.slider_reset_button {
+    background-color: var(--dark_875_color);
+    padding: 0.6rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.4rem;
+    flex-shrink: 0;
+    &:hover {
+        background-color: var(--dark_825_color);
+        & .slider_reset_svg {
+            color: var(--dark_200_color);
+        }
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+}
+
+.slider_reset_svg {
+    width: 1.4rem;
+    color: var(--dark_550_color);
+}
+
+
 
 .other_controls {
     margin-top: 6rem;
