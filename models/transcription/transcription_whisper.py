@@ -99,3 +99,6 @@ if __name__ == "__main__":
     downloadWhisperWeight("./", "large-v1", callback)
     downloadWhisperWeight("./", "large-v2", callback)
     downloadWhisperWeight("./", "large-v3", callback)
+    downloadWhisperWeight("./", "faster-small", callback)
+    downloadWhisperWeight("./", "faster-medium", callback)
+    downloadWhisperWeight("./", "faster-large-v3", callback)
