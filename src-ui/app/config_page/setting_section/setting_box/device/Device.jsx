@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import styles from "./Device.module.scss";
+import clsx from "clsx";
+import { useStore_IsBreakPoint } from "@store";
 import { ui_configs } from "@ui_configs";
 import {
     useEnableAutoMicSelect,
@@ -68,9 +70,14 @@ const Mic_Container = () => {
         }
     };
 
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+    const device_container_class = clsx(styles.device_container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
     return (
         <div className={styles.mic_container}>
-            <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
+            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.device.mic_host_device.label")} />
                 <div className={styles.device_contents}>
 
@@ -159,9 +166,14 @@ const Speaker_Container = () => {
 
     };
 
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+    const device_container_class = clsx(styles.device_container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
     return (
         <div className={styles.speaker_container}>
-            <div className={styles.device_container} onMouseLeave={onMouseLeaveFunction}>
+            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
                 <LabelComponent label={t("config_page.device.speaker_device.label")} />
                 <div className={styles.device_contents}>
 
