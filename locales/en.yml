@@ -127,12 +127,12 @@ config_page:
 
     translation:
         ctranslate2_weight_type:
-            label: Select Internal Translation Model
+            label: Internal Translation Model
             desc: You can choose the translation model to use for the internal translation engine.
             small: Basic model ({{capacity}})
             large: High accuracy model ({{capacity}})
         ctranslate2_compute_device:
-            label: Select Internal Translation Compute Device
+            label: Internal Translation Compute Device
         deepl_auth_key:
             label: DeepL Auth Key
             desc: Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported.
@@ -178,14 +178,14 @@ config_page:
             desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.
             error_message: You can set a number equal to or greater than 0.
         select_transcription_engine:
-            label: Select Transcription Engine
+            label: Transcription Engine
         whisper_weight_type:
-            label: Select Whisper Model
+            label: Whisper Model
             desc: Models with larger capacities tend to have higher accuracy, but they also consume more CPU and GPU resources.
             model_template: '{{model_name}} model ({{capacity}})'
             recommended_model_template: '{{model_name}} model ({{capacity}}) (Recommended)'
         whisper_compute_device:
-            label: Select Whisper Compute Device
+            label: Whisper Compute Device
 
     vr:
         single_line: Single line
