@@ -167,9 +167,9 @@ config_page:
             desc: 在某些語言中，語音識別的準確性可能會提高。使用語音識別時，CPU使用率會增加，請根據你的PC規格考慮是否使用此功能。
         whisper_weight_type:
             label: 選擇 Whisper 模型
-            desc: |-
-                一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。
-                ※特別是超過中等大小的模型，根據CPU性能可能難以運行。
+            # desc: |-
+            #     一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。
+            #     ※特別是超過中等大小的模型，根據CPU性能可能難以運行。
             model_template: '{{model_name}}模型（{{capacity}}）'
             recommended_model_template: '{{model_name}}模型（{{capacity}}）（推薦）'
 

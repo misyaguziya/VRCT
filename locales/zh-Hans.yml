@@ -168,9 +168,9 @@ config_page:
             desc: 在某些语言中,语音识别的准确性可能会提高.语音识别的过程中,CPU占有率可能会提高,请根据你的pc性能来决定是否使用它.
         whisper_weight_type:
             label: 选择某个Whisper模型
-            desc: |-
-                通常来说,容量越大的模型精度也会越高,但也会增加文字显示所需要的时间和CPU的使用率。请浏览各个模型的文档
-                ※特别是大于medium容量的模型、因CPU性能原因甚至无法使用。
+            # desc: |-
+            #     通常来说,容量越大的模型精度也会越高,但也会增加文字显示所需要的时间和CPU的使用率。请浏览各个模型的文档
+            #     ※特别是大于medium容量的模型、因CPU性能原因甚至无法使用。
             model_template: '{{model_name}} 模型 ({{capacity}})'
             recommended_model_template: '{{model_name}} 模型 ({{capacity}}) (推荐)'
 
