@@ -20,6 +20,7 @@ import {
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
     useOverlayShowOnlyTranslatedMessages,
+    useSendTextToOverlay,
 } from "@logics_configs";
 
 import RedoSvg from "@images/redo.svg?react";
@@ -50,26 +51,26 @@ export const Vr = () => {
                     is_selected={is_opened_small_settings}
                     label_1={t("config_page.vr.single_line")}
                     label_2={t("config_page.vr.multi_lines")}
-                    />
+                />
                 {is_opened_small_settings ? (
                     <OverlaySettingsContainer
-                    id="overlay_settings_small"
-                    ui_configs={ui_configs.overlay_small_log}
-                    default_ui_configs={ui_configs.overlay_small_log_default_settings}
-                    current_overlay_settings={currentOverlaySmallLogSettings.data}
-                    set_overlay_settings={setOverlaySmallLogSettings}
-                    current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
-                    toggle_is_enabled_overlay={toggleIsEnabledOverlaySmallLog}
+                        id="overlay_settings_small"
+                        ui_configs={ui_configs.overlay_small_log}
+                        default_ui_configs={ui_configs.overlay_small_log_default_settings}
+                        current_overlay_settings={currentOverlaySmallLogSettings.data}
+                        set_overlay_settings={setOverlaySmallLogSettings}
+                        current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
+                        toggle_is_enabled_overlay={toggleIsEnabledOverlaySmallLog}
                     />
                 ) : (
                     <OverlaySettingsContainer
-                    id="overlay_settings_large"
-                    ui_configs={ui_configs.overlay_large_log}
-                    default_ui_configs={ui_configs.overlay_large_log_default_settings}
-                    current_overlay_settings={currentOverlayLargeLogSettings.data}
-                    set_overlay_settings={setOverlayLargeLogSettings}
-                    current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
-                    toggle_is_enabled_overlay={toggleIsEnabledOverlayLargeLog}
+                        id="overlay_settings_large"
+                        ui_configs={ui_configs.overlay_large_log}
+                        default_ui_configs={ui_configs.overlay_large_log_default_settings}
+                        current_overlay_settings={currentOverlayLargeLogSettings.data}
+                        set_overlay_settings={setOverlayLargeLogSettings}
+                        current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
+                        toggle_is_enabled_overlay={toggleIsEnabledOverlayLargeLog}
                     />
                 )}
             </div>
@@ -146,6 +147,7 @@ const OverlaySettingsContainer = ({
                 ) : (
                     <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 )}
+                <SendSampleTextToggleButton />
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
@@ -378,5 +380,59 @@ const ResetButton = ({onClickFunction}) => {
         <button className={styles.slider_reset_button} onClick={onClickFunction}>
             <RedoSvg className={styles.slider_reset_svg}/>
         </button>
+    );
+};
+
+import SquareSvg from "@images/square.svg?react";
+import TriangleSvg from "@images/triangle.svg?react";
+import { randomIntMinMax } from "@utils";
+
+const SendSampleTextToggleButton = () => {
+    const { t } = useTranslation();
+    const { sendTextToOverlay } = useSendTextToOverlay();
+    const [is_started, setIsStarted] = useState(false);
+
+    useEffect(() => {
+        let interval_id;
+
+        if (is_started) {
+            interval_id = setInterval(() => {
+                const text_data = Array.from(
+                    { length: randomIntMinMax(1, 5) },
+                    () => t("config_page.vr.sample_text_button.sample_text")
+                ).join(" ");
+                sendTextToOverlay(text_data);
+            }, 1000);
+        };
+
+        return () => {
+            if (interval_id) {
+                clearInterval(interval_id);
+            }
+        };
+    }, [is_started]);
+
+    const toggleFunction = () => {
+        setIsStarted(!is_started);
+    };
+
+    const label = is_started
+        ? t("config_page.vr.sample_text_button.stop")
+        : t("config_page.vr.sample_text_button.start");
+
+    return (
+        <div className={styles.sample_text_button_wrapper}>
+            <button
+                className={clsx(styles.sample_text_button, { [styles.is_started]: is_started })}
+                onClick={toggleFunction}
+            >
+                {is_started ? (
+                    <SquareSvg className={styles.sample_text_button_square_svg} />
+                ) : (
+                    <TriangleSvg className={styles.sample_text_button_triangle_svg} />
+                )}
+            </button>
+            <p className={styles.sample_text_button_label}>{label}</p>
+        </div>
     );
 };
