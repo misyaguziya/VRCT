@@ -200,6 +200,12 @@ config_page:
         x_rotation: X-axis rotation
         y_rotation: Y-axis rotation
         z_rotation: Z-axis rotation
+        sample_text_button:
+            start: |-
+                Send sample texts
+                to Overlay
+            stop: Stop Sending
+            sample_text: Sample text.
         opacity: Opacity
         ui_scaling: UI Scaling
         display_duration: Display duration

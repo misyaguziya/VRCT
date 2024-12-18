@@ -49,6 +49,7 @@ export { useOverlaySmallLogSettings } from "./vr/useOverlaySmallLogSettings";
 export { useIsEnabledOverlayLargeLog } from "./vr/useIsEnabledOverlayLargeLog";
 export { useOverlayShowOnlyTranslatedMessages } from "./vr/useOverlayShowOnlyTranslatedMessages";
 export { useOverlayLargeLogSettings } from "./vr/useOverlayLargeLogSettings";
+export { useSendTextToOverlay } from "./vr/useSendTextToOverlay";
 
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
