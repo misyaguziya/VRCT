@@ -207,9 +207,10 @@ class Model:
                 sleep(0.1)
         return translation, success_flag
 
-    def getInputTranslate(self, message):
+    def getInputTranslate(self, message, source_language=None):
         translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        if source_language is None:
+            source_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_languages=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
 
         translations = []
@@ -231,9 +232,10 @@ class Model:
 
         return translations, success_flags
 
-    def getOutputTranslate(self, message):
+    def getOutputTranslate(self, message, source_language=None):
         translator_name=config.SELECTED_TRANSLATION_ENGINES[config.SELECTED_TAB_NO]
-        source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+        if source_language is None:
+            source_language=config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_language=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
         target_country=config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"]
 
@@ -428,16 +430,19 @@ class Model:
         )
         def sendMicTranscript():
             try:
+                selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                languages = [data["language"] for data in selected_your_languages.values() if data["enable"] is True]
+                countries = [data["country"] for data in selected_your_languages.values() if data["enable"] is True]
                 res = self.mic_transcriber.transcribeAudioQueue(
                     self.mic_audio_queue,
-                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
-                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"],
+                    languages,
+                    countries,
                     config.MIC_AVG_LOGPROB,
                     config.MIC_NO_SPEECH_PROB
                 )
                 if res:
-                    message = self.mic_transcriber.getTranscript()
-                    fnc(message)
+                    result = self.mic_transcriber.getTranscript()
+                    fnc(result)
             except Exception:
                 errorLogging()
 
@@ -592,16 +597,19 @@ class Model:
         )
         def sendSpeakerTranscript():
             try:
+                selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
+                countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
                 res = self.speaker_transcriber.transcribeAudioQueue(
                     speaker_audio_queue,
-                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
-                    config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["country"],
+                    languages,
+                    countries,
                     config.SPEAKER_AVG_LOGPROB,
                     config.SPEAKER_NO_SPEECH_PROB
                 )
                 if res:
-                    message = self.speaker_transcriber.getTranscript()
-                    fnc(message)
+                    result = self.speaker_transcriber.getTranscript()
+                    fnc(result)
             except Exception:
                 errorLogging()
 

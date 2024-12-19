@@ -44,39 +44,59 @@ class AudioTranscriber:
             self.whisper_model = getWhisperModel(root, whisper_weight_type, device=device, device_index=device_index)
             self.transcription_engine = "Whisper"
 
-    def transcribeAudioQueue(self, audio_queue, language, country, avg_logprob=-0.8, no_speech_prob=0.6):
+    def transcribeAudioQueue(self, audio_queue, languages, countries, avg_logprob=-0.8, no_speech_prob=0.6):
         if audio_queue.empty():
             time.sleep(0.01)
             return False
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
-        text = ''
+        result = {"confidence": 0, "text": "", "language": None}
         try:
             audio_data = self.audio_sources["process_data_func"]()
             match self.transcription_engine:
                 case "Google":
-                    text = self.audio_recognizer.recognize_google(audio_data, language=transcription_lang[language][country][self.transcription_engine])
+                    confidences = []
+                    for language, country in zip(languages, countries):
+                        text, confidence = self.audio_recognizer.recognize_google(
+                            audio_data,
+                            language=transcription_lang[language][country][self.transcription_engine],
+                            with_confidence=True
+                            )
+                        confidences.append({"confidence": confidence, "text": text, "language": language})
+                    result = max(confidences, key=lambda x: x["confidence"])
+
                 case "Whisper":
+                    confidences = []
+
                     audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
                     if isinstance(audio_data, torch.Tensor):
                         audio_data = audio_data.detach().numpy()
-                    segments, _ = self.whisper_model.transcribe(
-                        audio_data,
-                        beam_size=5,
-                        temperature=0.0,
-                        log_prob_threshold=-0.8,
-                        no_speech_threshold=0.6,
-                        language=transcription_lang[language][country][self.transcription_engine],
-                        word_timestamps=False,
-                        without_timestamps=True,
-                        task="transcribe",
-                        vad_filter=False,
-                        )
-                    for s in segments:
-                        if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
-                            continue
-                        text += s.text
+
+                    for language, country in zip(languages, countries):
+                        text = ""
+                        source_language = transcription_lang[language][country][self.transcription_engine] if len(languages) == 1 else None
+                        segments, info = self.whisper_model.transcribe(
+                            audio_data,
+                            beam_size=5,
+                            temperature=0.0,
+                            log_prob_threshold=-0.8,
+                            no_speech_threshold=0.6,
+                            language=source_language,
+                            word_timestamps=False,
+                            without_timestamps=True,
+                            task="transcribe",
+                            vad_filter=False,
+                            )
+                        for s in segments:
+                            if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
+                                continue
+                            text += s.text
+                        confidences.append({"confidence": info.language_probability, "text": text, "language": language})
+                        if (len(languages) == 1) or (transcription_lang[language][country][self.transcription_engine] == info.language):
+                            break
+                    result = max(confidences, key=lambda x: x["confidence"])
+
         except UnknownValueError:
             pass
         except Exception:
@@ -84,8 +104,8 @@ class AudioTranscriber:
         finally:
             pass
 
-        if text != '':
-            self.updateTranscript(text)
+        if result["text"] != "":
+            self.updateTranscript(result)
         return True
 
     def updateLastSampleAndPhraseStatus(self, data, time_spoken):
@@ -123,23 +143,23 @@ class AudioTranscriber:
             audio = self.audio_recognizer.record(source)
         return audio
 
-    def updateTranscript(self, text):
+    def updateTranscript(self, result):
         source_info = self.audio_sources
         transcript = self.transcript_data
 
         if source_info["new_phrase"] or len(transcript) == 0:
             if len(transcript) > self.max_phrases:
                 transcript.pop(-1)
-            transcript.insert(0, text)
+            transcript.insert(0, result)
         else:
-            transcript[0] = text
+            transcript[0] = result
 
     def getTranscript(self):
         if len(self.transcript_data) > 0:
-            text = self.transcript_data.pop(-1)
+            result = self.transcript_data.pop(-1)
         else:
-            text = ""
-        return text
+            result = {"confidence": 0, "text": "", "language": None}
+        return result
 
     def clearTranscriptData(self):
         self.transcript_data.clear()
