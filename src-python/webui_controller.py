@@ -183,7 +183,9 @@ class Controller:
                 self.weight_type,
             )
 
-    def micMessage(self, message: Union[str, bool]) -> None:
+    def micMessage(self, result: dict) -> None:
+        message = result["text"]
+        language = result["language"]
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
@@ -209,7 +211,7 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getInputTranslate(message)
+                translation, success = model.getInputTranslate(message, source_language=language)
                 if all(success) is not True:
                     self.changeToCTranslate2Process()
                     self.run(
@@ -256,7 +258,9 @@ class Controller:
                         overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                     model.updateOverlayLargeLog(overlay_image)
 
-    def speakerMessage(self, message) -> None:
+    def speakerMessage(self, result:dict) -> None:
+        message = result["text"]
+        language = result["language"]
         if isinstance(message, bool) and message is False:
             self.run(
                 400,
@@ -274,7 +278,7 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getOutputTranslate(message)
+                translation, success = model.getOutputTranslate(message, source_language=language)
                 if all(success) is not True:
                     self.changeToCTranslate2Process()
                     self.run(
