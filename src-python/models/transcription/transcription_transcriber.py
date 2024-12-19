@@ -58,12 +58,16 @@ class AudioTranscriber:
                 case "Google":
                     confidences = []
                     for language, country in zip(languages, countries):
-                        text, confidence = self.audio_recognizer.recognize_google(
-                            audio_data,
-                            language=transcription_lang[language][country][self.transcription_engine],
-                            with_confidence=True
-                            )
-                        confidences.append({"confidence": confidence, "text": text, "language": language})
+                        try:
+                            text, confidence = self.audio_recognizer.recognize_google(
+                                audio_data,
+                                language=transcription_lang[language][country][self.transcription_engine],
+                                with_confidence=True
+                                )
+                            confidences.append({"confidence": confidence, "text": text, "language": language})
+                        except Exception:
+                            pass
+
                     result = max(confidences, key=lambda x: x["confidence"])
 
                 case "Whisper":
