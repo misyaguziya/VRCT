@@ -1,5 +1,4 @@
 export { ActionButton } from "./action_button/ActionButton";
-export { Checkbox } from "./checkbox/Checkbox";
 export { DeeplAuthKey, OpenWebpage_DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
 export { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 export { Entry } from "./entry/Entry";
