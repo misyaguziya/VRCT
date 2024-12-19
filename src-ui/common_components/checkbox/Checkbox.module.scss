@@ -18,6 +18,12 @@
             border: var(--checkbox-color, var(--primary_600_color)) solid var(--checkbox-border-width, 0.2rem);
         }
     }
+    &.is_disabled {
+        pointer-events: none;
+        & .cbx {
+            border-color: var(--primary_800_color);
+        }
+    }
 }
 
 .checkbox_wrapper .cbx {
