@@ -490,6 +490,12 @@ class Controller:
             config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS,
             )
+
+        your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
+        for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
+            if your_language["language"] == target_language["language"]:
+                engines = ["CTranslate2"]
+
         return {"status":200, "result":engines}
 
     @staticmethod
@@ -1543,6 +1549,13 @@ class Controller:
             engine = "CTranslate2"
         engines[config.SELECTED_TAB_NO] = engine
         config.SELECTED_TRANSLATION_ENGINES = engines
+
+        your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
+        for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
+            if your_language["language"] == target_language["language"]:
+                engines[config.SELECTED_TAB_NO] = "CTranslate2"
+                config.SELECTED_TRANSLATION_ENGINES = engines
+                break
 
         self.run(200, self.run_mapping["selected_translation_engines"], config.SELECTED_TRANSLATION_ENGINES)
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
