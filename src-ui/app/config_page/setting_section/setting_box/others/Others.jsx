@@ -17,10 +17,10 @@ import {
 
 import {
     LabelComponent,
-    Checkbox,
     ActionButton,
     SectionLabelComponent,
 } from "../_components/";
+import { Checkbox } from "@common_components";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
 

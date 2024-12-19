@@ -6,7 +6,6 @@ import {
     LabelComponent,
     DropdownMenu,
     Slider,
-    Checkbox,
     SwitchBox,
     Entry,
     RadioButton,
@@ -17,6 +16,7 @@ import {
     WordFilterListToggleComponent,
     DownloadModels,
 } from "../_components/";
+import { Checkbox } from "@common_components";
 
 const LabeledContainer = ({ children, label, desc, custom_class_name }) => (
     <div className={clsx(styles.container, custom_class_name)}>
