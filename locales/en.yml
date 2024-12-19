@@ -48,20 +48,30 @@ main_page:
     #         Opened VRCT Documents page in your web browser.
     #         For any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the "Contact Form," or via X (formerly Twitter)!
 
-    update_available: New version is here!
-    update_software_desc: |-
-        Download the new version and automatically restart the app.
-        It'll take a while. Do it now?
-    deny_update_software: Do it later
-    accept_update_software: Update and Restart
-    updating: Now updating...
-
     state_text_enabled: Enabled
     state_text_disabled: Disabled
 
     language_selector:
         title_your_language: Select Your Language
         title_target_language: Select Target Language
+
+    update_available: New version is here!
+    updating: Now updating...
+
+update_modal:
+    update_software_desc: |-
+        Download the new version and automatically restart the app.
+        It'll take a while. Do it now?
+    deny_update_software: Do it later
+    accept_update_software: Update and Restart
+
+switch_compute_device_modal:
+    close_modal: Close
+    switch_to_cpu_desc: Download and replace with the CPU version. The GPU will no longer be selectable as the compute device, and only the CPU will be used.
+    switch_to_cuda_desc: Download and replace with the CUDA (GPU-selectable) version. It will be able to select both the CPU and GPU, but it will require approximately 5GB of disk space.
+    switch_to_cpu_button: Switch to CPU version
+    switch_to_cuda_button: Switch to CUDA (GPU) version
+    restart_desc: The app will automatically restart.
 
 config_page:
     version: version {{version}}
@@ -245,3 +255,5 @@ config_page:
             label: OSC Port
         open_config_filepath:
             label: Open Config File
+        switch_compute_device:
+            label: Switch VRCT to CPU/GPU Version

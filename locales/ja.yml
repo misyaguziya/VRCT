@@ -47,20 +47,34 @@ main_page:
     #         お使いのブラウザで、VRCTのドキュメントを開きました。使用方法などはそちらに記載されています。
     #         不具合、ご要望、その他お問い合わせはドキュメント最下部にあるLinks、「お問合せフォーム」もしくはX (元Twitter) にて気軽にご連絡ください！
 
-    update_available: 新しいバージョンが出ました！
-    update_software_desc: |-
-        新しいバージョンをダウンロードしてアプリを再起動します。
-        少し時間がかかります。今すぐ行いますか？
-    deny_update_software: 後でする
-    accept_update_software: アップデートして再起動
-    updating: アップデート中...
-
     state_text_enabled: 有効
     state_text_disabled: 無効
 
     language_selector:
         title_your_language: あなたの言語
         title_target_language: 相手の言語
+
+    update_available: 新しいバージョンが出ました！
+    updating: アップデート中...
+
+update_modal:
+    update_software_desc: |-
+        新しいバージョンをダウンロードしてアプリを再起動します。
+        少し時間がかかります。今すぐ行いますか？
+    deny_update_software: 後でする
+    accept_update_software: アップデートして再起動
+
+switch_compute_device_modal:
+    close_modal: 閉じる
+    switch_to_cpu_desc: |-
+        CPUバージョンをダウンロードして置き換えます。
+        処理デバイスとしてGPUを選択できなくなり、CPUのみを使用するようになります。
+    switch_to_cuda_desc: |-
+        CUDA（GPU選択可能）バージョンをダウンロードして置き換えます。
+        CPUとGPUの両方を選択できるようになりますが、約5GBのディスク容量が必要になります。
+    switch_to_cpu_button: CPUバージョンに切り替える
+    switch_to_cuda_button: CUDA（GPU）バージョンに切り替える
+    restart_desc: アプリが自動的に再起動します。
 
 config_page:
     version: バージョン {{version}}
@@ -244,3 +258,5 @@ config_page:
             label: OSC Port
         open_config_filepath:
             label: 設定ファイルを開く
+        switch_compute_device:
+            label: VRCT CPU/GPUバージョンの切り替え

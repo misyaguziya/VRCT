@@ -45,20 +45,23 @@ main_page:
     #         已在瀏覽器中打開VRCT文件頁面。
     #         如有任何問題、請求或查詢，請通過文件頁面底部的連結、「聯絡表單」或 X (Twitter) 聯絡我們！
 
-    update_available: 有新版本可供使用！
-    update_software_desc: |-
-        下載新版本並自動更新 VRCT。
-        會花一些時間，現在更新嗎？
-    deny_update_software: 稍後再說
-    accept_update_software: 更新
-    updating: 正在更新...
-
     state_text_enabled: 啟用
     state_text_disabled: 停用
 
     language_selector:
         title_your_language: 選擇你的語言
         title_target_language: 選擇目標語言
+
+    update_available: 有新版本可供使用！
+    updating: 正在更新...
+
+update_modal:
+    update_software_desc: |-
+        下載新版本並自動更新 VRCT。
+        會花一些時間，現在更新嗎？
+    deny_update_software: 稍後再說
+    accept_update_software: 更新
+
 
 config_page:
     version: 版本 {{version}}

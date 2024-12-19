@@ -15,6 +15,7 @@ import {
 
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
+import HelpSvg from "@images/help.svg?react";
 
 export const AdvancedSettings = () => {
     return (
@@ -22,6 +23,7 @@ export const AdvancedSettings = () => {
             <OscIpAddressContainer />
             <OscPortContainer />
             <OpenConfigFolderContainer />
+            <OpenSwitchComputeDeviceModalContainer />
         </>
     );
 };
@@ -89,6 +91,25 @@ const OpenConfigFolderContainer = () => {
                 label={t("config_page.advanced_settings.open_config_filepath.label")}
                 IconComponent={OpenFolderSvg}
                 onclickFunction={openFolder_ConfigFile}
+            />
+        </>
+    );
+};
+
+import { useStore_OpenedQuickSetting } from "@store";
+const OpenSwitchComputeDeviceModalContainer = () => {
+    const { t } = useTranslation();
+    const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const onClickFunction = () => {
+        updateOpenedQuickSetting("switch_compute_device");
+    };
+
+    return (
+        <>
+            <ActionButtonContainer
+                label={t("config_page.advanced_settings.switch_compute_device.label")}
+                IconComponent={HelpSvg}
+                onclickFunction={onClickFunction}
             />
         </>
     );

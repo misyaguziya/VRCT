@@ -16,7 +16,7 @@ export const UpdatingComponent = () => {
                     color: "var(--primary_300_color)",
                 }}/>
             </div>
-            <p className={styles.label}>{t("main_page.confirmation_message.updating")}</p>
+            <p className={styles.label}>{t("main_page.updating")}</p>
         </div>
     );
 };
