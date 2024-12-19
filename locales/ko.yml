@@ -44,20 +44,23 @@ main_page:
     #         웹 브라우저에서 VRCT 문서 페이지가 열렸습니다.
     #         문제, 요청 또는 문의 사항이 있는 경우 문서 페이지 하단의 링크, '문의 양식' 또는 X(구 트위터)를 통해 언제든지 문의해 주세요!
 
-    update_available: 새로운 버전이 나왔습니다!
-    update_software: |-
-        새 버전을 다운로드하고 재시작합니다.
-        조금 시간이 걸립니다. 지금 시작할까요?
-    deny_update_software: 나중에 하기
-    accept_update_software: 업데이트 및 재시작
-    updating: 업데이트 중...
-
     state_text_enabled: Enabled
     state_text_disabled: Disabled
 
     language_selector:
         title_your_language: 당신의 언어
         title_target_language: 상대방의 언어
+
+    update_available: 새로운 버전이 나왔습니다!
+    updating: 업데이트 중...
+
+update_modal:
+    update_software: |-
+        새 버전을 다운로드하고 재시작합니다.
+        조금 시간이 걸립니다. 지금 시작할까요?
+    deny_update_software: 나중에 하기
+    accept_update_software: 업데이트 및 재시작
+
 
 config_page:
     version: 버전 {{version}}

@@ -44,13 +44,6 @@ main_page:
     #         在你的默认浏览器上打开了VRCT文档,有着关于VRCT的使用方法
     #         其他问题、请求、查询等请通过文档底部的链接或X (Twitter) 联系我们！
 
-    update_available: 有新版本可供使用！
-    update_software_desc: |-
-        下载新版本并自动启动
-        会花少许时间,现在更新吗?
-    deny_update_software: 稍后再说
-    accept_update_software: 更新后自动启动
-    updating: 更新中...
 
     state_text_enabled: 启用
     state_text_disabled: 停用
@@ -58,6 +51,17 @@ main_page:
     language_selector:
         title_your_language: 你的语言
         title_target_language: 目标语言
+
+    update_available: 有新版本可供使用！
+    updating: 更新中...
+
+update_modal:
+    update_software_desc: |-
+        下载新版本并自动启动
+        会花少许时间,现在更新吗?
+    deny_update_software: 稍后再说
+    accept_update_software: 更新后自动启动
+
 
 config_page:
     version: 版本 {{version}}

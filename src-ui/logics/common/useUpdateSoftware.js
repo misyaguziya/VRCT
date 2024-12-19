@@ -6,7 +6,12 @@ export const useUpdateSoftware = () => {
         asyncStdoutToPython("/run/update_software");
     };
 
+    const updateSoftware_CUDA = () => {
+        asyncStdoutToPython("/run/update_cuda_software");
+    };
+
     return {
         updateSoftware,
+        updateSoftware_CUDA,
     };
 };

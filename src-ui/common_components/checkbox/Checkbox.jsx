@@ -1,20 +1,23 @@
+import { clsx } from "clsx";
 import styles from "./Checkbox.module.scss";
-
 export const Checkbox = ({
     checkboxId,
     variable,
     toggleFunction,
-    state = "idle",
     size = "2.8rem",
     color = "var(--primary_600_color)",
     borderWidth = "0.2rem",
     padding = "2rem",
 }) => {
 
+    const wrapper_class_names = clsx(styles.checkbox_wrapper, {
+        [styles.is_disabled]: variable.state === "pending",
+    });
+
     return (
         <div className={styles.checkbox_container}>
             <label
-                className={styles.checkbox_wrapper}
+                className={wrapper_class_names}
                 htmlFor={checkboxId}
                 style={{
                     "--checkbox-size": size,
@@ -23,7 +26,7 @@ export const Checkbox = ({
                     "--checkbox-padding": padding,
                 }}
             >
-                {state === "pending" ? (
+                {variable.state === "pending" ? (
                     <span className={styles.loader}></span>
                 ) : (
                     <input
