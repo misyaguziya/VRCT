@@ -32,7 +32,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['src-ui\\assets\\chato_icon_fill.png'],
+    icon=[],
 )
 coll = COLLECT(
     exe,
