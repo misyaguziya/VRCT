@@ -132,7 +132,7 @@ export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_Foreground
 export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook([], "MessageLogs");
 // export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs"); // For testing
 export const { atomInstance: Atom_MessageInputValue, useHook: useStore_MessageInputValue } = createAtomWithHook("", "MessageInputValue");
-export const { atomInstance: Atom_IsVisibleResendButton, useHook: useStore_IsVisibleResendButton } = createAtomWithHook(false, "IsVisibleResendButton");
+export const { atomInstance: Atom_IsVisibleResendButton, useHook: useStore_IsVisibleResendButton } = createAtomWithHook(false, "IsVisibleResendButton", {is_state_ok: true});
 export const { atomInstance: Atom_IsAppliedInitMessageBoxHeight, useHook: useStore_IsAppliedInitMessageBoxHeight } = createAtomWithHook(false, "IsAppliedInitMessageBoxHeight");
 
 export const { atomInstance: Atom_SelectableLanguageList, useHook: useStore_SelectableLanguageList } = createAtomWithHook([], "SelectableLanguageList");
