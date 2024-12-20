@@ -59,7 +59,7 @@ main_page:
 
 update_modal:
     cpu_desc: 処理デバイスとしてCPUのみを使用
-    cuda_desc: 処理デバイスとしてCPUとGPUの両方を選択可能
+    cuda_desc: 処理デバイスとしてCPUとNVIDIA製のGPUを選択可能
     cuda_disk_space_desc: 約{{size}}のディスク容量が必要
     close_modal: 閉じる
     download_latest_and_restart: |-

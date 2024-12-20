@@ -52,6 +52,7 @@
     width: 16rem;
     justify-content: space-between;
     position: relative;
+    flex-shrink: 0;
 }
 
 .deny_button, .accept_button {
@@ -122,6 +123,12 @@
         top: 100%;
         margin: 0.4rem 0 0 0;
     }
+}
+
+.version_desc_container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
 }
 
 .version_desc_wrapper {
