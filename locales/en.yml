@@ -60,7 +60,7 @@ main_page:
 
 update_modal:
     cpu_desc: Use CPU only as the compute device
-    cuda_desc: Selectable between CPU and GPU as compute devices
+    cuda_desc: Selectable between CPU and NVIDIA GPUs as compute devices
     cuda_disk_space_desc: Requires approximately {{size}} of disk space
     close_modal: Close
     download_latest_and_restart: |-

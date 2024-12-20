@@ -75,7 +75,7 @@ const UiScalingContainer = () => {
     const createMarks = (min, max) => {
         const marks = [];
         for (let value = min; value <= max; value += 10) {
-            const label = ([50,70,130,140,160,170,190].includes(value)) ? "" : value;
+            const label = ([50,70,90,110,130,150,170,190].includes(value)) ? "" : value;
             marks.push({ value, label: `${label}` });
         }
         return marks;
@@ -117,7 +117,7 @@ export const MessageLogUiScalingContainer = () => {
     const createMarks = (min, max) => {
         const marks = [];
         for (let value = min; value <= max; value += 10) {
-            const label = ([50,70,130,140,160,170,190].includes(value)) ? "" : value;
+            const label = ([50,70,90,110,130,150,170,190].includes(value)) ? "" : value;
             marks.push({ value, label: `${label}` });
         }
         return marks;
