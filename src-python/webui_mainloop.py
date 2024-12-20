@@ -89,6 +89,7 @@ mapping = {
     "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
 
     "/run/send_text_overlay_small_log": {"status": True, "variable":controller.sendTextOverlaySmallLog},
+    "/run/send_text_overlay_large_log": {"status": True, "variable":controller.sendTextOverlayLargeLog},
 
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 

@@ -1354,8 +1354,16 @@ class Controller:
     def sendTextOverlaySmallLog(data, *args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is True:
             if model.overlay.initialized is True:
-                overlay_image = model.createOverlayImageSystemMessage(data)
+                overlay_image = model.createOverlayImageSmallMessage(data)
                 model.updateOverlaySmallLog(overlay_image)
+        return {"status":200, "result":data}
+
+    @staticmethod
+    def sendTextOverlayLargeLog(data, *args, **kwargs) -> dict:
+        if config.OVERLAY_LARGE_LOG is True:
+            if model.overlay.initialized is True:
+                overlay_image = model.createOverlayImageLargeMessage(data)
+                model.updateOverlayLargeLog(overlay_image)
         return {"status":200, "result":data}
 
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:
