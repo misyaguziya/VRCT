@@ -427,7 +427,7 @@ export const useReceiveRoutes = () => {
         "/set/enable/overlay_show_only_translated_messages": updateOverlayShowOnlyTranslatedMessages,
         "/set/disable/overlay_show_only_translated_messages": updateOverlayShowOnlyTranslatedMessages,
 
-        "/run/send_text_overlay_small_log": () => {},
+        "/run/send_text_overlay": () => {},
 
         // Others Tab
         "/get/data/auto_clear_message_box": updateEnableAutoClearMessageInputBox,

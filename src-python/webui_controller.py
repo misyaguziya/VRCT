@@ -1351,15 +1351,12 @@ class Controller:
         return {"status":200, "result":True}
 
     @staticmethod
-    def sendTextOverlaySmallLog(data, *args, **kwargs) -> dict:
+    def sendTextOverlay(data, *args, **kwargs) -> dict:
         if config.OVERLAY_SMALL_LOG is True:
             if model.overlay.initialized is True:
                 overlay_image = model.createOverlayImageSmallMessage(data)
                 model.updateOverlaySmallLog(overlay_image)
-        return {"status":200, "result":data}
 
-    @staticmethod
-    def sendTextOverlayLargeLog(data, *args, **kwargs) -> dict:
         if config.OVERLAY_LARGE_LOG is True:
             if model.overlay.initialized is True:
                 overlay_image = model.createOverlayImageLargeMessage(data)
