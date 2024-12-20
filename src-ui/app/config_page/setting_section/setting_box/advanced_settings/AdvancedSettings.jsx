@@ -101,7 +101,7 @@ const OpenSwitchComputeDeviceModalContainer = () => {
     const { t } = useTranslation();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const onClickFunction = () => {
-        updateOpenedQuickSetting("switch_compute_device");
+        updateOpenedQuickSetting("update_software");
     };
 
     return (

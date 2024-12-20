@@ -59,19 +59,15 @@ main_page:
     updating: Now updating...
 
 update_modal:
-    update_software_desc: |-
-        Download the new version and automatically restart the app.
-        It'll take a while. Do it now?
-    deny_update_software: Do it later
-    accept_update_software: Update and Restart
-
-switch_compute_device_modal:
+    cpu_desc: Use CPU only as the compute device
+    cuda_desc: Selectable between CPU and GPU as compute devices
+    cuda_disk_space_desc: Requires approximately {{size}} of disk space
     close_modal: Close
-    switch_to_cpu_desc: Download and replace with the CPU version. The GPU will no longer be selectable as the compute device, and only the CPU will be used.
-    switch_to_cuda_desc: Download and replace with the CUDA (GPU-selectable) version. It will be able to select both the CPU and GPU, but it will require approximately 5GB of disk space.
-    switch_to_cpu_button: Switch to CPU version
-    switch_to_cuda_button: Switch to CUDA (GPU) version
-    restart_desc: The app will automatically restart.
+    download_latest_and_restart: |-
+        The latest version will be downloaded,
+        and the app will automatically restart.
+    is_latest_version_already: Already using the latest version
+    is_current_compute_device: Currently using this version
 
 config_page:
     version: version {{version}}
