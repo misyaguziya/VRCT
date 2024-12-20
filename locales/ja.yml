@@ -58,23 +58,15 @@ main_page:
     updating: アップデート中...
 
 update_modal:
-    update_software_desc: |-
-        新しいバージョンをダウンロードしてアプリを再起動します。
-        少し時間がかかります。今すぐ行いますか？
-    deny_update_software: 後でする
-    accept_update_software: アップデートして再起動
-
-switch_compute_device_modal:
+    cpu_desc: 処理デバイスとしてCPUのみを使用
+    cuda_desc: 処理デバイスとしてCPUとGPUの両方を選択可能
+    cuda_disk_space_desc: 約{{size}}のディスク容量が必要
     close_modal: 閉じる
-    switch_to_cpu_desc: |-
-        CPUバージョンをダウンロードして置き換えます。
-        処理デバイスとしてGPUを選択できなくなり、CPUのみを使用するようになります。
-    switch_to_cuda_desc: |-
-        CUDA（GPU選択可能）バージョンをダウンロードして置き換えます。
-        CPUとGPUの両方を選択できるようになりますが、約5GBのディスク容量が必要になります。
-    switch_to_cpu_button: CPUバージョンに切り替える
-    switch_to_cuda_button: CUDA（GPU）バージョンに切り替える
-    restart_desc: アプリが自動的に再起動します。
+    download_latest_and_restart: |-
+        最新版がダウンロードされ、
+        アプリは自動的に再起動します。
+    is_latest_version_already: すでに最新版を使用中
+    is_current_compute_device: 現在使用中のバージョン
 
 config_page:
     version: バージョン {{version}}
