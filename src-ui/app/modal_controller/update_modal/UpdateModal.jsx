@@ -43,7 +43,7 @@ export const UpdateModal = () => {
                             <button className={cpu_accept_button_class_name} onClick={onClickUpdateSoftware}>CPU</button>
                             {is_cpu_version ? <CurrentVersionLabel is_latest_version_already={is_latest_version_already} /> : null}
                         </div>
-                        <div>
+                        <div className={styles.version_desc_container}>
                             <VersionDescComponent desc={t("update_modal.cpu_desc")} />
                         </div>
                     </div>
@@ -52,7 +52,7 @@ export const UpdateModal = () => {
                             <button className={cuda_accept_button_class_name} onClick={onClickUpdateSoftware_CUDA}>CUDA (GPU)</button>
                             {!is_cpu_version ? <CurrentVersionLabel is_latest_version_already={is_latest_version_already} is_cuda={true}/> : null}
                         </div>
-                        <div>
+                        <div className={styles.version_desc_container}>
                             <VersionDescComponent desc={t("update_modal.cuda_desc")} />
                             <VersionDescComponent desc={t("update_modal.cuda_disk_space_desc", {size: "5GB"})} />
                         </div>
