@@ -51,12 +51,11 @@ class AudioTranscriber:
         audio, time_spoken = audio_queue.get()
         self.updateLastSampleAndPhraseStatus(audio, time_spoken)
 
-        result = {"confidence": 0, "text": "", "language": None}
+        confidences = [{"confidence": 0, "text": "", "language": None}]
         try:
             audio_data = self.audio_sources["process_data_func"]()
             match self.transcription_engine:
                 case "Google":
-                    confidences = []
                     for language, country in zip(languages, countries):
                         try:
                             text, confidence = self.audio_recognizer.recognize_google(
@@ -67,12 +66,7 @@ class AudioTranscriber:
                             confidences.append({"confidence": confidence, "text": text, "language": language})
                         except Exception:
                             pass
-
-                    result = max(confidences, key=lambda x: x["confidence"])
-
                 case "Whisper":
-                    confidences = []
-
                     audio_data = np.frombuffer(audio_data.get_raw_data(convert_rate=16000, convert_width=2), np.int16).flatten().astype(np.float32) / 32768.0
                     if isinstance(audio_data, torch.Tensor):
                         audio_data = audio_data.detach().numpy()
@@ -99,7 +93,6 @@ class AudioTranscriber:
                         confidences.append({"confidence": info.language_probability, "text": text, "language": language})
                         if (len(languages) == 1) or (transcription_lang[language][country][self.transcription_engine] == info.language):
                             break
-                    result = max(confidences, key=lambda x: x["confidence"])
 
         except UnknownValueError:
             pass
@@ -108,6 +101,7 @@ class AudioTranscriber:
         finally:
             pass
 
+        result = max(confidences, key=lambda x: x["confidence"])
         if result["text"] != "":
             self.updateTranscript(result)
         return True
