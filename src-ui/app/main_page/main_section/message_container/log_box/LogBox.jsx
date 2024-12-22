@@ -14,7 +14,8 @@ export const LogBox = () => {
     useLayoutEffect(() => {
         store.log_box_ref = log_container_ref;
         if (!is_scrolling) {
-            scrollToBottom(store.log_box_ref, true);
+            scrollToBottom(store.log_box_ref);
+            // scrollToBottom(store.log_box_ref, true); [Fix me]
         }
     }, [currentMessageLogs.data]);
 
