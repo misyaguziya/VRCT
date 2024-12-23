@@ -4,7 +4,7 @@ import { useStore_PosterShowcaseWorldPageIndex } from "@store";
 const images = import.meta.glob("@images/about_vrct/showcased_worlds/*.{png,jpg,jpeg,svg}", { eager: true });
 
 const getImageByFileName = (file_name) => {
-    const imagePath = Object.keys(images).find((path) => path.includes(file_name));
+    const imagePath = Object.keys(images).find((path) => path.endsWith(file_name + ".png"));
     return imagePath ? images[imagePath]?.default : null;
 };
 
