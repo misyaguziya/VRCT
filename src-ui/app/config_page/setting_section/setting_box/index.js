@@ -6,3 +6,4 @@ export { Others, VrcMicMuteSyncContainer } from "./others/Others";
 export { AdvancedSettings } from "./advanced_settings/AdvancedSettings";
 export { Vr } from "./vr/Vr";
 export { AboutVrct } from "./about_vrct/AboutVrct";
+export { Supporters } from "./supporters/Supporters";
