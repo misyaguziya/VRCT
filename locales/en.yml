@@ -85,6 +85,7 @@ config_page:
         vr: VR
         others: Others
         advanced_settings: Advanced Settings
+        supporters: Supporters
         about_vrct: About VRCT
 
     device:
