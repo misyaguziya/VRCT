@@ -8,6 +8,7 @@ import {
     Others,
     AdvancedSettings,
     Vr,
+    Supporters,
     AboutVrct,
 } from "@setting_box";
 
@@ -28,6 +29,8 @@ export const SettingBox = () => {
             return <Vr />;
         case "advanced_settings":
             return <AdvancedSettings />;
+        case "supporters":
+            return <Supporters />;
         case "about_vrct":
             return <AboutVrct />;
 
