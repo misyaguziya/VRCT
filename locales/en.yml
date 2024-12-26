@@ -59,9 +59,10 @@ main_page:
     updating: Now updating...
 
 update_modal:
-    cpu_desc: Use CPU only as the compute device
-    cuda_desc: Selectable between CPU and NVIDIA GPUs as compute devices
-    cuda_disk_space_desc: Requires approximately {{size}} of disk space
+    cpu_desc: Use CPU only as the compute device.
+    cuda_desc: Selectable between CPU and NVIDIA GPUs as compute devices.
+    cuda_compare_cpu_desc: With GPU selection, processing is faster compared to a CPU.
+    cuda_disk_space_desc: Requires approximately {{size}} of disk space.
     close_modal: Close
     download_latest_and_restart: |-
         The latest version will be downloaded,
