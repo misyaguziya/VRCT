@@ -54,6 +54,7 @@ export const UpdateModal = () => {
                         </div>
                         <div className={styles.version_desc_container}>
                             <VersionDescComponent desc={t("update_modal.cuda_desc")} />
+                            <VersionDescComponent desc={t("update_modal.cuda_compare_cpu_desc")} />
                             <VersionDescComponent desc={t("update_modal.cuda_disk_space_desc", {size: "5GB"})} />
                         </div>
                     </div>
