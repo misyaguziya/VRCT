@@ -1,3 +1,8 @@
+# =================================
+# IMPORTANT:
+# Please read 'readme_first.txt' before making any changes.
+# =================================
+
 common:
     go_back_button_label: 돌아가기
 

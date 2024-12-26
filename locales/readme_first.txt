@@ -1,3 +1,1 @@
-Thank you for considering translating VRCT's UI.
-For your information, we are planning to transition VRCT's UI from Python's tkinter to a web-based platform using HTML, CSS, and JavaScript.
-This means there might be structural changes to the UI. We apologize if any of the sentences you translated are removed due to these changes.
+Thank you for considering translating VRCT's UI. However, please refrain from making any changes at this time. I am currently organizing the files, including reordering, adding, and removing elements, and some parts may change frequently until the UI becomes stable. (Note: This message was updated in December 2024.)
