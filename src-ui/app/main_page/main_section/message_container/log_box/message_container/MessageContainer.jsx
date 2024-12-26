@@ -5,6 +5,7 @@ import styles from "./MessageContainer.module.scss";
 import { MessageSubMenuContainer } from "./message_sub_menu_container/MessageSubMenuContainer";
 import { useMessage } from "@logics_common";
 import { useIsVisibleResendButton } from "@logics_main";
+
 export const MessageContainer = ({ messages, status, category, created_at }) => {
     const { t } = useTranslation();
     const {
@@ -22,7 +23,6 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
         updateMessageInputValue(messages.original);
     };
 
-
     const handleMouseEnter = () => {
         if (!is_locked) {
             setIsHovered(true);
@@ -39,15 +39,20 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
         setIsLocked(true);
     };
 
-    const is_translated_exist = messages.translated.length >= 1;
+    const is_translated_exist = messages.translated?.length >= 1;
     const is_pending = status === "pending";
     const is_sent_message = category === "sent";
-    const category_text = is_sent_message ? t("main_page.message_log.sent") : t("main_page.message_log.received");
+    const is_system_message = category === "system";
+    const category_text = is_sent_message
+        ? t("main_page.message_log.sent")
+        : is_system_message
+        ? t("main_page.message_log.system")
+        : t("main_page.message_log.received");
 
     const message_type_class_name = clsx({
         [styles.sent_message]: is_sent_message,
-        [styles.is_shown_resend_button]: currentIsVisibleResendButton.data,
-        [styles.received_message]: !is_sent_message,
+        [styles.received_message]: !is_sent_message && !is_system_message,
+        [styles.system_message]: is_system_message,
     });
 
     return (
@@ -63,10 +68,13 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                     {is_sent_message && is_pending && <span className={styles.loader}></span>}
                 </div>
                 <div className={clsx(styles.message_box, message_type_class_name)}>
-                    {is_translated_exist
-                        ? <WithTranslatedMessages messages={messages} />
-                        : <p className={styles.message_main}>{messages.original}</p>
-                    }
+                    {is_system_message ? (
+                        <p className={styles.message_main_system}>{messages.message}</p>
+                    ) : is_translated_exist ? (
+                        <WithTranslatedMessages messages={messages} />
+                    ) : (
+                        <p className={styles.message_main}>{messages.original}</p>
+                    )}
                 </div>
             </div>
             {currentIsVisibleResendButton.data && is_sent_message && is_hovered ? (
