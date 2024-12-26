@@ -30,6 +30,19 @@ export const useMessage = () => {
         });
     };
 
+    const addSystemMessageLog = (message) => {
+        const uuid = crypto.randomUUID();
+        const date = generateTimeData();
+
+        addMessageLogs({
+            id: uuid,
+            category: "system",
+            status: "system",
+            created_at: date,
+            messages: {message: message},
+        });
+    };
+
     const updateSentMessageLogById = (payload) => {
         updateMessageLogs(updateItemById(payload.id, payload.translation));
     };
@@ -52,6 +65,7 @@ export const useMessage = () => {
     return {
         currentMessageLogs,
         sendMessage,
+        addSystemMessageLog,
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,
@@ -67,7 +81,7 @@ export const useMessage = () => {
 const generateTimeData = () => {
     const data = new Date().toLocaleTimeString(
         "ja-JP",
-        {hour12: false, hour: "2-digit", minute: "2-digit"},
+        { hour12: false, hour: "2-digit", minute: "2-digit" },
     );
     return data;
 };
@@ -84,7 +98,6 @@ const generateMessageObject = (data, category) => {
         },
     };
 };
-
 
 const updateItemById = (id, translated_data) => (current_items) => {
     return current_items.data.map(item => {

@@ -93,6 +93,7 @@ export const useReceiveRoutes = () => {
     } = useLanguageSettings();
     const { updateSelectableLanguageList } = useSelectableLanguageList();
     const {
+        addSystemMessageLog,
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,
@@ -382,6 +383,8 @@ export const useReceiveRoutes = () => {
                 return updated_list;
             });
         },
+        "/run/word_filter": (payload) => addSystemMessageLog(payload.message),
+
 
         "/get/data/speaker_record_timeout": updateSpeakerRecordTimeout,
         "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
