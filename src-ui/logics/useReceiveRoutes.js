@@ -279,6 +279,7 @@ export const useReceiveRoutes = () => {
         "/set/data/selected_mic_device": updateSelectedMicDevice,
 
         "/run/selected_mic_device": (payload) => {
+
             updateSelectedMicHost(payload.host);
             updateSelectedMicDevice(payload.device);
         },
