@@ -27,6 +27,11 @@
     &.received_message {
         align-items: start;
     }
+    &.system_message {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.6rem;
+    }
 }
 
 .info_box {
@@ -84,4 +89,23 @@
     color: var(--dark_450_color);
     user-select: text;
     font-size: 1em;
+}
+
+
+.system_message {
+    justify-content: center;
+    text-align: center;
+
+    .category {
+        color: var(--primary_300_color);
+    }
+
+    .message_box {
+        align-items: center;
+    }
+
+    .message_main_system {
+        font-size: 1.2rem;
+        color: var(--dark_500_color);
+    }
 }

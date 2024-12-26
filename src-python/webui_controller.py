@@ -203,7 +203,7 @@ class Controller:
                 self.run(
                     200,
                     self.run_mapping["word_filter"],
-                    {"message":f"Detected by word filter:{message}"},
+                    {"message":f"Detected by word filter: {message}"},
                 )
                 return
             elif model.detectRepeatSendMessage(message):
