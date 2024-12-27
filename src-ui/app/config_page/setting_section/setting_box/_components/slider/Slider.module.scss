@@ -4,4 +4,8 @@
     align-items: center;
     justify-content: center;
     width: 100%;
+    padding-left: 4rem;
+    &.no_padding {
+        padding-left: 0;
+    }
 }
