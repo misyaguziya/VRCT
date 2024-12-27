@@ -19,6 +19,10 @@ main_page:
     translator: Translator
     translator_ctranslate2: Internal (Default)
 
+    translator_selector:
+        is_selected_same_language: |-
+            Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{translator_ctranslate2}}' is available.
+
     message_log:
         all: All
         sent: Sent
