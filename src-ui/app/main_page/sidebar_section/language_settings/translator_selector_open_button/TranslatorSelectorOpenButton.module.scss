@@ -4,6 +4,7 @@
 }
 
 .translator_selector_button {
+    position: relative;
     width: auto;
     display: flex;
     justify-content: center;
@@ -25,4 +26,11 @@
     font-size: 1.2rem;
     color: var(--dark_basic_text_color);
     white-space: nowrap;
+}
+
+.warning_svg {
+    margin-left: 0.2rem;
+    padding-bottom: 0.2rem;
+    width: 1.8rem;
+    color: #cb944f;
 }
