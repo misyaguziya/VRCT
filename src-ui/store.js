@@ -16,6 +16,7 @@ import {
 export const store = {
     backend_subprocess: null,
     config_page: null,
+    setting_box_scroll_container: null,
     log_box_ref: null,
     is_applied_init_message_box_height: false,
 };
@@ -160,6 +161,7 @@ export const { atomInstance: Atom_IsOpenedLanguageSelector, useHook: useStore_Is
 // Common
 export const { atomInstance: Atom_SoftwareVersion, useHook: useStore_SoftwareVersion } = createAtomWithHook("-", "SoftwareVersion");
 export const { atomInstance: Atom_SelectedConfigTabId, useHook: useStore_SelectedConfigTabId } = createAtomWithHook("device", "SelectedConfigTabId");
+export const { atomInstance: Atom_SettingBoxScrollPosition, useHook: useStore_SettingBoxScrollPosition } = createAtomWithHook(0, "SettingBoxScrollPosition");
 
 // Designs
 export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useStore_IsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");

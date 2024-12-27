@@ -193,3 +193,13 @@
     margin-top: 2rem;
     color: var(--dark_300_color);
 }
+
+.progress_bar {
+    height: 0.2rem;
+    width: 0%;
+    &.progress_bar_active {
+        transition: width 20000ms linear;
+        background-color: var(--primary_400_color);
+        width: 100%;
+    }
+}
