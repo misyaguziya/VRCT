@@ -4,7 +4,6 @@ from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
 from datetime import datetime
-from logging import getLogger, FileHandler, Formatter, INFO
 from time import sleep
 from queue import Queue
 from threading import Thread
@@ -30,7 +29,7 @@ from models.transcription.transcription_whisper import checkWhisperWeight, downl
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
-from utils import errorLogging
+from utils import errorLogging, setupLogger
 
 class threadFnc(Thread):
     def __init__(self, fnc, end_fnc=None, daemon=True, *args, **kwargs):
@@ -130,14 +129,8 @@ class Model:
 
     def startLogger(self):
         os_makedirs(config.PATH_LOGS, exist_ok=True)
-        logger = getLogger()
-        logger.setLevel(INFO)
         file_name = os_path.join(config.PATH_LOGS, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
-        file_handler = FileHandler(file_name, encoding="utf-8", delay=True)
-        formatter = Formatter("[%(asctime)s] %(message)s")
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-        self.logger = logger
+        self.logger = setupLogger("log", file_name)
         self.logger.disabled = False
 
     def stopLogger(self):
