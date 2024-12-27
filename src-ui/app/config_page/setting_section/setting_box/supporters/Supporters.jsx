@@ -9,14 +9,18 @@ import vrct_supporters_title from "@images/supporters/vrct_supporters_title.png"
 import fanbox_button from "@images/supporters/fanbox_button.png";
 import kofi_preparing from "@images/supporters/kofi_preparing.png";
 
+import ExternalLink from "@images/external_link.svg?react";
+
+
 const mogu_count = 8;
 const mochi_count = 3;
 const fuwa_count = 4;
 const basic_count = 5;
 const former_count = 2;
+const and_you_count = 1;
 const default_icon_numbers = ["05", "06", "07", "11"];
 
-const supporters_filenames = Array.from({ length: 22 }, (_, index) => `supporter_${String(index + 1).padStart(2, "0")}`);
+const supporters_filenames = Array.from({ length: 23 }, (_, index) => `supporter_${String(index + 1).padStart(2, "0")}`);
 const chato_expressions_filenames = Array.from({ length: 7 }, (_, index) => `chato_expression_${String(index + 1).padStart(2, "0")}`);
 
 const shuffleArray = (array) => {
@@ -36,6 +40,7 @@ const mochi_images = getCategoryImages(mogu_count, mochi_count);
 const fuwa_images = getCategoryImages(mogu_count + mochi_count, fuwa_count);
 const basic_images = getCategoryImages(mogu_count + mochi_count + fuwa_count, basic_count);
 const former_images = getCategoryImages(mogu_count + mochi_count + fuwa_count + basic_count, former_count);
+const and_you_images = getCategoryImages(mogu_count + mochi_count + fuwa_count + basic_count + former_count, and_you_count);
 
 const getRandomImage = (images) => {
     const random_index = Math.floor(Math.random() * images.length);
@@ -88,7 +93,7 @@ const SupportUsContainer = () => {
 };
 
 export const SupportersContainer = () => {
-    const renderImages = (image_list, class_name) => {
+    const renderImages = (image_list, options={}) => {
         return image_list.map((file_name) => {
             const img_src = getSupportersImageByFileName(file_name);
             const is_default_icon = default_icon_numbers.some((default_num) => file_name.endsWith(default_num));
@@ -100,7 +105,7 @@ export const SupportersContainer = () => {
             return img_src ? (
                 <div
                     key={file_name}
-                    className={clsx(styles.supporter_image_wrapper, class_name)}
+                    className={clsx(styles.supporter_image_wrapper, options.class_name)}
                     style={{ "--delay": random_delay }}
                 >
                     <img className={styles.supporter_image} src={img_src} />
@@ -110,6 +115,7 @@ export const SupportersContainer = () => {
                             src={chato_expression_src}
                         />
                     )}
+                    {options.is_and_you_icon ? <AndYouIcon /> : null}
                 </div>
             ) : null;
         });
@@ -118,14 +124,33 @@ export const SupportersContainer = () => {
     return (
         <div className={styles.supporters_container}>
             <img className={styles.vrct_supporters_title} src={vrct_supporters_title} />
-            <p className={styles.vrct_supporters_desc}>{`VRCT3.0のアップデートに向けて、むちゃ大変な開発を支えてくれた "Early Supporters" です。\nThey are the 'Early Supporters' who supported us through the incredibly challenging development toward the VRCT3.0 update.`}</p>
+            <p className={styles.vrct_supporters_desc}>{`VRCT3.0のアップデートに向けて、めちゃ大変な開発を支えてくれた "Early Supporters" です。\nThey are the 'Early Supporters' who supported us through the incredibly challenging development toward the VRCT3.0 update.`}</p>
             <div className={styles.supporters_wrapper}>
-                {renderImages(mogu_images, `${styles.mogu_image}`)}
+                {renderImages(mogu_images, {class_name: styles.mogu_image})}
                 {renderImages(mochi_images)}
                 {renderImages(fuwa_images)}
                 {renderImages(basic_images)}
                 {renderImages(former_images)}
+                <a href="https://vrct-dev.fanbox.cc/" target="_blank" rel="noreferrer" >
+                    {renderImages(and_you_images, {is_and_you_icon: true, class_name: styles.and_you_image})}
+                </a>
             </div>
+            <p className={styles.vrct_supporters_desc_end}>{`みなさんのおかげで、みしゃ社長は布団で寝ることを許され(in開発室) しいなは喜び庭駆け回っています！！！ふわもちもぐもぐです！ありがとうございます。これからもまだまだ進化するVRCTをどうかよろしくお願いします！\nThanks to everyone, Misha has been granted the privilege of sleeping in a proper bed (in the development room), and Shiina is so happy, running around the yard! Fuwa-mochi-mogu-mogu! Thank you so much! We hope you’ll continue to support the ever-evolving VRCT!`}</p>
         </div>
+    );
+};
+
+const AndYouIcon = () => {
+    return (
+        <>
+            <div className={styles.and_you_container}>
+                <div className={styles.and_you_1}></div>
+                <div className={styles.and_you_2}></div>
+            </div>
+            <p className={styles.and_you_fanbox_link_text}>
+                FANBOX
+                <ExternalLink className={styles.external_link_svg} />
+            </p>
+        </>
     );
 };
