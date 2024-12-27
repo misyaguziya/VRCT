@@ -493,7 +493,7 @@ class Controller:
 
         your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
         for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
-            if your_language["language"] == target_language["language"]:
+            if your_language["language"] == target_language["language"] and target_language["enable"] is True:
                 engines = ["CTranslate2"]
 
         return {"status":200, "result":engines}
@@ -1557,7 +1557,7 @@ class Controller:
 
         your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
         for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
-            if your_language["language"] == target_language["language"]:
+            if your_language["language"] == target_language["language"] and target_language["enable"] is True:
                 engines[config.SELECTED_TAB_NO] = "CTranslate2"
                 config.SELECTED_TRANSLATION_ENGINES = engines
                 break
