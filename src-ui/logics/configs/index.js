@@ -54,4 +54,5 @@ export { useSendTextToOverlay } from "./vr/useSendTextToOverlay";
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
 
+export { useSettingBoxScrollPosition } from "./useSettingBoxScrollPosition";
 export { useSoftwareVersion } from "./useSoftwareVersion";
