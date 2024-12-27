@@ -54,7 +54,7 @@ const CommonContainer = ({ Component, ...props }) => {
 
     return (
         <LabeledContainer label={props.label} desc={props.desc} custom_class_name={container_class}>
-            <Component {...props} />
+            <Component {...props} is_break_point={currentIsBreakPoint.data} />
         </LabeledContainer>
     );
 };
