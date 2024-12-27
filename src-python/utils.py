@@ -5,6 +5,7 @@ import random
 from typing import Union
 from os import path as os_path, rename as os_rename
 import traceback
+import logging
 from PIL.Image import open as Image_open
 
 def getImageFile(file_name):
@@ -70,32 +71,61 @@ def removeLog():
     with open('process.log', 'w', encoding="utf-8") as f:
         f.write("")
 
+def setupLogger(name, log_file, level=logging.INFO):
+    """
+    特定の名前とログファイルを持つロガーを設定します。
+    """
+    # ロガーを作成
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    logger.propagate = False  # 親ロガーへの伝播を防ぐ
+
+    # ハンドラーを作成
+    file_handler = logging.FileHandler(log_file, encoding="utf-8", delay=True)
+    file_handler.setLevel(level)
+
+    # フォーマッターを設定
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+
+    # ロガーにハンドラーを追加
+    logger.addHandler(file_handler)
+
+    return logger
+
+process_logger = None
 def printLog(log:str, data:Any=None) -> None:
+    global process_logger
+    if process_logger is None:
+        process_logger = setupLogger("process", "process.log", logging.INFO)
+
     response = {
         "status": 348,
         "log": log,
         "data": str(data),
     }
-
-    with open('process.log', 'a', encoding="utf-8") as f:
-        f.write(f"log: {response}\n")
-
+    process_logger.info(response)
     response = json.dumps(response)
     print(response, flush=True)
 
 def printResponse(status:int, endpoint:str, result:Any=None) -> None:
+    global process_logger
+    if process_logger is None:
+        process_logger = setupLogger("process", "process.log", logging.INFO)
+
     response = {
         "status": status,
         "endpoint": endpoint,
         "result": result,
     }
-
-    with open('process.log', 'a', encoding="utf-8") as f:
-        f.write(f"log: {response}\n")
-
+    process_logger.info(response)
     response = json.dumps(response)
     print(response, flush=True)
 
+error_logger = None
 def errorLogging() -> None:
-    with open('error.log', 'a') as f:
-        traceback.print_exc(file=f)
+    global error_logger
+    if error_logger is None:
+        error_logger = setupLogger("error", "error.log", logging.ERROR)
+
+    error_logger.error(traceback.format_exc())
