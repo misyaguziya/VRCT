@@ -19,6 +19,10 @@ main_page:
     translator: 翻訳エンジン
     translator_ctranslate2: オフライン翻訳 (Default)
 
+    translator_selector:
+        is_selected_same_language: |-
+            「{{your_language}}」と「{{target_language}}」に同じ言語が選択がされているため、「{{translator_ctranslate2}}」のみが使用できます。
+
     message_log:
         all: 全て
         sent: 送信
