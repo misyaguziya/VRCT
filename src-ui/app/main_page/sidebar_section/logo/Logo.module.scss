@@ -1,0 +1,19 @@
+.container {
+    height: var(--main_page_topbar_height);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.logo {
+    width: 12rem;
+    height: auto;
+    margin: auto;
+}
+
+.logo_chato {
+    width: 2rem;
+    height: auto;
+    margin: auto;
+}

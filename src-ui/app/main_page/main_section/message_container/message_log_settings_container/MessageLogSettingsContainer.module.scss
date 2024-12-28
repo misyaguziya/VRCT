@@ -1,0 +1,85 @@
+$container_height: 18rem;
+$toggle_config_size: 3rem;
+.container {
+    position: absolute;
+    top: calc(-#{$container_height} + -#{$toggle_config_size});
+    left: 0;
+    height: $container_height;
+    width: 100%;
+    background-color: var(--dark_825_color);
+    transition: top 0.3s ease;
+    padding: 0.6rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    &.to_visible_toggle_bar {
+        top: calc(-#{$container_height} + 1rem);
+        & .config_svg_wrapper {
+            transform: translate(-50%, -50%) rotate(180deg);
+        }
+
+    }
+    &.is_hovered {
+        top: calc(-#{$container_height} + 2rem);
+    }
+    &.is_opened {
+        top: 0;
+        background-color: var(--dark_825_color_cc);
+        backdrop-filter: blur(0.6rem);
+        & .config_svg_wrapper {
+            width: 0%;
+            bottom: 0;
+        }
+    }
+    &:not(.is_opened) {
+        cursor: pointer;
+    }
+}
+
+.container_relative_wrapper {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.config_svg_wrapper {
+    position: absolute;
+    left: 50%;
+    bottom: -#{$toggle_config_size};
+    transform: translate(-50%, -50%) rotate(0deg);
+    background-color: var(--dark_825_color);
+    width: $toggle_config_size;
+    border-radius: 50%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease, transform 0.6s ease;
+}
+
+.config_svg {
+    width: calc($toggle_config_size / 1.6);
+    color: var(--dark_500_color);
+}
+
+.others_wrapper {
+    width: 100%;
+    display: flex;
+}
+
+.resend_checkbox_toggle {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.6rem 1.2rem;
+    gap: 1rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+}
+
+.resend_checkbox_label {
+    font-size: 1.4rem;
+}

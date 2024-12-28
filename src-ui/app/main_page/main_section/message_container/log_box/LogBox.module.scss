@@ -1,0 +1,10 @@
+.container {
+    height: 100%;
+    width: 100%;
+    flex: 1;
+    background-color: var(--dark_900_color);
+    overflow: auto;
+    border-radius: 0.8rem;
+    padding: 1rem;
+    font-size: 1rem; // This is the standard font size for message logs, and is controlled by JavaScript. All child elements this are generally expressed in "em" and are affected by the font size setting here.
+}

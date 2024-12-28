@@ -1,0 +1,1 @@
+Thank you for considering translating VRCT's UI. However, please refrain from making any changes at this time. I am currently organizing the files, including reordering, adding, and removing elements, and some parts may change frequently until the UI becomes stable. (Note: This message was updated in December 2024.)

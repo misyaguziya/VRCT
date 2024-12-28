@@ -1,0 +1,36 @@
+.container {
+    width: 100%;
+}
+
+.swap_button_wrapper {
+    width: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 0.8rem 2rem;
+    padding: 0.4rem 0.8rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_750_color);
+    }
+    &:active {
+        background-color: var(--dark_850_color);
+    }
+}
+
+.narrow_arrow_down_svg {
+    width: 1.6rem;
+    color: var(--dark_500_color);
+    &.reverse {
+        transform: rotate(180deg);
+    }
+}
+
+.label {
+    font-size: 1.2rem;
+    color: var(--dark_500_color);
+    &.is_hovered {
+        color: var(--dark_basic_text_color);
+    }
+}
