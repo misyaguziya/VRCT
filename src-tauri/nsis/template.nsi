@@ -149,6 +149,7 @@ Function PageChooseLanguage
     ${NSD_CB_AddString} $DropListLanguages "日本語"
     ${NSD_CB_AddString} $DropListLanguages "한국어"
     ${NSD_CB_AddString} $DropListLanguages "繁體中文"
+    ${NSD_CB_AddString} $DropListLanguages "简体中文"
     ${NSD_CB_SelectString} $DropListLanguages "English"
     StrCpy $SelectedLangage "en"
     nsDialogs::Show
@@ -164,11 +165,12 @@ Function PageLeaveChooseLanguage
         StrCpy $SelectedLangage "ko"
     ${ElseIf} "繁體中文" == $0
         StrCpy $SelectedLangage "zh-Hant"
+    ${ElseIf} "简体中文" == $0
+        StrCpy $SelectedLangage "zh-Hans"
     ${EndIf}
 FunctionEnd
 
 ; 4-2. Page Download Translate Model Weight
-Var CheckboxUseTranslate
 Var DropListCTranslate2DownloadWeightType
 Var SelectedCTranslate2DownloadWeightType
 Var DialogTranslate
@@ -182,44 +184,22 @@ Function PageTranslate
         Abort
     ${EndIf}
 
-    ${NSD_CreateLabel} 0 21u 33% 12u "Enable Translation"
-    ${NSD_CreateCheckBox} 33% 20u 33% 12u ""
-    Pop $CheckboxUseTranslate
-    ${NSD_CreateLabel} 0 52u 33% 12u "Select AI Model Size"
-    ${NSD_CreateDropList} 33% 50u 40% 12u ""
+    ${NSD_CreateLabel} 0 21u 33% 12u "Select AI Model Size"
+    ${NSD_CreateDropList} 33% 20u 40% 12u ""
     Pop $DropListCTranslate2DownloadWeightType
     ${NSD_CB_AddString} $DropListCTranslate2DownloadWeightType "Basic model(418MB)"
     ${NSD_CB_AddString} $DropListCTranslate2DownloadWeightType "High accuracy model(1.3GB)"
     ${NSD_CB_SelectString} $DropListCTranslate2DownloadWeightType "Basic model(418MB)"
-    StrCpy $SelectedCTranslate2DownloadWeightType "Small"
-    EnableWindow $DropListCTranslate2DownloadWeightType 0
-    ${NSD_OnClick} $CheckboxUseTranslate OnCheckboxCTranslate2DownloadWeightClick
+    StrCpy $SelectedCTranslate2DownloadWeightType "small"
     nsDialogs::Show
 FunctionEnd
 
 Function PageLeaveTranslate
-    ${NSD_GetState} $CheckboxUseTranslate $0
-    ${If} $0 == 1
-        StrCpy $CheckboxUseTranslate "true"
-    ${Else}
-        StrCpy $CheckboxUseTranslate "false"
-    ${EndIf}
-
     ${NSD_GetText} $CheckboxCTranslate2DownloadWeight $0
     ${If} "Basic model(418MB)" == $0
-        StrCpy $SelectedCTranslate2DownloadWeightType "Small"
+        StrCpy $SelectedCTranslate2DownloadWeightType "small"
     ${ElseIf} "High accuracy model(1.3GB)" == $0
-        StrCpy $SelectedCTranslate2DownloadWeightType "Large"
-    ${EndIf}
-FunctionEnd
-
-Function OnCheckboxCTranslate2DownloadWeightClick
-    Pop $CheckboxUseTranslate
-    ${NSD_GetState} $CheckboxUseTranslate $0
-    ${If} $0 == 1
-        EnableWindow $DropListCTranslate2DownloadWeightType 1
-    ${Else}
-        EnableWindow $DropListCTranslate2DownloadWeightType 0
+        StrCpy $SelectedCTranslate2DownloadWeightType "large"
     ${EndIf}
 FunctionEnd
 
@@ -266,9 +246,9 @@ FunctionEnd
 Function PageLeaveTranscript
     ${NSD_GetText} $DropLListTranscriptEngines $0
     ${If} $0 == "Google"
-        StrCpy $SelectedTranscriptEngine "google"
+        StrCpy $SelectedTranscriptEngine "Google"
     ${Else}
-        StrCpy $SelectedTranscriptEngine "wishper"
+        StrCpy $SelectedTranscriptEngine "Wishper"
     ${EndIf}
     ${NSD_GetText} $DropListWhisperDownloadWeightType $0
     ${If} "tiny model(74.5MB)" == $0
@@ -294,34 +274,6 @@ Function OnDropListWishperDownloadWeightClick
         EnableWindow $DropListWhisperDownloadWeightType 1
     ${Else}
         EnableWindow $DropListWhisperDownloadWeightType 0
-    ${EndIf}
-FunctionEnd
-
-
-Var CheckboxUseCUDA
-Var DialogSelectInstallDeviceVersion
-Page custom PageSelectInstallDeviceVersion PageLeaveSelectInstallDeviceVersion
-Function PageSelectInstallDeviceVersion
-    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Enable GPUs for translation and transcription."
-    nsDialogs::Create 1018
-    Pop $DialogSelectInstallDeviceVersion
-
-    ${If} $DialogSelectInstallDeviceVersion == error
-        Abort
-    ${EndIf}
-
-    ${NSD_CreateLabel} 0 21u 33% 12u "Enable the use of GPUs"
-    ${NSD_CreateCheckBox} 33% 20u 33% 12u ""
-    Pop $CheckboxUseCUDA
-    nsDialogs::Show
-FunctionEnd
-
-Function PageLeaveSelectInstallDeviceVersion
-    ${NSD_GetState} $CheckboxUseCUDA $0
-    ${If} $0 == 1
-        StrCpy $CheckboxUseCUDA "true"
-    ${Else}
-        StrCpy $CheckboxUseCUDA "false"
     ${EndIf}
 FunctionEnd
 
@@ -761,47 +713,19 @@ Section Install
 
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
-  !define SOFTWARE_RELEASE_URL "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
+  !define SOFTWARE_RELEASE_URL "https://huggingface.co/misyaguziya/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
-  !define SOFTWARE_CUDA_DOWNLOAD_FILENAME "VRCT_cuda.zip"
-  !define SOFTWARE_JSON_FILENAME "response.json"
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
   Var /GLOBAL cmder_version
   Var /GLOBAL file_name
+  StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
 
-  ${If} $CheckboxUseCUDA == "true"
-    StrCpy $file_name "${SOFTWARE_CUDA_DOWNLOAD_FILENAME}"
-  ${Else}
-    StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
-  ${EndIf}
-
-  DetailPrint "Fetching Latest Release from GitHub (${SOFTWARE_RELEASE_URL})"
-  inetc::get /SILENT "${SOFTWARE_RELEASE_URL}" "$TEMP\${SOFTWARE_JSON_FILENAME}"
-
-  DetailPrint "Parsing JSON..."
-  nsJSON::Set /file "$TEMP\${SOFTWARE_JSON_FILENAME}"
-
-  nsJSON::Get 'tag_name' /end
-  Pop $cmder_version
-  DetailPrint "Found version $cmder_version"
-
-  nsJSON::Get /count 'assets' /end
-  Pop $R0
-
-  ${ForEach} $i 0 $R0 + 1
-    nsJSON::Get 'assets' /index $i 'name' /end
-    Pop $R1
-    StrCmp $R1 $file_name done
-  ${Next}
-  done:
-
-  nsJSON::Get 'assets' /index $i 'browser_download_url' /end
-  Pop $cmder_dl
+  StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
   DetailPrint "Got URL : $cmder_dl"
 
   DetailPrint "Downloading $file_name..."
-  inetc::get $cmder_dl "$TEMP\$file_name"
+  inetc::get $cmder_dl "$TEMP\$file_name" /end
   Pop $0
   StrCmp "$0" "OK" dlok
   DetailPrint "Download Failed $0"
@@ -872,7 +796,7 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage", "USE_TRANSLATION_FEATURE": $CheckboxUseTranslate, "SELECTED_TRANSCRIPTION_ENGINE": "$SelectedTranscriptEngine", "CTRANSLATE2_WEIGHT_TYPE": "$SelectedCTranslate2DownloadWeightType", "WHISPER_WEIGHT_TYPE": "$SelectedWhisperDownloadWeightType"}'
+  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage", "SELECTED_TRANSCRIPTION_ENGINE": "$SelectedTranscriptEngine", "CTRANSLATE2_WEIGHT_TYPE": "$SelectedCTranslate2DownloadWeightType", "WHISPER_WEIGHT_TYPE": "$SelectedWhisperDownloadWeightType"}'
   FileOpen $0 "$INSTDIR\config.json" w
   FileWrite $0 $1
   FileClose $0
