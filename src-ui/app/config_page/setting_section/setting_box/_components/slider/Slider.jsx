@@ -5,7 +5,7 @@ import { clsx } from "clsx";
 
 export const Slider = (props) => {
     return (
-        <div className={clsx(styles.container, props.className)}>
+        <div className={clsx(styles.container, props.className, {[styles.no_padding]: props.no_padding || props.is_break_point})}>
             <MUI_Slider
                 aria-label="Default"
                 valueLabelDisplay="auto"
