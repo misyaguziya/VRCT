@@ -1,22 +1,20 @@
+torch==2.2.2
+faster-whisper==1.0.3
+ctranslate2==4.3.1
+transformers==4.40.2
 pillow == 10.0.0
 PyAudioWPatch == 0.2.12.6
-python-osc == 1.8.3
-customtkinter == 5.2.0
+python-osc == 1.9.0
 deepl == 1.15.0
-flashtext == 2.7
-pyyaml == 6.0.1
-python-i18n == 0.3.9
-CTkToolTip == 0.8
-pyinstaller==6.2.0
+flashtext ==2.7
+pyinstaller==6.10.0
 numpy==1.26.4
-torch==2.2.2
-transformers==4.37.2
 sentencepiece==0.2.0
-ctranslate2==4.1.0
-faster-whisper==1.0.3
 openvr==1.26.701
 pydub==0.25.1
 psutil==5.9.8
+pykakasi==2.3.0
+pycaw==20240210
 translators @ git+https://github.com/misyaguziya/translators@5.9.2.1
-SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4
-tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.2
+SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.1
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3

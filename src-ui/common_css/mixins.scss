@@ -1,0 +1,101 @@
+// デフォルト変数
+$default_loader_size: 2rem !default;
+$default_loader_line_width: 0.2rem !default;
+
+// Loader Mixin
+@mixin loader($loader_size: $default_loader_size, $loader_line_width: $default_loader_line_width, $position: right, $position_amount: 0) {
+    $half_line_width: calc($loader_line_width / 2);
+    $calc_translate: calc(-50% + #{$half_line_width});
+
+    position: absolute;
+    top: calc(50% - #{$half_line_width});
+    #{$position}: $position_amount;
+    transform: translate($calc_translate, $calc_translate);
+    width: $loader_size;
+    height: $loader_size;
+    border-radius: 50%;
+    display: inline-block;
+    border-top: $loader_line_width solid var(--dark_400_color);
+    border-right: $loader_line_width solid transparent;
+    animation: rotate_animation 0.6s linear infinite;
+
+    &::after {
+        content: '';
+        position: absolute;
+        width: $loader_size;
+        height: $loader_size;
+        border-radius: 50%;
+        border-bottom: $loader_line_width solid var(--primary_400_color);
+        border-left: $loader_line_width solid transparent;
+    }
+
+    @keyframes rotate_animation {
+        0% {
+            transform: translate($calc_translate, $calc_translate) rotate(0deg);
+        }
+        100% {
+            transform: translate($calc_translate, $calc_translate) rotate(360deg);
+        }
+    }
+}
+
+
+
+$toggle_background_color_on: var(--primary_400_color);
+$toggle_background_color_off: var(--dark_775_color);
+$toggle_control_color: var(--dark_400_color);
+$toggle_width: 4rem;
+$toggle_height: 1.6rem;
+$toggle_gutter: 0.1rem;
+$toggle_radius: 50%;
+$toggle_control_speed: .15s;
+$toggle_control_ease: ease-out;
+
+$toggle_radius: calc($toggle_height / 2);
+$toggle_control_size: $toggle_height - calc($toggle_gutter * 2);
+
+@mixin toggle_control_styles {
+    display: block;
+    position: relative;
+    height: 100%;
+    width: auto;
+    .control {
+        position: relative;
+        height: $toggle_height;
+        width: $toggle_width;
+        border-radius: $toggle_radius;
+        background-color: $toggle_background_color_off;
+        &:after {
+            content: "";
+            position: absolute;
+            left: $toggle_gutter;
+            top: $toggle_gutter;
+            width: $toggle_control_size;
+            height: $toggle_control_size;
+            border-radius: $toggle_radius;
+            background: $toggle_control_color;
+            transition: left $toggle_control_speed $toggle_control_ease;
+        }
+        &.is_pending:after{
+            background-color: var(--dark_600_color);
+        }
+        &.is_hovered {
+            background-color: var(--dark_725_color);
+        }
+        &.is_mouse_down {
+            background-color: var(--dark_825_color);
+        }
+        &.is_active {
+            background-color: $toggle_background_color_on;
+            &.is_hovered {
+                background-color: var(--primary_350_color);
+            }
+            &.is_mouse_down {
+                background-color: var(--primary_700_color);
+            }
+            &:after {
+                left: $toggle_width - $toggle_control_size - $toggle_gutter;
+            }
+        }
+    }
+}

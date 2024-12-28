@@ -1,0 +1,46 @@
+.poster_pagination_container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.poster_pagination_wrapper {
+    display: flex;
+}
+
+$poster_img_width: 18rem;
+.poster_img {
+    width: $poster_img_width;
+}
+
+$poster_pagination_button_width: 4.6rem;
+.poster_pagination_button {
+    width: $poster_pagination_button_width;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--dark_700_color);
+    &:hover {
+        background-color: var(--dark_900_color);
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+    &.poster_prev {
+        border-radius: 0.8rem 0 0 0.8rem;
+    }
+    &.poster_next {
+        border-radius: 0 0.8rem 0.8rem 0;
+    }
+}
+
+.poster_pagination_svg {
+    width: 3.2rem;
+    &.poster_next_svg {
+        transform: rotate(180deg);
+    }
+}
+
+.poster_authors_img {
+    width: $poster_img_width + $poster_pagination_button_width;
+}

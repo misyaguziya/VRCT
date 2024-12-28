@@ -1,0 +1,90 @@
+@import "@scss_mixins";
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.1rem;
+}
+
+.switch_container {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.6rem 1.4rem;
+    background-color: var(--dark_825_color);
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_875_color);
+    }
+    &.is_compact_mode {
+        padding: 1.5rem;
+    }
+    &.is_pending {
+        pointer-events: none;
+    }
+}
+
+.label_wrapper {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+$basic_label_color: var(--dark_basic_text_color);
+$pending_label_color: var(--dark_500_color);
+.switch_label {
+    font-size: 1.4rem;
+    color: $basic_label_color;
+    &.is_compact_mode {
+        display: none;
+    }
+    &.is_pending {
+        color: $pending_label_color;
+    }
+}
+
+.switch_svg {
+    width: 1.8rem;
+    color: $basic_label_color;
+    &.is_pending {
+        color: $pending_label_color;
+    }
+    &:not(.is_compact_mode) {
+        width: 1.6rem;
+        color: var(--dark_350_color);
+    }
+}
+
+.switch_indicator {
+    position: absolute;
+    top: 50%;
+    right: 0.4rem;
+    transform: translate(-50%, -50%);
+    width: 0.2rem;
+    height: 2.6rem;
+    border-radius: 0.1rem;
+    background-color: var(--primary_300_color);
+    display: none;
+    &.is_compact_mode.is_active {
+        display: block;
+    }
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, left, 50%);
+}
+
+.toggle_control {
+    @include toggle_control_styles;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    &.is_compact_mode {
+        display: none;
+    }
+}

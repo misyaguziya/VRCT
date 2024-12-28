@@ -1,0 +1,111 @@
+@import "@scss_mixins";
+
+// *******************                           *******************
+// ******************* Express in "em" not "rem" *******************
+// *******************                           *******************
+.container {
+    width: 100%;
+    display: flex;
+    user-select: text;
+    gap: 0.6rem;
+    &.sent_message.is_shown_resend_button:hover {
+        background-color: var(--dark_950_color);
+    }
+}
+
+.message_wrapper {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: end;
+    user-select: text;
+    padding: 0.6em 0;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        align-items: start;
+    }
+    &.system_message {
+        flex-direction: row;
+        align-items: center;
+        gap: 0.6rem;
+    }
+}
+
+.info_box {
+    position: relative;
+    display: flex;
+    gap: 0.8em;
+    justify-content: center;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        flex-flow: row-reverse;
+        align-items: start;
+    }
+}
+
+.loader {
+    @include loader(0.8em, 0.1em, left, -1em);
+}
+
+.time {
+    font-size: 1em;
+    color: var(--dark_600_color);
+}
+
+.category {
+    font-size: 1em;
+    &.sent_message {
+        color: var(--sent_400_color);
+    }
+    &.received_message {
+        align-items: start;
+        color: var(--received_300_color);
+    }
+}
+
+.message_box {
+    display: flex;
+    flex-direction: column;
+    &.sent_message {
+        align-items: end;
+    }
+    &.received_message {
+        align-items: start;
+    }
+}
+
+.message_main {
+    color: var(--dark_basic_text_color);
+    user-select: text;
+    font-size: 1.4em;
+}
+
+.message_second {
+    color: var(--dark_450_color);
+    user-select: text;
+    font-size: 1em;
+}
+
+
+.system_message {
+    justify-content: center;
+    text-align: center;
+
+    .category {
+        color: var(--primary_300_color);
+    }
+
+    .message_box {
+        align-items: center;
+    }
+
+    .message_main_system {
+        font-size: 1.2rem;
+        color: var(--dark_500_color);
+    }
+}

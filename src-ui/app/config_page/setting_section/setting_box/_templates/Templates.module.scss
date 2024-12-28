@@ -1,0 +1,57 @@
+.container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    gap: 2rem;
+    &.flex_column {
+        flex-direction: column;
+    }
+    border-bottom: solid 0.1rem var(--dark_800_color);
+
+    &.is_break_point {
+        flex-direction: column;
+        gap: 2rem;
+        align-items: start;
+    }
+}
+
+.label_only_section {
+    width: 100%;
+}
+
+.deepl_auth_key_label_section {
+    max-width: 34rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.4rem;
+}
+
+.message_format_section {
+    width: 100%;
+}
+
+
+.word_filter_container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+    padding: 2rem;
+}
+
+.word_filter_switch_section {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.word_filter_label_wrapper {
+    max-width: 34rem;
+}
