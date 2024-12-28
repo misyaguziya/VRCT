@@ -1,0 +1,268 @@
+# =================================
+# IMPORTANT:
+# Please read 'readme_first.txt' before making any changes.
+# =================================
+
+common:
+    go_back_button_label: Go Back
+
+main_page:
+    translation: Translation
+    transcription_send: Voice2Chatbox
+    transcription_receive: Speaker2Log
+    foreground: Foreground
+    language_settings: Language Settings
+    your_language: Your Language
+    translate_each_other_label: Translate Each Other
+    swap_button_label: Swap Languages
+    target_language: Target Language
+    translator: Translator
+    translator_ctranslate2: Internal (Default)
+
+    translator_selector:
+        is_selected_same_language: |-
+            Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{translator_ctranslate2}}' is available.
+
+    message_log:
+        all: All
+        sent: Sent
+        received: Received
+        system: System
+
+        show_resend_button: Show Resend Button
+        resend_button_on_hover_desc: Press and hold to send
+
+    # textbox_system_message:
+    #     enabled_easter_egg: Whoa! You caught us! There is something...like...easter-egg-ish function has enabled! It'll affect to Overlay(VR) for now;).
+    #     enabled_translation: Translation feature is turned on.
+    #     disabled_translation: Translation feature is turned off.
+    #     enabled_voice2chatbox: Transcription from the microphone has started.
+    #     disabled_voice2chatbox: Transcription from the microphone has been stopped.
+    #     enabled_speaker2log: Transcription from the speaker has started.
+    #     disabled_speaker2log: Transcription from the speaker has been stopped.
+    #     enabled_foreground: The screen is fixed in the foreground.
+    #     disabled_foreground: The foreground fixation has been released.
+    #     auth_key_success: Auth key update completed.
+    #     auth_key_error: Auth Key is incorrect or Usage limit reached.
+    #     no_mic_device_detected_error: No mic device detected.
+    #     no_speaker_device_detected_error: No speaker device detected.
+    #     translation_engine_limit_error: It has automatically changed the translation engine. Access has been temporarily restricted due to an excessive number of requests to the translation engine. If you want to use the same translation engine, please wait for a while, restart VRCT, and try again.
+    #     detected_by_word_filter: The word {{detected_message}} has not been sent due to detection by the word filter.
+    #     selected_your_language: '"Your Language" has set to {{your_language}}.'
+    #     selected_target_language: '"Target Language" has set to {{target_language}}.'
+    #     switched_language_preset_tab: Switched to Language Preset Tab No.{{tab_no}}."
+    #     latest_language_setting: Currently, "Your Language" is set to {{your_language}}, and "Target Language" is set to {{target_language}}.
+    #     opened_web_page_booth: Opened Booth page in your web browser.
+    #     opened_web_page_vrct_documents: |-
+    #         Opened VRCT Documents page in your web browser.
+    #         For any issues, requests, or inquiries, please feel free to contact us through the links at the bottom of the documents page, the "Contact Form," or via X (formerly Twitter)!
+
+    state_text_enabled: Enabled
+    state_text_disabled: Disabled
+
+    language_selector:
+        title_your_language: Select Your Language
+        title_target_language: Select Target Language
+
+    update_available: New version is here!
+    updating: Now updating...
+
+update_modal:
+    cpu_desc: Use CPU only as the compute device.
+    cuda_desc: Selectable between CPU and NVIDIA GPUs as compute devices.
+    cuda_compare_cpu_desc: With GPU selection, processing is faster compared to a CPU.
+    cuda_disk_space_desc: Requires approximately {{size}} of disk space.
+    close_modal: Close
+    download_latest_and_restart: |-
+        The latest version will be downloaded,
+        and the app will automatically restart.
+    is_latest_version_already: Already using the latest version
+    is_current_compute_device: Currently using this version
+
+config_page:
+    version: version {{version}}
+    # config_title: Settings
+    # compact_mode: Compact Mode
+    # restart_message: Apply changes with a restart.
+    # common_error_message:
+    #     invalid_value: Invalid value.
+    model_download_button_label: Download
+    side_menu_labels:
+        device: Device
+        appearance: Appearance
+        translation: Translation
+        transcription: Transcription
+        vr: VR
+        others: Others
+        advanced_settings: Advanced Settings
+        supporters: Supporters
+        about_vrct: About VRCT
+
+    device:
+        check_volume: Check Volume
+        mic_host_device:
+            label: Mic Device
+            label_auto_select: Auto Select
+            label_host: Host/Driver
+            label_device: Device
+        mic_dynamic_energy_threshold:
+            label_for_automatic: 'Mic Energy Threshold (Current Setting: Automatic)'
+            desc_for_automatic: Automatically determine microphone input sensitivity.
+            label_for_manual: 'Mic Energy Threshold (Current Setting: Manual)'
+            desc_for_manual: Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume.
+            error_message: You can set it with a value between 0 to {{max}}.
+        speaker_device:
+            label: Speaker Device
+            label_auto_select: Auto Select
+            label_device: Device
+        speaker_dynamic_energy_threshold:
+            label_for_automatic: 'Speaker Energy Threshold (Current Setting: Automatic)'
+            desc_for_automatic: Automatically determine speaker input sensitivity.
+            label_for_manual: 'Speaker Energy Threshold (Current Setting: Manual)'
+            desc_for_manual: Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume.
+            error_message: You can set it with a value between 0 to {{max}}.
+            no_device_error_message: No speaker device detected.
+
+    appearance:
+        transparency:
+            label: Transparency
+            desc: Change the main window's transparency.
+        ui_size:
+            label: UI Size
+        textbox_ui_size:
+            label: Message Logs Font Size
+            desc: You can adjust the font size used in the logs relative to the UI size.
+        send_message_button_type:
+            label: Send Message Button
+            hide: Hide (Use enter key to send)
+            show: Show
+            show_and_disable_enter_key: Show and disable to send when pressed enter key
+        font_family:
+            label: Font Family
+        ui_language:
+            label: UI Language
+
+    translation:
+        ctranslate2_weight_type:
+            label: Internal Translation Model
+            desc: You can choose the translation model to use for the internal translation engine.
+            small: Basic model ({{capacity}})
+            large: High accuracy model ({{capacity}})
+        ctranslate2_compute_device:
+            label: Internal Translation Compute Device
+        deepl_auth_key:
+            label: DeepL Auth Key
+            desc: Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported.
+            save: Save
+            edit: Edit
+            open_auth_key_webpage: Open DeepL Account Webpage
+            auth_key_success: Auth key update completed.
+            auth_key_error: Auth Key is incorrect or Usage limit reached.
+
+    transcription:
+        section_label_mic: Mic
+        section_label_speaker: Speaker
+        section_label_transcription_engines: Transcription Engines
+        mic_record_timeout:
+            label: Mic Record Timeout
+            desc: Detects silence and, when the specified number of seconds has passed, considers the mic input to have ended. (Second(s))
+            error_message: It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more.
+        mic_phrase_timeout:
+            label: Mic Phrase Timeout
+            desc: Transcription processing is performed at intervals of the specified number of seconds.
+            error_message: It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more.
+        mic_max_phrase:
+            label: Mic Max Words
+            desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat.
+            error_message: You can set a number equal to or greater than 0.
+        mic_word_filter:
+            label: Mic Word Filter
+            desc: |-
+                If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a "," (comma).
+                *Duplicate words will not be registered.
+            add_button_label: Add
+            count_desc: 'Current registered word count: {{count}}'
+        speaker_record_timeout:
+            label: Speaker Record Timeout
+            desc: Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))
+            error_message: It cannot be greater than '{{speaker_phrase_timeout_label}}' with a value of 0 or more.
+        speaker_phrase_timeout:
+            label: Speaker Phrase Timeout
+            desc: Transcription processing is performed at intervals of the specified number of seconds.
+            error_message: It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more.
+        speaker_max_phrase:
+            label: Speaker Max Words
+            desc: It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs.
+            error_message: You can set a number equal to or greater than 0.
+        select_transcription_engine:
+            label: Transcription Engine
+        whisper_weight_type:
+            label: Whisper Model
+            desc: |-
+                Larger models tend to have higher accuracy, but they also consume more CPU or GPU resources.
+                Especially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU.
+            model_template: '{{model_name}} model ({{capacity}})'
+            recommended_model_template: '{{model_name}} model ({{capacity}}) (Recommended)'
+        whisper_compute_device:
+            label: Whisper Compute Device
+
+    vr:
+        single_line: Single line
+        multi_lines: Multi lines
+        overlay_enable: Enable
+        restore_default_settings: Restore Default Settings
+        position: Position
+        rotation: Rotation
+        x_position: X-axis (left-right)
+        y_position: Y-axis (up-down)
+        z_position: Z-axis (front-back)
+        x_rotation: X-axis rotation
+        y_rotation: Y-axis rotation
+        z_rotation: Z-axis rotation
+        sample_text_button:
+            start: |-
+                Send sample texts
+                to Overlay
+            stop: Stop Sending
+            sample_text: Sample text.
+        opacity: Opacity
+        ui_scaling: UI Scaling
+        display_duration: Display duration
+        fadeout_duration: Fadeout duration
+        tracker: Tracker
+        hmd: HMD
+        left_hand: Left hand
+        right_hand: Right hand
+        common_settings: Common Settings
+        overlay_show_only_translated_messages:
+            label: Show Only Translated Messages
+
+    others:
+        auto_clear_the_message_box:
+            label: Auto Clear The Message Box
+        send_only_translated_messages:
+            label: Send Only Translated Messages
+        auto_export_message_logs:
+            label: Auto Export Message Logs
+            desc: Automatically export the conversation messages as a text file.
+        vrc_mic_mute_sync:
+            label: VRC Mic Mute Sync
+            desc: |-
+                VRCT will not send the message to VRChat while VRChat's mic is muted.
+                *There is a bit latency and Push-To-Talk is not supported.
+        send_message_to_vrc:
+            label: Send Message To VRChat
+            desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
+        send_received_message_to_vrc:
+            label: Send Received Message To VRChat
+            desc: Send the message you received from the speaker's sound to VRChat's chatbox.
+
+    advanced_settings:
+        osc_ip_address:
+            label: OSC IP Address
+        osc_port:
+            label: OSC Port
+        open_config_filepath:
+            label: Open Config File
+        switch_compute_device:
+            label: Switch VRCT to CPU/GPU Version

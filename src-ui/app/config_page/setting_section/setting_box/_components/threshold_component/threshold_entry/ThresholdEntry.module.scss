@@ -1,0 +1,24 @@
+.container {
+
+}
+
+.entry_wrapper {
+    width: 6rem;
+    height: 100%;
+    padding: 0.6rem;
+    background-color: var(--dark_875_color);
+    border: 0.1rem solid var(--dark_750_color);
+    border-radius: 0.4rem;
+}
+
+.entry_input_area {
+    width: 100%;
+    height: 100%;
+    font-size: 1.4rem;
+    resize: none;
+    color: var(--dark_basic_text_color);
+    &.is_disable {
+        color: var(--dark_500_color);
+        pointer-events: none;
+    }
+}

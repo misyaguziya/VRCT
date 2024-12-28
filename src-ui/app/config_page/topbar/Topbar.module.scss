@@ -1,0 +1,82 @@
+.container {
+    width: 100%;
+    height: 0%;
+    transition: top 0.5s ease;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.show_config.container {
+    top: 0;
+}
+
+.show_main.container {
+    top: 100%;
+}
+
+
+.wrapper {
+    background-color: var(--dark_850_color);
+    cursor: pointer;
+    height: 1rem;
+    width: 100%;
+    position: relative;
+    transition: all 0.3s ease;
+
+    &:hover {
+        height: 2rem;
+        .go_back_button {
+            top: -12rem;
+            transform: rotate(35deg);
+        }
+        .arrow_left_svg {
+            color: var(--dark_400_color);
+        }
+        .go_back_text {
+            color: var(--dark_400_color);
+        }
+        .go_back_text_wrapper {
+            padding-top: 8.2rem;
+        }
+    }
+
+}
+
+.go_back_button {
+    height: 16rem;
+    width: 16rem;
+    border-radius: 1.2rem;
+    background-color: var(--dark_850_color);
+    position: absolute;
+    top: -13.2rem;
+    right: 10rem;
+    transform: rotate(30deg);
+    transition: all 0.3s ease;
+}
+
+.arrow_left_svg {
+    height: 2.8rem;
+    position: absolute;
+    right: 1rem;
+    bottom: 0.4rem;
+    color: var(--dark_600_color);
+    transform: rotate(-100deg);
+}
+
+.go_back_text_wrapper {
+    position: absolute;
+    top: -4.6rem;
+    right: 0rem;
+    padding-top: 7.2rem;
+    padding-bottom: 1rem;
+    width: 15.2rem;
+    transition: all 0.3s ease;
+}
+
+.go_back_text {
+    color: var(--dark_650_color);
+    font-size: 1.6rem;
+    padding-left: 4rem;
+    transition: all 0.3s ease;
+}

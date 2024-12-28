@@ -1,0 +1,84 @@
+{
+  "build": {
+    "beforeDevCommand": "",
+    "beforeBuildCommand": "",
+    "devPath": "http://localhost:1420",
+    "distDir": "../dist"
+  },
+  "package": {
+    "productName": "VRCT",
+    "version": "3.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false,
+      "window": {
+        "all": false,
+        "setAlwaysOnTop": true,
+        "setDecorations": true,
+        "close": true,
+        "setPosition": true,
+        "setSize": true,
+        "maximize": true,
+        "minimize": true,
+        "unmaximize": true,
+        "unminimize": true,
+        "startDragging": true
+    },
+    "shell": {
+        "all": false,
+        "open": true,
+        "sidecar": true,
+        "scope": [
+            {
+                "name": "bin/VRCT-sidecar", "sidecar": true,"args": true
+            }
+        ]
+    }
+},
+"windows": [
+    {
+        "title": "VRCT",
+        "center": true,
+        "width": 450,
+        "height": 220,
+        "minWidth": 400,
+        "minHeight": 200,
+        "transparent": true,
+        "decorations": false
+    }
+    ],
+    "security": {
+      "csp": null
+    },
+    "bundle": {
+      "active": true,
+      "targets": "nsis",
+      "identifier": "com.vrct.dev",
+      "publisher": "m's software",
+      "copyright": "Copyright m's software",
+      "shortDescription": "VRCT",
+      "icon": [
+        "icons/32x32.png",
+        "icons/128x128.png",
+        "icons/128x128@2x.png",
+        "icons/icon.icns",
+        "icons/icon.ico"
+      ],
+      "externalBin": [
+        "bin/VRCT-sidecar"
+      ],
+      "resources":{
+        "bin/_internal": "_internal"
+      },
+      "windows": {
+        "nsis": {
+          "template": "nsis/template.nsi",
+          "license": "../LICENSE",
+          "installMode": "both",
+          "displayLanguageSelector": true
+        }
+      }
+    }
+  }
+}
