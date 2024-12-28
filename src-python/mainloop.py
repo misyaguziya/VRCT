@@ -4,7 +4,7 @@ import time
 from typing import Any
 from threading import Thread
 from queue import Queue
-from webui_controller import Controller
+from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
 
 controller = Controller()
