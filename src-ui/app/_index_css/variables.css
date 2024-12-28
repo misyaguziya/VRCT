@@ -1,0 +1,61 @@
+:root {
+    --primary_100_color: #b7ded8;
+    --primary_150_color: #a1d4cc;
+    --primary_200_color: #8acac0;
+    --primary_250_color: #76bfb4;
+    --primary_300_color: #61b4a7;
+    --primary_350_color: #55ac9e;
+    --primary_400_color: #48a495;
+    --primary_450_color: #429c8c;
+    --primary_500_color: #3b9483;
+    --primary_550_color: #398E7D;
+    --primary_600_color: #368777;
+    --primary_650_color: #347f6f;
+    --primary_700_color: #317767;
+    --primary_750_color: #2f6f60;
+    --primary_800_color: #2c6759;
+    --primary_900_color: #214b3f;
+
+    --primary_600_color_44: #36877744;
+
+    --sent_400_color: #6197b4;
+    --received_300_color: #a861b4;
+
+    --dark_basic_text_color: #f2f2f2;
+    --dark_100_color: #f5f7fb;
+    --dark_200_color: #f1f2f6;
+    --dark_300_color: #e9eaee;
+    --dark_350_color: #d8d9dd;
+    --dark_400_color: #c7c8cc;
+    --dark_450_color: #b8b9bd;
+    --dark_500_color: #a9aaae;
+    --dark_550_color: #949599;
+    --dark_600_color: #7f8084;
+    --dark_650_color: #75767a;
+    --dark_700_color: #6a6c6f;
+    --dark_725_color: #636467;
+    --dark_750_color: #5b5c5f;
+    --dark_775_color: #535457;
+    --dark_800_color: #4b4c4f;
+    --dark_825_color: #434447;
+    --dark_850_color: #3a3b3e;
+    --dark_863_color: #36373a;
+    --dark_875_color: #323336;
+    --dark_888_color: #2e2f32;
+    --dark_900_color: #292a2d;
+    --dark_925_color: #242528;
+    --dark_950_color: #1f2022;
+    --dark_975_color: #1a1b1d;
+    --dark_1000_color: #151517;
+
+    --dark_825_color_cc: #434447cc;
+    --dark_550_color_22: #94959922;
+
+
+    --title_bar_height: 2rem;
+    --main_page_topbar_height: 4.8rem;
+    --config_page_sidebar_width: 16.8rem;
+    --config_page_topbar_height: 8rem;
+
+    --font_family: "Yu Gothic UI";
+}

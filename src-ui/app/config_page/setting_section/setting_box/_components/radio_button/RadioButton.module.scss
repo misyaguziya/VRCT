@@ -1,0 +1,74 @@
+@import "@scss_mixins";
+
+.container {
+    display: flex;
+    gap: 0.4rem;
+    position: relative;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    max-width: 70%;
+    &.column {
+        flex-direction: column;
+    }
+}
+
+.radio_button_container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    position: relative;
+}
+
+
+.radio_button_wrapper {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    cursor: pointer;
+    gap: 1rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+    &:active {
+        background-color: var(--dark_925_color);
+    }
+    &.is_selected {
+        pointer-events: none;
+    }
+    &.disabled {
+        pointer-events: none;
+        color: var(--dark_600_color);
+    }
+}
+
+.radio_button_input {
+    appearance: none;
+    margin: 0;
+    width: 2rem;
+    height: 2rem;
+    border: 0.3rem solid var(--dark_600_color);
+    border-radius: 50%;
+    transition: border-color .1s ease, border-width .1s ease;
+    flex-shrink: 0;
+    cursor: inherit;
+    &:checked {
+        border-color: var(--primary_400_color);
+        border-width: 0.6rem;
+    }
+    &:disabled {
+        border-color: var(--dark_825_color);
+    }
+}
+
+.radio_button_label {
+    font-size: 1.4rem;
+    font-weight: 400;
+    flex-shrink: 0;
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, left, -1.6rem);
+}

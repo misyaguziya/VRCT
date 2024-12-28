@@ -1,0 +1,50 @@
+.container {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: var(--dark_875_color);
+    flex: 1;
+    overflow-y: hidden;
+}
+
+.language_list_scroll_wrapper {
+    height: 100%;
+    overflow-y: auto;
+    padding: 1rem 1rem 8rem 1.6rem;
+}
+
+.language_list {
+    column-count: auto;
+    column-width: 16rem;
+}
+
+.language_each_letter_box {
+    break-inside: avoid-column;
+    margin-bottom: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.language_latter {
+    font-size: 1.4rem;
+    color: var(--dark_500_color);
+}
+
+.language_button {
+    padding: 0.8rem 0.6rem;
+    cursor: pointer;
+    &:hover{
+        background-color: var(--dark_825_color);
+    }
+    &:active{
+        background-color: var(--dark_888_color);
+    }
+}
+
+.language_label {
+    font-size: 1.4rem;
+    color: var(--dark_basic_text_color);
+}

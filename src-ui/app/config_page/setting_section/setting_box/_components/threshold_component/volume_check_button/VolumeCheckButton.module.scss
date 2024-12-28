@@ -1,0 +1,45 @@
+.button {
+    width: 100%;
+    background-color: var(--dark_800_color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-radius: 0.4rem;
+    gap: 0.4rem;
+    cursor: pointer;
+    &.is_active {
+        background-color: var(--primary_500_color);
+        &:hover {
+            background-color: var(--primary_450_color);
+        }
+        &:active {
+            background-color: var(--primary_550_color);
+        }
+    }
+    &.is_pending {
+        background-color: var(--dark_850_color);
+        pointer-events: none;
+        .button_svg, .button_text {
+            color: var(--dark_500_color);
+        }
+    }
+
+
+    &:hover {
+        background-color: var(--dark_775_color);
+    }
+    &:active {
+        background-color: var(--dark_850_color);
+    }
+}
+
+.button_svg {
+    width: 1.4rem;
+    color: var(--dark_350_color);
+}
+
+.button_text {
+    font-size: 1.2rem;
+    color: var(--dark_basic_text_color);
+}

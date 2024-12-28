@@ -1,0 +1,16 @@
+.snackbar_content {
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    color: #fff;
+    &.is_success {
+        background-color: #368777;
+    }
+    &.is_error {
+        background-color: #bb4448;
+    }
+}
+
+.snackbar_message {
+    font-size: 1.4rem;
+}

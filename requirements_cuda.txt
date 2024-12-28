@@ -1,0 +1,21 @@
+torch==2.2.2
+--extra-index-url https://download.pytorch.org/whl/cu121
+faster-whisper==1.0.3
+ctranslate2==4.3.1
+transformers==4.40.2
+pillow == 10.0.0
+PyAudioWPatch == 0.2.12.6
+python-osc == 1.9.0
+deepl == 1.15.0
+flashtext ==2.7
+pyinstaller==6.10.0
+numpy==1.26.4
+sentencepiece==0.2.0
+openvr==1.26.701
+pydub==0.25.1
+psutil==5.9.8
+pykakasi==2.3.0
+pycaw==20240210
+translators @ git+https://github.com/misyaguziya/translators@5.9.2.1
+SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.1
+tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3

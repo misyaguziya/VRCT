@@ -1,0 +1,45 @@
+@import "./reset.css";
+@import "./variables.css";
+
+:root {
+    font-size: 62.5%;
+    color: #F2F2F2;
+}
+
+* {
+    user-select: none;
+    &::-webkit-scrollbar {
+        width: 0.8rem;
+    }
+    &::-webkit-scrollbar-track {
+        background-color: var(--dark_925_color);
+        border-radius: 0.4rem;
+    }
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--dark_800_color);
+        border-radius: 0.4rem;
+    }
+}
+
+html, body {
+    height: 100%;
+    font-family: var(--font_family); /* If not found the font family where 'root:' that is selected by user*/
+    border-radius: 1.8rem;
+}
+
+
+#root {
+    height: 100%;
+
+    /* For controlling a whole window transparency */
+    opacity: 1;
+}
+
+/* SVG内のすべての要素にfillを適用 (colorの調整をcssでするため) */
+svg {
+    fill: currentColor;
+}
+
+p {
+    white-space: pre-wrap;
+}

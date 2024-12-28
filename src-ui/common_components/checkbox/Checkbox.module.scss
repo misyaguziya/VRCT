@@ -1,0 +1,66 @@
+@import "@scss_mixins";
+
+.checkbox_container {
+    height: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.checkbox_wrapper {
+    display: inline-block;
+    cursor: pointer;
+    padding: var(--checkbox-padding, 2rem);
+    position: relative;
+
+    &:hover {
+        & .cbx {
+            border: var(--checkbox-color, var(--primary_600_color)) solid var(--checkbox-border-width, 0.2rem);
+        }
+    }
+    &.is_disabled {
+        pointer-events: none;
+        & .cbx {
+            border-color: var(--primary_800_color);
+        }
+    }
+}
+
+.checkbox_wrapper .cbx {
+    display: block;
+    width: var(--checkbox-size, 2.8rem);
+    height: var(--checkbox-size, 2.8rem);
+    border-radius: 0.4rem;
+    border: var(--dark_700_color) solid var(--checkbox-border-width, 0.2rem);
+    transition: all 0.15s ease;
+    padding: calc(var(--checkbox-size, 2.8rem) / 7);
+}
+
+.checkbox_wrapper .cbx svg {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke: var(--dark_basic_text_color);
+    stroke-width: calc(var(--checkbox-border-width, 0.2rem) / 2);
+    stroke-dasharray: 1.7rem;
+    stroke-dashoffset: 1.7rem;
+}
+
+.checkbox_wrapper input[type="checkbox"] {
+    display: none;
+    visibility: hidden;
+}
+
+.checkbox_wrapper input[type="checkbox"]:checked + .cbx {
+    background-color: var(--checkbox-color, var(--primary_600_color));
+    border: none;
+}
+
+.checkbox_wrapper input[type="checkbox"]:checked + .cbx svg {
+    stroke-dashoffset: 0;
+    transition: all 0.15s ease;
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, right, -2rem);
+}
