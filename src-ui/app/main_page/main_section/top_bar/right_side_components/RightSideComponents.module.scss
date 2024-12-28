@@ -1,0 +1,49 @@
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    height: 100%;
+}
+
+.help_and_info_button {
+    padding: 0.6rem;
+    border-radius: 0.6rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.help_svg {
+    width: 2.4rem;
+    color: var(--dark_400_color);
+}
+
+.software_update_button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--primary_300_color);
+    padding: 1rem 0.4rem;
+    cursor: pointer;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.refresh_svg {
+    width: 1.8rem;
+    transform: rotate(-30deg);
+}
+
+.software_update_label {
+    font-size: 1.2rem;
+}

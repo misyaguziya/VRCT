@@ -1,0 +1,22 @@
+[package]
+name = "VRCT"
+version = "0.0.0"
+description = "VRCT Application"
+authors = ["misyaguziya"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "1", features = [] }
+
+[dependencies]
+tauri = { version = "1", features = [ "window-set-size", "window-set-position", "window-unmaximize", "window-close", "window-maximize", "window-minimize", "window-unminimize", "window-start-dragging", "window-set-decorations", "window-set-always-on-top", "shell-sidecar", "shell-open", "devtools"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+font-kit = "0.14.2"
+window-shadows = { git = "https://github.com/tauri-apps/window-shadows.git" }
+
+[features]
+# This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]

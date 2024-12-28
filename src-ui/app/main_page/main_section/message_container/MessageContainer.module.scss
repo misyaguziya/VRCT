@@ -1,0 +1,42 @@
+.container {
+    height: 0%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 0 1.6rem 1rem 1.6rem;
+}
+
+.log_box_resize_wrapper {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+}
+
+.separator {
+    position: relative;
+    width: 100%;
+    height: 0.8rem;
+    cursor: row-resize;
+    flex-shrink: 0;
+    &:hover {
+        & .separator_line {
+            background-color: var(--primary_300_color);
+        }
+    }
+}
+.separator_line {
+    position: absolute;
+    bottom: 0%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    height: 50%;
+    width: 99%;
+    transition: background-color .15s ease-out;
+}
+
+.message_box_resize_wrapper {
+    height: 10rem;
+    min-height: 3.8rem;
+    max-height: 90%;
+}

@@ -1,0 +1,24 @@
+{
+    "parser": "@typescript-eslint/parser",
+    "extends": [
+        "plugin:react/recommended"
+    ],
+    "parserOptions": {
+        "ecmaFeatures": {
+            "jsx": true // Allows for the parsing of JSX
+        }
+    },
+    "rules": {
+        "react/prop-types": "off",
+        "@typescript-eslint/no-empty-interface": 0,
+        "no-unreachable": "warn",
+        "no-unused-vars": "warn",
+        "react/react-in-jsx-scope": "off",
+        "semi": ["error", "always"]
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    }
+}
