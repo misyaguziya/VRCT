@@ -199,6 +199,7 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                 </p>
                 <Slider
                     className={styles.x_position_slider}
+                    no_padding={true}
                     variable={settings.x_pos}
                     step={ui_configs.x_pos.step}
                     min={ui_configs.x_pos.min}
@@ -213,6 +214,7 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                 </p>
                 <Slider
                     className={styles.y_position_slider}
+                    no_padding={true}
                     variable={settings.y_pos}
                     step={ui_configs.y_pos.step}
                     min={ui_configs.y_pos.min}
@@ -228,6 +230,7 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                 </p>
                 <Slider
                     className={styles.z_position_slider}
+                    no_padding={true}
                     variable={settings.z_pos}
                     step={ui_configs.z_pos.step}
                     min={ui_configs.z_pos.min}
@@ -252,6 +255,7 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, default_u
                 </p>
                 <Slider
                     className={styles.x_rotation_slider}
+                    no_padding={true}
                     variable={-settings.x_rotation}
                     valueLabelFormat={settings.x_rotation}
                     step={5}
@@ -268,6 +272,7 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, default_u
                 </p>
                 <Slider
                     className={styles.y_rotation_slider}
+                    no_padding={true}
                     variable={settings.y_rotation}
                     step={5}
                     min={-180}
@@ -282,6 +287,7 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, default_u
                 </p>
                 <Slider
                     className={styles.z_rotation_slider}
+                    no_padding={true}
                     variable={settings.z_rotation}
                     step={5}
                     min={-180}
@@ -308,6 +314,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 </p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.opacity_slider)}
+                    no_padding={true}
                     variable={settings.opacity * 100}
                     valueLabelFormat={`${ui_variable_opacity}%`}
                     step={5}
@@ -322,6 +329,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 </p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
+                    no_padding={true}
                     variable={settings.ui_scaling * 100}
                     valueLabelFormat={`${ui_variable_ui_scaling}%`}
                     step={ui_configs.ui_scaling.step}
@@ -334,6 +342,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 <p className={clsx(styles.other_controls_slider_label, styles.display_duration_label)}>{t("config_page.vr.display_duration")}</p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.display_duration_slider)}
+                    no_padding={true}
                     variable={settings.display_duration}
                     valueLabelFormat={`${settings.display_duration} second(s)`}
                     step={1}
@@ -346,6 +355,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                 <p className={clsx(styles.other_controls_slider_label, styles.fadeout_duration_label)}>{t("config_page.vr.fadeout_duration")}</p>
                 <Slider
                     className={clsx(styles.other_controls_slider, styles.fadeout_duration_slider)}
+                    no_padding={true}
                     variable={settings.fadeout_duration}
                     valueLabelFormat={`${settings.fadeout_duration} second(s)`}
                     step={1}

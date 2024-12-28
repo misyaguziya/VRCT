@@ -4,6 +4,7 @@
     justify-content: center;
     align-items: center;
     gap: 1rem;
+    flex-shrink: 0;
 }
 
 .entry_section_wrapper {
@@ -72,13 +73,14 @@
 }
 
 .open_webpage_button {
-    padding: 0.6rem 3.2rem;
+    padding: 0.6rem 2.8rem;
     display: flex;
     gap: 1rem;
     justify-content: center;
     align-items: center;
     border-radius: 0.4rem;
     cursor: pointer;
+    flex-shrink: 0;
     &:hover {
         background-color: var(--dark_825_color);
     }
@@ -95,4 +97,5 @@
 .external_link_svg {
     color: var(--dark_500_color);
     width: 1.6rem;
+    flex-shrink: 0;
 }
