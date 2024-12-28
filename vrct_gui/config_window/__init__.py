@@ -1,1 +1,0 @@
-from .ConfigWindow import ConfigWindow

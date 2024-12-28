@@ -1,0 +1,40 @@
+.add_remove_target_language_container {
+    width: 100%;
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.remove_target_language_button, .add_target_language_button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+    background-color: var(--dark_825_color);
+    &:hover {
+        background-color: var(--dark_875_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+    &.is_disabled {
+        pointer-events: none;
+        .remove_svg, .add_svg {
+            color: var(--dark_700_color);
+        }
+    }
+}
+
+.remove_target_language_button {
+    border-radius: 0 0 0 0.4rem;
+
+}
+.add_target_language_button {
+    border-radius: 0 0 0.4rem 0;
+}
+
+.remove_svg, .add_svg {
+    width: 0.8rem;
+    color: var(--dark_200_color);
+}

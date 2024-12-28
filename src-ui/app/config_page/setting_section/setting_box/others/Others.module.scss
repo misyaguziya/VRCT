@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    gap: 6.4rem;
+    flex-direction: column;
+}
+
+.auto_export_message_logs_container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    align-items: center;
+    gap: 2rem;
+    &.flex_column {
+        flex-direction: column;
+    }
+    border-bottom: solid 0.1rem var(--dark_800_color);
+}
+
+.auto_export_message_logs_switch_section_container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    align-items: center;
+    gap: 2rem;
+}
