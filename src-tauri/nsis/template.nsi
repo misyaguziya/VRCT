@@ -858,6 +858,24 @@ Section Uninstall
     Delete "$INSTDIR\\{{this}}"
   {{/each}}
 
+  ; Dlete config.json
+  Delete "$INSTDIR\config.json"
+
+  ; Delete process.log
+  Delete "$INSTDIR\process.log"
+
+  ; Delete errror.log
+  Delete "$INSTDIR\error.log"
+
+  ; Delete update.exe
+  Delete "$INSTDIR\update.exe"
+
+  ; Delete log files
+  RmDir /r "$INSTDIR\logs"
+
+  ; Delete weights files
+  RmDir /r "$INSTDIR\weights"
+
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"
 
