@@ -73,6 +73,7 @@
     flex-direction: column;
     &.sent_message {
         align-items: end;
+        text-align: end;
     }
     &.received_message {
         align-items: start;
