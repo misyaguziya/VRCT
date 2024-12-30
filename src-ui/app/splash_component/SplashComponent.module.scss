@@ -5,19 +5,32 @@
     position: relative;
 }
 
-.announcements_button {
+.announcements_button_wrapper {
     position: absolute;
     top: 16px;
     left: 20px;
-    border: 1px solid var(--dark_600_color);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    &.is_shown {
+        opacity: 1;
+    }
+}
+.announcements_button {
+    border: 1px solid var(--dark_700_color);
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 6px;
-    padding: 6px 8px;
+    padding: 4px 8px;
     border-radius: 4px;
     &:hover {
-        background-color: var(--dark_750_color);
+        background-color: var(--dark_825_color);
+        & .announcements_label {
+            color: var(--dark_basic_text_color);
+        }
+        & .announcements_link_svg {
+            color: var(--primary_300_color);
+        }
     }
     &:active {
         background-color: var(--dark_850_color);
@@ -27,6 +40,12 @@
 
 .announcements_label {
     font-size: 12px;
+    color: var(--dark_400_color);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    &.is_labels_active {
+        opacity: 1;
+    }
 }
 .announcements_link_svg {
     width: 20px;
