@@ -43,3 +43,8 @@ svg {
 p {
     white-space: pre-wrap;
 }
+img {
+    user-select: none;
+    -webkit-user-drag: none;
+    -webkit-user-select: none;
+}
