@@ -15,6 +15,7 @@ import {
     DownloadModelsContainer,
     DeeplAuthKeyContainer,
     DropdownMenuContainer,
+    ComputeDeviceContainer,
 } from "../_templates/Templates";
 
 export const Translation = () => {
@@ -70,6 +71,8 @@ const CTranslate2WeightType_Box = () => {
     );
 };
 
+// Duplicate
+import { useComputeMode } from "@logics_common";
 const CTranslation2ComputeDevice_Box = () => {
     const { t } = useTranslation();
     const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useSelectedCTranslate2ComputeDevice();
@@ -83,6 +86,20 @@ const CTranslation2ComputeDevice_Box = () => {
     const list_for_ui = transformDeviceArray(currentSelectableCTranslate2ComputeDeviceList.data);
 
     const target_index = findKeyByDeviceValue(currentSelectableCTranslate2ComputeDeviceList.data, currentSelectedCTranslate2ComputeDevice.data);
+
+
+    const { currentComputeMode } = useComputeMode();
+    if (currentComputeMode.data === "cpu") {
+        return (
+            <ComputeDeviceContainer
+                label={t("config_page.translation.ctranslate2_compute_device.label")}
+                selected_id={target_index}
+                list={list_for_ui}
+                selectFunction={selectFunction}
+                state={currentSelectedCTranslate2ComputeDevice.state}
+            />
+        )
+    }
 
     return (
         <DropdownMenuContainer
