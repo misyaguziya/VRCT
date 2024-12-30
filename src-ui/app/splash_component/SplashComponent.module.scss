@@ -1,3 +1,10 @@
+.container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
 .announcements_button {
     position: absolute;
     top: 16px;
@@ -23,4 +30,41 @@
 }
 .announcements_link_svg {
     width: 20px;
+}
+
+
+
+.close_button_wrapper {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    width: 68px;
+    aspect-ratio: 1 / 1;
+    &:hover {
+        background-color: #bb4448;
+        & .x_mark_svg {
+            color: var(--dark_200_color);
+            transform: rotate(45deg);
+        }
+    }
+    &:active {
+        background-color: #9c3938;
+    }
+    transition: all 0.1s ease;
+}
+
+.close_button {
+    // width: 100%;
+    // height: 100%;
+}
+
+.x_mark_svg {
+    width: 24px;
+    transform: rotate(-45deg);
+    color: var(--dark_700_color);
+    transition: transform 0.3s ease;
 }

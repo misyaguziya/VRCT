@@ -3,13 +3,16 @@ import styles from "./SplashComponent.module.scss";
 import { StartUpProgressContainer } from "./start_up_progress_container/StartUpProgressContainer/";
 import { DownloadModelsContainer } from "./download_models_container/DownloadModelsContainer/";
 import MegaphoneSvg from "@images/megaphone.svg?react";
+import XMarkSvg from "@images/cancel.svg?react";
+import { appWindow } from "@tauri-apps/api/window";
 
 export const SplashComponent = () => {
     return (
-        <div>
+        <div className={styles.container}>
             <StartUpProgressContainer />
             <DownloadModelsContainer />
             <AnnouncementsContainer />
+            <CloseButtonContainer />
         </div>
     );
 };
@@ -37,5 +40,20 @@ const AnnouncementsContainer = () => {
                 <p className={styles.announcements_label}>{labels[currentLabelIndex]}</p>
             </button>
         </a>
+    );
+};
+
+
+const CloseButtonContainer = () => {
+    const close = () => {
+        appWindow.close();
+    };
+
+    return (
+        <button className={styles.close_button_wrapper} onClick={close}>
+            <div className={styles.close_button}>
+                <XMarkSvg className={styles.x_mark_svg}/>
+            </div>
+        </button>
     );
 };
