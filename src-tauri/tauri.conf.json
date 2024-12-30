@@ -75,7 +75,7 @@
         "nsis": {
           "template": "nsis/template.nsi",
           "license": "../LICENSE",
-          "installMode": "both",
+          "installMode": "currentUser",
           "displayLanguageSelector": true
         }
       }
