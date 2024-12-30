@@ -870,10 +870,13 @@ Section Uninstall
   ; Delete update.exe
   Delete "$INSTDIR\update.exe"
 
-  ; Delete log files
+  ; Delete _internal folder
+  RmDir /r "$INSTDIR\_internal"
+
+  ; Delete log folder
   RmDir /r "$INSTDIR\logs"
 
-  ; Delete weights files
+  ; Delete weights folder
   RmDir /r "$INSTDIR\weights"
 
   ; Delete uninstaller
