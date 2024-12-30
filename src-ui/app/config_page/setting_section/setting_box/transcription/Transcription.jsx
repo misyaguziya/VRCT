@@ -26,6 +26,7 @@ import {
     DownloadModelsContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
+    ComputeDeviceContainer,
 } from "../_templates/Templates";
 
 import {
@@ -326,6 +327,9 @@ const WhisperWeightType_Box = () => {
     );
 };
 
+
+// Duplicate
+import { useComputeMode } from "@logics_common";
 const WhisperComputeDevice_Box = () => {
     const { t } = useTranslation();
     const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useSelectedWhisperComputeDevice();
@@ -340,6 +344,19 @@ const WhisperComputeDevice_Box = () => {
 
     const target_index = findKeyByDeviceValue(currentSelectableWhisperComputeDeviceList.data, currentSelectedWhisperComputeDevice.data);
 
+
+    const { currentComputeMode } = useComputeMode();
+    if (currentComputeMode.data === "cpu") {
+        return (
+            <ComputeDeviceContainer
+                label={t("config_page.transcription.whisper_compute_device.label")}
+                selected_id={target_index}
+                list={list_for_ui}
+                selectFunction={selectFunction}
+                state={currentSelectedWhisperComputeDevice.state}
+            />
+        )
+    }
 
     return (
         <DropdownMenuContainer
