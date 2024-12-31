@@ -170,113 +170,6 @@ Function PageLeaveChooseLanguage
     ${EndIf}
 FunctionEnd
 
-; 4-2. Page Download Translate Model Weight
-Var DropListCTranslate2DownloadWeightType
-Var SelectedCTranslate2DownloadWeightType
-Var DialogTranslate
-Page custom PageTranslate PageLeaveTranslate
-Function PageTranslate
-    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Set to use the translation function (can be changed later)."
-    nsDialogs::Create 1018
-    Pop $DialogTranslate
-
-    ${If} $DialogTranslate == error
-        Abort
-    ${EndIf}
-
-    ${NSD_CreateLabel} 0 21u 33% 12u "Select AI Model Size"
-    ${NSD_CreateDropList} 33% 20u 40% 12u ""
-    Pop $DropListCTranslate2DownloadWeightType
-    ${NSD_CB_AddString} $DropListCTranslate2DownloadWeightType "Basic model(418MB)"
-    ${NSD_CB_AddString} $DropListCTranslate2DownloadWeightType "High accuracy model(1.3GB)"
-    ${NSD_CB_SelectString} $DropListCTranslate2DownloadWeightType "Basic model(418MB)"
-    StrCpy $SelectedCTranslate2DownloadWeightType "small"
-    nsDialogs::Show
-FunctionEnd
-
-Function PageLeaveTranslate
-    ${NSD_GetText} $CheckboxCTranslate2DownloadWeight $0
-    ${If} "Basic model(418MB)" == $0
-        StrCpy $SelectedCTranslate2DownloadWeightType "small"
-    ${ElseIf} "High accuracy model(1.3GB)" == $0
-        StrCpy $SelectedCTranslate2DownloadWeightType "large"
-    ${EndIf}
-FunctionEnd
-
-; 4-3. Page Download Transcript Model Weight
-Var DropLListTranscriptEngines
-Var SelectedTranscriptEngine
-Var DropListWhisperDownloadWeightType
-Var SelectedWhisperDownloadWeightType
-Var DialogTranscript
-Page custom PageTranscript PageLeaveTranscript
-Function PageTranscript
-    !insertmacro MUI_HEADER_TEXT "Initial Settings" "Set to use the transcript engine (can be changed later)."
-    nsDialogs::Create 1018
-    Pop $DialogTranscript
-
-    ${If} $DialogTranscript == error
-        Abort
-    ${EndIf}
-
-    ${NSD_CreateLabel} 0 21u 33% 12u "Select Transcript Engine"
-    ${NSD_CreateDropList} 33% 20u 33% 12u ""
-    Pop $DropLListTranscriptEngines
-    ${NSD_CB_AddString} $DropLListTranscriptEngines "Google"
-    ${NSD_CB_AddString} $DropLListTranscriptEngines "Wishper"
-    ${NSD_CB_SelectString} $DropLListTranscriptEngines "Google"
-    ${NSD_CreateLabel} 0 52u 33% 12u "Select AI Model Size"
-    ${NSD_CreateDropList} 33% 50u 40% 12u ""
-    Pop $DropListWhisperDownloadWeightType
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "tiny model(74.5MB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "base model(141MB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "small model(463MB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "medium model(1.42GB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "large-v1 model(2.87GB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "large-v2 model(2.87GB)"
-    ${NSD_CB_AddString} $DropListWhisperDownloadWeightType "large-v3 model(2.87GB)"
-    ${NSD_CB_SelectString} $DropListWhisperDownloadWeightType "base model(141MB)"
-
-    StrCpy $SelectedWhisperDownloadWeightType "base"
-    EnableWindow $DropListWhisperDownloadWeightType 0
-    ${NSD_OnChange} $DropLListTranscriptEngines OnDropListWishperDownloadWeightClick
-    nsDialogs::Show
-FunctionEnd
-
-Function PageLeaveTranscript
-    ${NSD_GetText} $DropLListTranscriptEngines $0
-    ${If} $0 == "Google"
-        StrCpy $SelectedTranscriptEngine "Google"
-    ${Else}
-        StrCpy $SelectedTranscriptEngine "Wishper"
-    ${EndIf}
-    ${NSD_GetText} $DropListWhisperDownloadWeightType $0
-    ${If} "tiny model(74.5MB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "tiny"
-    ${ElseIf} "base model(141MB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "base"
-    ${ElseIf} "small model(463MB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "small"
-    ${ElseIf} "medium model(1.42GB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "medium"
-    ${ElseIf} "large-v1 model(2.87GB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "large-v1"
-    ${ElseIf} "large-v2 model(2.87GB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "large-v2"
-    ${ElseIf} "large-v3 model(2.87GB)" == $0
-        StrCpy $SelectedWhisperDownloadWeightType "large-v3"
-    ${EndIf}
-FunctionEnd
-
-Function OnDropListWishperDownloadWeightClick
-    ${NSD_GetText} $DropLListTranscriptEngines $0
-    ${If} $0 == "Wishper"
-        EnableWindow $DropListWhisperDownloadWeightType 1
-    ${Else}
-        EnableWindow $DropListWhisperDownloadWeightType 0
-    ${EndIf}
-FunctionEnd
-
 !insertmacro MUI_PAGE_COMPONENTS
 
 ; 4-4. Custom page to ask user if he wants to reinstall/uninstall
@@ -796,7 +689,7 @@ Function .onInstSuccess
       nsis_tauri_utils::RunAsUser "$INSTDIR\${MAINBINARYNAME}.exe" "$R0"
   run_done:
 
-  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage", "SELECTED_TRANSCRIPTION_ENGINE": "$SelectedTranscriptEngine", "CTRANSLATE2_WEIGHT_TYPE": "$SelectedCTranslate2DownloadWeightType", "WHISPER_WEIGHT_TYPE": "$SelectedWhisperDownloadWeightType"}'
+  StrCpy $1 '{"UI_LANGUAGE": "$SelectedLangage"}'
   FileOpen $0 "$INSTDIR\config.json" w
   FileWrite $0 $1
   FileClose $0
