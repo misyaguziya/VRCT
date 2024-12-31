@@ -15,10 +15,10 @@ export const RightSideComponents = () => {
             <OpenOverlayQuickSetting />
             <SoftwareUpdateAvailableButton />
             <a
-            className={styles.help_and_info_button}
-            href="https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
-            target="_blank"
-            rel="noreferrer"
+                className={styles.help_and_info_button}
+                href="https://docs.google.com/spreadsheets/d/1_L5i-1U6PB1dnaPPTE_5uKMfqOpkLziPyRkiMLi4mqU/edit?usp=sharing"
+                target="_blank"
+                rel="noreferrer"
             >
                 <HelpSvg className={styles.help_svg} />
             </a>
