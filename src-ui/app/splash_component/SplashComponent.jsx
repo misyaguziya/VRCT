@@ -18,7 +18,7 @@ export const SplashComponent = () => {
     );
 };
 
-const SHOW_MEGAPHONE_TIME = 1000;
+const SHOW_MEGAPHONE_TIME = 500;
 
 const AnnouncementsContainer = () => {
     const labels = ["Check the Latest Status", "最新の状況を確認"];
@@ -33,7 +33,7 @@ const AnnouncementsContainer = () => {
 
         const labelsTimeout = setTimeout(() => {
             setIsLabelsActive(true);
-        }, SHOW_MEGAPHONE_TIME + 500);
+        }, SHOW_MEGAPHONE_TIME + 15000);
 
         let labelInterval;
         if (is_labels_active) {
@@ -52,14 +52,17 @@ const AnnouncementsContainer = () => {
 
     return (
         <a
-            className={clsx(styles.announcements_button_wrapper, { [styles.is_shown]: is_shown })}
+            className={clsx(styles.announcements_button_wrapper, {
+                [styles.is_shown]: is_shown,
+                [styles.is_labels_active]: is_labels_active,
+            })}
             href="https://docs.google.com/spreadsheets/d/1_L5i-1U6PB1dnaPPTE_5uKMfqOpkLziPyRkiMLi4mqU/edit?usp=sharing"
             target="_blank"
             rel="noreferrer"
         >
             <button className={styles.announcements_button}>
                 <MegaphoneSvg className={styles.announcements_link_svg} />
-                <p className={clsx(styles.announcements_label, { [styles.is_labels_active]: is_labels_active })}>
+                <p className={styles.announcements_label}>
                     {labels[currentLabelIndex]}
                 </p>
             </button>
