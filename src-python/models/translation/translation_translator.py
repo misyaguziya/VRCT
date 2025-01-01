@@ -6,7 +6,7 @@ from .translation_utils import ctranslate2_weights
 
 import ctranslate2
 import transformers
-from utils import errorLogging
+from utils import errorLogging, getBestComputeType
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -37,7 +37,7 @@ class Translator():
         weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
         tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
 
-        compute_type = "int8" if device == "cpu" else "float16"
+        compute_type = getBestComputeType(device, device_index)
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
             device=device,
