@@ -22,11 +22,11 @@
     bottom: 0;
     left: 0;
     border-radius: 0.4rem;
-    background-color:  (#00000044);
+    background-color: var(--dark_1000_color_66);
     backdrop-filter: blur(4rem);
     border: solid 0.1rem var(--dark_700_color);
     &:hover {
-        background-color:  (#00000088);
+        background-color: var(--dark_1000_color_aa);
     }
     &:active {
         backdrop-filter: blur(1.4rem);
@@ -35,7 +35,6 @@
 
 .edit_button {
     padding: 0.8rem 1.2rem;
-    color: var(--dark_basic_text_color);
     height: 100%;
     width: 100%;
     font-size: 1.4rem;
@@ -62,7 +61,6 @@
 }
 
 .save_button_label {
-    color: var(--dark_basic_text_color);
     font-size: 1.4rem;
 }
 
@@ -91,7 +89,6 @@
 
 .open_webpage_text {
     font-size: 1.2rem;
-    color: var(--dark_basic_text_color);
 }
 
 .external_link_svg {

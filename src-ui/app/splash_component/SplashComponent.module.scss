@@ -22,13 +22,13 @@
             animation: appear .3s ease;
         }
         & .announcements_link_svg {
-            color: var(--dark_basic_text_color);
+            color: var(--dark_200_color);
         }
     }
     &:hover {
         background-color: var(--dark_825_color);
         & .announcements_label {
-            color: var(--dark_basic_text_color);
+            color: var(--dark_200_color);
         }
         & .announcements_link_svg {
             color: var(--primary_300_color);
@@ -79,14 +79,14 @@
     width: 68px;
     aspect-ratio: 1 / 1;
     &:hover {
-        background-color: #bb4448;
+        background-color: var(--error_bc_color);
         & .x_mark_svg {
             color: var(--dark_200_color);
             transform: rotate(45deg);
         }
     }
     &:active {
-        background-color: #9c3938;
+        background-color: var(--error_bc_active_color);
     }
     transition: all 0.1s ease;
 }
