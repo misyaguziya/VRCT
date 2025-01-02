@@ -4,6 +4,7 @@ from typing import Callable
 import huggingface_hub
 from faster_whisper import WhisperModel
 import logging
+from utils import getBestComputeType
 
 logger = logging.getLogger('faster_whisper')
 logger.setLevel(logging.CRITICAL)
@@ -73,7 +74,7 @@ def downloadWhisperWeight(root, weight_type, callback=None, end_callback=None):
 
 def getWhisperModel(root, weight_type, device="cpu", device_index=0):
     path = os_path.join(root, "weights", "whisper", weight_type)
-    compute_type = "int8" if device == "cpu" else "float16"
+    compute_type = getBestComputeType(device, device_index)
     return WhisperModel(
         path,
         device=device,
