@@ -20,6 +20,10 @@
 
     --sent_400_color: #6197b4;
     --received_300_color: #a861b4;
+    --error_bc_color: #bb4448;
+    --error_bc_active_color: #9c3938;
+    --success_bc_color: #368777;
+    --waring_color: #cb944f;
 
     --dark_basic_text_color: #f2f2f2;
     --dark_100_color: #f5f7fb;
@@ -48,8 +52,11 @@
     --dark_975_color: #1a1b1d;
     --dark_1000_color: #151517;
 
-    --dark_825_color_cc: #434447cc;
     --dark_550_color_22: #94959922;
+    --dark_825_color_cc: #434447cc;
+    --dark_1000_color_66: #15151766;
+    --dark_1000_color_aa: #151517aa;
+    --dark_1000_color_dd: #151517dd;
 
 
     --title_bar_height: 2rem;

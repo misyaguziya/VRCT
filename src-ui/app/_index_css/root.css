@@ -3,7 +3,7 @@
 
 :root {
     font-size: 62.5%;
-    color: #F2F2F2;
+    color: var(--dark_basic_text_color);
 }
 
 * {
