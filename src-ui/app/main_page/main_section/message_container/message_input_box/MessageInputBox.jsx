@@ -69,7 +69,7 @@ export const MessageInputBox = () => {
             if (history_index > -1) {
                 const new_index = history_index - 1;
                 setHistoryIndex(new_index);
-                setInputValue(
+                updateMessageInputValue(
                     new_index >= 0
                         ? message_history[message_history.length - 1 - new_index]
                         : ""
