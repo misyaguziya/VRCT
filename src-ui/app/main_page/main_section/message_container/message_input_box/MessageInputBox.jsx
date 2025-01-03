@@ -3,8 +3,7 @@ import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics_common";
 import { useSendMessageButtonType, useEnableAutoClearMessageInputBox } from "@logics_configs";
-import { store } from "@store";
-import { scrollToBottom } from "@utils";
+import { useMessageLogScroll } from "@logics_main";
 
 export const MessageInputBox = () => {
     const [message_history, setMessageHistory] = useState([]);
@@ -20,6 +19,8 @@ export const MessageInputBox = () => {
 
     const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
     const { currentSendMessageButtonType } = useSendMessageButtonType();
+
+    const { scrollToBottom } = useMessageLogScroll();
 
     useEffect(() => {
         if (currentMessageLogs.data) {
@@ -40,7 +41,7 @@ export const MessageInputBox = () => {
         if (currentEnableAutoClearMessageInputBox.data) updateMessageInputValue("");
 
         setTimeout(() => {
-            scrollToBottom(store.log_box_ref);
+            scrollToBottom();
         }, 10);
 
         setHistoryIndex(-1);
