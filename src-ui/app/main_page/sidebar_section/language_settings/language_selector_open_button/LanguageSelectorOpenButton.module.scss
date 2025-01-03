@@ -57,7 +57,6 @@
 
 .selected_language {
     font-size: 1.2rem;
-    color: var(--dark_basic_text_color);
 }
 
 .arrow_left_svg {
@@ -66,7 +65,6 @@
     margin: 0 0.2rem;
     transform: rotate(180deg);
     width: 1.6rem;
-    color: var(--dark_basic_text_color);
     &.reverse {
         transform: rotate(0deg);
     }

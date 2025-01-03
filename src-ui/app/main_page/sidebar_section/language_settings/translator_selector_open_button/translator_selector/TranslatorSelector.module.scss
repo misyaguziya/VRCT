@@ -3,8 +3,7 @@
     bottom: 100%;
     width: 100%;
     height: 26rem;
-    background-color:  (#000000dd);
-    // background-color:  (var(--dark_875_color) + 80);
+    background-color:  var(--dark_1000_color_dd);
     backdrop-filter: blur(0.1rem);
     display: flex;
     justify-content: center;
@@ -75,7 +74,7 @@ $box_size: 6.8rem;
     bottom: 0;
     width: 100%;
     height: 100%;
-    background-color:  (#22222233);
+    background-color: var(--dark_1000_color_66);
     display: flex;
     justify-content: center;
     align-items: start;
@@ -87,5 +86,4 @@ $box_size: 6.8rem;
     font-size: 1.4rem;
     text-align: center;
     text-wrap: balance;
-    color: var(--dark_basic_text_color);
 }

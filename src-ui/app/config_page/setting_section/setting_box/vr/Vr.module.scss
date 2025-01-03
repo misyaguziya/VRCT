@@ -39,7 +39,7 @@
         background-color: var(--dark_850_color);
     }
     &.is_selected .controller_switcher_label {
-        color: var(--dark_basic_text_color);
+        color: var(--dark_200_color);
     }
 }
 .controller_switcher_label {
@@ -92,7 +92,6 @@
     transform: translateX(10%) rotate(90deg);
 }
 .sample_text_button_label {
-    color: var(--dark_basic_text_color);
     position: absolute;
     left: 50%;
     top: 110%;
@@ -281,7 +280,6 @@
 }
 
 .restore_default_settings_button {
-    color: var(--dark_basic_text_color);
     font-size: 1.2rem;
     margin-top: 6rem;
     padding: 0.8rem;
