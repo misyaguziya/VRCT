@@ -71,12 +71,13 @@
 .message_box {
     display: flex;
     flex-direction: column;
-    width: 100%;
     &.sent_message {
+        width: 100%;
         align-items: end;
         text-align: end;
     }
     &.received_message {
+        width: 100%;
         align-items: start;
     }
 }
