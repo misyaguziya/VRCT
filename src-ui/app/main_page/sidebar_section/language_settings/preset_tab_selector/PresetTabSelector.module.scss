@@ -21,7 +21,7 @@
     }
     &.is_selected {
         background-color: var(--dark_800_color);
-        color: var(--dark_basic_text_color);
+        color: var(--dark_200_color);
         cursor: default;
         pointer-events: none;
     }

@@ -61,10 +61,10 @@
 }
 .close_button {
     &:hover {
-        background-color: #bb4448;
+        background-color: var(--error_bc_color);
     }
     &:active {
-        background-color: #9c3938;
+        background-color: var(--error_bc_active_color);
     }
 }
 
