@@ -90,19 +90,19 @@
             border-radius: 0.4rem;
         }
         &.is_latest_version_already {
-            background-color: var(--dark_800_color);
+            background-color: var(--dark_825_color);
             pointer-events: none;
         }
     }
 }
 
 .deny_button {
-    background-color: var(--dark_800_color);
+    background-color: var(--dark_825_color);
     &:hover {
-        background-color: var(--dark_700_color);
+        background-color: var(--dark_800_color);
     }
     &:active {
-        background-color: var(--dark_800_color);
+        background-color: var(--dark_850_color);
     }
 }
 
