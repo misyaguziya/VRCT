@@ -4,10 +4,9 @@ import {
     useWindow,
 } from "@logics_common";
 
-// import React from "react";
-
 import {
     KeyEventController,
+    GlobalHotKeyController,
     StartPythonController,
     UiLanguageController,
     ConfigPageCloseTriggerController,
@@ -34,6 +33,7 @@ export const App = () => {
     return (
         <div className={styles.container}>
             <KeyEventController />
+            <GlobalHotKeyController />
             <StartPythonController />
             <UiLanguageController />
             <ConfigPageCloseTriggerController />
