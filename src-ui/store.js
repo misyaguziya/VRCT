@@ -18,6 +18,7 @@ export const store = {
     config_page: null,
     setting_box_scroll_container: null,
     log_box_ref: null,
+    text_area_ref: null,
     is_applied_init_message_box_height: false,
 };
 
