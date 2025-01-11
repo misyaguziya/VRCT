@@ -51,6 +51,8 @@ export { useOverlayShowOnlyTranslatedMessages } from "./vr/useOverlayShowOnlyTra
 export { useOverlayLargeLogSettings } from "./vr/useOverlayLargeLogSettings";
 export { useSendTextToOverlay } from "./vr/useSendTextToOverlay";
 
+export { useHotkeys } from "./hotkeys/useHotkeys";
+
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
 
