@@ -94,6 +94,7 @@ config_page:
         transcription: Transcription
         vr: VR
         others: Others
+        hotkeys: Hotkeys
         advanced_settings: Advanced Settings
         supporters: Supporters
         about_vrct: About VRCT

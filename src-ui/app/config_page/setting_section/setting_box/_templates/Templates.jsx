@@ -8,6 +8,7 @@ import {
     Slider,
     SwitchBox,
     Entry,
+    HotkeysEntry,
     RadioButton,
     OpenWebpage_DeeplAuthKey,
     DeeplAuthKey,
@@ -73,6 +74,10 @@ export const SwitchBoxContainer = (props) => (
 
 export const EntryContainer = (props) => (
     <CommonContainer Component={Entry} {...props} add_break_point={false} />
+);
+
+export const HotkeysEntryContainer = (props) => (
+    <CommonContainer Component={HotkeysEntry} {...props} add_break_point={false} />
 );
 
 export const RadioButtonContainer = (props) => (

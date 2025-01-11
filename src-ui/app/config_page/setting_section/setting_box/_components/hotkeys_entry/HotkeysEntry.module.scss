@@ -1,0 +1,13 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.delete_button {
+    padding: 0.8rem;
+    font-size: 1.4rem;
+    background-color: var(--dark_800_color);
+    flex-shrink: 0;
+}

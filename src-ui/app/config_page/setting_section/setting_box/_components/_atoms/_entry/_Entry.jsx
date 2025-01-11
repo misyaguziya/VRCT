@@ -8,16 +8,22 @@ const _Entry = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         focus: () => {
             inputRef.current.focus();
+        },
+        blur: () => {
+            inputRef.current.blur();
         }
     }));
     const input_class_names = clsx(styles.entry_input_area, {
-        [styles.is_disabled]: props.is_disabled
+        [styles.is_disabled]: props.is_disabled,
+    });
+    const input_wrapper_class_names = clsx(styles.entry_wrapper, {
+        [styles.is_activated]: props.is_activated,
     });
 
     return (
         <div className={styles.entry_container}>
             <div
-                className={styles.entry_wrapper}
+                className={input_wrapper_class_names}
                 style={{width: props.width }}
             >
                 <input
@@ -25,6 +31,7 @@ const _Entry = forwardRef((props, ref) => {
                     className={input_class_names}
                     value={props.ui_variable === null ? "" : props.ui_variable}
                     onChange={(e) => props.onChange(e)}
+                    {...props}
                 />
             </div>
         </div>
