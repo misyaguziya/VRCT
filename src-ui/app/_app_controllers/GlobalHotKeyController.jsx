@@ -27,15 +27,12 @@ export const GlobalHotKeyController = () => {
             const shortcut_raw = currentHotkeys.data.toggle_active_vrct;
             console.log(shortcut_raw);
 
-
             if (!shortcut_raw) {
                 console.warn("No hotkey defined.");
                 return;
             }
 
-            // 入力文字列をTauriで使える形式に変換
             const shortcut = parseHotkey(shortcut_raw);
-            // const shortcut = "F9";
 
             try {
                 // 既存のショートカットをすべて解除
@@ -46,14 +43,14 @@ export const GlobalHotKeyController = () => {
                 if (!isAlreadyRegistered) {
                     await register(shortcut, async () => {
                         console.log(`Shortcut "${shortcut}" triggered, setting focus.`);
-                        // const minimized = await appWindow.isMinimized();
-                        // if (minimized === true) {
-                        //     appWindow.unminimize();
-                        //     await appWindow.setFocus();
-                        //     store.text_area_ref.current?.focus();
-                        // } else {
-                        //     appWindow.minimize();
-                        // }
+                        const minimized = await appWindow.isMinimized();
+                        if (minimized === true) {
+                            appWindow.unminimize();
+                            await appWindow.setFocus();
+                            store.text_area_ref.current?.focus();
+                        } else {
+                            appWindow.minimize();
+                        }
                     });
                     console.log(`Registered global shortcut: ${shortcut}`);
                 }
