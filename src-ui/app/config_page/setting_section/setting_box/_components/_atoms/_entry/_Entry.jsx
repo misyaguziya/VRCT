@@ -28,10 +28,16 @@ const _Entry = forwardRef((props, ref) => {
             >
                 <input
                     ref={inputRef}
+                    text={props.text ? props.text : "text"}
+                    placeholder={props.placeholder ? props.placeholder : ""}
                     className={input_class_names}
                     value={props.ui_variable === null ? "" : props.ui_variable}
-                    onChange={(e) => props.onChange(e)}
-                    {...props}
+                    onChange={(e) => props.onChange?.(e)}
+                    onFocus={(e) => props.onFocus?.(e)}
+                    onBlur={(e) => props.onBlur?.(e)}
+                    onKeyDown={(e) => props.onKeyDown?.(e)}
+                    onKeyUp={(e) => props.onKeyUp?.(e)}
+                    readOnly={props.readOnly === true ? true : false}
                 />
             </div>
         </div>

@@ -534,6 +534,19 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('HOTKEYS')
+    def HOTKEYS(self):
+        return self._HOTKEYS
+
+    @HOTKEYS.setter
+    def HOTKEYS(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.HOTKEYS.keys()):
+            for key, value in value.items():
+                if isinstance(value, list) or value is None:
+                    self._HOTKEYS[key] = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.HOTKEYS, immediate_save=True)
+
+    @property
     @json_serializable('MIC_AVG_LOGPROB')
     def MIC_AVG_LOGPROB(self):
         return self._MIC_AVG_LOGPROB
@@ -1026,6 +1039,9 @@ class Config:
         self._MIC_PHRASE_TIMEOUT = 3
         self._MIC_MAX_PHRASES = 10
         self._MIC_WORD_FILTER = []
+        self._HOTKEYS = {
+            "toggle_active_vrct": None,
+        }
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._AUTO_SPEAKER_SELECT = True

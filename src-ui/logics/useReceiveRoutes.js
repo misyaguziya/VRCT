@@ -68,6 +68,7 @@ import {
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
     useOverlayShowOnlyTranslatedMessages,
+    useHotkeys,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -167,6 +168,8 @@ export const useReceiveRoutes = () => {
     const { updateOverlayLargeLogSettings } = useOverlayLargeLogSettings();
     const { updateIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
     const { updateOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
+
+    const { updateHotkeys } = useHotkeys();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -457,6 +460,10 @@ export const useReceiveRoutes = () => {
         "/get/data/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
         "/set/enable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
         "/set/disable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+
+        // Hotkeys
+        "/get/data/hotkeys": updateHotkeys,
+        "/set/data/hotkeys": updateHotkeys,
 
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,

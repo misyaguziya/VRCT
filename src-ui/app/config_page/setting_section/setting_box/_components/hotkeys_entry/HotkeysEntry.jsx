@@ -1,15 +1,24 @@
 import styles from "./HotkeysEntry.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import DeleteSvg from "@images/cancel.svg?react";
+import { clsx } from "clsx";
 
 export const HotkeysEntry = (props) => {
     const [isAcceptingInput, setIsAcceptingInput] = useState(false);
-    const [displayValue, setDisplayValue] = useState(props.value[props.hotkey_id]);
+    const [displayValue, setDisplayValue] = useState("");
     const lastKeyRef = useRef(null);
     const isModifierOnlyRef = useRef(false);
     const entryRef = useRef(null);
     const pressedKeys = useRef(new Set());
     const keysRef = useRef([]);
+
+    useEffect(() => {
+        const init_display_value = props.value[props.hotkey_id] ? props.value[props.hotkey_id].join(" + ") : "";
+        setDisplayValue(init_display_value);
+    }, []);
+    console.log(props.value[props.hotkey_id]);
+
 
     const updateHotkeys = (keys) => {
         entryRef.current.blur();
@@ -85,23 +94,25 @@ export const HotkeysEntry = (props) => {
         setDisplayValue("");
     };
 
+    const is_pending = props.state === "pending";
     return (
         <div className={styles.container}>
+            {is_pending && <span className={styles.loader}></span>}
             <_Entry
                 ref={entryRef}
                 type="text"
-                placeholder="Press hotkeys keys"
                 onFocus={() => setIsAcceptingInput(true)}
                 onBlur={handleBlur}
                 onKeyDown={handleKeyDown}
                 onKeyUp={handleKeyUp}
-                value={displayValue}
+                ui_variable={displayValue}
                 width="20rem"
                 is_activated={isAcceptingInput}
+                is_disabled={is_pending}
                 readOnly
             />
-            <button className={styles.delete_button} onClick={handleDelete}>
-                Delete
+            <button className={clsx(styles.delete_button, { [styles.is_pending]: is_pending })} onClick={handleDelete}>
+                <DeleteSvg className={styles.delete_svg}/>
             </button>
         </div>
     );
