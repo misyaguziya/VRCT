@@ -997,6 +997,15 @@ class Controller:
         return response
 
     @staticmethod
+    def getHotkeys(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.HOTKEYS}
+
+    @staticmethod
+    def setHotkeys(data, *args, **kwargs) -> dict:
+        config.HOTKEYS = data
+        return {"status":200, "result":config.HOTKEYS}
+
+    @staticmethod
     def getSpeakerAvgLogprob(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 

@@ -183,6 +183,9 @@ mapping = {
     "/get/data/mic_max_phrases": {"status": True, "variable":controller.getMicMaxPhrases},
     "/set/data/mic_max_phrases": {"status": True, "variable":controller.setMicMaxPhrases},
 
+    "/get/data/hotkeys": {"status": True, "variable":controller.getHotkeys},
+    "/set/data/hotkeys": {"status": True, "variable":controller.setHotkeys},
+
     "/get/data/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/data/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 

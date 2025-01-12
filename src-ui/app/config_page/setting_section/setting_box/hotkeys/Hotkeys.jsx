@@ -19,6 +19,7 @@ const HotkeysBoxContainer = () => {
                 label="Toggle active input box"
                 hotkey_id="toggle_active_vrct"
                 value={currentHotkeys.data}
+                state={currentHotkeys.state}
                 setHotkeys={setHotkeys}
             />
         </div>
