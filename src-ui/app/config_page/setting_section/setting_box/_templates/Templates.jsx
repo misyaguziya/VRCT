@@ -77,7 +77,7 @@ export const EntryContainer = (props) => (
 );
 
 export const HotkeysEntryContainer = (props) => (
-    <CommonContainer Component={HotkeysEntry} {...props} add_break_point={false} />
+    <CommonContainer Component={HotkeysEntry} {...props} />
 );
 
 export const RadioButtonContainer = (props) => (

@@ -24,21 +24,21 @@ const HotkeysBoxContainer = () => {
                 setHotkeys={setHotkeys}
             />
             <HotkeysEntryContainer
-                label={t("config_page.hotkeys.toggle_translation.label")}
+                label={t("config_page.hotkeys.toggle_translation.label", {translation: t("main_page.translation")})}
                 hotkey_id="toggle_translation"
                 value={currentHotkeys.data}
                 state={currentHotkeys.state}
                 setHotkeys={setHotkeys}
             />
             <HotkeysEntryContainer
-                label={t("config_page.hotkeys.toggle_transcription_send.label")}
+                label={t("config_page.hotkeys.toggle_transcription_send.label", {transcription_send: t("main_page.transcription_send")})}
                 hotkey_id="toggle_transcription_send"
                 value={currentHotkeys.data}
                 state={currentHotkeys.state}
                 setHotkeys={setHotkeys}
             />
             <HotkeysEntryContainer
-                label={t("config_page.hotkeys.toggle_transcription_receive.label")}
+                label={t("config_page.hotkeys.toggle_transcription_receive.label", {transcription_receive: t("main_page.transcription_receive")})}
                 hotkey_id="toggle_transcription_receive"
                 value={currentHotkeys.data}
                 state={currentHotkeys.state}
