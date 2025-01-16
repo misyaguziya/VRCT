@@ -41,7 +41,7 @@ export const MessageInputBox = () => {
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
-        appWindow.minimize();
+        // appWindow.minimize();
 
         if (!currentMessageInputValue.data.trim()) return updateMessageInputValue("");
 

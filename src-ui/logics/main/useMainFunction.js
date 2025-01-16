@@ -6,7 +6,7 @@ import {
     useStore_TranscriptionReceiveStatus,
     useStore_ForegroundStatus,
 } from "@store";
-
+import { useCallback } from "react";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMainFunction = () => {
@@ -40,7 +40,11 @@ export const useMainFunction = () => {
             asyncStdoutToPython("/set/disable/translation");
         }
     };
-    const toggleTranslation = () => setTranslation(!currentTranslationStatus.data);
+    const toggleTranslation = () => {
+        updateTranslationStatus(prev_state => {
+            if (prev_state.state === "ok") setTranslation(!prev_state.data);
+        }, { set_state: "pending" });
+    };
 
     const setTranscriptionSend = (to_enable) => {
         pendingTranscriptionSendStatus();
@@ -50,7 +54,11 @@ export const useMainFunction = () => {
             asyncStdoutToPython("/set/disable/transcription_send");
         }
     };
-    const toggleTranscriptionSend = () => setTranscriptionSend(!currentTranscriptionSendStatus.data);
+    const toggleTranscriptionSend = () => {
+        updateTranscriptionSendStatus(prev_state => {
+            if (prev_state.state === "ok") setTranscriptionSend(!prev_state.data);
+        }, { set_state: "pending" });
+    };
 
     const setTranscriptionReceive = (to_enable) => {
         pendingTranscriptionReceiveStatus();
@@ -60,7 +68,11 @@ export const useMainFunction = () => {
             asyncStdoutToPython("/set/disable/transcription_receive");
         }
     };
-    const toggleTranscriptionReceive = () => setTranscriptionReceive(!currentTranscriptionReceiveStatus.data);
+    const toggleTranscriptionReceive = () => {
+        updateTranscriptionReceiveStatus(prev_state => {
+            if (prev_state.state === "ok") setTranscriptionReceive(!prev_state.data);
+        }, { set_state: "pending" });
+    };
 
 
     const toggleForeground = () => {

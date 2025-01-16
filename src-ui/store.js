@@ -55,20 +55,20 @@ const createAtomWithHook = (initialValue, base_name, options) => {
             });
         };
 
-        const updateAtom = (payload) => {
+        const updateAtom = (payload, options = {}) => {
+            const { remain_state = false, set_state } = options;
+
             setAtom((currentValue) => {
-                if (typeof payload === "function") {
-                    const updated_data = payload(currentValue);
-                    return {
-                        state: "ok",
-                        data: updated_data,
-                    };
-                } else {
-                    return {
-                        state: "ok",
-                        data: payload,
-                    };
-                }
+                const new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+
+                const updated_data = typeof payload === "function"
+                    ? payload(currentValue)
+                    : payload;
+
+                return {
+                    state: new_state,
+                    data: updated_data,
+                };
             });
         };
 
@@ -266,7 +266,10 @@ export const { atomInstance: Atom_EnableSendReceivedMessageToVrc, useHook: useSt
 
 // Hotkeys
 export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createAtomWithHook({
-    toggle_active_vrct: null,
+    toggle_vrct_visibility: null,
+    toggle_translation: null,
+    toggle_transcription_send: null,
+    toggle_transcription_receive: null,
 }, "Hotkeys");
 
 // Advanced Settings
