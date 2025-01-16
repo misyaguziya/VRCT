@@ -1,0 +1,41 @@
+@import "@scss_mixins";
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+}
+
+.delete_button {
+    padding: 0.4rem;
+    font-size: 1.4rem;
+    // background-color: var(--dark_800_color);
+    flex-shrink: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.2rem;
+    &:hover {
+        background-color: var(--dark_850_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+    &.is_pending {
+        pointer-events: none;
+        & .delete_svg {
+            color: var(--dark_600_color);
+        }
+    }
+}
+
+.delete_svg {
+    width: 2.2rem;
+    color: var(--error_bc_color);
+}
+
+.loader {
+    @include loader(2rem, 0.2rem, left, -2.2rem);
+}

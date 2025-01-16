@@ -92,6 +92,7 @@ config_page:
         translation: 翻訳
         transcription: 音声認識
         others: その他
+        hotkeys: ホットキー
         advanced_settings: 高度な設定
 
     device:
@@ -254,6 +255,16 @@ config_page:
         send_received_message_to_vrc:
             label: 受信したメッセージをVRChatに送信する
             desc: スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。
+
+    hotkeys:
+        toggle_vrct_visibility:
+            label: VRCTの最小化/アクティブ化の切り替え
+        toggle_translation:
+            label: '{{translation}}機能切り替え'
+        toggle_transcription_send:
+            label: '{{transcription_send}}機能切り替え'
+        toggle_transcription_receive:
+            label: '{{transcription_receive}}機能切り替え'
 
     advanced_settings:
         osc_ip_address:

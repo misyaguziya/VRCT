@@ -10,6 +10,7 @@ export const SidebarSection = () => {
                 <Tab tab_id="transcription" />
                 <Tab tab_id="vr" />
                 <Tab tab_id="others" />
+                <Tab tab_id="hotkeys" />
                 <Tab tab_id="advanced_settings" />
             </div>
             <div className={styles.separated_tabs_wrapper}>
