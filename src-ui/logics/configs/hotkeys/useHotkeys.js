@@ -12,7 +12,13 @@ export const useHotkeys = () => {
 
     const setHotkeys = (hotkeys) => {
         pendingHotkeys();
-        asyncStdoutToPython("/set/data/hotkeys", hotkeys);
+        const send_obj = {
+            ...currentHotkeys.data,
+            ...hotkeys,
+        };
+        asyncStdoutToPython("/set/data/hotkeys", send_obj);
+
+
     };
 
     return {

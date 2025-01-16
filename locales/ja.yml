@@ -255,6 +255,10 @@ config_page:
             label: 受信したメッセージをVRChatに送信する
             desc: スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。
 
+    hotkeys:
+        toggle_vrct_visibility:
+            label: VRCTの最小化/アクティブ化の切り替え
+
     advanced_settings:
         osc_ip_address:
             label: OSC IP Address

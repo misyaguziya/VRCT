@@ -3,6 +3,7 @@ import { register, unregisterAll, isRegistered } from "@tauri-apps/api/globalSho
 import { useEffect } from "react";
 import { store } from "@store";
 import { useHotkeys } from "@logics_configs";
+import { useMainFunction } from "@logics_main";
 
 // 修飾キーのパースを行う関数
 const parseHotkey = (hotkeyString) => {
@@ -22,40 +23,65 @@ const parseHotkey = (hotkeyString) => {
 export const GlobalHotKeyController = () => {
     const { currentHotkeys } = useHotkeys();
 
+    const {
+        toggleTranslation,
+        toggleTranscriptionSend,
+        toggleTranscriptionReceive,
+    } = useMainFunction();
+
     useEffect(() => {
         const registerShortcuts = async () => {
-            const shortcut_raw = currentHotkeys.data.toggle_active_vrct;
-            console.log(shortcut_raw);
-
-            if (!shortcut_raw) {
-                console.warn("No hotkey defined.");
-                return;
-            }
-
-            const shortcut = parseHotkey(shortcut_raw);
-
             try {
                 // 既存のショートカットをすべて解除
                 await unregisterAll();
 
-                // 新しいショートカットを登録
-                const isAlreadyRegistered = await isRegistered(shortcut);
-                if (!isAlreadyRegistered) {
-                    await register(shortcut, async () => {
-                        console.log(`Shortcut "${shortcut}" triggered, setting focus.`);
-                        const minimized = await appWindow.isMinimized();
-                        if (minimized === true) {
-                            appWindow.unminimize();
-                            await appWindow.setFocus();
-                            store.text_area_ref.current?.focus();
-                        } else {
-                            appWindow.minimize();
-                        }
-                    });
-                    console.log(`Registered global shortcut: ${shortcut}`);
+                const hotkeyEntries = Object.entries(currentHotkeys.data);
+
+                for (const [actionKey, hotkeyRaw] of hotkeyEntries) {
+                    if (!hotkeyRaw) continue;
+
+                    const shortcut = parseHotkey(hotkeyRaw);
+                    const isAlreadyRegistered = await isRegistered(shortcut);
+
+                    if (!isAlreadyRegistered) {
+                        await register(shortcut, async () => {
+                            console.log(`Shortcut for "${actionKey}" triggered.`);
+
+                            switch (actionKey) {
+                                case "toggle_vrct_visibility": {
+                                    const minimized = await appWindow.isMinimized();
+                                    if (minimized) {
+                                        appWindow.unminimize();
+                                        await appWindow.setFocus();
+                                        store.text_area_ref.current?.focus();
+                                    } else {
+                                        appWindow.minimize();
+                                    }
+                                    break;
+                                }
+                                case "toggle_translation": {
+                                    toggleTranslation();
+                                    break;
+                                }
+                                case "toggle_transcription_send": {
+                                    toggleTranscriptionSend();
+                                    break;
+                                }
+                                case "toggle_transcription_receive": {
+                                    toggleTranscriptionReceive();
+                                    break;
+                                }
+                                default: {
+                                    console.warn(`No handler defined for action: ${actionKey}`);
+                                    break;
+                                }
+                            }
+                        });
+                        console.log(`Registered global shortcut: ${shortcut} for action: ${actionKey}`);
+                    }
                 }
             } catch (error) {
-                console.error("Failed to register global shortcut:", error);
+                console.error("Failed to register global shortcuts:", error);
             }
         };
 
@@ -67,7 +93,7 @@ export const GlobalHotKeyController = () => {
                 console.error("Failed to unregister shortcuts:", error);
             });
         };
-    }, [currentHotkeys.data.toggle_active_vrct]); // 監視対象を明確に指定
+    }, [currentHotkeys.data]); // 監視対象を全体に変更
 
     return null;
 };

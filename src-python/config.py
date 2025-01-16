@@ -1040,7 +1040,10 @@ class Config:
         self._MIC_MAX_PHRASES = 10
         self._MIC_WORD_FILTER = []
         self._HOTKEYS = {
-            "toggle_active_vrct": None,
+            "toggle_vrct_visibility": None,
+            "toggle_translation": None,
+            "toggle_transcription_send": None,
+            "toggle_transcription_receive": None,
         }
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6

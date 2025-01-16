@@ -17,8 +17,6 @@ export const HotkeysEntry = (props) => {
         const init_display_value = props.value[props.hotkey_id] ? props.value[props.hotkey_id].join(" + ") : "";
         setDisplayValue(init_display_value);
     }, []);
-    console.log(props.value[props.hotkey_id]);
-
 
     const updateHotkeys = (keys) => {
         entryRef.current.blur();
@@ -35,9 +33,10 @@ export const HotkeysEntry = (props) => {
         const keys = [];
         const nonModifierKeys = [];
 
-        ["Ctrl", "Shift", "Alt", "Super"].forEach((modKey) => {
+        ["Ctrl", "Shift", "Alt", "Meta"].forEach((modKey) => {
             if (event[`${modKey.toLowerCase()}Key`] && !keys.includes(modKey)) {
-                keys.push(modKey);
+                let register_mod_key =  (modKey === "Meta") ? "Super" : modKey;
+                keys.push(register_mod_key);
             }
         });
 
@@ -80,6 +79,9 @@ export const HotkeysEntry = (props) => {
             );
             if (hasNonModifierKeys) {
                 updateHotkeys(keysRef.current);
+            } else {
+                const display_value = props.value[props.hotkey_id] ? props.value[props.hotkey_id].join(" + ") : "";
+                setDisplayValue(display_value);
             }
         }
     };
