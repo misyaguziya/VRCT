@@ -4,8 +4,6 @@ import {
     useWindow,
 } from "@logics_common";
 
-// import React from "react";
-
 import {
     KeyEventController,
     StartPythonController,
