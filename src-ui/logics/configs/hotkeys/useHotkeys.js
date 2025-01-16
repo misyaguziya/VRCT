@@ -2,6 +2,7 @@ import { appWindow } from "@tauri-apps/api/window";
 
 import { store, useStore_Hotkeys } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useNotificationStatus } from "@logics_common";
 import { useMainFunction } from "@logics_main";
 import { register, unregisterAll, isRegistered } from "@tauri-apps/api/globalShortcut";
 
@@ -19,14 +20,37 @@ export const useHotkeys = () => {
         pendingHotkeys();
         asyncStdoutToPython("/get/data/hotkeys");
     };
+    const { showNotification_Success, showNotification_Error, closeNotification } = useNotificationStatus();
 
     const setHotkeys = (hotkeys) => {
         pendingHotkeys();
-        const send_obj = {
-            ...currentHotkeys.data,
-            ...hotkeys,
-        };
-        asyncStdoutToPython("/set/data/hotkeys", send_obj);
+
+        const updatedHotkeys = { ...currentHotkeys.data, ...hotkeys };
+        const usedShortcuts = new Set();
+        const conflictingKeys = [];
+
+        for (const [actionKey, hotkey] of Object.entries(updatedHotkeys)) {
+            if (!hotkey) continue;
+
+            const shortcut = parseHotkey(hotkey);
+            if (usedShortcuts.has(shortcut)) {
+                showNotification_Error(`The hotkey ${shortcut} is already in use.`);
+                updatedHotkeys[actionKey] = null;
+                conflictingKeys.push(actionKey);
+            } else {
+                usedShortcuts.add(shortcut);
+            }
+        }
+
+        updateHotkeys(updatedHotkeys);
+
+        if (conflictingKeys.length === 0) {
+            asyncStdoutToPython("/set/data/hotkeys", updatedHotkeys);
+            closeNotification();
+            return true;
+        } else {
+            return false;
+        }
     };
 
     const registerShortcuts = async () => {
@@ -73,7 +97,7 @@ export const useHotkeys = () => {
                             }
                         }
                     });
-                    // console.log(`Registered global shortcut: ${shortcut} for action: ${actionKey}`);
+
                 }
             }
         } catch (error) {
