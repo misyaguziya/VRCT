@@ -20,7 +20,8 @@ export const HotkeysEntry = (props) => {
 
     const updateHotkeys = (keys) => {
         entryRef.current.blur();
-        props.setHotkeys({ [props.hotkey_id]: keys });
+        const result = props.setHotkeys({ [props.hotkey_id]: keys });
+        if (result === false) setDisplayValue("");
     };
 
     const processKey = (key) => {
