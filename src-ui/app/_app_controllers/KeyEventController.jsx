@@ -4,7 +4,9 @@ export const KeyEventController = () => {
     useEffect(() => {
         const handleKeydown = (event) => {
             if (
-                event.key === "F5" ||
+                event.key === "F5" || // Page reload
+                event.key === "F10" || // Focus thw window menu (maybe)
+                event.key === "F12" || // Open dev tool
                 (event.ctrlKey && event.key === "r") ||
                 (event.metaKey && event.key === "r")
             ) {
