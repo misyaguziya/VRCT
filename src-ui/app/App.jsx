@@ -7,6 +7,7 @@ import {
 import {
     KeyEventController,
     StartPythonController,
+    GlobalHotKeyController,
     UiLanguageController,
     ConfigPageCloseTriggerController,
     UiSizeController,
@@ -33,6 +34,7 @@ export const App = () => {
         <div className={styles.container}>
             <KeyEventController />
             <StartPythonController />
+            <GlobalHotKeyController />
             <UiLanguageController />
             <ConfigPageCloseTriggerController />
             <UiSizeController />
