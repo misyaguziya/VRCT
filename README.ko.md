@@ -52,7 +52,7 @@ Become a VRCT Supporter on:
 <br>
 <br>
 
-| [English](./README.md) | [日本語](./README.ja.md) | **한국어** |
+| [English](./README.md) | [日本語](./README.ja.md) | **한국어** | [繁體中文](./README.zh-Hant.md) |
 
 <h3>
 VRCT는 음성인식 및 번역 기능을 통해 VRChat의 대화를 지원하는 소프트웨어입니다.
