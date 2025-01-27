@@ -31,6 +31,19 @@ export const randomIntMinMax = (min, max) => {
 	return int;
 };
 
+export const randomMinMax = (min, max) => {
+    return Math.random() * (max - min) + min;
+};
+
+export const shuffleArray = (array) => {
+    const new_array = [...array];
+    for (let i = new_array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [new_array[i], new_array[j]] = [new_array[j], new_array[i]];
+    }
+    return new_array;
+};
+
 export const updateLabelsById = (data_array, updates) => {
     return data_array.map(item => {
         const update = updates.find(update_item => update_item.id === item.id);
