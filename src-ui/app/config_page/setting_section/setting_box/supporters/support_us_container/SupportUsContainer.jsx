@@ -5,7 +5,7 @@ import styles from "./SupportUsContainer.module.scss";
 
 export const SupportUsContainer = () => {
     return (
-        <div id="ttt" className={styles.support_us_container}>
+        <div id="support_us_container" className={styles.support_us_container}>
             <img className={styles.fanbox_img} src={fanbox_img} />
             <div className={styles.support_us_button_wrapper}>
                 <div className={styles.fanbox_wrapper}>
