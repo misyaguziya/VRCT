@@ -11,6 +11,7 @@ import {
 import json_data from "./data.json";
 
 const target_supporting_month = "2025-01";
+const calc_support_period = ["2024-10", "2024-11", "2024-12", "2025-01"];
 
 const SHUFFLE_INTERVAL_TIME = 20000;
 
@@ -142,9 +143,7 @@ export const SupportersWrapper = () => {
 
             const random_delay = `${randomMinMax(0.1, 6).toFixed(1)}s`;
 
-            const image_wrapper_classname = clsx(styles.supporter_image_wrapper, {
-                [styles.mogu_image]: target_plan === "もぐもぐ_2000",
-            });
+
 
             const file_name = is_and_you ? "and_you" : `supporter_${item.supporter_id}`;
             const label_img_src = getSupportersLabelsPath(file_name);
@@ -172,27 +171,38 @@ export const SupportersWrapper = () => {
                 </div>
             );
 
+
+
+            const supporter_image_wrapper_classname = clsx(styles.supporter_image_wrapper, {
+                [styles.mogu_image]: target_plan === "もぐもぐ_2000",
+            });
+
             return is_and_you ? (
-                <a href="#ttt">
+                <a href="#support_us_container">
+                    <div key={item.supporter_id} className={styles.supporter_image_container}>
+                        <div
+                            key={item.supporter_id}
+                            className={supporter_image_wrapper_classname}
+                            style={{ "--delay": random_delay }}
+                        >
+                            <img className={styles.supporter_image} src={img_src} />
+                            {supporterLabelComponent()}
+                            <AndYouIcon />
+                        </div>
+                    </div>
+
+                </a>
+            ): img_src ? (
+                <div key={item.supporter_id} className={styles.supporter_image_container}>
                     <div
                         key={item.supporter_id}
-                        className={image_wrapper_classname}
+                        className={supporter_image_wrapper_classname}
                         style={{ "--delay": random_delay }}
                     >
                         <img className={styles.supporter_image} src={img_src} />
                         {supporterLabelComponent()}
-                        <AndYouIcon />
                     </div>
-                </a>
-
-            ): img_src ? (
-                <div
-                    key={item.supporter_id}
-                    className={image_wrapper_classname}
-                    style={{ "--delay": random_delay }}
-                >
-                    <img className={styles.supporter_image} src={img_src} />
-                    {supporterLabelComponent()}
+                    <SupporterPeriodContainer settings={item}/>
                 </div>
             ) : null;
         });
@@ -229,4 +239,37 @@ const AndYouIcon = () => {
             <ArrowLeftSvg className={styles.arrow_left_svg} />
         </>
     );
+};
+
+const SupporterPeriodContainer = ({settings}) => {
+
+    const period_data = extractKeys(settings, calc_support_period);
+
+    return (
+        <div className={styles.supporter_period_container}>
+            {Object.entries(period_data).map(([key, item]) => {
+                if (item === "") return null;
+                const class_name = clsx(styles.period_box, {
+                    [styles.mogu_bar]: item === "もぐもぐ_2000",
+                    [styles.mochi_bar]: item === "もちもち_1000",
+                    [styles.fuwa_bar]: item === "ふわふわ_500",
+                    [styles.basic_bar]: item === "Basic_300",
+                });
+
+                return <div className={class_name}></div>
+            })}
+        </div>
+    );
+};
+
+
+
+const extractKeys = (data, keys_to_extract) => {
+    const result = {};
+    for (const key of keys_to_extract) {
+        if (key in data) {
+            result[key] = data[key];
+        }
+    }
+    return result;
 };
