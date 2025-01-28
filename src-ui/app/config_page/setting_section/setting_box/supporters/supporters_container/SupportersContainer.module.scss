@@ -1,0 +1,26 @@
+.supporters_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+.vrct_supporters_title {
+    height: 6rem;
+}
+
+.vrct_supporters_desc_end {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    color: var(--dark_300_color);
+}
+
+.progress_bar {
+    height: 0.2rem;
+    width: 0%;
+    &.progress_bar_active {
+        transition: width 20000ms linear;
+        background-color: var(--primary_400_color);
+        width: 100%;
+    }
+}
