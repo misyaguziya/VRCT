@@ -9,7 +9,6 @@ export const SupportersContainer = () => {
     return (
         <div className={styles.supporters_container}>
             <img className={styles.vrct_supporters_title} src={vrct_supporters_title} />
-            <p className={styles.vrct_supporters_desc}>{`VRCT3.0のアップデートに向けて、めちゃ大変な開発を支えてくれた "Early Supporters" です。\nThey are the 'Early Supporters' who supported us through the incredibly challenging development toward the VRCT3.0 update.`}</p>
             <ProgressBar />
             <SupportersWrapper />
             <ProgressBar />

@@ -1,22 +1,46 @@
-import fanbox_img from "@images/supporters/c_fanbox_1620x580.png";
-import fanbox_button from "@images/supporters/fanbox_button.png";
-import kofi_preparing from "@images/supporters/kofi_preparing.png";
+import top_img from "@images/supporters/patreon_1600x400px.png";
+import fanbox_logo from "@images/supporters/fanbox_logo.png";
+import kofi_logo from "@images/supporters/kofi_logo.png";
+import patreon_logo from "@images/supporters/patreon_logo.png";
 import styles from "./SupportUsContainer.module.scss";
+import { clsx } from "clsx";
 
 export const SupportUsContainer = () => {
     return (
         <div id="support_us_container" className={styles.support_us_container}>
-            <img className={styles.fanbox_img} src={fanbox_img} />
-            <div className={styles.support_us_button_wrapper}>
-                <div className={styles.fanbox_wrapper}>
-                    <a className={styles.fanbox_button} href="https://vrct-dev.fanbox.cc/" target="_blank" rel="noreferrer">
-                        <img style={{ height: "100%", width: "100%", objectFit: "contain" }} src={fanbox_button} />
+            <img className={styles.top_img} src={top_img} />
+            <div className={styles.support_buttons_wrapper}>
+                <div className={styles.support_us_button_wrapper}>
+                    <a className={styles.support_button} href="https://vrct-dev.fanbox.cc" target="_blank" rel="noreferrer">
+                        <img
+                            src={fanbox_logo}
+                            className={clsx(styles.support_img, styles.fanbox_logo)}
+                        />
+                        <div className={styles.spiral_top}></div>
+                        <div className={styles.spiral_bottom}></div>
                     </a>
-                    <p className={styles.mainly_japanese}>日本語 / Mainly Japanese</p>
+                    <a className={styles.support_button} href="https://ko-fi.com/vrct_dev" target="_blank" rel="noreferrer">
+                        <img
+                            src={kofi_logo}
+                            className={clsx(styles.support_img, styles.kofi_logo)}
+                        />
+                        <div className={styles.spiral_top}></div>
+                        <div className={styles.spiral_bottom}></div>
+                    </a>
+                    <a className={styles.support_button} href="https://www.patreon.com/vrct_dev" target="_blank" rel="noreferrer">
+                        <img
+                            src={patreon_logo}
+                            className={clsx(styles.support_img, styles.patreon_logo)}
+                        />
+                        <div className={styles.spiral_top}></div>
+                        <div className={styles.spiral_bottom}></div>
+                    </a>
                 </div>
-                <div className={styles.kofi_wrapper}>
-                    <img className={styles.kofi_preparing} src={kofi_preparing} />
-                    <p className={styles.mainly_english}>Mainly English</p>
+                <div className={styles.lines_container}>
+                    <div className={styles.line_basic}></div>
+                    <div className={styles.line_fuwa}></div>
+                    <div className={styles.line_mochi}></div>
+                    <div className={styles.line_mogu}></div>
                 </div>
             </div>
         </div>

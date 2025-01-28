@@ -178,10 +178,9 @@ export const SupportersWrapper = () => {
             });
 
             return is_and_you ? (
-                <a href="#support_us_container">
-                    <div key={item.supporter_id} className={styles.supporter_image_container}>
+                <a href="#support_us_container" key={item.supporter_id}>
+                    <div className={styles.supporter_image_container}>
                         <div
-                            key={item.supporter_id}
                             className={supporter_image_wrapper_classname}
                             style={{ "--delay": random_delay }}
                         >
@@ -195,7 +194,6 @@ export const SupportersWrapper = () => {
             ): img_src ? (
                 <div key={item.supporter_id} className={styles.supporter_image_container}>
                     <div
-                        key={item.supporter_id}
                         className={supporter_image_wrapper_classname}
                         style={{ "--delay": random_delay }}
                     >
@@ -219,9 +217,7 @@ export const SupportersWrapper = () => {
     }, []);
 
     return (
-        <div>
-            <div className={styles.supporters_wrapper}>{renderImages()}</div>
-        </div>
+        <div className={styles.supporters_wrapper}>{renderImages()}</div>
     );
 };
 
@@ -247,7 +243,7 @@ const SupporterPeriodContainer = ({settings}) => {
 
     return (
         <div className={styles.supporter_period_container}>
-            {Object.entries(period_data).map(([key, item]) => {
+            {Object.entries(period_data).map(([key, item], index) => {
                 if (item === "") return null;
                 const class_name = clsx(styles.period_box, {
                     [styles.mogu_bar]: item === "もぐもぐ_2000",
@@ -256,7 +252,7 @@ const SupporterPeriodContainer = ({settings}) => {
                     [styles.basic_bar]: item === "Basic_300",
                 });
 
-                return <div className={class_name}></div>
+                return <div key={index} className={class_name}></div>
             })}
         </div>
     );
