@@ -1,0 +1,33 @@
+.container {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 1.4rem;
+    font-size: 1.2rem;
+    color: var(--dark_400_color);
+}
+
+.wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    &.is_copied {
+        cursor: default;
+    }
+}
+
+.version_label {
+    font-size: 1.2rem;
+    color: var(--dark_400_color);
+}
+
+.copy_svg {
+    width: 1.4rem;
+    color: var(--dark_500_color);
+}
+
+.check_mark_svg {
+    width: 1.4rem;
+    color: var(--primary_300_color);
+}

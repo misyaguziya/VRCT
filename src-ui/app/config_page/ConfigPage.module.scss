@@ -24,11 +24,3 @@
     display: flex;
     padding-top: var(--config_page_topbar_height);
 }
-
-.software_version {
-    position: absolute;
-    bottom: 0.8rem;
-    left: 1.2rem;
-    font-size: 1.2rem;
-    color: var(--dark_400_color);
-}
