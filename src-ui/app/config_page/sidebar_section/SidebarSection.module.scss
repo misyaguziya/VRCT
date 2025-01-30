@@ -1,10 +1,15 @@
 .container {
     width: var(--config_page_sidebar_width);
     flex-shrink: 0;
+    padding: 0rem 0rem 5.8rem 1.2rem;
+}
+
+.scroll_container {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 0rem 0rem 5.8rem 1.2rem;
+    overflow-y: auto;
+    height: 100%;
     max-height: 60rem;
 }
 
