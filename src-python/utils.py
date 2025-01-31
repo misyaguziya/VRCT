@@ -3,6 +3,7 @@ from typing import Any
 import json
 import traceback
 import logging
+from logging.handlers import RotatingFileHandler
 
 from ctranslate2 import get_supported_compute_types
 
@@ -31,8 +32,17 @@ def setupLogger(name, log_file, level=logging.INFO):
     logger.setLevel(level)
     logger.propagate = False  # 親ロガーへの伝播を防ぐ
 
+    # filled with 10MB logs
+    max_log_size = 10 * 1024 * 1024  # 10MB
+
     # ハンドラーを作成
-    file_handler = logging.FileHandler(log_file, encoding="utf-8", delay=True)
+    file_handler = RotatingFileHandler(
+        log_file,
+        maxBytes=max_log_size,
+        backupCount=1,
+        encoding="utf-8",
+        delay=True
+        )
     file_handler.setLevel(level)
 
     # フォーマッターを設定
