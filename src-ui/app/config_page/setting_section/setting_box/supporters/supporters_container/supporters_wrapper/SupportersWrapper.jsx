@@ -57,8 +57,8 @@ export const SupportersWrapper = () => {
 
     const supporters_settings = currentSupportersData.data.supporters_settings;
 
-    const target_supporting_month = supporters_settings.target_supporting_month;
     const calc_support_period = supporters_settings.calc_support_period;
+    const target_supporting_month = calc_support_period.at(-1);
     const chato_ex_count = supporters_settings.chato_ex_count;
     const last_updated_local_date = new Date(supporters_settings.last_updated_utc_date)?.toString();
 
@@ -78,9 +78,7 @@ export const SupportersWrapper = () => {
         const filtered_data = json_data.supporters_data.filter((supporter) => {
             if (!supporter.supporter_id) return false;
 
-            const months = Object.keys(supporter).filter((key) =>
-                key.match(/^\d{4}-\d{2}$/)
-            );
+            const months = Object.keys(supporter).filter((key) => calc_support_period.includes(key));
             const has_valid_month = months.some((month) => supporter[month]);
             if (!has_valid_month) return false;
 
