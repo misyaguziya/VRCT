@@ -56,5 +56,9 @@ export { useHotkeys } from "./hotkeys/useHotkeys";
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
 
+
+export { useSupporters } from "./supporters/useSupporters";
+
+
 export { useSettingBoxScrollPosition } from "./useSettingBoxScrollPosition";
 export { useSoftwareVersion } from "./useSoftwareVersion";
