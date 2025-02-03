@@ -1,9 +1,10 @@
 .container {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    // flex: 1;
     gap: 1rem;
     justify-content: space-between;
+    width: 42rem;
 }
 $image_height: 2.8rem;
 $y_padding: 0.4rem;
@@ -32,6 +33,7 @@ $image_height_gap: 0.4rem;
 }
 .poster_showcase_world_img {
     height: $image_height;
+    flex-shrink: 0;
 }
 
 .pagination_container {
