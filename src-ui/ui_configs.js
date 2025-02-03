@@ -75,3 +75,6 @@ export const whisper_weight_type_status = [
     { id: "large-v2", label: "large-v2", is_downloaded: false, progress: null },
     { id: "large-v3", label: "large-v3", is_downloaded: false, progress: null },
 ];
+
+export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";
+export const supporters_images_url = "https://ShiinaSakamoto.github.io/vrct_supporters/assets/supporters";

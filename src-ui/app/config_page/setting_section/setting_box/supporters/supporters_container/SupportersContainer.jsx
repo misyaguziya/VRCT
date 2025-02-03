@@ -1,40 +1,28 @@
 import styles from "./SupportersContainer.module.scss";
-import { useState, useEffect } from "react";
-import vrct_supporters_title from "@images/supporters/vrct_supporters_title.png";
+import {  useEffect } from "react";
 import { SupportersWrapper } from "./supporters_wrapper/SupportersWrapper";
-import { clsx } from "clsx";
-const SHUFFLE_INTERVAL_TIME = 20000;
+import { useSupporters } from "@logics_configs";
+import { supporters_images_url } from "@ui_configs";
 
 export const SupportersContainer = () => {
-    return (
-        <div className={styles.supporters_container}>
-            <img className={styles.vrct_supporters_title} src={vrct_supporters_title} />
-            <ProgressBar />
-            <SupportersWrapper />
-            <ProgressBar />
-            <p className={styles.vrct_supporters_desc_end}>{`みなさんのおかげで、みしゃ社長は布団で寝ることを許され(in開発室) しいなは喜び庭駆け回っています！！！ふわもちもぐもぐです！ありがとうございます。これからもまだまだ進化するVRCTをどうかよろしくお願いします！\nThanks to everyone, Misha has been granted the privilege of sleeping in a proper bed (in the development room), and Shiina is so happy, running around the yard! Fuwa-mochi-mogu-mogu! Thank you so much! We hope you'll continue to support the ever-evolving VRCT!`}</p>
-        </div>
-    );
-};
-
-const ProgressBar = () => {
-    const [is_active, setIsActive] = useState(false);
+    const { currentSupportersData, asyncFetchSupportersData } = useSupporters();
 
     useEffect(() => {
-        setIsActive(true);
-        const interval = setInterval(() => {
-            setIsActive(false);
-            setTimeout(() => setIsActive(true), 50);
-        }, SHUFFLE_INTERVAL_TIME);
-
-        return () => clearInterval(interval);
+        asyncFetchSupportersData();
     }, []);
 
+    if (currentSupportersData.state === "error")
+        return <div>Failed to retrieve data.</div>;
+
+    if (currentSupportersData.state === "pending" || currentSupportersData.data === null)
+        return <div>Loading...</div>;
+
+    const supporters_settings = currentSupportersData.data.supporters_settings;
     return (
-        <div
-            className={clsx(styles.progress_bar, {
-                [styles.progress_bar_active]: is_active,
-            })}
-        />
+        <div className={styles.supporters_container}>
+            <img className={styles.vrct_supporters_title} src={`${supporters_images_url}/vrct_supporters_title.png`} />
+            <SupportersWrapper supporters_settings={supporters_settings}/>
+            <p className={styles.vrct_supporters_desc_end}>{`みなさんのおかげで、みしゃ社長は布団で寝ることを許され(in開発室) しいなは喜び庭駆け回っています！！！ふわもちもぐもぐです！ありがとうございます。これからもまだまだ進化するVRCTをどうかよろしくお願いします！\nThanks to everyone, Misha has been granted the privilege of sleeping in a proper bed (in the development room), and Shiina is so happy, running around the yard! Fuwa-mochi-mogu-mogu! Thank you so much! We hope you'll continue to support the ever-evolving VRCT!`}</p>
+        </div>
     );
 };
