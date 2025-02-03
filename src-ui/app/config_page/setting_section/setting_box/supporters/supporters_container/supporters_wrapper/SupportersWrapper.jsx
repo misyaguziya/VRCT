@@ -42,7 +42,7 @@ const getSupportersLabelsPath = (file_name) => `${image_sets.supporters_labels}$
 const getSupportersIconsPath = (file_name) => `${image_sets.supporters_icons}${file_name}.png`;
 
 
-export const SupportersWrapper = ({supporters_settings}) => {
+export const SupportersWrapper = () => {
     const { saveScrollPosition, restoreScrollPosition } = useSettingBoxScrollPosition();
     const { currentSupportersData } = useSupporters();
 
@@ -54,6 +54,8 @@ export const SupportersWrapper = ({supporters_settings}) => {
         setJsonData(currentSupportersData.data);
     }, [currentSupportersData.data]);
 
+
+    const supporters_settings = currentSupportersData.data.supporters_settings;
 
     const target_supporting_month = supporters_settings.target_supporting_month;
     const calc_support_period = supporters_settings.calc_support_period;
