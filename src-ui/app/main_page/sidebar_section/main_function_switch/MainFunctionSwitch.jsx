@@ -92,11 +92,11 @@ export const SwitchContainer = ({ switchLabel, switch_id, children, currentState
 
     return (
         <div className={getClassNames(styles.switch_container)}
-        onMouseEnter={onMouseEnter}
-        onMouseLeave={onMouseLeave}
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
-        onClick={toggleFunction}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+            onMouseDown={onMouseDown}
+            onMouseUp={onMouseUp}
+            onClick={toggleFunction}
         >
             <div className={styles.label_wrapper}>
                 <SvgComponent className={getClassNames(styles.switch_svg)} />

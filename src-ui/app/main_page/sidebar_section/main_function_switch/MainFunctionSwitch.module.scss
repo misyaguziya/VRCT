@@ -22,6 +22,7 @@
     }
     &.is_compact_mode {
         padding: 1.5rem;
+        justify-content: center;
     }
     &.is_pending {
         pointer-events: none;
