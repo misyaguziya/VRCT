@@ -3,19 +3,21 @@ import styles from "./SidebarSection.module.scss";
 export const SidebarSection = () => {
     return (
         <div className={styles.container}>
-            <div className={styles.tabs_wrapper}>
-                <Tab tab_id="device" />
-                <Tab tab_id="appearance" />
-                <Tab tab_id="translation" />
-                <Tab tab_id="transcription" />
-                <Tab tab_id="vr" />
-                <Tab tab_id="others" />
-                <Tab tab_id="hotkeys" />
-                <Tab tab_id="advanced_settings" />
-            </div>
-            <div className={styles.separated_tabs_wrapper}>
-                <Tab tab_id="supporters" />
-                <Tab tab_id="about_vrct" />
+            <div className={styles.scroll_container}>
+                <div className={styles.tabs_wrapper}>
+                    <Tab tab_id="device" />
+                    <Tab tab_id="appearance" />
+                    <Tab tab_id="translation" />
+                    <Tab tab_id="transcription" />
+                    <Tab tab_id="vr" />
+                    <Tab tab_id="others" />
+                    <Tab tab_id="hotkeys" />
+                    <Tab tab_id="advanced_settings" />
+                </div>
+                <div className={styles.separated_tabs_wrapper}>
+                    <Tab tab_id="supporters" />
+                    <Tab tab_id="about_vrct" />
+                </div>
             </div>
         </div>
     );

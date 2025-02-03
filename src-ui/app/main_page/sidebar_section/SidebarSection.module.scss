@@ -8,8 +8,8 @@
     &.is_compact_mode {
         min-width: auto;
         .scroll_container {
-            overflow-y: hidden;
-            width: auto;
+            // overflow-y: hidden;
+            // width: auto;
         }
     }
 }
