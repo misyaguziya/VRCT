@@ -3,10 +3,20 @@ import dev_section_title from "@images/about_vrct/dev_section_title.png";
 import dev_misya from "@images/about_vrct/dev_misya.png";
 import dev_shiina from "@images/about_vrct/dev_shiina.png";
 import vrct_logo_for_about_vrct from "@images/about_vrct/vrct_logo_for_about_vrct.png";
+
 import contributors_section_title from "@images/about_vrct/contributors_section_title.png";
-import contributors_members from "@images/about_vrct/contributors_members.png";
+import contributor_done from "@images/about_vrct/contributor_done.png";
+import contributor_iya from "@images/about_vrct/contributor_iya.png";
+import contributor_rera from "@images/about_vrct/contributor_rera.png";
+import contributor_poposuke from "@images/about_vrct/contributor_poposuke.png";
+import contributor_kumaguma from "@images/about_vrct/contributor_kumaguma.png";
+
 import localization_section_title from "@images/about_vrct/localization_section_title.png";
-import localization_members from "@images/about_vrct/localization_members.png";
+import localization_1 from "@images/about_vrct/localization_1.png";
+import localization_2 from "@images/about_vrct/localization_2.png";
+import localization_3 from "@images/about_vrct/localization_3.png";
+import localization_4 from "@images/about_vrct/localization_4.png";
+import localization_5 from "@images/about_vrct/localization_5.png";
 
 import special_thanks_section_title from "@images/about_vrct/special_thanks_section_title.png";
 import special_thanks_members from "@images/about_vrct/special_thanks_members.png";
@@ -14,8 +24,6 @@ import special_thanks_message_en from "@images/about_vrct/special_thanks_message
 import special_thanks_message_ja from "@images/about_vrct/special_thanks_message_ja.png";
 
 import poster_showcase_section_title from "@images/about_vrct/poster_showcase_section_title.png";
-
-import vrchat_disclaimer from "@images/about_vrct/vrchat_disclaimer.png";
 
 import clsx from "clsx";
 import { useTranslation } from "react-i18next";
@@ -43,7 +51,9 @@ export const AboutVrct = () => {
             </div>
 
             <div className={styles.project_links_and_logo_section}>
-                <img src={vrct_logo_for_about_vrct} className={styles.about_vrct_logo} />
+                <div className={styles.about_vrct_logo_wrapper}>
+                    <img src={vrct_logo_for_about_vrct} className={styles.about_vrct_logo} />
+                </div>
                 <div className={styles.project_links_wrapper}>
                     <OpenLinkContainer className={styles.project_link} href_id="project_link_booth" />
                     <OpenLinkContainer className={styles.project_link} href_id="project_link_documents" />
@@ -55,19 +65,46 @@ export const AboutVrct = () => {
             <div className={styles.contributors_section}>
                 <img src={contributors_section_title} className={clsx(styles.section_title, styles.contributors)} />
                 <div className={styles.contributors_img_wrapper}>
-                    <img src={contributors_members} className={clsx(styles.contributors_img, styles.contributors)} />
-                    <OpenLinkContainer className={styles.contributors_done_san_x} href_id="contributors_done_san_x" />
-                    <OpenLinkContainer className={styles.contributors_iya_x} href_id="contributors_iya_x" />
-                    <OpenLinkContainer className={styles.contributors_rera_x} href_id="contributors_rera_x" />
-                    <OpenLinkContainer className={styles.contributors_rera_github} href_id="contributors_rera_github" />
-                    <OpenLinkContainer className={styles.contributors_poposuke_x} href_id="contributors_poposuke_x" />
-                    <OpenLinkContainer className={styles.contributors_kumaguma_x} href_id="contributors_kumaguma_x" />
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_done} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_done_san_x} href_id="contributors_done_san_x" />
+                    </div>
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_iya} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_iya_x} href_id="contributors_iya_x" />
+                    </div>
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_rera} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_rera_x} href_id="contributors_rera_x" />
+                        <OpenLinkContainer className={styles.contributors_rera_github} href_id="contributors_rera_github" />
+                    </div>
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_poposuke} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_poposuke_x} href_id="contributors_poposuke_x" />
+                    </div>
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_kumaguma} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_kumaguma_x} href_id="contributors_kumaguma_x" />
+                    </div>
                 </div>
             </div>
 
             <div className={styles.localization_section}>
                 <img src={localization_section_title} className={clsx(styles.section_title, styles.localization)} />
-                <img src={localization_members} className={clsx(styles.localization_members_img, styles.localization)} />
+                <div className={styles.localization_members_wrapper}>
+                    <div className={styles.localization_members_row_wrapper}>
+                        <img src={localization_1} className={styles.localization_members_img} />
+                        <img src={localization_2} className={styles.localization_members_img} />
+                    </div>
+                    <div className={styles.localization_members_row_wrapper}>
+                        <img src={localization_3} className={styles.localization_members_img} />
+                        <img src={localization_4} className={styles.localization_members_img} />
+                    </div>
+                    <div className={styles.localization_members_row_wrapper}>
+                        <img src={localization_5} className={styles.localization_members_img} />
+                        {/* <img src={localization_6} className={styles.localization_members_img} /> */}
+                    </div>
+                </div>
             </div>
 
             <div className={styles.special_thanks_section}>
@@ -87,7 +124,7 @@ export const AboutVrct = () => {
             </div>
 
             <div className={styles.vrchat_disclaimer_section}>
-                <img src={vrchat_disclaimer} className={styles.vrchat_disclaimer} />
+                <p className={styles.vrchat_disclaimer}>VRCT is not endorsed by VRChat and does not reflect the views or opinions of VRChat or anyone officially involved in producing or managing VRChat properties. VRChat and all associated properties are trademarks or registered trademarks of VRChat Inc. VRChat © VRChat Inc.</p>
             </div>
 
 
