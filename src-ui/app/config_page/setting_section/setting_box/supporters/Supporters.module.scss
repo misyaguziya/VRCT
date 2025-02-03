@@ -6,3 +6,16 @@
     align-items: center;
     width: 100%;
 }
+.supportersWrapper {
+    opacity: 0;
+    animation: fadeIn 0.8s ease-in-out 1.6s forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}

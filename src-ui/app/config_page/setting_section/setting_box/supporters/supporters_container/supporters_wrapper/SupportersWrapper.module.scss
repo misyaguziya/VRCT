@@ -1,3 +1,11 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
 .supporters_wrapper {
     display: flex;
     justify-content: center;
@@ -218,4 +226,22 @@
     &.basic_bar {
         background-color: var(--dark_800_color);
     }
+}
+
+
+.progress_bar {
+    height: 0.2rem;
+    width: 0%;
+    &.progress_bar_active {
+        transition: width 20000ms linear;
+        background-color: var(--primary_400_color);
+        width: 100%;
+    }
+}
+
+.last_updated_local_date {
+    font-size: 1rem;
+    color: var(--dark_800_color);
+    width: 100%;
+    text-align: end;
 }
