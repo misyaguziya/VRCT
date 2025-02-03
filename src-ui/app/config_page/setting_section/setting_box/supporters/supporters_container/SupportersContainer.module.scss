@@ -5,8 +5,19 @@
     flex-direction: column;
     gap: 1rem;
 }
+
+.vrct_supporters_title_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.2rem;
+}
 .vrct_supporters_title {
-    height: 6rem;
+    height: 4.2rem;
+}
+.calc_period {
+    height: 1.6rem;
 }
 
 .vrct_supporters_desc_end {
