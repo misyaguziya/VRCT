@@ -1663,8 +1663,8 @@ class Controller:
         self.run(200, self.run_mapping["initialization_progress"], progress)
 
     def init(self, *args, **kwargs) -> None:
-        printLog("Start Initialization")
         removeLog()
+        printLog("Start Initialization")
 
         printLog("Init Translation Engine Status")
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
