@@ -7,8 +7,6 @@ from queue import Queue
 from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
 
-controller = Controller()
-
 run_mapping = {
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
@@ -41,11 +39,11 @@ run_mapping = {
     "initialization_complete":"/run/initialization_complete",
 }
 
-controller.setRunMapping(run_mapping)
-
 def run(status:int, endpoint:str, result:Any) -> None:
     printResponse(status, endpoint, result)
 
+controller = Controller()
+controller.setRunMapping(run_mapping)
 controller.setRun(run)
 
 mapping = {
