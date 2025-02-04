@@ -72,12 +72,15 @@ class Model:
         self.th_check_device = None
         self.mic_print_transcript = None
         self.mic_audio_recorder = None
+        self.mic_transcriber = None
         self.mic_energy_recorder = None
         self.mic_energy_plot_progressbar = None
         self.speaker_print_transcript = None
         self.speaker_audio_recorder = None
+        self.speaker_transcriber = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
+        
         self.previous_send_message = ""
         self.previous_receive_message = ""
         self.translator = Translator()
@@ -426,13 +429,14 @@ class Model:
                 selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
                 languages = [data["language"] for data in selected_your_languages.values() if data["enable"] is True]
                 countries = [data["country"] for data in selected_your_languages.values() if data["enable"] is True]
-                res = self.mic_transcriber.transcribeAudioQueue(
-                    self.mic_audio_queue,
-                    languages,
-                    countries,
-                    config.MIC_AVG_LOGPROB,
-                    config.MIC_NO_SPEECH_PROB
-                )
+                if isinstance(self.mic_transcriber, AudioTranscriber) is True:
+                    res = self.mic_transcriber.transcribeAudioQueue(
+                        self.mic_audio_queue,
+                        languages,
+                        countries,
+                        config.MIC_AVG_LOGPROB,
+                        config.MIC_NO_SPEECH_PROB
+                    )
                 if res:
                     result = self.mic_transcriber.getTranscript()
                     fnc(result)
@@ -444,7 +448,7 @@ class Model:
                 self.mic_audio_queue.get()
             # while not self.mic_energy_queue.empty():
             #     self.mic_energy_queue.get()
-            del self.mic_transcriber
+            self.mic_transcriber = None
             gc.collect()
 
         # def sendMicEnergy():
@@ -593,13 +597,14 @@ class Model:
                 selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
                 languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
                 countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
-                res = self.speaker_transcriber.transcribeAudioQueue(
-                    speaker_audio_queue,
-                    languages,
-                    countries,
-                    config.SPEAKER_AVG_LOGPROB,
-                    config.SPEAKER_NO_SPEECH_PROB
-                )
+                if isinstance(self.speaker_transcriber, AudioTranscriber) is True:
+                    res = self.speaker_transcriber.transcribeAudioQueue(
+                        speaker_audio_queue,
+                        languages,
+                        countries,
+                        config.SPEAKER_AVG_LOGPROB,
+                        config.SPEAKER_NO_SPEECH_PROB
+                    )
                 if res:
                     result = self.speaker_transcriber.getTranscript()
                     fnc(result)
@@ -611,7 +616,7 @@ class Model:
                 speaker_audio_queue.get()
             # while not speaker_energy_queue.empty():
             #     speaker_energy_queue.get()
-            del self.speaker_transcriber
+            self.speaker_transcriber = None
             gc.collect()
 
         # def sendSpeakerEnergy():
