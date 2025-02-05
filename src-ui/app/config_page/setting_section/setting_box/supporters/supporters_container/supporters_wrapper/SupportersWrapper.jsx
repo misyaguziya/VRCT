@@ -54,64 +54,37 @@ export const SupportersWrapper = () => {
         setJsonData(currentSupportersData.data);
     }, [currentSupportersData.data]);
 
-
     const supporters_settings = currentSupportersData.data.supporters_settings;
-
     const calc_support_period = supporters_settings.calc_support_period;
-    const target_supporting_month = calc_support_period.at(-1);
     const chato_ex_count = supporters_settings.chato_ex_count;
-    const last_updated_local_date = new Date(supporters_settings.last_updated_utc_date)?.toString();
 
     const recalcAndUpdateSupporters = useCallback(() => {
         if (!json_data) return;
 
-        let credit_pending_count = 0;
-        const newGroupedData = {
-            "mogu_2000": [],
-            "mochi_1000": [],
-            "fuwa_500": [],
-            "basic_300": [],
-            "empty": [],
-            "and_you": [],
+        const grouped_data = {
+            mogu_2000: [],
+            mochi_1000: [],
+            fuwa_500: [],
+            basic_300: [],
+            former_supporter: [],
+            and_you: [],
         };
 
-        const filtered_data = json_data.supporters_data.filter((supporter) => {
-            if (!supporter.supporter_id) return false;
-
-            const months = Object.keys(supporter).filter((key) => calc_support_period.includes(key));
-            const has_valid_month = months.some((month) => supporter[month]);
-            if (!has_valid_month) return false;
-
-            const basic_300_months = months.filter(
-                (month) => supporter[month] === "basic_300"
-            );
-            const has_special_plan = months.some((month) =>
-                ["fuwa_500", "mochi_1000", "mogu_2000"].includes(supporter[month])
-            );
-
-            if (basic_300_months.length === 1 && !has_special_plan) {
-                credit_pending_count++;
-                return false;
-            }
-
-            return true;
-        });
-
-        filtered_data.forEach((supporter) => {
-            const value = supporter[target_supporting_month] || "empty";
-            if (newGroupedData[value]) {
-                newGroupedData[value].push(supporter);
+        json_data.supporters_data.forEach((supporter) => {
+            const value = supporter.highest_plan_during_the_period || "former_supporter";
+            if (grouped_data[value]) {
+                grouped_data[value].push(supporter);
             } else {
-                newGroupedData["empty"].push(supporter);
+                grouped_data["former_supporter"].push(supporter);
             }
         });
 
         const newSupportersData = [
-            ...shuffleArray(newGroupedData["mogu_2000"]),
-            ...shuffleArray(newGroupedData["mochi_1000"]),
-            ...shuffleArray(newGroupedData["fuwa_500"]),
-            ...shuffleArray(newGroupedData["basic_300"]),
-            ...shuffleArray(newGroupedData["empty"]),
+            ...shuffleArray(grouped_data["mogu_2000"]),
+            ...shuffleArray(grouped_data["mochi_1000"]),
+            ...shuffleArray(grouped_data["fuwa_500"]),
+            ...shuffleArray(grouped_data["basic_300"]),
+            ...shuffleArray(grouped_data["former_supporter"]),
             and_you_data,
         ];
 
@@ -152,11 +125,9 @@ export const SupportersWrapper = () => {
                 <SupporterCardsComponent
                     supportersData={supportersData}
                     chatoExpressions={chatoExpressions}
-                    target_supporting_month={target_supporting_month}
                     calc_support_period={calc_support_period}
                 />
             </div>
-            <p className={styles.last_updated_local_date}>{`Last updated date:\n${last_updated_local_date}`}</p>
             <ProgressBar />
         </div>
     );
@@ -177,9 +148,9 @@ const AndYouIcon = () => {
     );
 };
 
-const SupporterCardsComponent = ({ supportersData, chatoExpressions, target_supporting_month, calc_support_period }) => {
+const SupporterCardsComponent = ({ supportersData, chatoExpressions, calc_support_period }) => {
     return supportersData.map((item, index) => {
-        const target_plan = item[target_supporting_month];
+        const target_plan = item.highest_plan_during_the_period;
 
         const img_src = getSupporterCard(target_plan);
 
