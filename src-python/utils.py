@@ -6,6 +6,14 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 from ctranslate2 import get_supported_compute_types
+import requests
+
+def isConnectedNetwork(url="http://www.google.com", timeout=3):
+    try:
+        response = requests.get(url, timeout=timeout)
+        return response.status_code == 200
+    except requests.RequestException:
+        return False
 
 def getBestComputeType(device, device_index) -> str:
     compute_types = get_supported_compute_types(device, device_index)
