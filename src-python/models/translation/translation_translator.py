@@ -1,6 +1,11 @@
 from os import path as os_path
 from deepl import Translator as deepl_Translator
-from translators import translate_text as other_web_Translator
+try:
+    from translators import translate_text as other_web_Translator
+    ENABLE_TRANSLATORS = True
+except Exception:
+    ENABLE_TRANSLATORS = False
+
 from .translation_languages import translation_lang
 from .translation_utils import ctranslate2_weights
 
@@ -18,6 +23,7 @@ class Translator():
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
         self.is_loaded_ctranslate2_model = False
+        self.is_enable_translators = ENABLE_TRANSLATORS
 
     def authenticationDeepLAuthKey(self, authkey):
         result = True
@@ -97,42 +103,47 @@ class Translator():
             source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL":
-                    result = other_web_Translator(
-                        query_text=message,
-                        translator="deepl",
-                        from_language=source_language,
-                        to_language=target_language,
-                        )
+                    if self.is_enable_translators is True:
+                        result = other_web_Translator(
+                            query_text=message,
+                            translator="deepl",
+                            from_language=source_language,
+                            to_language=target_language,
+                            )
                 case "DeepL_API":
-                    if self.deepl_client is None:
-                        result = False
-                    else:
-                        result = self.deepl_client.translate_text(
-                            message,
-                            source_lang=source_language,
-                            target_lang=target_language,
-                            ).text
+                    if self.is_enable_translators is True:
+                        if self.deepl_client is None:
+                            result = False
+                        else:
+                            result = self.deepl_client.translate_text(
+                                message,
+                                source_lang=source_language,
+                                target_lang=target_language,
+                                ).text
                 case "Google":
-                    result = other_web_Translator(
-                        query_text=message,
-                        translator="google",
-                        from_language=source_language,
-                        to_language=target_language,
-                        )
+                    if self.is_enable_translators is True:
+                        result = other_web_Translator(
+                            query_text=message,
+                            translator="google",
+                            from_language=source_language,
+                            to_language=target_language,
+                            )
                 case "Bing":
-                    result = other_web_Translator(
-                        query_text=message,
-                        translator="bing",
-                        from_language=source_language,
-                        to_language=target_language,
-                        )
+                    if self.is_enable_translators is True:
+                        result = other_web_Translator(
+                            query_text=message,
+                            translator="bing",
+                            from_language=source_language,
+                            to_language=target_language,
+                            )
                 case "Papago":
-                    result = other_web_Translator(
-                        query_text=message,
-                        translator="papago",
-                        from_language=source_language,
-                        to_language=target_language,
-                        )
+                    if self.is_enable_translators is True:
+                        result = other_web_Translator(
+                            query_text=message,
+                            translator="papago",
+                            from_language=source_language,
+                            to_language=target_language,
+                            )
                 case "CTranslate2":
                     result = self.translateCTranslate2(
                         message=message,
