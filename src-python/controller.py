@@ -29,12 +29,14 @@ class Controller:
         self.run(
             200,
             self.run_mapping["connected_network"],
+            True,
         )
 
     def disconnectedNetwork(self) -> None:
         self.run(
             200,
-            self.run_mapping["disconnected_network"],
+            self.run_mapping["connected_network"],
+            False,
         )
 
     def updateMicHostList(self) -> None:
@@ -526,7 +528,10 @@ class Controller:
         your_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]
         for target_language in config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO].values():
             if your_language["language"] == target_language["language"] and target_language["enable"] is True:
-                engines = ["CTranslate2"]
+                if config.SELECTABLE_TRANSLATION_ENGINE_STATUS["CTranslate2"] is True:
+                    engines = ["CTranslate2"]
+                else:
+                    engines = []
 
         return {"status":200, "result":engines}
 
@@ -1707,6 +1712,7 @@ class Controller:
             self.connectedNetwork()
         else:
             self.disconnectedNetwork()
+        printLog(f"Connected Network: {connected_network}")
 
         printLog("Init Translation Engine Status")
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
@@ -1724,28 +1730,29 @@ class Controller:
                             config.AUTH_KEYS = auth_keys
         self.initializationProgress(1)
 
-        # download CTranslate2 Model Weight
-        printLog("Download CTranslate2 Model Weight")
-        weight_type = config.CTRANSLATE2_WEIGHT_TYPE
-        th_download_ctranslate2 = None
-        if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:
-            th_download_ctranslate2 = Thread(target=self.downloadCtranslate2Weight, args=(weight_type, False))
-            th_download_ctranslate2.daemon = True
-            th_download_ctranslate2.start()
+        if connected_network is True:
+            # download CTranslate2 Model Weight
+            printLog("Download CTranslate2 Model Weight")
+            weight_type = config.CTRANSLATE2_WEIGHT_TYPE
+            th_download_ctranslate2 = None
+            if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:
+                th_download_ctranslate2 = Thread(target=self.downloadCtranslate2Weight, args=(weight_type, False))
+                th_download_ctranslate2.daemon = True
+                th_download_ctranslate2.start()
 
-        # download Whisper Model Weight
-        printLog("Download Whisper Model Weight")
-        weight_type = config.WHISPER_WEIGHT_TYPE
-        th_download_whisper = None
-        if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
-            th_download_whisper = Thread(target=self.downloadWhisperWeight, args=(weight_type, False))
-            th_download_whisper.daemon = True
-            th_download_whisper.start()
+            # download Whisper Model Weight
+            printLog("Download Whisper Model Weight")
+            weight_type = config.WHISPER_WEIGHT_TYPE
+            th_download_whisper = None
+            if model.checkTranscriptionWhisperModelWeight(weight_type) is False:
+                th_download_whisper = Thread(target=self.downloadWhisperWeight, args=(weight_type, False))
+                th_download_whisper.daemon = True
+                th_download_whisper.start()
 
-        if isinstance(th_download_ctranslate2, Thread):
-            th_download_ctranslate2.join()
-        if isinstance(th_download_whisper, Thread):
-            th_download_whisper.join()
+            if isinstance(th_download_ctranslate2, Thread):
+                th_download_ctranslate2.join()
+            if isinstance(th_download_whisper, Thread):
+                th_download_whisper.join()
 
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
             match engine:

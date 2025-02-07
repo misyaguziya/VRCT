@@ -9,7 +9,6 @@ from utils import printLog, printResponse, errorLogging, encodeBase64
 
 run_mapping = {
     "connected_network":"/run/connected_network",
-    "disconnected_network":"/run/disconnected_network",
 
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
