@@ -39,6 +39,20 @@ class Controller:
             False,
         )
 
+    def enableAiModels(self) -> None:
+        self.run(
+            200,
+            self.run_mapping["enable_ai_models"],
+            True,
+        )
+
+    def disableAiModels(self) -> None:
+        self.run(
+            200,
+            self.run_mapping["enable_ai_models"],
+            False,
+        )
+
     def updateMicHostList(self) -> None:
         self.run(
             200,
@@ -1753,6 +1767,12 @@ class Controller:
                 th_download_ctranslate2.join()
             if isinstance(th_download_whisper, Thread):
                 th_download_whisper.join()
+
+        if (model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is False or
+            model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is False):
+            self.disableAiModels()
+        else:
+            self.enableAiModels()
 
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
             match engine:
