@@ -1,10 +1,6 @@
 import { useTranslation } from "react-i18next";
 
 import {
-    useWindow,
-} from "@logics_common";
-
-import {
     KeyEventController,
     StartPythonController,
     GlobalHotKeyController,
@@ -23,9 +19,10 @@ import { UpdatingComponent } from "./updating_component/UpdatingComponent";
 import { ModalController } from "./modal_controller/ModalController";
 import { SnackbarController } from "./snackbar_controller/SnackbarController";
 import styles from "./App.module.scss";
-import { useIsBackendReady, useIsSoftwareUpdating } from "@logics_common";
+import { useIsBackendReady, useIsSoftwareUpdating, useIsVrctAvailable, useWindow } from "@logics_common";
 
 export const App = () => {
+    const { currentIsVrctAvailable } = useIsVrctAvailable();
     const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
     const { i18n } = useTranslation();
@@ -42,10 +39,12 @@ export const App = () => {
             <TransparencyController />
             <WindowGeometryController />
 
-            {currentIsBackendReady.data === false
-            ? <SplashComponent />
-            : <Contents  key={i18n.language}/>
+            {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
+                ? <SplashComponent />
+                : <Contents  key={i18n.language}/>
             }
+
+            <SnackbarController />
         </div>
     );
 };
@@ -61,7 +60,6 @@ const Contents = () => {
                 <ConfigPage />
                 <MainPage />
                 <ModalController />
-                <SnackbarController />
             </div>
             :
             <UpdatingComponent />

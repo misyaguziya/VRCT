@@ -6,7 +6,9 @@ export const useHandleNetworkConnection = () => {
 
     const handleNetworkConnection = (is_network_connected) => {
         if (!is_network_connected) {
-            showNotification_Error("Network is not connected. Some of the function will not work.");
+            showNotification_Error("Network is not connected. Some of the function will not work.", {
+                hide_duration: 8000,
+            });
         }
     };
 
