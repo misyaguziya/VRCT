@@ -2,6 +2,7 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useIsVrctAvailable,
     useNotificationStatus,
     useHandleNetworkConnection,
 
@@ -74,6 +75,7 @@ import {
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { updateIsVrctAvailable } = useIsVrctAvailable();
     const { updateComputeMode } = useComputeMode();
     const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
@@ -184,6 +186,12 @@ export const useReceiveRoutes = () => {
         // Common
         "/run/feed_watchdog": () => {},
         "/run/initialization_progress": updateInitProgress,
+        "/run/enable_ai_models": (is_ai_models_available) => {
+            if (is_ai_models_available === false) {
+                updateIsVrctAvailable(false);
+                showNotification_Error("AI models have not been detected. Check the network connection and restart VRCT (it will download automatically, normally).", { hide_duration: null });
+            }
+        },
         "/get/data/compute_mode": updateComputeMode,
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
@@ -481,6 +489,7 @@ export const useReceiveRoutes = () => {
         "/get/data/speaker_no_speech_prob": ()=>{}, // Not implemented on UI yet
         "/get/data/convert_message_to_romaji": ()=>{}, // Not implemented on UI yet
         "/get/data/convert_message_to_hiragana": ()=>{}, // Not implemented on UI yet
+        "/get/data/transcription_engines": ()=>{}, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     };
 
     const error_routes = {
