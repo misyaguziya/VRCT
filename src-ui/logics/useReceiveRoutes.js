@@ -3,7 +3,7 @@ import { arrayToObject } from "@utils";
 
 import {
     useNotificationStatus,
-
+    useHandleNetworkConnection,
 
     useComputeMode,
     useInitProgress,
@@ -178,6 +178,8 @@ export const useReceiveRoutes = () => {
 
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
+    const { handleNetworkConnection } = useHandleNetworkConnection();
+
     const routes = {
         // Common
         "/run/feed_watchdog": () => {},
@@ -188,6 +190,7 @@ export const useReceiveRoutes = () => {
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
         "/run/update_software_flag": updateIsSoftwareUpdateAvailable,
+        "/run/connected_network": handleNetworkConnection,
 
         // Main Page
         // Page Controls
