@@ -237,6 +237,15 @@ class Config:
         if isinstance(value, dict):
             self._SELECTABLE_TRANSLATION_ENGINE_STATUS = value
 
+    @property
+    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self):
+        return self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS
+
+    @SELECTABLE_TRANSCRIPTION_ENGINE_STATUS.setter
+    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self, value):
+        if isinstance(value, dict):
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -977,6 +986,9 @@ class Config:
         self._SELECTABLE_TRANSLATION_ENGINE_STATUS = {}
         for engine in self.SELECTABLE_TRANSLATION_ENGINE_LIST:
             self._SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+        self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {}
+        for engine in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
 
         # Save Json Data
         ## Main Window
