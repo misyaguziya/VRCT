@@ -68,7 +68,7 @@ class OverlayImage:
 
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
-        character_line_num = (base_width // character_width) - 12
+        character_line_num = int((base_width // character_width) - 12)
         if len(text) > character_line_num:
             text = "\n".join([text[i:i + character_line_num] for i in range(0, len(text), character_line_num)])
         text_height = font_size * (len(text.split("\n")) + 1) + 20
