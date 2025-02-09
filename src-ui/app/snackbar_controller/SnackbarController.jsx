@@ -17,17 +17,23 @@ export const SnackbarController = () => {
         [styles.is_error]: currentNotificationStatus.data.status === "error",
     });
 
+    const settings = currentNotificationStatus.data;
+
+    let hide_duration = 5000;
+    if (settings.options?.hide_duration === null) hide_duration = null;
+    if (Number(settings.options?.hide_duration)) hide_duration = settings.options.hide_duration;
+
     return (
         <div>
             <Snackbar
-                open={currentNotificationStatus.data.is_open}
+                open={settings.is_open}
                 onClose={handleClose}
                 TransitionComponent={SlideTransition}
-                key={currentNotificationStatus.data.key}
-                autoHideDuration={5000}
+                key={settings.key}
+                autoHideDuration={hide_duration}
             >
                 <div className={snackbar_classname}>
-                    <p className={styles.snackbar_message}>{currentNotificationStatus.data.message}</p>
+                    <p className={styles.snackbar_message}>{settings.message}</p>
                 </div>
             </Snackbar>
         </div>

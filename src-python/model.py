@@ -80,7 +80,7 @@ class Model:
         self.speaker_transcriber = None
         self.speaker_energy_recorder = None
         self.speaker_energy_plot_progressbar = None
-        
+
         self.previous_send_message = ""
         self.previous_receive_message = ""
         self.translator = Translator()

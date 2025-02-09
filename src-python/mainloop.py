@@ -8,6 +8,9 @@ from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
 
 run_mapping = {
+    "connected_network":"/run/connected_network",
+    "enable_ai_models":"/run/enable_ai_models",
+
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
 
@@ -20,8 +23,10 @@ run_mapping = {
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
     "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
+    "error_ctranslate2_weight":"/run/error_ctranslate2_weight",
     "download_progress_whisper_weight":"/run/download_progress_whisper_weight",
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
+    "error_whisper_weight":"/run/error_whisper_weight",
 
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
@@ -79,6 +84,7 @@ mapping = {
     "/get/data/selected_target_languages": {"status": True, "variable":controller.getSelectedTargetLanguages},
     "/set/data/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
 
+    "/get/data/transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
