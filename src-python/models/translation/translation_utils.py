@@ -5,6 +5,7 @@ from os import makedirs as os_makedirs
 from requests import get as requests_get
 from typing import Callable
 import hashlib
+import transformers
 from utils import errorLogging
 
 ctranslate2_weights = {
@@ -87,3 +88,16 @@ def downloadCTranslate2Weight(root, weight_type="small", callback=None, end_call
 
     if isinstance(end_callback, Callable):
         end_callback()
+
+def downloadCTranslate2Tokenizer(path, weight_type="small"):
+    directory_name = ctranslate2_weights[weight_type]["directory_name"]
+    tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
+    tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
+
+    try:
+        os_makedirs(tokenizer_path, exist_ok=True)
+        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+    except Exception:
+        errorLogging()
+        tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
+        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
