@@ -1,9 +1,11 @@
 .container {
     display: flex;
     gap: 2.2rem;
+    justify-content: center;
+    align-items: center;
     flex-direction: column;
-    width: 72rem;
-    // background-color: gray;
+    max-width: 72rem;
+    margin: auto;
 }
 
 .section_title {
@@ -30,20 +32,23 @@
 }
 .dev_section_wrapper {
     display: flex;
-    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
 }
 .dev_card_wrapper {
-    width: 34.6rem;
     position: relative;
+    // width: 100%;
 }
 .dev_card_img {
-    width: 100%;
+    width: 34.6rem;
 }
 
 @mixin dev_sns_styles($right) {
     position: absolute;
     right: $right;
-    bottom: 1.2rem;
+    bottom: 0.6rem;
     width: 2.8rem;
     padding: 0.4rem;
     border-radius: 0.4rem;
@@ -69,8 +74,16 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    text-align: center;
     padding: 0 5.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+.about_vrct_logo_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 2rem 0;
 }
 .about_vrct_logo {
     width: 20rem;
@@ -78,7 +91,7 @@
 }
 .project_links_wrapper {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: 0.2rem;
     align-items: start;
 }
@@ -87,6 +100,7 @@
     height: 2.6rem;
     padding: 0.4rem 1rem;
     border-radius: 0.4rem;
+    flex-shrink: 0;
     &:hover {
         background-color: var(--dark_850_color);
     }
@@ -96,19 +110,27 @@
 }
 
 .contributors_img_wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: center;
+}
+.contributor_card_wrapper {
     position: relative;
 }
 .contributors_img {
-    width: 100%;
+    width: 22rem;
 }
 
-@mixin contributors_sns_styles($top, $left) {
+@mixin contributors_sns_styles($bottom, $left) {
     position: absolute;
     left: $left;
-    top: $top;
+    bottom: $bottom;
     width: 2.4rem;
     padding: 0.4rem;
     border-radius: 0.4rem;
+    transform: translate(50%, 50%);
     &:hover {
         background-color: var(--dark_825_color);
     }
@@ -117,34 +139,51 @@
     }
 }
 
-$first_line_top: 6.2rem;
+$bottom_pos: 16%;
+$sns_left_pos: 0.8rem;
 .contributors_done_san_x {
-    @include contributors_sns_styles($first_line_top, 2rem);
+    @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
 .contributors_iya_x {
-    @include contributors_sns_styles($first_line_top, 27.6rem);
+    @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
 .contributors_rera_x {
-    @include contributors_sns_styles($first_line_top, 52.2rem);
+    @include contributors_sns_styles($bottom_pos, calc($sns_left_pos - 1.4rem));
 }
 .contributors_rera_github {
-    @include contributors_sns_styles($first_line_top, 55rem);
+    @include contributors_sns_styles($bottom_pos, calc($sns_left_pos + 1.4rem));
 }
 
-$second_line_top: 16.6rem;
 .contributors_poposuke_x {
-    @include contributors_sns_styles($second_line_top, 14.8rem);
+    @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
 .contributors_kumaguma_x {
-    @include contributors_sns_styles($second_line_top, 40.8rem);
+    @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
 
 .localization_section {
     display: flex;
     flex-direction: column;
+    width: 100%;
+    gap: 0.6rem;
+}
+.localization_members_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: start;
+    column-gap: 6rem;
+    row-gap: 1rem;
+    flex-wrap: wrap;
+}
+.localization_members_row_wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    gap: 0.2rem;
 }
 .localization_members_img {
-    width: 100%;
+    height: 2.2rem;
 }
 
 .special_thanks_section {
@@ -163,9 +202,11 @@ $second_line_top: 16.6rem;
 .poster_showcase_section {
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 .vrchat_disclaimer {
-    width: 100%;
+    font-size: 1.2rem;
     margin-top: 8rem;
+    color: var(--dark_600_color);
 }

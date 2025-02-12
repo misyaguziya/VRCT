@@ -18,6 +18,7 @@ export const store = {
     config_page: null,
     setting_box_scroll_container: null,
     log_box_ref: null,
+    text_area_ref: null,
     is_applied_init_message_box_height: false,
 };
 
@@ -54,20 +55,20 @@ const createAtomWithHook = (initialValue, base_name, options) => {
             });
         };
 
-        const updateAtom = (payload) => {
+        const updateAtom = (payload, options = {}) => {
+            const { remain_state = false, set_state } = options;
+
             setAtom((currentValue) => {
-                if (typeof payload === "function") {
-                    const updated_data = payload(currentValue);
-                    return {
-                        state: "ok",
-                        data: updated_data,
-                    };
-                } else {
-                    return {
-                        state: "ok",
-                        data: payload,
-                    };
-                }
+                const new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+
+                const updated_data = typeof payload === "function"
+                    ? payload(currentValue)
+                    : payload;
+
+                return {
+                    state: new_state,
+                    data: updated_data,
+                };
             });
         };
 
@@ -105,6 +106,7 @@ const createAtomWithHook = (initialValue, base_name, options) => {
 
 // Common
 export const { atomInstance: Atom_IsBackendReady, useHook: useStore_IsBackendReady } = createAtomWithHook(false, "IsBackendReady");
+export const { atomInstance: Atom_IsVrctAvailable, useHook: useStore_IsVrctAvailable } = createAtomWithHook(true, "IsVrctAvailable");
 export const { atomInstance: Atom_ComputeMode, useHook: useStore_ComputeMode } = createAtomWithHook("", "ComputeMode");
 export const { atomInstance: Atom_IsOpenedConfigPage, useHook: useStore_IsOpenedConfigPage } = createAtomWithHook(false, "IsOpenedConfigPage");
 export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_MainFunctionsStateMemory } = createAtomWithHook({
@@ -263,6 +265,14 @@ export const { atomInstance: Atom_EnableVrcMicMuteSync, useHook: useStore_Enable
 export const { atomInstance: Atom_EnableSendMessageToVrc, useHook: useStore_EnableSendMessageToVrc } = createAtomWithHook(true, "EnableSendMessageToVrc");
 export const { atomInstance: Atom_EnableSendReceivedMessageToVrc, useHook: useStore_EnableSendReceivedMessageToVrc } = createAtomWithHook(false, "EnableSendReceivedMessageToVrc");
 
+// Hotkeys
+export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createAtomWithHook({
+    toggle_vrct_visibility: null,
+    toggle_translation: null,
+    toggle_transcription_send: null,
+    toggle_transcription_receive: null,
+}, "Hotkeys");
+
 // Advanced Settings
 export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");
 export const { atomInstance: Atom_OscPort, useHook: useStore_OscPort } = createAtomWithHook("9000", "OscPort");
@@ -270,6 +280,8 @@ export const { atomInstance: Atom_OscPort, useHook: useStore_OscPort } = createA
 
 
 export const { atomInstance: Atom_IsOpenedTranslatorSelector, useHook: useStore_IsOpenedTranslatorSelector } = createAtomWithHook(false, "IsOpenedTranslatorSelector");
+
+export const { atomInstance: Atom_SupportersData, useHook: useStore_SupportersData } = createAtomWithHook(null, "SupportersData", {is_state_ok: true});
 
 export const { atomInstance: Atom_VrctPosterIndex, useHook: useStore_VrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
 export const { atomInstance: Atom_PosterShowcaseWorldPageIndex, useHook: useStore_PosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");

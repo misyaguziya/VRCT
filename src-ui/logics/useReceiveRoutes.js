@@ -2,8 +2,9 @@ import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
 import {
+    useIsVrctAvailable,
     useNotificationStatus,
-
+    useHandleNetworkConnection,
 
     useComputeMode,
     useInitProgress,
@@ -68,11 +69,13 @@ import {
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
     useOverlayShowOnlyTranslatedMessages,
+    useHotkeys,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
+    const { updateIsVrctAvailable } = useIsVrctAvailable();
     const { updateComputeMode } = useComputeMode();
     const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
@@ -168,6 +171,8 @@ export const useReceiveRoutes = () => {
     const { updateIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
     const { updateOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
 
+    const { updateHotkeys } = useHotkeys();
+
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
 
@@ -175,16 +180,25 @@ export const useReceiveRoutes = () => {
 
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
+    const { handleNetworkConnection } = useHandleNetworkConnection();
+
     const routes = {
         // Common
         "/run/feed_watchdog": () => {},
         "/run/initialization_progress": updateInitProgress,
+        "/run/enable_ai_models": (is_ai_models_available) => {
+            if (is_ai_models_available === false) {
+                updateIsVrctAvailable(false);
+                showNotification_Error("AI models have not been detected. Check the network connection and restart VRCT (it will download automatically, normally).", { hide_duration: null });
+            }
+        },
         "/get/data/compute_mode": updateComputeMode,
         "/get/data/main_window_geometry": restoreWindowGeometry,
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
         "/run/update_software_flag": updateIsSoftwareUpdateAvailable,
+        "/run/connected_network": handleNetworkConnection,
 
         // Main Page
         // Page Controls
@@ -458,6 +472,10 @@ export const useReceiveRoutes = () => {
         "/set/enable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
         "/set/disable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
 
+        // Hotkeys
+        "/get/data/hotkeys": updateHotkeys,
+        "/set/data/hotkeys": updateHotkeys,
+
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,
         "/set/data/osc_ip_address": updateOscIpAddress,
@@ -471,6 +489,7 @@ export const useReceiveRoutes = () => {
         "/get/data/speaker_no_speech_prob": ()=>{}, // Not implemented on UI yet
         "/get/data/convert_message_to_romaji": ()=>{}, // Not implemented on UI yet
         "/get/data/convert_message_to_hiragana": ()=>{}, // Not implemented on UI yet
+        "/get/data/transcription_engines": ()=>{}, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     };
 
     const error_routes = {

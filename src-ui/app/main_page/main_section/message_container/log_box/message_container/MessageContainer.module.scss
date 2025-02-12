@@ -72,18 +72,21 @@
     display: flex;
     flex-direction: column;
     &.sent_message {
+        width: 100%;
         align-items: end;
         text-align: end;
     }
     &.received_message {
+        width: 100%;
         align-items: start;
     }
 }
 
 .message_main {
-    color: var(--dark_basic_text_color);
     user-select: text;
     font-size: 1.4em;
+    overflow-wrap: break-word;
+    max-width: 100%;
 }
 
 .message_second {

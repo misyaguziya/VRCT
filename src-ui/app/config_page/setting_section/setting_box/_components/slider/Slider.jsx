@@ -31,13 +31,6 @@ export const Slider = (props) => {
                             backgroundColor: "var(--dark_800_color)",
                             padding: "0.6rem 1rem",
                             lineHeight: "1.15",
-                            // top: "-1.4rem",
-                            // "&::before": {
-                            //     left: "30%",
-                            //     width: "1rem",
-                            //     height: "1rem",
-                            //     clipPath: "polygon(50% 0, 100% 100%, 0 100%)",
-                            // },
                         },
                     },
                     "& .MuiSlider-markLabel": {

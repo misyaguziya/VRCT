@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { appWindow, currentMonitor, availableMonitors, LogicalPosition, LogicalSize } from "@tauri-apps/api/window";
+import { appWindow, currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useStore_IsBreakPoint } from "@store";
 import { useUiScaling } from "@logics_configs";
@@ -12,14 +12,14 @@ export const useWindow = () => {
     const asyncGetWindowGeometry = async () => {
         try {
             const position = await appWindow.outerPosition();
-            const { x, y } = position;
+            const { x: x_pos, y: y_pos } = position;
 
             const size = await appWindow.outerSize();
             const { width, height } = size;
 
             return {
-                x_pos: x,
-                y_pos: y,
+                x_pos: x_pos,
+                y_pos: y_pos,
                 width: width,
                 height: height
             };
@@ -78,8 +78,8 @@ export const useWindow = () => {
                     adjustedY = monitorY + monitorHeight - adjustedHeight;
                 }
 
-                await appWindow.setPosition(new LogicalPosition(adjustedX, adjustedY));
-                await appWindow.setSize(new LogicalSize(adjustedWidth, adjustedHeight));
+                await appWindow.setPosition(new PhysicalPosition(adjustedX, adjustedY));
+                await appWindow.setSize(new PhysicalSize(adjustedWidth, adjustedHeight));
             } else {
                 console.error("Monitor information could not be retrieved.");
             }

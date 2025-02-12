@@ -9,6 +9,9 @@
     background-color: var(--dark_875_color);
     border: 0.1rem solid var(--dark_750_color);
     border-radius: 0.4rem;
+    &.is_activated {
+        border: 0.1rem solid var(--primary_400_color);
+    }
 }
 
 .entry_input_area {
@@ -16,7 +19,6 @@
     height: 100%;
     font-size: 1.4rem;
     resize: none;
-    color: var(--dark_basic_text_color);
     &.is_disabled {
         color: var(--dark_500_color);
         pointer-events: none;

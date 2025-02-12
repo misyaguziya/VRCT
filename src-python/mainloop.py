@@ -7,9 +7,10 @@ from queue import Queue
 from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
 
-controller = Controller()
-
 run_mapping = {
+    "connected_network":"/run/connected_network",
+    "enable_ai_models":"/run/enable_ai_models",
+
     "transcription_mic":"/run/transcription_send_mic_message",
     "transcription_speaker":"/run/transcription_receive_speaker_message",
 
@@ -22,8 +23,10 @@ run_mapping = {
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
     "downloaded_ctranslate2_weight":"/run/downloaded_ctranslate2_weight",
+    "error_ctranslate2_weight":"/run/error_ctranslate2_weight",
     "download_progress_whisper_weight":"/run/download_progress_whisper_weight",
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
+    "error_whisper_weight":"/run/error_whisper_weight",
 
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
@@ -41,11 +44,11 @@ run_mapping = {
     "initialization_complete":"/run/initialization_complete",
 }
 
-controller.setRunMapping(run_mapping)
-
 def run(status:int, endpoint:str, result:Any) -> None:
     printResponse(status, endpoint, result)
 
+controller = Controller()
+controller.setRunMapping(run_mapping)
 controller.setRun(run)
 
 mapping = {
@@ -81,6 +84,7 @@ mapping = {
     "/get/data/selected_target_languages": {"status": True, "variable":controller.getSelectedTargetLanguages},
     "/set/data/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
 
+    "/get/data/transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
@@ -182,6 +186,9 @@ mapping = {
 
     "/get/data/mic_max_phrases": {"status": True, "variable":controller.getMicMaxPhrases},
     "/set/data/mic_max_phrases": {"status": True, "variable":controller.setMicMaxPhrases},
+
+    "/get/data/hotkeys": {"status": True, "variable":controller.getHotkeys},
+    "/set/data/hotkeys": {"status": True, "variable":controller.setHotkeys},
 
     "/get/data/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/data/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
