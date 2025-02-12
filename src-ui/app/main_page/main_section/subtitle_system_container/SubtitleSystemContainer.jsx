@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import styles from "./PluginsSection.module.scss";
+import styles from "./SubtitleSystemContainer.module.scss";
 import { useSendTextToOverlay } from "@logics_configs";
 
-export const PluginsSection = () => {
+export const SubtitleSystemContainer = () => {
     const { sendTextToOverlay } = useSendTextToOverlay();
     const [srtContent, setSrtContent] = useState("");
     const [cues, setCues] = useState([]);

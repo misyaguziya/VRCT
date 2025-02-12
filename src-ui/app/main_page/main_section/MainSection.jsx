@@ -2,19 +2,20 @@ import { useTranslation } from "react-i18next";
 import styles from "./MainSection.module.scss";
 
 import { TopBar } from "./top_bar/TopBar";
-import { MessageContainer } from "./message_container/MessageContainer";
+// import { MessageContainer } from "./message_container/MessageContainer";
 import { LanguageSelector } from "./language_selector/LanguageSelector";
 
 import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 import { useEffect } from "react";
-
+import { SubtitleSystemContainer } from "./subtitle_system_container/SubtitleSystemContainer";
 export const MainSection = () => {
 
     return (
         <div className={styles.container}>
             <TopBar />
-            <MessageContainer />
+            <SubtitleSystemContainer />
+            {/* <MessageContainer /> */}
             <HandleLanguageSelector />
         </div>
     );
