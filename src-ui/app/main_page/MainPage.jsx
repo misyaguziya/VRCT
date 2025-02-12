@@ -2,6 +2,7 @@ import clsx from "clsx";
 import styles from "./MainPage.module.scss";
 import { SidebarSection } from "./sidebar_section/SidebarSection";
 import { MainSection } from "./main_section/MainSection";
+import { PluginsSection } from "./plugins_section/PluginsSection";
 import { useIsOpenedConfigPage } from "@logics_common";
 
 export const MainPage = () => {
@@ -15,6 +16,7 @@ export const MainPage = () => {
             <div className={styles.container}>
                 <SidebarSection />
                 <MainSection />
+                <PluginsSection />
             </div>
         </div>
     );
