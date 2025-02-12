@@ -14,8 +14,8 @@ export const PluginsSection = () => {
     const [targetHour, setTargetHour] = useState("19");
     const [targetMinute, setTargetMinute] = useState("00");
 
-    // カウントダウンの状態
-    // initialCountdown: 開始ボタン押下時に計算される元の残り秒数
+    // カウントダウン状態
+    // initialCountdown: 再生開始ボタン押下時に算出される元の残り秒数
     const [initialCountdown, setInitialCountdown] = useState(null);
     // countdownAdjustment: ユーザーが上下ボタンで調整する値（秒単位）
     const [countdownAdjustment, setCountdownAdjustment] = useState(0);
@@ -24,12 +24,12 @@ export const PluginsSection = () => {
     // cuesScheduled: 字幕タイマーが一度スケジュールされたか
     const [cuesScheduled, setCuesScheduled] = useState(false);
 
-    // setTimeout/setInterval のタイマーID管理用
+    // タイマー（setTimeout/setInterval）のID管理用
     const timersRef = useRef([]);
     // ファイル入力リセット用の ref
     const fileInputRef = useRef(null);
 
-    // ファイルアップロード処理
+    // ファイルアップロード時の処理
     const handleFileUpload = (event) => {
         const file = event.target.files[0];
         if (!file) return;
@@ -37,9 +37,15 @@ export const PluginsSection = () => {
         reader.onload = (e) => {
             const content = e.target.result;
             setSrtContent(content);
-            const parsedCues = parseSRT(content);
+            let parsedCues = [];
+            // 拡張子により ASS と SRT を判定
+            if (file.name.toLowerCase().endsWith(".ass")) {
+                parsedCues = parseASS(content);
+            } else {
+                parsedCues = parseSRT(content);
+            }
             setCues(parsedCues);
-            console.log("パース結果:", parsedCues);
+            console.log("Parsed cues:", parsedCues);
             if (fileInputRef.current) {
                 fileInputRef.current.value = "";
             }
@@ -49,14 +55,20 @@ export const PluginsSection = () => {
 
     // 字幕開始時の処理
     const startFunction = (cue) => {
-        console.log(`字幕開始 (index: ${cue.index}): ${cue.text}`);
-        sendTextToOverlay(cue.text);
+        let send_text = "";
+        if (cue.actor !== "") {
+            send_text = `[${cue.actor}] ${cue.text}`;
+        } else {
+            send_text = `${cue.text}`;
+        }
+        console.log(`字幕開始 (index: ${cue.index}) send_text:${send_text}`);
+        sendTextToOverlay(send_text);
     };
 
     // 字幕終了時の処理
     const endFunction = (cue) => {
         console.log(`字幕終了 (index: ${cue.index}): ${cue.text}`);
-        // 必要に応じて終了処理（例：テキストクリア）
+        // 必要に応じた終了処理（例：テキストクリア）を実装可能
         // sendTextToOverlay("");
     };
 
@@ -75,7 +87,7 @@ export const PluginsSection = () => {
         setCuesScheduled(false);
     };
 
-    // cues のスケジュールを行う（offset は countdownAdjustment * 1000）
+    // cues のスケジュールを行う（字幕開始時のオフセットは countdownAdjustment * 1000）
     const scheduleCues = (offset) => {
         cues.forEach((cue) => {
             const startDelay = cue.startTime * 1000 + offset;
@@ -93,7 +105,6 @@ export const PluginsSection = () => {
 
     // カウントダウンタイマーの開始
     const startCountdownInterval = (initialValue) => {
-        // 初期表示は (initialValue + countdownAdjustment)
         setEffectiveCountdown(initialValue + countdownAdjustment);
         const countdownInterval = setInterval(() => {
             setEffectiveCountdown((prev) => {
@@ -150,7 +161,8 @@ export const PluginsSection = () => {
         ) {
             sendTextToOverlay("Start.");
             console.log("Start.");
-            scheduleCues(0);
+            // オフセットは countdownAdjustment × 1000 を字幕に反映
+            scheduleCues(countdownAdjustment * 1000);
             setCuesScheduled(true);
         }
     }, [effectiveCountdown, isPlaying, cuesScheduled, countdownAdjustment]);
@@ -190,11 +202,11 @@ export const PluginsSection = () => {
             <h1>字幕プレイヤー</h1>
             <div className={styles.fileSection}>
                 <label className={styles.label}>
-                    SRTファイルを選択:
+                    SRT/ASSファイルを選択:
                     <input
                         ref={fileInputRef}
                         type="file"
-                        accept=".srt"
+                        accept=".srt,.ass"
                         onChange={handleFileUpload}
                         className={styles.input}
                     />
@@ -217,9 +229,7 @@ export const PluginsSection = () => {
                 </label>
                 {playbackMode === "absolute" && (
                     <div className={styles.timeSection}>
-                        <label className={styles.label}>
-                            再生開始時刻 (HH:MM):
-                        </label>
+                        <label className={styles.label}>再生開始時刻 (HH:MM):</label>
                         <div className={styles.timeSelects}>
                             <select
                                 value={targetHour}
@@ -265,21 +275,29 @@ export const PluginsSection = () => {
                     停止
                 </button>
             </div>
-            <div className={styles.countdown}>
-                <span>カウントダウン: {effectiveCountdown} 秒</span>
-                <button
-                    onClick={() => setEffectiveCountdown((prev) => prev + 1)}
-                    className={styles.adjustButton}
-                >
-                    ▲
-                </button>
-                <button
-                    onClick={() => setEffectiveCountdown((prev) => prev - 1)}
-                    className={styles.adjustButton}
-                >
-                    ▼
-                </button>
-            </div>
+            {/* カウントダウン表示：字幕開始前は常に表示 */}
+            {effectiveCountdown !== null && !cuesScheduled && (
+                <div className={styles.countdown}>
+                    <span>カウントダウン: {effectiveCountdown} 秒</span>
+                    <button
+                        onClick={() =>
+                            setEffectiveCountdown((prev) => prev + 1)
+                        }
+                        className={styles.adjustButton}
+                    >
+                        ▲
+                    </button>
+                    <button
+                        onClick={() =>
+                            setEffectiveCountdown((prev) => prev - 1)
+                        }
+                        className={styles.adjustButton}
+                    >
+                        ▼
+                    </button>
+                </div>
+            )}
+            {/* 字幕一覧の表示（relative モードの場合、クリックでジャンプ） */}
             {cues.length > 0 && (
                 <div className={styles.subtitleSection}>
                     <h2>字幕一覧</h2>
@@ -289,6 +307,7 @@ export const PluginsSection = () => {
                                 <th>番号</th>
                                 <th>開始</th>
                                 <th>終了</th>
+                                <th>Actor</th>
                                 <th>テキスト</th>
                             </tr>
                         </thead>
@@ -302,6 +321,7 @@ export const PluginsSection = () => {
                                     <td>{cue.index}</td>
                                     <td>{formatTime(cue.startTime)}</td>
                                     <td>{formatTime(cue.endTime)}</td>
+                                    <td>{cue.actor}</td>
                                     <td>{cue.text}</td>
                                 </tr>
                             ))}
@@ -318,7 +338,8 @@ export const PluginsSection = () => {
 
 /**
  * SRT形式の文字列を解析する関数
- * ユーザー提示のサンプルに基づき、改行コードを正規化後、空行で分割して解析
+ * 改行コードを正規化し、空行で分割して解析する
+ * （actor は存在しないため、空文字列をセット）
  */
 const parseSRT = (data) => {
     const cues = [];
@@ -333,14 +354,54 @@ const parseSRT = (data) => {
             const start = parseTime(timeMatch[1]);
             const end = parseTime(timeMatch[2]);
             const text = lines.slice(2).join("\n");
-            cues.push({ index, startTime: start, endTime: end, text });
+            cues.push({ index, startTime: start, endTime: end, actor: "", text });
         }
     });
     return cues;
 };
 
 /**
- * "HH:MM:SS,mmm" 形式の文字列を秒数に変換する関数
+ * ASS形式の文字列を解析する関数
+ * [Events] セクション内の "Dialogue:" 行から、
+ * フォーマット "Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
+ * に沿って分割する。
+ * ここでは Name を actor、Text を text として抽出する。
+ */
+const parseASS = (data) => {
+    const cues = [];
+    const lines = data.split(/\r?\n/);
+    let index = 1;
+    lines.forEach((line) => {
+        if (line.startsWith("Dialogue:")) {
+            const dialogueLine = line.substring("Dialogue:".length).trim();
+            const parts = dialogueLine.split(",");
+            // parts[0]: Layer, parts[1]: Start, parts[2]: End, parts[3]: Style, parts[4]: Name, parts[5]: MarginL, parts[6]: MarginR, parts[7]: MarginV, parts[8]: Effect, parts[9]～: Text
+            if (parts.length < 10) return;
+            const startTime = parseASSTime(parts[1].trim());
+            const endTime = parseASSTime(parts[2].trim());
+            const actor = parts[4].trim();
+            const text = parts.slice(9).join(",").trim();
+            cues.push({ index: index++, startTime, endTime, actor, text });
+        }
+    });
+    return cues;
+};
+
+/**
+ * "H:MM:SS.cc" 形式の ASS 時刻文字列を秒数に変換する関数
+ * 例: "0:00:10.52" → 10.52 秒
+ */
+const parseASSTime = (timeString) => {
+    const parts = timeString.split(":");
+    if (parts.length !== 3) return 0;
+    const hours = parseFloat(parts[0]);
+    const minutes = parseFloat(parts[1]);
+    const seconds = parseFloat(parts[2]);
+    return hours * 3600 + minutes * 60 + seconds;
+};
+
+/**
+ * "HH:MM:SS,mmm" 形式の SRT 時刻文字列を秒数に変換する関数
  */
 const parseTime = (timeString) => {
     const [hms, ms] = timeString.split(",");
