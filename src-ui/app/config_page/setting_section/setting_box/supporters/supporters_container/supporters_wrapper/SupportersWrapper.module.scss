@@ -1,0 +1,240 @@
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.supporters_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    align-content: start;
+    flex-wrap: wrap;
+    column-gap: 1.8rem;
+    row-gap: 1rem;
+}
+
+.supporter_image_container {
+    position: relative;
+    width: 18rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.supporter_image_wrapper {
+    position: relative;
+    overflow: hidden;
+}
+
+.supporter_image {
+    position: relative;
+    width: 100%;
+}
+
+.supporter_label_component {
+    position: absolute;
+    left: 0.6rem;
+    &.is_icon_plan {
+        top: 50%;
+        transform: translateY(-50%);
+    }
+    top: 0.4rem;
+    display: flex;
+    justify-content: center;
+    gap: 0.4rem;
+}
+
+.supporter_label_image {
+    height: 2rem;
+    // margin-top: 0.2rem;
+    &.small {
+        height: 1.4rem;
+    }
+}
+
+.supporter_icon_wrapper {
+    height: 4rem;
+    aspect-ratio: 1 /1;
+    border-radius: 50%;
+    background-color: #ffffff;
+    overflow: hidden;
+    position: relative;
+}
+
+.supporter_icon {
+    aspect-ratio: 1 / 1;
+    height: 100%;
+    width: 100%;
+}
+
+.default_chato_expression_image {
+    position: absolute;
+    top: 52%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(10deg);
+    width: 2.8rem;
+    opacity: 0.8;
+}
+
+.mogu_image {
+    position: relative;
+    &::after {
+        content: "";
+        position: absolute;
+        top: -200%;
+        left: -200%;
+        width: 300%;
+        height: 300%;
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.7) 50%, rgba(255, 255, 255, 0) 70%);
+        transform: rotate(90deg);
+        animation: shine 2.5s infinite;
+        filter: blur(0.4rem);
+        animation-delay: var(--delay, 0s);
+    }
+
+}
+
+@keyframes shine {
+    0% {
+        top: -200%;
+        left: -200%;
+    }
+    50% {
+        top: 50%;
+        left: 50%;
+        opacity: 0.7;
+    }
+    100% {
+        top: 200%;
+        left: 200%;
+    }
+}
+
+
+
+.and_you_container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+}
+
+.and_you_1, .and_you_2 {
+    width: 2.2rem;
+    height: 0.2rem;
+    border-radius: 50%;
+    background-color: var(--dark_400_color);
+}
+
+.and_you_2 {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.supporter_image_container {
+    &:hover .and_you_container {
+        top: 36%;
+        transform: translate(-50%, -50%) rotate(180deg);
+        animation: disappear 0.3s forwards;
+    }
+    &:hover .and_you_fanbox_link_text {
+        top: 74%;
+        opacity: 1;
+    }
+    &:hover .arrow_left_svg {
+        opacity: 0;
+        animation: arrow_up_down 0.3s forwards;
+        animation-delay: 0.3s;
+    }
+}
+
+.supporter_image_container.and_you_image {
+    cursor: pointer;
+    &:active {
+        opacity: 0.6;
+    }
+}
+
+.and_you_fanbox_link_text {
+    font-size: 1.2rem;
+    color: var(--dark_400_color);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    text-align: center;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    opacity: 0;
+}
+
+.arrow_left_svg {
+    position: absolute;
+    top: 60%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(90deg);
+    color: var(--dark_400_color);
+    width: 2rem;
+    opacity: 0;
+}
+
+@keyframes arrow_up_down {
+    0% {
+        top: 60%;
+    }
+    100% {
+        top: 36%;
+        opacity: 1;
+    }
+}
+
+@keyframes disappear {
+    0% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+
+.supporter_period_container {
+    display: flex;
+    gap: 0.2rem;
+    padding-left: 0.4rem;
+}
+
+.period_box {
+    width: 1.8rem;
+    height: 0.3rem;
+    border-radius: 0.3rem;
+    &.mogu_bar {
+        background-color: var(--dark_basic_text_color);
+    }
+    &.mochi_bar {
+        background-color: var(--received_300_color);
+    }
+    &.fuwa_bar {
+        background-color: #5788a2;
+    }
+    &.basic_bar {
+        background-color: var(--dark_800_color);
+    }
+}
+
+
+.progress_bar {
+    height: 0.2rem;
+    width: 0%;
+    &.progress_bar_active {
+        transition: width 20000ms linear;
+        background-color: var(--primary_400_color);
+        width: 100%;
+    }
+}

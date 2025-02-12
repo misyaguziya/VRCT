@@ -237,6 +237,15 @@ class Config:
         if isinstance(value, dict):
             self._SELECTABLE_TRANSLATION_ENGINE_STATUS = value
 
+    @property
+    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self):
+        return self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS
+
+    @SELECTABLE_TRANSCRIPTION_ENGINE_STATUS.setter
+    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self, value):
+        if isinstance(value, dict):
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -532,6 +541,19 @@ class Config:
         if isinstance(value, list):
             self._MIC_WORD_FILTER = sorted(set(value), key=value.index)
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('HOTKEYS')
+    def HOTKEYS(self):
+        return self._HOTKEYS
+
+    @HOTKEYS.setter
+    def HOTKEYS(self, value):
+        if isinstance(value, dict) and set(value.keys()) == set(self.HOTKEYS.keys()):
+            for key, value in value.items():
+                if isinstance(value, list) or value is None:
+                    self._HOTKEYS[key] = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, self.HOTKEYS, immediate_save=True)
 
     @property
     @json_serializable('MIC_AVG_LOGPROB')
@@ -911,7 +933,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "3.0.1"
+        self._VERSION = "3.0.2"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -964,6 +986,9 @@ class Config:
         self._SELECTABLE_TRANSLATION_ENGINE_STATUS = {}
         for engine in self.SELECTABLE_TRANSLATION_ENGINE_LIST:
             self._SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+        self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {}
+        for engine in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
 
         # Save Json Data
         ## Main Window
@@ -1026,6 +1051,12 @@ class Config:
         self._MIC_PHRASE_TIMEOUT = 3
         self._MIC_MAX_PHRASES = 10
         self._MIC_WORD_FILTER = []
+        self._HOTKEYS = {
+            "toggle_vrct_visibility": None,
+            "toggle_translation": None,
+            "toggle_transcription_send": None,
+            "toggle_transcription_receive": None,
+        }
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._AUTO_SPEAKER_SELECT = True

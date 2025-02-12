@@ -22,6 +22,7 @@
     }
     &.is_compact_mode {
         padding: 1.5rem;
+        justify-content: center;
     }
     &.is_pending {
         pointer-events: none;
@@ -35,11 +36,9 @@
     gap: 0.8rem;
 }
 
-$basic_label_color: var(--dark_basic_text_color);
 $pending_label_color: var(--dark_500_color);
 .switch_label {
     font-size: 1.4rem;
-    color: $basic_label_color;
     &.is_compact_mode {
         display: none;
     }
@@ -50,7 +49,6 @@ $pending_label_color: var(--dark_500_color);
 
 .switch_svg {
     width: 1.8rem;
-    color: $basic_label_color;
     &.is_pending {
         color: $pending_label_color;
     }

@@ -94,6 +94,7 @@ config_page:
         transcription: Transcription
         vr: VR
         others: Others
+        hotkeys: Hotkeys
         advanced_settings: Advanced Settings
         supporters: Supporters
         about_vrct: About VRCT
@@ -256,6 +257,16 @@ config_page:
         send_received_message_to_vrc:
             label: Send Received Message To VRChat
             desc: Send the message you received from the speaker's sound to VRChat's chatbox.
+
+    hotkeys:
+        toggle_vrct_visibility:
+            label: Toggle VRCT Visibility
+        toggle_translation:
+            label: Toggle {{translation}}
+        toggle_transcription_send:
+            label: Toggle {{transcription_send}}
+        toggle_transcription_receive:
+            label: Toggle {{transcription_receive}}
 
     advanced_settings:
         osc_ip_address:

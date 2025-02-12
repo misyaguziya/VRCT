@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
 import styles from "./DownloadModels.module.scss";
 import {
     RadioButton,
-    // DownloadModels,
 } from "../index";
+
 export const DownloadModels = (props) => {
     const options = props.options.map(item => ({
         ...item,
@@ -25,25 +23,11 @@ export const DownloadModels = (props) => {
                 downloadStartFunction={props.downloadStartFunction}
             />
         </>
-        // <div className={styles.container}>
-        //     {props.models.map((option) => (
-        //         <ModelSelector key={option.model_id} option={option} {...props}/>
-        //     ))}
-        // </div>
     );
 };
 
 const ModelSelector = ({option, ...props}) => {
     const { t } = useTranslation();
-    const [circular_color, setCircularColor] = useState("");
-    const [circular_color_2, setCircularColor2] = useState("");
-    useEffect(() => {
-        const circular_color = getComputedStyle(document.documentElement).getPropertyValue("--dark_600_color");
-        setCircularColor(circular_color.trim());
-        const circular_color_2 = getComputedStyle(document.documentElement).getPropertyValue("--primary_300_color");
-        setCircularColor2(circular_color_2.trim());
-    }, []);
-
 
     const renderContent = () => {
         const circular_progress = Math.floor(option.progress / 10) * 10;
@@ -56,13 +40,13 @@ const ModelSelector = ({option, ...props}) => {
                             variant={(option.progress === 100) ? "indeterminate" : "determinate"}
                             value={circular_progress}
                             size="3rem"
-                            sx={{ color: circular_color_2 }}
+                            sx={{ color: "var(--primary_300_color)" }}
                         />
                         <p className={styles.progress_label}>{`${Math.round(option.progress)}%`}</p>
                     </>
                 );
             case option.is_pending:
-                return <CircularProgress size="3rem" sx={{ color: circular_color }}/>;
+                return <CircularProgress size="3rem" sx={{ color: "var(--dark_600_color)" }}/>;
             case !option.is_downloaded:
                 return (
                     <button

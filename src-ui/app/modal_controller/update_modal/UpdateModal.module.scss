@@ -66,7 +66,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--dark_basic_text_color);
 }
 
 .accept_button {
@@ -91,19 +90,19 @@
             border-radius: 0.4rem;
         }
         &.is_latest_version_already {
-            background-color: var(--dark_800_color);
+            background-color: var(--dark_825_color);
             pointer-events: none;
         }
     }
 }
 
 .deny_button {
-    background-color: var(--dark_800_color);
+    background-color: var(--dark_825_color);
     &:hover {
-        background-color: var(--dark_700_color);
+        background-color: var(--dark_800_color);
     }
     &:active {
-        background-color: var(--dark_800_color);
+        background-color: var(--dark_850_color);
     }
 }
 
@@ -137,7 +136,6 @@
     gap: 0.6rem;
 }
 .version_desc_point {
-    background-color: var(--dark_basic_text_color);
     width: 0.3rem;
     border-radius: 50%;
     aspect-ratio: 1 / 1;
@@ -147,5 +145,4 @@
     max-width: 48rem;
     // text-align: center;
     font-weight: 300;
-    color: var(--dark_basic_text_color);
 }

@@ -15,8 +15,10 @@
       "window": {
         "all": false,
         "setAlwaysOnTop": true,
+        "setFocus": true,
         "setDecorations": true,
         "close": true,
+        "hide": true,
         "setPosition": true,
         "setSize": true,
         "maximize": true,
@@ -24,7 +26,10 @@
         "unmaximize": true,
         "unminimize": true,
         "startDragging": true
-    },
+      },
+      "globalShortcut": {
+        "all": true
+      },
     "shell": {
         "all": false,
         "open": true,

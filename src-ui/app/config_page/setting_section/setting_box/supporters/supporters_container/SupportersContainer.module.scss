@@ -1,0 +1,34 @@
+.supporters_container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.vrct_supporters_title_wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.2rem;
+    width: 100%;
+}
+.vrct_supporters_title {
+    height: 4.2rem;
+}
+.calc_period {
+    height: 1.6rem;
+}
+.last_updated_local_date {
+    font-size: 1.2rem;
+    color: var(--dark_600_color);
+    width: 100%;
+    text-align: end;
+}
+
+.vrct_supporters_desc_end {
+    font-size: 1.4rem;
+    margin-top: 2rem;
+    color: var(--dark_300_color);
+}

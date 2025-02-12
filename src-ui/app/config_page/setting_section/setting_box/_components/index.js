@@ -3,6 +3,7 @@ export { ComputeDevice } from "./compute_device/ComputeDevice";
 export { DeeplAuthKey, OpenWebpage_DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
 export { DropdownMenu } from "./dropdown_menu/DropdownMenu";
 export { Entry } from "./entry/Entry";
+export { HotkeysEntry } from "./hotkeys_entry/HotkeysEntry";
 export { LabelComponent } from "./label_component/LabelComponent";
 export { RadioButton } from "./radio_button/RadioButton";
 export { SectionLabelComponent } from "./section_label_component/SectionLabelComponent";

@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics_common";
 import { useSendMessageButtonType, useEnableAutoClearMessageInputBox } from "@logics_configs";
+import { useMessageLogScroll } from "@logics_main";
 import { store } from "@store";
-import { scrollToBottom } from "@utils";
+import { appWindow } from "@tauri-apps/api/window";
 
 export const MessageInputBox = () => {
     const [message_history, setMessageHistory] = useState([]);
@@ -21,6 +22,14 @@ export const MessageInputBox = () => {
     const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
     const { currentSendMessageButtonType } = useSendMessageButtonType();
 
+    const { scrollToBottom } = useMessageLogScroll();
+
+    const log_box_ref = useRef(null);
+
+    useLayoutEffect(() => {
+        store.text_area_ref = log_box_ref;
+    }, []);
+
     useEffect(() => {
         if (currentMessageLogs.data) {
             const sentMessages = currentMessageLogs.data
@@ -32,6 +41,7 @@ export const MessageInputBox = () => {
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
+        // appWindow.minimize();
 
         if (!currentMessageInputValue.data.trim()) return updateMessageInputValue("");
 
@@ -40,7 +50,7 @@ export const MessageInputBox = () => {
         if (currentEnableAutoClearMessageInputBox.data) updateMessageInputValue("");
 
         setTimeout(() => {
-            scrollToBottom(store.log_box_ref);
+            scrollToBottom();
         }, 10);
 
         setHistoryIndex(-1);
@@ -69,7 +79,7 @@ export const MessageInputBox = () => {
             if (history_index > -1) {
                 const new_index = history_index - 1;
                 setHistoryIndex(new_index);
-                setInputValue(
+                updateMessageInputValue(
                     new_index >= 0
                         ? message_history[message_history.length - 1 - new_index]
                         : ""
@@ -89,6 +99,7 @@ export const MessageInputBox = () => {
         <div className={styles.container}>
             <div className={styles.message_box_wrapper}>
                 <textarea
+                    ref={log_box_ref}
                     className={styles.message_box_input_area}
                     onChange={onChangeFunction}
                     onBlur={stopTyping}
