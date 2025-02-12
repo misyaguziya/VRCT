@@ -24,7 +24,7 @@ from models.transcription.transcription_recorder import SelectedMicEnergyRecorde
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight
+from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
@@ -112,6 +112,9 @@ class Model:
 
     def downloadCTranslate2ModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadCTranslate2Weight(config.PATH_LOCAL, weight_type, callback, end_callback)
+
+    def downloadCTranslate2ModelTokenizer(self, weight_type):
+        return downloadCTranslate2Tokenizer(config.PATH_LOCAL, weight_type)
 
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
