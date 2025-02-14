@@ -11,7 +11,7 @@ export const SubtitleSystemContainer = () => {
     // 再生モード ("relative": ボタン押下から、"absolute": 指定時刻から)
     const [playbackMode, setPlaybackMode] = useState("relative");
     // 絶対モード用の再生開始時刻（ドロップダウンで選択、HH:MM）
-    const [targetHour, setTargetHour] = useState("19");
+    const [targetHour, setTargetHour] = useState("23");
     const [targetMinute, setTargetMinute] = useState("00");
 
     // カウントダウン状態
@@ -26,6 +26,8 @@ export const SubtitleSystemContainer = () => {
 
     // タイマー（setTimeout/setInterval）のID管理用
     const timersRef = useRef([]);
+    // カウントダウンタイマー専用の ref
+    const countdownIntervalRef = useRef(null);
     // ファイル入力リセット用の ref
     const fileInputRef = useRef(null);
 
@@ -79,6 +81,10 @@ export const SubtitleSystemContainer = () => {
             clearInterval(timerId);
         });
         timersRef.current = [];
+        if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+            countdownIntervalRef.current = null;
+        }
         console.log("再生を停止しました。");
         setIsPlaying(false);
         setInitialCountdown(null);
@@ -87,7 +93,7 @@ export const SubtitleSystemContainer = () => {
         setCuesScheduled(false);
     };
 
-    // cues のスケジュールを行う（字幕開始時のオフセットは countdownAdjustment * 1000）
+    // cues のスケジュールを行う（字幕開始時のオフセットは調整後のタイミングに合わせる）
     const scheduleCues = (offset) => {
         cues.forEach((cue) => {
             const startDelay = cue.startTime * 1000 + offset;
@@ -103,19 +109,24 @@ export const SubtitleSystemContainer = () => {
         });
     };
 
-    // カウントダウンタイマーの開始
-    const startCountdownInterval = (initialValue) => {
-        setEffectiveCountdown(initialValue + countdownAdjustment);
-        const countdownInterval = setInterval(() => {
+    // カウントダウンタイマーの開始／再登録（指定した値から1秒ごとに減らす）
+    const startCountdownInterval = (startValue) => {
+        // 既存のタイマーがあればクリア
+        if (countdownIntervalRef.current) {
+            clearInterval(countdownIntervalRef.current);
+        }
+        // 新たな開始値を設定
+        setEffectiveCountdown(startValue);
+        countdownIntervalRef.current = setInterval(() => {
             setEffectiveCountdown((prev) => {
                 if (prev <= 1) {
-                    clearInterval(countdownInterval);
+                    clearInterval(countdownIntervalRef.current);
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
-        timersRef.current.push(countdownInterval);
+        timersRef.current.push(countdownIntervalRef.current);
     };
 
     // 「再生開始」ボタン押下時の処理
@@ -146,9 +157,10 @@ export const SubtitleSystemContainer = () => {
             computedCountdown = 10; // relative モードの場合は固定値
         }
         setInitialCountdown(computedCountdown);
-        setEffectiveCountdown(computedCountdown + countdownAdjustment);
-        sendTextToOverlay((computedCountdown + countdownAdjustment).toString());
-        startCountdownInterval(computedCountdown);
+        // 調整値を反映した開始値
+        const startValue = computedCountdown + countdownAdjustment;
+        startCountdownInterval(startValue);
+        sendTextToOverlay(startValue.toString());
     };
 
     // effectiveCountdown が 0 になったとき、字幕開始
@@ -161,10 +173,13 @@ export const SubtitleSystemContainer = () => {
         ) {
             sendTextToOverlay("Start.");
             console.log("Start.");
-            // オフセットは countdownAdjustment × 1000 を字幕に反映
-            scheduleCues(countdownAdjustment * 1000);
+            // 調整後のタイミングで字幕スケジュールを開始
+            scheduleCues(0);
             setCuesScheduled(true);
         }
+
+        console.log(secToDayTime(effectiveCountdown));
+        sendTextToOverlay(secToDayTime(effectiveCountdown));
     }, [effectiveCountdown, isPlaying, cuesScheduled, countdownAdjustment]);
 
     // テーブル内の字幕行をクリック（relative モードのみ）でジャンプ
@@ -211,7 +226,7 @@ export const SubtitleSystemContainer = () => {
                         className={styles.input}
                     />
                 </label>
-                <button onClick={handleClearFile} className={styles.fileClear}>
+                <button onClick={handleClearFile} className={styles.file_clear}>
                     ファイルクリア
                 </button>
             </div>
@@ -228,13 +243,13 @@ export const SubtitleSystemContainer = () => {
                     </select>
                 </label>
                 {playbackMode === "absolute" && (
-                    <div className={styles.timeSection}>
+                    <div className={styles.time_section}>
                         <label className={styles.label}>再生開始時刻 (HH:MM):</label>
-                        <div className={styles.timeSelects}>
+                        <div className={styles.time_selects}>
                             <select
                                 value={targetHour}
                                 onChange={(e) => setTargetHour(e.target.value)}
-                                className={styles.select}
+                                className={styles.time_selects_item}
                             >
                                 {Array.from({ length: 24 }, (_, i) => {
                                     const hour = i.toString().padStart(2, "0");
@@ -249,7 +264,7 @@ export const SubtitleSystemContainer = () => {
                             <select
                                 value={targetMinute}
                                 onChange={(e) => setTargetMinute(e.target.value)}
-                                className={styles.select}
+                                className={styles.time_selects_item}
                             >
                                 {Array.from({ length: 60 }, (_, i) => {
                                     const minute = i.toString().padStart(2, "0");
@@ -278,23 +293,55 @@ export const SubtitleSystemContainer = () => {
             {/* カウントダウン表示：字幕開始前は常に表示 */}
             {effectiveCountdown !== null && !cuesScheduled && (
                 <div className={styles.countdown}>
-                    <span>カウントダウン: {effectiveCountdown} 秒</span>
-                    <button
-                        onClick={() =>
-                            setEffectiveCountdown((prev) => prev + 1)
-                        }
-                        className={styles.adjustButton}
-                    >
-                        ▲
-                    </button>
-                    <button
-                        onClick={() =>
-                            setEffectiveCountdown((prev) => prev - 1)
-                        }
-                        className={styles.adjustButton}
-                    >
-                        ▼
-                    </button>
+                    <span>カウントダウン: {secToDayTime(effectiveCountdown)}</span>
+                    <div className={styles.adjust_button_wrapper}>
+                        {/* 1分単位の調整ボタン */}
+                        <div>
+                            <button
+                                onClick={() => {
+                                    const newValue = effectiveCountdown + 60;
+                                    setCountdownAdjustment((prev) => prev + 60);
+                                    startCountdownInterval(newValue);
+                                }}
+                                className={styles.adjust_button}
+                                >
+                                ▲ 1分
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const newValue = effectiveCountdown - 60;
+                                    setCountdownAdjustment((prev) => prev - 60);
+                                    startCountdownInterval(newValue);
+                                }}
+                                className={styles.adjust_button}
+                                >
+                                ▼ 1分
+                            </button>
+                        </div>
+                        {/* 1秒単位の調整ボタン */}
+                        <div>
+                            <button
+                                onClick={() => {
+                                    const newValue = effectiveCountdown + 1;
+                                    setCountdownAdjustment((prev) => prev + 1);
+                                    startCountdownInterval(newValue);
+                                }}
+                                className={styles.adjust_button}
+                            >
+                                ▲ 1秒
+                            </button>
+                            <button
+                                onClick={() => {
+                                    const newValue = effectiveCountdown - 1;
+                                    setCountdownAdjustment((prev) => prev - 1);
+                                    startCountdownInterval(newValue);
+                                }}
+                                className={styles.adjust_button}
+                            >
+                                ▼ 1秒
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
             {/* 字幕一覧の表示（relative モードの場合、クリックでジャンプ） */}
@@ -407,4 +454,23 @@ const parseTime = (timeString) => {
     const [hms, ms] = timeString.split(",");
     const [hours, minutes, seconds] = hms.split(":").map(Number);
     return hours * 3600 + minutes * 60 + seconds + Number(ms) / 1000;
+};
+
+const secToDayTime = (seconds) => {
+    const day = Math.floor(seconds / 86400);
+    const hour = Math.floor((seconds % 86400) / 3600);
+    const min = Math.floor((seconds % 3600) / 60);
+    const sec = seconds % 60;
+    let time = "";
+    // day が 0 の場合は「日」は出力しない（hour や min も同様）
+    if (day !== 0) {
+        time = `${day}日${hour}時間${min}分${sec}秒`;
+    } else if (hour !== 0) {
+        time = `${hour}:${min}:${sec}`;
+    } else if (min !== 0) {
+        time = `${String(min).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+    } else {
+        time = `${String(sec).padStart(2, "0")}`;
+    }
+    return time;
 };
