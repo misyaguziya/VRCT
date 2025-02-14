@@ -1,7 +1,6 @@
 .container {
-    padding: 4rem;
-    background: #1e1e1e;
-    color: #ffffff;
+    padding: 2rem 4rem;
+    background: var(--dark_900_color);
     border-radius: 1rem;
     flex-shrink: 0;
     height: 100%;
@@ -9,48 +8,54 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+}
 
-    h1 {
-        font-size: 2.4rem;
-        margin-bottom: 1.5rem;
-        text-align: center;
-    }
+.title {
+    font-size: 1.8rem;
+    text-align: center;
+    flex-shrink: 0;
+}
 
-    label {
-        display: block;
-        font-size: 1.6rem;
-        margin-bottom: 0.5rem;
-    }
+.border {
+    width: 100%;
+    height: 0.2rem;
+    background-color: var(--dark_800_color);
+    flex-shrink: 0;
 
-    input,
-    select {
-        font-size: 1.6rem;
-        padding: 0.5rem;
-        border-radius: 0.5rem;
-        border: 0.1rem solid #ccc;
-        background: #333;
-        color: #fff;
-    }
+}
 
-    input[type="file"] {
-        padding: 0.5rem;
-    }
+    // label {
+    //     display: block;
+    //     font-size: 1.6rem;
+    //     margin-bottom: 0.5rem;
+    // }
+
+    // input,
+    // select {
+    //     font-size: 1.6rem;
+    //     padding: 0.5rem;
+    //     border-radius: 0.5rem;
+    //     border: 0.1rem solid #ccc;
+    //     background: #333;
+    //     color: #fff;
+    // }
+
 
     // ボタンの基本スタイル
-    button {
-        font-size: 1.8rem;
-        padding: 1rem 2rem;
-        border: none;
-        border-radius: 0.5rem;
-        cursor: pointer;
-        transition: background 0.3s;
-        margin-right: 1rem;
+    // button {
+    //     // font-size: 1.8rem;
+    //     // padding: 1rem 2rem;
+    //     // border: none;
+    //     // border-radius: 0.5rem;
+    //     // cursor: pointer;
+    //     // // transition: background 0.3s;
+    //     // margin-right: 1rem;
 
-        &:focus {
-            outline: none;
-            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-        }
-    }
+    //     &:focus {
+    //         outline: none;
+    //         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    //     }
+    // }
 
     // 再生開始用ボタン（通常時）
     .primary {
@@ -70,14 +75,7 @@
         }
     }
 
-    // ファイルクリア用ボタン
-    .file_clear {
-        background: #6c757d;
-        color: #fff;
-        &:hover {
-            background: #5a6268;
-        }
-    }
+
 
     // 「再生中」状態（クリック不可）用のスタイル
     .is_playing {
@@ -86,41 +84,6 @@
         pointer-events: none;
     }
 
-    // カウントダウン表示用エリア
-    .countdown {
-        margin-top: 1rem;
-        font-size: 2.6rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        flex-direction: column;
-
-        span {
-            font-weight: bold;
-        }
-
-        button {
-            padding: 0.5rem 1rem;
-            font-size: 1.6rem;
-            border: none;
-            border-radius: 0.4rem;
-            background: #28a745;
-            color: #fff;
-            cursor: pointer;
-            transition: background 0.3s;
-
-            &:hover {
-                background: #218838;
-            }
-        }
-    }
-
-    // 再生モードや時刻指定の select 関連（横並びの場合などに調整）
-    .time_selects {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
 
     // 字幕一覧のテーブル
     table {
@@ -154,26 +117,8 @@
         }
         }
     }
-    }
-
 }
+
 .subtitle_lists {
     font-size: 1.4rem;
-}
-
-.time_section {
-    display: flex;
-    gap: 2rem;
-    justify-content: center;
-    align-items: center;
-}
-.time_selects_item {
-    gap: 0.4rem;
-    width: 6rem;
-    text-align: center;
-}
-
-.adjust_button_wrapper {
-    display: flex;
-    gap: 2rem;
 }
