@@ -1,0 +1,47 @@
+.container {
+    margin-top: 1rem;
+    font-size: 2.6rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-direction: column;
+
+    span {
+        font-weight: bold;
+    }
+
+}
+
+.adjust_button_container {
+    display: flex;
+    gap: 10rem;
+}
+
+.adjust_button_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4rem;
+}
+
+
+
+.adjust_button {
+    padding: 1rem 1.4rem;
+    font-size: 1.8rem;
+    border-radius: 0.4rem;
+    background: var(--primary_600_color);
+    color: #fff;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--primary_400_color);
+    }
+    &:active {
+        background: var(--primary_650_color);
+    }
+}
+
+.adjust_button_border {
+    background-color: var(--dark_600_color);
+    width: 0.2rem;
+}

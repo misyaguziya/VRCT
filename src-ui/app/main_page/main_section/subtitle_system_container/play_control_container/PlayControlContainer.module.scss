@@ -1,0 +1,31 @@
+.container {
+    display: flex;
+    gap: 4rem;
+    display: flex;
+    justify-content: center;
+}
+
+.playback_button, .playback_stop_button {
+    font-size: 1.6rem;
+    padding: 1rem 2rem;
+    cursor: pointer;
+    border-radius: 0.4rem;
+}
+
+.playback_button {
+    background-color: var(--primary_550_color);
+    &:hover {
+        background-color: var(--primary_400_color);
+    }
+    &.is_playing {
+        background-color: var(--primary_650_color);
+        pointer-events: none;
+        color: var(--dark_400_color);
+    }
+}
+.playback_stop_button {
+    background-color: var(--dark_800_color);
+    &:hover {
+        background-color: var(--error_bc_color);
+    }
+}

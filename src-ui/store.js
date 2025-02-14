@@ -285,3 +285,21 @@ export const { atomInstance: Atom_SupportersData, useHook: useStore_SupportersDa
 
 export const { atomInstance: Atom_VrctPosterIndex, useHook: useStore_VrctPosterIndex } = createAtomWithHook(0, "VrctPosterIndex");
 export const { atomInstance: Atom_PosterShowcaseWorldPageIndex, useHook: useStore_PosterShowcaseWorldPageIndex } = createAtomWithHook(0, "PosterShowcaseWorldPageIndex");
+
+// -----------------------------------------------
+// Subtitles
+// -----------------------------------------------
+export const { atomInstance: Atom_IsSubtitlePlaying, useHook: useStore_IsSubtitlePlaying } = createAtomWithHook(false, "IsSubtitlePlaying", { is_state_ok: true });
+export const { atomInstance: Atom_SubtitlePlaybackMode, useHook: useStore_SubtitlePlaybackMode } = createAtomWithHook("relative", "SubtitlePlaybackMode", { is_state_ok: true });
+export const { atomInstance: Atom_SubtitleAbsoluteTargetTime, useHook: useStore_SubtitleAbsoluteTargetTime } = createAtomWithHook({
+    hour: "23",
+    minute: "00",
+}, "SubtitleAbsoluteTargetTime", { is_state_ok: true });
+export const { atomInstance: Atom_IsCuesScheduled, useHook: useStore_IsCuesScheduled } = createAtomWithHook(false, "IsCuesScheduled", { is_state_ok: true });
+export const { atomInstance: Atom_CountdownAdjustment, useHook: useStore_CountdownAdjustment } = createAtomWithHook(0, "CountdownAdjustment", { is_state_ok: true });
+export const { atomInstance: Atom_EffectiveCountdown, useHook: useStore_EffectiveCountdown } = createAtomWithHook(null, "EffectiveCountdown", { is_state_ok: true });
+export const { atomInstance: Atom_SubtitleCues, useHook: useStore_SubtitleCues } = createAtomWithHook([], "SubtitleCues", { is_state_ok: true });
+
+export const { atomInstance: Atom_SubtitleTimers, useHook: useStore_SubtitleTimers } = createAtomWithHook([], "SubtitleTimers", { is_state_ok: true });
+export const { atomInstance: Atom_SubtitleCountdownTimerId, useHook: useStore_SubtitleCountdownTimerId } = createAtomWithHook([], "SubtitleCountdownTimerId", { is_state_ok: true });
+export const { atomInstance: Atom_SubtitleFileName, useHook: useStore_SubtitleFileName } = createAtomWithHook("ファイルが選択されていません", "SubtitleFileName", { is_state_ok: true });
