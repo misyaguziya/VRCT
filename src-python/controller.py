@@ -1100,6 +1100,20 @@ class Controller:
         return {"status":200, "result":config.OSC_PORT}
 
     @staticmethod
+    def getNotificationVrcSfx(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
+
+    @staticmethod
+    def setEnableNotificationVrcSfx(*args, **kwargs) -> dict:
+        config.NOTIFICATION_VRC_SFX = True
+        return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
+
+    @staticmethod
+    def setDisableNotificationVrcSfx(*args, **kwargs) -> dict:
+        config.NOTIFICATION_VRC_SFX = False
+        return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
+
+    @staticmethod
     def getDeepLAuthKey(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["DeepL_API"]}
 
