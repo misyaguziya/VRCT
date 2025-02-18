@@ -237,6 +237,7 @@ config_page:
             label: 翻訳後のメッセージのみ表示する
 
     others:
+        section_label_sounds: サウンド
         auto_clear_the_message_box:
             label: 送信後はチャットボックスを空にする
         send_only_translated_messages:
@@ -252,6 +253,8 @@ config_page:
         send_message_to_vrc:
             label: VRChatにメッセージを送信する
             desc: サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。
+        notification_vrc_sfx:
+            label: チャット送信時に音を鳴らさない
         send_received_message_to_vrc:
             label: 受信したメッセージをVRChatに送信する
             desc: スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。
