@@ -128,11 +128,14 @@ class Overlay:
             try:
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
             except Exception:
-                errorLogging()
                 self.reStartOverlay()
                 while self.initialized is False:
                     time.sleep(0.1)
-                self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+                try:
+                    self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+                except Exception:
+                    errorLogging()
+
             self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
 
