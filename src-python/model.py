@@ -289,8 +289,8 @@ class Model:
     def oscStopSendTyping(self):
         self.osc_handler.sendTyping(flag=False)
 
-    def oscSendMessage(self, message, notification=True):
-        self.osc_handler.sendMessage(message=message, notification=notification)
+    def oscSendMessage(self, message:str):
+        self.osc_handler.sendMessage(message=message, notification=config.NOTIFICATION_VRC_SFX)
 
     def getMuteSelfStatus(self):
         return self.osc_handler.getOSCParameterMuteSelf()
