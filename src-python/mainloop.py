@@ -295,6 +295,10 @@ mapping = {
     "/get/data/osc_port": {"status": True, "variable":controller.getOscPort},
     "/set/data/osc_port": {"status": True, "variable":controller.setOscPort},
 
+    "/get/data/notification_vrc_sfx": {"status": True, "variable":controller.getNotificationVrcSfx},
+    "/set/enable/notification_vrc_sfx": {"status": True, "variable":controller.setEnableNotificationVrcSfx},
+    "/set/disable/notification_vrc_sfx": {"status": True, "variable":controller.setDisableNotificationVrcSfx},
+
     "/run/open_filepath_config_file": {"status": True, "variable":controller.openFilepathConfigFile},
 
     # "/run/start_watchdog": {"status": True, "variable":controller.startWatchdog},
