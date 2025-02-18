@@ -239,6 +239,7 @@ config_page:
             label: Show Only Translated Messages
 
     others:
+        section_label_sounds: Sounds
         auto_clear_the_message_box:
             label: Auto Clear The Message Box
         send_only_translated_messages:
@@ -254,6 +255,8 @@ config_page:
         send_message_to_vrc:
             label: Send Message To VRChat
             desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
+        notification_vrc_sfx:
+            label: Enable Notification Sound When Sending Chat
         send_received_message_to_vrc:
             label: Send Received Message To VRChat
             desc: Send the message you received from the speaker's sound to VRChat's chatbox.
