@@ -198,11 +198,12 @@ class Overlay:
             transform = utils.transform_matrix(base_matrix, translation, rotation)
             transform = mat34Id(transform)
 
-            self.overlay.setOverlayTransformTrackedDeviceRelative(
-                self.handle[size],
-                trackerIndex,
-                transform
-            )
+            if bool(self.overlay_system.isTrackedDeviceConnected(trackerIndex)) is True:
+                self.overlay.setOverlayTransformTrackedDeviceRelative(
+                    self.handle[size],
+                    trackerIndex,
+                    transform
+                )
 
     def updateDisplayDuration(self, display_duration, size):
         self.settings[size]["display_duration"] = display_duration
