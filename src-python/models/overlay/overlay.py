@@ -128,11 +128,14 @@ class Overlay:
             try:
                 self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
             except Exception:
-                errorLogging()
                 self.reStartOverlay()
                 while self.initialized is False:
                     time.sleep(0.1)
-                self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+                try:
+                    self.overlay.setOverlayRaw(self.handle[size], img, width, height, 4)
+                except Exception:
+                    errorLogging()
+
             self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
 
@@ -198,11 +201,12 @@ class Overlay:
             transform = utils.transform_matrix(base_matrix, translation, rotation)
             transform = mat34Id(transform)
 
-            self.overlay.setOverlayTransformTrackedDeviceRelative(
-                self.handle[size],
-                trackerIndex,
-                transform
-            )
+            if bool(self.overlay_system.isTrackedDeviceConnected(trackerIndex)) is True:
+                self.overlay.setOverlayTransformTrackedDeviceRelative(
+                    self.handle[size],
+                    trackerIndex,
+                    transform
+                )
 
     def updateDisplayDuration(self, display_duration, size):
         self.settings[size]["display_duration"] = display_duration

@@ -22,6 +22,7 @@ export { useEnableSendMessageToVrc } from "./others/useEnableSendMessageToVrc";
 export { useEnableSendReceivedMessageToVrc } from "./others/useEnableSendReceivedMessageToVrc";
 export { useEnableSendOnlyTranslatedMessages } from "./others/useEnableSendOnlyTranslatedMessages";
 export { useEnableVrcMicMuteSync } from "./others/useEnableVrcMicMuteSync";
+export { useEnableNotificationVrcSfx } from "./others/useEnableNotificationVrcSfx";
 
 export { useMicRecordTimeout } from "./transcription/useMicRecordTimeout";
 export { useMicPhraseTimeout } from "./transcription/useMicPhraseTimeout";
