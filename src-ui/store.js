@@ -264,6 +264,7 @@ export const { atomInstance: Atom_EnableAutoExportMessageLogs, useHook: useStore
 export const { atomInstance: Atom_EnableVrcMicMuteSync, useHook: useStore_EnableVrcMicMuteSync } = createAtomWithHook(false, "EnableVrcMicMuteSync");
 export const { atomInstance: Atom_EnableSendMessageToVrc, useHook: useStore_EnableSendMessageToVrc } = createAtomWithHook(true, "EnableSendMessageToVrc");
 export const { atomInstance: Atom_EnableSendReceivedMessageToVrc, useHook: useStore_EnableSendReceivedMessageToVrc } = createAtomWithHook(false, "EnableSendReceivedMessageToVrc");
+export const { atomInstance: Atom_EnableNotificationVrcSfx, useHook: useStore_EnableNotificationVrcSfx } = createAtomWithHook(true, "EnableNotificationVrcSfx");
 
 // Hotkeys
 export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createAtomWithHook({

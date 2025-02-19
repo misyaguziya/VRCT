@@ -9,6 +9,7 @@ import {
     useEnableVrcMicMuteSync,
     useEnableSendMessageToVrc,
     useEnableSendReceivedMessageToVrc,
+    useEnableNotificationVrcSfx,
 } from "@logics_configs";
 
 import {
@@ -25,6 +26,8 @@ import { Checkbox } from "@common_components";
 import OpenFolderSvg from "@images/open_folder.svg?react";
 
 export const Others = () => {
+    const { t } = useTranslation();
+
     return (
         <div className={styles.container}>
             <div>
@@ -33,6 +36,10 @@ export const Others = () => {
                 <AutoExportMessageLogsContainer />
                 <VrcMicMuteSyncContainer />
                 <SendMessageToVrcContainer />
+            </div>
+            <div>
+                <SectionLabelComponent label={t("config_page.others.section_label_sounds")} />
+                <EnableNotificationVrcSfxContainer />
             </div>
             <div>
                 <SectionLabelComponent label="Speaker2Chatbox" />
@@ -117,6 +124,19 @@ const SendMessageToVrcContainer = () => {
     );
 };
 
+
+const EnableNotificationVrcSfxContainer = () => {
+    const { t } = useTranslation();
+    const { currentEnableNotificationVrcSfx, toggleEnableNotificationVrcSfx } = useEnableNotificationVrcSfx();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.notification_vrc_sfx.label")}
+            variable={currentEnableNotificationVrcSfx}
+            toggleFunction={toggleEnableNotificationVrcSfx}
+        />
+    );
+};
 
 const SendReceivedMessageToVrcContainer = () => {
     const { t } = useTranslation();

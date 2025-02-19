@@ -931,9 +931,20 @@ class Config:
             self._VRC_MIC_MUTE_SYNC = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
+    @property
+    @json_serializable('NOTIFICATION_VRC_SFX')
+    def NOTIFICATION_VRC_SFX(self):
+        return self._NOTIFICATION_VRC_SFX
+
+    @NOTIFICATION_VRC_SFX.setter
+    def NOTIFICATION_VRC_SFX(self, value):
+        if isinstance(value, bool):
+            self._NOTIFICATION_VRC_SFX = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
     def init_config(self):
         # Read Only
-        self._VERSION = "3.0.2"
+        self._VERSION = "3.0.3"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1114,6 +1125,7 @@ class Config:
         self._SEND_RECEIVED_MESSAGE_TO_VRC = False
         self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
+        self._NOTIFICATION_VRC_SFX = True
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
