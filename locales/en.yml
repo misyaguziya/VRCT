@@ -257,6 +257,7 @@ config_page:
             desc: There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat.
         notification_vrc_sfx:
             label: Enable Notification Sound When Sending Chat
+            desc: Disabling this feature will send chats quietly without playing a notification sound that others can hear.
         send_received_message_to_vrc:
             label: Send Received Message To VRChat
             desc: Send the message you received from the speaker's sound to VRChat's chatbox.

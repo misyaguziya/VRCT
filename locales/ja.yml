@@ -254,7 +254,8 @@ config_page:
             label: VRChatにメッセージを送信する
             desc: サポート対象外ですが、VRChatにメッセージを送信せずに使う方法があります。送信したい場合、この機能を有効にする事を忘れないでください。
         notification_vrc_sfx:
-            label: チャット送信時に音を鳴らさない
+            label: チャット送信時にチャットボックスの通知音を鳴らす
+            desc: この機能を無効にすると、他の人が聞こえるチャットボックスの通知音を鳴らさず、静かに送信します。
         send_received_message_to_vrc:
             label: 受信したメッセージをVRChatに送信する
             desc: スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。
