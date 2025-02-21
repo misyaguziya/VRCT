@@ -132,6 +132,7 @@ const EnableNotificationVrcSfxContainer = () => {
     return (
         <CheckboxContainer
             label={t("config_page.others.notification_vrc_sfx.label")}
+            desc={t("config_page.others.notification_vrc_sfx.desc")}
             variable={currentEnableNotificationVrcSfx}
             toggleFunction={toggleEnableNotificationVrcSfx}
         />
