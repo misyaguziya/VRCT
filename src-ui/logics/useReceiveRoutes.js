@@ -69,6 +69,7 @@ import {
     useIsEnabledOverlayLargeLog,
     useOverlayLargeLogSettings,
     useOverlayShowOnlyTranslatedMessages,
+    useEnableNotificationVrcSfx,
     useHotkeys,
     useOscIpAddress,
     useOscPort,
@@ -170,6 +171,7 @@ export const useReceiveRoutes = () => {
     const { updateOverlayLargeLogSettings } = useOverlayLargeLogSettings();
     const { updateIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
     const { updateOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
+    const { updateEnableNotificationVrcSfx } = useEnableNotificationVrcSfx();
 
     const { updateHotkeys } = useHotkeys();
 
@@ -471,6 +473,10 @@ export const useReceiveRoutes = () => {
         "/get/data/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
         "/set/enable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
         "/set/disable/send_received_message_to_vrc": updateEnableSendReceivedMessageToVrc,
+
+        "/get/data/notification_vrc_sfx": updateEnableNotificationVrcSfx,
+        "/set/enable/notification_vrc_sfx": updateEnableNotificationVrcSfx,
+        "/set/disable/notification_vrc_sfx": updateEnableNotificationVrcSfx,
 
         // Hotkeys
         "/get/data/hotkeys": updateHotkeys,
