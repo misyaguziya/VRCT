@@ -30,6 +30,18 @@
       "globalShortcut": {
         "all": true
       },
+      "fs": {
+        "readDir": true,
+        "readFile": true,
+        "exists": true,
+        "writeFile": true,
+        "createDir": true,
+        "scope": ["$RESOURCE/**", "**/src-tauri/target/debug/plugins/**"]
+      },
+      "http": {
+        "request": true,
+        "scope": ["https://api.github.com/repos/**", "https://github.com/**"]
+      },
     "shell": {
         "all": false,
         "open": true,
@@ -74,7 +86,8 @@
         "bin/VRCT-sidecar"
       ],
       "resources":{
-        "bin/_internal": "_internal"
+        "bin/_internal": "_internal",
+        "plugins": "plugins"
       },
       "windows": {
         "nsis": {

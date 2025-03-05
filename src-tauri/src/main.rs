@@ -22,7 +22,7 @@ fn main() {
                 event.window().set_size(tauri::Size::Physical(*new_inner_size)).unwrap();
             }
         })
-        .invoke_handler(tauri::generate_handler![get_font_list])
+        .invoke_handler(tauri::generate_handler![get_font_list, download_zip_asset])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
@@ -45,4 +45,23 @@ async fn get_font_list() -> Vec<String> {
     }
 
     font_families.into_iter().collect()
+}
+
+#[tauri::command]
+async fn download_zip_asset(url: String) -> Result<String, String> {
+    use reqwest;
+    // reqwest のクライアントを作成
+    let client = reqwest::Client::new();
+    // GET リクエストを送信（リダイレクトも自動追従します）
+    let resp = client.get(&url)
+        .header("Accept", "application/octet-stream")
+        .send()
+        .await.map_err(|e| format!("Request error: {}", e))?;
+    if !resp.status().is_success() {
+        return Err(format!("HTTP error: {}", resp.status()));
+    }
+    // レスポンスのバイナリデータを取得
+    let bytes = resp.bytes().await.map_err(|e| format!("Reading bytes error: {}", e))?;
+    // バイナリデータを base64 エンコードして返す
+    Ok(base64::encode(&bytes))
 }

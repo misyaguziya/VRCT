@@ -9,12 +9,16 @@ import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 import { useEffect } from "react";
 import { SubtitleSystemContainer } from "./subtitle_system_container/SubtitleSystemContainer";
+
+import { PluginHost } from "./PluginHost";
+
 export const MainSection = () => {
 
     return (
         <div className={styles.container}>
             <TopBar />
-            <SubtitleSystemContainer />
+            {/* <SubtitleSystemContainer /> */}
+            <PluginHost />
             {/* <MessageContainer /> */}
             <HandleLanguageSelector />
         </div>

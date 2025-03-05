@@ -34,7 +34,7 @@ const generatePropertyNames = (base_name) => ({
 });
 
 
-const createAtomWithHook = (initialValue, base_name, options) => {
+export const createAtomWithHook = (initialValue, base_name, options) => {
     const property_names = generatePropertyNames(base_name);
     const atomInstance = atom({
         state: (options?.is_state_ok) ? "ok" : "pending",
@@ -273,6 +273,10 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
     toggle_transcription_send: null,
     toggle_transcription_receive: null,
 }, "Hotkeys");
+
+// Plugins
+export const { atomInstance: Atom_InstalledPluginsPath, useHook: useStore_InstalledPluginsPath } = createAtomWithHook([], "InstalledPluginsPath");
+export const { atomInstance: Atom_LoadedPluginsList, useHook: useStore_LoadedPluginsList } = createAtomWithHook([], "LoadedPluginsList");
 
 // Advanced Settings
 export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");

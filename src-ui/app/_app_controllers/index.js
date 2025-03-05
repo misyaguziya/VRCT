@@ -6,3 +6,4 @@ export { ConfigPageCloseTriggerController } from "./ConfigPageCloseTriggerContro
 export { UiSizeController } from "./UiSizeController";
 export { FontFamilyController } from "./FontFamilyController";
 export { TransparencyController } from "./TransparencyController";
+export { PluginsController } from "./PluginsController";

@@ -9,6 +9,7 @@ import {
     UiSizeController,
     FontFamilyController,
     TransparencyController,
+    PluginsController,
 } from "./_app_controllers/index.js";
 
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
@@ -40,6 +41,7 @@ export const App = () => {
             <FontFamilyController />
             <TransparencyController />
             <WindowGeometryController />
+            <PluginsController />
 
             {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                 ? <SplashComponent />
