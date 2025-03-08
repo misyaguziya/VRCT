@@ -1,12 +1,21 @@
-    import { invoke } from '@tauri-apps/api/tauri';
-    import { createAtomWithHook, useStore_LoadedPluginsList } from "@store";
-    import { transform } from "@babel/standalone";
-    import { writeFile, createDir, exists, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
-    const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
-    import JSZip from "jszip";
-    import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
+import { invoke } from '@tauri-apps/api/tauri';
+import { createAtomWithHook, useStore_LoadedPluginsList } from "@store";
+import { transform } from "@babel/standalone";
+import { writeFile, createDir, exists, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
+const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
+import JSZip from "jszip";
+import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
 
-    export const usePlugins = () => {
+import React from "react";
+// import ReactDOM from "react-dom/client";
+
+// グローバルに公開
+window.React = React;
+// window.ReactDOM = ReactDOM;
+window.React$1 = React;
+window.we = React;
+
+export const usePlugins = () => {
     const { updateLoadedPluginsList } = useStore_LoadedPluginsList();
 
     const plugin_context = {
@@ -24,7 +33,6 @@
 
     const asyncLoadPlugin = async (plugin_relative_path) => {
         plugin_relative_path = "plugins/" + plugin_relative_path;
-        console.log("plugin_relative_path",plugin_relative_path);
 
         try {
             const plugin_code = await readTextFile(plugin_relative_path, { dir: BaseDirectory.Resource, recursive: true });
@@ -32,10 +40,11 @@
             const transpiled_code = transform(cleanedCode, {
                 presets: [
                     ["env", { modules: false }],
-                    "react"
+                    "react",
                 ],
                 sourceType: "module"
             }).code;
+
             const blob = new Blob([transpiled_code], { type: "text/javascript" });
             const blob_url = URL.createObjectURL(blob);
             const plugin_module = await import(/* @vite-ignore */ blob_url);
@@ -53,7 +62,6 @@
         if (import.meta.env.DEV) {
             // ホットリロード対応 src-tauri以下にあるpluginsディレクトリから直接読み込み（開発用）
             Object.entries(dev_plugin_mapping).forEach(([key, plugin_module]) => {
-                console.log(plugin_module);
                 if (plugin_module && plugin_module.init) {
                     plugin_module.init(plugin_context);
                 }
@@ -62,9 +70,7 @@
             try {
                 const plugin_files = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
                 for (const target_dir of plugin_files) {
-                    console.log(target_dir);
-
-                    const target_path = target_dir.name + "\\index.jsx";
+                    const target_path = target_dir.name + "/index.es.js";
                     await asyncLoadPlugin(target_path, plugin_context);
                 }
             } catch (error) {
@@ -76,8 +82,6 @@
     const downloadAndExtractPlugin = async (plugin) => {
         try {
             const plugin_zip_url = await fetchLatestPluginZipUrl(plugin);
-            console.log("Latest plugin zip URL:", plugin_zip_url);
-
             // Rust コマンド経由で zip をダウンロード
             const base64Zip = await invoke("download_zip_asset", { url: plugin_zip_url });
             // base64Zip は文字列なので、デコードして Uint8Array に変換
@@ -102,10 +106,8 @@
             zip.forEach((relativePath, zipEntry) => {
                 // .git 以下のファイルはスキップ
                 if (relativePath.startsWith(".git") || relativePath.includes("/.git/")) {
-                    // console.log("Skipping .git file: " + relativePath);
                     return;
                 }
-
 
                 const filePath = target_plugin_path + "/" + relativePath;
 
@@ -113,8 +115,6 @@
                     // フォルダの場合、ディレクトリを作成
                     filePromises.push(
                         createDir(filePath, { dir: BaseDirectory.Resource, recursive: true }).catch((err) => {
-                            console.log(err);
-
                             if (!err.message?.includes("already exists")) {
                                 console.error("Failed to create directory:", filePath, err);
                             }
@@ -142,9 +142,7 @@
             await Promise.all(filePromises);
             console.log("Plugin downloaded successfully.");
 
-            const index_file_relative_path = plugin.asset_name.replace(".zip", "") + "/" + "index.jsx"
-            console.log("index_file_relative_path", index_file_relative_path);
-
+            const index_file_relative_path = plugin.asset_name.replace(".zip", "") + "/" + "index.es.js"
             await asyncLoadPlugin(index_file_relative_path);
 
             console.log("Plugin loaded successfully.");
