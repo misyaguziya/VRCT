@@ -44,6 +44,7 @@ const PluginDownloadContainer = () => {
             {plugin_list.map((plugin) => (
                 <div key={plugin.plugin_id}>
                     <h3>{plugin.title}</h3>
+                    <h3>{plugin.plugin_id}</h3>
                     <button onClick={() => handleDownload(plugin)}>
                         Download and Load Plugin
                     </button>
