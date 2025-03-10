@@ -36,11 +36,12 @@
         "exists": true,
         "writeFile": true,
         "createDir": true,
+        "removeDir": true,
         "scope": ["$RESOURCE/**", "**/src-tauri/target/debug/plugins/**"]
       },
       "http": {
         "request": true,
-        "scope": ["https://api.github.com/repos/**", "https://github.com/**"]
+        "scope": ["https://api.github.com/repos/**", "https://github.com/**", "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json"]
       },
     "shell": {
         "all": false,
