@@ -1,4 +1,5 @@
 import { useStore } from "../store/store";
+import { useEffect } from "react";
 
 export const MainContainer = () => {
     const { updateCountPluginState, currentCountPluginState } = useStore("useStore_CountPluginState");
@@ -8,6 +9,9 @@ export const MainContainer = () => {
             count: prev_value.data.count + 1,
         }));
     };
+
+    useEffect(() => {
+    }, [])
 
     return (
         <div>

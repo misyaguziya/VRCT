@@ -1,50 +1,41 @@
 import { invoke } from '@tauri-apps/api/tauri';
 import { createAtomWithHook, useStore_LoadedPluginsList } from "@store";
+import { useSoftwareVersion } from "@logics_configs";
 import { transform } from "@babel/standalone";
-import { writeFile, createDir, exists, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
+import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
 import JSZip from "jszip";
 import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
 
-import React from "react";
-// import ReactDOM from "react-dom/client";
-
-// グローバルに公開
-window.React = React;
-// window.ReactDOM = ReactDOM;
-window.React$1 = React;
-window.we = React;
-
 export const usePlugins = () => {
     const { updateLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentSoftwareVersion } = useSoftwareVersion();
 
     const plugin_context = {
         registerComponent: ({ plugin_id, location, component }) => {
-        if (!plugin_id || !location || !component) {
-            return console.error("An invalid plugin was detected.", plugin_id, location, component);
-        }
-        updateLoadedPluginsList((prev) => {
-            const filtered = prev.data.filter(item => item.plugin_id !== plugin_id);
-            return [...filtered, { plugin_id, location, component }];
-        });
+            if (!plugin_id || !location || !component) {
+                return console.error("An invalid plugin was detected.", plugin_id, location, component);
+            }
+            updateLoadedPluginsList((prev) => {
+                const filtered = prev.data.filter(item => item.plugin_id !== plugin_id);
+                return [...filtered, { plugin_id, location, component }];
+            });
         },
         createAtomWithHook: (...args) => createAtomWithHook(...args)
     };
 
     const asyncLoadPlugin = async (plugin_relative_path) => {
         plugin_relative_path = "plugins/" + plugin_relative_path;
-
         try {
             const plugin_code = await readTextFile(plugin_relative_path, { dir: BaseDirectory.Resource, recursive: true });
-            const cleanedCode = removeImportStatements(plugin_code);
-            const transpiled_code = transform(cleanedCode, {
+            const cleaned_code = removeImportStatements(plugin_code);
+            const transpiled_code = transform(cleaned_code, {
                 presets: [
                     ["env", { modules: false }],
                     "react",
                 ],
                 sourceType: "module"
             }).code;
-
             const blob = new Blob([transpiled_code], { type: "text/javascript" });
             const blob_url = URL.createObjectURL(blob);
             const plugin_module = await import(/* @vite-ignore */ blob_url);
@@ -60,7 +51,7 @@ export const usePlugins = () => {
 
     const loadAllPlugins = async () => {
         if (import.meta.env.DEV) {
-            // ホットリロード対応 src-tauri以下にあるpluginsディレクトリから直接読み込み（開発用）
+            // 開発時: ホットリロード対応、src-tauri以下のpluginsから直接読み込み
             Object.entries(dev_plugin_mapping).forEach(([key, plugin_module]) => {
                 if (plugin_module && plugin_module.init) {
                     plugin_module.init(plugin_context);
@@ -70,7 +61,7 @@ export const usePlugins = () => {
             try {
                 const plugin_files = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
                 for (const target_dir of plugin_files) {
-                    const target_path = target_dir.name + "/index.es.js";
+                    const target_path = target_dir.name + "/index.esm.js";
                     await asyncLoadPlugin(target_path, plugin_context);
                 }
             } catch (error) {
@@ -82,68 +73,63 @@ export const usePlugins = () => {
     const downloadAndExtractPlugin = async (plugin) => {
         try {
             const plugin_zip_url = await fetchLatestPluginZipUrl(plugin);
-            // Rust コマンド経由で zip をダウンロード
-            const base64Zip = await invoke("download_zip_asset", { url: plugin_zip_url });
-            // base64Zip は文字列なので、デコードして Uint8Array に変換
-            const binaryString = atob(base64Zip);
-            const len = binaryString.length;
+            // Rust コマンド経由で ZIP をダウンロード
+            const base64_zip = await invoke("download_zip_asset", { url: plugin_zip_url });
+            // base64_zip をデコードして Uint8Array に変換
+            const binary_string = atob(base64_zip);
+            const len = binary_string.length;
             const bytes = new Uint8Array(len);
             for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+                bytes[i] = binary_string.charCodeAt(i);
             }
 
-            // JSZip で zip を解凍
+            // JSZip で ZIP を解凍
             const zip = await JSZip.loadAsync(bytes);
 
-            // const plugin_dir_exists = await exists("plugins", { dir: BaseDirectory.Resource, recursive: true });
-            await createDir("plugins/" + plugin.asset_name.replace(".zip", ""), { dir: BaseDirectory.Resource, recursive: true });
-            // if (!plugin_dir_exists) {
-            // }
+            // 展開先ディレクトリのパス（例："plugins/<plugin_id>" とする）
             const target_plugin_path = "plugins/" + plugin.asset_name.replace(".zip", "");
+            // 既に存在する場合は削除してから新規作成
+            if (await exists(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true })) {
+                await removeDir(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true });
+            }
+            await createDir(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true });
 
-
-            const filePromises = [];
-            zip.forEach((relativePath, zipEntry) => {
+            const file_promises = [];
+            zip.forEach((relative_path, zip_entry) => {
                 // .git 以下のファイルはスキップ
-                if (relativePath.startsWith(".git") || relativePath.includes("/.git/")) {
+                if (relative_path.startsWith(".git") || relative_path.includes("/.git/")) {
                     return;
                 }
-
-                const filePath = target_plugin_path + "/" + relativePath;
-
-                if (zipEntry.dir) {
-                    // フォルダの場合、ディレクトリを作成
-                    filePromises.push(
-                        createDir(filePath, { dir: BaseDirectory.Resource, recursive: true }).catch((err) => {
+                const file_path = target_plugin_path + "/" + relative_path;
+                if (zip_entry.dir) {
+                    file_promises.push(
+                        createDir(file_path, { dir: BaseDirectory.Resource, recursive: true }).catch((err) => {
                             if (!err.message?.includes("already exists")) {
-                                console.error("Failed to create directory:", filePath, err);
+                                console.error("Failed to create directory:", file_path, err);
                             }
                         })
                     );
                 } else {
-                    // ファイルの場合、ディレクトリを作成してから書き込む
-                    const dirPath = filePath.substring(0, filePath.lastIndexOf("/")); // 親ディレクトリのパス
-
-                    const promise = createDir(dirPath, { dir: BaseDirectory.Resource, recursive: true })
+                    const dir_path = file_path.substring(0, file_path.lastIndexOf("/"));
+                    const promise = createDir(dir_path, { dir: BaseDirectory.Resource, recursive: true })
                         .catch((err) => {
                             if (!err.message?.includes("already exists")) {
-                                console.error("Failed to create parent directory:", dirPath, err);
+                                console.error("Failed to create parent directory:", dir_path, err);
                             }
                         })
-                        .then(() => zipEntry.async("text"))
-                        .then(async (fileData) => {
-                            await writeFile(filePath, fileData, { dir: BaseDirectory.Resource, recursive: true });
+                        .then(() => zip_entry.async("text"))
+                        .then(async (file_data) => {
+                            await writeFile(file_path, file_data, { dir: BaseDirectory.Resource, recursive: true });
                         });
-
-                    filePromises.push(promise);
+                    file_promises.push(promise);
                 }
             });
 
-            await Promise.all(filePromises);
+            await Promise.all(file_promises);
             console.log("Plugin downloaded successfully.");
 
-            const index_file_relative_path = plugin.asset_name.replace(".zip", "") + "/" + "index.es.js"
-            await asyncLoadPlugin(index_file_relative_path);
+            const index_file_relative_path = plugin.asset_name.replace(".zip", "") + "/index.esm.js";
+            await asyncLoadPlugin(index_file_relative_path, plugin_context);
 
             console.log("Plugin loaded successfully.");
         } catch (error) {
@@ -151,8 +137,7 @@ export const usePlugins = () => {
         }
     };
 
-    // JSON内のURLから GitHub API を使って最新リリース情報を取得し、
-    // assets 配列から plugin.asset_name に一致するアセットの browser_download_url を返す
+    // GitHub API を使用して、最新リリース情報から asset_name に一致するアセットのブラウザダウンロード URL を返す
     const fetchLatestPluginZipUrl = async (plugin) => {
         const api_url = plugin.url;
         const response = await tauriFetch(api_url, {

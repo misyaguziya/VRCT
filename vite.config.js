@@ -33,6 +33,11 @@ export default defineConfig(async () => ({
 
     resolve: {
         alias: {
+            "react": path.resolve(__dirname, "node_modules/react"),
+            "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
+
+
+
             "@root": path.resolve(__dirname),
             "@test_data": path.resolve(__dirname, "./test_data.js"),
 
