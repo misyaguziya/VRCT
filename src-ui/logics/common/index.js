@@ -12,3 +12,4 @@ export { useUpdateSoftware } from "./useUpdateSoftware";
 export { useVolume } from "./useVolume";
 export { useHandleNetworkConnection } from "./useHandleNetworkConnection";
 export { useIsVrctAvailable } from "./useIsVrctAvailable";
+export { useFetch } from "./useFetch";
