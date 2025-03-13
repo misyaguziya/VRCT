@@ -1,15 +1,24 @@
+import React, { useEffect, useRef } from "react";
 import { usePlugins } from "@logics_configs";
 
-
-import React, { useEffect } from "react";
 if (typeof window !== "undefined") {
     window.React = React;
 }
 
 export const PluginsController = () => {
-    const { loadAllPlugins } = usePlugins();
+    const hasRunRef = useRef(false);
+    const {
+        loadAllPlugins,
+        asyncUpdatePluginInfoList,
+    } = usePlugins();
+
     useEffect(() => {
-        loadAllPlugins();
+        if (!hasRunRef.current) {
+            asyncUpdatePluginInfoList().then(() => {
+                loadAllPlugins();
+            });
+        }
+        return () => hasRunRef.current = true;
     }, []);
 
     return null;

@@ -275,8 +275,8 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
 }, "Hotkeys");
 
 // Plugins
-export const { atomInstance: Atom_InstalledPluginsPath, useHook: useStore_InstalledPluginsPath } = createAtomWithHook([], "InstalledPluginsPath");
 export const { atomInstance: Atom_LoadedPluginsList, useHook: useStore_LoadedPluginsList } = createAtomWithHook([], "LoadedPluginsList");
+export const { atomInstance: Atom_PluginsInfoList, useHook: useStore_PluginsInfoList } = createAtomWithHook([], "PluginsInfoList");
 
 // Advanced Settings
 export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");

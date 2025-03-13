@@ -41,7 +41,6 @@ export const App = () => {
             <FontFamilyController />
             <TransparencyController />
             <WindowGeometryController />
-            <PluginsController />
 
             {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                 ? <SplashComponent />
@@ -57,6 +56,7 @@ const Contents = () => {
     const { currentIsSoftwareUpdating } = useIsSoftwareUpdating();
     return (
         <>
+            <PluginsController />
             <SubtitlesController />
 
             <WindowTitleBar />

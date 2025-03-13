@@ -1,10 +1,8 @@
-// PluginHost.jsx
 import React from "react";
-import { useStore_LoadedPluginsList } from "@store";
+import { usePlugins } from "@logics_configs";
 
-// export const PluginHost = ({ location }) => {
 export const PluginHost = () => {
-    const { currentLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentLoadedPluginsList } = usePlugins();
     console.log(currentLoadedPluginsList.data);
 
     return (

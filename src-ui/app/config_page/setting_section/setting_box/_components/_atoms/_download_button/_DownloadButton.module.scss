@@ -1,0 +1,30 @@
+@import "@scss_mixins";
+
+.download_container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 8rem;
+}
+
+.download_button {
+    pointer-events: auto;
+    background-color: var(--dark_800_color);
+    padding: 0.8rem;
+    flex-shrink: 0;
+    &:hover {
+        background-color: var(--dark_750_color);
+    }
+    &:active {
+        background-color: var(--dark_800_color);
+    }
+}
+.download_button_label {
+    font-size: 1.2rem;
+}
+
+.progress_label {
+    position: absolute;
+    font-size: 1rem;
+}

@@ -1,15 +1,30 @@
-import { invoke } from '@tauri-apps/api/tauri';
-import { createAtomWithHook, useStore_LoadedPluginsList } from "@store";
-import { useSoftwareVersion } from "@logics_configs";
+import semver from "semver";
+
+import { invoke } from "@tauri-apps/api/tauri";
+import {
+    createAtomWithHook,
+    useStore_LoadedPluginsList,
+    useStore_PluginsInfoList,
+} from "@store";
+
 import { transform } from "@babel/standalone";
 import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
 import JSZip from "jszip";
-import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
+
+import { useFetch } from "@logics_common";
+import { useSoftwareVersion } from "@logics_configs";
+
+
+// PLUGIN_LIST_URL は中央リポジトリにある、各プラグインの plugin_info.json への URL の配列を保持する JSON の URL
+const PLUGIN_LIST_URL = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json";
 
 export const usePlugins = () => {
-    const { updateLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentLoadedPluginsList, updateLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentPluginsInfoList, updatePluginsInfoList, pendingPluginsInfoList } = useStore_PluginsInfoList();
     const { currentSoftwareVersion } = useSoftwareVersion();
+
+    const { asyncTauriFetchGithub } = useFetch();
 
     const plugin_context = {
         registerComponent: ({ plugin_id, location, component }) => {
@@ -137,17 +152,9 @@ export const usePlugins = () => {
         }
     };
 
-    // GitHub API を使用して、最新リリース情報から asset_name に一致するアセットのブラウザダウンロード URL を返す
     const fetchLatestPluginZipUrl = async (plugin) => {
         const api_url = plugin.url;
-        const response = await tauriFetch(api_url, {
-            method: "GET",
-            responseType: ResponseType.Json,
-            headers: {
-                "Accept": "application/vnd.github+json",
-                "User-Agent": "VRCTPluginApp"
-            }
-        });
+        const response = await asyncTauriFetchGithub(api_url);
         if (response.status !== 200) {
             throw new Error("Failed to fetch latest release info, status: " + response.status);
         }
@@ -159,9 +166,87 @@ export const usePlugins = () => {
         return asset.browser_download_url;
     };
 
+
+    const asyncUpdatePluginInfoList = async () => {
+        pendingPluginsInfoList();
+        try {
+            const response = await asyncTauriFetchGithub(PLUGIN_LIST_URL);
+            if (response.status !== 200) {
+                throw new Error("Failed to fetch plugin list, status: " + response.status);
+            }
+            const plugins_data = response.data;
+            const updated_list = await Promise.all(
+                plugins_data.map(async (plugin_data) => {
+                    try {
+                        const plugin_info = await asyncFetchPluginInfo(plugin_data.url);
+                        return { ...plugin_info };
+                    } catch (error) {
+                        console.error("Error fetching plugin info for URL:", plugin_data.url, error);
+                        // エラー発生時は、plugin_data.title とエラーメッセージを返す
+                        return {
+                            title: plugin_data.title,
+                            plugin_id: plugin_data.plugin_id || plugin_data.title,
+                            error: error.message,
+                            url: plugin_data.url
+                        };
+                    }
+                })
+            );
+            updatePluginsInfoList(updated_list);
+        } catch (error) {
+            console.error("Error fetching plugin info list:", error);
+        }
+    }
+
+    const asyncFetchPluginInfo = async (plugin_info_asset_url) => {
+        const release_response = await asyncTauriFetchGithub(plugin_info_asset_url);
+        if (release_response.status !== 200) {
+            throw new Error(`Failed to fetch release info from ${plugin_info_asset_url}`);
+        }
+        const plugin_info_json = release_response.data.assets.find(asset => asset.name === "plugin_info.json");
+        if (!plugin_info_json) {
+            throw new Error("plugin_info.json not found in release assets");
+        }
+        const plugin_info_json_response = await asyncTauriFetchGithub(plugin_info_json.browser_download_url);
+        if (plugin_info_json_response.status !== 200) {
+            throw new Error(`Failed to fetch plugin_info.json from ${plugin_info_json.browser_download_url}`);
+        }
+        const plugin_info = plugin_info_json_response.data;
+
+        const isPluginCompatible = (main_version, lower_version, upper_version) => {
+            console.log(main_version, lower_version, upper_version);
+
+            // lower_version 以上かつ upper_version 以下なら互換性ありと判定
+            return semver.gte(main_version, lower_version) && semver.lte(main_version, upper_version);
+        };
+
+        const is_plugin_supported = isPluginCompatible(currentSoftwareVersion.data, plugin_info.min_supported_vrct_version, plugin_info.max_supported_vrct_version);
+
+        return {
+            title: plugin_info.title,
+            plugin_id: plugin_info.plugin_id,
+            plugin_version: plugin_info.plugin_version,
+            min_supported_vrct_version: plugin_info.min_supported_vrct_version,
+            max_supported_vrct_version: plugin_info.max_supported_vrct_version,
+            is_plugin_supported: is_plugin_supported,
+            asset_name: plugin_info.asset_name,
+            url: plugin_info_asset_url
+        };
+    }
+
+
+
     return {
+        asyncUpdatePluginInfoList,
+
         loadAllPlugins,
         downloadAndExtractPlugin,
+
+        currentLoadedPluginsList,
+        updateLoadedPluginsList,
+
+        currentPluginsInfoList,
+        updatePluginsInfoList,
     };
 };
 
