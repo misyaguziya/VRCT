@@ -276,6 +276,10 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
 
 // Plugins
 export const { atomInstance: Atom_LoadedPluginsList, useHook: useStore_LoadedPluginsList } = createAtomWithHook([], "LoadedPluginsList");
+export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([
+    { plugin_id: "vrct_plugin_example_1", is_enabled: true },
+    { plugin_id: "vrct_plugin_example_2", is_enabled: false }
+], "SavedPluginsStatus");
 export const { atomInstance: Atom_PluginsInfoList, useHook: useStore_PluginsInfoList } = createAtomWithHook([], "PluginsInfoList");
 
 // Advanced Settings
