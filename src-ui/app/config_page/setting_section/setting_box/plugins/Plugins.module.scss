@@ -20,6 +20,13 @@
     }
 }
 
+.plugin_info_wrapper {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .title {
     font-size: 1.6rem;
 }

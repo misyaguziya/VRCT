@@ -16,31 +16,41 @@ const PluginDownloadContainer = () => {
         downloadAndExtractPlugin,
         currentPluginsInfoList,
         updatePluginsInfoList,
+        currentSavedPluginsStatus,
+        updateSavedPluginsStatus,
+        currentLoadedPluginsList,
+        // updateLoadedPluginsList,
     } = usePlugins();
 
-    const downloadStartFunction = async (plugin) => {
+    const downloadStartFunction = async (target_plugin_id) => {
         updatePluginsInfoList((old_value) => {
             const new_value = old_value.data.map(d => {
-                if (d.plugin_id === plugin.plugin_id) {
+                if (d.plugin_id === target_plugin_id) {
                     d.is_pending = true;
                 }
                 return d;
             });
             return new_value;
         });
-        await downloadAndExtractPlugin(plugin);
-        updatePluginsInfoList((old_value) => {
-            const new_value = old_value.data.map(d => {
-                if (d.plugin_id === plugin.plugin_id) {
-                    d.is_pending = false;
-                }
-                return d;
+        const target_plugin_info = currentPluginsInfoList.data.find(d => d.plugin_id === target_plugin_id);
+        downloadAndExtractPlugin(target_plugin_info).then(() => {
+            updatePluginsInfoList((old_value) => {
+                const new_value = old_value.data.map(d => {
+                    if (d.plugin_id === target_plugin_id) {
+                        d.is_pending = false;
+                        d.is_downloaded = true;
+                    }
+                    return d;
+                });
+                return new_value;
             });
-            return new_value;
-        });
+        })
     };
+    // console.log(currentPluginsInfoList.data);
 
-    const plugin_list = currentPluginsInfoList.data;
+
+    // const plugin_list = currentPluginsInfoList.data;
+    const plugin_list = [...currentPluginsInfoList.data, ...currentLoadedPluginsList.data];
     // const plugin_list = [
     //     {
     //         title: "VRCT Example Plugins 1",
@@ -64,6 +74,26 @@ const PluginDownloadContainer = () => {
     //     },
     // ];
 
+    const getTargetPluginStatus = (target_plugin_id) => {
+        let plugin_status = currentSavedPluginsStatus.data.find(d => d.plugin_id === target_plugin_id) ?? {};
+        const is_downloaded = currentLoadedPluginsList.data.find(d => d.plugin_id === target_plugin_id) ? true : false;
+
+        plugin_status.toggleFunction = () => {
+            updateSavedPluginsStatus((old_value) => {
+                const new_value = old_value.data.map(d => {
+                    if (d.plugin_id === target_plugin_id) {
+                        d.data = !d.data;
+                        d.state = "ok";
+                    }
+                    return d;
+                });
+                return new_value;
+            });
+        }
+        plugin_status.is_downloaded = is_downloaded;
+        plugin_status.is_pending = false;
+        return plugin_status;
+    };
 
 
 
@@ -85,6 +115,7 @@ const PluginDownloadContainer = () => {
                             </div>
                             <DownloadPlugins
                                 plugin_info={plugin}
+                                plugin_status={getTargetPluginStatus(plugin.plugin_id)}
                                 downloadStartFunction={downloadStartFunction}
                             />
                         </div>

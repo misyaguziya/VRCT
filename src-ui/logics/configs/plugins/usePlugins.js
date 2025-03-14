@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import {
     createAtomWithHook,
     useStore_LoadedPluginsList,
+    useStore_SavedPluginsStatus,
     useStore_PluginsInfoList,
 } from "@store";
 
@@ -21,6 +22,7 @@ const PLUGIN_LIST_URL = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_p
 
 export const usePlugins = () => {
     const { currentLoadedPluginsList, updateLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentSavedPluginsStatus, updateSavedPluginsStatus } = useStore_SavedPluginsStatus();
     const { currentPluginsInfoList, updatePluginsInfoList, pendingPluginsInfoList } = useStore_PluginsInfoList();
     const { currentSoftwareVersion } = useSoftwareVersion();
 
@@ -244,6 +246,9 @@ export const usePlugins = () => {
 
         currentLoadedPluginsList,
         updateLoadedPluginsList,
+
+        currentSavedPluginsStatus,
+        updateSavedPluginsStatus,
 
         currentPluginsInfoList,
         updatePluginsInfoList,

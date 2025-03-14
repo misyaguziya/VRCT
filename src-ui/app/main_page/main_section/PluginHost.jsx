@@ -3,7 +3,7 @@ import { usePlugins } from "@logics_configs";
 
 export const PluginHost = () => {
     const { currentLoadedPluginsList } = usePlugins();
-    console.log(currentLoadedPluginsList.data);
+    // console.log(currentLoadedPluginsList.data);
 
     return (
         <div>
