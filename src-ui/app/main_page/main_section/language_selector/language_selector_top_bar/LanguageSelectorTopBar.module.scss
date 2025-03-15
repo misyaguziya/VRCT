@@ -16,7 +16,12 @@
     position: absolute;
     left: 0;
     background-color: var(--dark_800_color);
-    padding: 1.2rem;
+    padding: 0 2rem 0 1.6rem;
+    height: 100%;
+    min-width: 8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
     &:hover{
         background-color: var(--dark_750_color);
