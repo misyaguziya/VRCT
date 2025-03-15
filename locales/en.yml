@@ -17,10 +17,10 @@ main_page:
     swap_button_label: "Swap Languages"
     target_language: "Target Language"
     translator: "Translator"
-    translator_ctranslate2: "Internal (Default)"
+    # translator_label_default: "Default"
 
     translator_selector:
-        is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{translator_ctranslate2}}' is available."
+        is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{ctranslate2}}' is available."
 
     message_log:
         all: "All"
@@ -59,12 +59,9 @@ config_page:
         appearance: "Appearance"
         translation: "Translation"
         transcription: "Transcription"
-        vr: "VR"
         others: "Others"
         hotkeys: "Hotkeys"
         advanced_settings: "Advanced Settings"
-        supporters: "Supporters"
-        about_vrct: "About VRCT"
 
     device:
         check_volume: "Check Volume"
@@ -112,12 +109,12 @@ config_page:
 
     translation:
         ctranslate2_weight_type:
-            label: "Internal Translation Model"
+            label: "{{ctranslate2}} Model"
             desc: "You can choose the translation model to use for the internal translation engine."
             small: "Basic model ({{capacity}})"
             large: "High accuracy model ({{capacity}})"
         ctranslate2_compute_device:
-            label: "Internal Translation Compute Device"
+            label: "{{ctranslate2}} Compute Device"
         deepl_auth_key:
             label: "DeepL Auth Key"
             desc: "Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported."

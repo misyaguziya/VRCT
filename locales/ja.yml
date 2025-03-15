@@ -10,17 +10,17 @@ main_page:
     translation: "翻訳"
     transcription_send: "音声認識（マイク）"
     transcription_receive: "音声認識（スピーカー）"
-    foreground: "最前面表示"
+    foreground: "最前面固定"
     language_settings: "言語設定"
     your_language: "あなたの言語"
     translate_each_other_label: "双方向に翻訳"
     swap_button_label: "言語を入れ替え"
     target_language: "相手の言語"
     translator: "翻訳エンジン"
-    translator_ctranslate2: "オフライン翻訳 (Default)"
+    # translator_label_default: "Default"
 
     translator_selector:
-        is_selected_same_language: "{{your_language}}」と「{{target_language}}」に同じ言語が選択がされているため、「{{translator_ctranslate2}}」のみが使用できます。"
+        is_selected_same_language: "「{{your_language}}」と「{{target_language}}」に同じ言語が選択がされているため、「{{ctranslate2}}」のみが使用できます。"
 
     message_log:
         all: "全て"
@@ -98,7 +98,7 @@ config_page:
             desc: "ログに表示されるフォントのサイズを、UIサイズを基準にして倍率を変えられます。"
         send_message_button_type:
             label: "メッセージ送信ボタン"
-            hide: "非表示 (エンターキーを使って送信)"
+            hide: "非表示 （エンターキーを使って送信）"
             show: "表示"
             show_and_disable_enter_key: "表示し、エンターキーでの送信を無効"
         font_family:
@@ -108,14 +108,14 @@ config_page:
 
     translation:
         ctranslate2_weight_type:
-            label: "オフライン翻訳のタイプ"
-            desc: "翻訳エンジン（オフライン翻訳）で翻訳する際に、使用する翻訳モデルを選択できます。"
+            label: "AI翻訳 {{ctranslate2}} のモデルタイプ"
+            desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル ({{capacity}})"
             large: "高精度モデル ({{capacity}})"
         ctranslate2_compute_device:
-            label: "オフライン翻訳の処理デバイス"
+            label: "AI翻訳 {{ctranslate2}} の処理デバイス"
         deepl_auth_key:
-            label: "DeepL 認証キー"
+            label: "DeepL API 認証キー"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
             open_auth_key_webpage: "DeepLアカウントページを開く"
             save: "保存"
