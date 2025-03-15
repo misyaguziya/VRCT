@@ -34,9 +34,9 @@
     gap: 1rem;
 }
 
-$box_size: 6.8rem;
+$box_size: 6rem;
 .box {
-    width: $box_size;
+    width: 9.2rem;
     height: $box_size;
     background-color: var(--dark_875_color);
     display: flex;
@@ -44,7 +44,7 @@ $box_size: 6.8rem;
     align-items: center;
     white-space: pre-wrap;
     text-align: center;
-    border-radius: 0.6rem;
+    border-radius: 0.2rem;
     cursor: pointer;
     &:hover {
         background-color: var(--dark_825_color);

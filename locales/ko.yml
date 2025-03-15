@@ -17,7 +17,7 @@ main_page:
     swap_button_label: "언어 교체"
     target_language: "상대방의 언어"
     translator: "번역 엔진"
-    translator_ctranslate2: "오프라인 번역 (기본값)"
+    # translator_label_default: "기본값"
 
     message_log:
         all: "전체"

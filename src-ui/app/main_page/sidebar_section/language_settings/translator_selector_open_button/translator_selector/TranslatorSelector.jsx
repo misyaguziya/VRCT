@@ -33,7 +33,7 @@ export const TranslatorSelector = ({selected_id, translation_engines, is_selecte
                             {t("main_page.translator_selector.is_selected_same_language", {
                                 your_language: t("main_page.your_language"),
                                 target_language: t("main_page.target_language"),
-                                translator_ctranslate2: t("main_page.translator_ctranslate2"),
+                                ctranslate2: "CTranslate2",
                             })}
                         </p>
                     </div>

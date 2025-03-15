@@ -17,7 +17,7 @@ main_page:
     swap_button_label: "交換語言"
     target_language: "目標語言"
     translator: "翻譯器"
-    translator_ctranslate2: "離線翻譯（預設）"
+    # translator_label_default: "預設"
 
     message_log:
         all: "全部"
