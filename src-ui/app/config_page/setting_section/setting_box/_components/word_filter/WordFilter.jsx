@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import styles from "./WordFilter.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState } from "react";
@@ -5,6 +6,8 @@ import { useStore_IsOpenedMicWordFilterList } from "@store";
 import { useMicWordFilterList } from "@logics_configs";
 
 export const WordFilter = () => {
+    const { t } = useTranslation();
+
     const [input_value, setInputValue] = useState("");
     const { currentMicWordFilterList, updateMicWordFilterList, setMicWordFilterList } = useMicWordFilterList();
     const { currentIsOpenedMicWordFilterList, updateIsOpenedMicWordFilterList } = useStore_IsOpenedMicWordFilterList();
@@ -82,7 +85,7 @@ export const WordFilter = () => {
             }
             <div className={styles.entry_section_wrapper}>
                 <_Entry width="30rem" onChange={onChangeEntry} ui_variable={input_value}/>
-                <button className={styles.add_button} onClick={addWords}>Add</button>
+                <button className={styles.add_button} onClick={addWords}>{t("config_page.transcription.mic_word_filter.add_button_label")}</button>
             </div>
         </div>
     );
@@ -120,8 +123,6 @@ const WordFilterItem = (props) => {
         </div>
     );
 };
-
-import { useTranslation } from "react-i18next";
 
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 export const WordFilterListToggleComponent = (props) => {
