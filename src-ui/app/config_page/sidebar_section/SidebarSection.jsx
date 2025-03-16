@@ -42,9 +42,16 @@ const Tab = (props) => {
         [styles["is_selected"]]: (currentSelectedConfigTabId.data === props.tab_id) ? true : false
     });
 
+    const getLabel = () => {
+        if (props.tab_id === "vr") return "VR";
+        if (props.tab_id === "supporters") return "Supporters";
+        if (props.tab_id === "about_vrct") return "About VRCT";
+        return t(`config_page.side_menu_labels.${props.tab_id}`);
+    };
+
     return (
         <div className={tab_container_class_names} onClick={onclickFunction}>
-            <p className={styles.tab_text}>{t(`config_page.side_menu_labels.${props.tab_id}`)}</p>
+            <p className={styles.tab_text}>{getLabel()}</p>
             <div className={switch_indicator_class_names}></div>
         </div>
     );

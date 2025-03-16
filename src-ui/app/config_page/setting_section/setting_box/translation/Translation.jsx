@@ -56,7 +56,10 @@ const CTranslate2WeightType_Box = () => {
     return (
         <>
             <DownloadModelsContainer
-                label={t("config_page.translation.ctranslate2_weight_type.label")}
+                label={t(
+                    "config_page.translation.ctranslate2_weight_type.label",
+                    {ctranslate2: "CTranslate2"}
+                )}
                 desc={t(
                     "config_page.translation.ctranslate2_weight_type.desc",
                     {translator: t("main_page.translator")}
@@ -89,10 +92,13 @@ const CTranslation2ComputeDevice_Box = () => {
 
 
     const { currentComputeMode } = useComputeMode();
+    const ctranslate2_compute_device_label = t("config_page.translation.ctranslate2_compute_device.label", {
+        ctranslate2: "Ctranslate2"
+    });
     if (currentComputeMode.data === "cpu") {
         return (
             <ComputeDeviceContainer
-                label={t("config_page.translation.ctranslate2_compute_device.label")}
+                label={ctranslate2_compute_device_label}
                 selected_id={target_index}
                 list={list_for_ui}
                 selectFunction={selectFunction}
@@ -104,8 +110,7 @@ const CTranslation2ComputeDevice_Box = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="ctranslate2_compute_device"
-            label={t("config_page.translation.ctranslate2_compute_device.label")}
-            // desc={t("config_page.translation.ctranslate2_compute_device.label")}
+            label={ctranslate2_compute_device_label}
             selected_id={target_index}
             list={list_for_ui}
             selectFunction={selectFunction}
