@@ -1,6 +1,8 @@
 import { translator_status } from "@ui_configs";
 import { arrayToObject } from "@utils";
 
+import { _useBackendErrorHandling } from "./_useBackendErrorHandling";
+
 import {
     useIsVrctAvailable,
     useNotificationStatus,
@@ -183,6 +185,10 @@ export const useReceiveRoutes = () => {
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
     const { handleNetworkConnection } = useHandleNetworkConnection();
+
+    const {
+        errorHandling_Backend,
+    } = _useBackendErrorHandling();
 
     const routes = {
         // Common
@@ -498,16 +504,25 @@ export const useReceiveRoutes = () => {
         "/get/data/transcription_engines": ()=>{}, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     };
 
-    const error_routes = {
-        "/set/data/mic_record_timeout": updateMicRecordTimeout,
-        "/set/data/mic_phrase_timeout": updateMicPhraseTimeout,
-        "/set/data/mic_max_phrases": updateMicMaxWords,
+    const error_status_routes = {
+        "/run/error_device": errorHandling_Backend,
 
-        "/set/data/speaker_record_timeout": updateSpeakerRecordTimeout,
-        "/set/data/speaker_phrase_timeout": updateSpeakerPhraseTimeout,
-        "/set/data/speaker_max_phrases": updateSpeakerMaxWords,
+        "/run/error_ctranslate2_weight": errorHandling_Backend,
+        "/run/error_whisper_weight": errorHandling_Backend,
 
-        "/set/data/deepl_auth_key": updateDeepLAuthKey,
+        "/set/data/deepl_auth_key": errorHandling_Backend,
+
+        "/run/error_translation_engine": errorHandling_Backend,
+
+        "/set/data/mic_threshold": errorHandling_Backend,
+        "/set/data/mic_record_timeout": errorHandling_Backend,
+        "/set/data/mic_phrase_timeout": errorHandling_Backend,
+        "/set/data/mic_max_phrases": errorHandling_Backend,
+
+        "/set/data/speaker_threshold": errorHandling_Backend,
+        "/set/data/speaker_record_timeout": errorHandling_Backend,
+        "/set/data/speaker_phrase_timeout": errorHandling_Backend,
+        "/set/data/speaker_max_phrases": errorHandling_Backend,
     };
 
 
@@ -519,22 +534,37 @@ export const useReceiveRoutes = () => {
             }
         };
 
+        const handleInvalidEndpoint = (parsed_data) => {
+            console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
+        };
+
+        if (parsed_data.endpoint === "/run/initialization_complete") {
+            initDataSyncProcess(parsed_data.result);
+            updateIsBackendReady(true);
+            return;
+        };
+
         switch (parsed_data.status) {
             case 200:
-                if (parsed_data.endpoint === "/run/initialization_complete") {
-                    initDataSyncProcess(parsed_data.result);
-                    updateIsBackendReady(true);
-                    break;
-                };
                 const route = routes[parsed_data.endpoint];
-                (route) ? route(parsed_data.result) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
+                if (route) {
+                    route(parsed_data.result);
+                } else {
+                    handleInvalidEndpoint(parsed_data);
+                }
                 break;
 
             case 400:
-                const error_route = error_routes[parsed_data.endpoint];
-                (error_route) ? error_route(parsed_data.result.data) : console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
-                console.error(`status 400: ${JSON.stringify(parsed_data.result)}`);
-                showNotification_Error(parsed_data.result.message);
+                const error_route = error_status_routes[parsed_data.endpoint];
+                if (error_route) {
+                    error_route({
+                        message: parsed_data.result.message,
+                        data: parsed_data.result.data,
+                        endpoint: parsed_data.endpoint,
+                    });
+                } else {
+                    handleInvalidEndpoint(parsed_data);
+                }
                 break;
 
             case 348:

@@ -6,6 +6,24 @@
 common:
     go_back_button_label: "返回"
 
+common_error:
+    no_device_mic:
+    no_device_speaker: "未偵測到喇叭裝置。"
+    threshold_invalid_value: "可以設置 {{min}} 到 {{max}} 之間的值。"
+    failed_download_weight_ctranslate2:
+    failed_download_weight_whisper:
+    translation_limit:
+    deepl_auth_key_invalid_length:
+    deepl_auth_key_failed_authentication: "授權金鑰錯誤或已達使用上限。"
+
+    invalid_value_mic_record_timeout: "不能大於「{{mic_phrase_timeout_label}}」，應為 0 或更高。"
+    invalid_value_mic_phrase_timeout: "不能小於「{{mic_record_timeout_label}}」，應為 0 或更高。"
+    invalid_value_mic_max_phrase: "可以設置 0 或更高的數值。"
+
+    invalid_value_speaker_record_timeout: "不能大於「{{speaker_phrase_timeout_label}}」，應為 0 或更高。"
+    invalid_value_speaker_phrase_timeout: "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
+    invalid_value_speaker_max_phrase: "可以設置 0 或更高的數值。"
+
 main_page:
     translation: "翻譯"
     transcription_send: "麥克風轉文字"
@@ -61,7 +79,6 @@ config_page:
             desc_for_automatic: "自動判定麥克風輸入靈敏度。"
             label_for_manual: "麥克風能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整麥克風輸入靈敏度，你可以按下麥克風圖示來測試。"
-            error_message: "可以設置 0 到 {{max}} 之間的值。"
         speaker_device:
             label: "喇叭裝置"
         speaker_dynamic_energy_threshold:
@@ -69,8 +86,6 @@ config_page:
             desc_for_automatic: "自動確定喇叭輸入靈敏度。"
             label_for_manual: "喇叭能量閾值（當前設置：手動）"
             desc_for_manual: "使用滑桿調整喇叭輸入靈敏度，你可以按下喇叭圖示來測試。"
-            error_message: "可以設置 0 到 {{max}} 之間的值。"
-            no_device_error_message: "未偵測到喇叭裝置。"
 
     appearance:
         transparency:
@@ -102,7 +117,6 @@ config_page:
             desc: "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。"
             open_auth_key_webpage: "打開 DeepL 帳號頁面"
             auth_key_success: "授權金鑰更新完成。"
-            auth_key_error: "授權金鑰錯誤或已達使用上限。"
 
     transcription:
         section_label_mic: "麥克風"
@@ -110,15 +124,12 @@ config_page:
         mic_record_timeout:
             label: "麥克風音訊 - 判定結束時間"
             desc: "麥克風未收到音訊後，結束一段話的判定時間（秒）。"
-            error_message: "不能大於「{{mic_phrase_timeout_label}}」，應為 0 或更高。"
         mic_phrase_timeout:
             label: "麥克風音訊 - 紀錄間隔時間"
             desc: "每隔多久要紀錄一次音訊。"
-            error_message: "不能小於「{{mic_record_timeout_label}}」，應為 0 或更高。"
         mic_max_phrase:
             label: "麥克風音訊 - 最大單詞數量"
             desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
-            error_message: "可以設置為 0 或更高的數值。"
         mic_word_filter:
             label: "麥克風單詞過濾器"
             desc: "如果偵測到清單內的單詞，則不會發送訊息。要一次新增多個詞語，請用「,」（半形逗號）分隔。\n*重複詞語會被忽略。"
@@ -127,15 +138,12 @@ config_page:
         speaker_record_timeout:
             label: "喇叭音訊 - 判定結束時間"
             desc: "偵測到靜音並在指定秒數後認為喇叭輸入已結束。（秒）"
-            error_message: "不能大於「{{speaker_phrase_timeout_label}}」，應為 0 或更高。"
         speaker_phrase_timeout:
             label: "喇叭音訊 - 紀錄間隔時間"
             desc: "以指定秒數間隔進行轉錄處理。"
-            error_message: "不能小於「{{speaker_record_timeout_label}}」，應為 0 或更高。"
         speaker_max_phrase:
             label: "喇叭音訊 - 最大單詞數量"
             desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
-            error_message: "可以設置 0 或更高的數值。"
         use_whisper_feature:
             label: "使用 Whisper 模型進行轉錄"
             desc: "在某些語言中，語音識別的準確性可能會提高。使用語音識別時，CPU使用率會增加，請根據你的PC規格考慮是否使用此功能。"

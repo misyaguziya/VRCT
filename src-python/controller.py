@@ -150,7 +150,7 @@ class Controller:
                 400,
                 self.run_mapping["error_device"],
                 {
-                    "message":"No mic device detected",
+                    "message":"No Speaker device detected",
                     "data": None
                 },
             )
@@ -777,7 +777,7 @@ class Controller:
             response = {
                 "status":400,
                 "result":{
-                    "message":"Speaker energy threshold value is out of range",
+                    "message":"Mic energy threshold value is out of range",
                     "data": config.MIC_THRESHOLD
                 }
             }
