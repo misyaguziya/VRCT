@@ -6,6 +6,24 @@
 common:
     go_back_button_label: "돌아가기"
 
+common_error:
+    no_device_mic: "마이크 디바이스를 찾지 못했습니다."
+    no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
+    threshold_invalid_value:
+    failed_download_weight_ctranslate2:
+    failed_download_weight_whisper:
+    translation_limit:
+    deepl_auth_key_invalid_length:
+    deepl_auth_key_failed_authentication: "인증키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
+
+    invalid_value_mic_record_timeout: "0 이상에서 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
+    invalid_value_mic_phrase_timeout: "0 이상에서 '{{mic_record_timeout_label}}'보다 작을 수 없습니다."
+    invalid_value_mic_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
+
+    invalid_value_speaker_record_timeout: "0 이상에서 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
+    invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
+    invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
+
 main_page:
     translation: "번역"
     transcription_send: "음성인식 (마이크)"
@@ -60,7 +78,6 @@ config_page:
             desc_for_automatic: "마이크의 입력 감도를 자동으로 조절합니다."
             label_for_manual: "음성 입력 최소 볼륨 (현재 설정: 수동)"
             desc_for_manual: "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 마이크 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다."
-            error_message: "0에서 {{max}}까지의 숫자로만 설정할 수 있습니다."
         speaker_device:
             label: "스피커 장치"
         speaker_dynamic_energy_threshold:
@@ -68,8 +85,6 @@ config_page:
             desc_for_automatic: "스피커의 입력 감도를 자동으로 조절합니다."
             label_for_manual: "음성 입력 최소 볼륨 (현재 설정: 수동)"
             desc_for_manual: "슬라이더를 움직여 입력 감도를 수동으로 조절합니다. 헤드폰 아이콘을 누르면 실제 음성의 볼륨을 확인하며 감도를 조절할 수 있습니다."
-            error_message: "0에서 {{max}}까지의 숫자로만 설정할 수 있습니다."
-            no_device_error_message: "스피커 디바이스를 찾지 못했습니다."
 
     appearance:
         transparency:
@@ -101,7 +116,6 @@ config_page:
             desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."
             open_auth_key_webpage: "DeepL 계정 페이지 열기"
             auth_key_success: "인증키 갱신이 완료되었습니다."
-            auth_key_error: "인증키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
 
     transcription:
         section_label_mic: "마이크"
@@ -109,15 +123,12 @@ config_page:
         mic_record_timeout:
             label: "최대 무음 시간"
             desc: "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다."
-            error_message: "0 이상에서 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
         mic_phrase_timeout:
             label: "최대 인식 시간"
             desc: "설정된 초 단위로 음성인식 처리가 이루어집니다."
-            error_message: "0 이상에서 '{{mic_record_timeout_label}}'보다 작을 수 없습니다."
         mic_max_phrase:
             label: "최대 입력 절(phrases) 수"
             desc: "인식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 VRChat으로 전송하고 로그에 표시합니다."
-            error_message: "0 이상의 숫자만 설정할 수 있습니다."
         mic_word_filter:
             label: "단어 필터"
             desc: "등록된 단어가 감지되면 해당 문장은 전송되지 않습니다.\n',' 쉼표로 구분하면 여러 단어를 추가할 수 있습니다.\n* 중복된 단어는 등록되지 않습니다."
@@ -126,15 +137,12 @@ config_page:
         speaker_record_timeout:
             label: "최대 무음 시간"
             desc: "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다."
-            error_message: "0 이상에서 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
         speaker_phrase_timeout:
             label: "최대 인식 시간"
             desc: "설정된 초 단위로 음성인식 처리가 이루어집니다."
-            error_message: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
         speaker_max_phrase:
             label: "최대 입력 절(phrases) 수"
             desc: "식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
-            error_message: "0 이상의 숫자만 설정할 수 있습니다."
         use_whisper_feature:
             label: "음성 인식에 Whisper 모델을 사용"
             desc: "일부 언어에서는 음성 인식의 정확도가 향상될 수 있어요. 음성 인식 중 CPU 사용률이 올라가기 때문에 사용하시는 PC의 사양을 고려하여 이 기능을 사용해주세요."
