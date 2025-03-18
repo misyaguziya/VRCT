@@ -29,6 +29,7 @@ main_page:
     transcription_send: "音声認識 マイク"
     transcription_receive: "音声認識 スピーカー"
     foreground: "最前面固定"
+
     language_settings: "言語設定"
     your_language: "あなたの言語"
     translate_each_other_label: "双方向に翻訳"
@@ -83,11 +84,11 @@ config_page:
 
     device:
         check_volume: "音量チェック"
+        label_auto_select: "自動選択"
+        label_host: "ホスト/ドライバー"
+        label_device: "デバイス"
         mic_host_device:
             label: "マイク （デバイス）"
-            label_auto_select: "自動選択"
-            label_host: "ホスト/ドライバー"
-            label_device: "デバイス"
         mic_dynamic_energy_threshold:
             label_for_automatic: "マイク入力感度の調整 （現在の設定: 自動）"
             desc_for_automatic: "マイクの入力感度を自動的に調節する。"
@@ -95,7 +96,6 @@ config_page:
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。"
         speaker_device:
             label: "スピーカー （デバイス）"
-            label_auto_select: "自動選択"
         speaker_dynamic_energy_threshold:
             label_for_automatic: "スピーカー入力感度の調整 （現在の設定: 自動）"
             desc_for_automatic: "スピーカーの入力感度を自動的に調節する。"
@@ -196,10 +196,10 @@ config_page:
         display_duration: "表示時間"
         fadeout_duration: "フェードアウト時間"
         common_settings: "共通設定"
+        tracker: "表示するトラッカーの位置"
         hmd: "HMD"
         left_hand: "左手"
         right_hand: "右手"
-        tracker: "表示するトラッカーの位置"
         overlay_show_only_translated_messages:
             label: "翻訳後のメッセージのみ表示する"
 

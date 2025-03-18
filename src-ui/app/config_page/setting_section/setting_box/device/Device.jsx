@@ -82,7 +82,7 @@ const Mic_Container = () => {
                 <div className={styles.device_contents}>
 
                     <div className={styles.device_auto_select_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_auto_select")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.label_auto_select")}</p>
                         <SwitchBox
                             variable={currentEnableAutoMicSelect}
                             toggleFunction={toggleEnableAutoMicSelect}
@@ -91,7 +91,7 @@ const Mic_Container = () => {
 
                     <div className={styles.device_dropdown_wrapper}>
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_host")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.device.label_host")}</p>
                             <DropdownMenu
                                 dropdown_id="mic_host"
                                 selected_id={currentSelectedMicHost.data}
@@ -104,7 +104,7 @@ const Mic_Container = () => {
                         </div>
 
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_device")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.device.label_device")}</p>
                             <DropdownMenu
                                 dropdown_id="mic_device"
                                 selected_id={currentSelectedMicDevice.data}
@@ -178,7 +178,7 @@ const Speaker_Container = () => {
                 <div className={styles.device_contents}>
 
                     <div className={styles.device_auto_select_wrapper}>
-                        <p className={styles.device_secondary_label}>{t("config_page.device.speaker_device.label_auto_select")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.label_auto_select")}</p>
                         <SwitchBox
                             variable={currentEnableAutoSpeakerSelect}
                             toggleFunction={toggleEnableAutoSpeakerSelect}
@@ -186,7 +186,7 @@ const Speaker_Container = () => {
                     </div>
 
                     <div className={styles.device_dropdown}>
-                        <p className={styles.device_secondary_label}>{t("config_page.device.mic_host_device.label_device")}</p>
+                        <p className={styles.device_secondary_label}>{t("config_page.device.label_device")}</p>
                         <DropdownMenu
                             dropdown_id="speaker_device"
                             label={t("config_page.device.speaker_device.label")}
