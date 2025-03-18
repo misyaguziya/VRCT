@@ -206,7 +206,7 @@ config_page:
     others:
         section_label_sounds: "サウンド"
         auto_clear_the_message_box:
-            label: "送信後はチャットボックスを空にする"
+            label: "送信後はメッセージ入力欄を空にする"
         send_only_translated_messages:
             label: "翻訳後のメッセージのみ送信する"
         auto_export_message_logs:
