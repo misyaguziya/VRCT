@@ -29,19 +29,26 @@ main_page:
     transcription_send: "麥克風轉文字"
     transcription_receive: "喇叭轉文字"
     foreground: "最上層顯示"
+
     language_settings: "語言設定"
     your_language: "你的語言"
     translate_each_other_label: "互相翻譯"
     swap_button_label: "交換語言"
     target_language: "目標語言"
     translator: "翻譯器"
-    # translator_label_default: "預設"
+    translator_label_default: "預設"
+
+    translator_selector:
+        is_selected_same_language:
 
     message_log:
         all: "全部"
         sent: "已發送"
         received: "已接收"
         system: "系統"
+
+        show_resend_button:
+        resend_button_on_hover_desc:
 
     state_text_enabled: "啟用"
     state_text_disabled: "停用"
@@ -54,25 +61,33 @@ main_page:
     updating: "正在更新..."
 
 update_modal:
-    update_software_desc: "下載新版本並自動更新 VRCT。\n會花一些時間，現在更新嗎？"
-    deny_update_software: "稍後再說"
-    accept_update_software: "更新"
-
+    cpu_desc:
+    cuda_desc:
+    cuda_compare_cpu_desc:
+    cuda_disk_space_desc:
+    close_modal:
+    download_latest_and_restart:
+    is_latest_version_already:
+    is_current_compute_device:
 
 config_page:
     version: "版本 {{version}}"
+    model_download_button_label:
     side_menu_labels:
+        device:
         appearance: "外觀"
         translation: "翻譯"
         transcription: "轉錄"
-        vr: "VR"
         others: "其他"
+        hotkeys:
         advanced_settings: "進階設定"
 
     device:
-        mic_host:
-            label: "麥克風 Host/Driver"
-        mic_device:
+        check_volume: "Check Volume"
+        label_auto_select: "Auto Select"
+        label_host: "Host/Driver"
+        label_device: "Device"
+        mic_host_device:
             label: "麥克風裝置"
         mic_dynamic_energy_threshold:
             label_for_automatic: "麥克風能量閾值（當前設置：自動）"
@@ -112,15 +127,20 @@ config_page:
             desc: "你可以選擇用於離線翻譯引擎的翻譯模型。"
             small: "基本模型（{{capacity}}）"
             large: "高準確率模型（{{capacity}}）"
+        ctranslate2_compute_device:
+            label:
         deepl_auth_key:
             label: "DeepL 授權金鑰"
             desc: "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。"
             open_auth_key_webpage: "打開 DeepL 帳號頁面"
+            save:
+            edit:
             auth_key_success: "授權金鑰更新完成。"
 
     transcription:
         section_label_mic: "麥克風"
         section_label_speaker: "喇叭"
+        section_label_transcription_engines:
         mic_record_timeout:
             label: "麥克風音訊 - 判定結束時間"
             desc: "麥克風未收到音訊後，結束一段話的判定時間（秒）。"
@@ -144,38 +164,51 @@ config_page:
         speaker_max_phrase:
             label: "喇叭音訊 - 最大單詞數量"
             desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
-        use_whisper_feature:
-            label: "使用 Whisper 模型進行轉錄"
-            desc: "在某些語言中，語音識別的準確性可能會提高。使用語音識別時，CPU使用率會增加，請根據你的PC規格考慮是否使用此功能。"
+        select_transcription_engine:
+            label:
         whisper_weight_type:
             label: "選擇 Whisper 模型"
-            # desc: |-
-            #     一般來說，容量較大的模型往往具有更高的準確性，但這也導致轉錄時間較長和CPU使用率增加。請參考文檔了解各模型的說明。
-            #     ※特別是超過中等大小的模型，根據CPU性能可能難以運行。
+            desc:
             model_template: "{{model_name}}模型（{{capacity}}）"
             recommended_model_template: "{{model_name}}模型（{{capacity}}）（推薦）"
+        whisper_compute_device:
+            label:
 
     vr:
+        single_line:
+        multi_lines:
+        overlay_enable:
         restore_default_settings: "恢復預設設定"
-        opacity: "透明度"
-        ui_scaling: "介面縮放"
+        position:
+        rotation:
         x_position: "X軸（左右）"
         y_position: "Y軸（上下）"
         z_position: "Z軸（前後）"
         x_rotation: "X軸旋轉"
         y_rotation: "Y軸旋轉"
         z_rotation: "Z軸旋轉"
+        sample_text_button:
+            start:
+            stop:
+            sample_text:
+        opacity: "透明度"
+        ui_scaling: "介面縮放"
         display_duration: "顯示持續時間"
         fadeout_duration: "淡出持續時間"
+        common_settings:
+        tracker:
+        hmd:
+        left_hand:
+        right_hand:
+        overlay_show_only_translated_messages:
+            label:
 
     others:
+        section_label_sounds:
         auto_clear_the_message_box:
             label: "自動清除 Chatbox"
         send_only_translated_messages:
             label: "僅發送翻譯訊息"
-        notice_xsoverlay:
-            label: "XSOverlay 通知"
-            desc: "從 XSOverlay 的通知功能接收訊息。"
         auto_export_message_logs:
             label: "自動匯出訊息記錄"
             desc: "自動將對話訊息匯出為文字文件。"
@@ -185,6 +218,22 @@ config_page:
         send_message_to_vrc:
             label: "發送訊息到 VRChat"
             desc: "當你打算向 VRChat 發送訊息時啟用此功能。"
+        notification_vrc_sfx:
+            label:
+            desc:
+        send_received_message_to_vrc:
+            label:
+            desc:
+
+    hotkeys:
+        toggle_vrct_visibility:
+            label:
+        toggle_translation:
+            label:
+        toggle_transcription_send:
+            label:
+        toggle_transcription_receive:
+            label:
 
     advanced_settings:
         osc_ip_address:
@@ -193,3 +242,5 @@ config_page:
             label: "OSC 端口"
         open_config_filepath:
             label: "打開設定文件"
+        switch_compute_device:
+            label:
