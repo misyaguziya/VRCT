@@ -36,7 +36,7 @@ main_page:
     swap_button_label: "互换"
     target_language: "目标语言"
     translator: "翻译器"
-    # translator_label_default: "默认"
+    translator_label_default: "默认"
 
     translator_selector:
         is_selected_same_language:

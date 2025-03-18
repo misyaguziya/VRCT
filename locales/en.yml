@@ -36,7 +36,7 @@ main_page:
     swap_button_label: "Swap Languages"
     target_language: "Target Language"
     translator: "Translator"
-    # translator_label_default: "Default"
+    translator_label_default: "Default"
 
     translator_selector:
         is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{ctranslate2}}' is available."
