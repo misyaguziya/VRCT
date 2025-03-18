@@ -29,6 +29,7 @@ main_page:
     transcription_send: "你的语音转文字"
     transcription_receive: "他人语音转文字"
     foreground: "顶层显示"
+
     language_settings: "语言设定"
     your_language: "你的语言"
     translate_each_other_label: "双向翻译"
@@ -37,11 +38,17 @@ main_page:
     translator: "翻译器"
     # translator_label_default: "默认"
 
+    translator_selector:
+        is_selected_same_language:
+
     message_log:
         all: "全部"
         sent: "发送"
         received: "接受"
         system: "系统"
+
+        show_resend_button:
+        resend_button_on_hover_desc:
 
     state_text_enabled: "启用"
     state_text_disabled: "停用"
@@ -54,24 +61,33 @@ main_page:
     updating: "更新中..."
 
 update_modal:
-    update_software_desc: "下载新版本并自动启动\n会花少许时间,现在更新吗?"
-    deny_update_software: "稍后再说"
-    accept_update_software: "更新后自动启动"
-
+    cpu_desc:
+    cuda_desc:
+    cuda_compare_cpu_desc:
+    cuda_disk_space_desc:
+    close_modal:
+    download_latest_and_restart:
+    is_latest_version_already:
+    is_current_compute_device:
 
 config_page:
     version: "版本 {{version}}"
+    model_download_button_label:
     side_menu_labels:
+        device:
         appearance: "外观"
         translation: "翻译"
         transcription: "转录"
         others: "其他"
+        hotkeys:
         advanced_settings: "高级设置"
 
     device:
-        mic_host:
-            label: "麦克风(host/driver)"
-        mic_device:
+        check_volume: "Check Volume"
+        label_auto_select: "Auto Select"
+        label_host: "Host/Driver"
+        label_device: "Device"
+        mic_host_device:
             label: "麦克风 (设备)"
         mic_dynamic_energy_threshold:
             label_for_automatic: "麦克风输入阈值(当前设置:自动)"
@@ -111,15 +127,20 @@ config_page:
             desc: "可以选择用于离线翻译的翻译模型"
             small: "普通模型 ({{capacity}})"
             large: "高精度模型 ({{capacity}})"
+        ctranslate2_compute_device:
+            label:
         deepl_auth_key:
             label: "DeepL 授权密匙"
             desc: "在使用的时候,使用时请在主屏幕上通过 DeepL_API 选择 {{translator}}\n※某些语言可能不支持"
             open_auth_key_webpage: "打开DeepL账号页面"
+            save:
+            edit:
             auth_key_success: "授权密匙认证完成。"
 
     transcription:
         section_label_mic: "你的麦克风"
         section_label_speaker: "他人声音"
+        section_label_transcription_engines:
         mic_record_timeout:
             label: "语音输入结束后的静音时间"
             desc: "当检测到静音并经过设定的秒数后，语音输入即被视为完成。"
@@ -143,31 +164,47 @@ config_page:
         speaker_max_phrase:
             label: "语音接收时的最小单词数"
             desc: "转录字数的下限,只有超过这个数字,才会记录转录结果"
-        use_whisper_feature:
-            label: "使用Whisper模型翻译"
-            desc: "在某些语言中,语音识别的准确性可能会提高.语音识别的过程中,CPU占有率可能会提高,请根据你的pc性能来决定是否使用它."
+        select_transcription_engine:
+            label:
         whisper_weight_type:
             label: "选择某个Whisper模型"
-            # desc: |-
-            #     通常来说,容量越大的模型精度也会越高,但也会增加文字显示所需要的时间和CPU的使用率。请浏览各个模型的文档
-            #     ※特别是大于medium容量的模型、因CPU性能原因甚至无法使用。
+            desc:
             model_template: "{{model_name}} 模型 ({{capacity}})"
             recommended_model_template: "{{model_name}} 模型 ({{capacity}}) (推荐)"
+        whisper_compute_device:
+            label:
 
     vr:
+        single_line:
+        multi_lines:
+        overlay_enable:
         restore_default_settings: "恢复默认设置"
-        opacity: "透明度"
-        ui_scaling: "大小"
+        position:
+        rotation:
         x_position: "X轴(左右)"
         y_position: "Y轴(上下)"
         z_position: "Z轴(前后)"
         x_rotation: "X轴旋转"
         y_rotation: "Y轴旋转"
         z_rotation: "Z轴旋转"
+        sample_text_button:
+            start:
+            stop:
+            sample_text:
+        opacity: "透明度"
+        ui_scaling: "大小"
         display_duration: "显示持续时间"
         fadeout_duration: "渐隐持续时间"
+        common_settings:
+        tracker:
+        hmd:
+        left_hand:
+        right_hand:
+        overlay_show_only_translated_messages:
+            label:
 
     others:
+        section_label_sounds:
         auto_clear_the_message_box:
             label: "发言后自动清空chatbox"
         send_only_translated_messages:
@@ -181,6 +218,22 @@ config_page:
         send_message_to_vrc:
             label: "发送信息至VRChat"
             desc: "不发送信息至VRChat的情况下也能使用它,但该功能现在并未完成.在想要发送信息时,请不要忘记打开这个功能."
+        notification_vrc_sfx:
+            label:
+            desc:
+        send_received_message_to_vrc:
+            label:
+            desc:
+
+    hotkeys:
+        toggle_vrct_visibility:
+            label:
+        toggle_translation:
+            label:
+        toggle_transcription_send:
+            label:
+        toggle_transcription_receive:
+            label:
 
     advanced_settings:
         osc_ip_address:
@@ -189,3 +242,5 @@ config_page:
             label: "OSC 端口"
         open_config_filepath:
             label: "打开设置文件"
+        switch_compute_device:
+            label:
