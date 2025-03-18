@@ -78,7 +78,9 @@ $pending_label_color: var(--dark_500_color);
 }
 
 .toggle_control {
-    @include toggle_control_styles;
+    // @include toggle_control_styles;
+    @include toggle_control_styles($toggle_width: 3.6rem, $toggle_height: 1.4rem);
+
     display: flex;
     justify-content: end;
     align-items: center;
