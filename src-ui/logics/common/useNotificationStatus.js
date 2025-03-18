@@ -15,7 +15,7 @@ export const useNotificationStatus = () => {
         });
     };
 
-    const showNotification_Success = (message) => {
+    const showNotification_Success = (message, options = {}) => {
         updateNotificationStatus({
             status: "success",
             is_open: true,
