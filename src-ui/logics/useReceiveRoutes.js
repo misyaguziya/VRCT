@@ -148,7 +148,7 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
-    const { updateDeepLAuthKey } = useDeepLAuthKey();
+    const { updateDeepLAuthKey, saveSuccessDeepLAuthKey } = useDeepLAuthKey();
     const { updateSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
     const {
         updateDownloadedCTranslate2WeightTypeStatus,
@@ -352,7 +352,7 @@ export const useReceiveRoutes = () => {
 
         // Translation
         "/get/data/deepl_auth_key": updateDeepLAuthKey,
-        "/set/data/deepl_auth_key": updateDeepLAuthKey,
+        "/set/data/deepl_auth_key": saveSuccessDeepLAuthKey,
         "/delete/data/deepl_auth_key": () => updateDeepLAuthKey(""),
 
         "/get/data/ctranslate2_weight_type": updateSelectedCTranslate2WeightType,
