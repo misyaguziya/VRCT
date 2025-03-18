@@ -36,7 +36,7 @@ main_page:
     swap_button_label: "言語を入れ替え"
     target_language: "相手の言語"
     translator: "翻訳エンジン"
-    # translator_label_default: "Default"
+    translator_label_default: "デフォルト"
 
     translator_selector:
         is_selected_same_language: "「{{your_language}}」と「{{target_language}}」に同じ言語が選択がされているため、「{{ctranslate2}}」のみが使用できます。"

@@ -36,7 +36,7 @@ main_page:
     swap_button_label: "언어 교체"
     target_language: "상대방의 언어"
     translator: "번역 엔진"
-    # translator_label_default: "기본값"
+    translator_label_default: "기본값"
 
     translator_selector:
         is_selected_same_language:

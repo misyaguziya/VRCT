@@ -15,12 +15,13 @@ export const TranslatorSelector = ({selected_id, translation_engines, is_selecte
                 <div className={styles.wrapper}>
                     {columns.map((column, column_index) => (
                         <div className={styles.column_wrapper} key={`column_${column_index}`}>
-                            {column.map(({ id, label, is_available }) => (
+                            {column.map(({ id, label, is_available, is_default }) => (
                                 <TranslatorBox
                                     key={id}
                                     id={id}
                                     label={label}
                                     is_available={is_available}
+                                    is_default={is_default}
                                     is_selected={(id === selected_id)}
                                 />
                             ))}
@@ -45,6 +46,7 @@ export const TranslatorSelector = ({selected_id, translation_engines, is_selecte
 };
 
 const TranslatorBox = (props) => {
+    const { t } = useTranslation();
     const { setSelectedTranslationEngines} = useLanguageSettings();
     const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 
@@ -53,6 +55,10 @@ const TranslatorBox = (props) => {
         { [styles.is_selected]: props.is_selected },
         { [styles.is_available]: props.is_available }
     );
+    const label_default_class_name = clsx(
+        styles.label_default,
+        { [styles.is_selected]: props.is_selected },
+    );
 
     const selectTranslator = () => {
         if (props.is_selected === false) {
@@ -60,9 +66,11 @@ const TranslatorBox = (props) => {
         }
         updateIsOpenedTranslatorSelector(false);
     };
+
     return (
         <div className={box_class_name} onClick={selectTranslator}>
             <p className={styles.translator_name}>{props.label}</p>
+            {props.is_default && <p className={label_default_class_name}>{t("main_page.translator_label_default")}</p>}
         </div>
     );
 };
