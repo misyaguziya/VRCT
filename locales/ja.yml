@@ -12,30 +12,31 @@ common_error:
     threshold_invalid_value: "{{min}} から {{max}} までの数値で設定できます。"
     failed_download_weight_ctranslate2: "CTranslate2 モデルのダウンロードに失敗しました。"
     failed_download_weight_whisper: "Whisper モデルのダウンロードに失敗しました。"
-    translation_limit: "翻訳エンジンの使用制限に達したか、一時的に制限がかけられています。"
+    translation_limit: "翻訳エンジンの使用制限に達したか、一時的に利用制限がかけられています。"
     deepl_auth_key_invalid_length: "認証キーの文字数が間違っています。"
     deepl_auth_key_failed_authentication: "認証キーが間違っているか、API使用制限が上限に達しています。"
 
     invalid_value_mic_record_timeout: "0 以上で 「{{mic_phrase_timeout_label}}」 より大きくすることはできません。"
     invalid_value_mic_phrase_timeout: "0 以上で 「{{mic_record_timeout_label}}」 より小さくすることはできません。"
-    invalid_value_mic_max_phrase: "0以上の数値を設定できます。"
+    invalid_value_mic_max_phrase: "0 以上の数値を設定できます。"
 
     invalid_value_speaker_record_timeout: "0 以上で 「{{speaker_phrase_timeout_label}}」 より大きくすることはできません。"
     invalid_value_speaker_phrase_timeout: "0 以上で 「{{speaker_record_timeout_label}}」 より小さくすることはできません。"
-    invalid_value_speaker_max_phrase: "0以上の数値を設定できます。"
+    invalid_value_speaker_max_phrase: "0 以上の数値を設定できます。"
 
 main_page:
     translation: "翻訳"
-    transcription_send: "音声認識（マイク）"
-    transcription_receive: "音声認識（スピーカー）"
+    transcription_send: "音声認識 マイク"
+    transcription_receive: "音声認識 スピーカー"
     foreground: "最前面固定"
+
     language_settings: "言語設定"
     your_language: "あなたの言語"
     translate_each_other_label: "双方向に翻訳"
     swap_button_label: "言語を入れ替え"
     target_language: "相手の言語"
     translator: "翻訳エンジン"
-    # translator_label_default: "Default"
+    translator_label_default: "デフォルト"
 
     translator_selector:
         is_selected_same_language: "「{{your_language}}」と「{{target_language}}」に同じ言語が選択がされているため、「{{ctranslate2}}」のみが使用できます。"
@@ -83,23 +84,22 @@ config_page:
 
     device:
         check_volume: "音量チェック"
+        label_auto_select: "自動選択"
+        label_host: "ホスト/ドライバー"
+        label_device: "デバイス"
         mic_host_device:
             label: "マイク （デバイス）"
-            label_auto_select: "自動選択"
-            label_host: "ホスト/ドライバー"
-            label_device: "デバイス"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "マイク入力感度の調整 (現在の設定: 自動)"
+            label_for_automatic: "マイク入力感度の調整 （現在の設定: 自動）"
             desc_for_automatic: "マイクの入力感度を自動的に調節する。"
-            label_for_manual: "マイク入力感度の調整 (現在の設定: 手動)"
+            label_for_manual: "マイク入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。マイクのアイコンを押すと、実際に声を入力し、音量を確認しながら調節できます。"
         speaker_device:
             label: "スピーカー （デバイス）"
-            label_auto_select: "自動選択"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "スピーカー入力感度の調整 (現在の設定: 自動)"
+            label_for_automatic: "スピーカー入力感度の調整 （現在の設定: 自動）"
             desc_for_automatic: "スピーカーの入力感度を自動的に調節する。"
-            label_for_manual: "スピーカー入力感度の調整 (現在の設定: 手動)"
+            label_for_manual: "スピーカー入力感度の調整 （現在の設定: 手動）"
             desc_for_manual: "スライダーを調整して入力感度を手動で決められます。ヘッドフォンのアイコンを押すと、実際に音声を聞き取り、音量を確認しながら調節できます。"
 
     appearance:
@@ -125,8 +125,8 @@ config_page:
         ctranslate2_weight_type:
             label: "AI翻訳 {{ctranslate2}} のモデルタイプ"
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
-            small: "通常モデル ({{capacity}})"
-            large: "高精度モデル ({{capacity}})"
+            small: "通常モデル （{{capacity}}）"
+            large: "高精度モデル （{{capacity}}）"
         ctranslate2_compute_device:
             label: "AI翻訳 {{ctranslate2}} の処理デバイス"
         deepl_auth_key:
@@ -169,8 +169,8 @@ config_page:
         whisper_weight_type:
             label: "Whisperモデルのタイプ"
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
-            model_template: "{{model_name}} モデル ({{capacity}})"
-            recommended_model_template: "{{model_name}} モデル ({{capacity}}) (推奨)"
+            model_template: "{{model_name}} モデル （{{capacity}}）"
+            recommended_model_template: "{{model_name}} モデル （{{capacity}}） [推奨]"
         whisper_compute_device:
             label: "Whisperで使用する処理デバイス"
 
@@ -196,17 +196,17 @@ config_page:
         display_duration: "表示時間"
         fadeout_duration: "フェードアウト時間"
         common_settings: "共通設定"
+        tracker: "表示するトラッカーの位置"
         hmd: "HMD"
         left_hand: "左手"
         right_hand: "右手"
-        tracker: "表示するトラッカーの位置"
         overlay_show_only_translated_messages:
             label: "翻訳後のメッセージのみ表示する"
 
     others:
         section_label_sounds: "サウンド"
         auto_clear_the_message_box:
-            label: "送信後はチャットボックスを空にする"
+            label: "送信後はメッセージ入力欄を空にする"
         send_only_translated_messages:
             label: "翻訳後のメッセージのみ送信する"
         auto_export_message_logs:
@@ -229,11 +229,11 @@ config_page:
         toggle_vrct_visibility:
             label: "VRCTの最小化/アクティブ化の切り替え"
         toggle_translation:
-            label: "{{translation}}機能切り替え"
+            label: "「{{translation}}」 オン/オフの切り替え"
         toggle_transcription_send:
-            label: "{{transcription_send}}機能切り替え"
+            label: "「{{transcription_send}}」 オン/オフの切り替え"
         toggle_transcription_receive:
-            label: "{{transcription_receive}}機能切り替え"
+            label: "「{{transcription_receive}}」 オン/オフの切り替え"
 
     advanced_settings:
         osc_ip_address:
