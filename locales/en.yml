@@ -6,21 +6,40 @@
 common:
     go_back_button_label: "Go Back"
 
+common_error:
+    no_device_mic: "No mic device detected."
+    no_device_speaker: "No Speaker device detected."
+    threshold_invalid_value: "You can set it with a value between {{min}} to {{max}}."
+    failed_download_weight_ctranslate2: "CTranslate2 weight download error."
+    failed_download_weight_whisper: "Whisper weight download error."
+    translation_limit: "Translation engine limit error."
+    deepl_auth_key_invalid_length: "DeepL auth key length is not correct."
+    deepl_auth_key_failed_authentication: "Auth Key is incorrect or Usage limit reached."
+
+    invalid_value_mic_record_timeout: "It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more."
+    invalid_value_mic_phrase_timeout: "It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more."
+    invalid_value_mic_max_phrase: "You can set a number equal to or greater than 0."
+
+    invalid_value_speaker_record_timeout: "It cannot be greater than '{{speaker_phrase_timeout_label}}' with a value of 0 or more."
+    invalid_value_speaker_phrase_timeout: "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
+    invalid_value_speaker_max_phrase: "You can set a number equal to or greater than 0."
+
 main_page:
     translation: "Translation"
     transcription_send: "Voice2Chatbox"
     transcription_receive: "Speaker2Log"
     foreground: "Foreground"
+
     language_settings: "Language Settings"
     your_language: "Your Language"
     translate_each_other_label: "Translate Each Other"
     swap_button_label: "Swap Languages"
     target_language: "Target Language"
     translator: "Translator"
-    translator_ctranslate2: "Internal (Default)"
+    translator_label_default: "Default"
 
     translator_selector:
-        is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{translator_ctranslate2}}' is available."
+        is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{ctranslate2}}' is available."
 
     message_log:
         all: "All"
@@ -59,37 +78,29 @@ config_page:
         appearance: "Appearance"
         translation: "Translation"
         transcription: "Transcription"
-        vr: "VR"
         others: "Others"
         hotkeys: "Hotkeys"
         advanced_settings: "Advanced Settings"
-        supporters: "Supporters"
-        about_vrct: "About VRCT"
 
     device:
         check_volume: "Check Volume"
+        label_auto_select: "Auto Select"
+        label_host: "Host/Driver"
+        label_device: "Device"
         mic_host_device:
             label: "Mic Device"
-            label_auto_select: "Auto Select"
-            label_host: "Host/Driver"
-            label_device: "Device"
         mic_dynamic_energy_threshold:
             label_for_automatic: "Mic Energy Threshold (Current Setting: Automatic)"
             desc_for_automatic: "Automatically determine microphone input sensitivity."
             label_for_manual: "Mic Energy Threshold (Current Setting: Manual)"
             desc_for_manual: "Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume."
-            error_message: "You can set it with a value between 0 to {{max}}."
         speaker_device:
             label: "Speaker Device"
-            label_auto_select: "Auto Select"
-            label_device: "Device"
         speaker_dynamic_energy_threshold:
             label_for_automatic: "Speaker Energy Threshold (Current Setting: Automatic)"
             desc_for_automatic: "Automatically determine speaker input sensitivity."
             label_for_manual: "Speaker Energy Threshold (Current Setting: Manual)"
             desc_for_manual: "Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume."
-            error_message: "You can set it with a value between 0 to {{max}}."
-            no_device_error_message: "No speaker device detected."
 
     appearance:
         transparency:
@@ -112,20 +123,19 @@ config_page:
 
     translation:
         ctranslate2_weight_type:
-            label: "Internal Translation Model"
+            label: "{{ctranslate2}} Model"
             desc: "You can choose the translation model to use for the internal translation engine."
             small: "Basic model ({{capacity}})"
             large: "High accuracy model ({{capacity}})"
         ctranslate2_compute_device:
-            label: "Internal Translation Compute Device"
+            label: "{{ctranslate2}} Compute Device"
         deepl_auth_key:
             label: "DeepL Auth Key"
             desc: "Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported."
+            open_auth_key_webpage: "Open DeepL Account Webpage"
             save: "Save"
             edit: "Edit"
-            open_auth_key_webpage: "Open DeepL Account Webpage"
             auth_key_success: "Auth key update completed."
-            auth_key_error: "Auth Key is incorrect or Usage limit reached."
 
     transcription:
         section_label_mic: "Mic"
@@ -134,15 +144,12 @@ config_page:
         mic_record_timeout:
             label: "Mic Record Timeout"
             desc: "Detects silence and, when the specified number of seconds has passed, considers the mic input to have ended. (Second(s))"
-            error_message: "It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more."
         mic_phrase_timeout:
             label: "Mic Phrase Timeout"
             desc: "Transcription processing is performed at intervals of the specified number of seconds."
-            error_message: "It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more."
         mic_max_phrase:
             label: "Mic Max Words"
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat."
-            error_message: "You can set a number equal to or greater than 0."
         mic_word_filter:
             label: "Mic Word Filter"
             desc: "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a ',' (comma).\n*Duplicate words will not be registered."
@@ -151,15 +158,12 @@ config_page:
         speaker_record_timeout:
             label: "Speaker Record Timeout"
             desc: "Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))"
-            error_message: "It cannot be greater than '{{speaker_phrase_timeout_label}}' with a value of 0 or more."
         speaker_phrase_timeout:
             label: "Speaker Phrase Timeout"
             desc: "Transcription processing is performed at intervals of the specified number of seconds."
-            error_message: "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
         speaker_max_phrase:
             label: "Speaker Max Words"
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
-            error_message: "You can set a number equal to or greater than 0."
         select_transcription_engine:
             label: "Transcription Engine"
         whisper_weight_type:
@@ -191,11 +195,11 @@ config_page:
         ui_scaling: "UI Scaling"
         display_duration: "Display duration"
         fadeout_duration: "Fadeout duration"
+        common_settings: "Common Settings"
         tracker: "Tracker"
         hmd: "HMD"
         left_hand: "Left hand"
         right_hand: "Right hand"
-        common_settings: "Common Settings"
         overlay_show_only_translated_messages:
             label: "Show Only Translated Messages"
 
