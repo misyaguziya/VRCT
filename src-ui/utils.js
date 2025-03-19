@@ -50,3 +50,11 @@ export const updateLabelsById = (data_array, updates) => {
         return update ? { ...item, label: update.label } : item;
     });
 };
+
+export const genNumArray = (count, start_from = 0) => {
+    return [...Array(count).keys()].map(i => i + start_from);
+};
+
+export const genNumObjArray = (count, start_from = 0) => {
+    return arrayToObject(genNumArray(count, start_from));
+};

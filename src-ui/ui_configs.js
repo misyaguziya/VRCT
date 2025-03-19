@@ -54,11 +54,11 @@ export const ui_configs = {
 
 export const translator_status = [
     { id: "DeepL", label: "DeepL", is_available: false },
-    { id: "DeepL_API", label: `DeepL\nAPI`, is_available: false },
+    { id: "DeepL_API", label: `DeepL API`, is_available: false },
     { id: "Google", label: "Google", is_available: false },
     { id: "Bing", label: "Bing", is_available: false },
     { id: "Papago", label: "Papago", is_available: false },
-    { id: "CTranslate2", label: `Internal\n(Default)`, is_available: false },
+    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
 ];
 
 export const ctranslate2_weight_type_status = [
