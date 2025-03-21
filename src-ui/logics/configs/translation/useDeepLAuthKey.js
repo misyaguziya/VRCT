@@ -18,14 +18,20 @@ export const useDeepLAuthKey = () => {
         pendingDeepLAuthKey();
         asyncStdoutToPython("/set/data/deepl_auth_key", selected_deepl_auth_key);
     };
-    const saveSuccessDeepLAuthKey = (saved_deepl_auth_key) => {
-        updateDeepLAuthKey(saved_deepl_auth_key);
-        showNotification_Success(t("config_page.translation.deepl_auth_key.auth_key_success"));
-    };
 
     const deleteDeepLAuthKey = () => {
         pendingDeepLAuthKey();
         asyncStdoutToPython("/delete/data/deepl_auth_key");
+    };
+
+    const savedDeepLAuthKey = (data) => {
+        updateDeepLAuthKey(data);
+        showNotification_Success(t("config_page.translation.deepl_auth_key.auth_key_success"));
+    };
+
+    const saveErrorDeepLAuthKey = ({data, message}) => {
+        updateDeepLAuthKey(data);
+        showNotification_Error(message);
     };
 
     return {
@@ -33,7 +39,9 @@ export const useDeepLAuthKey = () => {
         getDeepLAuthKey,
         updateDeepLAuthKey,
         setDeepLAuthKey,
-        saveSuccessDeepLAuthKey,
         deleteDeepLAuthKey,
+
+        saveErrorDeepLAuthKey,
+        savedDeepLAuthKey,
     };
 };
