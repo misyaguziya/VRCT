@@ -148,7 +148,7 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
-    const { updateDeepLAuthKey, saveSuccessDeepLAuthKey } = useDeepLAuthKey();
+    const { updateDeepLAuthKey, savedDeepLAuthKey } = useDeepLAuthKey();
     const { updateSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
     const {
         updateDownloadedCTranslate2WeightTypeStatus,
@@ -352,7 +352,7 @@ export const useReceiveRoutes = () => {
 
         // Translation
         "/get/data/deepl_auth_key": updateDeepLAuthKey,
-        "/set/data/deepl_auth_key": saveSuccessDeepLAuthKey,
+        "/set/data/deepl_auth_key": savedDeepLAuthKey,
         "/delete/data/deepl_auth_key": () => updateDeepLAuthKey(""),
 
         "/get/data/ctranslate2_weight_type": updateSelectedCTranslate2WeightType,
@@ -523,6 +523,9 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_record_timeout": errorHandling_Backend,
         "/set/data/speaker_phrase_timeout": errorHandling_Backend,
         "/set/data/speaker_max_phrases": errorHandling_Backend,
+
+        "/set/data/osc_ip_address": errorHandling_Backend,
+        "/set/data/osc_port": errorHandling_Backend,
     };
 
 
@@ -555,12 +558,14 @@ export const useReceiveRoutes = () => {
                 break;
 
             case 400:
+            case 500:
                 const error_route = error_status_routes[parsed_data.endpoint];
                 if (error_route) {
                     error_route({
                         message: parsed_data.result.message,
                         data: parsed_data.result.data,
                         endpoint: parsed_data.endpoint,
+                        _result: parsed_data.result,
                     });
                 } else {
                     handleInvalidEndpoint(parsed_data);
