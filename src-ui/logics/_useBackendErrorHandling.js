@@ -14,6 +14,10 @@ import {
     useSpeakerMaxWords,
 
     useDeepLAuthKey,
+
+
+    useOscIpAddress,
+    useOscPort,
 } from "@logics_configs";
 import { ui_configs } from "../ui_configs";
 
@@ -29,9 +33,13 @@ export const _useBackendErrorHandling = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
-    const { updateDeepLAuthKey } = useDeepLAuthKey();
+    const { updateDeepLAuthKey, saveErrorDeepLAuthKey } = useDeepLAuthKey();
 
-    const errorHandling_Backend = ({message, data, endpoint}) => {
+
+    const { saveErrorOscIpAddress } = useOscIpAddress();
+    const { saveErrorOscPort } = useOscPort();
+
+    const errorHandling_Backend = ({message, data, endpoint, _result}) => {
         switch (message) {
             case "No mic device detected":
                 showNotification_Error(t("common_error.no_device_mic"));
@@ -111,8 +119,12 @@ export const _useBackendErrorHandling = () => {
                 break;
 
             default:
-                if (endpoint === "/set/data/deepl_auth_key") updateDeepLAuthKey(data);
-                showNotification_Error(message);
+                // determine by endpoint, not message.
+                if (endpoint === "/set/data/deepl_auth_key") saveErrorDeepLAuthKey({message, data, endpoint, _result});
+                if (endpoint === "/set/data/osc_ip_address") saveErrorOscIpAddress({message, data, endpoint, _result});
+                if (endpoint === "/set/data/osc_port") saveErrorOscPort({message, data, endpoint, _result});
+
+
                 break;
         }
 
