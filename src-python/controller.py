@@ -1086,7 +1086,7 @@ class Controller:
     @staticmethod
     def setOscIpAddress(data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
-            return {
+            response = {
                 "status":400,
                 "result":{
                     "message":"Invalid IP address",
@@ -1097,16 +1097,17 @@ class Controller:
             try:
                 model.setOscIpAddress(data)
                 config.OSC_IP_ADDRESS = data
-                return {"status":200, "result":config.OSC_IP_ADDRESS}
+                response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
-                return {
+                response = {
                     "status":400,
                     "result":{
                         "message":"Cannot set IP address",
                         "data": config.OSC_IP_ADDRESS
                     }
                 }
+        return response
 
     @staticmethod
     def getOscPort(*args, **kwargs) -> dict:
