@@ -150,7 +150,7 @@ class Controller:
                 400,
                 self.run_mapping["error_device"],
                 {
-                    "message":"No Speaker device detected",
+                    "message":"No speaker device detected",
                     "data": None
                 },
             )
