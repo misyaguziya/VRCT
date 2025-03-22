@@ -15,9 +15,7 @@ import {
 
     useDeepLAuthKey,
 
-
     useOscIpAddress,
-    useOscPort,
 } from "@logics_configs";
 import { ui_configs } from "../ui_configs";
 
@@ -35,9 +33,7 @@ export const _useBackendErrorHandling = () => {
 
     const { updateDeepLAuthKey, saveErrorDeepLAuthKey } = useDeepLAuthKey();
 
-
-    const { saveErrorOscIpAddress } = useOscIpAddress();
-    const { saveErrorOscPort } = useOscPort();
+    const { updateOscIpAddress } = useOscIpAddress();
 
     const errorHandling_Backend = ({message, data, endpoint, _result}) => {
         switch (message) {
@@ -55,9 +51,9 @@ export const _useBackendErrorHandling = () => {
                 break;
             case "Speaker energy threshold value is out of range":
                 showNotification_Error(t("common_error.threshold_invalid_value",
-                { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max },
-            ));
-            break;
+                    { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max },
+                ));
+                break;
 
             case "CTranslate2 weight download error":
                 showNotification_Error(t("common_error.failed_download_weight_ctranslate2"));
@@ -118,12 +114,21 @@ export const _useBackendErrorHandling = () => {
                 showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"));
                 break;
 
+
+            // Advanced Settings, error messages are set by Backend (EN only)
+            case "Invalid IP address":
+                updateOscIpAddress(data);
+                showNotification_Error(message);
+                break;
+
+            case "Cannot set IP address":
+                updateOscIpAddress(data);
+                showNotification_Error(message);
+                break;
+
             default:
                 // determine by endpoint, not message.
                 if (endpoint === "/set/data/deepl_auth_key") saveErrorDeepLAuthKey({message, data, endpoint, _result});
-                if (endpoint === "/set/data/osc_ip_address") saveErrorOscIpAddress({message, data, endpoint, _result});
-                if (endpoint === "/set/data/osc_port") saveErrorOscPort({message, data, endpoint, _result});
-
 
                 break;
         }

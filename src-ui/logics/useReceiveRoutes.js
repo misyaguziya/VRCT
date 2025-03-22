@@ -525,7 +525,6 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_max_phrases": errorHandling_Backend,
 
         "/set/data/osc_ip_address": errorHandling_Backend,
-        "/set/data/osc_port": errorHandling_Backend,
     };
 
 
@@ -558,7 +557,6 @@ export const useReceiveRoutes = () => {
                 break;
 
             case 400:
-            case 500:
                 const error_route = error_status_routes[parsed_data.endpoint];
                 if (error_route) {
                     error_route({
@@ -570,6 +568,10 @@ export const useReceiveRoutes = () => {
                 } else {
                     handleInvalidEndpoint(parsed_data);
                 }
+                break;
+            case 500:
+                showNotification_Error(
+                    `An error occurred. Please restart VRCT or contact the developers. ${JSON.stringify(parsed_data.result)}`, { hide_duration: null });
                 break;
 
             case 348:
