@@ -44,7 +44,7 @@ export const _useBackendErrorHandling = () => {
             case "No mic device detected":
                 showNotification_Error(t("common_error.no_device_mic"));
                 break;
-            case "No Speaker device detected":
+            case "No speaker device detected":
                 showNotification_Error(t("common_error.no_device_speaker"));
                 break;
 
