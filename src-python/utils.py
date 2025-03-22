@@ -7,12 +7,20 @@ from logging.handlers import RotatingFileHandler
 
 from ctranslate2 import get_supported_compute_types
 import requests
+import ipaddress
 
-def isConnectedNetwork(url="http://www.google.com", timeout=3):
+def isConnectedNetwork(url="http://www.google.com", timeout=3) -> bool:
     try:
         response = requests.get(url, timeout=timeout)
         return response.status_code == 200
     except requests.RequestException:
+        return False
+
+def isValidIpAddress(ip_address: str) -> bool:
+    try:
+        ipaddress.ip_address(ip_address)
+        return True
+    except ValueError:
         return False
 
 def getBestComputeType(device, device_index) -> str:
