@@ -9,7 +9,6 @@ export const init = (plugin_context) => {
     };
 
     plugin_context.registerComponent({
-        plugin_id: "plugin_example_1_my_plugin",
         location: "main_section",
         component: EntryComponents,
     });
