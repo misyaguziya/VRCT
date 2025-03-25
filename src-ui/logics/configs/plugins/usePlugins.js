@@ -56,10 +56,12 @@ export const usePlugins = () => {
     }
 
     const asyncLoadPlugin = async (plugin_folder_relative_path) => {
-        const init_path = "plugins/" + plugin_folder_relative_path +"/index.esm.js";
-        const plugin_info_path = "plugins/" + plugin_folder_relative_path +"/plugin_info.json";
+        const init_path = "plugins/" + plugin_folder_relative_path + "/index.esm.js";
+        const plugin_info_path = "plugins/" + plugin_folder_relative_path + "/plugin_info.json";
         try {
-            const plugin_info = await readTextFile(plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
+            const plugin_info_json = await readTextFile(plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
+            const plugin_info = JSON.parse(plugin_info_json);
+
             const plugin_code = await readTextFile(init_path, { dir: BaseDirectory.Resource, recursive: true });
             const cleaned_code = removeImportStatements(plugin_code);
             const transpiled_code = transform(cleaned_code, {
