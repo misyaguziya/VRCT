@@ -10,8 +10,8 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
-const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
-const dev_plugin_info_mapping = import.meta.glob("/src-tauri/plugins/**/plugin_info.json", { eager: true });
+import { dev_plugins } from "@dev_plugins_path";
+
 import JSZip from "jszip";
 
 import { useFetch } from "@logics_common";
@@ -85,22 +85,17 @@ export const usePlugins = () => {
 
     const asyncLoadAllPlugins = async () => {
         if (import.meta.env.DEV) {
-            // 開発時: ホットリロード対応、src-tauri以下のpluginsから直接読み込み
-            Object.entries(dev_plugin_mapping).forEach(([key, plugin_module]) => {
-                // 例: key が "/src-tauri/plugins/sample/index.jsx" の場合、plugin_info.json のパスは同じディレクトリ内にある
-                const pluginInfoKey = key.replace("index.jsx", "plugin_info.json");
-                const plugin_info = dev_plugin_info_mapping[pluginInfoKey];
-
-                if (!plugin_info) {
-                    console.error("plugin_info.json has not found:", pluginInfoKey);
+            // `dev_plugins` を利用してプラグインを登録
+            dev_plugins.forEach(({ index, plugin_info }) => {
+                if (!index || !plugin_info) {
+                    console.error("Invalid development plugin detected", index, plugin_info);
                     return;
                 }
-
-                // plugin_info を使ってプラグインコンテキストを生成
                 const plugin_context = generatePluginContext(plugin_info);
-
-                if (plugin_module && plugin_module.init) {
-                    plugin_module.init(plugin_context);
+                if (index.init) {
+                    index.init(plugin_context);
+                } else {
+                    console.error("Plugin missing init function", plugin_info);
                 }
             });
         } else {

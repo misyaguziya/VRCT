@@ -33,11 +33,6 @@ export default defineConfig(async () => ({
 
     resolve: {
         alias: {
-            "react": path.resolve(__dirname, "node_modules/react"),
-            "react-dom": path.resolve(__dirname, "node_modules/react-dom"),
-
-
-
             "@root": path.resolve(__dirname),
             "@test_data": path.resolve(__dirname, "./test_data.js"),
 
@@ -53,6 +48,8 @@ export default defineConfig(async () => ({
 
             "@setting_box": path.resolve(__dirname, "src-ui/app/config_page/setting_section/setting_box/index.js"),
             "@common_components": path.resolve(__dirname, "src-ui/common_components/index.js"),
+
+            "@dev_plugins_path": path.resolve(__dirname, "src-ui/plugins/index.js"),
         },
     },
 
