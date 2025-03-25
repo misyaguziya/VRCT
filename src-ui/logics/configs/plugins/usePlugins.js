@@ -11,6 +11,7 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { transform } from "@babel/standalone";
 import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
 const dev_plugin_mapping = import.meta.glob("/src-tauri/plugins/**/index.jsx", { eager: true });
+const dev_plugin_info_mapping = import.meta.glob("/src-tauri/plugins/**/plugin_info.json", { eager: true });
 import JSZip from "jszip";
 
 import { useFetch } from "@logics_common";
@@ -29,31 +30,37 @@ export const usePlugins = () => {
 
     const { asyncTauriFetchGithub } = useFetch();
 
-    const plugin_context = {
-        registerComponent: ({ plugin_id, location, component }) => {
-            if (!plugin_id || !location || !component) {
-                return console.error("An invalid plugin was detected.", plugin_id, location, component);
-            }
-            updatePluginsData(prev => {
-                const is_already_registered = prev.data.some(old_value => old_value.plugin_id === plugin_id);
-                const new_value = prev.data.map(old_value =>
-                    old_value.plugin_id === plugin_id
-                        ? { ...old_value, location, component, is_downloaded: true }
-                        : old_value
-                );
+    const generatePluginContext= (plugin_info) => {
+        const plugin_context = {
+            registerComponent: ({ location, component }) => {
+                if (!plugin_info.plugin_id || !location || !component) {
+                    return console.error("An invalid plugin was detected.", plugin_info.plugin_id, location, component);
+                }
+                updatePluginsData(prev => {
+                    const is_already_registered = prev.data.some(old_value => old_value.plugin_id === plugin_info.plugin_id);
 
-                return is_already_registered
-                    ? new_value
-                    : [...new_value, { plugin_id, location, component, is_downloaded: true }];
-            });
-        },
-        createAtomWithHook: (...args) => createAtomWithHook(...args)
-    };
+                    const new_value = prev.data.map(old_value =>
+                        old_value.plugin_id === plugin_info.plugin_id
+                            ? { ...old_value, ...plugin_info, location, component, is_downloaded: true }
+                            : old_value
+                    );
 
-    const asyncLoadPlugin = async (plugin_relative_path) => {
-        plugin_relative_path = "plugins/" + plugin_relative_path;
+                    return is_already_registered
+                        ? new_value
+                        : [...new_value, { plugin_id: plugin_info.plugin_id, location, component, is_downloaded: true }];
+                });
+            },
+            createAtomWithHook: (...args) => createAtomWithHook(...args)
+        };
+        return plugin_context;
+    }
+
+    const asyncLoadPlugin = async (plugin_folder_relative_path) => {
+        const init_path = "plugins/" + plugin_folder_relative_path +"/index.esm.js";
+        const plugin_info_path = "plugins/" + plugin_folder_relative_path +"/plugin_info.json";
         try {
-            const plugin_code = await readTextFile(plugin_relative_path, { dir: BaseDirectory.Resource, recursive: true });
+            const plugin_info = await readTextFile(plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
+            const plugin_code = await readTextFile(init_path, { dir: BaseDirectory.Resource, recursive: true });
             const cleaned_code = removeImportStatements(plugin_code);
             const transpiled_code = transform(cleaned_code, {
                 presets: [
@@ -68,10 +75,10 @@ export const usePlugins = () => {
             URL.revokeObjectURL(blob_url);
 
             if (plugin_module && plugin_module.init) {
-                plugin_module.init(plugin_context);
+                plugin_module.init(generatePluginContext(plugin_info));
             }
         } catch (error) {
-            console.error("Failed to load plugin from", plugin_relative_path, error);
+            console.error("Failed to load plugin from", plugin_folder_relative_path, error);
         }
     };
 
@@ -79,6 +86,18 @@ export const usePlugins = () => {
         if (import.meta.env.DEV) {
             // 開発時: ホットリロード対応、src-tauri以下のpluginsから直接読み込み
             Object.entries(dev_plugin_mapping).forEach(([key, plugin_module]) => {
+                // 例: key が "/src-tauri/plugins/sample/index.jsx" の場合、plugin_info.json のパスは同じディレクトリ内にある
+                const pluginInfoKey = key.replace("index.jsx", "plugin_info.json");
+                const plugin_info = dev_plugin_info_mapping[pluginInfoKey];
+
+                if (!plugin_info) {
+                    console.error("plugin_info.json has not found:", pluginInfoKey);
+                    return;
+                }
+
+                // plugin_info を使ってプラグインコンテキストを生成
+                const plugin_context = generatePluginContext(plugin_info);
+
                 if (plugin_module && plugin_module.init) {
                     plugin_module.init(plugin_context);
                 }
@@ -87,8 +106,8 @@ export const usePlugins = () => {
             try {
                 const plugin_files = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
                 for (const target_dir of plugin_files) {
-                    const target_path = target_dir.name + "/index.esm.js";
-                    await asyncLoadPlugin(target_path, plugin_context);
+                    const target_path = target_dir.name;
+                    await asyncLoadPlugin(target_path);
                 }
             } catch (error) {
                 console.error("Error loading plugins:", error);
@@ -113,7 +132,7 @@ export const usePlugins = () => {
             const zip = await JSZip.loadAsync(bytes);
 
             // 展開先ディレクトリのパス（例："plugins/<plugin_id>" とする）
-            const target_plugin_path = "plugins/" + plugin.asset_name.replace(".zip", "");
+            const target_plugin_path = "plugins/" + plugin.plugin_id;
             // 既に存在する場合は削除してから新規作成
             if (await exists(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true })) {
                 await removeDir(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true });
@@ -154,8 +173,8 @@ export const usePlugins = () => {
             await Promise.all(file_promises);
             console.log("Plugin downloaded successfully.");
 
-            const index_file_relative_path = plugin.asset_name.replace(".zip", "") + "/index.esm.js";
-            await asyncLoadPlugin(index_file_relative_path, plugin_context);
+            const index_file_relative_path = plugin.plugin_id;
+            await asyncLoadPlugin(index_file_relative_path);
 
             console.log("Plugin loaded successfully.");
         } catch (error) {
