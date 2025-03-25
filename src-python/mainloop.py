@@ -190,6 +190,9 @@ mapping = {
     "/get/data/hotkeys": {"status": True, "variable":controller.getHotkeys},
     "/set/data/hotkeys": {"status": True, "variable":controller.setHotkeys},
 
+    "/get/data/plugins_status": {"status": True, "variable":controller.getPluginsStatus},
+    "/set/data/plugins_status": {"status": True, "variable":controller.setPluginsStatus},
+
     "/get/data/mic_avg_logprob": {"status": True, "variable":controller.getMicAvgLogprob},
     "/set/data/mic_avg_logprob": {"status": True, "variable":controller.setMicAvgLogprob},
 

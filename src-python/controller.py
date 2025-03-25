@@ -1062,6 +1062,15 @@ class Controller:
         return {"status":200, "result":config.HOTKEYS}
 
     @staticmethod
+    def getPluginsStatus(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.PLUGINS_STATUS}
+
+    @staticmethod
+    def setPluginsStatus(data, *args, **kwargs) -> dict:
+        config.PLUGINS_STATUS = data
+        return {"status":200, "result":config.PLUGINS_STATUS}
+
+    @staticmethod
     def getSpeakerAvgLogprob(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SPEAKER_AVG_LOGPROB}
 

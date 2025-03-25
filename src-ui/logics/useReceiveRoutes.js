@@ -73,6 +73,7 @@ import {
     useOverlayShowOnlyTranslatedMessages,
     useEnableNotificationVrcSfx,
     useHotkeys,
+    usePlugins,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -176,6 +177,7 @@ export const useReceiveRoutes = () => {
     const { updateEnableNotificationVrcSfx } = useEnableNotificationVrcSfx();
 
     const { updateHotkeys } = useHotkeys();
+    const { updateSavedPluginsStatus } = usePlugins();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -487,6 +489,10 @@ export const useReceiveRoutes = () => {
         // Hotkeys
         "/get/data/hotkeys": updateHotkeys,
         "/set/data/hotkeys": updateHotkeys,
+
+        // Plugins
+        "/get/data/plugins_status": updateSavedPluginsStatus,
+        "/set/data/plugins_status": updateSavedPluginsStatus,
 
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,
