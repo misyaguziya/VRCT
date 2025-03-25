@@ -3,10 +3,10 @@ import semver from "semver";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
     createAtomWithHook,
-    useStore_LoadedPluginsList,
     useStore_SavedPluginsStatus,
-    useStore_PluginsInfoList,
+    useStore_PluginsData,
 } from "@store";
+import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
@@ -21,9 +21,10 @@ import { useSoftwareVersion } from "@logics_configs";
 const PLUGIN_LIST_URL = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json";
 
 export const usePlugins = () => {
-    const { currentLoadedPluginsList, updateLoadedPluginsList } = useStore_LoadedPluginsList();
-    const { currentSavedPluginsStatus, updateSavedPluginsStatus } = useStore_SavedPluginsStatus();
-    const { currentPluginsInfoList, updatePluginsInfoList, pendingPluginsInfoList } = useStore_PluginsInfoList();
+    const { asyncStdoutToPython } = useStdoutToPython();
+    // const { currentLoadedPluginsList, updateLoadedPluginsList } = useStore_LoadedPluginsList();
+    const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
+    const { currentPluginsData, updatePluginsData, pendingPluginsData } = useStore_PluginsData();
     const { currentSoftwareVersion } = useSoftwareVersion();
 
     const { asyncTauriFetchGithub } = useFetch();
@@ -33,9 +34,17 @@ export const usePlugins = () => {
             if (!plugin_id || !location || !component) {
                 return console.error("An invalid plugin was detected.", plugin_id, location, component);
             }
-            updateLoadedPluginsList((prev) => {
-                const filtered = prev.data.filter(item => item.plugin_id !== plugin_id);
-                return [...filtered, { plugin_id, location, component }];
+            updatePluginsData(prev => {
+                const is_already_registered = prev.data.some(old_value => old_value.plugin_id === plugin_id);
+                const new_value = prev.data.map(old_value =>
+                    old_value.plugin_id === plugin_id
+                        ? { ...old_value, location, component, is_downloaded: true }
+                        : old_value
+                );
+
+                return is_already_registered
+                    ? new_value
+                    : [...new_value, { plugin_id, location, component, is_downloaded: true }];
             });
         },
         createAtomWithHook: (...args) => createAtomWithHook(...args)
@@ -66,7 +75,7 @@ export const usePlugins = () => {
         }
     };
 
-    const loadAllPlugins = async () => {
+    const asyncLoadAllPlugins = async () => {
         if (import.meta.env.DEV) {
             // 開発時: ホットリロード対応、src-tauri以下のpluginsから直接読み込み
             Object.entries(dev_plugin_mapping).forEach(([key, plugin_module]) => {
@@ -169,8 +178,7 @@ export const usePlugins = () => {
     };
 
 
-    const asyncUpdatePluginInfoList = async () => {
-        pendingPluginsInfoList();
+    const asyncFetchPluginsInfo = async () => {
         try {
             const response = await asyncTauriFetchGithub(PLUGIN_LIST_URL);
             if (response.status !== 200) {
@@ -194,7 +202,7 @@ export const usePlugins = () => {
                     }
                 })
             );
-            updatePluginsInfoList(updated_list);
+            return updated_list;
         } catch (error) {
             console.error("Error fetching plugin info list:", error);
         }
@@ -236,22 +244,26 @@ export const usePlugins = () => {
         };
     }
 
+    const setSavedPluginsStatus = (plugins_status) => {
+        pendingSavedPluginsStatus();
+        asyncStdoutToPython("/set/data/plugins_status", plugins_status);
+    };
+
 
 
     return {
-        asyncUpdatePluginInfoList,
+        asyncFetchPluginsInfo,
 
-        loadAllPlugins,
+        asyncLoadAllPlugins,
         downloadAndExtractPlugin,
-
-        currentLoadedPluginsList,
-        updateLoadedPluginsList,
 
         currentSavedPluginsStatus,
         updateSavedPluginsStatus,
 
-        currentPluginsInfoList,
-        updatePluginsInfoList,
+        currentPluginsData,
+        updatePluginsData,
+
+        setSavedPluginsStatus,
     };
 };
 

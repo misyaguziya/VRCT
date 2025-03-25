@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -29,6 +30,7 @@ export const App = () => {
     const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
     const { i18n } = useTranslation();
+    const fetchPluginsHasRunRef = useRef(false);
 
     return (
         <div className={styles.container}>
@@ -44,7 +46,7 @@ export const App = () => {
 
             {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                 ? <SplashComponent />
-                : <Contents  key={i18n.language}/>
+                : <Contents key={i18n.language} fetchPluginsHasRunRef={fetchPluginsHasRunRef} />
             }
 
             <SnackbarController />
@@ -52,11 +54,11 @@ export const App = () => {
     );
 };
 
-const Contents = () => {
+const Contents = ({ fetchPluginsHasRunRef }) => {
     const { currentIsSoftwareUpdating } = useIsSoftwareUpdating();
     return (
         <>
-            <PluginsController />
+            <PluginsController fetchPluginsHasRunRef={fetchPluginsHasRunRef} />
             <SubtitlesController />
 
             <WindowTitleBar />
