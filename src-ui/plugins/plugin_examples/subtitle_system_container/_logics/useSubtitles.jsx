@@ -1,35 +1,39 @@
-import { useSendTextToOverlay } from "@logics_configs";
-import {
-    useStore_SubtitleFileName,
-    useStore_IsSubtitlePlaying,
-    useStore_SubtitlePlaybackMode,
-    useStore_SubtitleAbsoluteTargetTime,
-    useStore_IsCuesScheduled,
-    useStore_CountdownAdjustment,
-    useStore_EffectiveCountdown,
-    useStore_SubtitleCues,
+import { useStore, useStoreContext } from "../../store/store.js";
 
-    useStore_SubtitleTimers,
-    useStore_SubtitleCountdownTimerId,
-} from "@store";
+// import { useSendTextToOverlay } from "@logics_configs";
+// import {
+//     useStore_SubtitleFileName,
+//     useStore_IsSubtitlePlaying,
+//     useStore_SubtitlePlaybackMode,
+//     useStore_SubtitleAbsoluteTargetTime,
+//     useStore_IsCuesScheduled,
+//     useStore_CountdownAdjustment,
+//     useStore_EffectiveCountdown,
+//     useStore_SubtitleCues,
+
+//     useStore_SubtitleTimers,
+//     useStore_SubtitleCountdownTimerId,
+// } from "../../store/store.js";
 
 export const useSubtitles = () => {
-    const { sendTextToOverlay } = useSendTextToOverlay();
-    const { currentSubtitleFileName, updateSubtitleFileName } = useStore_SubtitleFileName();
-    const { currentIsSubtitlePlaying, updateIsSubtitlePlaying } = useStore_IsSubtitlePlaying();
-    const { currentSubtitlePlaybackMode, updateSubtitlePlaybackMode } = useStore_SubtitlePlaybackMode();
-    const { currentSubtitleAbsoluteTargetTime, updateSubtitleAbsoluteTargetTime } = useStore_SubtitleAbsoluteTargetTime();
-    const { currentIsCuesScheduled, updateIsCuesScheduled } = useStore_IsCuesScheduled();
+    const logic_configs = useStoreContext();
+    const { sendTextToOverlay } = logic_configs.useSendTextToOverlay();
 
-    const { currentCountdownAdjustment, updateCountdownAdjustment } = useStore_CountdownAdjustment();
-    const { currentEffectiveCountdown, updateEffectiveCountdown } = useStore_EffectiveCountdown();
-    const { currentSubtitleCues, updateSubtitleCues } = useStore_SubtitleCues();
+    const { currentSubtitleFileName, updateSubtitleFileName } = useStore("useStore_SubtitleFileName");
+    const { currentIsSubtitlePlaying, updateIsSubtitlePlaying } = useStore("useStore_IsSubtitlePlaying");
+    const { currentSubtitlePlaybackMode, updateSubtitlePlaybackMode } = useStore("useStore_SubtitlePlaybackMode");
+    const { currentSubtitleAbsoluteTargetTime, updateSubtitleAbsoluteTargetTime } = useStore("useStore_SubtitleAbsoluteTargetTime");
+    const { currentIsCuesScheduled, updateIsCuesScheduled } = useStore("useStore_IsCuesScheduled");
+
+    const { currentCountdownAdjustment, updateCountdownAdjustment } = useStore("useStore_CountdownAdjustment");
+    const { currentEffectiveCountdown, updateEffectiveCountdown } = useStore("useStore_EffectiveCountdown");
+    const { currentSubtitleCues, updateSubtitleCues } = useStore("useStore_SubtitleCues");
 
     // タイマー（setTimeout/setInterval）のID管理用
-    const { currentSubtitleTimers, updateSubtitleTimers, addSubtitleTimers } = useStore_SubtitleTimers();
+    const { currentSubtitleTimers, updateSubtitleTimers, addSubtitleTimers } = useStore("useStore_SubtitleTimers");
     // const timersRef = useRef([]);
     // カウントダウンタイマー専用の ref
-    const { currentSubtitleCountdownTimerId, updateSubtitleCountdownTimerId, AddSubtitleCountdownTimerId } = useStore_SubtitleCountdownTimerId();
+    const { currentSubtitleCountdownTimerId, updateSubtitleCountdownTimerId, AddSubtitleCountdownTimerId } = useStore("useStore_SubtitleCountdownTimerId");
 
     // cues のスケジュールを行う（字幕開始時のオフセットは調整後のタイミングに合わせる）
     const scheduleCues = (offset) => {
