@@ -1,9 +1,12 @@
-import { useSendTextToOverlay } from "@logics_configs";
+import { useStoreContext } from "../../store/store.js";
+
 import { useSubtitles } from "../_logics/useSubtitles";
 import { secToDayTime } from "../_subtitles_utils"
 import { useEffect } from "react";
 export const SubtitlesController = () => {
-    const { sendTextToOverlay } = useSendTextToOverlay();
+    const logic_configs = useStoreContext();
+    const { sendTextToOverlay } = logic_configs.useSendTextToOverlay();
+
     const {
         currentIsSubtitlePlaying,
         currentIsCuesScheduled,

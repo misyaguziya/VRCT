@@ -23,8 +23,6 @@ import { SnackbarController } from "./snackbar_controller/SnackbarController";
 import styles from "./App.module.scss";
 import { useIsBackendReady, useIsSoftwareUpdating, useIsVrctAvailable, useWindow } from "@logics_common";
 
-import { SubtitlesController } from "./main_page/main_section/subtitle_system_container/_controllers/subtitlesController.jsx";
-
 export const App = () => {
     const { currentIsVrctAvailable } = useIsVrctAvailable();
     const { currentIsBackendReady } = useIsBackendReady();
@@ -59,7 +57,6 @@ const Contents = ({ fetchPluginsHasRunRef }) => {
     return (
         <>
             <PluginsController fetchPluginsHasRunRef={fetchPluginsHasRunRef} />
-            <SubtitlesController />
 
             <WindowTitleBar />
             {currentIsSoftwareUpdating.data === false
