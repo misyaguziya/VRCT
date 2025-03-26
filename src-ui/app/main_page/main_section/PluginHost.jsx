@@ -1,17 +1,14 @@
 import React from "react";
-import { usePlugins } from "@logics_configs";
 
-export const PluginHost = () => {
-    const { currentPluginsData } = usePlugins();
+export const PluginHost = ({render_components}) => {
 
     return (
-        <div>
-            {currentPluginsData.data
-                .filter((plugin) => plugin.is_enabled && plugin.location === "main_section")
+        <>
+            {render_components
                 .map((plugin, index) => {
                     const PluginComponent = plugin.component;
                     return PluginComponent ? <PluginComponent key={index} /> : null;
                 })}
-        </div>
+        </>
     );
 };

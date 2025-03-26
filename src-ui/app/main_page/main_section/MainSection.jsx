@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import styles from "./MainSection.module.scss";
 
 import { TopBar } from "./top_bar/TopBar";
-// import { MessageContainer } from "./message_container/MessageContainer";
+import { MessageContainer } from "./message_container/MessageContainer";
 import { LanguageSelector } from "./language_selector/LanguageSelector";
 
 import { useStore_IsOpenedLanguageSelector } from "@store";
@@ -12,14 +12,20 @@ import { SubtitleSystemContainer } from "./subtitle_system_container/SubtitleSys
 
 import { PluginHost } from "./PluginHost";
 
+import { usePlugins } from "@logics_configs";
+
 export const MainSection = () => {
+    const { currentPluginsData } = usePlugins();
+
+    const render_plugins = currentPluginsData.data.filter((plugin) => plugin.is_enabled && plugin.location === "main_section");
 
     return (
         <div className={styles.container}>
             <TopBar />
-            {/* <SubtitleSystemContainer /> */}
-            <PluginHost />
-            {/* <MessageContainer /> */}
+            {render_plugins.length
+                ? <PluginHost render_components={render_plugins}/>
+                : <MessageContainer />
+            }
             <HandleLanguageSelector />
         </div>
     );
