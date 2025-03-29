@@ -1,8 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { usePlugins } from "@logics_configs";
+import clsx from "clsx";
 
 if (typeof window !== "undefined") {
     window.React = React;
+    window.clsx = clsx;
 }
 
 export const PluginsController = ({ fetchPluginsHasRunRef }) => {

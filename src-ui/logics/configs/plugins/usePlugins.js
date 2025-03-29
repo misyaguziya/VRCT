@@ -59,6 +59,7 @@ export const usePlugins = () => {
     const asyncLoadPlugin = async (plugin_folder_relative_path) => {
         const init_path = "plugins/" + plugin_folder_relative_path + "/index.esm.js";
         const plugin_info_path = "plugins/" + plugin_folder_relative_path + "/plugin_info.json";
+        const plugin_css_path = "plugins/" + plugin_folder_relative_path + "/main.css";
         try {
             const plugin_info_json = await readTextFile(plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
             const plugin_info = JSON.parse(plugin_info_json);
@@ -80,6 +81,8 @@ export const usePlugins = () => {
             if (plugin_module && plugin_module.init) {
                 plugin_module.init(generatePluginContext(plugin_info));
             }
+            await loadPluginCSS(plugin_css_path);
+
         } catch (error) {
             console.error("Failed to load plugin from", plugin_folder_relative_path, error);
         }
@@ -290,3 +293,22 @@ const removeImportStatements = (code) => {
         .filter(line => !line.match(/^import\s+.*['"]react['"]/))
         .join("\n");
 };
+
+// import { readTextFile, BaseDirectory } from "@tauri-apps/api/fs";
+
+const loadPluginCSS = async (plugin_css_path) => {
+    try {
+        // プラグインフォルダのルートにある main.css を読み込む
+        const css_content = await readTextFile(plugin_css_path, { dir: BaseDirectory.Resource });
+        // style タグを作成して head に挿入する
+        const style_tag = document.createElement("style");
+        style_tag.id = `plugin-css-${plugin_css_path.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+        style_tag.textContent = css_content;
+        document.head.appendChild(style_tag);
+        console.log("Plugin CSS loaded for:", plugin_css_path);
+    } catch (error) {
+        console.error("Failed to load plugin CSS from", plugin_css_path, error);
+    }
+};
+
+export { loadPluginCSS };
