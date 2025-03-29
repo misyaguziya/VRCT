@@ -4,8 +4,8 @@ import { useSubtitles } from "../_logics/useSubtitles";
 import { secToDayTime } from "../_subtitles_utils"
 import { useEffect } from "react";
 export const SubtitlesController = () => {
-    const logic_configs = useStoreContext();
-    const { sendTextToOverlay } = logic_configs.useSendTextToOverlay();
+    const { useSendTextToOverlay } = useStoreContext();
+    const { sendTextToOverlay } = useSendTextToOverlay();
 
     const {
         currentIsSubtitlePlaying,
