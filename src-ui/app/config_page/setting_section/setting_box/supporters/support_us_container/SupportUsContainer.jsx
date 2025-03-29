@@ -3,7 +3,7 @@ import fanbox_logo from "@images/supporters/fanbox_logo.png";
 import kofi_logo from "@images/supporters/kofi_logo.png";
 import patreon_logo from "@images/supporters/patreon_logo.png";
 import styles from "./SupportUsContainer.module.scss";
-import { clsx } from "clsx";
+import clsx from "clsx";
 
 export const SupportUsContainer = () => {
     return (

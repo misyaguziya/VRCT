@@ -1,7 +1,7 @@
 // import React, { useState, useRef, useEffect } from "react";
 import styles from "./PlayControlContainer.module.scss";
 import { useSubtitles } from "../_logics/useSubtitles";
-import { clsx } from "clsx";
+import clsx from "clsx";
 
 export const PlayControlContainer = () => {
     const {
