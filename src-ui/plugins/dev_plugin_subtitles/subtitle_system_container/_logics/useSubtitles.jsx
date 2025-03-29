@@ -1,23 +1,8 @@
 import { useStore, useStoreContext } from "../../store/store.js";
 
-// import { useSendTextToOverlay } from "@logics_configs";
-// import {
-//     useStore_SubtitleFileName,
-//     useStore_IsSubtitlePlaying,
-//     useStore_SubtitlePlaybackMode,
-//     useStore_SubtitleAbsoluteTargetTime,
-//     useStore_IsCuesScheduled,
-//     useStore_CountdownAdjustment,
-//     useStore_EffectiveCountdown,
-//     useStore_SubtitleCues,
-
-//     useStore_SubtitleTimers,
-//     useStore_SubtitleCountdownTimerId,
-// } from "../../store/store.js";
-
 export const useSubtitles = () => {
-    const logic_configs = useStoreContext();
-    const { sendTextToOverlay } = logic_configs.useSendTextToOverlay();
+    const { useSendTextToOverlay } = useStoreContext();
+    const { sendTextToOverlay } = useSendTextToOverlay();
 
     const { currentSubtitleFileName, updateSubtitleFileName } = useStore("useStore_SubtitleFileName");
     const { currentIsSubtitlePlaying, updateIsSubtitlePlaying } = useStore("useStore_IsSubtitlePlaying");

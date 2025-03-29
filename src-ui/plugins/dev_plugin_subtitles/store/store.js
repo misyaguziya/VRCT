@@ -2,16 +2,6 @@ const store_hooks = {};
 
 export const initStore = (createAtomWithHook) => {
     Object.assign(store_hooks, {
-        // useStore_CountPluginState: createAtomWithHook(
-        //     { count: 10 },
-        //     "CountPluginState"
-        // ).useHook,
-
-        // useStore_AnotherState: createAtomWithHook(
-        //     { value: "initial" },
-        //     "AnotherState"
-        // ).useHook,
-
         useStore_IsSubtitlePlaying: createAtomWithHook(false, "IsSubtitlePlaying", { is_state_ok: true }).useHook,
         useStore_SubtitlePlaybackMode: createAtomWithHook("relative", "SubtitlePlaybackMode", { is_state_ok: true }).useHook,
         useStore_SubtitleAbsoluteTargetTime: createAtomWithHook({

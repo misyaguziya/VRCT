@@ -16,7 +16,9 @@ import JSZip from "jszip";
 
 import { useFetch } from "@logics_common";
 import { useSoftwareVersion } from "@logics_configs";
-import * as logic_configs from "@logics_configs";
+import * as logics_configs from "@logics_configs";
+import * as logics_main from "@logics_main";
+import * as logics_common from "@logics_common";
 
 
 // PLUGIN_LIST_URL は中央リポジトリにある、各プラグインの plugin_info.json への URL の配列を保持する JSON の URL
@@ -51,7 +53,7 @@ export const usePlugins = () => {
                 });
             },
             createAtomWithHook: (...args) => createAtomWithHook(...args),
-            logic_configs: logic_configs,
+            logics: { ...logics_common, ...logics_configs, ...logics_main }
         };
         return plugin_context;
     }
