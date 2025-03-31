@@ -1,4 +1,4 @@
-import { initStore, StoreContext } from "./store/store.js";
+import { initStore, StoreContext } from "@plugin_store";
 import { SubtitleSystemContainer } from "./subtitle_system_container/SubtitleSystemContainer";
 import { SubtitlesController } from "./subtitle_system_container/_controllers/SubtitlesController.jsx";
 

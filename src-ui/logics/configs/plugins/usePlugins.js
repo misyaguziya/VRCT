@@ -10,12 +10,20 @@ import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, createDir, exists, removeDir, readDir, BaseDirectory, readTextFile } from "@tauri-apps/api/fs";
-import { dev_plugins } from "@dev_plugins_path";
+import { dev_plugins } from "@plugins_index";
+const imported_dev_plugins = [];
+dev_plugins.forEach(async ({entry_path}) => {
+    imported_dev_plugins.push({
+        index: await import(`@plugins_path/${entry_path}/index.jsx`),
+        plugin_info:  await import(`@plugins_path/${entry_path}/plugin_info.json`),
+    });
+})
 
 import JSZip from "jszip";
 
 import { useFetch } from "@logics_common";
 import { useSoftwareVersion } from "@logics_configs";
+
 import * as logics_configs from "@logics_configs";
 import * as logics_main from "@logics_main";
 import * as logics_common from "@logics_common";
@@ -91,9 +99,8 @@ export const usePlugins = () => {
     };
 
     const asyncLoadAllPlugins = async () => {
-        if (import.meta.env.DEV) {
-            // `dev_plugins` を利用してプラグインを登録
-            dev_plugins.forEach(({ index, plugin_info }) => {
+        if (!import.meta.env.DEV) {
+            imported_dev_plugins.forEach(({ index, plugin_info }) => {
                 if (!index || !plugin_info) {
                     console.error("Invalid development plugin detected", index, plugin_info);
                     return;
