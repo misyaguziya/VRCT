@@ -88,7 +88,8 @@ const PluginDownloadContainer = () => {
                     ) : (
                         <div className={styles.plugin_info_wrapper}>
                             <div className={styles.plugin_info}>
-                                <p>Version: {plugin.plugin_version}</p>
+                                <p>Downloaded Version: {plugin.downloaded_plugin_version}</p>
+                                <p>Latest Version: {plugin.latest_plugin_version}</p>
                                 <p>
                                     Compatible: {plugin.min_supported_vrct_version} ~ {plugin.max_supported_vrct_version}
                                 </p>

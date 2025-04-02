@@ -47,17 +47,19 @@ export const usePlugins = () => {
                     return console.error("An invalid plugin was detected.", plugin_info.plugin_id, plugin_info.location, component);
                 }
                 updatePluginsData(prev => {
-                    const is_already_registered = prev.data.some(old_value => old_value.plugin_id === plugin_info.plugin_id);
-
                     const new_value = prev.data.map(old_value =>
                         old_value.plugin_id === plugin_info.plugin_id
-                            ? { ...old_value, ...plugin_info, location: plugin_info.location, component, is_downloaded: true }
-                            : old_value
+                            ? {
+                                ...old_value,
+                                ...plugin_info,
+                                downloaded_plugin_version: plugin_info.plugin_version,
+                                component: component,
+                                is_downloaded: true,
+                                is_latest_version_available: false,
+                            } : old_value
                     );
 
-                    return is_already_registered
-                        ? new_value
-                        : [...new_value, { plugin_id: plugin_info.plugin_id, location: plugin_info.location, component, is_downloaded: true }];
+                    return new_value;
                 });
             },
             createAtomWithHook: (...args) => createAtomWithHook(...args),
