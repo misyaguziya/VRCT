@@ -32,6 +32,15 @@ export const _DownloadButton = ({option, ...props}) => {
                         <p className={styles.download_button_label}>{t("config_page.model_download_button_label")}</p>
                     </button>
                 );
+            case option.update_button:
+                return (
+                    <button
+                        className={styles.update_button}
+                        onClick={() => props.downloadStartFunction(option.id)}
+                    >
+                        <p className={styles.download_button_label}>Update</p>
+                    </button>
+                );
             default:
                 return null;
         }

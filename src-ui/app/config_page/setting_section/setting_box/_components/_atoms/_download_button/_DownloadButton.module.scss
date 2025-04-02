@@ -29,3 +29,17 @@
     position: absolute;
     font-size: 1rem;
 }
+
+.update_button {
+    pointer-events: auto;
+    background-color: var(--primary_400_color);
+    padding: 0.8rem;
+    flex-shrink: 0;
+    border-radius: 0.2rem;
+    &:hover {
+        background-color: var(--primary_450_color);
+    }
+    &:active {
+        background-color: var(--primary_500_color);
+    }
+}

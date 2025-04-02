@@ -23,25 +23,43 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
                 const info_array = await asyncFetchPluginsInfo();
                 updatePluginsData(prev => {
                     // Map を利用してそれぞれの配列を plugin_id で参照できるようにする
-                    const infoMap = new Map(info_array.map(info => [info.plugin_id, info]));
-                    const prevMap = new Map(prev.data.map(item => [item.plugin_id, item]));
+                    const info_map = new Map(info_array.map(info => [info.plugin_id, info]));
+                    const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
 
                     // info_array にある各アイテムについて、prev.data に同じ plugin_id があればマージ
                     const merged = info_array.map(info => {
-                        if (prevMap.has(info.plugin_id)) {
-                            return { ...info, ...prevMap.get(info.plugin_id) };
+                        if (prev_map.has(info.plugin_id)) {
+                            return {
+                                ...info,
+                                latest_plugin_version: info.plugin_version,
+                                ...prev_map.get(info.plugin_id),
+                            };
                         }
-                        return info;
+                        return {
+                            ...info,
+                            latest_plugin_version: info.plugin_version,
+                        };
                     });
 
-                    // prev.data にのみ存在するアイテムを追加し、is_outdated: true を付与
+                    // prev.data にのみ存在するアイテム = latest plugin infoには存在しない
+                    // を追加し、is_outdated: true を付与
                     prev.data.forEach(item => {
-                        if (!infoMap.has(item.plugin_id)) {
+                        if (!info_map.has(item.plugin_id)) {
                             merged.push({ ...item, is_outdated: true });
                         }
                     });
 
-                    return merged;
+                    let new_value = [];
+                    for (const plugin of merged) {
+                        if (plugin.downloaded_plugin_version !== plugin.latest_plugin_version && plugin.is_plugin_supported) {
+                            plugin.is_latest_version_available = true;
+                        } else {
+                            plugin.is_latest_version_available = false;
+                        }
+                        new_value.push(plugin);
+                    }
+
+                    return new_value;
                 });
             } catch (error) {
                 console.error(error);
@@ -59,7 +77,7 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
         updatePluginsData(prev => {
             // currentSavedPluginsStatus.data の各要素を Map 化して plugin_id で参照
             const savedMap = new Map(currentSavedPluginsStatus.data.map(saved => [saved.plugin_id, saved]));
-            const prevMap = new Map(prev.data.map(item => [item.plugin_id, item]));
+            const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
 
             // prev.data にある各アイテムについて、保存済みの状態情報があればマージ
             const merged = prev.data.map(item => {
@@ -71,7 +89,7 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
 
             // currentSavedPluginsStatus.data にのみ存在する項目があれば追加
             currentSavedPluginsStatus.data.forEach(saved => {
-                if (!prevMap.has(saved.plugin_id)) {
+                if (!prev_map.has(saved.plugin_id)) {
                     merged.push({ plugin_id: saved.plugin_id, is_enabled: saved.is_enabled });
                 }
             });
