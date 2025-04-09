@@ -14,6 +14,7 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
         currentPluginsData,
         updatePluginsData,
         currentSavedPluginsStatus,
+        updateIsPluginsInitialized,
     } = usePlugins();
 
     useEffect(() => {
@@ -26,40 +27,55 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
                     const info_map = new Map(info_array.map(info => [info.plugin_id, info]));
                     const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
 
-                    // info_array にある各アイテムについて、prev.data に同じ plugin_id があればマージ
-                    const merged = info_array.map(info => {
-                        if (prev_map.has(info.plugin_id)) {
-                            return {
-                                ...info,
-                                latest_plugin_version: info.plugin_version,
-                                ...prev_map.get(info.plugin_id),
+                    const new_data = [];
+                    for (const info of info_array) {
+                        let new_plugin_info = {};
+                        if (prev_map.has(info.plugin_id)) { // plugin_id 登録済み
+                            const target_downloaded_plugin = prev_map.get(info.plugin_id);
+                            if (target_downloaded_plugin.is_downloaded) { // 既にダウンロード済み
+                                const is_latest_version_available = !(target_downloaded_plugin.plugin_version === info.plugin_version);
+
+                                new_plugin_info = {
+                                    is_downloaded: true,
+                                    is_latest_version_already: (target_downloaded_plugin.downloaded_plugin_info?.plugin_version === info.plugin_version),
+                                    is_latest_version_available: is_latest_version_available,
+                                    latest_plugin_info: { ...info },
+                                    ...target_downloaded_plugin,
+                                };
+                            } else { // infoにもあり登録済みだがダウンロードされていない
+                                new_plugin_info = {
+                                    is_downloaded: false,
+                                    is_latest_version_already: false,
+                                    is_latest_version_available: info.is_latest_version_available,
+                                    latest_plugin_info: { ...info },
+                                    ...target_downloaded_plugin,
+                                }
+                            }
+                        } else { // 未ダウンロード
+                            new_plugin_info = {
+                                plugin_id: info.plugin_id,
+                                is_downloaded: false,
+                                is_latest_version_already: false,
+                                latest_plugin_info: { ...info },
                             };
                         }
-                        return {
-                            ...info,
-                            latest_plugin_version: info.plugin_version,
-                        };
-                    });
+                        new_data.push(new_plugin_info);
+                    }
 
                     // prev.data にのみ存在するアイテム = latest plugin infoには存在しない
                     // を追加し、is_outdated: true を付与
                     prev.data.forEach(item => {
                         if (!info_map.has(item.plugin_id)) {
-                            merged.push({ ...item, is_outdated: true });
+                            new_data.push({ ...item, is_outdated: true });
                         }
                     });
 
-                    let new_value = [];
-                    for (const plugin of merged) {
-                        if (plugin.downloaded_plugin_version !== plugin.latest_plugin_version && plugin.is_plugin_supported) {
-                            plugin.is_latest_version_available = true;
-                        } else {
-                            plugin.is_latest_version_available = false;
+                    new_data.forEach(plugin => {
+                        if (!plugin.is_outdated) {
+                            plugin.is_latest_version_available = (plugin.latest_plugin_info.is_plugin_supported);
                         }
-                        new_value.push(plugin);
-                    }
-
-                    return new_value;
+                    });
+                    return new_data;
                 });
             } catch (error) {
                 console.error(error);
@@ -68,6 +84,7 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
 
         if (!fetchPluginsHasRunRef.current) {
             loadPlugins();
+            updateIsPluginsInitialized(true);
         }
         return () => fetchPluginsHasRunRef.current = true;
     }, []);
@@ -76,13 +93,13 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
     useEffect(() => {
         updatePluginsData(prev => {
             // currentSavedPluginsStatus.data の各要素を Map 化して plugin_id で参照
-            const savedMap = new Map(currentSavedPluginsStatus.data.map(saved => [saved.plugin_id, saved]));
+            const saved_map = new Map(currentSavedPluginsStatus.data.map(saved => [saved.plugin_id, saved]));
             const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
-
             // prev.data にある各アイテムについて、保存済みの状態情報があればマージ
             const merged = prev.data.map(item => {
-                if (savedMap.has(item.plugin_id)) {
-                    return { ...item, is_enabled: savedMap.get(item.plugin_id).is_enabled };
+
+                if (saved_map.has(item.plugin_id)) {
+                    return { ...item, is_enabled: saved_map.get(item.plugin_id).is_enabled };
                 }
                 return item;
             });
@@ -93,7 +110,6 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
                     merged.push({ plugin_id: saved.plugin_id, is_enabled: saved.is_enabled });
                 }
             });
-
             return merged;
         });
     }, [currentSavedPluginsStatus]);

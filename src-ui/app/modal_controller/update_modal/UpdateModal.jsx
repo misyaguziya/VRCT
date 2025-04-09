@@ -1,8 +1,14 @@
 import styles from "./UpdateModal.module.scss";
 import { useTranslation } from "react-i18next";
 import { useStore_OpenedQuickSetting } from "@store";
-import { useComputeMode, useUpdateSoftware } from "@logics_common";
-import { useIsSoftwareUpdating, useIsSoftwareUpdateAvailable } from "@logics_common";
+import { usePlugins } from "@logics_configs";
+import {
+    useComputeMode,
+    useUpdateSoftware,
+    useIsSoftwareUpdating,
+    useSoftwareVersion,
+} from "@logics_common";
+
 import clsx from "clsx";
 
 export const UpdateModal = () => {
@@ -11,9 +17,13 @@ export const UpdateModal = () => {
     const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
     const { currentComputeMode } = useComputeMode();
-    const { currentIsSoftwareUpdateAvailable } = useIsSoftwareUpdateAvailable();
+    const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
+    const { isAnyPluginEnabled } = usePlugins();
 
-    const is_latest_version_already = currentIsSoftwareUpdateAvailable.data === false;
+    console.log(isAnyPluginEnabled());
+
+
+    const is_latest_version_already = currentLatestSoftwareVersionInfo.data.is_update_available === false;
     const is_cpu_version = currentComputeMode.data === "cpu";
 
     const onClickUpdateSoftware = () => {
@@ -37,6 +47,7 @@ export const UpdateModal = () => {
     return (
         <div className={styles.container}>
             <div className={styles.wrapper}>
+                {isAnyPluginEnabled() && <PluginUpdateNotification />}
                 <div className={styles.update_section}>
                     <div className={styles.cpu_section}>
                         <div className={styles.button_wrapper}>
@@ -85,4 +96,20 @@ const CurrentVersionLabel = (props) => {
         return <p className={clsx(styles.current_version_label, {[styles.is_cuda]: props.is_cuda})}>{t("update_modal.is_latest_version_already")}</p>;
     }
     return <p className={clsx(styles.current_version_label, {[styles.is_cuda]: props.is_cuda})}>{t("update_modal.is_current_compute_device")}</p>;
+};
+
+const PluginUpdateNotification = () => {
+    const { enabledPluginsList } = usePlugins();
+
+    const incompatible_plugins_list = enabledPluginsList();
+
+    return (
+        <div>
+            {incompatible_plugins_list.map(plugin => {
+                console.log(plugin);
+
+                return <p>{plugin.title}</p>
+            })}
+        </div>
+    );
 };

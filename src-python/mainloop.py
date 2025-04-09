@@ -38,7 +38,7 @@ run_mapping = {
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
 
-    "update_software_flag":"/run/update_software_flag",
+    "software_update_info":"/run/software_update_info",
 
     "initialization_progress":"/run/initialization_progress",
     "initialization_complete":"/run/initialization_complete",

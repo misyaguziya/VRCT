@@ -447,11 +447,11 @@ class Controller:
         return {"status":200, "result":config.VERSION}
 
     def checkSoftwareUpdated(self) -> dict:
-        update_flag =  model.checkSoftwareUpdated()
+        software_update_info = model.checkSoftwareUpdated()
         self.run(
             200,
-            self.run_mapping["update_software_flag"],
-            update_flag,
+            self.run_mapping["software_update_info"],
+            software_update_info,
         )
 
     @staticmethod

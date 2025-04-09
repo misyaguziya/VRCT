@@ -1,9 +1,9 @@
+export { useSoftwareVersion } from "./useSoftwareVersion";
 export { useComputeMode } from "./useComputeMode";
 export { useInitProgress } from "./useInitProgress";
 export { useIsBackendReady } from "./useIsBackendReady";
 export { useWindow } from "./useWindow";
 export { useIsOpenedConfigPage } from "./useIsOpenedConfigPage";
-export { useIsSoftwareUpdateAvailable } from "./useIsSoftwareUpdateAvailable";
 export { useIsSoftwareUpdating } from "./useIsSoftwareUpdating";
 export { useNotificationStatus } from "./useNotificationStatus";
 export { useOpenFolder } from "./useOpenFolder";
