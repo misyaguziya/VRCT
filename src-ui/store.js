@@ -114,7 +114,10 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
     transcription_receive: false,
 }, "MainFunctionsStateMemory");
 export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
-export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_IsSoftwareUpdateAvailable } = createAtomWithHook(false, "IsSoftwareUpdateAvailable");
+export const { atomInstance: Atom_LatestSoftwareVersionInfo, useHook: useStore_LatestSoftwareVersionInfo } = createAtomWithHook({
+    is_update_available: false,
+    new_version: "",
+}, "LatestSoftwareVersionInfo");
 export const { atomInstance: Atom_InitProgress, useHook: useStore_InitProgress } = createAtomWithHook(0, "InitProgress");
 export const { atomInstance: Atom_IsBreakPoint, useHook: useStore_IsBreakPoint } = createAtomWithHook(false, "IsBreakPoint");
 export const { atomInstance: Atom_IsSoftwareUpdating, useHook: useStore_IsSoftwareUpdating } = createAtomWithHook(false, "IsSoftwareUpdating");
@@ -275,7 +278,7 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
 }, "Hotkeys");
 
 // Plugins
-// export const { atomInstance: Atom_LoadedPluginsList, useHook: useStore_LoadedPluginsList } = createAtomWithHook([], "LoadedPluginsList");
+export const { atomInstance: Atom_IsPluginsInitialized, useHook: useStore_IsPluginsInitialized } = createAtomWithHook(false, "IsPluginsInitialized");
 export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
 export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
 

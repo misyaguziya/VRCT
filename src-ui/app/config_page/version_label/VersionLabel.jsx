@@ -3,8 +3,7 @@ import { useState } from "react";
 import clsx from "clsx";
 import styles from "./VersionLabel.module.scss";
 
-import { useSoftwareVersion } from "@logics_configs";
-import { useComputeMode } from "@logics_common";
+import { useSoftwareVersion, useComputeMode } from "@logics_common";
 import CopySvg from "@images/copy.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 

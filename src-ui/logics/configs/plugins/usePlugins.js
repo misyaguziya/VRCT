@@ -1,10 +1,9 @@
-import semver from "semver";
-
 import { invoke } from "@tauri-apps/api/tauri";
 import {
     createAtomWithHook,
     useStore_SavedPluginsStatus,
     useStore_PluginsData,
+    useStore_IsPluginsInitialized,
 } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
@@ -21,8 +20,7 @@ dev_plugins.forEach(async ({entry_path}) => {
 
 import JSZip from "jszip";
 
-import { useFetch } from "@logics_common";
-import { useSoftwareVersion } from "@logics_configs";
+import { useFetch, useSoftwareVersion } from "@logics_common";
 
 import * as logics_configs from "@logics_configs";
 import * as logics_main from "@logics_main";
@@ -36,30 +34,66 @@ export const usePlugins = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
     const { currentPluginsData, updatePluginsData, pendingPluginsData } = useStore_PluginsData();
-    const { currentSoftwareVersion } = useSoftwareVersion();
+    const { currentIsPluginsInitialized, updateIsPluginsInitialized, pendingIsPluginsInitialized } = useStore_IsPluginsInitialized();
+    const { checkVrctVerCompatibility } = useSoftwareVersion();
 
     const { asyncTauriFetchGithub } = useFetch();
 
-    const generatePluginContext= (plugin_info) => {
+    const generatePluginContext= (downloaded_plugin_info) => {
         const plugin_context = {
             registerComponent: (component) => {
-                if (!plugin_info.plugin_id || !plugin_info.location || !component) {
-                    return console.error("An invalid plugin was detected.", plugin_info.plugin_id, plugin_info.location, component);
+                if (!downloaded_plugin_info.plugin_id || !downloaded_plugin_info.location || !component) {
+                    return console.error("An invalid plugin was detected.", downloaded_plugin_info.plugin_id, downloaded_plugin_info.location, component);
                 }
                 updatePluginsData(prev => {
-                    const new_value = prev.data.map(old_value =>
-                        old_value.plugin_id === plugin_info.plugin_id
-                            ? {
-                                ...old_value,
-                                ...plugin_info,
-                                downloaded_plugin_version: plugin_info.plugin_version,
+                    const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
+                    const new_data = [];
+                    let new_value = {};
+
+                    if (!prev_map.has(downloaded_plugin_info.plugin_id)) { // 未ダウンロード 新規登録
+                        new_value = {
+                            plugin_id: downloaded_plugin_info.plugin_id,
+                            component: component,
+                            is_downloaded: true,
+                            is_latest_version_available: false,
+                            downloaded_plugin_info: {
+                                ...downloaded_plugin_info,
+                                component: component,
+                                is_plugin_supported: is_plugin_supported,
+                                is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
+                            },
+                        };
+                        return [...prev.data, new_value];
+                    }
+
+                    for (const old_plugin_data of prev.data) {
+                        const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(downloaded_plugin_info.min_supported_vrct_version, downloaded_plugin_info.max_supported_vrct_version);
+
+                        if (prev_map.has(downloaded_plugin_info.plugin_id) && old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み
+
+
+                            const target_prev_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
+                            const is_latest_version_available = (target_prev_plugin.is_downloaded) && !(downloaded_plugin_info.plugin_version === target_prev_plugin.latest_plugin_info.plugin_version);
+
+                            new_value = {
+                                ...target_prev_plugin,
+                                plugin_id: downloaded_plugin_info.plugin_id,
                                 component: component,
                                 is_downloaded: true,
-                                is_latest_version_available: false,
-                            } : old_value
-                    );
-
-                    return new_value;
+                                is_latest_version_available: is_latest_version_available,
+                                downloaded_plugin_info: {
+                                    ...downloaded_plugin_info,
+                                    component: component,
+                                    is_plugin_supported: is_plugin_supported,
+                                    is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
+                                },
+                            };
+                        } else {
+                            new_value = old_plugin_data;
+                        }
+                        new_data.push(new_value);
+                    }
+                    return new_data;
                 });
             },
             createAtomWithHook: (...args) => createAtomWithHook(...args),
@@ -70,11 +104,11 @@ export const usePlugins = () => {
 
     const asyncLoadPlugin = async (plugin_folder_relative_path) => {
         const init_path = "plugins/" + plugin_folder_relative_path + "/index.esm.js";
-        const plugin_info_path = "plugins/" + plugin_folder_relative_path + "/plugin_info.json";
+        const downloaded_plugin_info_path = "plugins/" + plugin_folder_relative_path + "/plugin_info.json";
         const plugin_css_path = "plugins/" + plugin_folder_relative_path + "/main.css";
         try {
-            const plugin_info_json = await readTextFile(plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
-            const plugin_info = JSON.parse(plugin_info_json);
+            const downloaded_plugin_info_json = await readTextFile(downloaded_plugin_info_path, { dir: BaseDirectory.Resource, recursive: true });
+            const downloaded_plugin_info = JSON.parse(downloaded_plugin_info_json);
 
             const plugin_code = await readTextFile(init_path, { dir: BaseDirectory.Resource, recursive: true });
             const cleaned_code = removeImportStatements(plugin_code);
@@ -91,7 +125,7 @@ export const usePlugins = () => {
             URL.revokeObjectURL(blob_url);
 
             if (plugin_module && plugin_module.init) {
-                plugin_module.init(generatePluginContext(plugin_info));
+                plugin_module.init(generatePluginContext(downloaded_plugin_info));
             }
             await loadPluginCSS(plugin_css_path);
 
@@ -102,16 +136,16 @@ export const usePlugins = () => {
 
     const asyncLoadAllPlugins = async () => {
         if (!import.meta.env.DEV) {
-            imported_dev_plugins.forEach(({ index, plugin_info }) => {
-                if (!index || !plugin_info) {
-                    console.error("Invalid development plugin detected", index, plugin_info);
+            imported_dev_plugins.forEach(({ index, downloaded_plugin_info }) => {
+                if (!index || !downloaded_plugin_info) {
+                    console.error("Invalid development plugin detected", index, downloaded_plugin_info);
                     return;
                 }
-                const plugin_context = generatePluginContext(plugin_info);
+                const plugin_context = generatePluginContext(downloaded_plugin_info);
                 if (index.init) {
                     index.init(plugin_context);
                 } else {
-                    console.error("Plugin missing init function", plugin_info);
+                    console.error("Plugin missing init function", downloaded_plugin_info);
                 }
             });
         } else {
@@ -128,8 +162,9 @@ export const usePlugins = () => {
     };
 
     const downloadAndExtractPlugin = async (plugin) => {
+        const latest_plugin_info =  plugin.latest_plugin_info;
         try {
-            const plugin_zip_url = await fetchLatestPluginZipUrl(plugin);
+            const plugin_zip_url = await fetchLatestPluginZipUrl(latest_plugin_info);
             // Rust コマンド経由で ZIP をダウンロード
             const base64_zip = await invoke("download_zip_asset", { url: plugin_zip_url });
             // base64_zip をデコードして Uint8Array に変換
@@ -144,7 +179,7 @@ export const usePlugins = () => {
             const zip = await JSZip.loadAsync(bytes);
 
             // 展開先ディレクトリのパス（例："plugins/<plugin_id>" とする）
-            const target_plugin_path = "plugins/" + plugin.plugin_id;
+            const target_plugin_path = "plugins/" + latest_plugin_info.plugin_id;
             // 既に存在する場合は削除してから新規作成
             if (await exists(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true })) {
                 await removeDir(target_plugin_path, { dir: BaseDirectory.Resource, recursive: true });
@@ -220,13 +255,13 @@ export const usePlugins = () => {
                 plugins_data.map(async (plugin_data) => {
                     try {
                         const plugin_info = await asyncFetchPluginInfo(plugin_data.url);
-                        return { ...plugin_info };
+                        return plugin_info;
                     } catch (error) {
                         console.error("Error fetching plugin info for URL:", plugin_data.url, error);
-                        // エラー発生時は、plugin_data.title とエラーメッセージを返す
                         return {
                             title: plugin_data.title,
                             plugin_id: plugin_data.plugin_id || plugin_data.title,
+                            is_error: true,
                             error: error.message,
                             url: plugin_data.url
                         };
@@ -254,14 +289,8 @@ export const usePlugins = () => {
         }
         const plugin_info = plugin_info_json_response.data;
 
-        const isPluginCompatible = (main_version, lower_version, upper_version) => {
-            console.log(main_version, lower_version, upper_version);
 
-            // lower_version 以上かつ upper_version 以下なら互換性ありと判定
-            return semver.gte(main_version, lower_version) && semver.lte(main_version, upper_version);
-        };
-
-        const is_plugin_supported = isPluginCompatible(currentSoftwareVersion.data, plugin_info.min_supported_vrct_version, plugin_info.max_supported_vrct_version);
+        const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(plugin_info.min_supported_vrct_version, plugin_info.max_supported_vrct_version);
 
         return {
             title: plugin_info.title,
@@ -270,20 +299,46 @@ export const usePlugins = () => {
             min_supported_vrct_version: plugin_info.min_supported_vrct_version,
             max_supported_vrct_version: plugin_info.max_supported_vrct_version,
             is_plugin_supported: is_plugin_supported,
+            is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
             asset_name: plugin_info.asset_name,
             url: plugin_info_asset_url
         };
     }
+
+    const handlePendingPlugin = (target_plugin_id, is_pending) => {
+        updatePluginsData((old_value) => {
+            const new_value = old_value.data.map((d) => {
+                if (d.plugin_id === target_plugin_id) {
+                    d.is_pending = is_pending;
+                }
+                return d;
+            });
+            return new_value;
+        });
+    };
+
+
 
     const setSavedPluginsStatus = (plugins_status) => {
         pendingSavedPluginsStatus();
         asyncStdoutToPython("/set/data/plugins_status", plugins_status);
     };
 
+    const isAnyPluginEnabled = () => {
+        return currentPluginsData.data.some(plugin => plugin.is_enabled);
+    };
+
+    const enabledPluginsList = () => {
+        return  currentPluginsData.data.filter(plugin => plugin.is_enabled);
+    }
+
 
 
     return {
         asyncFetchPluginsInfo,
+
+        isAnyPluginEnabled,
+        enabledPluginsList,
 
         asyncLoadAllPlugins,
         downloadAndExtractPlugin,
@@ -294,7 +349,12 @@ export const usePlugins = () => {
         currentPluginsData,
         updatePluginsData,
 
+        currentIsPluginsInitialized,
+        updateIsPluginsInitialized,
+
         setSavedPluginsStatus,
+
+        handlePendingPlugin,
     };
 };
 
