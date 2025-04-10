@@ -35,6 +35,7 @@ export default defineConfig(async () => {
                     main: path.resolve(__dirname, "index.html"),
                 },
             },
+            sourcemap: true,
         },
 
         resolve: {

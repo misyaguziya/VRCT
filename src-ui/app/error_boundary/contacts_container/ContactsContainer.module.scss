@@ -1,0 +1,28 @@
+.container {
+    display: flex;
+    gap: 3.2rem;
+}
+
+.github_issues, .google_forms {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 1rem;
+    border-radius: 0.4rem;
+    gap: 1rem;
+    &:hover {
+        background-color: var(--dark_800_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color)
+    }
+}
+.contact_button_icon {
+    width: 5.2rem;
+}
+.contact_button_label {
+    font-size: 1.4rem;
+    white-space: nowrap;
+}
