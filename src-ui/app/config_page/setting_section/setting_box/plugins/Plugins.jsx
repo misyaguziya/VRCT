@@ -79,20 +79,19 @@ const PluginDownloadContainer = () => {
                 <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
                     <p className={styles.title}>
                         {plugin.is_downloaded
-                            ? plugin.downloaded_plugin_info?.title || plugin.latest_plugin_info.title
-                            : plugin.latest_plugin_info.title}
+                            ? plugin.downloaded_plugin_info?.title
+                            : plugin.latest_plugin_info?.title}
                     </p>
                     <p className={styles.plugin_id}>{plugin.plugin_id}</p>
-                    {plugin.error ? (
-                        <p style={{ color: "red" }}>Error: {plugin.error}</p>
+                    {plugin.is_error ? (
+                        <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
                     ) : (
                         <div className={styles.plugin_info_wrapper}>
                             <div className={styles.plugin_info}>
-                                {/* 状態に応じた情報表示（例：バージョン等） */}
                                 <p>
                                     {plugin.is_downloaded
                                         ? `現在のバージョン: ${plugin.downloaded_plugin_info?.plugin_version}`
-                                        : `最新バージョン: ${plugin.latest_plugin_info.plugin_version}`}
+                                        : null}
                                 </p>
                             </div>
                             <PluginsControlComponent
