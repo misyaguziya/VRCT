@@ -49,6 +49,7 @@ export const usePlugins = () => {
                     const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
                     const new_data = [];
                     let new_value = {};
+                    const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(downloaded_plugin_info.min_supported_vrct_version, downloaded_plugin_info.max_supported_vrct_version);
 
                     if (!prev_map.has(downloaded_plugin_info.plugin_id)) { // 未ダウンロード 新規登録
                         new_value = {
@@ -67,9 +68,8 @@ export const usePlugins = () => {
                     }
 
                     for (const old_plugin_data of prev.data) {
-                        const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(downloaded_plugin_info.min_supported_vrct_version, downloaded_plugin_info.max_supported_vrct_version);
 
-                        if (prev_map.has(downloaded_plugin_info.plugin_id) && old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み
+                        if (prev_map.has(downloaded_plugin_info.plugin_id) && old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み アップデート
 
 
                             const target_prev_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
@@ -262,7 +262,7 @@ export const usePlugins = () => {
                             title: plugin_data.title,
                             plugin_id: plugin_data.plugin_id || plugin_data.title,
                             is_error: true,
-                            error: error.message,
+                            error_message: error.message,
                             url: plugin_data.url
                         };
                     }
