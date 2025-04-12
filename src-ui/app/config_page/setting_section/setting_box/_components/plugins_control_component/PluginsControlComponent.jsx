@@ -81,7 +81,7 @@ const DownloadedPluginControl = ({
 
 
 const NotDownloadedPluginControl = ({ option, plugin_status, downloadStartFunction }) => {
-    const latest_version = plugin_status.latest_plugin_info.plugin_version;
+    const latest_version = plugin_status.latest_plugin_info?.plugin_version;
 
     if (plugin_status.is_latest_version_available) {
         return (

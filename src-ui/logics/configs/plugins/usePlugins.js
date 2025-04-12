@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
+import { IS_PLUGIN_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
     createAtomWithHook,
     useStore_SavedPluginsStatus,
@@ -14,7 +15,7 @@ const imported_dev_plugins = [];
 dev_plugins.forEach(async ({entry_path}) => {
     imported_dev_plugins.push({
         index: await import(`@plugins_path/${entry_path}/index.jsx`),
-        plugin_info:  await import(`@plugins_path/${entry_path}/plugin_info.json`),
+        downloaded_plugin_info:  await import(`@plugins_path/${entry_path}/plugin_info.json`),
     });
 })
 
@@ -28,7 +29,7 @@ import * as logics_common from "@logics_common";
 
 
 // PLUGIN_LIST_URL は中央リポジトリにある、各プラグインの plugin_info.json への URL の配列を保持する JSON の URL
-const PLUGIN_LIST_URL = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json";
+const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -135,7 +136,7 @@ export const usePlugins = () => {
     };
 
     const asyncLoadAllPlugins = async () => {
-        if (!import.meta.env.DEV) {
+        if (IS_PLUGIN_DEV_MODE) {
             imported_dev_plugins.forEach(({ index, downloaded_plugin_info }) => {
                 if (!index || !downloaded_plugin_info) {
                     console.error("Invalid development plugin detected", index, downloaded_plugin_info);
@@ -150,7 +151,9 @@ export const usePlugins = () => {
             });
         } else {
             try {
-                const plugin_files = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
+                const plugin_entries = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
+                const plugin_files = plugin_entries.filter(entry => entry.children && Array.isArray(entry.children));
+
                 for (const target_dir of plugin_files) {
                     const target_path = target_dir.name;
                     await asyncLoadPlugin(target_path);
@@ -368,9 +371,11 @@ const removeImportStatements = (code) => {
 // import { readTextFile, BaseDirectory } from "@tauri-apps/api/fs";
 
 const loadPluginCSS = async (plugin_css_path) => {
+    if (!await exists(plugin_css_path, { dir: BaseDirectory.Resource, recursive: true })) return;
     try {
         // プラグインフォルダのルートにある main.css を読み込む
         const css_content = await readTextFile(plugin_css_path, { dir: BaseDirectory.Resource });
+
         // style タグを作成して head に挿入する
         const style_tag = document.createElement("style");
         style_tag.id = `plugin-css-${plugin_css_path.replace(/[^a-zA-Z0-9_-]/g, "")}`;

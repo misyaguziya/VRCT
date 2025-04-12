@@ -41,7 +41,12 @@
       },
       "http": {
         "request": true,
-        "scope": ["https://api.github.com/repos/**", "https://github.com/**", "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json"]
+        "scope": [
+            "https://api.github.com/repos/**",
+            "https://github.com/**",
+            "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/vrct_plugins_list.json",
+            "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/dev_vrct_plugins_list.json"
+          ]
       },
     "shell": {
         "all": false,

@@ -52,6 +52,15 @@ export const ui_configs = {
     ]
 };
 
+export const IS_PLUGIN_DEV_MODE = false;
+export const getPluginsList = () => {
+    const base_url = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/";
+    const plugins_list_url = (IS_PLUGIN_DEV_MODE)
+        ? base_url + "dev_vrct_plugins_list.json"
+        : base_url + "vrct_plugins_list.json";
+    return plugins_list_url;
+};
+
 export const translator_status = [
     { id: "DeepL", label: "DeepL", is_available: false },
     { id: "DeepL_API", label: `DeepL API`, is_available: false },
