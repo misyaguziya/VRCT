@@ -15,6 +15,7 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
         updatePluginsData,
         currentSavedPluginsStatus,
         updateIsPluginsInitialized,
+        downloadAndExtractPlugin,
     } = usePlugins();
 
     useEffect(() => {
@@ -36,19 +37,19 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
                                 const is_latest_version_available = !(target_downloaded_plugin.plugin_version === info.plugin_version);
 
                                 new_plugin_info = {
-                                    is_downloaded: true,
-                                    is_latest_version_already: (target_downloaded_plugin.downloaded_plugin_info?.plugin_version === info.plugin_version),
-                                    is_latest_version_available: is_latest_version_available,
-                                    latest_plugin_info: { ...info },
                                     ...target_downloaded_plugin,
+                                    is_downloaded: true,
+                                    latest_plugin_info: { ...info },
+                                    is_latest_version_available: is_latest_version_available,
+                                    is_latest_version_already: (target_downloaded_plugin.downloaded_plugin_info?.plugin_version === info.plugin_version),
                                 };
                             } else { // infoにもあり登録済みだがダウンロードされていない
                                 new_plugin_info = {
+                                    ...target_downloaded_plugin,
                                     is_downloaded: false,
                                     is_latest_version_already: false,
                                     is_latest_version_available: info.is_latest_version_available,
                                     latest_plugin_info: { ...info },
-                                    ...target_downloaded_plugin,
                                 }
                             }
                         } else { // 未ダウンロード
@@ -75,8 +76,29 @@ export const PluginsController = ({ fetchPluginsHasRunRef }) => {
                             plugin.is_latest_version_available = (plugin.latest_plugin_info.is_plugin_supported);
                         }
                     });
+
+                    // ダウンロード済みで最新版じゃない場合、自動的にアップデート
+                    // is_latest_version_supported: true のみ。
+                    // 失敗した場合、現在のバージョンが非対応の場合はdisabledにする。
+                    new_data.forEach(async plugin =>  {
+                        if (plugin.is_enabled) {
+                            if (!plugin.is_latest_version_already && plugin.is_latest_version_available) {
+                                await downloadAndExtractPlugin(plugin);
+                            }
+                        }
+                    });
+
+                    new_data.forEach(async plugin =>  {
+                        if (plugin.is_enabled) {
+                            if (!plugin.downloaded_plugin_info?.is_plugin_supported) {
+                                plugin.is_enabled = false
+                            }
+                        }
+                    });
+
                     return new_data;
                 });
+
             } catch (error) {
                 console.error(error);
             }
