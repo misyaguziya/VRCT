@@ -53,6 +53,7 @@ export const ui_configs = {
 };
 
 export const IS_PLUGIN_DEV_MODE = false;
+if (IS_PLUGIN_DEV_MODE) console.warn("ui_configs IS_PLUGIN_DEV_MODE: true. Turn to 'false' when it's production environment.");
 export const getPluginsList = () => {
     const base_url = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/";
     const plugins_list_url = (IS_PLUGIN_DEV_MODE)

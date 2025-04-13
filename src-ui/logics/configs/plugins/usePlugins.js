@@ -52,12 +52,14 @@ export const usePlugins = () => {
                     let new_value = {};
                     const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(downloaded_plugin_info.min_supported_vrct_version, downloaded_plugin_info.max_supported_vrct_version);
 
-                    if (!prev_map.has(downloaded_plugin_info.plugin_id)) { // 未ダウンロード 新規登録
+                    const target_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
+                    if (!target_plugin) { // 未ダウンロード 新規登録
                         new_value = {
                             plugin_id: downloaded_plugin_info.plugin_id,
                             component: component,
                             is_downloaded: true,
                             is_latest_version_available: false,
+                            is_latest_version_already: true,
                             downloaded_plugin_info: {
                                 ...downloaded_plugin_info,
                                 component: component,
@@ -70,9 +72,7 @@ export const usePlugins = () => {
 
                     for (const old_plugin_data of prev.data) {
 
-                        if (prev_map.has(downloaded_plugin_info.plugin_id) && old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み アップデート
-
-
+                        if (old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み or 登録済 アップデート
                             const target_prev_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
                             const is_latest_version_available = (target_prev_plugin.is_downloaded) && !(downloaded_plugin_info.plugin_version === target_prev_plugin.latest_plugin_info.plugin_version);
 
@@ -82,6 +82,7 @@ export const usePlugins = () => {
                                 component: component,
                                 is_downloaded: true,
                                 is_latest_version_available: is_latest_version_available,
+                                is_latest_version_already: (target_plugin.plugin_version === old_plugin_data.latest_plugin_info?.plugin_info),
                                 downloaded_plugin_info: {
                                     ...downloaded_plugin_info,
                                     component: component,
@@ -168,6 +169,7 @@ export const usePlugins = () => {
         const latest_plugin_info =  plugin.latest_plugin_info;
         try {
             const plugin_zip_url = await fetchLatestPluginZipUrl(latest_plugin_info);
+            console.log("start download", plugin_zip_url);
             // Rust コマンド経由で ZIP をダウンロード
             const base64_zip = await invoke("download_zip_asset", { url: plugin_zip_url });
             // base64_zip をデコードして Uint8Array に変換

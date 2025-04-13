@@ -52,7 +52,14 @@ const DownloadedPluginControl = ({
 
     const latest_version = plugin_status.latest_plugin_info?.plugin_version;
 
-    if (plugin_status.is_latest_version_already) {
+
+    if (!plugin_status.downloaded_plugin_info.is_plugin_supported) {
+        return (
+            <div className={styles.container}>
+                <p>現在利用不可 使用中VRCTバージョンとの互換性なし</p>
+            </div>
+        );
+    } else if (plugin_status.is_latest_version_already) {
         return (
             <div className={styles.container}>
                 <p>最新のバージョン: {latest_version}</p>
@@ -72,7 +79,7 @@ const DownloadedPluginControl = ({
     } else {
         return (
             <div className={styles.container}>
-                <p>最新のバージョン: {latest_version}</p>
+                <p>最新版は現在利用不可</p>
                 <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
@@ -88,6 +95,13 @@ const NotDownloadedPluginControl = ({ option, plugin_status, downloadStartFuncti
             <div className={styles.container}>
                 <p>最新バージョン: {latest_version}</p>
                 <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
+            </div>
+        );
+    } else if (plugin_status.latest_plugin_info?.is_plugin_supported_latest_vrct) {
+        return (
+            <div className={styles.container}>
+                <p>最新のバージョン: {latest_version}</p>
+                <p>VRCT最新版で利用可能</p>
             </div>
         );
     } else {
