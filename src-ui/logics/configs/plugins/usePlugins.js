@@ -5,6 +5,8 @@ import {
     useStore_SavedPluginsStatus,
     useStore_PluginsData,
     useStore_IsPluginsInitialized,
+    useStore_IsInitializedLoadPlugin,
+    useStore_IsFetchedPluginsInfo,
 } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
@@ -33,6 +35,11 @@ const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
+
+    const { currentIsInitializedLoadPlugin, updateIsInitializedLoadPlugin, pendingIsInitializedLoadPlugin } = useStore_IsInitializedLoadPlugin();
+    const { currentIsFetchedPluginsInfo, updateIsFetchedPluginsInfo, pendingIsFetchedPluginsInfo } = useStore_IsFetchedPluginsInfo();
+
+
     const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
     const { currentPluginsData, updatePluginsData, pendingPluginsData } = useStore_PluginsData();
     const { currentIsPluginsInitialized, updateIsPluginsInitialized, pendingIsPluginsInitialized } = useStore_IsPluginsInitialized();
@@ -40,13 +47,15 @@ export const usePlugins = () => {
 
     const { asyncTauriFetchGithub } = useFetch();
 
-    const generatePluginContext= (downloaded_plugin_info) => {
+    const generatePluginContext = (downloaded_plugin_info) => {
         const plugin_context = {
             registerComponent: (component) => {
                 if (!downloaded_plugin_info.plugin_id || !downloaded_plugin_info.location || !component) {
                     return console.error("An invalid plugin was detected.", downloaded_plugin_info.plugin_id, downloaded_plugin_info.location, component);
                 }
                 updatePluginsData(prev => {
+                    console.log("-----updated downloaded plugin info----");
+
                     const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
                     const new_data = [];
                     let new_value = {};
@@ -74,7 +83,7 @@ export const usePlugins = () => {
 
                         if (old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み or 登録済 アップデート
                             const target_prev_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
-                            const is_latest_version_available = (target_prev_plugin.is_downloaded) && !(downloaded_plugin_info.plugin_version === target_prev_plugin.latest_plugin_info.plugin_version);
+                            const is_latest_version_available = (target_prev_plugin.is_downloaded) && (target_prev_plugin.latest_plugin_info?.plugin_version) && !(downloaded_plugin_info.plugin_version === target_prev_plugin.latest_plugin_info?.plugin_version);
 
                             new_value = {
                                 ...target_prev_plugin,
@@ -356,6 +365,11 @@ export const usePlugins = () => {
 
         currentIsPluginsInitialized,
         updateIsPluginsInitialized,
+
+        currentIsInitializedLoadPlugin,
+        updateIsInitializedLoadPlugin,
+        currentIsFetchedPluginsInfo,
+        updateIsFetchedPluginsInfo,
 
         setSavedPluginsStatus,
 

@@ -20,9 +20,6 @@ export const UpdateModal = () => {
     const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { isAnyPluginEnabled } = usePlugins();
 
-    console.log(isAnyPluginEnabled());
-
-
     const is_latest_version_already = currentLatestSoftwareVersionInfo.data.is_update_available === false;
     const is_cpu_version = currentComputeMode.data === "cpu";
 
@@ -101,14 +98,17 @@ const CurrentVersionLabel = (props) => {
 const PluginUpdateNotification = () => {
     const { enabledPluginsList } = usePlugins();
 
-    const incompatible_plugins_list = enabledPluginsList();
+    // ダウンロード済みのもの or プラグイン最新版が、VRCT最新版（VRCTアプデ後）に非対応のもの
+    const incompatible_plugins_list = enabledPluginsList().filter(plugin => {
+        if (!plugin.is_downloaded) return false;
+        if (!plugin.downloaded_plugin_info?.is_plugin_supported_latest_vrct || !plugin.latest_plugin_info.is_plugin_supported_latest_vrct) return true;
+    });
 
     return (
         <div>
             {incompatible_plugins_list.map(plugin => {
-                console.log(plugin);
-
-                return <p>{plugin.title}</p>
+                const target_data = plugin.downloaded_plugin_info;
+                return <p key={plugin.plugin_id} >{target_data.title}</p>
             })}
         </div>
     );
