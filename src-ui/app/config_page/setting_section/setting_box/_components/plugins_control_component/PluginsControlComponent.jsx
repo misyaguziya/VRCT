@@ -54,9 +54,25 @@ const DownloadedPluginControl = ({
 
 
     if (!plugin_status.downloaded_plugin_info.is_plugin_supported) {
+        if (plugin_status.is_latest_version_available) {
+            return (
+                <div className={styles.container}>
+                    <p>最新のバージョン: {latest_version}</p>
+                    <p>最新版にアップデート後 利用可能</p>
+                    <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
+                </div>
+            );
+        }
         return (
             <div className={styles.container}>
                 <p>現在利用不可 使用中VRCTバージョンとの互換性なし</p>
+            </div>
+        );
+    } else if (plugin_status.is_outdated) {
+        return (
+            <div className={styles.container}>
+                <p>最新情報が取得できません</p>
+                <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else if (plugin_status.is_latest_version_already) {

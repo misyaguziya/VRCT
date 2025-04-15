@@ -29,7 +29,10 @@ export const App = () => {
     const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
     const { i18n } = useTranslation();
-    const fetchPluginsHasRunRef = useRef(false);
+    const fetchPluginsHasRunRef = useRef({
+        is_initialized_load_plugin: false,
+        is_fetched_plugins_info: false,
+    });
 
     return (
         <div className={styles.container}>
