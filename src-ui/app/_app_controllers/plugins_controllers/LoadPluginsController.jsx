@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { usePlugins } from "@logics_configs";
 
 export const LoadPluginsController = ({ pluginsControllerHasRunRef }) => {

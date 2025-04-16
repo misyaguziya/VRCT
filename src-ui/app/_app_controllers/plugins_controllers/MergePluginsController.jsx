@@ -121,7 +121,7 @@ export const MergePluginsController = () => {
                 }
 
 
-                // 追加処理: ダウンロード済みかつ有効なプラグインで、サポート対象でない場合は無効化
+                // ダウンロード済みかつ有効なプラグインで、サポート対象でない場合は無効化
                 new_data.forEach(plugin => {
                     if (plugin.is_downloaded && plugin.is_enabled) {
                         if (
@@ -143,7 +143,7 @@ export const MergePluginsController = () => {
 
 
 
-    // --- 自動アップデート（ダウンロード処理）のuseEffect ---
+    // --- 自動アップデート（ダウンロード処理）---
     // ※downloadAndExtractPlugin の重複実行を防ぐため、実行中の plugin_id を useRef で管理
     const downloadingRef = useRef(new Set());
 
@@ -160,7 +160,6 @@ export const MergePluginsController = () => {
 
                 if (!downloadingRef.current.has(plugin.plugin_id)) {
                     downloadingRef.current.add(plugin.plugin_id);
-                    // ※ downloadAndExtractPlugin は外部通信を伴い currentLoadedPlugins.data 更新を引き起こすので注意
                     downloadAndExtractPlugin(plugin)
                         .then(() => {
                             console.log(`Plugin ${plugin.plugin_id} updated successfully`);
@@ -175,33 +174,5 @@ export const MergePluginsController = () => {
         });
     }, [currentPluginsData.data]);
 
-
-
-
     return null;
 };
-
-
-
-
-
-// ダウンロード済みで最新版じゃない場合、自動的にアップデート
-// // is_latest_version_supported: true のみ。
-// // 失敗した場合、現在のバージョンが非対応の場合はdisabledにする。
-// new_data.forEach(async plugin =>  {
-//     if (plugin.is_enabled) {
-//         console.log(plugin);
-
-//         if (!plugin.is_latest_version_already && plugin.is_latest_version_available) {
-//             await downloadAndExtractPlugin(plugin);
-//         }
-//     }
-// });
-
-// new_data.forEach(plugin => {
-//     if (plugin.is_downloaded && plugin.is_enabled) {
-//         if (!plugin.downloaded_plugin_info?.is_plugin_supported && !plugin.latest_plugin_info?.is_plugin_supported) {
-//             plugin.is_enabled = false
-//         }
-//     }
-// });
