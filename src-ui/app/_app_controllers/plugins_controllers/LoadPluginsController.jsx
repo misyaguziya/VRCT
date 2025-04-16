@@ -1,17 +1,9 @@
 import React, { useEffect } from "react";
 import { usePlugins } from "@logics_configs";
-import clsx from "clsx";
 
-if (typeof window !== "undefined") {
-    window.React = React;
-    window.clsx = clsx;
-}
-
-export const LoadPluginsController = () => {
-
+export const LoadPluginsController = ({ pluginsControllerHasRunRef }) => {
     const {
         asyncLoadAllPlugins,
-        currentIsInitializedLoadPlugin,
         updateIsInitializedLoadPlugin,
     } = usePlugins();
 
@@ -24,11 +16,11 @@ export const LoadPluginsController = () => {
     };
 
     useEffect(() => {
-
-        if (!currentIsInitializedLoadPlugin.data) {
+        if (!pluginsControllerHasRunRef.current.is_initialized_load_plugin) {
             asyncInitLoadPlugins().then(() => {
                 updateIsInitializedLoadPlugin(true);
             });
+            pluginsControllerHasRunRef.current.is_initialized_load_plugin = true;
         }
     }, []);
 

@@ -7,6 +7,9 @@ import {
     useStore_IsPluginsInitialized,
     useStore_IsInitializedLoadPlugin,
     useStore_IsFetchedPluginsInfo,
+
+    useStore_FetchedPluginsInfo,
+    useStore_LoadedPlugins,
 } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
@@ -39,6 +42,8 @@ export const usePlugins = () => {
     const { currentIsInitializedLoadPlugin, updateIsInitializedLoadPlugin, pendingIsInitializedLoadPlugin } = useStore_IsInitializedLoadPlugin();
     const { currentIsFetchedPluginsInfo, updateIsFetchedPluginsInfo, pendingIsFetchedPluginsInfo } = useStore_IsFetchedPluginsInfo();
 
+    const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
+    const { currentLoadedPlugins, updateLoadedPlugins, pendingLoadedPlugins } = useStore_LoadedPlugins();
 
     const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
     const { currentPluginsData, updatePluginsData, pendingPluginsData } = useStore_PluginsData();
@@ -47,65 +52,24 @@ export const usePlugins = () => {
 
     const { asyncTauriFetchGithub } = useFetch();
 
+
+
     const generatePluginContext = (downloaded_plugin_info) => {
         const plugin_context = {
             registerComponent: (component) => {
                 if (!downloaded_plugin_info.plugin_id || !downloaded_plugin_info.location || !component) {
                     return console.error("An invalid plugin was detected.", downloaded_plugin_info.plugin_id, downloaded_plugin_info.location, component);
                 }
-                updatePluginsData(prev => {
-                    console.log("-----updated downloaded plugin info----");
 
+                updateLoadedPlugins(prev => {
                     const prev_map = new Map(prev.data.map(item => [item.plugin_id, item]));
-                    const new_data = [];
-                    let new_value = {};
-                    const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(downloaded_plugin_info.min_supported_vrct_version, downloaded_plugin_info.max_supported_vrct_version);
-
-                    const target_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
-                    if (!target_plugin) { // 未ダウンロード 新規登録
-                        new_value = {
-                            plugin_id: downloaded_plugin_info.plugin_id,
-                            component: component,
-                            is_downloaded: true,
-                            is_latest_version_available: false,
-                            is_latest_version_already: true,
-                            downloaded_plugin_info: {
-                                ...downloaded_plugin_info,
-                                component: component,
-                                is_plugin_supported: is_plugin_supported,
-                                is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
-                            },
-                        };
-                        return [...prev.data, new_value];
-                    }
-
-                    for (const old_plugin_data of prev.data) {
-
-                        if (old_plugin_data.plugin_id === downloaded_plugin_info.plugin_id) { // ダウンロード済み or 登録済 アップデート
-                            const target_prev_plugin = prev_map.get(downloaded_plugin_info.plugin_id);
-                            const is_latest_version_available = (target_prev_plugin.is_downloaded) && (target_prev_plugin.latest_plugin_info?.plugin_version) && !(downloaded_plugin_info.plugin_version === target_prev_plugin.latest_plugin_info?.plugin_version);
-
-                            new_value = {
-                                ...target_prev_plugin,
-                                plugin_id: downloaded_plugin_info.plugin_id,
-                                component: component,
-                                is_downloaded: true,
-                                is_latest_version_available: is_latest_version_available,
-                                is_latest_version_already: (target_plugin.plugin_version === old_plugin_data.latest_plugin_info?.plugin_info),
-                                downloaded_plugin_info: {
-                                    ...downloaded_plugin_info,
-                                    component: component,
-                                    is_plugin_supported: is_plugin_supported,
-                                    is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
-                                },
-                            };
-                        } else {
-                            new_value = old_plugin_data;
-                        }
-                        new_data.push(new_value);
-                    }
-                    return new_data;
+                    prev_map.set(downloaded_plugin_info.plugin_id, {
+                        ...downloaded_plugin_info,
+                        component: component,
+                    });
+                    return Array.from(prev_map.values());
                 });
+
             },
             createAtomWithHook: (...args) => createAtomWithHook(...args),
             logics: { ...logics_common, ...logics_configs, ...logics_main }
@@ -259,10 +223,11 @@ export const usePlugins = () => {
 
 
     const asyncFetchPluginsInfo = async () => {
+        if (currentIsFetchedPluginsInfo.data) return;
         try {
             const response = await asyncTauriFetchGithub(PLUGIN_LIST_URL);
             if (response.status !== 200) {
-                throw new Error("Failed to fetch plugin list, status: " + response.status);
+                throw new Error("Failed to fetch plugins list, status: " + response.status);
             }
             const plugins_data = response.data;
             const updated_list = await Promise.all(
@@ -271,7 +236,7 @@ export const usePlugins = () => {
                         const plugin_info = await asyncFetchPluginInfo(plugin_data.url);
                         return plugin_info;
                     } catch (error) {
-                        console.error("Error fetching plugin info for URL:", plugin_data.url, error);
+                        console.error("Error fetching plugin info for URL: ", plugin_data.url, error);
                         return {
                             title: plugin_data.title,
                             plugin_id: plugin_data.plugin_id || plugin_data.title,
@@ -282,13 +247,15 @@ export const usePlugins = () => {
                     }
                 })
             );
-            return updated_list;
+            updateFetchedPluginsInfo(updated_list);
+            updateIsFetchedPluginsInfo(true);
         } catch (error) {
-            console.error("Error fetching plugin info list:", error);
+            console.error("Error fetching plugin info list: ", error);
         }
     }
 
     const asyncFetchPluginInfo = async (plugin_info_asset_url) => {
+
         const release_response = await asyncTauriFetchGithub(plugin_info_asset_url);
         if (release_response.status !== 200) {
             throw new Error(`Failed to fetch release info from ${plugin_info_asset_url}`);
@@ -370,6 +337,12 @@ export const usePlugins = () => {
         updateIsInitializedLoadPlugin,
         currentIsFetchedPluginsInfo,
         updateIsFetchedPluginsInfo,
+
+        currentFetchedPluginsInfo,
+        updateFetchedPluginsInfo,
+
+        currentLoadedPlugins,
+        updateLoadedPlugins,
 
         setSavedPluginsStatus,
 
