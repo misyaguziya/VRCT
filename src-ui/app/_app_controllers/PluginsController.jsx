@@ -8,7 +8,6 @@ if (typeof window !== "undefined") {
 
 import { LoadPluginsController } from "./plugins_controllers/LoadPluginsController";
 import { FetchLatestPluginsDataController } from "./plugins_controllers/FetchLatestPluginsDataController";
-// import { MergeSavedPluginsStatusController } from "./plugins_controllers/MergeSavedPluginsStatusController";
 import { MergePluginsController } from "./plugins_controllers/MergePluginsController";
 
 export const PluginsController = ({ pluginsControllerHasRunRef }) => {
@@ -18,7 +17,6 @@ export const PluginsController = ({ pluginsControllerHasRunRef }) => {
             <MergePluginsController />
             <LoadPluginsController pluginsControllerHasRunRef={pluginsControllerHasRunRef}/>
             <FetchLatestPluginsDataController pluginsControllerHasRunRef={pluginsControllerHasRunRef}/>
-            {/* <MergeSavedPluginsStatusController /> */}
         </>
     );
 };
