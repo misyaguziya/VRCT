@@ -281,7 +281,9 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
 export const { atomInstance: Atom_IsPluginsInitialized, useHook: useStore_IsPluginsInitialized } = createAtomWithHook(false, "IsPluginsInitialized");
 export const { atomInstance: Atom_IsInitializedLoadPlugin, useHook: useStore_IsInitializedLoadPlugin } = createAtomWithHook(false, "IsInitializedLoadPlugin");
 export const { atomInstance: Atom_IsFetchedPluginsInfo, useHook: useStore_IsFetchedPluginsInfo } = createAtomWithHook(false, "IsFetchedPluginsInfo");
-export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook(false, "FetchedPluginsInfo");
+
+export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook([], "FetchedPluginsInfo");
+export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
 export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
 export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
 

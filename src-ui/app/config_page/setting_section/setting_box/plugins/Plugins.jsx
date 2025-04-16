@@ -8,7 +8,7 @@ export const Plugins = () => {
         currentIsPluginsInitialized,
     } = usePlugins();
 
-    if (!currentIsPluginsInitialized.data) return null;
+    // if (!currentIsPluginsInitialized.data) return null;
 
     return (
         <div className={styles.container}>

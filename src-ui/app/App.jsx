@@ -29,9 +29,9 @@ export const App = () => {
     const { currentIsBackendReady } = useIsBackendReady();
     const { WindowGeometryController } = useWindow();
     const { i18n } = useTranslation();
-    const fetchPluginsHasRunRef = useRef({
+    const pluginsControllerHasRunRef = useRef({
         is_initialized_load_plugin: false,
-        is_fetched_plugins_info: false,
+        is_init_fetched_plugins_info: false,
     });
 
     return (
@@ -49,7 +49,7 @@ export const App = () => {
 
                 {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                     ? <SplashComponent />
-                    : <Contents key={i18n.language} fetchPluginsHasRunRef={fetchPluginsHasRunRef} />
+                    : <Contents key={i18n.language} pluginsControllerHasRunRef={pluginsControllerHasRunRef} />
                 }
 
                 <SnackbarController />
@@ -58,11 +58,11 @@ export const App = () => {
     );
 };
 
-const Contents = ({ fetchPluginsHasRunRef }) => {
+const Contents = ({ pluginsControllerHasRunRef }) => {
     const { currentIsSoftwareUpdating } = useIsSoftwareUpdating();
     return (
         <>
-            <PluginsController fetchPluginsHasRunRef={fetchPluginsHasRunRef} />
+            <PluginsController pluginsControllerHasRunRef={pluginsControllerHasRunRef} />
 
             <WindowTitleBar />
             {currentIsSoftwareUpdating.data === false
