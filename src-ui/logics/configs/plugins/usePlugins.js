@@ -124,6 +124,9 @@ export const usePlugins = () => {
                 }
             });
         } else {
+            const is_plugins_dir_exists = await exists("plugins", { dir: BaseDirectory.Resource });
+            if (!is_plugins_dir_exists) return;
+
             try {
                 const plugin_entries = await readDir("plugins", { dir: BaseDirectory.Resource, recursive: true });
                 const plugin_files = plugin_entries.filter(entry => entry.children && Array.isArray(entry.children));
