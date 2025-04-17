@@ -47,8 +47,6 @@ export const PluginCompatibilityList = () => {
 };
 
 const PluginContainer = ({ target_data, is_compatible }) => {
-    console.log(target_data.plugin_id);
-
     return (
         <div className={styles.plugin_box}>
             <p className={clsx(styles.plugin_label, {[styles.is_compatible]: is_compatible})} >{target_data.title}</p>

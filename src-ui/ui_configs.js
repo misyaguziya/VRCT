@@ -52,15 +52,20 @@ export const ui_configs = {
     ]
 };
 
-export const IS_PLUGIN_DEV_MODE = false;
-if (IS_PLUGIN_DEV_MODE) console.warn("ui_configs IS_PLUGIN_DEV_MODE: true. Turn to 'false' when it's production environment.");
+// true: src-ui\plugins false: src-tauri\target\debug\plugins
+export const IS_PLUGIN_PATH_DEV_MODE = false;
+
+// true: dev_vrct_plugins_list.json false: vrct_plugins_list.json
+export const IS_PLUGIN_LIST_URL_DEV_MODE = false;
+
 export const getPluginsList = () => {
     const base_url = "https://raw.githubusercontent.com/ShiinaSakamoto/vrct_plugins_list/main/";
-    const plugins_list_url = (IS_PLUGIN_DEV_MODE)
-        ? base_url + "dev_vrct_plugins_list.json"
-        : base_url + "vrct_plugins_list.json";
+    const plugins_list_url = (IS_PLUGIN_LIST_URL_DEV_MODE)
+    ? base_url + "dev_vrct_plugins_list.json"
+    : base_url + "vrct_plugins_list.json";
     return plugins_list_url;
 };
+if (IS_PLUGIN_PATH_DEV_MODE || IS_PLUGIN_LIST_URL_DEV_MODE) console.warn("ui_configs IS_PLUGIN_PATH_DEV_MODE or IS_PLUGIN_LIST_URL_DEV_MODE is true. Turn to 'false' when it's production environment.");
 
 export const translator_status = [
     { id: "DeepL", label: "DeepL", is_available: false },
