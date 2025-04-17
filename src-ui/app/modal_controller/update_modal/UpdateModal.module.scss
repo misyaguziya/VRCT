@@ -3,7 +3,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: safe center;
     align-items: center;
     gap: 2.4rem;
 }
@@ -14,6 +14,14 @@
     justify-content: center;
     align-items: center;
     gap: 8rem;
+}
+
+.update_section_wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4rem;
 }
 
 .update_section {
