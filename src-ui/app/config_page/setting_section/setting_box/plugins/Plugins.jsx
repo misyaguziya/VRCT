@@ -22,9 +22,8 @@ const PluginDownloadContainer = () => {
     const {
         downloadAndExtractPlugin,
         currentPluginsData,
-        updatePluginsData,
         currentSavedPluginsStatus,
-        setSavedPluginsStatus,
+        toggleSavedPluginStatus,
         handlePendingPlugin,
     } = usePlugins();
 
@@ -42,33 +41,7 @@ const PluginDownloadContainer = () => {
 
     // プラグインのオンオフ切り替え処理
     const toggleFunction = (target_plugin_id) => {
-        const is_exists = currentSavedPluginsStatus.data.some(
-            (d) => d.plugin_id === target_plugin_id
-        );
-        let new_value = [];
-        if (is_exists) {
-            new_value = currentSavedPluginsStatus.data.map((d) => {
-                if (d.plugin_id === target_plugin_id) {
-                    d.is_enabled = !d.is_enabled;
-                }
-                return d;
-            });
-        } else {
-            new_value.push(...currentSavedPluginsStatus.data);
-            new_value.push({
-                plugin_id: target_plugin_id,
-                is_enabled: true,
-            });
-        }
-
-        // 「currentPluginsData.data」でis_downloadedがtrueのものだけ残す
-        new_value = new_value.filter((item) =>
-            currentPluginsData.data.some(
-                (plugin) => plugin.plugin_id === item.plugin_id && plugin.is_downloaded
-            )
-        );
-
-        setSavedPluginsStatus(new_value);
+        toggleSavedPluginStatus(target_plugin_id);
     };
 
     const variable_state = currentSavedPluginsStatus.state;

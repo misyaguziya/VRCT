@@ -10,6 +10,7 @@ export const MergePluginsController = () => {
         currentFetchedPluginsInfo,
         currentSavedPluginsStatus,
         downloadAndExtractPlugin,
+        toggleSavedPluginStatus,
     } = usePlugins();
     const { checkVrctVerCompatibility } = useSoftwareVersion();
 
@@ -129,6 +130,7 @@ export const MergePluginsController = () => {
                             !plugin.latest_plugin_info?.is_plugin_supported
                         ) {
                             plugin.is_enabled = false;
+                            toggleSavedPluginStatus(plugin.plugin_id);
                         }
                     }
                 });
