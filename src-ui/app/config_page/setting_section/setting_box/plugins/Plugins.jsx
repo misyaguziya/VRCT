@@ -17,7 +17,6 @@ export const Plugins = () => {
     );
 };
 
-
 const PluginDownloadContainer = () => {
     const {
         downloadAndExtractPlugin,
@@ -46,9 +45,14 @@ const PluginDownloadContainer = () => {
 
     const variable_state = currentSavedPluginsStatus.state;
 
+    // plugin_id で ABC 順にソート
+    const sorted_plugins_data = [...currentPluginsData.data].sort((a, b) =>
+        a.plugin_id.localeCompare(b.plugin_id)
+    );
+
     return (
         <div className={styles.plugins_list_container}>
-            {currentPluginsData.data.map((plugin) => (
+            {sorted_plugins_data.map((plugin) => (
                 <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
                     <p className={styles.title}>
                         {plugin.is_downloaded
