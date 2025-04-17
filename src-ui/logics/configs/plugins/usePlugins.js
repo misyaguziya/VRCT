@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
-import { IS_PLUGIN_DEV_MODE, getPluginsList } from "@ui_configs";
+import { IS_PLUGIN_PATH_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
     createAtomWithHook,
     useStore_SavedPluginsStatus,
@@ -110,7 +110,7 @@ export const usePlugins = () => {
     };
 
     const asyncLoadAllPlugins = async () => {
-        if (IS_PLUGIN_DEV_MODE) {
+        if (IS_PLUGIN_PATH_DEV_MODE) {
             imported_dev_plugins.forEach(({ index, downloaded_plugin_info }) => {
                 if (!index || !downloaded_plugin_info) {
                     console.error("Invalid development plugin detected", index, downloaded_plugin_info);
