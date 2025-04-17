@@ -206,13 +206,7 @@ export const useReceiveRoutes = () => {
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
-        "/run/software_update_info": () => {
-            updateLatestSoftwareVersionInfo({
-                is_update_available: true,
-                new_version: "3.0.3",
-            })
-        },
-        // "/run/software_update_info": updateLatestSoftwareVersionInfo,
+        "/run/software_update_info": updateLatestSoftwareVersionInfo,
         "/run/connected_network": handleNetworkConnection,
 
         // Main Page
