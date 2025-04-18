@@ -5,10 +5,7 @@ import { PluginsControlComponent } from "../_components/plugins_control_componen
 
 export const Plugins = () => {
     const {
-        currentIsPluginsInitialized,
     } = usePlugins();
-
-    // if (!currentIsPluginsInitialized.data) return null;
 
     return (
         <div className={styles.container}>
@@ -22,7 +19,7 @@ const PluginDownloadContainer = () => {
         downloadAndExtractPlugin,
         currentPluginsData,
         currentSavedPluginsStatus,
-        toggleSavedPluginStatus,
+        toggleSavedPluginsStatus,
         handlePendingPlugin,
     } = usePlugins();
 
@@ -40,7 +37,7 @@ const PluginDownloadContainer = () => {
 
     // プラグインのオンオフ切り替え処理
     const toggleFunction = (target_plugin_id) => {
-        toggleSavedPluginStatus(target_plugin_id);
+        toggleSavedPluginsStatus(target_plugin_id);
     };
 
     const variable_state = currentSavedPluginsStatus.state;

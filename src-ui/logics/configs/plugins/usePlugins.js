@@ -4,8 +4,6 @@ import {
     createAtomWithHook,
     useStore_SavedPluginsStatus,
     useStore_PluginsData,
-    useStore_IsPluginsInitialized,
-    useStore_IsInitializedLoadPlugin,
     useStore_IsFetchedPluginsInfo,
 
     useStore_FetchedPluginsInfo,
@@ -39,7 +37,6 @@ const PLUGIN_LIST_URL = getPluginsList();
 export const usePlugins = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
 
-    const { currentIsInitializedLoadPlugin, updateIsInitializedLoadPlugin, pendingIsInitializedLoadPlugin } = useStore_IsInitializedLoadPlugin();
     const { currentIsFetchedPluginsInfo, updateIsFetchedPluginsInfo, pendingIsFetchedPluginsInfo } = useStore_IsFetchedPluginsInfo();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
@@ -47,7 +44,6 @@ export const usePlugins = () => {
 
     const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
     const { currentPluginsData, updatePluginsData, pendingPluginsData } = useStore_PluginsData();
-    const { currentIsPluginsInitialized, updateIsPluginsInitialized, pendingIsPluginsInitialized } = useStore_IsPluginsInitialized();
     const { checkVrctVerCompatibility } = useSoftwareVersion();
 
     const { asyncTauriFetchGithub } = useFetch();
@@ -301,7 +297,7 @@ export const usePlugins = () => {
         });
     };
 
-    const toggleSavedPluginStatus = (target_plugin_id) => {
+    const toggleSavedPluginsStatus = (target_plugin_id) => {
         const is_exists = currentSavedPluginsStatus.data.some(
             (d) => d.plugin_id === target_plugin_id
         );
@@ -361,11 +357,6 @@ export const usePlugins = () => {
         currentPluginsData,
         updatePluginsData,
 
-        currentIsPluginsInitialized,
-        updateIsPluginsInitialized,
-
-        currentIsInitializedLoadPlugin,
-        updateIsInitializedLoadPlugin,
         currentIsFetchedPluginsInfo,
         updateIsFetchedPluginsInfo,
 
@@ -375,7 +366,7 @@ export const usePlugins = () => {
         currentLoadedPlugins,
         updateLoadedPlugins,
 
-        toggleSavedPluginStatus,
+        toggleSavedPluginsStatus,
         setSavedPluginsStatus,
 
         handlePendingPlugin,
