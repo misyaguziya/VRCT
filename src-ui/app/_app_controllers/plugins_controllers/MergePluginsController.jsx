@@ -126,7 +126,8 @@ export const MergePluginsController = () => {
                 new_data.forEach(plugin => {
                     if (plugin.is_downloaded && plugin.is_enabled) {
                         if (
-                            !plugin.downloaded_plugin_info?.is_plugin_supported &&
+                            !plugin.downloaded_plugin_info.is_plugin_supported &&
+                            plugin.latest_plugin_info &&
                             !plugin.latest_plugin_info?.is_plugin_supported
                         ) {
                             plugin.is_enabled = false;
@@ -155,6 +156,7 @@ export const MergePluginsController = () => {
         currentPluginsData.data.forEach(plugin => {
             if (plugin.is_downloaded &&
                 plugin.is_enabled &&
+                !plugin.downloaded_plugin_info.is_plugin_supported &&
                 !plugin.is_latest_version_already &&
                 plugin.is_latest_version_available
             ) {
