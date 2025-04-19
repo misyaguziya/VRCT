@@ -10,7 +10,7 @@ export const MergePluginsController = () => {
         currentFetchedPluginsInfo,
         currentSavedPluginsStatus,
         downloadAndExtractPlugin,
-        toggleSavedPluginsStatus,
+        setTargetSavedPluginsStatus_Init,
     } = usePlugins();
     const { checkVrctVerCompatibility } = useSoftwareVersion();
 
@@ -131,7 +131,15 @@ export const MergePluginsController = () => {
                             !plugin.latest_plugin_info?.is_plugin_supported
                         ) {
                             plugin.is_enabled = false;
-                            toggleSavedPluginsStatus(plugin.plugin_id);
+                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
+                        }
+
+                        if (
+                            !plugin.downloaded_plugin_info.is_plugin_supported &&
+                            plugin.is_outdated
+                        ) {
+                            plugin.is_enabled = false;
+                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
                         }
                     }
                 });

@@ -1,11 +1,20 @@
-import React from "react";
+import { useEffect, useRef } from "react";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
 import { PluginsControlComponent } from "../_components/plugins_control_component/PluginsControlComponent";
 
 export const Plugins = () => {
     const {
+        asyncFetchPluginsInfo,
     } = usePlugins();
+    const hasRunRef = useRef(false);
+
+    useEffect(() => {
+        if (!hasRunRef.current) {
+            asyncFetchPluginsInfo();
+        }
+        return () => hasRunRef.current = true;
+    }, []);
 
     return (
         <div className={styles.container}>

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import styles from "./PluginCompatibilityList.module.scss";
 import { usePlugins } from "@logics_configs";
 import CheckMarkSvg from "@images/check_mark.svg?react";
@@ -5,7 +6,14 @@ import XSvg from "@images/x_mark.svg?react";
 import WarningSvg from "@images/warning.svg?react";
 
 export const PluginCompatibilityList = () => {
-    const { enabledPluginsList } = usePlugins();
+    const {
+        enabledPluginsList,
+        asyncFetchPluginsInfo,
+    } = usePlugins();
+
+    useEffect(() => {
+        asyncFetchPluginsInfo();
+    }, []);
 
     // ダウンロード済みのもの
     const downloaded_plugin = enabledPluginsList().filter(p => p.is_downloaded);
@@ -13,7 +21,7 @@ export const PluginCompatibilityList = () => {
     const compatible_plugins_list = [];
     const incompatible_plugins_list = [];
     for (const p of downloaded_plugin) {
-        if (!p.downloaded_plugin_info?.is_plugin_supported_latest_vrct || !p.latest_plugin_info?.is_plugin_supported_latest_vrct) {
+        if (!p.downloaded_plugin_info?.is_plugin_supported_latest_vrct && !p.latest_plugin_info?.is_plugin_supported_latest_vrct) {
             // プラグイン最新版でも、VRCT最新版（VRCTアプデ後）に非対応のもの
             incompatible_plugins_list.push(p);
         } else {

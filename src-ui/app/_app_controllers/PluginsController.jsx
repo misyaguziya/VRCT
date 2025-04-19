@@ -10,13 +10,13 @@ import { LoadPluginsController } from "./plugins_controllers/LoadPluginsControll
 import { FetchLatestPluginsDataController } from "./plugins_controllers/FetchLatestPluginsDataController";
 import { MergePluginsController } from "./plugins_controllers/MergePluginsController";
 
-export const PluginsController = ({ pluginsControllerHasRunRef }) => {
+export const PluginsController = () => {
 
     return (
         <>
             <MergePluginsController />
-            <LoadPluginsController pluginsControllerHasRunRef={pluginsControllerHasRunRef}/>
-            <FetchLatestPluginsDataController pluginsControllerHasRunRef={pluginsControllerHasRunRef}/>
+            <LoadPluginsController />
+            <FetchLatestPluginsDataController />
         </>
     );
 };

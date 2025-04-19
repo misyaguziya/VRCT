@@ -20,6 +20,8 @@ export const store = {
     log_box_ref: null,
     text_area_ref: null,
     is_applied_init_message_box_height: false,
+    is_initialized_load_plugin: false,
+    is_fetched_plugins_info: false,
 };
 
 const generatePropertyNames = (base_name) => ({
@@ -278,8 +280,6 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
 }, "Hotkeys");
 
 // Plugins
-export const { atomInstance: Atom_IsFetchedPluginsInfo, useHook: useStore_IsFetchedPluginsInfo } = createAtomWithHook(false, "IsFetchedPluginsInfo");
-
 export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook([], "FetchedPluginsInfo");
 export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
 export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
