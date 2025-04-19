@@ -1,10 +1,11 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { IS_PLUGIN_PATH_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
+    store,
+
     createAtomWithHook,
     useStore_SavedPluginsStatus,
     useStore_PluginsData,
-    useStore_IsFetchedPluginsInfo,
 
     useStore_FetchedPluginsInfo,
     useStore_LoadedPlugins,
@@ -36,8 +37,6 @@ const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-
-    const { currentIsFetchedPluginsInfo, updateIsFetchedPluginsInfo, pendingIsFetchedPluginsInfo } = useStore_IsFetchedPluginsInfo();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
     const { currentLoadedPlugins, updateLoadedPlugins, pendingLoadedPlugins } = useStore_LoadedPlugins();
@@ -222,7 +221,9 @@ export const usePlugins = () => {
 
 
     const asyncFetchPluginsInfo = async () => {
-        if (currentIsFetchedPluginsInfo.data) return;
+        if (store.is_fetched_plugins_info) return;
+        store.is_fetched_plugins_info = true;
+
         try {
             const response = await asyncTauriFetchGithub(PLUGIN_LIST_URL);
             if (response.status !== 200) {
@@ -247,7 +248,6 @@ export const usePlugins = () => {
                 })
             );
             updateFetchedPluginsInfo(updated_list);
-            updateIsFetchedPluginsInfo(true);
         } catch (error) {
             console.error("Error fetching plugin info list: ", error);
         }
@@ -327,9 +327,41 @@ export const usePlugins = () => {
         setSavedPluginsStatus(new_value);
     };
 
+
+    // Init時の処理 非対応のものを無効化する際に、savedDPluginsStatusから不要なものを削除する処理が邪魔になるので該当コードを削除したバージョン。Init以外で使用する時にはリファクタが必要になる。
+    const setTargetSavedPluginsStatus_Init = (target_plugin_id, is_enabled) => {
+        const is_exists = currentSavedPluginsStatus.data.some(
+            (d) => d.plugin_id === target_plugin_id
+        );
+        let new_value = [];
+        if (is_exists) {
+            new_value = currentSavedPluginsStatus.data.map((d) => {
+                if (d.plugin_id === target_plugin_id) {
+                    d.is_enabled = is_enabled;
+                }
+                return d;
+            });
+        } else {
+            new_value.push(...currentSavedPluginsStatus.data);
+            new_value.push({
+                plugin_id: target_plugin_id,
+                is_enabled: is_enabled,
+            });
+        }
+
+        setSavedPluginsStatus(new_value);
+    };
+
+
     const setSavedPluginsStatus = (plugins_status) => {
         pendingSavedPluginsStatus();
         asyncStdoutToPython("/set/data/plugins_status", plugins_status);
+    };
+
+    // init時、currentPluginsDataからのデータではデータ更新が間に合わないので、currentSavedPluginsStatusから直接取得
+    const isAnyPluginEnabled_Init = () => {
+        console.log(currentSavedPluginsStatus);
+        return currentSavedPluginsStatus.data.some(plugin => plugin.is_enabled);
     };
 
     const isAnyPluginEnabled = () => {
@@ -345,6 +377,7 @@ export const usePlugins = () => {
     return {
         asyncFetchPluginsInfo,
 
+        isAnyPluginEnabled_Init,
         isAnyPluginEnabled,
         enabledPluginsList,
 
@@ -357,9 +390,6 @@ export const usePlugins = () => {
         currentPluginsData,
         updatePluginsData,
 
-        currentIsFetchedPluginsInfo,
-        updateIsFetchedPluginsInfo,
-
         currentFetchedPluginsInfo,
         updateFetchedPluginsInfo,
 
@@ -367,6 +397,7 @@ export const usePlugins = () => {
         updateLoadedPlugins,
 
         toggleSavedPluginsStatus,
+        setTargetSavedPluginsStatus_Init,
         setSavedPluginsStatus,
 
         handlePendingPlugin,

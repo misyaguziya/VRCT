@@ -1,23 +1,15 @@
 import { useEffect } from "react";
 import { usePlugins } from "@logics_configs";
 
-export const FetchLatestPluginsDataController = ({ pluginsControllerHasRunRef }) => {
+export const FetchLatestPluginsDataController = () => {
     const {
         asyncFetchPluginsInfo,
+        isAnyPluginEnabled_Init,
     } = usePlugins();
 
-    const asyncInitFetchPluginsInfo = async () => {
-        try {
-            await asyncFetchPluginsInfo();
-        } catch (error) {
-            console.error(error);
-        }
-    };
-
     useEffect(() => {
-        if (!pluginsControllerHasRunRef.current.is_init_fetched_plugins_info) {
-            asyncInitFetchPluginsInfo();
-            pluginsControllerHasRunRef.current.is_init_fetched_plugins_info = true;
+        if (isAnyPluginEnabled_Init()) {
+            asyncFetchPluginsInfo();
         }
     }, []);
 

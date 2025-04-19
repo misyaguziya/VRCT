@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { usePlugins } from "@logics_configs";
+import { store } from "@store";
 
-export const LoadPluginsController = ({ pluginsControllerHasRunRef }) => {
+export const LoadPluginsController = () => {
     const {
         asyncLoadAllPlugins,
     } = usePlugins();
@@ -15,9 +16,9 @@ export const LoadPluginsController = ({ pluginsControllerHasRunRef }) => {
     };
 
     useEffect(() => {
-        if (!pluginsControllerHasRunRef.current.is_initialized_load_plugin) {
+        if (!store.is_initialized_load_plugin) {
             asyncInitLoadPlugins();
-            pluginsControllerHasRunRef.current.is_initialized_load_plugin = true;
+            store.is_initialized_load_plugin = true;
         }
     }, []);
 
