@@ -32,10 +32,10 @@ export const AdvancedSettings = () => {
 const OscIpAddressContainer = () => {
     const { t } = useTranslation();
     const { currentOscIpAddress, setOscIpAddress } = useOscIpAddress();
-    const [input_value, seInputValue] = useState(currentOscIpAddress.data);
+    const [input_value, setInputValue] = useState(currentOscIpAddress.data);
 
     const onChangeFunction = (value) => {
-        seInputValue(value);
+        setInputValue(value);
     };
 
     const saveFunction = () => {
@@ -43,7 +43,7 @@ const OscIpAddressContainer = () => {
     };
 
     useEffect(()=> {
-        seInputValue(currentOscIpAddress.data);
+        setInputValue(currentOscIpAddress.data);
     }, [currentOscIpAddress]);
 
     return (
@@ -61,10 +61,11 @@ const OscIpAddressContainer = () => {
 const OscPortContainer = () => {
     const { t } = useTranslation();
     const { currentOscPort, setOscPort } = useOscPort();
-    const [input_value, seInputValue] = useState(currentOscPort.data);
+    const [input_value, setInputValue] = useState(currentOscPort.data);
 
     const onChangeFunction = (value) => {
-        seInputValue(value);
+        value = value.replace(/[^0-9]/g, "");
+        setInputValue(value);
     };
 
     const saveFunction = () => {
@@ -72,7 +73,7 @@ const OscPortContainer = () => {
     };
 
     useEffect(()=> {
-        seInputValue(currentOscPort.data);
+        setInputValue(currentOscPort.data);
     }, [currentOscPort]);
 
     return (
