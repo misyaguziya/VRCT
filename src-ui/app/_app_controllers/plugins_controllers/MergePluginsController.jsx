@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { store } from "@store";
 import { usePlugins } from "@logics_configs";
 import { useSoftwareVersion } from "@logics_common";
 
@@ -121,29 +122,6 @@ export const MergePluginsController = () => {
                     }
                 }
 
-
-                // ダウンロード済みかつ有効なプラグインで、サポート対象でない場合は無効化
-                new_data.forEach(plugin => {
-                    if (plugin.is_downloaded && plugin.is_enabled) {
-                        if (
-                            !plugin.downloaded_plugin_info.is_plugin_supported &&
-                            plugin.latest_plugin_info &&
-                            !plugin.latest_plugin_info?.is_plugin_supported
-                        ) {
-                            plugin.is_enabled = false;
-                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
-                        }
-
-                        if (
-                            !plugin.downloaded_plugin_info.is_plugin_supported &&
-                            plugin.is_outdated
-                        ) {
-                            plugin.is_enabled = false;
-                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
-                        }
-                    }
-                });
-
                 console.log("merged plugin data", new_data);
                 return new_data;
             });
@@ -168,8 +146,6 @@ export const MergePluginsController = () => {
                 !plugin.is_latest_version_already &&
                 plugin.is_latest_version_available
             ) {
-                console.log(!downloadingRef.current.has(plugin.plugin_id));
-
                 if (!downloadingRef.current.has(plugin.plugin_id)) {
                     downloadingRef.current.add(plugin.plugin_id);
                     downloadAndExtractPlugin(plugin)
@@ -185,6 +161,36 @@ export const MergePluginsController = () => {
             }
         });
     }, [currentPluginsData.data]);
+
+
+    useEffect(() => {
+        // ダウンロード済みかつ有効なプラグインで、サポート対象でない場合は無効化
+        if (store.is_initialized_fetched_plugin_info) {
+            updatePluginsData(prev => {
+                prev.data.forEach(plugin => {
+                    if (plugin.is_downloaded && plugin.is_enabled) {
+                        if (
+                            !plugin.downloaded_plugin_info.is_plugin_supported &&
+                            plugin.latest_plugin_info &&
+                            !plugin.latest_plugin_info?.is_plugin_supported
+                        ) {
+                            plugin.is_enabled = false;
+                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
+                        }
+
+                        if (
+                            !plugin.downloaded_plugin_info.is_plugin_supported &&
+                            plugin.is_outdated
+                        ) {
+                            plugin.is_enabled = false;
+                            setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
+                        }
+                    }
+                });
+                return prev.data;
+            });
+        }
+    }, [store.is_initialized_fetched_plugin_info]);
 
     return null;
 };

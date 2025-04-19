@@ -21,7 +21,8 @@ export const store = {
     text_area_ref: null,
     is_applied_init_message_box_height: false,
     is_initialized_load_plugin: false,
-    is_fetched_plugins_info: false,
+    is_fetched_plugins_info_already: false,
+    is_initialized_fetched_plugin_info: false,
 };
 
 const generatePropertyNames = (base_name) => ({

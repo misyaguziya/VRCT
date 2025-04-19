@@ -221,8 +221,8 @@ export const usePlugins = () => {
 
 
     const asyncFetchPluginsInfo = async () => {
-        if (store.is_fetched_plugins_info) return;
-        store.is_fetched_plugins_info = true;
+        if (store.is_fetched_plugins_info_already) return;
+        store.is_fetched_plugins_info_already = true;
 
         try {
             const response = await asyncTauriFetchGithub(PLUGIN_LIST_URL);
@@ -251,6 +251,8 @@ export const usePlugins = () => {
         } catch (error) {
             console.error("Error fetching plugin info list: ", error);
         }
+
+        store.is_initialized_fetched_plugin_info = true;
     }
 
     const asyncFetchPluginInfo = async (plugin_info_asset_url) => {
@@ -360,7 +362,6 @@ export const usePlugins = () => {
 
     // init時、currentPluginsDataからのデータではデータ更新が間に合わないので、currentSavedPluginsStatusから直接取得
     const isAnyPluginEnabled_Init = () => {
-        console.log(currentSavedPluginsStatus);
         return currentSavedPluginsStatus.data.some(plugin => plugin.is_enabled);
     };
 
