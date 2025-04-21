@@ -1,7 +1,5 @@
-torch==2.2.2
---extra-index-url https://download.pytorch.org/whl/cu121
-faster-whisper==1.0.3
-ctranslate2==4.3.1
+faster-whisper==1.1.0
+ctranslate2==4.5.0
 transformers==4.40.2
 pillow == 10.0.0
 PyAudioWPatch == 0.2.12.6
