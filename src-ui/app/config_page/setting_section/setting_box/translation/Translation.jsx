@@ -62,7 +62,7 @@ const CTranslate2WeightType_Box = () => {
                 )}
                 desc={t(
                     "config_page.translation.ctranslate2_weight_type.desc",
-                    {translator: t("main_page.translator")}
+                    {ctranslate2: "CTranslate2"}
                 )}
                 name="ctransalte2_weight_type"
                 options={c_translate2_weight_types}
