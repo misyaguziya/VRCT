@@ -1,9 +1,9 @@
 <div align="center">
 
 <picture>
-    <source srcset="docs/vrct_logo_white.png" media="(prefers-color-scheme: dark)" width="50%">
-    <source srcset="docs/vrct_logo_black.png" media="(prefers-color-scheme: light)" width="50%">
-    <img src="docs/vrct_logo.png" alt="VRCT Logo" width="50%">
+    <source srcset="../img/vrct_logo_white.png" media="(prefers-color-scheme: dark)" width="50%">
+    <source srcset="../img/vrct_logo_black.png" media="(prefers-color-scheme: light)" width="50%">
+    <img src="../img/vrct_logo.png" alt="VRCT Logo" width="50%">
 </picture>
 
 <br>
@@ -21,44 +21,44 @@ Become a VRCT Supporter on:
 
 <a href="https://vrct-dev.fanbox.cc">
     <picture>
-        <source srcset="docs/pixiv_fanbox_white.png" media="(prefers-color-scheme: dark)" height="18px">
-        <source srcset="docs/pixiv_fanbox_black.png" media="(prefers-color-scheme: light)" height="18px">
-        <img src="docs/pixiv_fanbox_black.png" alt="PIXIV FANBOX" height="18px">
+        <source srcset="../img/pixiv_fanbox_white.png" media="(prefers-color-scheme: dark)" height="18px">
+        <source srcset="../img/pixiv_fanbox_black.png" media="(prefers-color-scheme: light)" height="18px">
+        <img src="../img/pixiv_fanbox_black.png" alt="PIXIV FANBOX" height="18px">
     </picture>
 </a>&emsp;&nbsp;
 
 <a href="https://patreon.com/vrct_dev">
     <picture>
-        <source srcset="docs/patreon_logo_white.png" media="(prefers-color-scheme: dark)" height="22px">
-        <source srcset="docs/patreon_logo_black.png" media="(prefers-color-scheme: light)" height="22px">
-        <img src="docs/patreon_logo_black.png" alt="Patreon" height="22px">
+        <source srcset="../img/patreon_logo_white.png" media="(prefers-color-scheme: dark)" height="22px">
+        <source srcset="../img/patreon_logo_black.png" media="(prefers-color-scheme: light)" height="22px">
+        <img src="../img/patreon_logo_black.png" alt="Patreon" height="22px">
     </picture>
 </a>&emsp;&nbsp;
 
 <a href="https://ko-fi.com/vrct_dev">
     <picture>
-        <img src="docs/kofi_logo.png" alt="Ko-fi" height="22px">
+        <img src="../img/kofi_logo.png" alt="Ko-fi" height="22px">
     </picture>
 </a>&emsp;&nbsp;
 
 <br>
 
 <picture>
-    <source srcset="docs/supporter_section_border_d.png" media="(prefers-color-scheme: dark)">
-    <source srcset="docs/supporter_section_border_l.png" media="(prefers-color-scheme: light)">
-    <img src="docs/supporter_section_border_d.png" alt="Supporter Section Border">
+    <source srcset="../img/supporter_section_border_d.png" media="(prefers-color-scheme: dark)">
+    <source srcset="../img/supporter_section_border_l.png" media="(prefers-color-scheme: light)">
+    <img src="../img/supporter_section_border_d.png" alt="Supporter Section Border">
 </picture>
 
 <br>
 <br>
 
-| [English](./README.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md) | **繁體中文** |
+| [English](./README.en.md) | [日本語](./README.ja.md) | [한국어](./README.ko.md) | **繁體中文** |
 
 <h3>
 VRCT 是一個支援 VRChat 對話翻譯和紀錄的軟體。
 </h3>
 
-![](docs/main_window.png)
+![](../img/main_window.png)
 
 <div align="left">
 
