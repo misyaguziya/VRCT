@@ -90,15 +90,6 @@ VRCT 可以：
 
 <div align="left">
 
-# 原始碼啟動
-1. 安裝此版本的 Python。
-    `python version 3.11.5`
-2. 安裝 package 並啟動 main.py。
-    ```bash
-    ./install.bat
-    python main.py
-    ```
-
 ## 作者
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (主要開發)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI 多語系支援)

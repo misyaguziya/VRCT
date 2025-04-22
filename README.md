@@ -91,15 +91,6 @@ Initial setup, basic functions, and other features are also described.
 
 <div align="left">
 
-# If you want to run it in python
-1. Install the following version of python.
-    `python version 3.11.5`
-2. Install package and run main.py.
-    ```bash
-    ./install.bat
-    python main.py
-    ```
-
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (Main Development)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
