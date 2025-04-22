@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./Transcription.module.scss";
-import { updateLabelsById } from "@utils";
+import { updateLabelsById, genNumObjArray } from "@utils";
 
 import {
     useMicRecordTimeout,
@@ -21,7 +20,6 @@ import {
 } from "@logics_configs";
 
 import {
-    EntryContainer,
     WordFilterContainer,
     DownloadModelsContainer,
     RadioButtonContainer,
@@ -59,82 +57,61 @@ const Mic_Container = () => {
 
 const MicRecordTimeout_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentMicRecordTimeout, setMicRecordTimeout } = useMicRecordTimeout();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setMicRecordTimeout(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setMicRecordTimeout(selected_data.selected_id);
     };
 
-    useEffect(()=> {
-        setUiVariable(currentMicRecordTimeout.data);
-    }, [currentMicRecordTimeout]);
-
     return (
-        <EntryContainer
+        <DropdownMenuContainer
+            dropdown_id="mic_record_timeout"
             label={t("config_page.transcription.mic_record_timeout.label")}
             desc={t("config_page.transcription.mic_record_timeout.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            selected_id={currentMicRecordTimeout.data}
+            list={genNumObjArray(31)}
+            selectFunction={selectFunction}
+            state={currentMicRecordTimeout.state}
         />
     );
 };
 const MicPhraseTimeout_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentMicPhraseTimeout, setMicPhraseTimeout } = useMicPhraseTimeout();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setMicPhraseTimeout(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setMicPhraseTimeout(selected_data.selected_id);
     };
 
-    useEffect(()=> {
-        setUiVariable(currentMicPhraseTimeout.data);
-    }, [currentMicPhraseTimeout]);
-
     return (
-        <EntryContainer
+        <DropdownMenuContainer
+            dropdown_id="mic_phrase_timeout"
             label={t("config_page.transcription.mic_phrase_timeout.label")}
             desc={t("config_page.transcription.mic_phrase_timeout.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            selected_id={currentMicPhraseTimeout.data}
+            list={genNumObjArray(31)}
+            selectFunction={selectFunction}
+            state={currentMicPhraseTimeout.state}
         />
     );
 };
 const MicMaxWords_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentMicMaxWords, setMicMaxWords } = useMicMaxWords();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setMicMaxWords(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setMicMaxWords(selected_data.selected_id);
     };
 
-    useEffect(()=> {
-        setUiVariable(currentMicMaxWords.data);
-    }, [currentMicMaxWords]);
-
     return (
-        <EntryContainer
+        <DropdownMenuContainer
+            dropdown_id="mic_max_phrase"
             label={t("config_page.transcription.mic_max_phrase.label")}
             desc={t("config_page.transcription.mic_max_phrase.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            selected_id={currentMicMaxWords.data}
+            list={genNumObjArray(31)}
+            selectFunction={selectFunction}
+            state={currentMicMaxWords.state}
         />
     );
 };
@@ -167,82 +144,60 @@ const Speaker_Container = () => {
 
 const SpeakerRecordTimeout_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentSpeakerRecordTimeout, setSpeakerRecordTimeout } = useSpeakerRecordTimeout();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setSpeakerRecordTimeout(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setSpeakerRecordTimeout(selected_data.selected_id);
     };
 
-    useEffect(()=> {
-        setUiVariable(currentSpeakerRecordTimeout.data);
-    }, [currentSpeakerRecordTimeout]);
-
     return (
-        <EntryContainer
-            label={t("config_page.transcription.speaker_record_timeout.label")}
+        <DropdownMenuContainer
+            dropdown_id="speaker_record_timeout"
             desc={t("config_page.transcription.speaker_record_timeout.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            label={t("config_page.transcription.speaker_record_timeout.label")}
+            selected_id={currentSpeakerRecordTimeout.data}
+            list={genNumObjArray(31)}
+            selectFunction={selectFunction}
+            state={currentSpeakerRecordTimeout.state}
         />
     );
 };
 const SpeakerPhraseTimeout_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentSpeakerPhraseTimeout, setSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setSpeakerPhraseTimeout(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setSpeakerPhraseTimeout(selected_data.selected_id);
     };
-
-    useEffect(()=> {
-        setUiVariable(currentSpeakerPhraseTimeout.data);
-    }, [currentSpeakerPhraseTimeout]);
-
     return (
-        <EntryContainer
+        <DropdownMenuContainer
+            dropdown_id="speaker_phrase_timeout"
             label={t("config_page.transcription.speaker_phrase_timeout.label")}
             desc={t("config_page.transcription.speaker_phrase_timeout.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            selected_id={currentSpeakerPhraseTimeout.data}
+            list={genNumObjArray(31)}
+            selectFunction={selectFunction}
+            state={currentSpeakerPhraseTimeout.state}
         />
     );
 };
 const SpeakerMaxWords_Box = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentSpeakerMaxWords, setSpeakerMaxWords } = useSpeakerMaxWords();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setSpeakerMaxWords(value);
-        }
+
+    const selectFunction = (selected_data) => {
+        setSpeakerMaxWords(selected_data.selected_id);
     };
 
-    useEffect(()=> {
-        setUiVariable(currentSpeakerMaxWords.data);
-    }, [currentSpeakerMaxWords]);
-
     return (
-        <EntryContainer
+        <DropdownMenuContainer
+            dropdown_id="speaker_max_phrase"
             label={t("config_page.transcription.speaker_max_phrase.label")}
             desc={t("config_page.transcription.speaker_max_phrase.desc")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            selected_id={currentSpeakerMaxWords.data}
+            list={genNumObjArray(61)}
+            selectFunction={selectFunction}
+            state={currentSpeakerMaxWords.state}
         />
     );
 };
@@ -305,6 +260,8 @@ const WhisperWeightType_Box = () => {
         { id: "large-v1", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v1", capacity: "2.87GB"}) },
         { id: "large-v2", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v2", capacity: "2.87GB"}) },
         { id: "large-v3", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3", capacity: "2.87GB"}) },
+        { id: "large-v3-turbo-int8", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3-turbo-int8", capacity: "794MB"}) },
+        { id: "large-v3-turbo", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3-turbo", capacity: "1.58GB"}) },
     ];
 
     const whisper_weight_types = updateLabelsById(currentWhisperWeightTypeStatus.data, new_labels);

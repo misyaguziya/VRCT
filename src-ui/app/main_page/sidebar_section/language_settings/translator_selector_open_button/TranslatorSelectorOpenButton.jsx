@@ -16,11 +16,12 @@ export const TranslatorSelectorOpenButton = () => {
         currentSelectedTranslationEngines,
     } = useLanguageSettings();
 
-    const new_labels = [
-        {id: "CTranslate2", label: t("main_page.translator_ctranslate2")}
-    ];
+    // const new_labels = [
+    //     {id: "CTranslate2", label: "AI\nCTranslate2"}
+    // ];
 
-    const translation_engines = updateLabelsById(currentTranslationEngines.data, new_labels);
+    const translation_engines = currentTranslationEngines.data;
+    // const translation_engines = updateLabelsById(currentTranslationEngines.data, new_labels);
 
     const selected_engine_id = currentSelectedTranslationEngines.data[currentSelectedPresetTabNumber.data];
 
@@ -74,7 +75,7 @@ export const TranslatorSelectorOpenButton = () => {
     return (
         <div className={styles.container}>
             <div className={styles.translator_selector_button} onClick={openTranslatorSelector}>
-                <p className={styles.label}>{t("main_page.translator")}: </p>
+                <p className={styles.label}>{t("main_page.translator")}:</p>
                 <p className={styles.label}>{selected_label}</p>
                 {is_selected_same_language
                     ? <WarningSvg className={styles.warning_svg}/>

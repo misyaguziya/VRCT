@@ -48,35 +48,41 @@ $toggle_width: 4rem;
 $toggle_height: 1.6rem;
 $toggle_gutter: 0.1rem;
 $toggle_radius: 50%;
-$toggle_control_speed: .15s;
+$toggle_control_speed: 0.15s;
 $toggle_control_ease: ease-out;
 
-$toggle_radius: calc($toggle_height / 2);
-$toggle_control_size: $toggle_height - calc($toggle_gutter * 2);
+@mixin toggle_control_styles(
+    $toggle_width: $toggle_width,
+    $toggle_height: $toggle_height,
+    $toggle_gutter: $toggle_gutter,
+    $toggle_background_color_on: $toggle_background_color_on,
+    $toggle_background_color_off: $toggle_background_color_off,
+    $toggle_control_color: $toggle_control_color,
+    $toggle_control_speed: $toggle_control_speed,
+    $toggle_control_ease: $toggle_control_ease
+) {
+    $toggle_radius: calc($toggle_height / 2);
+    $toggle_control_size: calc($toggle_height - ($toggle_gutter * 2));
 
-@mixin toggle_control_styles {
-    display: block;
-    position: relative;
-    height: 100%;
-    width: auto;
     .control {
         position: relative;
-        height: $toggle_height;
         width: $toggle_width;
+        height: $toggle_height;
         border-radius: $toggle_radius;
         background-color: $toggle_background_color_off;
+        transition: background-color $toggle_control_speed $toggle_control_ease;
         &:after {
             content: "";
             position: absolute;
-            left: $toggle_gutter;
             top: $toggle_gutter;
+            left: $toggle_gutter;
             width: $toggle_control_size;
             height: $toggle_control_size;
             border-radius: $toggle_radius;
             background: $toggle_control_color;
             transition: left $toggle_control_speed $toggle_control_ease;
         }
-        &.is_pending:after{
+        &.is_pending:after {
             background-color: var(--dark_600_color);
         }
         &.is_hovered {

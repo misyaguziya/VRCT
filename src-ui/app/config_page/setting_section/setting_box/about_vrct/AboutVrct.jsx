@@ -10,6 +10,7 @@ import contributor_iya from "@images/about_vrct/contributor_iya.png";
 import contributor_rera from "@images/about_vrct/contributor_rera.png";
 import contributor_poposuke from "@images/about_vrct/contributor_poposuke.png";
 import contributor_kumaguma from "@images/about_vrct/contributor_kumaguma.png";
+import contributor_riku from "@images/about_vrct/contributor_riku.png";
 
 import localization_section_title from "@images/about_vrct/localization_section_title.png";
 import localization_1 from "@images/about_vrct/localization_1.png";
@@ -86,6 +87,10 @@ export const AboutVrct = () => {
                         <img src={contributor_kumaguma} className={clsx(styles.contributors_img, styles.contributors)} />
                         <OpenLinkContainer className={styles.contributors_kumaguma_x} href_id="contributors_kumaguma_x" />
                     </div>
+                    <div className={styles.contributor_card_wrapper}>
+                        <img src={contributor_riku} className={clsx(styles.contributors_img, styles.contributors)} />
+                        <OpenLinkContainer className={styles.contributors_riku_x} href_id="contributors_riku_x" />
+                    </div>
                 </div>
             </div>
 
@@ -158,6 +163,7 @@ const about_vrct_links = {
     contributors_rera_github: { img: contributors_github_icon, href: "https://github.com/soumt-r" },
     contributors_poposuke_x: { img: contributors_x_icon, href: "https://twitter.com/sig_popo" },
     contributors_kumaguma_x: { img: contributors_x_icon, href: "https://twitter.com/K_kumaguma_A" },
+    contributors_riku_x: { img: contributors_x_icon, href: "https://twitter.com/Riku7302" },
 };
 
 const OpenLinkContainer = ({className, href_id}) => {
