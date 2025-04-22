@@ -91,15 +91,6 @@ VRCT는 다음과 같이 당신의 대화를 도와드려요.
 
 <div align="left">
 
-# python으로 실행하고 싶은 경우
-1. 다음 버전의 python을 설치합니다.
-    `python version 3.11.5`
-2. 패키지를 설치하고 main.py를 실행합니다.
-    ```bash
-    ./install.bat
-    python main.py
-    ```
-
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (주요 개발)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI 다국어 지원)

@@ -91,15 +91,6 @@ VRCTはあなたの会話を以下でサポートをします。
 
 <div align="left">
 
-# pythonで実行したい場合
-1. 以下のバージョンのpythonをインストールしてください。
-    `python version 3.11.5`
-2. packageのインストールとmain.pyを起動してください。
-    ```bash
-    ./install.bat
-    python main.py
-    ```
-
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (メイン開発)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI多言語対応)
