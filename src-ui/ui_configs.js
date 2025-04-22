@@ -54,11 +54,11 @@ export const ui_configs = {
 
 export const translator_status = [
     { id: "DeepL", label: "DeepL", is_available: false },
-    { id: "DeepL_API", label: `DeepL\nAPI`, is_available: false },
+    { id: "DeepL_API", label: `DeepL API`, is_available: false },
     { id: "Google", label: "Google", is_available: false },
     { id: "Bing", label: "Bing", is_available: false },
     { id: "Papago", label: "Papago", is_available: false },
-    { id: "CTranslate2", label: `Internal\n(Default)`, is_available: false },
+    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
 ];
 
 export const ctranslate2_weight_type_status = [
@@ -74,6 +74,8 @@ export const whisper_weight_type_status = [
     { id: "large-v1", label: "large-v1", is_downloaded: false, progress: null },
     { id: "large-v2", label: "large-v2", is_downloaded: false, progress: null },
     { id: "large-v3", label: "large-v3", is_downloaded: false, progress: null },
+    { id: "large-v3-turbo-int8", label: "large-v3-turbo-int8", is_downloaded: false, progress: null },
+    { id: "large-v3-turbo", label: "large-v3-turbo", is_downloaded: false, progress: null },
 ];
 
 export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";

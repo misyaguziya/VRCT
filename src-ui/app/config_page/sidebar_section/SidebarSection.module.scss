@@ -9,6 +9,7 @@
     flex-direction: column;
     justify-content: space-between;
     overflow-y: auto;
+    // overflow-x: hidden;
     height: 100%;
     max-height: 60rem;
 }
@@ -59,7 +60,9 @@
 }
 
 .tab_text {
+    overflow: hidden;
     font-size: 1.6rem;
+    text-overflow: ellipsis;
 }
 
 .separated_tabs_wrapper {

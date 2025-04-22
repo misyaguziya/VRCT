@@ -1,7 +1,11 @@
 import { useStore_DeepLAuthKey } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useTranslation } from "react-i18next";
+import { useNotificationStatus } from "@logics_common";
 
 export const useDeepLAuthKey = () => {
+    const { t } = useTranslation();
+    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentDeepLAuthKey, updateDeepLAuthKey, pendingDeepLAuthKey } = useStore_DeepLAuthKey();
 
@@ -20,11 +24,24 @@ export const useDeepLAuthKey = () => {
         asyncStdoutToPython("/delete/data/deepl_auth_key");
     };
 
+    const savedDeepLAuthKey = (data) => {
+        updateDeepLAuthKey(data);
+        showNotification_Success(t("config_page.translation.deepl_auth_key.auth_key_success"));
+    };
+
+    const saveErrorDeepLAuthKey = ({data, message}) => {
+        updateDeepLAuthKey(data);
+        showNotification_Error(message);
+    };
+
     return {
         currentDeepLAuthKey,
         getDeepLAuthKey,
         updateDeepLAuthKey,
         setDeepLAuthKey,
         deleteDeepLAuthKey,
+
+        saveErrorDeepLAuthKey,
+        savedDeepLAuthKey,
     };
 };

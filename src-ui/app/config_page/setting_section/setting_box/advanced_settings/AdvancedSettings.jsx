@@ -11,6 +11,7 @@ import {
 import {
     ActionButtonContainer,
     EntryContainer,
+    EntryWithSaveButtonContainer,
 } from "../_templates/Templates";
 
 
@@ -30,54 +31,59 @@ export const AdvancedSettings = () => {
 
 const OscIpAddressContainer = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentOscIpAddress, setOscIpAddress } = useOscIpAddress();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setOscIpAddress(value);
-        }
+    const [input_value, setInputValue] = useState(currentOscIpAddress.data);
+
+    const onChangeFunction = (value) => {
+        setInputValue(value);
+    };
+
+    const saveFunction = () => {
+        setOscIpAddress(input_value);
     };
 
     useEffect(()=> {
-        setUiVariable(currentOscIpAddress.data);
+        setInputValue(currentOscIpAddress.data);
     }, [currentOscIpAddress]);
 
     return (
-        <EntryContainer
+        <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.osc_ip_address.label")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            variable={input_value}
+            saveFunction={saveFunction}
+            onChangeFunction={onChangeFunction}
+            state={currentOscIpAddress.state}
+            width="14rem"
         />
     );
 };
 
 const OscPortContainer = () => {
     const { t } = useTranslation();
-    const [ui_variable, setUiVariable] = useState("");
     const { currentOscPort, setOscPort } = useOscPort();
-    const onChangeFunction = (e) => {
-        const value = e.currentTarget.value;
-        if (value === "") {
-            setUiVariable("");
-        } else {
-            setUiVariable(value);
-            setOscPort(value);
-        }
+    const [input_value, setInputValue] = useState(currentOscPort.data);
+
+    const onChangeFunction = (value) => {
+        value = value.replace(/[^0-9]/g, "");
+        setInputValue(value);
+    };
+
+    const saveFunction = () => {
+        setOscPort(input_value);
     };
 
     useEffect(()=> {
-        setUiVariable(currentOscPort.data);
+        setInputValue(currentOscPort.data);
     }, [currentOscPort]);
 
     return (
-        <EntryContainer
+        <EntryWithSaveButtonContainer
             label={t("config_page.advanced_settings.osc_port.label")}
-            ui_variable={ui_variable}
-            onChange={onChangeFunction}
+            variable={input_value}
+            saveFunction={saveFunction}
+            onChangeFunction={onChangeFunction}
+            state={currentOscPort.state}
+            width="10rem"
         />
     );
 };
