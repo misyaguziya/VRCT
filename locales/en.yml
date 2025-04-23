@@ -8,13 +8,13 @@ common:
 
 common_error:
     no_device_mic: "No mic device detected."
-    no_device_speaker: "No Speaker device detected."
+    no_device_speaker: "No speaker device detected."
     threshold_invalid_value: "You can set it with a value between {{min}} to {{max}}."
     failed_download_weight_ctranslate2: "CTranslate2 weight download error."
     failed_download_weight_whisper: "Whisper weight download error."
-    translation_limit: "Translation engine limit error."
+    translation_limit: "Translation engine limit reached or temporarily restricted."
     deepl_auth_key_invalid_length: "DeepL auth key length is not correct."
-    deepl_auth_key_failed_authentication: "Auth Key is incorrect or Usage limit reached."
+    deepl_auth_key_failed_authentication: "Auth key is incorrect or API usage limit reached."
 
     invalid_value_mic_record_timeout: "It cannot be greater than '{{mic_phrase_timeout_label}}' with a value of 0 or more."
     invalid_value_mic_phrase_timeout: "It cannot be set lower than '{{mic_record_timeout_label}}' with a value of 0 or more."
@@ -28,18 +28,18 @@ main_page:
     translation: "Translation"
     transcription_send: "Voice2Chatbox"
     transcription_receive: "Speaker2Log"
-    foreground: "Foreground"
+    foreground: "Set To Stay On Top"
 
     language_settings: "Language Settings"
     your_language: "Your Language"
-    translate_each_other_label: "Translate Each Other"
-    swap_button_label: "Swap Languages"
+    translate_each_other_label: "Translate Both Languages"
+    swap_button_label: "Switch Languages"
     target_language: "Target Language"
     translator: "Translator"
     translator_label_default: "Default"
 
     translator_selector:
-        is_selected_same_language: "Since the same language is selected for both '{{your_language}}' and '{{target_language}}', only '{{ctranslate2}}' is available."
+        is_selected_same_language: "You are selecting the same language for '{{your_language}}' and '{{target_language}}' so only '{{ctranslate2}}' is available."
 
     message_log:
         all: "All"
@@ -48,7 +48,7 @@ main_page:
         system: "System"
 
         show_resend_button: "Show Resend Button"
-        resend_button_on_hover_desc: "Press and hold to send"
+        resend_button_on_hover_desc: "Press And Hold To Send"
 
     state_text_enabled: "Enabled"
     state_text_disabled: "Disabled"
@@ -57,28 +57,28 @@ main_page:
         title_your_language: "Select Your Language"
         title_target_language: "Select Target Language"
 
-    update_available: "New version is here!"
+    update_available: "New version is ready!"
     updating: "Now updating..."
 
 update_modal:
     cpu_desc: "Use CPU only as the compute device."
     cuda_desc: "Selectable between CPU and NVIDIA GPUs as compute devices."
-    cuda_compare_cpu_desc: "With GPU selection, processing is faster compared to a CPU."
+    cuda_compare_cpu_desc: "GPUs offer faster processing than CPUs."
     cuda_disk_space_desc: "Requires approximately {{size}} of disk space."
     close_modal: "Close"
     download_latest_and_restart: "The latest version will be downloaded,\nand the app will automatically restart."
     is_latest_version_already: "Already using the latest version"
-    is_current_compute_device: "Currently using this version"
+    is_current_compute_device: "The version currently in use"
 
 config_page:
-    version: "version {{version}}"
+    version: "Version {{version}}"
     model_download_button_label: "Download"
     side_menu_labels:
         device: "Device"
         appearance: "Appearance"
         translation: "Translation"
         transcription: "Transcription"
-        others: "Others"
+        others: "Other"
         hotkeys: "Hotkeys"
         advanced_settings: "Advanced Settings"
 
@@ -90,17 +90,17 @@ config_page:
         mic_host_device:
             label: "Mic Device"
         mic_dynamic_energy_threshold:
-            label_for_automatic: "Mic Energy Threshold (Current Setting: Automatic)"
-            desc_for_automatic: "Automatically determine microphone input sensitivity."
-            label_for_manual: "Mic Energy Threshold (Current Setting: Manual)"
-            desc_for_manual: "Manually determine the microphone input sensitivity using the slider. Press the microphone icon to input your voice and adjust the sensitivity while monitoring the volume."
+            label_for_automatic: "Mic Sensitivity Settings (Current Setting: Automatic)"
+            desc_for_automatic: "Automatically control mic input sensitivity."
+            label_for_manual: "Mic Sensitivity Settings (Current Setting: Manual)"
+            desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the mic icon to test your voice input and adjust the level while monitoring the volume."
         speaker_device:
             label: "Speaker Device"
         speaker_dynamic_energy_threshold:
-            label_for_automatic: "Speaker Energy Threshold (Current Setting: Automatic)"
-            desc_for_automatic: "Automatically determine speaker input sensitivity."
-            label_for_manual: "Speaker Energy Threshold (Current Setting: Manual)"
-            desc_for_manual: "Manually determine the speaker input sensitivity using the slider. Press the headphones icon to listen to the audio and adjust the sensitivity while monitoring the volume."
+            label_for_automatic: "Speaker Input Sensitivity Adjustment (Current Setting: Automatic)"
+            desc_for_automatic: "Automatically control speaker input sensitivity."
+            label_for_manual: "Speaker Input Sensitivity Adjustment (Current Setting: Manual)"
+            desc_for_manual: "Input sensitivity can be manually adjusted using the slider. Click the headphone icon to listen to the audio and adjust the level while checking the volume."
 
     appearance:
         transparency:
@@ -110,12 +110,12 @@ config_page:
             label: "UI Size"
         textbox_ui_size:
             label: "Message Logs Font Size"
-            desc: "You can adjust the font size used in the logs relative to the UI size."
+            desc: "You can adjust the log font size by changing the scaling factor relative to the UI size."
         send_message_button_type:
             label: "Send Message Button"
-            hide: "Hide (Use enter key to send)"
+            hide: "Hide (Use Enter key to send)"
             show: "Show"
-            show_and_disable_enter_key: "Show and disable to send when pressed enter key"
+            show_and_disable_enter_key: "Show and disable sending using the Enter key."
         font_family:
             label: "Font Family"
         ui_language:
@@ -124,14 +124,14 @@ config_page:
     translation:
         ctranslate2_weight_type:
             label: "{{ctranslate2}} Model"
-            desc: "You can choose the translation model to use for the internal translation engine."
-            small: "Basic model ({{capacity}})"
-            large: "High accuracy model ({{capacity}})"
+            desc: "You can choose the translation model when using the {{ctranslate2}} translation engine."
+            small: "Basic Model ({{capacity}})"
+            large: "High Accuracy Model ({{capacity}})"
         ctranslate2_compute_device:
-            label: "{{ctranslate2}} Compute Device"
+            label: "Processing device for AI translation {{ctranslate2}}"
         deepl_auth_key:
             label: "DeepL Auth Key"
-            desc: "Please select {{translator}} on the main screen with DeepL_API when using. ※Some languages may not be supported."
+            desc: "When using it, please change {{translator}} on the main screen to DeepL_API. ※Some languages may not be supported."
             open_auth_key_webpage: "Open DeepL Account Webpage"
             save: "Save"
             edit: "Edit"
@@ -143,7 +143,7 @@ config_page:
         section_label_transcription_engines: "Transcription Engines"
         mic_record_timeout:
             label: "Mic Record Timeout"
-            desc: "Detects silence and, when the specified number of seconds has passed, considers the mic input to have ended. (Second(s))"
+            desc: "Detects silence and, when the specified number of seconds passes, the system considers the voice input to have ended. (Second(s))"
         mic_phrase_timeout:
             label: "Mic Phrase Timeout"
             desc: "Transcription processing is performed at intervals of the specified number of seconds."
@@ -152,9 +152,9 @@ config_page:
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs and send to VRChat."
         mic_word_filter:
             label: "Mic Word Filter"
-            desc: "If a registered word is detected, the text will not be sent. To add multiple words at once, separate them with a ',' (comma).\n*Duplicate words will not be registered."
+            desc: "If a registered word is detected, the message will not be sent. To add multiple words at once, separate them with ',' (comma).\n*Duplicate words will not be registered."
             add_button_label: "Add"
-            count_desc: "Current registered word count: {{count}}"
+            count_desc: "Words Currently Registered: {{count}}"
         speaker_record_timeout:
             label: "Speaker Record Timeout"
             desc: "Detects silence and, when the specified number of seconds has passed, considers the speaker input to have ended. (Second(s))"
@@ -165,20 +165,20 @@ config_page:
             label: "Speaker Max Words"
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
         select_transcription_engine:
-            label: "Transcription Engine"
+            label: "Transcription Engine Used For Speech Recognition"
         whisper_weight_type:
             label: "Whisper Model"
-            desc: "Larger models tend to have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
+            desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
             model_template: "{{model_name}} model ({{capacity}})"
             recommended_model_template: "{{model_name}} model ({{capacity}}) (Recommended)"
         whisper_compute_device:
-            label: "Whisper Compute Device"
+            label: "Processing Device Used For Whisper"
 
     vr:
         single_line: "Single line"
-        multi_lines: "Multi lines"
+        multi_lines: "Multiple Lines"
         overlay_enable: "Enable"
-        restore_default_settings: "Restore Default Settings"
+        restore_default_settings: "Reset to Default Settings"
         position: "Position"
         rotation: "Rotation"
         x_position: "X-axis (left-right)"
@@ -188,46 +188,46 @@ config_page:
         y_rotation: "Y-axis rotation"
         z_rotation: "Z-axis rotation"
         sample_text_button:
-            start: "Send sample texts\nto Overlay"
+            start: "Send Sample Texts\nTo Overlay"
             stop: "Stop Sending"
-            sample_text: "Sample text."
+            sample_text: "Sample Text."
         opacity: "Opacity"
         ui_scaling: "UI Scaling"
-        display_duration: "Display duration"
-        fadeout_duration: "Fadeout duration"
+        display_duration: "Display Duration"
+        fadeout_duration: "Fadeout Duration"
         common_settings: "Common Settings"
         tracker: "Tracker"
         hmd: "HMD"
-        left_hand: "Left hand"
-        right_hand: "Right hand"
+        left_hand: "Left Hand"
+        right_hand: "Right Hand"
         overlay_show_only_translated_messages:
             label: "Show Only Translated Messages"
 
     others:
         section_label_sounds: "Sounds"
         auto_clear_the_message_box:
-            label: "Auto Clear The Message Box"
+            label: "Auto Clear Message box"
         send_only_translated_messages:
             label: "Send Only Translated Messages"
         auto_export_message_logs:
-            label: "Auto Export Message Logs"
-            desc: "Automatically export the conversation messages as a text file."
+            label: "Auto Save Message Logs"
+            desc: "Automatically saves the conversation messages as text files."
         vrc_mic_mute_sync:
             label: "VRC Mic Mute Sync"
-            desc: "VRCT will not send the message to VRChat while VRChat's mic is muted.\n*There is a bit latency and Push-To-Talk is not supported."
+            desc: "Messages will not be sent to VRCT while VRChat's mic is muted.\n*There may be a slight delay. Push-To-Talk is not supported."
         send_message_to_vrc:
             label: "Send Message To VRChat"
-            desc: "There is a way to use it without sending messages to VRChat, but it is not supported. Enable this feature when you intend to send a message to VRChat."
+            desc: "This feature is not supported, but there is a way to use it without sending messages to VRChat. Make sure to enable this feature when you wish to send messages to VRChat."
         notification_vrc_sfx:
             label: "Enable Notification Sound When Sending Chat"
-            desc: "Disabling this feature will send chats quietly without playing a notification sound that others can hear."
+            desc: "When this feature is disabled, messages will be sent silently without playing the chatbox notification sound that others can hear."
         send_received_message_to_vrc:
             label: "Send Received Message To VRChat"
-            desc: "Send the message you received from the speaker's sound to VRChat's chatbox."
+            desc: "Send the message you received from the speaker's voice to VRChat's chatbox."
 
     hotkeys:
         toggle_vrct_visibility:
-            label: "Toggle VRCT Visibility"
+            label: "Toggle VRCT visibility"
         toggle_translation:
             label: "Toggle {{translation}}"
         toggle_transcription_send:
@@ -243,4 +243,4 @@ config_page:
         open_config_filepath:
             label: "Open Config File"
         switch_compute_device:
-            label: "Switch VRCT to CPU/GPU Version"
+            label: "Switch VRCT To CPU/GPU Version"

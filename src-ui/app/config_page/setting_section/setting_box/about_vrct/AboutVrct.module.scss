@@ -160,6 +160,9 @@ $sns_left_pos: 0.8rem;
 .contributors_kumaguma_x {
     @include contributors_sns_styles($bottom_pos, $sns_left_pos);
 }
+.contributors_riku_x {
+    @include contributors_sns_styles($bottom_pos, $sns_left_pos);
+}
 
 .localization_section {
     display: flex;

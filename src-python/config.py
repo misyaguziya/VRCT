@@ -956,7 +956,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "3.0.4"
+        self._VERSION = "3.0.5"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:

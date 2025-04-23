@@ -14,6 +14,8 @@ import {
     useSpeakerMaxWords,
 
     useDeepLAuthKey,
+
+    useOscIpAddress,
 } from "@logics_configs";
 import { ui_configs } from "../ui_configs";
 
@@ -29,14 +31,16 @@ export const _useBackendErrorHandling = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
-    const { updateDeepLAuthKey } = useDeepLAuthKey();
+    const { updateDeepLAuthKey, saveErrorDeepLAuthKey } = useDeepLAuthKey();
 
-    const errorHandling_Backend = ({message, data, endpoint}) => {
+    const { updateOscIpAddress } = useOscIpAddress();
+
+    const errorHandling_Backend = ({message, data, endpoint, _result}) => {
         switch (message) {
             case "No mic device detected":
                 showNotification_Error(t("common_error.no_device_mic"));
                 break;
-            case "No Speaker device detected":
+            case "No speaker device detected":
                 showNotification_Error(t("common_error.no_device_speaker"));
                 break;
 
@@ -47,9 +51,9 @@ export const _useBackendErrorHandling = () => {
                 break;
             case "Speaker energy threshold value is out of range":
                 showNotification_Error(t("common_error.threshold_invalid_value",
-                { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max },
-            ));
-            break;
+                    { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max },
+                ));
+                break;
 
             case "CTranslate2 weight download error":
                 showNotification_Error(t("common_error.failed_download_weight_ctranslate2"));
@@ -110,9 +114,22 @@ export const _useBackendErrorHandling = () => {
                 showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"));
                 break;
 
-            default:
-                if (endpoint === "/set/data/deepl_auth_key") updateDeepLAuthKey(data);
+
+            // Advanced Settings, error messages are set by Backend (EN only)
+            case "Invalid IP address":
+                updateOscIpAddress(data);
                 showNotification_Error(message);
+                break;
+
+            case "Cannot set IP address":
+                updateOscIpAddress(data);
+                showNotification_Error(message);
+                break;
+
+            default:
+                // determine by endpoint, not message.
+                if (endpoint === "/set/data/deepl_auth_key") saveErrorDeepLAuthKey({message, data, endpoint, _result});
+
                 break;
         }
 

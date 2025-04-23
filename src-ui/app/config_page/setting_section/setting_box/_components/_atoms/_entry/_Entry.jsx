@@ -24,7 +24,7 @@ const _Entry = forwardRef((props, ref) => {
         <div className={styles.entry_container}>
             <div
                 className={input_wrapper_class_names}
-                style={{width: props.width }}
+                style={{width: props.width || "20rem" }}
             >
                 <input
                     ref={inputRef}

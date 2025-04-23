@@ -148,7 +148,7 @@ export const useReceiveRoutes = () => {
     const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
-    const { updateDeepLAuthKey, saveSuccessDeepLAuthKey } = useDeepLAuthKey();
+    const { updateDeepLAuthKey, savedDeepLAuthKey } = useDeepLAuthKey();
     const { updateSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
     const {
         updateDownloadedCTranslate2WeightTypeStatus,
@@ -353,7 +353,7 @@ export const useReceiveRoutes = () => {
 
         // Translation
         "/get/data/deepl_auth_key": updateDeepLAuthKey,
-        "/set/data/deepl_auth_key": saveSuccessDeepLAuthKey,
+        "/set/data/deepl_auth_key": savedDeepLAuthKey,
         "/delete/data/deepl_auth_key": () => updateDeepLAuthKey(""),
 
         "/get/data/ctranslate2_weight_type": updateSelectedCTranslate2WeightType,
@@ -528,6 +528,8 @@ export const useReceiveRoutes = () => {
         "/set/data/speaker_record_timeout": errorHandling_Backend,
         "/set/data/speaker_phrase_timeout": errorHandling_Backend,
         "/set/data/speaker_max_phrases": errorHandling_Backend,
+
+        "/set/data/osc_ip_address": errorHandling_Backend,
     };
 
 
@@ -566,10 +568,15 @@ export const useReceiveRoutes = () => {
                         message: parsed_data.result.message,
                         data: parsed_data.result.data,
                         endpoint: parsed_data.endpoint,
+                        _result: parsed_data.result,
                     });
                 } else {
                     handleInvalidEndpoint(parsed_data);
                 }
+                break;
+            case 500:
+                showNotification_Error(
+                    `An error occurred. Please restart VRCT or contact the developers. ${JSON.stringify(parsed_data.result)}`, { hide_duration: null });
                 break;
 
             case 348:
