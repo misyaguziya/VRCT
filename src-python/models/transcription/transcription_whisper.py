@@ -17,6 +17,8 @@ _MODELS = {
     "large-v1": "Systran/faster-whisper-large-v1",
     "large-v2": "Systran/faster-whisper-large-v2",
     "large-v3": "Systran/faster-whisper-large-v3",
+    "large-v3-turbo-int8": "Zoont/faster-whisper-large-v3-turbo-int8-ct2", #794MB
+    "large-v3-turbo": "deepdml/faster-whisper-large-v3-turbo-ct2", #1.58GB
 }
 
 _FILENAMES = [

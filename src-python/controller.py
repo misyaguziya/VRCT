@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog, errorLogging, isConnectedNetwork
+from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress
 
 class Controller:
     def __init__(self) -> None:
@@ -150,7 +150,7 @@ class Controller:
                 400,
                 self.run_mapping["error_device"],
                 {
-                    "message":"No Speaker device detected",
+                    "message":"No speaker device detected",
                     "data": None
                 },
             )
@@ -1094,9 +1094,29 @@ class Controller:
 
     @staticmethod
     def setOscIpAddress(data, *args, **kwargs) -> dict:
-        config.OSC_IP_ADDRESS = data
-        model.setOscIpAddress(config.OSC_IP_ADDRESS)
-        return {"status":200, "result":config.OSC_IP_ADDRESS}
+        if isValidIpAddress(data) is False:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Invalid IP address",
+                    "data": config.OSC_IP_ADDRESS
+                }
+            }
+        else:
+            try:
+                model.setOscIpAddress(data)
+                config.OSC_IP_ADDRESS = data
+                response = {"status":200, "result":config.OSC_IP_ADDRESS}
+            except Exception:
+                model.setOscIpAddress(config.OSC_IP_ADDRESS)
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Cannot set IP address",
+                        "data": config.OSC_IP_ADDRESS
+                    }
+                }
+        return response
 
     @staticmethod
     def getOscPort(*args, **kwargs) -> dict:
