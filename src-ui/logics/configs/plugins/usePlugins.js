@@ -373,6 +373,17 @@ export const usePlugins = () => {
         return  currentPluginsData.data.filter(plugin => plugin.is_enabled);
     }
 
+    const updateTargetPluginData = (target_plugin_id, attribute, value) => {
+        updatePluginsData(prev => {
+            prev.data.forEach(plugin => {
+                if (plugin.plugin_id === target_plugin_id) {
+                    plugin[attribute] = value;
+                }
+            });
+            return prev.data;
+        });
+    }
+
 
 
     return {
@@ -390,6 +401,8 @@ export const usePlugins = () => {
 
         currentPluginsData,
         updatePluginsData,
+
+        updateTargetPluginData,
 
         currentFetchedPluginsInfo,
         updateFetchedPluginsInfo,

@@ -7,6 +7,7 @@ export const MergePluginsController = () => {
     const {
         currentLoadedPlugins,
         updatePluginsData,
+        updateTargetPluginData,
         currentPluginsData,
         currentFetchedPluginsInfo,
         currentSavedPluginsStatus,
@@ -148,14 +149,15 @@ export const MergePluginsController = () => {
             ) {
                 if (!downloadingRef.current.has(plugin.plugin_id)) {
                     downloadingRef.current.add(plugin.plugin_id);
+                    const target_plugin_id = plugin.plugin_id;
                     downloadAndExtractPlugin(plugin)
                         .then(() => {
-                            console.log(`Plugin ${plugin.plugin_id} updated successfully`);
-                            downloadingRef.current.delete(plugin.plugin_id);
+                            console.log(`Plugin ${target_plugin_id} updated successfully`);
+                            downloadingRef.current.delete(target_plugin_id);
                         })
                         .catch((error) => {
-                            console.error(`Plugin ${plugin.plugin_id} update failed`, error);
-                            downloadingRef.current.delete(plugin.plugin_id);
+                            console.error(`Plugin ${target_plugin_id} update failed`, error);
+                            downloadingRef.current.delete(target_plugin_id);
                         });
                 }
             }
