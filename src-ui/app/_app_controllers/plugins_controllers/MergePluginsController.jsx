@@ -1,13 +1,15 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { store } from "@store";
 import { usePlugins } from "@logics_configs";
 import { useSoftwareVersion } from "@logics_common";
+import { useNotificationStatus } from "@logics_common";
 
 export const MergePluginsController = () => {
+    const { t } = useTranslation();
     const {
         currentLoadedPlugins,
         updatePluginsData,
-        updateTargetPluginData,
         currentPluginsData,
         currentFetchedPluginsInfo,
         currentSavedPluginsStatus,
@@ -15,6 +17,7 @@ export const MergePluginsController = () => {
         setTargetSavedPluginsStatus_Init,
     } = usePlugins();
     const { checkVrctVerCompatibility } = useSoftwareVersion();
+    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
     // downloaded, fetched, saved の各情報をまとめてマージ
     useEffect(() => {
@@ -148,16 +151,19 @@ export const MergePluginsController = () => {
                 plugin.is_latest_version_available
             ) {
                 if (!downloadingRef.current.has(plugin.plugin_id)) {
+                    showNotification_Success(t("plugin_notifications.updating"));
                     downloadingRef.current.add(plugin.plugin_id);
                     const target_plugin_id = plugin.plugin_id;
                     downloadAndExtractPlugin(plugin)
                         .then(() => {
                             console.log(`Plugin ${target_plugin_id} updated successfully`);
                             downloadingRef.current.delete(target_plugin_id);
+                            showNotification_Success(t("plugin_notifications.updated_success"));
                         })
                         .catch((error) => {
                             console.error(`Plugin ${target_plugin_id} update failed`, error);
                             downloadingRef.current.delete(target_plugin_id);
+                            showNotification_Error(t("plugin_notifications.updated_error"));
                         });
                 }
             }
@@ -176,6 +182,7 @@ export const MergePluginsController = () => {
                             plugin.latest_plugin_info &&
                             !plugin.latest_plugin_info?.is_plugin_supported
                         ) {
+                            showNotification_Error(t("plugin_notifications.disabled_out_of_support"));
                             plugin.is_enabled = false;
                             setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
                         }
@@ -184,6 +191,7 @@ export const MergePluginsController = () => {
                             !plugin.downloaded_plugin_info.is_plugin_supported &&
                             plugin.is_outdated
                         ) {
+                            showNotification_Error(t("plugin_notifications.disabled_out_of_support"));
                             plugin.is_enabled = false;
                             setTargetSavedPluginsStatus_Init(plugin.plugin_id, false);
                         }

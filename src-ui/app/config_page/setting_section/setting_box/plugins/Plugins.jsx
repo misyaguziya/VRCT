@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
 import { PluginsControlComponent } from "../_components/plugins_control_component/PluginsControlComponent";
+import { useNotificationStatus } from "@logics_common";
 
 export const Plugins = () => {
     const {
@@ -24,6 +26,7 @@ export const Plugins = () => {
 };
 
 const PluginDownloadContainer = () => {
+    const { t } = useTranslation();
     const {
         downloadAndExtractPlugin,
         currentPluginsData,
@@ -31,16 +34,22 @@ const PluginDownloadContainer = () => {
         toggleSavedPluginsStatus,
         handlePendingPlugin,
     } = usePlugins();
+    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
     // ダウンロード開始時の状態更新処理
     const downloadStartFunction = async (target_plugin_id) => {
         handlePendingPlugin(target_plugin_id, true);
+        showNotification_Success(t("plugin_notifications.downloading"));
 
         const target_plugin_info = currentPluginsData.data.find(
             (d) => d.plugin_id === target_plugin_id
         );
         downloadAndExtractPlugin(target_plugin_info).then(() => {
             handlePendingPlugin(target_plugin_id, false);
+            showNotification_Success(t("plugin_notifications.downloaded_success"));
+        }).catch(error => {
+            console.error(error);
+            showNotification_Error(t("plugin_notifications.downloaded_error"));
         });
     };
 
