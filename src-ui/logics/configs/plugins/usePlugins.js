@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/tauri";
+import { useTranslation } from "react-i18next";
 import { IS_PLUGIN_PATH_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
     store,
@@ -25,17 +26,18 @@ dev_plugins.forEach(async ({entry_path}) => {
 
 import JSZip from "jszip";
 
-import { useFetch, useSoftwareVersion } from "@logics_common";
+import { useFetch, useSoftwareVersion, useNotificationStatus } from "@logics_common";
 
 import * as logics_configs from "@logics_configs";
 import * as logics_main from "@logics_main";
 import * as logics_common from "@logics_common";
 
-
 // PLUGIN_LIST_URL は中央リポジトリにある、各プラグインの plugin_info.json への URL の配列を保持する JSON の URL
 const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
+    const { t } = useTranslation();
+    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
@@ -308,6 +310,9 @@ export const usePlugins = () => {
             new_value = currentSavedPluginsStatus.data.map((d) => {
                 if (d.plugin_id === target_plugin_id) {
                     d.is_enabled = !d.is_enabled;
+                    (d.is_enabled)
+                        ? showNotification_Success(t("plugin_notifications.is_enabled"))
+                        : showNotification_Success(t("plugin_notifications.is_disabled"));
                 }
                 return d;
             });
@@ -317,6 +322,7 @@ export const usePlugins = () => {
                 plugin_id: target_plugin_id,
                 is_enabled: true,
             });
+            showNotification_Success(t("plugin_notifications.is_enabled"))
         }
 
         // 「currentPluginsData.data」でis_downloadedがtrueのものだけ残す
