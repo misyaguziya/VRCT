@@ -16,7 +16,12 @@ import { usePlugins } from "@logics_configs";
 export const MainSection = () => {
     const { currentPluginsData } = usePlugins();
 
-    const render_plugins = currentPluginsData.data.filter((plugin) => (plugin.is_downloaded && plugin.is_enabled && plugin.downloaded_plugin_info.location === "main_section"));
+    const render_plugins = currentPluginsData.data.filter((plugin) => (
+        plugin.is_downloaded &&
+        plugin.is_enabled &&
+        plugin.downloaded_plugin_info.is_plugin_supported &&
+        plugin.downloaded_plugin_info.location === "main_section"
+    ));
 
     return (
         <div className={styles.container}>
