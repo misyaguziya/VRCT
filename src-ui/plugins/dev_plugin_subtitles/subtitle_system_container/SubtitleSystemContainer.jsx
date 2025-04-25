@@ -33,8 +33,6 @@ export const SubtitleSystemContainer = () => {
     // // カウントダウンタイマー専用の ref
     // const countdownIntervalRef = useRef(null);
 
-    console.log(t("main_page.title"));
-
     return (
         <div className={styles.container}>
             <h1 className={styles.title}>{t("main_page.title")}</h1>

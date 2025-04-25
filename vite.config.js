@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
+import yaml from "@rollup/plugin-yaml";
 import path from "path";
 
 import { dev_plugins } from "./src-ui/plugins/plugins_index.js";
@@ -11,8 +12,11 @@ export default defineConfig(async () => {
     const plugin_aliases = await getPluginAliases();
 
     return {
-        plugins: [react(), svgr()],
-        assetsInclude: ["**/*.yml"],
+        plugins: [
+            yaml({ include: ["**/*.yml", "**/*.yaml"] }),
+            react(),
+            svgr(),
+        ],
 
         // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
         //

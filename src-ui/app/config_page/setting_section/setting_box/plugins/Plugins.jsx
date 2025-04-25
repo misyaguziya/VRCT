@@ -26,7 +26,7 @@ export const Plugins = () => {
 };
 
 const PluginDownloadContainer = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
     const {
         downloadAndExtractPlugin,
         currentPluginsData,
@@ -74,35 +74,49 @@ const PluginDownloadContainer = () => {
         <div className={styles.plugins_list_container}>
             {is_failed_to_fetch && <p>Failed to fetch plugins data</p>}
             {is_fetching && <p>Fetching plugins data...</p>}
-            {sorted_plugins_data.map((plugin) => (
-                <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
-                    <p className={styles.title}>
-                        {plugin.is_downloaded
-                            ? plugin.downloaded_plugin_info?.title
-                            : plugin.latest_plugin_info?.title}
-                    </p>
-                    <p className={styles.plugin_id}>{plugin.plugin_id}</p>
-                    {plugin.is_error ? (
-                        <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
-                    ) : (
-                        <div className={styles.plugin_info_wrapper}>
-                            <div className={styles.plugin_info}>
-                                <p>
-                                    {plugin.is_downloaded
-                                        ? `現在のバージョン: ${plugin.downloaded_plugin_info?.plugin_version}`
-                                        : null}
-                                </p>
+            {sorted_plugins_data.map((plugin) => {
+                const target_info = plugin.is_downloaded
+                    ? plugin.downloaded_plugin_info
+                    : plugin.latest_plugin_info;
+
+                const target_locale = target_info.locales && target_info.locales[i18n.language]
+                ? target_info.locales[i18n.language]
+                : {
+                    title: target_info.title,
+                    desc: target_info.desc || null,
+                };
+
+                return (
+                    <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
+                        <p className={styles.title}>
+                            {target_locale.title}
+                        </p>
+                        <p className={styles.plugin_id}>{plugin.plugin_id}</p>
+                        <p className={styles.desc}>
+                            {target_locale.desc}
+                        </p>
+                        {plugin.is_error ? (
+                            <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
+                        ) : (
+                            <div className={styles.plugin_info_wrapper}>
+                                <div className={styles.plugin_info}>
+                                    <p>
+                                        {plugin.is_downloaded
+                                            ? `現在のバージョン: ${plugin.downloaded_plugin_info?.plugin_version}`
+                                            : null}
+                                    </p>
+                                </div>
+                                <PluginsControlComponent
+                                    variable_state={variable_state}
+                                    toggleFunction={toggleFunction}
+                                    downloadStartFunction={downloadStartFunction}
+                                    plugin_status={plugin}
+                                />
                             </div>
-                            <PluginsControlComponent
-                                variable_state={variable_state}
-                                toggleFunction={toggleFunction}
-                                downloadStartFunction={downloadStartFunction}
-                                plugin_status={plugin}
-                            />
-                        </div>
-                    )}
-                </div>
-            ))}
+                        )}
+                    </div>
+                );
+            })}
         </div>
     );
 };
