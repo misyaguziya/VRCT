@@ -9,6 +9,7 @@ export const PluginCompatibilityList = () => {
     const {
         enabledPluginsList,
         asyncFetchPluginsInfo,
+        currentFetchedPluginsInfo,
     } = usePlugins();
 
     useEffect(() => {
@@ -35,9 +36,15 @@ export const PluginCompatibilityList = () => {
 
     if (!is_any_incompatible_plugin && !is_any_compatible_plugin) return null; // This is just for safety.
 
+    // Duplicate
+    const is_failed_to_fetch = currentFetchedPluginsInfo.state === "error";
+    const is_fetching = currentFetchedPluginsInfo.state === "pending";
+
     return (
         <div className={styles.container}>
             <p className={styles.title}>使用中プラグインの互換性チェック</p>
+            {is_failed_to_fetch && <p>Failed to fetch plugins data</p>}
+            {is_fetching && <p>Fetching plugins data...</p>}
             <div className={styles.plugins_compatibility_container}>
                 {incompatible_plugins_list.map(plugin => {
                     const target_data = plugin.downloaded_plugin_info;

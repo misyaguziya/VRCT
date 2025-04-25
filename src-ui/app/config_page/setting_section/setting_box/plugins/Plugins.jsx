@@ -33,6 +33,7 @@ const PluginDownloadContainer = () => {
         currentSavedPluginsStatus,
         toggleSavedPluginsStatus,
         handlePendingPlugin,
+        currentFetchedPluginsInfo,
     } = usePlugins();
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
 
@@ -65,8 +66,14 @@ const PluginDownloadContainer = () => {
         a.plugin_id.localeCompare(b.plugin_id)
     );
 
+    // Duplicate
+    const is_failed_to_fetch = currentFetchedPluginsInfo.state === "error";
+    const is_fetching = currentFetchedPluginsInfo.state === "pending";
+
     return (
         <div className={styles.plugins_list_container}>
+            {is_failed_to_fetch && <p>Failed to fetch plugins data</p>}
+            {is_fetching && <p>Fetching plugins data...</p>}
             {sorted_plugins_data.map((plugin) => (
                 <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
                     <p className={styles.title}>
