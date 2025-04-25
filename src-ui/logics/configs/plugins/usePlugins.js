@@ -40,7 +40,7 @@ export const usePlugins = () => {
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
-    const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
+    const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo, errorFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
     const { currentLoadedPlugins, updateLoadedPlugins, pendingLoadedPlugins } = useStore_LoadedPlugins();
 
     const { currentSavedPluginsStatus, updateSavedPluginsStatus, pendingSavedPluginsStatus } = useStore_SavedPluginsStatus();
@@ -252,6 +252,7 @@ export const usePlugins = () => {
             updateFetchedPluginsInfo(updated_list);
         } catch (error) {
             console.error("Error fetching plugin info list: ", error);
+            errorFetchedPluginsInfo();
         }
 
         store.is_initialized_fetched_plugin_info = true;
