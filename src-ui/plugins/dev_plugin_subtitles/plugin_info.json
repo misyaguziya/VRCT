@@ -3,7 +3,7 @@
     "plugin_id": "vrct_plugin_subtitles",
     "asset_name": "vrct_plugin_subtitles.zip",
     "location": "main_section",
-    "plugin_version": "0.0.0",
-    "min_supported_vrct_version": "3.0.4",
-    "max_supported_vrct_version": "3.0.6"
+    "plugin_version": "0.0.4",
+    "min_supported_vrct_version": "3.0.5",
+    "max_supported_vrct_version": "3.0.5"
 }

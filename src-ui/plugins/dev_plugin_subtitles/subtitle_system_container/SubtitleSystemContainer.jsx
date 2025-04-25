@@ -4,8 +4,10 @@ import { ModeSelectorContainer } from "./mode_selector_container/ModeSelectorCon
 import { PlayControlContainer } from "./play_control_container/PlayControlContainer";
 import { CountdownContainer } from "./countdown_container/CountdownContainer";
 import { SubtitlesListContainer } from "./subtitles_list_container/SubtitlesListContainer";
+import { usePluginTranslation } from "@usePluginTranslation";
 
 export const SubtitleSystemContainer = () => {
+    const { t } = usePluginTranslation();
     // const [srtContent, setSrtContent] = useState("");
     // const [cues, setCues] = useState([]);
     // const [isPlaying, setIsPlaying] = useState(false);
@@ -31,9 +33,11 @@ export const SubtitleSystemContainer = () => {
     // // カウントダウンタイマー専用の ref
     // const countdownIntervalRef = useRef(null);
 
+    console.log(t("main_page.title"));
+
     return (
         <div className={styles.container}>
-            <h1 className={styles.title}>字幕プレイヤー</h1>
+            <h1 className={styles.title}>{t("main_page.title")}</h1>
             <InputFileContainer />
             <ModeSelectorContainer />
             <PlayControlContainer />

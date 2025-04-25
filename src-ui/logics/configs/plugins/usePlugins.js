@@ -50,6 +50,7 @@ export const usePlugins = () => {
     const { asyncTauriFetchGithub } = useFetch();
 
 
+    const { i18n } = useTranslation();
 
     const generatePluginContext = (downloaded_plugin_info) => {
         const plugin_context = {
@@ -69,7 +70,8 @@ export const usePlugins = () => {
 
             },
             createAtomWithHook: (...args) => createAtomWithHook(...args),
-            logics: { ...logics_common, ...logics_configs, ...logics_main }
+            logics: { ...logics_common, ...logics_configs, ...logics_main },
+            i18n: i18n,
         };
         return plugin_context;
     }
