@@ -9,12 +9,27 @@ import { useStore_IsOpenedLanguageSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 import { useEffect } from "react";
 
+import { PluginHost } from "./PluginHost";
+
+import { usePlugins } from "@logics_configs";
+
 export const MainSection = () => {
+    const { currentPluginsData } = usePlugins();
+
+    const render_plugins = currentPluginsData.data.filter((plugin) => (
+        plugin.is_downloaded &&
+        plugin.is_enabled &&
+        plugin.downloaded_plugin_info.is_plugin_supported &&
+        plugin.downloaded_plugin_info.location === "main_section"
+    ));
 
     return (
         <div className={styles.container}>
             <TopBar />
-            <MessageContainer />
+            {render_plugins.length
+                ? <PluginHost render_components={render_plugins}/>
+                : <MessageContainer />
+            }
             <HandleLanguageSelector />
         </div>
     );

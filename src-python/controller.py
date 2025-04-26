@@ -447,11 +447,11 @@ class Controller:
         return {"status":200, "result":config.VERSION}
 
     def checkSoftwareUpdated(self) -> dict:
-        update_flag =  model.checkSoftwareUpdated()
+        software_update_info = model.checkSoftwareUpdated()
         self.run(
             200,
-            self.run_mapping["update_software_flag"],
-            update_flag,
+            self.run_mapping["software_update_info"],
+            software_update_info,
         )
 
     @staticmethod
@@ -1060,6 +1060,15 @@ class Controller:
     def setHotkeys(data, *args, **kwargs) -> dict:
         config.HOTKEYS = data
         return {"status":200, "result":config.HOTKEYS}
+
+    @staticmethod
+    def getPluginsStatus(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.PLUGINS_STATUS}
+
+    @staticmethod
+    def setPluginsStatus(data, *args, **kwargs) -> dict:
+        config.PLUGINS_STATUS = data
+        return {"status":200, "result":config.PLUGINS_STATUS}
 
     @staticmethod
     def getSpeakerAvgLogprob(*args, **kwargs) -> dict:

@@ -1,7 +1,6 @@
 @import "@scss_mixins";
 
 .switchbox_container {
-    width: 100%;
     display: flex;
     justify-content: end;
     align-items: center;
@@ -22,6 +21,7 @@
 }
 
 .toggle_control {
+    position: relative;
     @include toggle_control_styles;
     display: flex;
     justify-content: center;

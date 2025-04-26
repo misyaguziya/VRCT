@@ -1,0 +1,50 @@
+.container {
+    // background-color: red;
+    display: flex;
+    gap: 4rem;
+}
+.mode_selector_wrapper {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+.absolute_time_label {
+    font-size: 1.4rem;
+}
+
+.mode_selector {
+    font-size: 1.6rem;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    border: 0.1rem solid var(--dark_400_color);
+    cursor: pointer;
+}
+
+.mode_selector_item {
+    background-color: var(--dark_800_color);
+}
+
+
+.time_section {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.time_selects {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+
+.time_selects_item {
+    width: 6rem;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 1.8rem;
+    background-color: var(--dark_850_color);
+    border: 0.1rem solid var(--dark_400_color);
+    cursor: pointer;
+}

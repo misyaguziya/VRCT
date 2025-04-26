@@ -60,6 +60,6 @@ export { useOscPort } from "./advanced_settings/useOscPort";
 
 export { useSupporters } from "./supporters/useSupporters";
 
+export { usePlugins } from "./plugins/usePlugins";
 
 export { useSettingBoxScrollPosition } from "./useSettingBoxScrollPosition";
-export { useSoftwareVersion } from "./useSoftwareVersion";
