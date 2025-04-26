@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
-import { PluginsControlComponent } from "../_components/plugins_control_component/PluginsControlComponent";
+import { PluginsControlComponent } from "../../_components/plugins_control_component/PluginsControlComponent";
 import { useNotificationStatus } from "@logics_common";
 
 export const Plugins = () => {

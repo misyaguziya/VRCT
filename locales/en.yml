@@ -244,6 +244,7 @@ config_page:
             label: "Open Config File"
         switch_compute_device:
             label: "Switch VRCT To CPU/GPU Version"
+        section_label_plugins: Plugins
 
 plugin_notifications:
     downloading: Downloading the plugin.
@@ -254,7 +255,7 @@ plugin_notifications:
     updated_success: Updated successfully.
     updated_error: Update failed.
 
-    disabled_out_of_support: THe plugin has been disabled. It's not supported on this VRCT version.
+    disabled_out_of_support: The plugin has been disabled. It's not supported on this VRCT version.
 
     is_enabled: The plugin has enabled.
     is_disabled: The plugin has disabled.
