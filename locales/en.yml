@@ -244,7 +244,19 @@ config_page:
             label: "Open Config File"
         switch_compute_device:
             label: "Switch VRCT To CPU/GPU Version"
-        section_label_plugins: Plugins
+        section_label_plugins: Plugins # Exception, It'll be moved later.
+
+    plugins:
+        downloaded_version: "Downloaded version: {{downloaded_version}}"
+        latest_version: "Latest version: {{latest_version}}"
+        available_after_updating: "Available after updating to the latest version"
+        unavailable_downloaded: "Currently unavailable due to incompatibility with the VRCT version in use"
+        no_latest_info: "Unable to retrieve the latest information"
+        using_latest_version: "Using the latest version"
+        available_latest_version: "Latest version available"
+        unavailable_latest_version: "Latest version currently unavailable"
+        available_in_latest_vrct_version: "Available in the latest VRCT version"
+        unavailable_not_downloaded: "Currently unavailable"
 
 plugin_notifications:
     downloading: Downloading the plugin.

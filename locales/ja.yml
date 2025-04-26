@@ -244,4 +244,30 @@ config_page:
             label: "設定ファイルを開く"
         switch_compute_device:
             label: "VRCT CPU/GPUバージョンの切り替え"
-        section_label_plugins: プラグイン
+        section_label_plugins: プラグイン # Exception, It'll be moved later.
+
+    plugins:
+        downloaded_version: "ダウンロード済バージョン: {{downloaded_version}}"
+        latest_version: "最新バージョン: {{latest_version}}"
+        available_after_updating: 最新版にアップデート後 利用可能
+        unavailable_downloaded: 現在利用不可 使用中VRCTバージョンとの互換性なし
+        no_latest_info: 最新情報が取得できません
+        using_latest_version: 最新版を使用中
+        available_latest_version: 最新版を利用可能
+        unavailable_latest_version: 最新版は現在利用不可
+        available_in_latest_vrct_version: VRCT最新版で利用可能
+        unavailable_not_downloaded: 現在利用不可
+
+plugin_notifications:
+    downloading: プラグインをダウンロード中。
+    downloaded_success: プラグインのダウンロードが完了しました。
+    downloaded_error: プラグインのダウンロードに失敗しました。
+
+    updating: プラグインをアップデート中。
+    updated_success: プラグインのアップデートが完了しました。
+    updated_error: プラグインのアップデートに失敗しました。
+
+    disabled_out_of_support: 現在のバージョンとの互換性がありません。プラグインを無効にしました。
+
+    is_enabled: プラグインを有効にしました。
+    is_disabled: プラグインを無効にしました。
