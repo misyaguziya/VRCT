@@ -1,0 +1,124 @@
+.container {
+    padding: 2rem 4rem;
+    background: var(--dark_900_color);
+    border-radius: 1rem;
+    flex-shrink: 0;
+    height: 100%;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.title {
+    font-size: 1.8rem;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.border {
+    width: 100%;
+    height: 0.2rem;
+    background-color: var(--dark_800_color);
+    flex-shrink: 0;
+
+}
+
+    // label {
+    //     display: block;
+    //     font-size: 1.6rem;
+    //     margin-bottom: 0.5rem;
+    // }
+
+    // input,
+    // select {
+    //     font-size: 1.6rem;
+    //     padding: 0.5rem;
+    //     border-radius: 0.5rem;
+    //     border: 0.1rem solid #ccc;
+    //     background: #333;
+    //     color: #fff;
+    // }
+
+
+    // ボタンの基本スタイル
+    // button {
+    //     // font-size: 1.8rem;
+    //     // padding: 1rem 2rem;
+    //     // border: none;
+    //     // border-radius: 0.5rem;
+    //     // cursor: pointer;
+    //     // // transition: background 0.3s;
+    //     // margin-right: 1rem;
+
+    //     &:focus {
+    //         outline: none;
+    //         box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    //     }
+    // }
+
+    // 再生開始用ボタン（通常時）
+    .primary {
+        background: #007bff;
+        color: #fff;
+        &:hover {
+            background: #0056b3;
+        }
+    }
+
+    // 再生停止用ボタン
+    .secondary {
+        background: #dc3545;
+        color: #fff;
+        &:hover {
+            background: #a71d2a;
+        }
+    }
+
+
+
+    // 「再生中」状態（クリック不可）用のスタイル
+    .is_playing {
+        background: #6c757d;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+
+    // 字幕一覧のテーブル
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 2rem;
+
+    th,
+    td {
+        padding: 1rem;
+        border: 0.1rem solid #444;
+        text-align: left;
+        font-size: 1.4rem;
+    }
+
+    th {
+        background: #555;
+    }
+
+    tbody {
+        tr {
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:nth-child(even) {
+            background: #2a2a2a;
+        }
+
+        &:hover {
+            background: #444;
+        }
+        }
+    }
+}
+
+.subtitle_lists {
+    font-size: 1.4rem;
+}

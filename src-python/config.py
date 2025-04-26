@@ -556,6 +556,18 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, self.HOTKEYS, immediate_save=True)
 
     @property
+    @json_serializable('PLUGINS_STATUS')
+    def PLUGINS_STATUS(self):
+        return self._PLUGINS_STATUS
+
+    @PLUGINS_STATUS.setter
+    def PLUGINS_STATUS(self, value):
+        if isinstance(value, list):
+            if all(isinstance(item, dict) for item in value):
+                self._PLUGINS_STATUS = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, self.PLUGINS_STATUS, immediate_save=True)
+
+    @property
     @json_serializable('MIC_AVG_LOGPROB')
     def MIC_AVG_LOGPROB(self):
         return self._MIC_AVG_LOGPROB
@@ -1068,6 +1080,7 @@ class Config:
             "toggle_transcription_send": None,
             "toggle_transcription_receive": None,
         }
+        self._PLUGINS_STATUS = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._AUTO_SPEAKER_SELECT = True

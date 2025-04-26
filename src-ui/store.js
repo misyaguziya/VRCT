@@ -20,6 +20,9 @@ export const store = {
     log_box_ref: null,
     text_area_ref: null,
     is_applied_init_message_box_height: false,
+    is_initialized_load_plugin: false,
+    is_fetched_plugins_info_already: false,
+    is_initialized_fetched_plugin_info: false,
 };
 
 const generatePropertyNames = (base_name) => ({
@@ -34,7 +37,7 @@ const generatePropertyNames = (base_name) => ({
 });
 
 
-const createAtomWithHook = (initialValue, base_name, options) => {
+export const createAtomWithHook = (initialValue, base_name, options) => {
     const property_names = generatePropertyNames(base_name);
     const atomInstance = atom({
         state: (options?.is_state_ok) ? "ok" : "pending",
@@ -114,7 +117,10 @@ export const { atomInstance: Atom_MainFunctionsStateMemory, useHook: useStore_Ma
     transcription_receive: false,
 }, "MainFunctionsStateMemory");
 export const { atomInstance: Atom_OpenedQuickSetting, useHook: useStore_OpenedQuickSetting } = createAtomWithHook("", "OpenedQuickSetting");
-export const { atomInstance: Atom_IsSoftwareUpdateAvailable, useHook: useStore_IsSoftwareUpdateAvailable } = createAtomWithHook(false, "IsSoftwareUpdateAvailable");
+export const { atomInstance: Atom_LatestSoftwareVersionInfo, useHook: useStore_LatestSoftwareVersionInfo } = createAtomWithHook({
+    is_update_available: false,
+    new_version: "0.0.0",
+}, "LatestSoftwareVersionInfo");
 export const { atomInstance: Atom_InitProgress, useHook: useStore_InitProgress } = createAtomWithHook(0, "InitProgress");
 export const { atomInstance: Atom_IsBreakPoint, useHook: useStore_IsBreakPoint } = createAtomWithHook(false, "IsBreakPoint");
 export const { atomInstance: Atom_IsSoftwareUpdating, useHook: useStore_IsSoftwareUpdating } = createAtomWithHook(false, "IsSoftwareUpdating");
@@ -272,6 +278,12 @@ export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createA
     toggle_transcription_send: null,
     toggle_transcription_receive: null,
 }, "Hotkeys");
+
+// Plugins
+export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedPluginsInfo } = createAtomWithHook([], "FetchedPluginsInfo");
+export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
+export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
+export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
 
 // Advanced Settings
 export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");

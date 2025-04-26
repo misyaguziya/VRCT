@@ -9,6 +9,7 @@ import {
     UiSizeController,
     FontFamilyController,
     TransparencyController,
+    PluginsController,
 } from "./_app_controllers/index.js";
 
 import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
@@ -20,6 +21,7 @@ import { ModalController } from "./modal_controller/ModalController";
 import { SnackbarController } from "./snackbar_controller/SnackbarController";
 import styles from "./App.module.scss";
 import { useIsBackendReady, useIsSoftwareUpdating, useIsVrctAvailable, useWindow } from "@logics_common";
+import { AppErrorBoundary } from "./error_boundary/AppErrorBoundary";
 
 export const App = () => {
     const { currentIsVrctAvailable } = useIsVrctAvailable();
@@ -29,22 +31,24 @@ export const App = () => {
 
     return (
         <div className={styles.container}>
-            <KeyEventController />
-            <StartPythonController />
-            <GlobalHotKeyController />
-            <UiLanguageController />
-            <ConfigPageCloseTriggerController />
-            <UiSizeController />
-            <FontFamilyController />
-            <TransparencyController />
-            <WindowGeometryController />
+            <AppErrorBoundary >
+                <KeyEventController />
+                <StartPythonController />
+                <GlobalHotKeyController />
+                <UiLanguageController />
+                <ConfigPageCloseTriggerController />
+                <UiSizeController />
+                <FontFamilyController />
+                <TransparencyController />
+                <WindowGeometryController />
 
-            {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
-                ? <SplashComponent />
-                : <Contents  key={i18n.language}/>
-            }
+                {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
+                    ? <SplashComponent />
+                    : <Contents key={i18n.language} />
+                }
 
-            <SnackbarController />
+                <SnackbarController />
+            </AppErrorBoundary>
         </div>
     );
 };
@@ -53,6 +57,8 @@ const Contents = () => {
     const { currentIsSoftwareUpdating } = useIsSoftwareUpdating();
     return (
         <>
+            <PluginsController />
+
             <WindowTitleBar />
             {currentIsSoftwareUpdating.data === false
             ?

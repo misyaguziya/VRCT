@@ -1,0 +1,42 @@
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6rem;
+}
+
+.input_file_wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.input_file_label {
+    font-size: 1.4rem;
+    border-radius: 0.4rem;
+    padding: 1rem;
+    background-color: var(--dark_850_color);
+    border: 0.1rem solid var(--dark_400_color);
+    flex-shrink: 0;
+}
+.input_file_i {
+    display: none;
+}
+.file_name {
+    font-size: 1.6rem;
+    padding: 0.5rem;
+    width: 100%;
+    max-width: 60rem;
+}
+
+.file_clear {
+    background: var(--dark_800_color);
+    color: var(--dark_200_color);
+    border-radius: 0.4rem;
+    font-size: 1.2rem;
+    padding: 0.6rem 1rem;
+    cursor: pointer;
+
+    &:hover {
+        background: var(--error_bc_color);
+    }
+}

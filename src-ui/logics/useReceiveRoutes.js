@@ -8,13 +8,13 @@ import {
     useNotificationStatus,
     useHandleNetworkConnection,
 
+    useSoftwareVersion,
     useComputeMode,
     useInitProgress,
     useIsBackendReady,
     useWindow,
     useMessage,
     useVolume,
-    useIsSoftwareUpdateAvailable,
 } from "@logics_common";
 
 import {
@@ -26,7 +26,6 @@ import {
 } from "@logics_main";
 
 import {
-    useSoftwareVersion,
     useEnableAutoMicSelect,
     useEnableAutoSpeakerSelect,
     useMicHostList,
@@ -73,6 +72,7 @@ import {
     useOverlayShowOnlyTranslatedMessages,
     useEnableNotificationVrcSfx,
     useHotkeys,
+    usePlugins,
     useOscIpAddress,
     useOscPort,
 } from "@logics_configs";
@@ -104,7 +104,7 @@ export const useReceiveRoutes = () => {
         addSentMessageLog,
         addReceivedMessageLog,
     } = useMessage();
-    const { updateIsSoftwareUpdateAvailable } = useIsSoftwareUpdateAvailable();
+    const { updateLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { updateSoftwareVersion } = useSoftwareVersion();
     const { updateEnableAutoMicSelect } = useEnableAutoMicSelect();
     const { updateEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
@@ -176,6 +176,7 @@ export const useReceiveRoutes = () => {
     const { updateEnableNotificationVrcSfx } = useEnableNotificationVrcSfx();
 
     const { updateHotkeys } = useHotkeys();
+    const { updateSavedPluginsStatus } = usePlugins();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
@@ -205,7 +206,12 @@ export const useReceiveRoutes = () => {
         "/set/data/main_window_geometry": () => {},
         "/run/open_filepath_logs": () => console.log("Opened Directory, Message Logs"),
         "/run/open_filepath_config_file": () => console.log("Opened Directory, Config File"),
-        "/run/update_software_flag": updateIsSoftwareUpdateAvailable,
+        "/run/software_update_info": (payload) => {
+            updateLatestSoftwareVersionInfo(prev => ({
+                is_update_available: payload.is_update_available,
+                new_version: payload.new_version || prev.data.new_version,
+            }));
+        },
         "/run/connected_network": handleNetworkConnection,
 
         // Main Page
@@ -487,6 +493,10 @@ export const useReceiveRoutes = () => {
         // Hotkeys
         "/get/data/hotkeys": updateHotkeys,
         "/set/data/hotkeys": updateHotkeys,
+
+        // Plugins
+        "/get/data/plugins_status": updateSavedPluginsStatus,
+        "/set/data/plugins_status": updateSavedPluginsStatus,
 
         // Advanced Settings
         "/get/data/osc_ip_address": updateOscIpAddress,

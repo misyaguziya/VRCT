@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./Slider.module.scss";
 import MUI_Slider from "@mui/material/Slider";
-import { clsx } from "clsx";
+import clsx from "clsx";
 
 export const Slider = (props) => {
     return (
