@@ -61,14 +61,18 @@ const PluginDownloadContainer = () => {
 
     const variable_state = currentSavedPluginsStatus.state;
 
+    const filtered_plugins_data = currentPluginsData.data.filter(plugin => !plugin.is_outdated)
+
     // plugin_id で ABC 順にソート
-    const sorted_plugins_data = [...currentPluginsData.data].sort((a, b) =>
+    const sorted_plugins_data = filtered_plugins_data.sort((a, b) =>
         a.plugin_id.localeCompare(b.plugin_id)
     );
 
     // Duplicate
     const is_failed_to_fetch = currentFetchedPluginsInfo.state === "error";
     const is_fetching = currentFetchedPluginsInfo.state === "pending";
+    console.log(sorted_plugins_data);
+
 
     return (
         <div className={styles.plugins_list_container}>
@@ -88,32 +92,27 @@ const PluginDownloadContainer = () => {
 
                 return (
                     <div key={plugin.plugin_id} className={styles.plugin_wrapper}>
-                        <p className={styles.title}>
-                            {target_locale.title}
-                        </p>
-                        <p className={styles.plugin_id}>{plugin.plugin_id}</p>
-                        <p className={styles.desc}>
-                            {target_locale.desc}
-                        </p>
-                        {plugin.is_error ? (
-                            <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
-                        ) : (
-                            <div className={styles.plugin_info_wrapper}>
-                                <div className={styles.plugin_info}>
-                                    <p>
-                                        {plugin.is_downloaded
-                                            ? `現在のバージョン: ${plugin.downloaded_plugin_info?.plugin_version}`
-                                            : null}
-                                    </p>
-                                </div>
+                        <div className={styles.labels_wrapper}>
+                            <p className={styles.title}>
+                                {target_locale.title}
+                            </p>
+                            <p className={styles.desc}>
+                                {target_locale.desc}
+                            </p>
+                            {/* <p className={styles.plugin_id}>{plugin.plugin_id}</p> */}
+                        </div>
+                        <div className={styles.plugin_info_wrapper}>
+                            {plugin.is_error ? (
+                                <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
+                            ) : (
                                 <PluginsControlComponent
                                     variable_state={variable_state}
                                     toggleFunction={toggleFunction}
                                     downloadStartFunction={downloadStartFunction}
                                     plugin_status={plugin}
                                 />
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
                 );
             })}

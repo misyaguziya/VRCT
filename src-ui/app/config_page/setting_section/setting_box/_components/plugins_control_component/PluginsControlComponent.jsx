@@ -2,6 +2,7 @@ import React from "react";
 import { SwitchBox } from "../index";
 import { _DownloadButton } from "../_atoms/_download_button/_DownloadButton";
 import styles from "./PluginsControlComponent.module.scss";
+import { useTranslation } from "react-i18next";
 
 export const PluginsControlComponent = ({
     variable_state,
@@ -9,6 +10,8 @@ export const PluginsControlComponent = ({
     toggleFunction,
     downloadStartFunction,
 }) => {
+    const { t } = useTranslation();
+
     const option = {
         id: plugin_status.plugin_id,
         is_pending: plugin_status.is_pending,
@@ -19,6 +22,16 @@ export const PluginsControlComponent = ({
         progress: null,
     };
 
+    const downloaded_version = plugin_status.downloaded_plugin_info?.plugin_version;
+    const latest_version = plugin_status.latest_plugin_info?.plugin_version;
+
+    const downloaded_version_label = t("config_page.plugins.downloaded_version",
+        { downloaded_version: downloaded_version }
+    );
+    const latest_version_label = t("config_page.plugins.latest_version",
+        { latest_version: latest_version }
+    );
+
     if (plugin_status.is_downloaded) {
         return (
             <DownloadedPluginControl
@@ -26,6 +39,8 @@ export const PluginsControlComponent = ({
                 plugin_status={plugin_status}
                 toggleFunction={toggleFunction}
                 downloadStartFunction={downloadStartFunction}
+                downloaded_version_label={downloaded_version_label}
+                latest_version_label={latest_version_label}
             />
         );
     } else {
@@ -34,6 +49,8 @@ export const PluginsControlComponent = ({
                 option={option}
                 plugin_status={plugin_status}
                 downloadStartFunction={downloadStartFunction}
+                downloaded_version_label={downloaded_version_label}
+                latest_version_label={latest_version_label}
             />
         );
     }
@@ -45,49 +62,51 @@ const DownloadedPluginControl = ({
     plugin_status,
     toggleFunction,
     downloadStartFunction,
+    downloaded_version_label,
+    latest_version_label,
 }) => {
+    const { t } = useTranslation();
+
     const togglePlugin = () => {
         toggleFunction(plugin_status.plugin_id);
     };
-
-    const latest_version = plugin_status.latest_plugin_info?.plugin_version;
-
 
     if (!plugin_status.downloaded_plugin_info.is_plugin_supported) {
         if (plugin_status.is_latest_version_available) {
             return (
                 <div className={styles.container}>
-                    <p>最新のバージョン: {latest_version}</p>
-                    <p>最新版にアップデート後 利用可能</p>
+                    <p>{downloaded_version_label}</p>
+                    <p>{latest_version_label}</p>
+                    <p>{t("config_page.plugins.available_after_updating")}</p>
                     <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
                 </div>
             );
         }
         return (
             <div className={styles.container}>
-                <p>現在利用不可 使用中VRCTバージョンとの互換性なし</p>
+                <p>{t("config_page.plugins.unavailable_downloaded")}</p>
             </div>
         );
     } else if (plugin_status.is_outdated) {
         return (
             <div className={styles.container}>
-                <p>最新情報が取得できません</p>
+                <p>{t("config_page.plugins.no_latest_info")}</p>
                 <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else if (plugin_status.is_latest_version_already) {
         return (
             <div className={styles.container}>
-                <p>最新のバージョン: {latest_version}</p>
-                <p>最新版を使用中</p>
+                <p>{latest_version_label}</p>
+                <p>{t("config_page.plugins.using_latest_version")}</p>
                 <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else if (plugin_status.is_latest_version_available) {
         return (
             <div className={styles.container}>
-                <p>最新のバージョン: {latest_version}</p>
-                <p>最新版を利用可能</p>
+                <p>{latest_version_label}</p>
+                <p>{t("config_page.plugins.available_latest_version")}</p>
                 <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
                 <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
@@ -95,7 +114,7 @@ const DownloadedPluginControl = ({
     } else {
         return (
             <div className={styles.container}>
-                <p>最新版は現在利用不可</p>
+                <p>{t("config_page.plugins.available_latest_version")}</p>
                 <SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
@@ -103,28 +122,34 @@ const DownloadedPluginControl = ({
 };
 
 
-const NotDownloadedPluginControl = ({ option, plugin_status, downloadStartFunction }) => {
-    const latest_version = plugin_status.latest_plugin_info?.plugin_version;
+const NotDownloadedPluginControl = ({
+    option,
+    plugin_status,
+    downloadStartFunction,
+    downloaded_version_label,
+    latest_version_label,
+}) => {
+    const { t } = useTranslation();
 
     if (plugin_status.is_latest_version_available) {
         return (
             <div className={styles.container}>
-                <p>最新バージョン: {latest_version}</p>
+                <p>{latest_version_label}</p>
                 <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
             </div>
         );
     } else if (plugin_status.latest_plugin_info?.is_plugin_supported_latest_vrct) {
         return (
             <div className={styles.container}>
-                <p>最新のバージョン: {latest_version}</p>
-                <p>VRCT最新版で利用可能</p>
+                <p>{latest_version_label}</p>
+                <p>{t("config_page.plugins.available_in_latest_vrct_version")}</p>
             </div>
         );
     } else {
         return (
             <div className={styles.container}>
-                <p>最新バージョン: {latest_version}</p>
-                <p>現在利用不可</p>
+                <p>{latest_version_label}</p>
+                <p>{t("config_page.plugins.unavailable_not_downloaded")}</p>
             </div>
         );
     }
