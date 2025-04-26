@@ -16,6 +16,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 2rem;
+    gap: 2rem;
     &:not(:last-child) {
         border-bottom: 0.1rem solid var(--dark_750_color);
     }
