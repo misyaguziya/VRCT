@@ -244,3 +244,4 @@ config_page:
             label: "設定ファイルを開く"
         switch_compute_device:
             label: "VRCT CPU/GPUバージョンの切り替え"
+        section_label_plugins: プラグイン
