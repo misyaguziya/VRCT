@@ -280,15 +280,10 @@ export const usePlugins = () => {
         const { is_plugin_supported, is_plugin_supported_latest_vrct } = checkVrctVerCompatibility(plugin_info.min_supported_vrct_version, plugin_info.max_supported_vrct_version);
 
         return {
-            title: plugin_info.title,
-            plugin_id: plugin_info.plugin_id,
-            plugin_version: plugin_info.plugin_version,
-            min_supported_vrct_version: plugin_info.min_supported_vrct_version,
-            max_supported_vrct_version: plugin_info.max_supported_vrct_version,
+            ...plugin_info,
             is_plugin_supported: is_plugin_supported,
             is_plugin_supported_latest_vrct: is_plugin_supported_latest_vrct,
-            asset_name: plugin_info.asset_name,
-            url: plugin_info_asset_url
+            url: plugin_info_asset_url,
         };
     }
 

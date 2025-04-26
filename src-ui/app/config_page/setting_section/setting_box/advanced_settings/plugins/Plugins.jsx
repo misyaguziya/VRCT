@@ -71,8 +71,6 @@ const PluginDownloadContainer = () => {
     // Duplicate
     const is_failed_to_fetch = currentFetchedPluginsInfo.state === "error";
     const is_fetching = currentFetchedPluginsInfo.state === "pending";
-    console.log(sorted_plugins_data);
-
 
     return (
         <div className={styles.plugins_list_container}>
