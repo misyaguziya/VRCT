@@ -94,7 +94,7 @@ Initial setup, basic functions, and other features are also described.
 ## Author
 - [みしゃ(misyaguzi)](https://github.com/misyaguziya) (Main Development)
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
-- [レラ](https://github.com/soumt-r) (Technical Support)
+- [レラ](https://github.com/soumt-r) (Technical Advisor)
 - [どね](https://twitter.com/done_vrc) (Logo Design)
 
 ## Thanks to our contributors
