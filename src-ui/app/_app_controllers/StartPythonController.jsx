@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef } from "react";
 import { useStartPython } from "@logics/useStartPython";
 import { useStdoutToPython } from "@logics/useStdoutToPython";

@@ -26,7 +26,6 @@ import { AppErrorBoundary } from "./error_boundary/AppErrorBoundary";
 export const App = () => {
     const { currentIsVrctAvailable } = useIsVrctAvailable();
     const { currentIsBackendReady } = useIsBackendReady();
-    const { WindowGeometryController } = useWindow();
     const { i18n } = useTranslation();
 
     return (
@@ -40,7 +39,6 @@ export const App = () => {
                 <UiSizeController />
                 <FontFamilyController />
                 <TransparencyController />
-                <WindowGeometryController />
 
                 {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                     ? <SplashComponent />
@@ -54,9 +52,11 @@ export const App = () => {
 };
 
 const Contents = () => {
+    const { WindowGeometryController } = useWindow();
     const { currentIsSoftwareUpdating } = useIsSoftwareUpdating();
     return (
         <>
+            <WindowGeometryController />
             <PluginsController />
 
             <WindowTitleBar />
