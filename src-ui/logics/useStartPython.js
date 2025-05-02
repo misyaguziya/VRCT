@@ -1,4 +1,4 @@
-import { Command } from "@tauri-apps/api/shell";
+import { Command } from "@tauri-apps/plugin-shell";
 import { store } from "@store";
 import { useReceiveRoutes } from "./useReceiveRoutes";
 import {

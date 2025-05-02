@@ -19,6 +19,7 @@ export const store = {
     setting_box_scroll_container: null,
     log_box_ref: null,
     text_area_ref: null,
+    is_register_window_geometry_controller: false,
     is_applied_init_message_box_height: false,
     is_initialized_load_plugin: false,
     is_fetched_plugins_info_already: false,

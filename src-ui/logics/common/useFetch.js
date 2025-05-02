@@ -1,18 +1,24 @@
-import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
+import { fetch as tauriFetch } from "@tauri-apps/plugin-http";
 
 export const useFetch = () => {
-    const asyncTauriFetchGithub = async (url) => {
+    const asyncTauriFetchGithub = async (url, {return_row = false} = {}) => {
         console.log("tauriFetch", url);
 
-        const release_response = await tauriFetch(url, {
+        const response = await tauriFetch(url, {
             method: "GET",
-            responseType: ResponseType.Json,
             headers: {
                 "Accept": "application/vnd.github+json",
                 "User-Agent": "VRCTPluginApp"
             }
         });
-        return release_response;
+
+        if (response.status !== 200) {
+            throw new Error(url, "Failed to fetch, response: " + response);
+        }
+
+        if (return_row === true) return await response;
+
+        return await response.json();
     };
 
     return {
