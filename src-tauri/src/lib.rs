@@ -7,7 +7,7 @@ pub fn run() {
             let _main_window = app.get_webview_window("main").unwrap();  // `main_window` is declared here for all builds
 
             #[cfg(debug_assertions)]
-            { main_window.open_devtools(); }
+            { _main_window.open_devtools(); }
 
             Ok(())
         })
