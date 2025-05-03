@@ -321,7 +321,14 @@ class Controller:
         elif isinstance(message, str) and len(message) > 0:
             translation = []
             transliteration = []
-            if model.detectRepeatReceiveMessage(message):
+            if model.checkKeywords(message):
+                self.run(
+                    200,
+                    self.run_mapping["word_filter"],
+                    {"message":f"Detected by word filter: {message}"},
+                )
+                return
+            elif model.detectRepeatReceiveMessage(message):
                 return
             elif config.ENABLE_TRANSLATION is False:
                 pass
