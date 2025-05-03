@@ -4,7 +4,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
-            let main_window = app.get_webview_window("main").unwrap();  // `main_window` is declared here for all builds
+            let _main_window = app.get_webview_window("main").unwrap();  // `main_window` is declared here for all builds
 
             #[cfg(debug_assertions)]
             { main_window.open_devtools(); }
