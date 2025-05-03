@@ -1,4 +1,4 @@
-import { getCurrent } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import {
     useStore_TranslationStatus,
@@ -75,8 +75,8 @@ export const useMainFunction = () => {
     };
 
 
-    const toggleForeground = () => {
-        const main_page = getCurrent();
+    const toggleForeground = async () => {
+        const main_page = await getCurrentWindow();
         const is_foreground_enabled = !currentForegroundStatus.data;
         main_page.setAlwaysOnTop(is_foreground_enabled);
         updateForegroundStatus(is_foreground_enabled);

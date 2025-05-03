@@ -3,9 +3,12 @@ import react from "@vitejs/plugin-react";
 import svgr from "vite-plugin-svgr";
 import yaml from "@rollup/plugin-yaml";
 import path from "path";
+import { globSync } from "node:fs";
+import { pathToFileURL } from "url";
 
 import { dev_plugins } from "./src-ui/plugins/plugins_index.js";
 
+const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => {
@@ -26,6 +29,14 @@ export default defineConfig(async () => {
         server: {
             port: 1420,
             strictPort: true,
+            host: host || false,
+            hmr: host
+                ? {
+                    protocol: "ws",
+                    host,
+                    port: 1421,
+                }
+                : undefined,
             watch: {
                 // 3. tell vite to ignore watching `src-tauri`
                 ignored: ["**/src-tauri/**"],
@@ -79,25 +90,42 @@ export default defineConfig(async () => {
 
 
 
-// 各プラグインのエイリアスを動的に読み込む関数
+
 const getPluginAliases = async () => {
     const aliases = {};
-    // dev_plugins 配列の各プラグインについて処理する
-    for (const plugin of dev_plugins) {
-        const entry_path = plugin.entry_path; // 例: "dev_plugin_subtitles"
-        try {
-            // エイリアス設定ファイルは各プラグインフォルダ内の "configs.js" に記述されている前提
-            const pluginConfig = await import(`./src-ui/plugins/${entry_path}/plugin_configs.js`);
-            if (pluginConfig.configs && pluginConfig.configs.alias) {
-                for (const [alias_key, alias_relative_path] of Object.entries(pluginConfig.configs.alias)) {
+    const raw_config_files = globSync("src-ui/plugins/*/plugin_configs.js"); // [Note] globSync is an experimental feature Node.js. If any error happened, use node.js v22.15.0 that I confirmed it works.
+    const config_files = raw_config_files.map(p => p.split(path.sep).join("/"));
 
-                    // ホスト側の絶対パスに変換
-                    aliases[alias_key] = path.resolve(__dirname, "src-ui/plugins", entry_path, alias_relative_path);
+    for (const plugin of dev_plugins) {
+        const entry_path = plugin.entry_path;
+        const relative_config_path = `src-ui/plugins/${entry_path}/plugin_configs.js`;
+
+        if (!config_files.includes(relative_config_path)) {
+            continue;
+        }
+
+        try {
+            const full_path = path.resolve(__dirname, relative_config_path);
+            const file_url = pathToFileURL(full_path).href;
+            const plugin_config = await import(file_url);
+
+            if (plugin_config.configs?.alias) {
+                for (const [alias_key, alias_relative_path] of Object.entries(plugin_config.configs.alias)) {
+                    aliases[alias_key] = path.resolve(
+                        __dirname,
+                        "src-ui/plugins",
+                        entry_path,
+                        alias_relative_path
+                    );
                 }
             }
         } catch (error) {
-            console.error(`Error loading alias config for plugin ${plugin.plugin_info.plugin_id}:`, error);
+            console.error(
+                `Error loading alias config for plugin ${plugin.plugin_id}:`,
+                error
+            );
         }
     }
+
     return aliases;
 };

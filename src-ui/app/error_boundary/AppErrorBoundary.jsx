@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { ErrorBoundary } from "react-error-boundary";
 import XMarkSvg from "@images/cancel.svg?react";
 import CopySvg from "@images/copy.svg?react";
@@ -65,12 +65,14 @@ const ErrorContainer = ({error}) => {
 };
 
 const CloseButtonContainer = () => {
-    const close = () => {
+
+    const asyncClose = async () => {
+        const appWindow = await getCurrentWindow();
         appWindow.close();
     };
 
     return (
-        <button className={styles.close_button_wrapper} onClick={close}>
+        <button className={styles.close_button_wrapper} onClick={asyncClose}>
             <div className={styles.close_button}>
                 <XMarkSvg className={styles.x_mark_svg}/>
             </div>
