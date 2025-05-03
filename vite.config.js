@@ -93,20 +93,18 @@ export default defineConfig(async () => {
 
 const getPluginAliases = async () => {
     const aliases = {};
-    const raw_config_files = globSync("src-ui/plugins/*/plugin_configs.js");
+    const raw_config_files = globSync("src-ui/plugins/*/plugin_configs.js"); // [Note] globSync is an experimental feature Node.js. If any error happened, use node.js v22.15.0 that I confirmed it works.
     const config_files = raw_config_files.map(p => p.split(path.sep).join("/"));
 
     for (const plugin of dev_plugins) {
-        const entry_path = plugin.entry_path; // 例: "dev_plugin_subtitles"
+        const entry_path = plugin.entry_path;
         const relative_config_path = `src-ui/plugins/${entry_path}/plugin_configs.js`;
 
-        // 該当エントリのファイルがなければスキップ
         if (!config_files.includes(relative_config_path)) {
             continue;
         }
 
         try {
-            // Node 実行環境用に絶対パスを生成し、動的 import
             const full_path = path.resolve(__dirname, relative_config_path);
             const file_url = pathToFileURL(full_path).href;
             const plugin_config = await import(file_url);
