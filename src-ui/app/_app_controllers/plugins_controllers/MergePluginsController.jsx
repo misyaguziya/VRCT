@@ -126,7 +126,6 @@ export const MergePluginsController = () => {
                     }
                 }
 
-                console.log("merged plugin data", new_data);
                 return new_data;
             });
         };
