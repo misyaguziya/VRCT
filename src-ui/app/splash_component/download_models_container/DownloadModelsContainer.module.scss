@@ -51,6 +51,7 @@
 }
 
 $progress_ease: cubic-bezier(0, 1, 0.75, 1);
+// Duplicated
 .progress_bar {
     height: 8px;
     transition: width 0.3s $progress_ease;

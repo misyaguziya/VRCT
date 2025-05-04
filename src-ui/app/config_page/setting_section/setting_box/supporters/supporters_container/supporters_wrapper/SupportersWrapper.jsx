@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import clsx from "clsx";
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import styles from "./SupportersWrapper.module.scss";
 import { shuffleArray, randomIntMinMax, randomMinMax } from "@utils";
@@ -261,18 +262,39 @@ const SupporterLabelComponent = ({ item, target_plan, chato_src }) => {
 
 const SupporterPeriodContainer = ({ settings, calc_support_period }) => {
     const period_data = extractKeys(settings, calc_support_period);
+    const offset = {
+        popper: {
+            sx: {
+                [`&.${tooltipClasses.popper}[data-popper-placement*="top"] .${tooltipClasses.tooltip}`]: { marginBottom: "0.2em" },
+            }
+        }
+    };
+
     return (
         <div className={styles.supporter_period_container}>
             {Object.entries(period_data).map(([key, item], index) => {
                 if (item === "") return null;
-                const class_name = clsx(styles.period_box, {
+                const period_box_class_name = clsx(styles.period_box, {
                     [styles.mogu_bar]: item === "mogu_2000",
                     [styles.mochi_bar]: item === "mochi_1000",
                     [styles.fuwa_bar]: item === "fuwa_500",
                     [styles.basic_bar]: item === "basic_300",
                 });
 
-                return <div key={index} className={class_name}></div>;
+                return (
+                    <Tooltip
+                        key={index}
+                        title={
+                            <p className={styles.tooltip_period_label}>{key}</p>
+                        }
+                        placement="top"
+                        slotProps={offset}
+                    >
+                        <div className={styles.period_box_wrapper}>
+                            <div className={period_box_class_name}></div>
+                        </div>
+                    </Tooltip>
+                );
             })}
         </div>
     );
