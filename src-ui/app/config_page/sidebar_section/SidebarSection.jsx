@@ -45,7 +45,9 @@ const Tab = (props) => {
 
     const getLabel = () => {
         if (props.tab_id === "vr") return "VR";
-        if (props.tab_id === "supporters") return "Supporters";
+        if (props.tab_id === "supporters") return (
+            <>Supporters<span className={styles.crown_emoji}>👑</span></>
+        );
         if (props.tab_id === "about_vrct") return "About VRCT";
         return t(`config_page.side_menu_labels.${props.tab_id}`);
     };
