@@ -9,6 +9,7 @@ import {
     UiSizeController,
     FontFamilyController,
     TransparencyController,
+    CornerRadiusController,
     PluginsController,
 } from "./_app_controllers/index.js";
 
@@ -39,6 +40,7 @@ export const App = () => {
                 <UiSizeController />
                 <FontFamilyController />
                 <TransparencyController />
+                <CornerRadiusController />
 
                 {(currentIsBackendReady.data === false || currentIsVrctAvailable.data === false)
                     ? <SplashComponent />
