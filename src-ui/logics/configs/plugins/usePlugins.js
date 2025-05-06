@@ -227,7 +227,10 @@ export const usePlugins = () => {
                 plugins_data.map(async (plugin_data) => {
                     try {
                         const plugin_info = await asyncFetchPluginInfo(plugin_data.url);
-                        return plugin_info;
+                        return {
+                            ...plugin_info,
+                            homepage_link: plugin_data.homepage_link,
+                        };
                     } catch (error) {
                         console.error("Error fetching plugin info for URL: ", plugin_data.url, error);
                         return {
@@ -235,7 +238,8 @@ export const usePlugins = () => {
                             plugin_id: plugin_data.plugin_id || plugin_data.title,
                             is_error: true,
                             error_message: error.message,
-                            url: plugin_data.url
+                            url: plugin_data.url,
+                            homepage_link: plugin_data.homepage_link,
                         };
                     }
                 })
