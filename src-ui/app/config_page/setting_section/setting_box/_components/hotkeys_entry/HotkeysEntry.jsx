@@ -2,7 +2,7 @@ import styles from "./HotkeysEntry.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef, useEffect } from "react";
 import DeleteSvg from "@images/cancel.svg?react";
-import { clsx } from "clsx";
+import clsx from "clsx";
 
 export const HotkeysEntry = (props) => {
     const [isAcceptingInput, setIsAcceptingInput] = useState(false);

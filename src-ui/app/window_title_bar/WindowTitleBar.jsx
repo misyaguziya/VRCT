@@ -5,15 +5,17 @@ import SquareSvg from "@images/square.svg?react";
 import LineSvg from "@images/line.svg?react";
 import VrctSvg from "@images/vrct.svg?react";
 
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export const WindowTitleBar = () => {
 
-    const minimize = () => {
+    const asyncMinimize = async () => {
+        const appWindow = await getCurrentWindow();
         appWindow.minimize();
     };
 
-    const maximize = async () => {
+    const asyncMaximize = async () => {
+        const appWindow = await getCurrentWindow();
         const maximizeState = await appWindow.isMaximized();
         if (!maximizeState) {
             appWindow.maximize();
@@ -22,7 +24,8 @@ export const WindowTitleBar = () => {
         }
     };
 
-    const close = () => {
+    const asyncClose = async () => {
+        const appWindow = await getCurrentWindow();
         appWindow.close();
     };
 
@@ -34,13 +37,13 @@ export const WindowTitleBar = () => {
                 </div>
 
                 <div className={styles.window_control_wrapper}>
-                    <div className={styles.minimize_button} onClick={minimize}>
+                    <div className={styles.minimize_button} onClick={asyncMinimize}>
                         <LineSvg className={styles.line_svg}/>
                     </div>
-                    <div className={styles.maximize_button} onClick={maximize}>
+                    <div className={styles.maximize_button} onClick={asyncMaximize}>
                         <SquareSvg className={styles.square_svg}/>
                     </div>
-                    <div className={styles.close_button} onClick={close}>
+                    <div className={styles.close_button} onClick={asyncClose}>
                         <XMarkSvg className={styles.x_mark_svg}/>
                     </div>
                 </div>

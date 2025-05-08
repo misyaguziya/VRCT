@@ -320,6 +320,7 @@ class Model:
     def checkSoftwareUpdated():
         # check update
         update_flag = False
+        version = ""
         try:
             response = requests_get(config.GITHUB_URL)
             json_data = response.json()
@@ -331,7 +332,10 @@ class Model:
                     update_flag = True
         except Exception:
             errorLogging()
-        return update_flag
+        return {
+            "is_update_available": update_flag,
+            "new_version": version,
+        }
 
     @staticmethod
     def updateSoftware():

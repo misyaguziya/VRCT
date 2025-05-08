@@ -13,7 +13,7 @@
     align-content: start;
     flex-wrap: wrap;
     column-gap: 1.8rem;
-    row-gap: 1rem;
+    row-gap: 0.4rem;
 }
 
 .supporter_image_container {
@@ -21,12 +21,14 @@
     width: 18rem;
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
 }
 
 .supporter_image_wrapper {
     position: relative;
     overflow: hidden;
+    &:hover .supporter_icon_wrapper{
+        transform: rotate(360deg);
+    }
 }
 
 .supporter_image {
@@ -54,7 +56,8 @@
         height: 1.4rem;
     }
 }
-
+$progress_ease: cubic-bezier(0, 1, 0.75, 1);
+// Duplicated
 .supporter_icon_wrapper {
     height: 4rem;
     aspect-ratio: 1 /1;
@@ -62,6 +65,7 @@
     background-color: #ffffff;
     overflow: hidden;
     position: relative;
+    transition: transform 0.6s $progress_ease;
 }
 
 .supporter_icon {
@@ -226,6 +230,12 @@
     &.basic_bar {
         background-color: var(--dark_800_color);
     }
+}
+.period_box_wrapper {
+    padding: 0.3rem 0 0.4rem 0;
+}
+.tooltip_period_label {
+    font-size: 1.4rem;
 }
 
 

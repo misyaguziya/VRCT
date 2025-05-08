@@ -4,7 +4,7 @@ import RefreshSvg from "@images/refresh.svg?react";
 import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
-import { useIsSoftwareUpdateAvailable } from "@logics_common";
+import { useSoftwareVersion } from "@logics_common";
 import { useIsEnabledOverlaySmallLog, useIsEnabledOverlayLargeLog, useEnableVrcMicMuteSync } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
@@ -66,9 +66,9 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
 };
 
 const SoftwareUpdateAvailableButton = () => {
-    const { currentIsSoftwareUpdateAvailable } = useIsSoftwareUpdateAvailable();
+    const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { t } = useTranslation();
-    if (currentIsSoftwareUpdateAvailable.data === false) return null;
+    if (currentLatestSoftwareVersionInfo.data.is_update_available === false) return null;
 
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
 

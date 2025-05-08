@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { clsx } from "clsx";
+import clsx from "clsx";
 import styles from "./Vr.module.scss";
 import { ui_configs } from "@ui_configs";
 import { Slider } from "../_components/";

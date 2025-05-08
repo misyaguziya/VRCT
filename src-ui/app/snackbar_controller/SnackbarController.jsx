@@ -1,4 +1,4 @@
-import { clsx } from "clsx";
+import clsx from "clsx";
 import Snackbar from "@mui/material/Snackbar";
 import Slide from "@mui/material/Slide";
 

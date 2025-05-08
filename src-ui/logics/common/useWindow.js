@@ -1,15 +1,18 @@
-import { useEffect } from "react";
-import { appWindow, currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
+import { useEffect, useRef } from "react";
+import { getCurrentWindow, currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useStore_IsBreakPoint } from "@store";
 import { useUiScaling } from "@logics_configs";
+import { store } from "@store";
 
 export const useWindow = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentUiScaling } = useUiScaling();
     const { updateIsBreakPoint } = useStore_IsBreakPoint();
 
+
     const asyncGetWindowGeometry = async () => {
+        const appWindow = await getCurrentWindow();
         try {
             const position = await appWindow.outerPosition();
             const { x: x_pos, y: y_pos } = position;
@@ -29,6 +32,7 @@ export const useWindow = () => {
     };
 
     const asyncSaveWindowGeometry = async () => {
+        const appWindow = await getCurrentWindow();
         const minimized = await appWindow.isMinimized();
         if (minimized === true) return; // don't save while the window is minimized.
         const data = await asyncGetWindowGeometry();
@@ -36,6 +40,8 @@ export const useWindow = () => {
     };
 
     const restoreWindowGeometry = async (data) => {
+        const appWindow = await getCurrentWindow();
+
         try {
             const monitors = await availableMonitors();
             const { x_pos, y_pos, width, height } = data;
@@ -89,38 +95,53 @@ export const useWindow = () => {
     };
 
     const asyncUpdateBreakPoint = async () => {
+        const appWindow = await getCurrentWindow();
         const size = await appWindow.innerSize();
         const dynamicBreakPoint = 800 * (currentUiScaling.data / 100);
         updateIsBreakPoint(size.width <= dynamicBreakPoint);
     };
 
     const WindowGeometryController = () => {
-        useEffect(() => {
-            let resizeTimeout;
-            const asyncFunction = () => {
-                asyncSaveWindowGeometry();
-                asyncUpdateBreakPoint();
-            };
 
-            const unlistenResize = appWindow.onResized(() => {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(asyncFunction, 200);
-            });
-
-            return () => {
-                unlistenResize.then((dispose) => dispose());
-            };
-        }, []);
+        const resizeTimeout = useRef(null);
+        const moveTimeout   = useRef(null);
+        const unlistenResize = useRef(null);
+        const unlistenMove   = useRef(null);
 
         useEffect(() => {
-            let moveTimeout;
-            const unlistenMove = appWindow.onMoved(() => {
-                clearTimeout(moveTimeout);
-                moveTimeout = setTimeout(asyncSaveWindowGeometry, 200);
-            });
+            const setup = async () => {
+                if (store.is_register_window_geometry_controller) return;
+                const appWindow = await getCurrentWindow();
+
+                unlistenResize.current = appWindow.onResized(() => {
+                    clearTimeout(resizeTimeout.current);
+                    resizeTimeout.current = setTimeout(() => {
+                        asyncSaveWindowGeometry();
+                        asyncUpdateBreakPoint();
+                    }, 200);
+                });
+
+                unlistenMove.current = appWindow.onMoved(() => {
+                    clearTimeout(moveTimeout.current);
+                    moveTimeout.current = setTimeout(() => {
+                        asyncSaveWindowGeometry();
+                    }, 200);
+                });
+                store.is_register_window_geometry_controller = true;
+            };
+
+            setup();
 
             return () => {
-                unlistenMove.then((dispose) => dispose());
+                if (unlistenResize.current) {
+                    unlistenResize.current.then(dispose => dispose());
+                }
+                if (unlistenMove.current) {
+                    unlistenMove.current.then(dispose => dispose());
+                }
+
+                clearTimeout(resizeTimeout.current);
+                clearTimeout(moveTimeout.current);
             };
         }, []);
 
