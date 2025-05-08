@@ -12,6 +12,7 @@ export const SidebarSection = () => {
                     <Tab tab_id="vr" />
                     <Tab tab_id="others" />
                     <Tab tab_id="hotkeys" />
+                    {/* <Tab tab_id="plugins" /> */}
                     <Tab tab_id="advanced_settings" />
                 </div>
                 <div className={styles.separated_tabs_wrapper}>
@@ -44,7 +45,9 @@ const Tab = (props) => {
 
     const getLabel = () => {
         if (props.tab_id === "vr") return "VR";
-        if (props.tab_id === "supporters") return "Supporters";
+        if (props.tab_id === "supporters") return (
+            <>Supporters<span className={styles.crown_emoji}>👑</span></>
+        );
         if (props.tab_id === "about_vrct") return "About VRCT";
         return t(`config_page.side_menu_labels.${props.tab_id}`);
     };

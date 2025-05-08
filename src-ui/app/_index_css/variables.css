@@ -19,6 +19,7 @@
     --primary_600_color_44: #36877744;
 
     --sent_400_color: #6197b4;
+    --sent_300_color: #6197b4;
     --received_300_color: #a861b4;
     --error_bc_color: #bb4448;
     --error_bc_active_color: #9c3938;
@@ -66,3 +67,4 @@
 
     --font_family: "Yu Gothic UI";
 }
+/* https://m2.material.io/design/color/the-color-system.html#tools-for-picking-colors */

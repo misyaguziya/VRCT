@@ -4,7 +4,7 @@ import { StartUpProgressContainer } from "./start_up_progress_container/StartUpP
 import { DownloadModelsContainer } from "./download_models_container/DownloadModelsContainer/";
 import MegaphoneSvg from "@images/megaphone.svg?react";
 import XMarkSvg from "@images/cancel.svg?react";
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import clsx from "clsx";
 
 export const SplashComponent = () => {
@@ -73,12 +73,13 @@ const AnnouncementsContainer = () => {
 
 
 const CloseButtonContainer = () => {
-    const close = () => {
+    const asyncClose = async () => {
+        const appWindow = await getCurrentWindow();
         appWindow.close();
     };
 
     return (
-        <button className={styles.close_button_wrapper} onClick={close}>
+        <button className={styles.close_button_wrapper} onClick={asyncClose}>
             <div className={styles.close_button}>
                 <XMarkSvg className={styles.x_mark_svg}/>
             </div>

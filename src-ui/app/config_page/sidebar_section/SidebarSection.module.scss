@@ -60,9 +60,18 @@
 }
 
 .tab_text {
-    overflow: hidden;
+    // overflow: hidden;
     font-size: 1.6rem;
-    text-overflow: ellipsis;
+    // text-overflow: ellipsis;
+    position: relative;
+}
+.crown_emoji {
+    font-size: 1.6rem;
+    position: absolute;
+    top: 40%;
+    left: 100%;
+    transform: translateY(-50%);
+    padding-left: 0.4rem;
 }
 
 .separated_tabs_wrapper {

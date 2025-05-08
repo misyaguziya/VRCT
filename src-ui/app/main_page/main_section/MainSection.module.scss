@@ -4,7 +4,8 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    // justify-content: space-between;
+    overflow-y: auto;
 }
 
 .language_selector_container {

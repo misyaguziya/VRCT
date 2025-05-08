@@ -1,10 +1,10 @@
-import { appWindow } from "@tauri-apps/api/window";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { store, useStore_Hotkeys } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
 import { useMainFunction } from "@logics_main";
-import { register, unregisterAll, isRegistered } from "@tauri-apps/api/globalShortcut";
+import { register, unregisterAll, isRegistered } from "@tauri-apps/plugin-global-shortcut";
 
 export const useHotkeys = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -66,16 +66,19 @@ export const useHotkeys = () => {
                 const isAlreadyRegistered = await isRegistered(shortcut);
 
                 if (!isAlreadyRegistered) {
-                    await register(shortcut, async () => {
+                    await register(shortcut, async (event) => {
+                        if (event.state !== "Pressed") return;
+                        const appWindow = await getCurrentWindow();
+
                         switch (actionKey) {
                             case "toggle_vrct_visibility": {
                                 const minimized = await appWindow.isMinimized();
                                 if (minimized) {
-                                    appWindow.unminimize();
+                                    await appWindow.unminimize();
                                     await appWindow.setFocus();
                                     store.text_area_ref.current?.focus();
                                 } else {
-                                    appWindow.minimize();
+                                    await appWindow.minimize();
                                 }
                                 break;
                             }

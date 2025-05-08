@@ -588,25 +588,9 @@ Section Install
 
   !insertmacro CheckIfAppIsRunning
 
-  ; ; Copy main executable
-  ; File "${MAINBINARYSRCPATH}"
-
-  ; ; Copy resources
-  ; {{#each resources_dirs}}
-  ;   CreateDirectory "$INSTDIR\\{{this}}"
-  ; {{/each}}
-  ; {{#each resources}}
-  ;   File /a "/oname={{this.[1]}}" "{{unescape-dollar-sign @key}}"
-  ; {{/each}}
-
-  ; ; Copy external binaries
-  ; {{#each binaries}}
-  ;   File /a "/oname={{this}}" "{{unescape-dollar-sign @key}}"
-  ; {{/each}}
-
   !addplugindir "..\..\..\..\nsis\plugins\x86-unicode"
   ; 指定のURLからファイルをダウンロード
-  !define SOFTWARE_RELEASE_URL "https://huggingface.co/misyaguziya/VRCT/resolve/main"
+  !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
