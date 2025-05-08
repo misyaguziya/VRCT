@@ -24,6 +24,7 @@ class OSCHandler:
         self.osc_server_ip_address = ip_address
         self.http_port = None
         self.osc_server_port = None
+        self.browser = None
 
     def setOscIpAddress(self, ip_address:str) -> None:
         self.osc_ip_address = ip_address
@@ -45,18 +46,26 @@ class OSCHandler:
     def getOSCParameterValue(self, address:str) -> Any:
         value = None
         try:
-            browser = OSCQueryBrowser()
-            sleep(1)
-            service = browser.find_service_by_name(self.osc_server_name)
+            # browserインスタンスを再利用し、毎回の生成と破棄を避ける
+            if self.browser is None:
+                self.browser = OSCQueryBrowser()
+                sleep(1)  # 初回のみスリープ
+
+            service = self.browser.find_service_by_name(self.osc_server_name)
             if service is not None:
                 osc_query_client = OSCQueryClient(service)
                 mute_self_node = osc_query_client.query_node(address)
                 value = mute_self_node.value[0]
-            browser.zc.close()
-            browser.browser.cancel()
-
         except Exception:
             errorLogging()
+            # エラー発生時にbrowserをリセットして次回再初期化
+            if self.browser is not None:
+                try:
+                    self.browser.zc.close()
+                    self.browser.browser.cancel()
+                except Exception:
+                    pass
+                self.browser = None
         return value
 
     def getOSCParameterMuteSelf(self) -> bool:
@@ -82,7 +91,8 @@ class OSCHandler:
                 sleep(1)
 
     def oscServerServe(self) -> None:
-        self.osc_server.serve_forever(2)
+        # ポーリング間隔を長くして（2秒から10秒に）CPUの使用率を削減
+        self.osc_server.serve_forever(10)
 
     def oscServerStop(self) -> None:
         if isinstance(self.osc_server, osc_server.ThreadingOSCUDPServer):
@@ -91,6 +101,14 @@ class OSCHandler:
         if isinstance(self.osc_query_service, OSCQueryService):
             self.osc_query_service.http_server.shutdown()
             self.osc_query_service = None
+        # browserがある場合はクリーンアップ
+        if self.browser is not None:
+            try:
+                self.browser.zc.close()
+                self.browser.browser.cancel()
+            except Exception:
+                pass
+            self.browser = None
 
 if __name__ == "__main__":
     handler = OSCHandler()
