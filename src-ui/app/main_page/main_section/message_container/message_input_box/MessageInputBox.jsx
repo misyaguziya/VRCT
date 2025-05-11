@@ -5,7 +5,6 @@ import { useMessage } from "@logics_common";
 import { useSendMessageButtonType, useEnableAutoClearMessageInputBox } from "@logics_configs";
 import { useMessageLogScroll } from "@logics_main";
 import { store } from "@store";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 export const MessageInputBox = () => {
     const [message_history, setMessageHistory] = useState([]);
@@ -41,8 +40,6 @@ export const MessageInputBox = () => {
 
     const onSubmitFunction = (e) => {
         e.preventDefault();
-        // const appWindow = getCurrentWindow();
-        // appWindow.minimize();
 
         if (!currentMessageInputValue.data.trim()) return updateMessageInputValue("");
 

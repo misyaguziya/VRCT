@@ -1,4 +1,4 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { store } from "@store";
 
 import {
     useStore_TranslationStatus,
@@ -6,10 +6,11 @@ import {
     useStore_TranscriptionReceiveStatus,
     useStore_ForegroundStatus,
 } from "@store";
-import { useCallback } from "react";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 
 export const useMainFunction = () => {
+    const appWindow = store.appWindow;
+
     const {
         currentTranslationStatus,
         updateTranslationStatus,
@@ -76,9 +77,8 @@ export const useMainFunction = () => {
 
 
     const toggleForeground = async () => {
-        const main_page = await getCurrentWindow();
         const is_foreground_enabled = !currentForegroundStatus.data;
-        main_page.setAlwaysOnTop(is_foreground_enabled);
+        await appWindow.setAlwaysOnTop(is_foreground_enabled);
         updateForegroundStatus(is_foreground_enabled);
     };
 
