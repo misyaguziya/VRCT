@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { getCurrentWindow, currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
+import { currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useStore_IsBreakPoint } from "@store";
 import { useUiScaling } from "@logics_configs";
@@ -10,9 +10,9 @@ export const useWindow = () => {
     const { currentUiScaling } = useUiScaling();
     const { updateIsBreakPoint } = useStore_IsBreakPoint();
 
+    const appWindow = store.appWindow;
 
     const asyncGetWindowGeometry = async () => {
-        const appWindow = await getCurrentWindow();
         try {
             const position = await appWindow.outerPosition();
             const { x: x_pos, y: y_pos } = position;
@@ -32,7 +32,6 @@ export const useWindow = () => {
     };
 
     const asyncSaveWindowGeometry = async () => {
-        const appWindow = await getCurrentWindow();
         const minimized = await appWindow.isMinimized();
         if (minimized === true) return; // don't save while the window is minimized.
         const data = await asyncGetWindowGeometry();
@@ -40,8 +39,6 @@ export const useWindow = () => {
     };
 
     const restoreWindowGeometry = async (data) => {
-        const appWindow = await getCurrentWindow();
-
         try {
             const monitors = await availableMonitors();
             const { x_pos, y_pos, width, height } = data;
@@ -95,7 +92,6 @@ export const useWindow = () => {
     };
 
     const asyncUpdateBreakPoint = async () => {
-        const appWindow = await getCurrentWindow();
         const size = await appWindow.innerSize();
         const dynamicBreakPoint = 800 * (currentUiScaling.data / 100);
         updateIsBreakPoint(size.width <= dynamicBreakPoint);
@@ -109,10 +105,7 @@ export const useWindow = () => {
         const unlistenMove   = useRef(null);
 
         useEffect(() => {
-            const setup = async () => {
-                if (store.is_register_window_geometry_controller) return;
-                const appWindow = await getCurrentWindow();
-
+            const setup = () => {
                 unlistenResize.current = appWindow.onResized(() => {
                     clearTimeout(resizeTimeout.current);
                     resizeTimeout.current = setTimeout(() => {
@@ -127,7 +120,6 @@ export const useWindow = () => {
                         asyncSaveWindowGeometry();
                     }, 200);
                 });
-                store.is_register_window_geometry_controller = true;
             };
 
             setup();
@@ -148,10 +140,30 @@ export const useWindow = () => {
         return null;
     };
 
+    const asyncToggleMaximizeApp = async () => {
+        const maximizeState = await appWindow.isMaximized();
+        if (!maximizeState) {
+            await appWindow.maximize();
+        } else {
+            await appWindow.unmaximize();
+        }
+    };
+
+    const asyncMinimizeApp = async () => {
+        await appWindow.minimize();
+    };
+    const asyncCloseApp = async () => {
+        await appWindow.close();
+    };
+
     return {
         WindowGeometryController,
         asyncSaveWindowGeometry,
         restoreWindowGeometry,
         asyncUpdateBreakPoint,
+
+        asyncCloseApp,
+        asyncToggleMaximizeApp,
+        asyncMinimizeApp,
     };
 };
