@@ -80,6 +80,7 @@ config_page:
         transcription: "音声認識"
         others: "その他"
         hotkeys: "ホットキー"
+        plugins: "プラグイン"
         advanced_settings: "高度な設定"
 
     device:
@@ -235,17 +236,6 @@ config_page:
         toggle_transcription_receive:
             label: "「{{transcription_receive}}」 オン/オフの切り替え"
 
-    advanced_settings:
-        osc_ip_address:
-            label: "OSC IP Address"
-        osc_port:
-            label: "OSC Port"
-        open_config_filepath:
-            label: "設定ファイルを開く"
-        switch_compute_device:
-            label: "VRCT CPU/GPUバージョンの切り替え"
-        section_label_plugins: プラグイン # Exception, It'll be moved later.
-
     plugins:
         downloaded_version: "ダウンロード済バージョン: {{downloaded_version}}"
         latest_version: "最新バージョン: {{latest_version}}"
@@ -257,6 +247,17 @@ config_page:
         unavailable_latest_version: 最新版は現在利用不可
         available_in_latest_vrct_version: VRCT最新版で利用可能
         unavailable_not_downloaded: 現在利用不可
+
+    advanced_settings:
+        osc_ip_address:
+            label: "OSC IP Address"
+        osc_port:
+            label: "OSC Port"
+        open_config_filepath:
+            label: "設定ファイルを開く"
+        switch_compute_device:
+            label: "VRCT CPU/GPUバージョンの切り替え"
+
 
 plugin_notifications:
     downloading: プラグインをダウンロード中。
