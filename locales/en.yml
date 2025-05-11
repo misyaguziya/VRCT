@@ -80,6 +80,7 @@ config_page:
         transcription: "Transcription"
         others: "Other"
         hotkeys: "Hotkeys"
+        plugins: "Plugins"
         advanced_settings: "Advanced Settings"
 
     device:
@@ -235,17 +236,6 @@ config_page:
         toggle_transcription_receive:
             label: "Toggle {{transcription_receive}}"
 
-    advanced_settings:
-        osc_ip_address:
-            label: "OSC IP Address"
-        osc_port:
-            label: "OSC Port"
-        open_config_filepath:
-            label: "Open Config File"
-        switch_compute_device:
-            label: "Switch VRCT To CPU/GPU Version"
-        section_label_plugins: Plugins # Exception, It'll be moved later.
-
     plugins:
         downloaded_version: "Downloaded version: {{downloaded_version}}"
         latest_version: "Latest version: {{latest_version}}"
@@ -257,6 +247,16 @@ config_page:
         unavailable_latest_version: "Latest version currently unavailable"
         available_in_latest_vrct_version: "Available in the latest VRCT version"
         unavailable_not_downloaded: "Currently unavailable"
+
+    advanced_settings:
+        osc_ip_address:
+            label: "OSC IP Address"
+        osc_port:
+            label: "OSC Port"
+        open_config_filepath:
+            label: "Open Config File"
+        switch_compute_device:
+            label: "Switch VRCT To CPU/GPU Version"
 
 plugin_notifications:
     downloading: Downloading the plugin.
