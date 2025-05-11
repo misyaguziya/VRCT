@@ -5,7 +5,7 @@ import "./_index_css/root.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import { store } from "@store";
-store.appWindow = await getCurrentWindow();
+store.appWindow = getCurrentWindow();
 
 import { App } from "./App";
 
