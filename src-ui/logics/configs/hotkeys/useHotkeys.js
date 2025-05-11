@@ -1,5 +1,3 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
-
 import { store, useStore_Hotkeys } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
@@ -7,6 +5,8 @@ import { useMainFunction } from "@logics_main";
 import { register, unregisterAll, isRegistered } from "@tauri-apps/plugin-global-shortcut";
 
 export const useHotkeys = () => {
+    const appWindow = store.appWindow;
+
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentHotkeys, updateHotkeys, pendingHotkeys } = useStore_Hotkeys();
     const {
@@ -68,8 +68,6 @@ export const useHotkeys = () => {
                 if (!isAlreadyRegistered) {
                     await register(shortcut, async (event) => {
                         if (event.state !== "Pressed") return;
-                        const appWindow = await getCurrentWindow();
-
                         switch (actionKey) {
                             case "toggle_vrct_visibility": {
                                 const minimized = await appWindow.isMinimized();
