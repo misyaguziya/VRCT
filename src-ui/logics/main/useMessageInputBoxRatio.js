@@ -1,8 +1,9 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { store } from "@store";
 import { useStore_MessageInputBoxRatio } from "@store";
 import { useStdoutToPython } from "@logics/useStdoutToPython";
 import { clampMinMax } from "@utils";
 export const useMessageInputBoxRatio = () => {
+    const appWindow = store.appWindow;
 
     const { asyncStdoutToPython } = useStdoutToPython();
     const { currentMessageInputBoxRatio, updateMessageInputBoxRatio } = useStore_MessageInputBoxRatio();
@@ -12,7 +13,6 @@ export const useMessageInputBoxRatio = () => {
     };
 
     const asyncSetMessageInputBoxRatio = async (ratio) => {
-        const appWindow = getCurrentWindow();
         const minimized = await appWindow.isMinimized();
         if (minimized === true) return; // don't save while the window is minimized.
         const parsed = parseFloat(ratio.toFixed(2));
