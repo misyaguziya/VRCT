@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./AdvancedSettings.module.scss";
 
-import { Plugins } from "./plugins/Plugins";
-
 import { useOpenFolder } from "@logics_common";
 import {
     useOscIpAddress,
@@ -15,30 +13,17 @@ import {
     EntryWithSaveButtonContainer,
 } from "../_templates/Templates";
 
-import {
-    SectionLabelComponent,
-} from "../_components/";
-
-
 import OpenFolderSvg from "@images/open_folder.svg?react";
 import HelpSvg from "@images/help.svg?react";
 
 export const AdvancedSettings = () => {
-    const { t } = useTranslation();
-
     return (
         <div className={styles.container}>
             <div>
-
                 <OscIpAddressContainer />
                 <OscPortContainer />
                 <OpenConfigFolderContainer />
                 <OpenSwitchComputeDeviceModalContainer />
-            </div>
-
-            <div>
-                <SectionLabelComponent label={t("config_page.advanced_settings.section_label_plugins")} />
-                <Plugins />
             </div>
         </div>
     );
