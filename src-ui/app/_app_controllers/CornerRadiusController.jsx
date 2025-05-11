@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { store } from "@store";
 
 export const CornerRadiusController = () => {
     const [is_win11, setIsWin11] = useState(false);
     const [is_maximized, setIsMaximized] = useState(false);
+
+    const appWindow = store.appWindow;
 
     // OS 判定（Win11 なら platformVersion の major ≥13）
     useEffect(() => {
@@ -27,12 +29,11 @@ export const CornerRadiusController = () => {
     useEffect(() => {
         let unlisten;
         const setup = async () => {
-            const window = await getCurrentWindow();
             // 初期状態取得
-            setIsMaximized(await window.isMaximized());
+            setIsMaximized(await appWindow.isMaximized());
             // リサイズ時にも再取得
-            const updateMax = () => window.isMaximized().then(setIsMaximized);
-            unlisten = await window.listen("tauri://resize", updateMax);
+            const updateMax = () => appWindow.isMaximized().then(setIsMaximized);
+            unlisten = await appWindow.listen("tauri://resize", updateMax);
         }
         setup();
 
