@@ -5,7 +5,7 @@ transformers==4.40.2
 pillow == 10.0.0
 PyAudioWPatch == 0.2.12.6
 python-osc == 1.9.0
-deepl == 1.15.0
+deepl == 1.22.0
 flashtext ==2.7
 pyinstaller==6.10.0
 numpy==1.26.4
