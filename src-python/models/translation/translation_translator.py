@@ -1,5 +1,5 @@
 from os import path as os_path
-from deepl import Translator as deepl_Translator
+from deepl import DeepLClient
 try:
     from translators import translate_text as other_web_Translator
     ENABLE_TRANSLATORS = True
@@ -28,7 +28,7 @@ class Translator():
     def authenticationDeepLAuthKey(self, authkey):
         result = True
         try:
-            self.deepl_client = deepl_Translator(authkey)
+            self.deepl_client = DeepLClient(authkey)
             self.deepl_client.translate_text(" ", target_lang="EN-US")
         except Exception:
             errorLogging()
