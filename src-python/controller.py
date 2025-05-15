@@ -1172,7 +1172,7 @@ class Controller:
                     response = {
                         "status":400,
                         "result":{
-                            "message":"DeepL auth key length is not correct",
+                            "message":"Authentication failure of deepL auth key",
                             "data": config.AUTH_KEYS[translator_name]
                         }
                     }
@@ -1180,7 +1180,7 @@ class Controller:
                 response = {
                     "status":400,
                     "result":{
-                        "message":"Authentication failure of deepL auth key",
+                        "message":"DeepL auth key length is not correct",
                         "data": config.AUTH_KEYS[translator_name]
                     }
                 }
