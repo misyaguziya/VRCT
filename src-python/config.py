@@ -954,6 +954,37 @@ class Config:
             self._NOTIFICATION_VRC_SFX = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
+    @property
+    def WEBSOCKET_SERVER(self):
+        return self._WEBSOCKET_SERVER
+
+    @WEBSOCKET_SERVER.setter
+    def WEBSOCKET_SERVER(self, value):
+        if isinstance(value, bool):
+            self._WEBSOCKET_SERVER = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    def WEBSOCKET_HOST(self):
+        return self._WEBSOCKET_HOST
+
+    @WEBSOCKET_HOST.setter
+    def WEBSOCKET_HOST(self, value):
+        if isinstance(value, str):
+            self._WEBSOCKET_HOST = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    def WEBSOCKET_PORT(self):
+        return self._WEBSOCKET_PORT
+
+    @WEBSOCKET_PORT.setter
+    def WEBSOCKET_PORT(self, value):
+        if isinstance(value, int):
+            self._WEBSOCKET_PORT = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+
     def init_config(self):
         # Read Only
         self._VERSION = "3.1.1"
@@ -1139,6 +1170,9 @@ class Config:
         self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
         self._NOTIFICATION_VRC_SFX = True
+        self._WEBSOCKET_SERVER = True
+        self._WEBSOCKET_HOST = "0.0.0.0"
+        self._WEBSOCKET_PORT = 8765
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:

@@ -1,30 +1,29 @@
 import asyncio
 import json
 import logging
-from typing import Dict, Set, Optional
+from typing import Dict, Set
 import websockets
-from websockets.server import WebSocketServerProtocol
 
 class WebSocketServer:
     def __init__(self, host: str = "0.0.0.0", port: int = 8765):
         self.host = host
         self.port = port
-        self.clients: Set[WebSocketServerProtocol] = set()
+        self.clients = set()
         self.server = None
         self.is_running = False
         self.logger = logging.getLogger('websocket_server')
 
-    async def register(self, websocket: WebSocketServerProtocol):
+    async def register(self, websocket):
         """クライアント接続を登録する"""
         self.clients.add(websocket)
         self.logger.info(f"クライアント接続: {websocket.remote_address}, 現在の接続数: {len(self.clients)}")
 
-    async def unregister(self, websocket: WebSocketServerProtocol):
+    async def unregister(self, websocket):
         """クライアント接続を解除する"""
         self.clients.remove(websocket)
         self.logger.info(f"クライアント切断: {websocket.remote_address}, 現在の接続数: {len(self.clients)}")
 
-    async def handler(self, websocket: WebSocketServerProtocol, path: str):
+    async def handler(self, websocket):
         """WebSocket接続ハンドラー"""
         await self.register(websocket)
         try:
@@ -46,17 +45,17 @@ class WebSocketServer:
         tasks = [client.send(json_message) for client in self.clients]
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    def send_transcription(self, transcription_data: Dict):
-        """文字起こし結果を送信する関数（通常のコードから呼び出し可能）"""
+    def send_message(self, message: Dict):
+        """メッセージを送信する関数（通常のコードから呼び出し可能）"""
         if not self.is_running or not self.clients:
             return
 
         # asyncioのイベントループがあれば利用し、なければ新たに作成
         loop = asyncio.get_event_loop() if asyncio.get_event_loop().is_running() else asyncio.new_event_loop()
-        
+
         # ブロードキャスト関数を実行
         asyncio.run_coroutine_threadsafe(
-            self.broadcast(transcription_data),
+            self.broadcast(message),
             loop
         )
 
@@ -100,3 +99,15 @@ class WebSocketServer:
 
         loop = asyncio.get_event_loop()
         asyncio.run_coroutine_threadsafe(self.stop_server(), loop)
+
+    def is_running(self) -> bool:
+        """サーバーが実行中かどうかを確認する"""
+        return self.is_running
+
+    def get_clients(self) -> Set:
+        """現在のクライアント接続を取得する"""
+        return self.clients
+
+    def get_client_count(self) -> int:
+        """現在のクライアント接続数を取得する"""
+        return len(self.clients)

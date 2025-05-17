@@ -294,6 +294,17 @@ class Controller:
                         "translation":translation,
                         "transliteration":transliteration
                     })
+
+                if config.WEBSOCKET_SERVER is True:
+                    model.websocketSendMessage(
+                        {
+                            "type":"SEND",
+                            "message":message,
+                            "translation":translation,
+                            "transliteration":transliteration
+                        }
+                    )
+
                 if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
@@ -377,6 +388,17 @@ class Controller:
                         "translation":translation,
                         "transliteration":transliteration,
                     })
+
+                if config.WEBSOCKET_SERVER is True:
+                    model.websocketSendMessage(
+                        {
+                            "type":"RECEIVED",
+                            "message":message,
+                            "translation":translation,
+                            "transliteration":transliteration
+                        }
+                    )
+
                 if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
@@ -433,6 +455,16 @@ class Controller:
                 else:
                     overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                 model.updateOverlayLargeLog(overlay_image)
+
+            if config.WEBSOCKET_SERVER is True:
+                model.websocketSendMessage(
+                    {
+                        "type":"CHAT",
+                        "message":message,
+                        "translation":translation,
+                        "transliteration":transliteration
+                    }
+                )
 
             # update textbox message log (Sent)
             if config.LOGGER_FEATURE is True:
@@ -1778,6 +1810,46 @@ class Controller:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
+    @staticmethod
+    def getWebSocketHost(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_HOST}
+
+    @staticmethod
+    def setWebSocketHost(data, *args, **kwargs) -> dict:
+        config.WEBSOCKET_HOST = data
+        if model.checkWebSocketServer() is True:
+            model.stopWebSocketServer()
+            model.startWebSocketServer()
+        return {"status":200, "result":config.WEBSOCKET_HOST}
+
+    @staticmethod
+    def getWebSocketPort(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_PORT}
+
+    @staticmethod
+    def setWebSocketPort(data, *args, **kwargs) -> dict:
+        config.WEBSOCKET_PORT = int(data)
+        if model.checkWebSocketServer() is True:
+            model.stopWebSocketServer()
+            model.startWebSocketServer()
+        return {"status":200, "result":config.WEBSOCKET_PORT}
+
+    @staticmethod
+    def getWebSocketServer(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_SERVER}
+
+    @staticmethod
+    def setEnableWebSocketServer(*args, **kwargs) -> dict:
+        config.WEBSOCKET_SERVER = True
+        model.startWebSocketServer()
+        return {"status":200, "result":config.WEBSOCKET_SERVER}
+
+    @staticmethod
+    def setDisableWebSocketServer(*args, **kwargs) -> dict:
+        config.WEBSOCKET_SERVER = False
+        model.stopWebSocketServer()
+        return {"status":200, "result":config.WEBSOCKET_SERVER}
+
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)
 
@@ -1825,41 +1897,7 @@ class Controller:
 
         printLog("Init Translation Engine Status")
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
-            match engine:
-                case "CTranslate2":
-                    if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is True:
-                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
-                case "DeepL_API":
-                    printLog("Start check DeepL API Key")
-                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
-                    if config.AUTH_KEYS[engine] is not None:
-                        if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
-                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                        else:
-                            # error update Auth key
-                            auth_keys = config.AUTH_KEYS
-                            auth_keys[engine] = None
-                            config.AUTH_KEYS = auth_keys
-                case _:
-                    if connected_network is True:
-                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
-
-        for engine in config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
-            match engine:
-                case "Whisper":
-                    if model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is True:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
-                case _:
-                    if connected_network is True:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
-                    else:
-                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+            config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
         self.initializationProgress(2)
 
         # set Translation Engine
@@ -1910,6 +1948,10 @@ class Controller:
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
             model.startOverlay()
+
+        printLog("Init WebSocket Server")
+        if config.WEBSOCKET_SERVER is True:
+            model.startWebSocketServer()
 
         printLog("Update settings")
         self.updateConfigSettings()
