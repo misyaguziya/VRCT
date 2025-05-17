@@ -29,6 +29,7 @@ from models.transcription.transcription_whisper import checkWhisperWeight, downl
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
+from models.websocket.websocket_server import WebSocketServer
 from utils import errorLogging, setupLogger
 
 class threadFnc(Thread):
@@ -99,6 +100,50 @@ class Model:
         self.kks = kakasi()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
+
+        # WebSocketサーバーの初期化
+        self.websocket_server = WebSocketServer(
+            host=config.WEBSOCKET_HOST,
+            port=config.WEBSOCKET_PORT
+        )
+        self.th_websocket_server = None
+
+    def startWebSocketServer(self):
+        if self.th_websocket_server is None:
+            from threading import Thread
+            def run_server():
+                try:
+                    self.websocket_server.start()
+                except Exception:
+                    errorLogging()
+            self.th_websocket_server = Thread(target=run_server, daemon=True)
+            self.th_websocket_server.start()
+
+    def stopWebSocketServer(self):
+        if self.websocket_server:
+            try:
+                self.websocket_server.stop()
+            except Exception:
+                errorLogging()
+        self.th_websocket_server = None
+
+    def checkWebSocketServer(self):
+        if self.websocket_server:
+            try:
+                return self.websocket_server.is_running
+            except Exception:
+                errorLogging()
+        return False
+
+    def websocketSendMessage(self, message_dict):
+        """
+        WebSocketサーバーから全クライアントにメッセージを送信する
+        :param message_dict: 送信する辞書型データ
+        """
+        try:
+            self.websocket_server.send_message(message_dict)
+        except Exception:
+            errorLogging()
 
     def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
