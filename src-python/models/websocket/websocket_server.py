@@ -14,7 +14,7 @@ class WebSocketServer:
     - メッセージのブロードキャスト機能
     - GUIスレッド等からメッセージ送信するためのキュー
     """
-    def __init__(self, host: str='localhost', port: int=8765):
+    def __init__(self, host: str='127.0.0.1', port: int=8765):
         """
         サーバーのホスト名とポートを指定して初期化します。
         """

@@ -965,6 +965,7 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('WEBSOCKET_HOST')
     def WEBSOCKET_HOST(self):
         return self._WEBSOCKET_HOST
 
@@ -975,6 +976,7 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('WEBSOCKET_PORT')
     def WEBSOCKET_PORT(self):
         return self._WEBSOCKET_PORT
 
@@ -1171,8 +1173,8 @@ class Config:
         self._VRC_MIC_MUTE_SYNC = False
         self._NOTIFICATION_VRC_SFX = True
         self._WEBSOCKET_SERVER = True
-        self._WEBSOCKET_HOST = "0.0.0.0"
-        self._WEBSOCKET_PORT = 8765
+        self._WEBSOCKET_HOST = "127.0.0.1"
+        self._WEBSOCKET_PORT = 2231
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
