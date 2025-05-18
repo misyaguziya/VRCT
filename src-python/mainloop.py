@@ -291,6 +291,15 @@ mapping = {
     "/set/enable/send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
     "/set/disable/send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
 
+    # WebSocket Settings
+    "/get/data/websocket_host": {"status": True, "variable":controller.getWebSocketHost},
+    "/set/data/websocket_host": {"status": True, "variable":controller.setWebSocketHost},
+    "/get/data/websocket_port": {"status": True, "variable":controller.getWebSocketPort},
+    "/set/data/websocket_port": {"status": True, "variable":controller.setWebSocketPort},
+    "/get/data/websocket_server": {"status": True, "variable":controller.getWebSocketServer},
+    "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
+    "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},

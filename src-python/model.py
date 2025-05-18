@@ -1,5 +1,7 @@
 import copy
 import gc
+import asyncio
+import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
 from os import path as os_path
@@ -29,6 +31,7 @@ from models.transcription.transcription_whisper import checkWhisperWeight, downl
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
+from models.websocket.websocket_server import WebSocketServer
 from utils import errorLogging, setupLogger
 
 class threadFnc(Thread):
@@ -99,6 +102,10 @@ class Model:
         self.kks = kakasi()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
+        self.websocket_server = None
+        self.websocket_server_loop = False
+        self.websocket_server_alive = False
+        self.th_websocket_server = None
 
     def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
@@ -826,5 +833,83 @@ class Model:
             self.th_watchdog.stop()
             self.th_watchdog.join()
             self.th_watchdog = None
+
+    def message_handler(websocket, message):
+        """WebSocketメッセージ受信時の処理"""
+        pass
+
+    def startWebSocketServer(self):
+        """WebSocketサーバーを起動し、別スレッドで実行する"""
+        self.websocket_server_loop = True
+        self.websocket_server_alive = False  # 初期状態を明示
+
+        async def WebSocketServerMain():
+            try:
+                self.websocket_server = WebSocketServer(
+                    host=config.WEBSOCKET_HOST,
+                    port=config.WEBSOCKET_PORT,
+                )
+                self.websocket_server.set_message_handler(self.message_handler)
+                self.websocket_server.start()
+                self.websocket_server_alive = True
+
+                # イベントループが終了するまで待機
+                while self.websocket_server_loop:
+                    self.websocket_server.send("Server is running...")
+                    await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
+
+            except Exception:
+                errorLogging()
+                # 具体的なエラー内容をログに残す場合
+                # self.logger.error(f"WebSocket server error: {str(e)}")
+            finally:
+                # 確実にサーバーを停止
+                if hasattr(self, 'websocket_server') and self.websocket_server:
+                    self.websocket_server.stop()
+                self.websocket_server_alive = False
+
+        self.th_websocket_server = Thread(target=lambda: asyncio.run(WebSocketServerMain()))
+        self.th_websocket_server.daemon = True
+        self.th_websocket_server.start()
+
+    def stopWebSocketServer(self):
+        """WebSocketサーバーを停止する"""
+        if not hasattr(self, 'th_websocket_server') or self.th_websocket_server is None:
+            return
+
+        self.websocket_server_loop = False
+
+        try:
+            # 一定時間待機してからタイムアウト
+            self.th_websocket_server.join(timeout=2.0)
+
+            if self.th_websocket_server.is_alive():
+                # タイムアウト後もスレッドが生きている場合の処理
+                self.logger.warning("WebSocket server thread did not terminate properly")
+        except Exception:
+            errorLogging()
+        finally:
+            self.th_websocket_server = None
+            self.websocket_server = None
+            self.websocket_server_alive = False
+
+    def checkWebSocketServer(self):
+        """WebSocketサーバーの稼働状態を確認する"""
+        return self.websocket_server_alive
+
+    def websocketSendMessage(self, message_dict:dict):
+        """
+        WebSocketサーバーから全クライアントにメッセージを送信する
+        :param message_dict: 送信するメッセージの辞書
+        :return: 送信成功したかどうか
+        """
+        if not self.websocket_server_alive or not self.websocket_server:
+            return False
+        try:
+            message_json = json.dumps(message_dict)
+            return self.websocket_server.send(message_json)
+        except Exception:
+            errorLogging()
+            return False
 
 model = Model()
