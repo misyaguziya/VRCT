@@ -56,6 +56,7 @@ export { useHotkeys } from "./hotkeys/useHotkeys";
 
 export { useOscIpAddress } from "./advanced_settings/useOscIpAddress";
 export { useOscPort } from "./advanced_settings/useOscPort";
+export { useWebsocket } from "./advanced_settings/useWebsocket";
 
 
 export { useSupporters } from "./supporters/useSupporters";
