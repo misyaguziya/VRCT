@@ -257,7 +257,12 @@ config_page:
             label: "設定ファイルを開く"
         switch_compute_device:
             label: "VRCT CPU/GPUバージョンの切り替え"
-
+        enable_websocket:
+            label: "WebSocketサーバーを有効にする"
+        websocket_host:
+            label: "WebSocket Host"
+        websocket_port:
+            label: "WebSocket Port"
 
 plugin_notifications:
     downloading: プラグインをダウンロード中。
