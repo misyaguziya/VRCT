@@ -855,7 +855,7 @@ class Model:
 
                 # イベントループが終了するまで待機
                 while self.websocket_server_loop:
-                    self.websocket_server.send("Server is running...")
+                    # self.websocket_server.send("Server is running...")
                     await asyncio.sleep(0.5)  # 応答性向上のため間隔短縮
 
             except Exception:
