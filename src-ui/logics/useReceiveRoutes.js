@@ -75,6 +75,7 @@ import {
     usePlugins,
     useOscIpAddress,
     useOscPort,
+    useWebsocket,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -180,6 +181,11 @@ export const useReceiveRoutes = () => {
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
+    const {
+        updateEnableWebsocket,
+        updateWebsocketHost,
+        updateWebsocketPort,
+    } = useWebsocket();
 
 
 
@@ -504,6 +510,16 @@ export const useReceiveRoutes = () => {
 
         "/get/data/osc_port": updateOscPort,
         "/set/data/osc_port": updateOscPort,
+
+        "/get/data/websocket_server": updateEnableWebsocket,
+        "/set/enable/websocket_server": updateEnableWebsocket,
+        "/set/disable/websocket_server": updateEnableWebsocket,
+
+        "/get/data/websocket_host": updateWebsocketHost,
+        "/set/data/websocket_host": updateWebsocketHost,
+
+        "/get/data/websocket_port": updateWebsocketPort,
+        "/set/data/websocket_port": updateWebsocketPort,
 
         "/get/data/mic_avg_logprob": ()=>{}, // Not implemented on UI yet
         "/get/data/mic_no_speech_prob": ()=>{}, // Not implemented on UI yet

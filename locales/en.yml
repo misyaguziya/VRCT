@@ -257,6 +257,12 @@ config_page:
             label: "Open Config File"
         switch_compute_device:
             label: "Switch VRCT To CPU/GPU Version"
+        enable_websocket:
+            label: "Enable WebSocket Server"
+        websocket_host:
+            label: "WebSocket Host"
+        websocket_port:
+            label: "WebSocket Port"
 
 plugin_notifications:
     downloading: Downloading the plugin.
