@@ -834,6 +834,10 @@ class Model:
             self.th_watchdog.join()
             self.th_watchdog = None
 
+    def message_handler(websocket, message):
+        """WebSocketメッセージ受信時の処理"""
+        pass
+
     def startWebSocketServer(self):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
         self.websocket_server_loop = True
@@ -845,6 +849,7 @@ class Model:
                     host=config.WEBSOCKET_HOST,
                     port=config.WEBSOCKET_PORT,
                 )
+                self.websocket_server.set_message_handler(self.message_handler)
                 self.websocket_server.start()
                 self.websocket_server_alive = True
 
