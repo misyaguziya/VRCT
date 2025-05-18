@@ -106,18 +106,12 @@ class Model:
             host=config.WEBSOCKET_HOST,
             port=config.WEBSOCKET_PORT
         )
-        self.th_websocket_server = None
 
     def startWebSocketServer(self):
-        if self.th_websocket_server is None:
-            from threading import Thread
-            def run_server():
-                try:
-                    self.websocket_server.start()
-                except Exception:
-                    errorLogging()
-            self.th_websocket_server = Thread(target=run_server, daemon=True)
-            self.th_websocket_server.start()
+        try:
+            self.websocket_server.start()
+        except Exception:
+            errorLogging()
 
     def stopWebSocketServer(self):
         if self.websocket_server:
@@ -125,7 +119,6 @@ class Model:
                 self.websocket_server.stop()
             except Exception:
                 errorLogging()
-        self.th_websocket_server = None
 
     def checkWebSocketServer(self):
         if self.websocket_server:
@@ -135,13 +128,13 @@ class Model:
                 errorLogging()
         return False
 
-    def websocketSendMessage(self, message_dict):
+    def websocketSendMessage(self, message):
         """
         WebSocketサーバーから全クライアントにメッセージを送信する
-        :param message_dict: 送信する辞書型データ
+        :param message: 送信するメッセージ
         """
         try:
-            self.websocket_server.send_message(message_dict)
+            self.websocket_server.send(str(message))
         except Exception:
             errorLogging()
 
