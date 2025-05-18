@@ -298,7 +298,7 @@ class Controller:
                 if config.WEBSOCKET_SERVER is True:
                     model.websocketSendMessage(
                         {
-                            "type":"SEND",
+                            "type":"SENT",
                             "message":message,
                             "translation":translation,
                             "transliteration":transliteration
@@ -466,11 +466,11 @@ class Controller:
                     }
                 )
 
-            # update textbox message log (Sent)
+            # update textbox message log (Chat)
             if config.LOGGER_FEATURE is True:
                 if len(translation) > 0:
                     translation_text = " (" + "/".join(translation) + ")"
-                model.logger.info(f"[SENT] {message}{translation_text}")
+                model.logger.info(f"[CHAT] {message}{translation_text}")
 
         return {"status":200,
                 "result":{
@@ -1840,8 +1840,8 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        config.WEBSOCKET_SERVER = True
         model.startWebSocketServer()
+        config.WEBSOCKET_SERVER = True
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     @staticmethod
