@@ -1172,7 +1172,7 @@ class Config:
         self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
         self._NOTIFICATION_VRC_SFX = True
-        self._WEBSOCKET_SERVER = True
+        self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
 
