@@ -295,10 +295,12 @@ class Controller:
                         "transliteration":transliteration
                     })
 
-                if config.WEBSOCKET_SERVER is True:
+                if model.checkWebSocketServerAlive() is True:
                     model.websocketSendMessage(
                         {
                             "type":"SENT",
+                            "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
                             "transliteration":transliteration
@@ -389,10 +391,12 @@ class Controller:
                         "transliteration":transliteration,
                     })
 
-                if config.WEBSOCKET_SERVER is True:
+                if model.checkWebSocketServerAlive() is True:
                     model.websocketSendMessage(
                         {
                             "type":"RECEIVED",
+                            "src_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
                             "transliteration":transliteration
@@ -456,10 +460,12 @@ class Controller:
                     overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                 model.updateOverlayLargeLog(overlay_image)
 
-            if config.WEBSOCKET_SERVER is True:
+            if model.checkWebSocketServerAlive() is True:
                 model.websocketSendMessage(
                     {
                         "type":"CHAT",
+                        "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                         "message":message,
                         "translation":translation,
                         "transliteration":transliteration
@@ -1816,11 +1822,31 @@ class Controller:
 
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
-        config.WEBSOCKET_HOST = data
-        if model.checkWebSocketServer() is True:
-            model.stopWebSocketServer()
-            model.startWebSocketServer()
-        return {"status":200, "result":config.WEBSOCKET_HOST}
+        if isValidIpAddress(data) is False:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Invalid IP address",
+                    "data": config.WEBSOCKET_HOST
+                }
+            }
+        else:
+            if model.checkWebSocketServerAlive() is True:
+                model.stopWebSocketServer()
+
+                if model.checkWebSocketServerPortAvailable() is True:
+                    model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                    config.WEBSOCKET_HOST = data
+                    response = {"status":200, "result":config.WEBSOCKET_HOST}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"WebSocket server port is not available",
+                            "data": config.WEBSOCKET_HOST
+                        }
+                    }
+        return response
 
     @staticmethod
     def getWebSocketPort(*args, **kwargs) -> dict:
@@ -1828,11 +1854,21 @@ class Controller:
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
-        config.WEBSOCKET_PORT = int(data)
-        if model.checkWebSocketServer() is True:
+        if model.checkWebSocketServerAlive() is True:
             model.stopWebSocketServer()
-            model.startWebSocketServer()
-        return {"status":200, "result":config.WEBSOCKET_PORT}
+            if model.checkWebSocketServerPortAvailable() is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
+                config.WEBSOCKET_PORT = int(data)
+                response = {"status":200, "result":config.WEBSOCKET_PORT}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"WebSocket server port is not available",
+                        "data": config.WEBSOCKET_PORT
+                    }
+                }
+        return response
 
     @staticmethod
     def getWebSocketServer(*args, **kwargs) -> dict:
@@ -1840,9 +1876,19 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        model.startWebSocketServer()
-        config.WEBSOCKET_SERVER = True
-        return {"status":200, "result":config.WEBSOCKET_SERVER}
+        if model.checkWebSocketServerPortAvailable() is True:
+            model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+            config.WEBSOCKET_SERVER = True
+            response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        else:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"WebSocket server port is not available",
+                    "data": config.WEBSOCKET_SERVER
+                }
+            }
+        return response
 
     @staticmethod
     def setDisableWebSocketServer(*args, **kwargs) -> dict:
@@ -1951,7 +1997,12 @@ class Controller:
 
         printLog("Init WebSocket Server")
         if config.WEBSOCKET_SERVER is True:
-            model.startWebSocketServer()
+            if model.checkWebSocketServerPortAvailable() is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+            else:
+                config.WEBSOCKET_SERVER = False
+                model.stopWebSocketServer()
+                printLog("WebSocket server port is not available")
 
         printLog("Update settings")
         self.updateConfigSettings()

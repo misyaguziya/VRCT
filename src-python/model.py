@@ -1,6 +1,8 @@
 import copy
 import gc
 import asyncio
+import socket
+import errno
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -838,16 +840,36 @@ class Model:
         """WebSocketメッセージ受信時の処理"""
         pass
 
-    def startWebSocketServer(self):
+    def checkWebSocketServerPortAvailable(self):
+        """WebSocketサーバーのポートが使用中かどうかを確認する"""
+        response = True
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as chk:
+            try:
+                chk.bind((config.WEBSOCKET_HOST, config.WEBSOCKET_PORT))
+                chk.shutdown(socket.SHUT_RDWR)
+                chk.close()
+            except OSError as e:
+                if e.errno == errno.EADDRINUSE:
+                    response = False
+                else:
+                    errorLogging(e)
+                    response = False
+        return response
+
+    def startWebSocketServer(self, host, port):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
+        if self.websocket_server_alive is True:
+            # サーバーが既に起動している場合は何もしない
+            return
+
         self.websocket_server_loop = True
         self.websocket_server_alive = False  # 初期状態を明示
 
         async def WebSocketServerMain():
             try:
                 self.websocket_server = WebSocketServer(
-                    host=config.WEBSOCKET_HOST,
-                    port=config.WEBSOCKET_PORT,
+                    host=host,
+                    port=port,
                 )
                 self.websocket_server.set_message_handler(self.message_handler)
                 self.websocket_server.start()
@@ -893,7 +915,7 @@ class Model:
             self.websocket_server = None
             self.websocket_server_alive = False
 
-    def checkWebSocketServer(self):
+    def checkWebSocketServerAlive(self):
         """WebSocketサーバーの稼働状態を確認する"""
         return self.websocket_server_alive
 
