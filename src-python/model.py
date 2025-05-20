@@ -852,7 +852,7 @@ class Model:
                 if e.errno == errno.EADDRINUSE:
                     response = False
                 else:
-                    errorLogging(e)
+                    errorLogging()
                     response = False
         return response
 
