@@ -1844,7 +1844,7 @@ class Controller:
                     response = {
                         "status":400,
                         "result":{
-                            "message":"WebSocket server port is not available",
+                            "message":"WebSocket server host is not available",
                             "data": config.WEBSOCKET_HOST
                         }
                     }
@@ -1890,7 +1890,7 @@ class Controller:
             response = {
                 "status":400,
                 "result":{
-                    "message":"WebSocket server port is not available",
+                    "message":"WebSocket server host or port is not available",
                     "data": config.WEBSOCKET_SERVER
                 }
             }
@@ -2008,7 +2008,7 @@ class Controller:
             else:
                 config.WEBSOCKET_SERVER = False
                 model.stopWebSocketServer()
-                printLog("WebSocket server port is not available")
+                printLog("WebSocket server host or port is not available")
 
         printLog("Update settings")
         self.updateConfigSettings()
