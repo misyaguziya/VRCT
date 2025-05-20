@@ -1831,10 +1831,12 @@ class Controller:
                 }
             }
         else:
-            if model.checkWebSocketServerAlive() is True:
+            if model.checkWebSocketServerAlive() is False:
+                config.WEBSOCKET_HOST = data
+                response = {"status":200, "result":config.WEBSOCKET_HOST}
+            else:
                 model.stopWebSocketServer()
-
-                if model.checkWebSocketServerPortAvailable() is True:
+                if model.checkWebSocketServerAvailable() is True:
                     model.startWebSocketServer(data, config.WEBSOCKET_PORT)
                     config.WEBSOCKET_HOST = data
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
@@ -1846,6 +1848,7 @@ class Controller:
                             "data": config.WEBSOCKET_HOST
                         }
                     }
+
         return response
 
     @staticmethod
@@ -1854,9 +1857,12 @@ class Controller:
 
     @staticmethod
     def setWebSocketPort(data, *args, **kwargs) -> dict:
-        if model.checkWebSocketServerAlive() is True:
+        if model.checkWebSocketServerAlive() is False:
+            config.WEBSOCKET_PORT = int(data)
+            response = {"status":200, "result":config.WEBSOCKET_PORT}
+        else:
             model.stopWebSocketServer()
-            if model.checkWebSocketServerPortAvailable() is True:
+            if model.checkWebSocketServerAvailable() is True:
                 model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
                 config.WEBSOCKET_PORT = int(data)
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
@@ -1876,7 +1882,7 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if model.checkWebSocketServerPortAvailable() is True:
+        if model.checkWebSocketServerAvailable() is True:
             model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
             config.WEBSOCKET_SERVER = True
             response = {"status":200, "result":config.WEBSOCKET_SERVER}
@@ -1997,7 +2003,7 @@ class Controller:
 
         printLog("Init WebSocket Server")
         if config.WEBSOCKET_SERVER is True:
-            if model.checkWebSocketServerPortAvailable() is True:
+            if model.checkWebSocketServerAvailable() is True:
                 model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
             else:
                 config.WEBSOCKET_SERVER = False

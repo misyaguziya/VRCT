@@ -840,20 +840,27 @@ class Model:
         """WebSocketメッセージ受信時の処理"""
         pass
 
-    def checkWebSocketServerPortAvailable(self):
+    def checkWebSocketServerAvailable(self):
         """WebSocketサーバーのポートが使用中かどうかを確認する"""
         response = True
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as chk:
-            try:
-                chk.bind((config.WEBSOCKET_HOST, config.WEBSOCKET_PORT))
-                chk.shutdown(socket.SHUT_RDWR)
-                chk.close()
-            except OSError as e:
-                if e.errno == errno.EADDRINUSE:
-                    response = False
-                else:
-                    errorLogging()
-                    response = False
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as chk:
+                # SO_REUSEADDRを設定してソケットの再利用を許可
+                chk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                try:
+                    chk.bind((config.WEBSOCKET_HOST, config.WEBSOCKET_PORT))
+                    # シャットダウン前にリッスン状態にする必要はない
+                    chk.close()
+                except OSError as e:
+                    if e.errno == errno.EADDRINUSE:
+                        response = False
+                    else:
+                        errorLogging()
+                        response = False
+        except Exception:
+            errorLogging()
+            response = False
+
         return response
 
     def startWebSocketServer(self, host, port):
