@@ -11,6 +11,12 @@ from utils import errorLogging
 
 class OSCHandler:
     def __init__(self, ip_address="127.0.0.1", port=9000) -> None:
+
+        if ip_address in ["127.0.0.1", "localhost"]:
+            self.osc_query_enabled = True
+        else:
+            self.osc_query_enabled = False
+
         self.osc_ip_address = ip_address
         self.osc_port = port
         self.osc_parameter_muteself = "/avatar/parameters/MuteSelf"
@@ -24,15 +30,25 @@ class OSCHandler:
         self.osc_server_ip_address = ip_address
         self.http_port = None
         self.osc_server_port = None
+        self.dict_filter_and_target = {}
         self.browser = None
 
     def setOscIpAddress(self, ip_address:str) -> None:
+        if ip_address in ["127.0.0.1", "localhost"]:
+            self.osc_query_enabled = True
+        else:
+            self.osc_query_enabled = False
+
+        self.oscServerStop()
         self.osc_ip_address = ip_address
         self.udp_client = udp_client.SimpleUDPClient(self.osc_ip_address, self.osc_port)
+        self.receiveOscParameters()
 
     def setOscPort(self, port:int) -> None:
+        self.oscServerStop()
         self.osc_port = port
         self.udp_client = udp_client.SimpleUDPClient(self.osc_ip_address, self.osc_port)
+        self.receiveOscParameters()
 
     # send OSC message typing
     def sendTyping(self, flag:bool=False) -> None:
@@ -44,6 +60,10 @@ class OSCHandler:
             self.udp_client.send_message(self.osc_parameter_chatbox_input, [f"{message}", True, notification])
 
     def getOSCParameterValue(self, address:str) -> Any:
+        if not self.osc_query_enabled:
+            # OSCQueryが無効な場合はNoneを返す
+            return None
+
         value = None
         try:
             # browserインスタンスを再利用し、毎回の生成と破棄を避ける
@@ -71,11 +91,18 @@ class OSCHandler:
     def getOSCParameterMuteSelf(self) -> bool:
         return self.getOSCParameterValue(self.osc_parameter_muteself)
 
-    def receiveOscParameters(self, dict_filter_and_target:dict) -> None:
+    def setDictFilterAndTarget(self, dict_filter_and_target:dict) -> None:
+        self.dict_filter_and_target = dict_filter_and_target
+
+    def receiveOscParameters(self) -> None:
+        if self.osc_query_enabled is False:
+            # OSCQueryが無効な場合は何もしない
+            return
+
         self.osc_server_port = get_open_udp_port()
         self.http_port = get_open_tcp_port()
         osc_dispatcher = dispatcher.Dispatcher()
-        for filter, target in dict_filter_and_target.items():
+        for filter, target in self.dict_filter_and_target.items():
             osc_dispatcher.map(filter, target)
         self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher, asyncio.get_event_loop())
         Thread(target=self.oscServerServe, daemon=True).start()
@@ -83,7 +110,7 @@ class OSCHandler:
         while True:
             try:
                 self.osc_query_service = OSCQueryService(self.osc_query_service_name, self.http_port, self.osc_server_port)
-                for filter, target in dict_filter_and_target.items():
+                for filter, target in self.dict_filter_and_target.items():
                     self.osc_query_service.advertise_endpoint(filter, access=OSCAccess.READWRITE_VALUE)
                 break
             except Exception:
