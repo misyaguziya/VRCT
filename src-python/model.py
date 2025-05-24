@@ -301,11 +301,8 @@ class Model:
     def oscSendMessage(self, message:str):
         self.osc_handler.sendMessage(message=message, notification=config.NOTIFICATION_VRC_SFX)
 
-    def getMuteSelfStatus(self):
-        return self.osc_handler.getOSCParameterMuteSelf()
-
     def setMuteSelfStatus(self):
-        self.mic_mute_status = self.getMuteSelfStatus()
+        self.mic_mute_status = self.osc_handler.getOSCParameterMuteSelf()
 
     def startReceiveOSC(self):
         def changeHandlerMute(address, osc_arguments):
@@ -320,7 +317,8 @@ class Model:
         dict_filter_and_target = {
             self.osc_handler.osc_parameter_muteself: changeHandlerMute,
         }
-        self.osc_handler.receiveOscParameters(dict_filter_and_target)
+        self.osc_handler.setDictFilterAndTarget(dict_filter_and_target)
+        self.osc_handler.receiveOscParameters()
 
     def stopReceiveOSC(self):
         self.osc_handler.oscServerStop()
@@ -512,12 +510,16 @@ class Model:
 
     def changeMicTranscriptStatus(self):
         if config.VRC_MIC_MUTE_SYNC is True:
-            if self.mic_mute_status is True:
-                self.pauseMicTranscript()
-            elif self.mic_mute_status is False:
-                self.resumeMicTranscript()
-            else:
-                pass
+            match self.mic_mute_status:
+                case True:
+                    self.pauseMicTranscript()
+                case False:
+                    self.resumeMicTranscript()
+                case None:
+                    # mute selfの状態が不明な場合は一時停止しない
+                    self.resumeMicTranscript()
+                case _:
+                    pass
         else:
             self.resumeMicTranscript()
 
