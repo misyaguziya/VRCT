@@ -1426,9 +1426,12 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        config.VRC_MIC_MUTE_SYNC = True
-        model.setMuteSelfStatus()
-        model.changeMicTranscriptStatus()
+        if model.getIsOscQueryEnabled() is False:
+            config.VRC_MIC_MUTE_SYNC = True
+            model.setMuteSelfStatus()
+            model.changeMicTranscriptStatus()
+        else:
+            config.VRC_MIC_MUTE_SYNC = False
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     @staticmethod
@@ -1905,6 +1908,12 @@ class Controller:
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)
 
+    def enableOscQuery(self):
+        self.run(200, self.run_mapping["enable_osc_query"], True)
+
+    def disableOscQuery(self):
+        self.run(200, self.run_mapping["enable_osc_query"], False)
+
     def init(self, *args, **kwargs) -> None:
         removeLog()
         printLog("Start Initialization")
@@ -1982,6 +1991,12 @@ class Controller:
         # init OSC receive
         printLog("Init OSC Receive")
         model.startReceiveOSC()
+        osc_query_enabled = model.getIsOscQueryEnabled()
+        if osc_query_enabled is True:
+            self.enableOscQuery()
+        else:
+            self.disableOscQuery()
+
         if config.VRC_MIC_MUTE_SYNC is True:
             self.setEnableVrcMicMuteSync()
 
