@@ -323,6 +323,9 @@ class Model:
     def stopReceiveOSC(self):
         self.osc_handler.oscServerStop()
 
+    def getIsOscQueryEnabled(self):
+        return self.osc_handler.getIsOscQueryEnabled()
+
     @staticmethod
     def checkSoftwareUpdated():
         # check update

@@ -13,9 +13,9 @@ class OSCHandler:
     def __init__(self, ip_address="127.0.0.1", port=9000) -> None:
 
         if ip_address in ["127.0.0.1", "localhost"]:
-            self.osc_query_enabled = True
+            self.is_osc_query_enabled = True
         else:
-            self.osc_query_enabled = False
+            self.is_osc_query_enabled = False
 
         self.osc_ip_address = ip_address
         self.osc_port = port
@@ -33,11 +33,14 @@ class OSCHandler:
         self.dict_filter_and_target = {}
         self.browser = None
 
+    def getIsOscQueryEnabled(self) -> bool:
+        return self.is_osc_query_enabled
+
     def setOscIpAddress(self, ip_address:str) -> None:
         if ip_address in ["127.0.0.1", "localhost"]:
-            self.osc_query_enabled = True
+            self.is_osc_query_enabled = True
         else:
-            self.osc_query_enabled = False
+            self.is_osc_query_enabled = False
 
         self.oscServerStop()
         self.osc_ip_address = ip_address
@@ -60,7 +63,7 @@ class OSCHandler:
             self.udp_client.send_message(self.osc_parameter_chatbox_input, [f"{message}", True, notification])
 
     def getOSCParameterValue(self, address:str) -> Any:
-        if not self.osc_query_enabled:
+        if not self.is_osc_query_enabled:
             # OSCQueryが無効な場合はNoneを返す
             return None
 
@@ -95,7 +98,7 @@ class OSCHandler:
         self.dict_filter_and_target = dict_filter_and_target
 
     def receiveOscParameters(self) -> None:
-        if self.osc_query_enabled is False:
+        if self.is_osc_query_enabled is False:
             # OSCQueryが無効な場合は何もしない
             return
 
