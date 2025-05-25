@@ -7,7 +7,13 @@ from tinyoscquery.queryservice import OSCQueryService
 from tinyoscquery.query import OSCQueryBrowser, OSCQueryClient
 from tinyoscquery.utility  import get_open_udp_port, get_open_tcp_port
 from tinyoscquery.shared.node import OSCAccess
-from utils import errorLogging
+
+try:
+    from utils import errorLogging
+except ImportError:
+    def errorLogging():
+        import traceback
+        print("Error occurred:", traceback.format_exc())
 
 class OSCHandler:
     def __init__(self, ip_address="127.0.0.1", port=9000) -> None:
@@ -107,7 +113,7 @@ class OSCHandler:
         osc_dispatcher = dispatcher.Dispatcher()
         for filter, target in self.dict_filter_and_target.items():
             osc_dispatcher.map(filter, target)
-        self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher, asyncio.get_event_loop())
+        self.osc_server = osc_server.ThreadingOSCUDPServer((self.osc_server_ip_address, self.osc_server_port), osc_dispatcher)
         Thread(target=self.oscServerServe, daemon=True).start()
 
         while True:
@@ -142,12 +148,26 @@ class OSCHandler:
 
 if __name__ == "__main__":
     handler = OSCHandler()
-    handler.receiveOscParameters({
-        "/avatar/parameters/MuteSelf": print,
+    handler.setDictFilterAndTarget({
+        "/avatar/parameters/MuteSelf": lambda address, *args: print(f"Received {address} with args {args}"),
+        "/chatbox/typing": lambda address, *args: print(f"Received {address} with args {args}"),
+        "/chatbox/input": lambda address, *args: print(f"Received {address} with args {args}"),
     })
+    handler.receiveOscParameters()
     sleep(5)
     handler.sendTyping(True)
     sleep(1)
-    handler.sendMessage(message="Hello World", notification=True)
-    sleep(60)
+    handler.sendMessage(message="Hello World 1", notification=True)
+    sleep(10)
+
+    print("IP address changed to 192.168.193.2")
+    handler.setOscIpAddress("192.168.193.2")
+    sleep(5)
+    handler.sendMessage(message="Hello World 2", notification=True)
+
+    print("IP address changed to 127.0.0.1")
+    handler.setOscIpAddress("127.0.0.1")
+    sleep(5)
+    handler.sendMessage(message="Hello World 3", notification=True)
+    sleep(10)
     handler.oscServerStop()
