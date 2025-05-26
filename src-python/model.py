@@ -1,8 +1,6 @@
 import copy
 import gc
 import asyncio
-import socket
-import errno
 import json
 from subprocess import Popen
 from os import makedirs as os_makedirs
@@ -839,29 +837,6 @@ class Model:
     def message_handler(websocket, message):
         """WebSocketメッセージ受信時の処理"""
         pass
-
-    def checkWebSocketServerAvailable(self):
-        """WebSocketサーバーのポートが使用中かどうかを確認する"""
-        response = True
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as chk:
-                # SO_REUSEADDRを設定してソケットの再利用を許可
-                chk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                try:
-                    chk.bind((config.WEBSOCKET_HOST, config.WEBSOCKET_PORT))
-                    # シャットダウン前にリッスン状態にする必要はない
-                    chk.close()
-                except OSError as e:
-                    if e.errno == errno.EADDRINUSE:
-                        response = False
-                    else:
-                        errorLogging()
-                        response = False
-        except Exception:
-            errorLogging()
-            response = False
-
-        return response
 
     def startWebSocketServer(self, host, port):
         """WebSocketサーバーを起動し、別スレッドで実行する"""
