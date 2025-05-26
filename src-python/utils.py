@@ -8,6 +8,7 @@ from logging.handlers import RotatingFileHandler
 from ctranslate2 import get_supported_compute_types
 import requests
 import ipaddress
+import socket
 
 def isConnectedNetwork(url="http://www.google.com", timeout=3) -> bool:
     try:
@@ -15,6 +16,25 @@ def isConnectedNetwork(url="http://www.google.com", timeout=3) -> bool:
         return response.status_code == 200
     except requests.RequestException:
         return False
+
+def isAvailableWebSocketServer(host:str, port:int) -> bool:
+    """WebSocketサーバーのポートが使用中かどうかを確認する"""
+    response = True
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as chk:
+            try:
+                # SO_REUSEADDRを設定してソケットの再利用を許可
+                chk.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                chk.bind((host, port))
+                # シャットダウン前にリッスン状態にする必要はない
+                chk.close()
+            except Exception:
+                response = False
+    except Exception:
+        errorLogging()
+        response = False
+
+    return response
 
 def isValidIpAddress(ip_address: str) -> bool:
     try:
