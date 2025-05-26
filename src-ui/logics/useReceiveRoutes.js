@@ -530,30 +530,6 @@ export const useReceiveRoutes = () => {
         "/get/data/transcription_engines": ()=>{}, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     };
 
-    const error_status_routes = {
-        "/run/error_device": errorHandling_Backend,
-
-        "/run/error_ctranslate2_weight": errorHandling_Backend,
-        "/run/error_whisper_weight": errorHandling_Backend,
-
-        "/set/data/deepl_auth_key": errorHandling_Backend,
-
-        "/run/error_translation_engine": errorHandling_Backend,
-
-        "/set/data/mic_threshold": errorHandling_Backend,
-        "/set/data/mic_record_timeout": errorHandling_Backend,
-        "/set/data/mic_phrase_timeout": errorHandling_Backend,
-        "/set/data/mic_max_phrases": errorHandling_Backend,
-
-        "/set/data/speaker_threshold": errorHandling_Backend,
-        "/set/data/speaker_record_timeout": errorHandling_Backend,
-        "/set/data/speaker_phrase_timeout": errorHandling_Backend,
-        "/set/data/speaker_max_phrases": errorHandling_Backend,
-
-        "/set/data/osc_ip_address": errorHandling_Backend,
-    };
-
-
     const receiveRoutes = (parsed_data) => {
         const initDataSyncProcess = (payload) => {
             for (const [endpoint, value] of Object.entries(payload)) {
@@ -583,17 +559,12 @@ export const useReceiveRoutes = () => {
                 break;
 
             case 400:
-                const error_route = error_status_routes[parsed_data.endpoint];
-                if (error_route) {
-                    error_route({
-                        message: parsed_data.result.message,
-                        data: parsed_data.result.data,
-                        endpoint: parsed_data.endpoint,
-                        _result: parsed_data.result,
-                    });
-                } else {
-                    handleInvalidEndpoint(parsed_data);
-                }
+                errorHandling_Backend({
+                    message: parsed_data.result.message,
+                    data: parsed_data.result.data,
+                    endpoint: parsed_data.endpoint,
+                    result: parsed_data.result,
+                });
                 break;
             case 500:
                 showNotification_Error(
