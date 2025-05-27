@@ -1,9 +1,16 @@
+import os
 import sys
 import json
 import time
 from typing import Any
 from threading import Thread
 from queue import Queue
+import warnings
+warnings.filterwarnings('ignore')
+huggingface_cache_dir = os.path.join(os.path.dirname(__file__), ".cache")
+os.makedirs(huggingface_cache_dir, exist_ok=True)
+os.environ["HF_HOME"] = os.path.join(huggingface_cache_dir)
+
 from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
 
@@ -376,7 +383,7 @@ class Main:
                 if status == 423:
                     self.queue.put((endpoint, data))
                 else:
-                    printLog(endpoint, {"send_data":result})
+                    printLog(endpoint, {"status": status, "send_data": result})
                     printResponse(status, endpoint, result)
             time.sleep(0.1)
 
