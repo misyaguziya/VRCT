@@ -7,9 +7,17 @@ from threading import Thread
 from queue import Queue
 import warnings
 warnings.filterwarnings('ignore')
-huggingface_cache_dir = os.path.join(os.path.dirname(__file__), ".cache")
-os.makedirs(huggingface_cache_dir, exist_ok=True)
-os.environ["HF_HOME"] = os.path.join(huggingface_cache_dir)
+
+if getattr(sys, 'frozen', False):
+    cache_dir = os.path.join(os.path.dirname(sys.executable), ".cache")
+    hub_dir = os.path.join(os.path.dirname(sys.executable), ".cache", "hub")
+else:
+    cache_dir = os.path.join(os.path.dirname(__file__), ".cache")
+    hub_dir = os.path.join(os.path.dirname(__file__), ".cache", "hub")
+
+os.makedirs(cache_dir, exist_ok=True)
+os.makedirs(hub_dir, exist_ok=True)
+os.environ["HF_HOME"] = os.path.join(cache_dir)
 
 from controller import Controller
 from utils import printLog, printResponse, errorLogging, encodeBase64
