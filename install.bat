@@ -1,21 +1,25 @@
-REM .venv .venv_cuda があれば削除
+REM .venv exists
 if exist .venv (
     rmdir /s /q .venv
 )
 
-if exist .venv_cuda (
-    rmdir /s /q .venv_cuda
-)
-
-REM .venv .venv_cuda を作成
+REM make .venv
 python -m venv .venv
-python -m venv .venv_cuda
 
-REM .venv .venv_cuda に必要なパッケージをインストール
+REM install packages for .venv
 call .venv/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements.txt
 
+REM if .venv_cuda exists
+if exist .venv_cuda (
+    rmdir /s /q .venv_cuda
+)
+
+REM make .venv_cuda
+python -m venv .venv_cuda
+
+REM install packages for .venv_cuda
 call .venv_cuda/Scripts/activate
 python.exe -m pip install --upgrade pip
 pip install --no-cache-dir --force-reinstall -r requirements_cuda.txt
