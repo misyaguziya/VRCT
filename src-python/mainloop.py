@@ -1,26 +1,14 @@
-import os
 import sys
 import json
 import time
 from typing import Any
 from threading import Thread
 from queue import Queue
-import warnings
-warnings.filterwarnings('ignore')
+import logging
+from controller import Controller  # noqa: E402
+from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
 
-if getattr(sys, 'frozen', False):
-    cache_dir = os.path.join(os.path.dirname(sys.executable), ".cache")
-    hub_dir = os.path.join(os.path.dirname(sys.executable), ".cache", "hub")
-else:
-    cache_dir = os.path.join(os.path.dirname(__file__), ".cache")
-    hub_dir = os.path.join(os.path.dirname(__file__), ".cache", "hub")
-
-os.makedirs(cache_dir, exist_ok=True)
-os.makedirs(hub_dir, exist_ok=True)
-os.environ["HF_HOME"] = os.path.join(cache_dir)
-
-from controller import Controller
-from utils import printLog, printResponse, errorLogging, encodeBase64
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 run_mapping = {
     "connected_network":"/run/connected_network",
