@@ -45,6 +45,8 @@ run_mapping = {
 
     "initialization_progress":"/run/initialization_progress",
     "initialization_complete":"/run/initialization_complete",
+
+    "enable_osc_query":"/run/enable_osc_query",
 }
 
 def run(status:int, endpoint:str, result:Any) -> None:
