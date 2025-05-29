@@ -4,8 +4,11 @@ import time
 from typing import Any
 from threading import Thread
 from queue import Queue
-from controller import Controller
-from utils import printLog, printResponse, errorLogging, encodeBase64
+import logging
+from controller import Controller  # noqa: E402
+from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
+
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 run_mapping = {
     "connected_network":"/run/connected_network",
@@ -376,7 +379,7 @@ class Main:
                 if status == 423:
                     self.queue.put((endpoint, data))
                 else:
-                    printLog(endpoint, {"send_data":result})
+                    printLog(endpoint, {"status": status, "send_data": result})
                     printResponse(status, endpoint, result)
             time.sleep(0.1)
 

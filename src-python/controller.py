@@ -1,4 +1,4 @@
-from typing import Callable, Union, Any
+from typing import Callable, Any
 from time import sleep
 from subprocess import Popen
 from threading import Thread
