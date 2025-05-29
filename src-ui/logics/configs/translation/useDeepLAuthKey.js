@@ -29,11 +29,6 @@ export const useDeepLAuthKey = () => {
         showNotification_Success(t("config_page.translation.deepl_auth_key.auth_key_success"));
     };
 
-    const saveErrorDeepLAuthKey = ({data, message}) => {
-        updateDeepLAuthKey(data);
-        showNotification_Error(message);
-    };
-
     return {
         currentDeepLAuthKey,
         getDeepLAuthKey,
@@ -41,7 +36,6 @@ export const useDeepLAuthKey = () => {
         setDeepLAuthKey,
         deleteDeepLAuthKey,
 
-        saveErrorDeepLAuthKey,
         savedDeepLAuthKey,
     };
 };
