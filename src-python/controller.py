@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress
+from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
 
 class Controller:
     def __init__(self) -> None:
@@ -1835,8 +1835,10 @@ class Controller:
                 config.WEBSOCKET_HOST = data
                 response = {"status":200, "result":config.WEBSOCKET_HOST}
             else:
-                model.stopWebSocketServer()
-                if model.checkWebSocketServerAvailable() is True:
+                if data == config.WEBSOCKET_HOST:
+                    response = {"status":200, "result":config.WEBSOCKET_HOST}
+                elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
+                    model.stopWebSocketServer()
                     model.startWebSocketServer(data, config.WEBSOCKET_PORT)
                     config.WEBSOCKET_HOST = data
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
@@ -1844,7 +1846,7 @@ class Controller:
                     response = {
                         "status":400,
                         "result":{
-                            "message":"WebSocket server port is not available",
+                            "message":"WebSocket server host is not available",
                             "data": config.WEBSOCKET_HOST
                         }
                     }
@@ -1861,8 +1863,10 @@ class Controller:
             config.WEBSOCKET_PORT = int(data)
             response = {"status":200, "result":config.WEBSOCKET_PORT}
         else:
-            model.stopWebSocketServer()
-            if model.checkWebSocketServerAvailable() is True:
+            if int(data) == config.WEBSOCKET_PORT:
+                return {"status":200, "result":config.WEBSOCKET_PORT}
+            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, int(data)) is True:
+                model.stopWebSocketServer()
                 model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
                 config.WEBSOCKET_PORT = int(data)
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
@@ -1882,7 +1886,7 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if model.checkWebSocketServerAvailable() is True:
+        if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
             model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
             config.WEBSOCKET_SERVER = True
             response = {"status":200, "result":config.WEBSOCKET_SERVER}
@@ -1890,7 +1894,7 @@ class Controller:
             response = {
                 "status":400,
                 "result":{
-                    "message":"WebSocket server port is not available",
+                    "message":"WebSocket server host or port is not available",
                     "data": config.WEBSOCKET_SERVER
                 }
             }
@@ -2003,12 +2007,12 @@ class Controller:
 
         printLog("Init WebSocket Server")
         if config.WEBSOCKET_SERVER is True:
-            if model.checkWebSocketServerAvailable() is True:
+            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
                 model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
             else:
                 config.WEBSOCKET_SERVER = False
                 model.stopWebSocketServer()
-                printLog("WebSocket server port is not available")
+                printLog("WebSocket server host or port is not available")
 
         printLog("Update settings")
         self.updateConfigSettings()
