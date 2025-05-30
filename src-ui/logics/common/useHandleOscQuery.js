@@ -18,7 +18,7 @@ export const useHandleOscQuery = () => {
             for (const disabled_function of disabled_functions) {
                 if (disabled_function === "vrc_mic_mute_sync") {
                     updateEnableVrcMicMuteSync({
-                        is_enabled: !is_osc_query_enabled,
+                        is_enabled: false,
                         is_available: false,
                     });
                     const item = `- ${t("config_page.others.vrc_mic_mute_sync.label")}`;
