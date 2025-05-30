@@ -1443,7 +1443,7 @@ class Controller:
                         "data": config.VRC_MIC_MUTE_SYNC
                     }
             }
-            return response
+        return response
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:

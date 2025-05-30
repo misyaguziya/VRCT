@@ -7,6 +7,7 @@ import {
     useIsVrctAvailable,
     useNotificationStatus,
     useHandleNetworkConnection,
+    useHandleOscQuery,
 
     useSoftwareVersion,
     useComputeMode,
@@ -83,6 +84,7 @@ export const useReceiveRoutes = () => {
     const { updateComputeMode } = useComputeMode();
     const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
+    const { handleOscQuery } = useHandleOscQuery();
     const { restoreWindowGeometry } = useWindow();
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
     const {
@@ -219,6 +221,12 @@ export const useReceiveRoutes = () => {
             }));
         },
         "/run/connected_network": handleNetworkConnection,
+        "/run/enable_osc_query": ({data, disabled_functions}) => {
+            handleOscQuery({
+                is_osc_query_enabled: data,
+                disabled_functions: disabled_functions,
+            });
+        },
 
         // Main Page
         // Page Controls
@@ -480,9 +488,15 @@ export const useReceiveRoutes = () => {
         "/set/enable/logger_feature": updateEnableAutoExportMessageLogs,
         "/set/disable/logger_feature": updateEnableAutoExportMessageLogs,
 
-        "/get/data/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
-        "/set/enable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
-        "/set/disable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
+        "/get/data/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
+        "/set/enable/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
+        "/set/disable/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
 
         "/get/data/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,

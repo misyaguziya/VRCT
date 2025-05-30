@@ -18,10 +18,17 @@
             border: var(--checkbox-color, var(--primary_600_color)) solid var(--checkbox-border-width, 0.2rem);
         }
     }
-    &.is_disabled {
+    &.is_pending {
         pointer-events: none;
         & .cbx {
             border-color: var(--primary_800_color);
+        }
+    }
+    &.is_disabled {
+        pointer-events: none;
+        & .cbx {
+            filter: grayscale(100%);
+            border-color: var(--dark_800_color);
         }
     }
 }

@@ -3,15 +3,16 @@ import styles from "./Checkbox.module.scss";
 export const Checkbox = ({
     checkboxId,
     variable,
+    is_available = true,
     toggleFunction,
     size = "2.8rem",
-    color = "var(--primary_600_color)",
     borderWidth = "0.2rem",
     padding = "2rem",
 }) => {
 
     const wrapper_class_names = clsx(styles.checkbox_wrapper, {
-        [styles.is_disabled]: variable.state === "pending",
+        [styles.is_disabled]: !is_available,
+        [styles.is_pending]: variable.state === "pending",
     });
 
     return (
@@ -21,7 +22,6 @@ export const Checkbox = ({
                 htmlFor={checkboxId}
                 style={{
                     "--checkbox-size": size,
-                    "--checkbox-color": color,
                     "--checkbox-border-width": borderWidth,
                     "--checkbox-padding": padding,
                 }}
