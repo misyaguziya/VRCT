@@ -1985,7 +1985,41 @@ class Controller:
 
         printLog("Init Translation Engine Status")
         for engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
-            config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+            match engine:
+                case "CTranslate2":
+                    if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is True:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                    else:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                case "DeepL_API":
+                    printLog("Start check DeepL API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                case _:
+                    if connected_network is True:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                    else:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+
+        for engine in config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
+            match engine:
+                case "Whisper":
+                    if model.checkTranscriptionWhisperModelWeight(config.WHISPER_WEIGHT_TYPE) is True:
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                    else:
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                case _:
+                    if connected_network is True:
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
+                    else:
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
         self.initializationProgress(2)
 
         # set Translation Engine
