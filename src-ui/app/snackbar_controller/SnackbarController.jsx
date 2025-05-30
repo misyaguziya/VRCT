@@ -14,6 +14,7 @@ export const SnackbarController = () => {
 
     const snackbar_classname = clsx(styles.snackbar_content, {
         [styles.is_success]: currentNotificationStatus.data.status === "success",
+        [styles.is_warning]: currentNotificationStatus.data.status === "warning",
         [styles.is_error]: currentNotificationStatus.data.status === "error",
     });
 

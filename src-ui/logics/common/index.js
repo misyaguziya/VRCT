@@ -11,5 +11,6 @@ export { useMessage } from "./useMessage";
 export { useUpdateSoftware } from "./useUpdateSoftware";
 export { useVolume } from "./useVolume";
 export { useHandleNetworkConnection } from "./useHandleNetworkConnection";
+export { useHandleOscQuery } from "./useHandleOscQuery";
 export { useIsVrctAvailable } from "./useIsVrctAvailable";
 export { useFetch } from "./useFetch";
