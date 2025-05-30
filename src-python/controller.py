@@ -1137,8 +1137,7 @@ class Controller:
     def getOscIpAddress(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OSC_IP_ADDRESS}
 
-    @staticmethod
-    def setOscIpAddress(data, *args, **kwargs) -> dict:
+    def setOscIpAddress(self, data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
             response = {
                 "status":400,
@@ -1151,6 +1150,11 @@ class Controller:
             try:
                 model.setOscIpAddress(data)
                 config.OSC_IP_ADDRESS = data
+                if model.getIsOscQueryEnabled() is True:
+                    self.enableOscQuery()
+                else:
+                    self.setDisableVrcMicMuteSync()
+                    self.disableOscQuery()
                 response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
@@ -1426,13 +1430,20 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        if model.getIsOscQueryEnabled() is False:
+        if model.getIsOscQueryEnabled() is True:
             config.VRC_MIC_MUTE_SYNC = True
             model.setMuteSelfStatus()
             model.changeMicTranscriptStatus()
+            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
         else:
-            config.VRC_MIC_MUTE_SYNC = False
-        return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+            response = {
+                    "status":400,
+                    "result":{
+                        "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
+                        "data": config.VRC_MIC_MUTE_SYNC
+                    }
+            }
+            return response
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
@@ -1913,10 +1924,22 @@ class Controller:
         self.run(200, self.run_mapping["initialization_progress"], progress)
 
     def enableOscQuery(self):
-        self.run(200, self.run_mapping["enable_osc_query"], True)
+        self.run(
+            200,
+            self.run_mapping["enable_osc_query"],
+            {
+                "data": True,
+                "disabled_functions": []
+            }
+        )
 
     def disableOscQuery(self):
-        self.run(200, self.run_mapping["enable_osc_query"], False)
+        self.run(200, self.run_mapping["enable_osc_query"], {
+            "data": False,
+            "disabled_functions": [
+                "vrc_mic_mute_sync",
+            ]
+        })
 
     def init(self, *args, **kwargs) -> None:
         removeLog()
@@ -1999,6 +2022,8 @@ class Controller:
         if osc_query_enabled is True:
             self.enableOscQuery()
         else:
+            # OSC Query is disabled, so disable VRC some features
+            config.VRC_MIC_MUTE_SYNC = False
             self.disableOscQuery()
 
         if config.VRC_MIC_MUTE_SYNC is True:
