@@ -5,6 +5,16 @@ export const useNotificationStatus = () => {
 
     const generateRandomKey = () => Math.random();
 
+    const showNotification_Warning = (message, options = {}) => {
+        updateNotificationStatus({
+            status: "warning",
+            is_open: true,
+            key: generateRandomKey(),
+            message: message,
+            options: options,
+        });
+    };
+
     const showNotification_Error = (message, options = {}) => {
         updateNotificationStatus({
             status: "error",
@@ -37,6 +47,7 @@ export const useNotificationStatus = () => {
         currentNotificationStatus,
         updateNotificationStatus,
 
+        showNotification_Warning,
         showNotification_Error,
         showNotification_Success,
         closeNotification,

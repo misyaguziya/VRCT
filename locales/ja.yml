@@ -24,6 +24,9 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 以上で 「{{speaker_record_timeout_label}}」 より小さくすることはできません。"
     invalid_value_speaker_max_phrase: "0 以上の数値を設定できます。"
 
+common_warning:
+    unable_to_use_osc_query: "OSC IP Address の設定によりOSCデータの受信ができないため、以下の機能が自動的に無効になっています。"
+
 main_page:
     translation: "翻訳"
     transcription_send: "音声認識 マイク"

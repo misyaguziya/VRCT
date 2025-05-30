@@ -6,6 +6,9 @@
     &.is_success {
         background-color: var(--success_bc_color);
     }
+    &.is_warning {
+        background-color: var(--waring_bc_color);
+    }
     &.is_error {
         background-color: var(--error_bc_color);
     }

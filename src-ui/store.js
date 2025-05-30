@@ -60,10 +60,19 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
         };
 
         const updateAtom = (payload, options = {}) => {
-            const { remain_state = false, set_state } = options;
+            const { remain_state = false, set_state, lock_state } = options;
 
             setAtom((currentValue) => {
-                const new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+                let new_state;
+                if (lock_state) {
+                    new_state = set_state;
+                } else {
+                    if (currentValue.lock_state) {
+                        new_state = currentValue.state;
+                    } else {
+                        new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+                    }
+                }
 
                 const updated_data = typeof payload === "function"
                     ? payload(currentValue)
