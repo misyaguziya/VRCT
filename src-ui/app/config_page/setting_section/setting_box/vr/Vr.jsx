@@ -25,6 +25,10 @@ import {
 
 import RedoSvg from "@images/redo.svg?react";
 
+import SquareSvg from "@images/square.svg?react";
+import TriangleSvg from "@images/triangle.svg?react";
+import { randomIntMinMax } from "@utils";
+
 export const Vr = () => {
     const { t } = useTranslation();
     const [is_opened_small_settings, setIsOpenedSmallSettings] = useState(true);
@@ -188,15 +192,9 @@ const PageSwitcherContainer = (props) => {
 };
 
 
-/**
- * PositionControls:
- * - x_pos, y_pos, z_pos 用のスライダーとリセットボタン、上下ボタンを表示
- * - useVariableControl を使って、is_max/is_min/variable_display/countUp/countDown を共通化
- */
-const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
+export const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
     const { t } = useTranslation();
 
-    // x_pos 用のフック呼び出し
     const {
         variable_display: x_variable_display,
         is_max: is_max_position_x,
@@ -205,7 +203,6 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
         countDown: countDownPositionX,
     } = useVariableControl("x_pos", settings, onchangeFunction, ui_configs);
 
-    // y_pos 用のフック呼び出し
     const {
         variable_display: y_variable_display,
         is_max: is_max_position_y,
@@ -214,7 +211,6 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
         countDown: countDownPositionY,
     } = useVariableControl("y_pos", settings, onchangeFunction, ui_configs);
 
-    // z_pos 用のフック呼び出し
     const {
         variable_display: z_variable_display,
         is_max: is_max_position_z,
@@ -223,19 +219,8 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
         countDown: countDownPositionZ,
     } = useVariableControl("z_pos", settings, onchangeFunction, ui_configs);
 
-    // 各ボタンの className を生成
-    const x_position_button_up_classname = clsx(styles.x_position_button_up, { [styles.is_disabled]: is_max_position_x });
-    const x_position_button_down_classname = clsx(styles.x_position_button_down, { [styles.is_disabled]: is_min_position_x });
-
-    const y_position_button_up_classname = clsx(styles.y_position_button_up, { [styles.is_disabled]: is_max_position_y });
-    const y_position_button_down_classname = clsx(styles.y_position_button_down, { [styles.is_disabled]: is_min_position_y });
-
-    const z_position_button_up_classname = clsx(styles.z_position_button_up, { [styles.is_disabled]: is_max_position_z });
-    const z_position_button_down_classname = clsx(styles.z_position_button_down, { [styles.is_disabled]: is_min_position_z });
-
     return (
         <div className={styles.position_controls}>
-            {/* X Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.x_position_label)}>
                     {t("config_page.vr.x_position")}
@@ -252,13 +237,15 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
                     valueLabelDisplay={x_variable_display}
                     valueLabelDisplayLocation="top"
                 />
-                <div className={styles.x_position_button_wrapper}>
-                    <div className={x_position_button_up_classname} onClick={countUpPositionX}>△</div>
-                    <div className={x_position_button_down_classname} onClick={countDownPositionX}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.x_position_button_wrapper}
+                    is_max={is_max_position_x}
+                    is_min={is_min_position_x}
+                    countUp={countUpPositionX}
+                    countDown={countDownPositionX}
+                />
             </div>
 
-            {/* Y Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.y_position_label)}>
                     {t("config_page.vr.y_position")}
@@ -276,13 +263,15 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
                     valueLabelDisplay={y_variable_display}
                     valueLabelDisplayLocation="right"
                 />
-                <div className={styles.y_position_button_wrapper}>
-                    <div className={y_position_button_up_classname} onClick={countUpPositionY}>△</div>
-                    <div className={y_position_button_down_classname} onClick={countDownPositionY}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.y_position_button_wrapper}
+                    is_max={is_max_position_y}
+                    is_min={is_min_position_y}
+                    countUp={countUpPositionY}
+                    countDown={countDownPositionY}
+                />
             </div>
 
-            {/* Z Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.z_position_label)}>
                     {t("config_page.vr.z_position")}
@@ -300,16 +289,19 @@ const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_confi
                     valueLabelDisplay={z_variable_display}
                     valueLabelDisplayLocation="left"
                 />
-                <div className={styles.z_position_button_wrapper}>
-                    <div className={z_position_button_up_classname} onClick={countUpPositionZ}>△</div>
-                    <div className={z_position_button_down_classname} onClick={countDownPositionZ}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.z_position_button_wrapper}
+                    is_max={is_max_position_z}
+                    is_min={is_min_position_z}
+                    countUp={countUpPositionZ}
+                    countDown={countDownPositionZ}
+                />
             </div>
         </div>
     );
 };
 
-const RotationControls = ({settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs}) => {
+export const RotationControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
     const { t } = useTranslation();
 
     const {
@@ -336,15 +328,6 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, ui_config
         countDown: countDownRotationZ,
     } = useVariableControl("z_rotation", settings, onchangeFunction, ui_configs);
 
-    const x_rotation_button_up_classname = clsx(styles.x_rotation_button_up, { [styles.is_disabled]: is_min_rotation_x });
-    const x_rotation_button_down_classname = clsx(styles.x_rotation_button_down, { [styles.is_disabled]: is_max_rotation_x });
-
-    const y_rotation_button_up_classname = clsx(styles.y_rotation_button_up, { [styles.is_disabled]: is_max_rotation_y });
-    const y_rotation_button_down_classname = clsx(styles.y_rotation_button_down, { [styles.is_disabled]: is_min_rotation_y });
-
-    const z_rotation_button_up_classname = clsx(styles.z_rotation_button_up, { [styles.is_disabled]: is_max_rotation_z });
-    const z_rotation_button_down_classname = clsx(styles.z_rotation_button_down, { [styles.is_disabled]: is_min_rotation_z });
-
     return (
         <div className={styles.rotation_controls}>
             <div className={styles.rotation_wrapper}>
@@ -365,11 +348,15 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, ui_config
                     valueLabelDisplay={x_variable_display}
                     valueLabelDisplayLocation="right"
                 />
-                <div className={styles.x_rotation_button_wrapper}>
-                    <div className={x_rotation_button_up_classname} onClick={countDownRotationX}>△</div>
-                    <div className={x_rotation_button_down_classname} onClick={countUpRotationX}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.x_rotation_button_wrapper}
+                    is_max={is_min_rotation_x}
+                    is_min={is_max_rotation_x}
+                    countUp={countDownRotationX}
+                    countDown={countUpRotationX}
+                />
             </div>
+
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.y_rotation_label)}>
                     {t("config_page.vr.y_rotation")}
@@ -386,11 +373,15 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, ui_config
                     valueLabelDisplay={y_variable_display}
                     valueLabelDisplayLocation="top"
                 />
-                <div className={styles.y_rotation_button_wrapper}>
-                    <div className={y_rotation_button_up_classname} onClick={countUpRotationY}>△</div>
-                    <div className={y_rotation_button_down_classname} onClick={countDownRotationY}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.y_rotation_button_wrapper}
+                    is_max={is_max_rotation_y}
+                    is_min={is_min_rotation_y}
+                    countUp={countUpRotationY}
+                    countDown={countDownRotationY}
+                />
             </div>
+
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.z_rotation_label)}>
                     {t("config_page.vr.z_rotation")}
@@ -408,10 +399,43 @@ const RotationControls = ({settings, onchangeFunction, selectFunction, ui_config
                     valueLabelDisplay={z_variable_display}
                     valueLabelDisplayLocation="left"
                 />
-                <div className={styles.z_rotation_button_wrapper}>
-                    <div className={z_rotation_button_up_classname} onClick={countUpRotationZ}>△</div>
-                    <div className={z_rotation_button_down_classname} onClick={countDownRotationZ}>▽</div>
-                </div>
+                <AdjustButtonContainer
+                    wrapper_class_name={styles.z_rotation_button_wrapper}
+                    is_max={is_max_rotation_z}
+                    is_min={is_min_rotation_z}
+                    countUp={countUpRotationZ}
+                    countDown={countDownRotationZ}
+                />
+            </div>
+        </div>
+    );
+};
+
+const AdjustButtonContainer = ({ wrapper_class_name, is_max, is_min, countUp, countDown }) => {
+    return (
+        <div className={wrapper_class_name}>
+            <div
+                className={clsx(
+                    styles.button_wrapper,
+                    {
+                        [styles.is_disabled]: is_max,
+                        [styles.up]: true,
+                    }
+                )}
+                onClick={countUp}
+            >
+                <TriangleSvg className={styles.adjust_button_triangle_svg} />
+            </div>
+            <div
+                className={clsx(
+                    styles.button_wrapper,
+                    {
+                        [styles.is_disabled]: is_min,
+                    }
+                )}
+                onClick={countDown}
+            >
+                <TriangleSvg className={styles.adjust_button_triangle_svg} />
             </div>
         </div>
     );
@@ -511,10 +535,6 @@ const ResetButton = ({onClickFunction}) => {
     );
 };
 
-import SquareSvg from "@images/square.svg?react";
-import TriangleSvg from "@images/triangle.svg?react";
-import { randomIntMinMax } from "@utils";
-
 const SendSampleTextToggleButton = () => {
     const { t } = useTranslation();
     const { sendTextToOverlay } = useSendTextToOverlay();
@@ -575,7 +595,6 @@ const useVariableControl = (key, settings, onchangeFunction, ui_configs) => {
 
     const timerRef = useRef();
 
-        // アンマウント時にタイマーをクリアする
     useEffect(() => {
         return () => {
             clearTimeout(timerRef.current);
