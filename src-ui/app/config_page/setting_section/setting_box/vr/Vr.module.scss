@@ -184,7 +184,9 @@
     &.is_disabled {
         pointer-events: none;
         background-color: var(--dark_875_color);
-        color: var(--dark_600_color);
+        & .adjust_button_triangle_svg {
+            color: var(--dark_800_color);
+        }
     }
 }
 
@@ -198,28 +200,38 @@
     transform: translate(-50%) rotate($rotate);
 }
 
+.button_wrapper {
+    @extend %variable-button;
+
+    &.up .adjust_button_triangle_svg {
+        transform: rotate(0deg);
+    }
+    &:not(.up) .adjust_button_triangle_svg {
+        transform: rotate(180deg);
+    }
+    &.is_disabled {
+        pointer-events: none;
+        color: var(--dark_875_color);
+    }
+}
+
+.adjust_button_triangle_svg {
+    width: 1.8rem;
+    color: var(--dark_400_color);
+}
+
+
+
 .y_position_button_wrapper {
     @include variable-button-wrapper(top, 30%, left, -26%);
-}
-.y_position_button_up,
-.y_position_button_down {
-    @extend %variable-button;
 }
 
 .x_position_button_wrapper {
     @include variable-button-wrapper(bottom, -38%, left, 46%, 90deg);
 }
-.x_position_button_up,
-.x_position_button_down {
-    @extend %variable-button;
-}
 
 .z_position_button_wrapper {
     @include variable-button-wrapper(bottom, 26%, right, -4%, 45deg);
-}
-.z_position_button_up,
-.z_position_button_down {
-    @extend %variable-button;
 }
 
 
@@ -280,27 +292,14 @@
 .x_rotation_button_wrapper {
     @include variable-button-wrapper(top, 30%, left, -26%);
 }
-.x_rotation_button_up,
-.x_rotation_button_down {
-    @extend %variable-button;
-}
 
 .y_rotation_button_wrapper {
     @include variable-button-wrapper(bottom, -38%, left, 46%, 90deg);
-}
-.y_rotation_button_up,
-.y_rotation_button_down {
-    @extend %variable-button;
 }
 
 .z_rotation_button_wrapper {
     @include variable-button-wrapper(bottom, 50%, right, -60%, -45deg);
 }
-.z_rotation_button_up,
-.z_rotation_button_down {
-    @extend %variable-button;
-}
-
 
 
 
