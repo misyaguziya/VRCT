@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import clsx from "clsx";
 import styles from "./Vr.module.scss";
@@ -147,7 +147,7 @@ const OverlaySettingsContainer = ({
                 ) : (
                     <RotationControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} default_ui_configs={default_ui_configs} selectFunction={selectFunction}/>
                 )}
-                <SendSampleTextToggleButton />
+            <SendSampleTextToggleButton />
             </div>
             <OtherControls settings={settings} onchangeFunction={onchangeFunction} ui_configs={ui_configs} />
             <RadioButtonContainer
@@ -187,11 +187,55 @@ const PageSwitcherContainer = (props) => {
     );
 };
 
-const PositionControls = ({settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs}) => {
+
+/**
+ * PositionControls:
+ * - x_pos, y_pos, z_pos 用のスライダーとリセットボタン、上下ボタンを表示
+ * - useVariableControl を使って、is_max/is_min/variable_display/countUp/countDown を共通化
+ */
+const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
     const { t } = useTranslation();
+
+    // x_pos 用のフック呼び出し
+    const {
+        variable_display: x_variable_display,
+        is_max: is_max_position_x,
+        is_min: is_min_position_x,
+        countUp: countUpPositionX,
+        countDown: countDownPositionX,
+    } = useVariableControl("x_pos", settings, onchangeFunction, ui_configs);
+
+    // y_pos 用のフック呼び出し
+    const {
+        variable_display: y_variable_display,
+        is_max: is_max_position_y,
+        is_min: is_min_position_y,
+        countUp: countUpPositionY,
+        countDown: countDownPositionY,
+    } = useVariableControl("y_pos", settings, onchangeFunction, ui_configs);
+
+    // z_pos 用のフック呼び出し
+    const {
+        variable_display: z_variable_display,
+        is_max: is_max_position_z,
+        is_min: is_min_position_z,
+        countUp: countUpPositionZ,
+        countDown: countDownPositionZ,
+    } = useVariableControl("z_pos", settings, onchangeFunction, ui_configs);
+
+    // 各ボタンの className を生成
+    const x_position_button_up_classname = clsx(styles.x_position_button_up, { [styles.is_disabled]: is_max_position_x });
+    const x_position_button_down_classname = clsx(styles.x_position_button_down, { [styles.is_disabled]: is_min_position_x });
+
+    const y_position_button_up_classname = clsx(styles.y_position_button_up, { [styles.is_disabled]: is_max_position_y });
+    const y_position_button_down_classname = clsx(styles.y_position_button_down, { [styles.is_disabled]: is_min_position_y });
+
+    const z_position_button_up_classname = clsx(styles.z_position_button_up, { [styles.is_disabled]: is_max_position_z });
+    const z_position_button_down_classname = clsx(styles.z_position_button_down, { [styles.is_disabled]: is_min_position_z });
 
     return (
         <div className={styles.position_controls}>
+            {/* X Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.x_position_label)}>
                     {t("config_page.vr.x_position")}
@@ -205,8 +249,16 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                     min={ui_configs.x_pos.min}
                     max={ui_configs.x_pos.max}
                     onchangeFunction={(value) => onchangeFunction("x_pos", value)}
+                    valueLabelDisplay={x_variable_display}
+                    valueLabelDisplayLocation="top"
                 />
+                <div className={styles.x_position_button_wrapper}>
+                    <div className={x_position_button_up_classname} onClick={countUpPositionX}>△</div>
+                    <div className={x_position_button_down_classname} onClick={countDownPositionX}>▽</div>
+                </div>
             </div>
+
+            {/* Y Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.y_position_label)}>
                     {t("config_page.vr.y_position")}
@@ -221,8 +273,16 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                     max={ui_configs.y_pos.max}
                     onchangeFunction={(value) => onchangeFunction("y_pos", value)}
                     orientation="vertical"
+                    valueLabelDisplay={y_variable_display}
+                    valueLabelDisplayLocation="right"
                 />
+                <div className={styles.y_position_button_wrapper}>
+                    <div className={y_position_button_up_classname} onClick={countUpPositionY}>△</div>
+                    <div className={y_position_button_down_classname} onClick={countDownPositionY}>▽</div>
+                </div>
             </div>
+
+            {/* Z Position */}
             <div className={styles.position_wrapper}>
                 <p className={clsx(styles.slider_label, styles.z_position_label)}>
                     {t("config_page.vr.z_position")}
@@ -237,68 +297,126 @@ const PositionControls = ({settings, onchangeFunction, selectFunction, ui_config
                     max={ui_configs.z_pos.max}
                     onchangeFunction={(value) => onchangeFunction("z_pos", value)}
                     orientation="vertical"
+                    valueLabelDisplay={z_variable_display}
+                    valueLabelDisplayLocation="left"
                 />
+                <div className={styles.z_position_button_wrapper}>
+                    <div className={z_position_button_up_classname} onClick={countUpPositionZ}>△</div>
+                    <div className={z_position_button_down_classname} onClick={countDownPositionZ}>▽</div>
+                </div>
             </div>
         </div>
     );
 };
 
-const RotationControls = ({settings, onchangeFunction, selectFunction, default_ui_configs}) => {
+const RotationControls = ({settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs}) => {
     const { t } = useTranslation();
+
+    const {
+        variable_display: x_variable_display,
+        is_max: is_max_rotation_x,
+        is_min: is_min_rotation_x,
+        countUp: countUpRotationX,
+        countDown: countDownRotationX,
+    } = useVariableControl("x_rotation", settings, onchangeFunction, ui_configs);
+
+    const {
+        variable_display: y_variable_display,
+        is_max: is_max_rotation_y,
+        is_min: is_min_rotation_y,
+        countUp: countUpRotationY,
+        countDown: countDownRotationY,
+    } = useVariableControl("y_rotation", settings, onchangeFunction, ui_configs);
+
+    const {
+        variable_display: z_variable_display,
+        is_max: is_max_rotation_z,
+        is_min: is_min_rotation_z,
+        countUp: countUpRotationZ,
+        countDown: countDownRotationZ,
+    } = useVariableControl("z_rotation", settings, onchangeFunction, ui_configs);
+
+    const x_rotation_button_up_classname = clsx(styles.x_rotation_button_up, { [styles.is_disabled]: is_min_rotation_x });
+    const x_rotation_button_down_classname = clsx(styles.x_rotation_button_down, { [styles.is_disabled]: is_max_rotation_x });
+
+    const y_rotation_button_up_classname = clsx(styles.y_rotation_button_up, { [styles.is_disabled]: is_max_rotation_y });
+    const y_rotation_button_down_classname = clsx(styles.y_rotation_button_down, { [styles.is_disabled]: is_min_rotation_y });
+
+    const z_rotation_button_up_classname = clsx(styles.z_rotation_button_up, { [styles.is_disabled]: is_max_rotation_z });
+    const z_rotation_button_down_classname = clsx(styles.z_rotation_button_down, { [styles.is_disabled]: is_min_rotation_z });
 
     return (
         <div className={styles.rotation_controls}>
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.x_rotation_label)}>
                     {t("config_page.vr.x_rotation")}
-                    <ResetButton onClickFunction={() => selectFunction("x_rotation", default_ui_configs.y_pos)} />
+                    <ResetButton onClickFunction={() => selectFunction("x_rotation", default_ui_configs.x_rotation)} />
                 </p>
                 <Slider
                     className={styles.x_rotation_slider}
                     no_padding={true}
                     variable={-settings.x_rotation}
                     valueLabelFormat={settings.x_rotation}
-                    step={5}
-                    min={-180}
-                    max={180}
+                    step={ui_configs.x_rotation.step}
+                    min={ui_configs.x_rotation.min}
+                    max={ui_configs.x_rotation.max}
                     onchangeFunction={(value) => onchangeFunction("x_rotation", -value)}
                     orientation="vertical"
+                    valueLabelDisplay={x_variable_display}
+                    valueLabelDisplayLocation="right"
                 />
+                <div className={styles.x_rotation_button_wrapper}>
+                    <div className={x_rotation_button_up_classname} onClick={countDownRotationX}>△</div>
+                    <div className={x_rotation_button_down_classname} onClick={countUpRotationX}>▽</div>
+                </div>
             </div>
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.y_rotation_label)}>
                     {t("config_page.vr.y_rotation")}
-                    <ResetButton onClickFunction={() => selectFunction("y_rotation", default_ui_configs.y_pos)} />
+                    <ResetButton onClickFunction={() => selectFunction("y_rotation", default_ui_configs.y_rotation)} />
                 </p>
                 <Slider
                     className={styles.y_rotation_slider}
                     no_padding={true}
                     variable={settings.y_rotation}
-                    step={5}
-                    min={-180}
-                    max={180}
+                    step={ui_configs.y_rotation.step}
+                    min={ui_configs.y_rotation.min}
+                    max={ui_configs.y_rotation.max}
                     onchangeFunction={(value) => onchangeFunction("y_rotation", value)}
+                    valueLabelDisplay={y_variable_display}
+                    valueLabelDisplayLocation="top"
                 />
+                <div className={styles.y_rotation_button_wrapper}>
+                    <div className={y_rotation_button_up_classname} onClick={countUpRotationY}>△</div>
+                    <div className={y_rotation_button_down_classname} onClick={countDownRotationY}>▽</div>
+                </div>
             </div>
             <div className={styles.rotation_wrapper}>
                 <p className={clsx(styles.slider_label, styles.z_rotation_label)}>
                     {t("config_page.vr.z_rotation")}
-                    <ResetButton onClickFunction={() => selectFunction("z_rotation", default_ui_configs.y_pos)} />
+                    <ResetButton onClickFunction={() => selectFunction("z_rotation", default_ui_configs.z_rotation)} />
                 </p>
                 <Slider
                     className={styles.z_rotation_slider}
                     no_padding={true}
                     variable={settings.z_rotation}
-                    step={5}
-                    min={-180}
-                    max={180}
+                    step={ui_configs.z_rotation.step}
+                    min={ui_configs.z_rotation.min}
+                    max={ui_configs.z_rotation.max}
                     onchangeFunction={(value) => onchangeFunction("z_rotation", value)}
                     orientation="vertical"
+                    valueLabelDisplay={z_variable_display}
+                    valueLabelDisplayLocation="left"
                 />
+                <div className={styles.z_rotation_button_wrapper}>
+                    <div className={z_rotation_button_up_classname} onClick={countUpRotationZ}>△</div>
+                    <div className={z_rotation_button_down_classname} onClick={countDownRotationZ}>▽</div>
+                </div>
             </div>
         </div>
     );
 };
+
 
 const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
     const { t } = useTranslation();
@@ -445,4 +563,59 @@ const SendSampleTextToggleButton = () => {
             <p className={styles.sample_text_button_label}>{label}</p>
         </div>
     );
+};
+
+
+
+const useVariableControl = (key, settings, onchangeFunction, ui_configs) => {
+    const [variable_display, setVariableDisplay] = useState("auto");
+
+    const [is_max, setIsMax] = useState(settings[key] >= ui_configs[key].max);
+    const [is_min, setIsMin] = useState(settings[key] <= ui_configs[key].min);
+
+    const timerRef = useRef();
+
+        // アンマウント時にタイマーをクリアする
+    useEffect(() => {
+        return () => {
+            clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    const triggerDisplay = () => {
+        setVariableDisplay("on");
+        clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            setVariableDisplay("auto");
+        }, 2000);
+    };
+
+    useEffect(() => {
+        setIsMax(settings[key] >= ui_configs[key].max);
+        setIsMin(settings[key] <= ui_configs[key].min);
+    }, [settings[key]]);
+
+    const countUp = () => {
+        if (is_max) return;
+        const step = ui_configs[key].step;
+        const new_value = parseFloat((settings[key] + step).toFixed(2));
+        onchangeFunction(key, new_value);
+        triggerDisplay();
+    };
+
+    const countDown = () => {
+        if (is_min) return;
+        const step = ui_configs[key].step;
+        const new_value = parseFloat((settings[key] - step).toFixed(2));
+        onchangeFunction(key, new_value);
+        triggerDisplay();
+    };
+
+    return {
+        variable_display,
+        is_max,
+        is_min,
+        countUp,
+        countDown,
+    };
 };
