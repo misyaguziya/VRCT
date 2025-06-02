@@ -16,7 +16,7 @@
     justify-content: center;
     width: 100%;
     max-width: 56rem;
-    gap: 2rem;
+    gap: 4rem;
 }
 
 .controller_type_switch {
@@ -58,12 +58,13 @@
 
 .sample_text_button_wrapper {
     position: absolute;
-    bottom: 0;
-    left: -74%;
+    bottom: -12%;
+    left: -80%;
     display: flex;
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    // transform: translate(-50%, -50%);
 }
 .sample_text_button {
     background-color: var(--dark_850_color);
@@ -121,20 +122,20 @@
 }
 .x_position_label {
     position: absolute;
-    bottom: -4.6rem;
+    bottom: -5rem;
     right: -46%;
     justify-content: end;
 }
 .y_position_label {
     position: absolute;
-    top: -44%;
-    left: 10%;
-    justify-content: start;
+    bottom: 110%;
+    right: 119%;
+    justify-content: end;
 }
 .z_position_label {
     position: absolute;
-    top: 30%;
-    left: 80%;
+    top: 14%;
+    left: 110%;
 }
 
 .x_position_slider {
@@ -155,13 +156,71 @@
 
 .z_position_slider {
     position: absolute;
-    bottom: 61%;
-    left: 61%;
+    bottom: 80%;
+    left: 88%;
     transform: translate(50%,50%) rotate(45deg);
     width: 0%;
     height: 100%;
 }
 
+
+%variable-button {
+    width: 3.8rem;
+    border-radius: 0.4rem;
+    aspect-ratio: 1.2 / 1;
+    background-color: var(--dark_850_color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.6rem;
+    cursor: pointer;
+
+    &:hover {
+        background-color: var(--primary_500_color);
+    }
+    &:active {
+        background-color: var(--primary_600_color);
+    }
+    &.is_disabled {
+        pointer-events: none;
+        background-color: var(--dark_875_color);
+        color: var(--dark_600_color);
+    }
+}
+
+@mixin variable-button-wrapper($vertical-pos, $vertical-value, $horizontal-pos, $horizontal-value, $rotate: 0deg) {
+    position: absolute;
+    #{$vertical-pos}: $vertical-value;
+    #{$horizontal-pos}: $horizontal-value;
+    display: flex;
+    gap: 1.6rem;
+    flex-direction: column;
+    transform: translate(-50%) rotate($rotate);
+}
+
+.y_position_button_wrapper {
+    @include variable-button-wrapper(top, 30%, left, -26%);
+}
+.y_position_button_up,
+.y_position_button_down {
+    @extend %variable-button;
+}
+
+.x_position_button_wrapper {
+    @include variable-button-wrapper(bottom, -38%, left, 46%, 90deg);
+}
+.x_position_button_up,
+.x_position_button_down {
+    @extend %variable-button;
+}
+
+.z_position_button_wrapper {
+    @include variable-button-wrapper(bottom, 26%, right, -4%, 45deg);
+}
+.z_position_button_up,
+.z_position_button_down {
+    @extend %variable-button;
+}
 
 
 
@@ -175,19 +234,20 @@
 
 .x_rotation_label {
     position: absolute;
-    top: -44%;
-    left: 10%;
+    bottom: 110%;
+    right: 119%;
+    justify-content: end;
 }
 .y_rotation_label {
     position: absolute;
-    bottom: -4.6rem;
+    bottom: -5rem;
     right: -46%;
     justify-content: end;
 }
 .z_rotation_label {
     position: absolute;
-    top: -10%;
-    right: -110%;
+    top: -20%;
+    right: -100%;
 }
 
 .x_rotation_slider {
@@ -214,6 +274,34 @@
     width: 0%;
     height: 100%;
 }
+
+
+
+.x_rotation_button_wrapper {
+    @include variable-button-wrapper(top, 30%, left, -26%);
+}
+.x_rotation_button_up,
+.x_rotation_button_down {
+    @extend %variable-button;
+}
+
+.y_rotation_button_wrapper {
+    @include variable-button-wrapper(bottom, -38%, left, 46%, 90deg);
+}
+.y_rotation_button_up,
+.y_rotation_button_down {
+    @extend %variable-button;
+}
+
+.z_rotation_button_wrapper {
+    @include variable-button-wrapper(bottom, 50%, right, -60%, -45deg);
+}
+.z_rotation_button_up,
+.z_rotation_button_down {
+    @extend %variable-button;
+}
+
+
 
 
 .slider_reset_button {
