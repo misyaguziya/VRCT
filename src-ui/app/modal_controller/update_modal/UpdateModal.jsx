@@ -59,7 +59,7 @@ export const UpdateModal = () => {
                         </div>
                         <div className={styles.cuda_section}>
                             <div className={styles.button_wrapper}>
-                                <button className={cuda_accept_button_class_name} onClick={onClickUpdateSoftware_CUDA}>CUDA (GPU)</button>
+                                <button className={cuda_accept_button_class_name} onClick={onClickUpdateSoftware_CUDA}>CUDA (CPU/GPU)</button>
                                 {!is_cpu_version ? <CurrentVersionLabel is_latest_version_already={is_latest_version_already} is_cuda={true}/> : null}
                             </div>
                             <div className={styles.version_desc_container}>
@@ -85,7 +85,7 @@ const VersionDescComponent = (props) => {
     return (
         <div className={styles.version_desc_wrapper}>
             <div className={styles.version_desc_point}></div>
-            <p className={styles.version_desc}>{props.desc}</p>
+            <p className={styles.version_desc}>{`- ${props.desc}`}</p>
         </div>
     );
 };
