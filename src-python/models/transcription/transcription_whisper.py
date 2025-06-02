@@ -77,15 +77,24 @@ def downloadWhisperWeight(root, weight_type, callback=None, end_callback=None):
 def getWhisperModel(root, weight_type, device="cpu", device_index=0):
     path = os_path.join(root, "weights", "whisper", weight_type)
     compute_type = getBestComputeType(device, device_index)
-    return WhisperModel(
-        path,
-        device=device,
-        device_index=device_index,
-        compute_type=compute_type,
-        cpu_threads=4,
-        num_workers=1,
-        local_files_only=True,
-    )
+    try:
+        model = WhisperModel(
+            path,
+            device=device,
+            device_index=device_index,
+            compute_type=compute_type,
+            cpu_threads=4,
+            num_workers=1,
+            local_files_only=True,
+        )
+        return model
+    except RuntimeError as e:
+        # VRAM不足エラーの検出
+        error_message = str(e)
+        if "CUDA out of memory" in error_message or "CUBLAS_STATUS_ALLOC_FAILED" in error_message:
+            raise ValueError("VRAM_OUT_OF_MEMORY", error_message)
+        # その他のエラーは通常通り再送出
+        raise
 
 if __name__ == "__main__":
     def callback(value):
