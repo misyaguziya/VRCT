@@ -509,6 +509,15 @@ class Model:
         if isinstance(self.mic_audio_recorder, SelectedMicEnergyAndAudioRecorder):
             self.mic_audio_recorder.pause()
 
+    # VRAM 不足エラーを検出するメソッドを追加
+    def detectVRAMError(self, error):
+        error_str = str(error)
+        if isinstance(error, ValueError) and len(error.args) > 0 and error.args[0] == "VRAM_OUT_OF_MEMORY":
+            return True, error.args[1] if len(error.args) > 1 else "VRAM out of memory"
+        if "CUDA out of memory" in error_str or "CUBLAS_STATUS_ALLOC_FAILED" in error_str:
+            return True, error_str
+        return False, None
+
     def changeMicTranscriptStatus(self):
         if config.VRC_MIC_MUTE_SYNC is True:
             match self.mic_mute_status:

@@ -259,17 +259,44 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getInputTranslate(message, source_language=language)
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                try:
+                    translation, success = model.getInputTranslate(message, source_language=language)
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_mic_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of mic",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        return
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -346,17 +373,44 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getOutputTranslate(message, source_language=language)
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                try:
+                    translation, success = model.getOutputTranslate(message, source_language=language)
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_speaker_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of speaker",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        return
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -417,26 +471,62 @@ class Controller:
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                if config.USE_EXCLUDE_WORDS is True:
-                    replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
-                    translation, success = model.getInputTranslate(replacement_message)
+                try:
+                    if config.USE_EXCLUDE_WORDS is True:
+                        replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
+                        translation, success = model.getInputTranslate(replacement_message)
 
-                    message = self.removeExclamations(message)
-                    for i in range(len(translation)):
-                        translation[i] = self.restoreText(translation[i], replacement_dict)
-                else:
-                    translation, success = model.getInputTranslate(message)
+                        message = self.removeExclamations(message)
+                        for i in range(len(translation)):
+                            translation[i] = self.restoreText(translation[i], replacement_dict)
+                    else:
+                        translation, success = model.getInputTranslate(message)
 
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_chat_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of chat",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        # エラー時は翻訳なしで返す
+                        return {"status":200,
+                                "result":
+                                {
+                                    "id":id,
+                                    "message":message,
+                                    "translation":[],
+                                    "transliteration":[],
+                                    },
+                                }
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -514,8 +604,21 @@ class Controller:
     @staticmethod
     def setSelectedTranslationComputeDevice(device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
+        pre_device = config.SELECTED_TRANSLATION_COMPUTE_DEVICE
         config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
-        model.changeTranslatorCTranslate2Model()
+        try:
+            model.changeTranslatorCTranslate2Model()
+        except Exception as e:
+            # VRAM不足エラーの検出（デバイス切り替え時）
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                # 前のデバイス設定に戻す
+                printLog("VRAM error detected, reverting device setting")
+                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = pre_device
+                model.changeTranslatorCTranslate2Model()
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
@@ -1628,8 +1731,35 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startMicTranscript(self.micMessage)
-        self.device_access_status = True
+        try:
+            model.startMicTranscript(self.micMessage)
+        except Exception as e:
+            # VRAM不足エラーの検出
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                self.run(
+                    400,
+                    self.run_mapping["error_transcription_mic_vram_overflow"],
+                    {
+                        "message":"VRAM out of memory during mic transcription",
+                        "data": error_message
+                    },
+                )
+                # ここでマイクの音声認識を停止
+                self.stopTranscriptionSendMessage()
+                self.run(
+                    400,
+                    self.run_mapping["enable_transcription_send"],
+                    {
+                        "message":"Transcription send disabled due to VRAM overflow",
+                        "data": False
+                    },
+                )
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
+        finally:
+            self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -1650,8 +1780,35 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startSpeakerTranscript(self.speakerMessage)
-        self.device_access_status = True
+        try:
+            model.startSpeakerTranscript(self.speakerMessage)
+        except Exception as e:
+            # VRAM不足エラーの検出
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                self.run(
+                    400,
+                    self.run_mapping["error_transcription_speaker_vram_overflow"],
+                    {
+                        "message":"VRAM out of memory during speaker transcription",
+                        "data": error_message
+                    },
+                )
+                # ここでスピーカーの音声認識を停止
+                self.stopTranscriptionReceiveMessage()
+                self.run(
+                    400,
+                    self.run_mapping["enable_transcription_receive"],
+                    {
+                        "message":"Transcription receive disabled due to VRAM overflow",
+                        "data": False
+                    },
+                )
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
+        finally:
+            self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
