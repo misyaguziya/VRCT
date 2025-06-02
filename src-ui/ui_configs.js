@@ -7,12 +7,18 @@ export const ui_configs = {
         x_pos: { step: 0.05, min: -0.5, max: 0.5 },
         y_pos: { step: 0.05, min: -0.8, max: 0.8 },
         z_pos: { step: 0.05, min: -0.5, max: 1.5 },
+        x_rotation: { min: -180, max: 180, step: 5 },
+        y_rotation: { min: -180, max: 180, step: 5 },
+        z_rotation: { min: -180, max: 180, step: 5 },
         ui_scaling: { step: 10, min: 40, max: 200 },
     },
     overlay_large_log: {
         x_pos: { step: 0.05, min: -0.5, max: 0.5 },
         y_pos: { step: 0.05, min: -0.8, max: 0.8 },
         z_pos: { step: 0.05, min: -0.5, max: 1.5 },
+        x_rotation: { min: -180, max: 180, step: 5 },
+        y_rotation: { min: -180, max: 180, step: 5 },
+        z_rotation: { min: -180, max: 180, step: 5 },
         ui_scaling: { step: 10, min: 40, max: 200 },
     },
 
