@@ -7,6 +7,7 @@ import {
     useIsVrctAvailable,
     useNotificationStatus,
     useHandleNetworkConnection,
+    useHandleOscQuery,
 
     useSoftwareVersion,
     useComputeMode,
@@ -75,6 +76,7 @@ import {
     usePlugins,
     useOscIpAddress,
     useOscPort,
+    useWebsocket,
 } from "@logics_configs";
 
 export const useReceiveRoutes = () => {
@@ -82,6 +84,7 @@ export const useReceiveRoutes = () => {
     const { updateComputeMode } = useComputeMode();
     const { updateInitProgress } = useInitProgress();
     const { updateIsBackendReady } = useIsBackendReady();
+    const { handleOscQuery } = useHandleOscQuery();
     const { restoreWindowGeometry } = useWindow();
     const { updateIsMainPageCompactMode } = useIsMainPageCompactMode();
     const {
@@ -180,6 +183,11 @@ export const useReceiveRoutes = () => {
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateOscPort } = useOscPort();
+    const {
+        updateEnableWebsocket,
+        updateWebsocketHost,
+        updateWebsocketPort,
+    } = useWebsocket();
 
 
 
@@ -213,6 +221,12 @@ export const useReceiveRoutes = () => {
             }));
         },
         "/run/connected_network": handleNetworkConnection,
+        "/run/enable_osc_query": ({data, disabled_functions}) => {
+            handleOscQuery({
+                is_osc_query_enabled: data,
+                disabled_functions: disabled_functions,
+            });
+        },
 
         // Main Page
         // Page Controls
@@ -474,9 +488,15 @@ export const useReceiveRoutes = () => {
         "/set/enable/logger_feature": updateEnableAutoExportMessageLogs,
         "/set/disable/logger_feature": updateEnableAutoExportMessageLogs,
 
-        "/get/data/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
-        "/set/enable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
-        "/set/disable/vrc_mic_mute_sync": updateEnableVrcMicMuteSync,
+        "/get/data/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
+        "/set/enable/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
+        "/set/disable/vrc_mic_mute_sync": (payload) => updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        }),
 
         "/get/data/send_message_to_vrc": updateEnableSendMessageToVrc,
         "/set/enable/send_message_to_vrc": updateEnableSendMessageToVrc,
@@ -505,6 +525,16 @@ export const useReceiveRoutes = () => {
         "/get/data/osc_port": updateOscPort,
         "/set/data/osc_port": updateOscPort,
 
+        "/get/data/websocket_server": updateEnableWebsocket,
+        "/set/enable/websocket_server": updateEnableWebsocket,
+        "/set/disable/websocket_server": updateEnableWebsocket,
+
+        "/get/data/websocket_host": updateWebsocketHost,
+        "/set/data/websocket_host": updateWebsocketHost,
+
+        "/get/data/websocket_port": updateWebsocketPort,
+        "/set/data/websocket_port": updateWebsocketPort,
+
         "/get/data/mic_avg_logprob": ()=>{}, // Not implemented on UI yet
         "/get/data/mic_no_speech_prob": ()=>{}, // Not implemented on UI yet
         "/get/data/speaker_avg_logprob": ()=>{}, // Not implemented on UI yet
@@ -513,30 +543,6 @@ export const useReceiveRoutes = () => {
         "/get/data/convert_message_to_hiragana": ()=>{}, // Not implemented on UI yet
         "/get/data/transcription_engines": ()=>{}, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
     };
-
-    const error_status_routes = {
-        "/run/error_device": errorHandling_Backend,
-
-        "/run/error_ctranslate2_weight": errorHandling_Backend,
-        "/run/error_whisper_weight": errorHandling_Backend,
-
-        "/set/data/deepl_auth_key": errorHandling_Backend,
-
-        "/run/error_translation_engine": errorHandling_Backend,
-
-        "/set/data/mic_threshold": errorHandling_Backend,
-        "/set/data/mic_record_timeout": errorHandling_Backend,
-        "/set/data/mic_phrase_timeout": errorHandling_Backend,
-        "/set/data/mic_max_phrases": errorHandling_Backend,
-
-        "/set/data/speaker_threshold": errorHandling_Backend,
-        "/set/data/speaker_record_timeout": errorHandling_Backend,
-        "/set/data/speaker_phrase_timeout": errorHandling_Backend,
-        "/set/data/speaker_max_phrases": errorHandling_Backend,
-
-        "/set/data/osc_ip_address": errorHandling_Backend,
-    };
-
 
     const receiveRoutes = (parsed_data) => {
         const initDataSyncProcess = (payload) => {
@@ -567,17 +573,12 @@ export const useReceiveRoutes = () => {
                 break;
 
             case 400:
-                const error_route = error_status_routes[parsed_data.endpoint];
-                if (error_route) {
-                    error_route({
-                        message: parsed_data.result.message,
-                        data: parsed_data.result.data,
-                        endpoint: parsed_data.endpoint,
-                        _result: parsed_data.result,
-                    });
-                } else {
-                    handleInvalidEndpoint(parsed_data);
-                }
+                errorHandling_Backend({
+                    message: parsed_data.result.message,
+                    data: parsed_data.result.data,
+                    endpoint: parsed_data.endpoint,
+                    result: parsed_data.result,
+                });
                 break;
             case 500:
                 showNotification_Error(

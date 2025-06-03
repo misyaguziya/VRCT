@@ -24,6 +24,9 @@ common_error:
     invalid_value_speaker_phrase_timeout: "It cannot be set lower than '{{speaker_record_timeout_label}}' with a value of 0 or more."
     invalid_value_speaker_max_phrase: "You can set a number equal to or greater than 0."
 
+common_warning:
+    unable_to_use_osc_query: "The functions below have been automatically disabled because receiving OSC data is not possible due to OSC IP Address settings."
+
 main_page:
     translation: "Translation"
     transcription_send: "Voice2Chatbox"
@@ -257,6 +260,12 @@ config_page:
             label: "Open Config File"
         switch_compute_device:
             label: "Switch VRCT To CPU/GPU Version"
+        enable_websocket:
+            label: "Enable WebSocket Server"
+        websocket_host:
+            label: "WebSocket Host"
+        websocket_port:
+            label: "WebSocket Port"
 
 plugin_notifications:
     downloading: Downloading the plugin.

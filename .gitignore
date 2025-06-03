@@ -12,7 +12,8 @@ weights/
 error.log
 *.exe
 *.ipynb
-
+VRCT.zip
+VRCT_cuda.zip
 
 # Added by WebUI migration
 # Logs

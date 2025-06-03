@@ -12,7 +12,7 @@ export const useEnableVrcMicMuteSync = () => {
 
     const toggleEnableVrcMicMuteSync = () => {
         pendingEnableVrcMicMuteSync();
-        if (currentEnableVrcMicMuteSync.data) {
+        if (currentEnableVrcMicMuteSync.data.is_enabled) {
             asyncStdoutToPython("/set/disable/vrc_mic_mute_sync");
         } else {
             asyncStdoutToPython("/set/enable/vrc_mic_mute_sync");

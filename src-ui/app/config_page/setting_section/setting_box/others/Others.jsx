@@ -101,11 +101,17 @@ export const VrcMicMuteSyncContainer = () => {
     const { t } = useTranslation();
     const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
 
+    const variable = {
+        state: currentEnableVrcMicMuteSync.state,
+        data: currentEnableVrcMicMuteSync.data.is_enabled,
+    };
+
     return (
         <CheckboxContainer
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             desc={t("config_page.others.vrc_mic_mute_sync.desc")}
-            variable={currentEnableVrcMicMuteSync}
+            variable={variable}
+            is_available={currentEnableVrcMicMuteSync.data.is_available}
             toggleFunction={toggleEnableVrcMicMuteSync}
         />
     );
