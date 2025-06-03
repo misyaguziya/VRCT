@@ -60,10 +60,19 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
         };
 
         const updateAtom = (payload, options = {}) => {
-            const { remain_state = false, set_state } = options;
+            const { remain_state = false, set_state, lock_state } = options;
 
             setAtom((currentValue) => {
-                const new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+                let new_state;
+                if (lock_state) {
+                    new_state = set_state;
+                } else {
+                    if (currentValue.lock_state) {
+                        new_state = currentValue.state;
+                    } else {
+                        new_state = set_state ?? (remain_state ? currentValue.state : "ok");
+                    }
+                }
 
                 const updated_data = typeof payload === "function"
                     ? payload(currentValue)
@@ -289,6 +298,10 @@ export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } =
 // Advanced Settings
 export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");
 export const { atomInstance: Atom_OscPort, useHook: useStore_OscPort } = createAtomWithHook("9000", "OscPort");
+
+export const { atomInstance: Atom_EnableWebsocket, useHook: useStore_EnableWebsocket } = createAtomWithHook(true, "EnableWebsocket");
+export const { atomInstance: Atom_WebsocketHost, useHook: useStore_WebsocketHost } = createAtomWithHook("127.0.0.1", "WebsocketHost");
+export const { atomInstance: Atom_WebsocketPort, useHook: useStore_WebsocketPort } = createAtomWithHook("2231", "WebsocketPort");
 
 
 

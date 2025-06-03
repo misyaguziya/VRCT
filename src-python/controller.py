@@ -1,4 +1,4 @@
-from typing import Callable, Union, Any
+from typing import Callable, Any
 from time import sleep
 from subprocess import Popen
 from threading import Thread
@@ -6,7 +6,7 @@ import re
 from device_manager import device_manager
 from config import config
 from model import model
-from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress
+from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
 
 class Controller:
     def __init__(self) -> None:
@@ -294,6 +294,19 @@ class Controller:
                         "translation":translation,
                         "transliteration":transliteration
                     })
+
+                if model.checkWebSocketServerAlive() is True:
+                    model.websocketSendMessage(
+                        {
+                            "type":"SENT",
+                            "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            "message":message,
+                            "translation":translation,
+                            "transliteration":transliteration
+                        }
+                    )
+
                 if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
@@ -377,6 +390,19 @@ class Controller:
                         "translation":translation,
                         "transliteration":transliteration,
                     })
+
+                if model.checkWebSocketServerAlive() is True:
+                    model.websocketSendMessage(
+                        {
+                            "type":"RECEIVED",
+                            "src_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            "message":message,
+                            "translation":translation,
+                            "transliteration":transliteration
+                        }
+                    )
+
                 if config.LOGGER_FEATURE is True:
                     if len(translation) > 0:
                         translation = " (" + "/".join(translation) + ")"
@@ -434,11 +460,23 @@ class Controller:
                     overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
                 model.updateOverlayLargeLog(overlay_image)
 
-            # update textbox message log (Sent)
+            if model.checkWebSocketServerAlive() is True:
+                model.websocketSendMessage(
+                    {
+                        "type":"CHAT",
+                        "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                        "message":message,
+                        "translation":translation,
+                        "transliteration":transliteration
+                    }
+                )
+
+            # update textbox message log (Chat)
             if config.LOGGER_FEATURE is True:
                 if len(translation) > 0:
                     translation_text = " (" + "/".join(translation) + ")"
-                model.logger.info(f"[SENT] {message}{translation_text}")
+                model.logger.info(f"[CHAT] {message}{translation_text}")
 
         return {"status":200,
                 "result":{
@@ -1099,8 +1137,7 @@ class Controller:
     def getOscIpAddress(*args, **kwargs) -> dict:
         return {"status":200, "result":config.OSC_IP_ADDRESS}
 
-    @staticmethod
-    def setOscIpAddress(data, *args, **kwargs) -> dict:
+    def setOscIpAddress(self, data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
             response = {
                 "status":400,
@@ -1113,6 +1150,11 @@ class Controller:
             try:
                 model.setOscIpAddress(data)
                 config.OSC_IP_ADDRESS = data
+                if model.getIsOscQueryEnabled() is True:
+                    self.enableOscQuery()
+                else:
+                    self.setDisableVrcMicMuteSync()
+                    self.disableOscQuery()
                 response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
@@ -1388,10 +1430,20 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        config.VRC_MIC_MUTE_SYNC = True
-        model.setMuteSelfStatus()
-        model.changeMicTranscriptStatus()
-        return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+        if model.getIsOscQueryEnabled() is True:
+            config.VRC_MIC_MUTE_SYNC = True
+            model.setMuteSelfStatus()
+            model.changeMicTranscriptStatus()
+            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+        else:
+            response = {
+                    "status":400,
+                    "result":{
+                        "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
+                        "data": config.VRC_MIC_MUTE_SYNC
+                    }
+            }
+        return response
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
@@ -1778,8 +1830,116 @@ class Controller:
         model.stopWatchdog()
         return {"status":200, "result":True}
 
+    @staticmethod
+    def getWebSocketHost(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_HOST}
+
+    @staticmethod
+    def setWebSocketHost(data, *args, **kwargs) -> dict:
+        if isValidIpAddress(data) is False:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"Invalid IP address",
+                    "data": config.WEBSOCKET_HOST
+                }
+            }
+        else:
+            if model.checkWebSocketServerAlive() is False:
+                config.WEBSOCKET_HOST = data
+                response = {"status":200, "result":config.WEBSOCKET_HOST}
+            else:
+                if data == config.WEBSOCKET_HOST:
+                    response = {"status":200, "result":config.WEBSOCKET_HOST}
+                elif isAvailableWebSocketServer(data, config.WEBSOCKET_PORT):
+                    model.stopWebSocketServer()
+                    model.startWebSocketServer(data, config.WEBSOCKET_PORT)
+                    config.WEBSOCKET_HOST = data
+                    response = {"status":200, "result":config.WEBSOCKET_HOST}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"WebSocket server host is not available",
+                            "data": config.WEBSOCKET_HOST
+                        }
+                    }
+
+        return response
+
+    @staticmethod
+    def getWebSocketPort(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_PORT}
+
+    @staticmethod
+    def setWebSocketPort(data, *args, **kwargs) -> dict:
+        if model.checkWebSocketServerAlive() is False:
+            config.WEBSOCKET_PORT = int(data)
+            response = {"status":200, "result":config.WEBSOCKET_PORT}
+        else:
+            if int(data) == config.WEBSOCKET_PORT:
+                return {"status":200, "result":config.WEBSOCKET_PORT}
+            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, int(data)) is True:
+                model.stopWebSocketServer()
+                model.startWebSocketServer(config.WEBSOCKET_HOST, int(data))
+                config.WEBSOCKET_PORT = int(data)
+                response = {"status":200, "result":config.WEBSOCKET_PORT}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"WebSocket server port is not available",
+                        "data": config.WEBSOCKET_PORT
+                    }
+                }
+        return response
+
+    @staticmethod
+    def getWebSocketServer(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WEBSOCKET_SERVER}
+
+    @staticmethod
+    def setEnableWebSocketServer(*args, **kwargs) -> dict:
+        if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+            model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+            config.WEBSOCKET_SERVER = True
+            response = {"status":200, "result":config.WEBSOCKET_SERVER}
+        else:
+            response = {
+                "status":400,
+                "result":{
+                    "message":"WebSocket server host or port is not available",
+                    "data": config.WEBSOCKET_SERVER
+                }
+            }
+        return response
+
+    @staticmethod
+    def setDisableWebSocketServer(*args, **kwargs) -> dict:
+        config.WEBSOCKET_SERVER = False
+        model.stopWebSocketServer()
+        return {"status":200, "result":config.WEBSOCKET_SERVER}
+
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)
+
+    def enableOscQuery(self):
+        self.run(
+            200,
+            self.run_mapping["enable_osc_query"],
+            {
+                "data": True,
+                "disabled_functions": []
+            }
+        )
+
+    def disableOscQuery(self):
+        self.run(200, self.run_mapping["enable_osc_query"], {
+            "data": False,
+            "disabled_functions": [
+                "vrc_mic_mute_sync",
+            ]
+        })
 
     def init(self, *args, **kwargs) -> None:
         removeLog()
@@ -1892,6 +2052,14 @@ class Controller:
         # init OSC receive
         printLog("Init OSC Receive")
         model.startReceiveOSC()
+        osc_query_enabled = model.getIsOscQueryEnabled()
+        if osc_query_enabled is True:
+            self.enableOscQuery()
+        else:
+            # OSC Query is disabled, so disable VRC some features
+            config.VRC_MIC_MUTE_SYNC = False
+            self.disableOscQuery()
+
         if config.VRC_MIC_MUTE_SYNC is True:
             self.setEnableVrcMicMuteSync()
 
@@ -1910,6 +2078,15 @@ class Controller:
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
             model.startOverlay()
+
+        printLog("Init WebSocket Server")
+        if config.WEBSOCKET_SERVER is True:
+            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+            else:
+                config.WEBSOCKET_SERVER = False
+                model.stopWebSocketServer()
+                printLog("WebSocket server host or port is not available")
 
         printLog("Update settings")
         self.updateConfigSettings()

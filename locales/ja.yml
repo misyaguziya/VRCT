@@ -24,10 +24,13 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 以上で 「{{speaker_record_timeout_label}}」 より小さくすることはできません。"
     invalid_value_speaker_max_phrase: "0 以上の数値を設定できます。"
 
+common_warning:
+    unable_to_use_osc_query: "OSC IP Address の設定によりOSCデータの受信ができないため、以下の機能が自動的に無効になっています。"
+
 main_page:
     translation: "翻訳"
-    transcription_send: "音声認識 マイク"
-    transcription_receive: "音声認識 スピーカー"
+    transcription_send: "マイク入力"
+    transcription_receive: "聞き取り"
     foreground: "最前面固定"
 
     language_settings: "言語設定"
@@ -131,7 +134,7 @@ config_page:
         ctranslate2_compute_device:
             label: "AI翻訳 {{ctranslate2}} の処理デバイス"
         deepl_auth_key:
-            label: "DeepL API 認証キー"
+            label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
             open_auth_key_webpage: "DeepLアカウントページを開く"
             save: "保存"
@@ -257,7 +260,12 @@ config_page:
             label: "設定ファイルを開く"
         switch_compute_device:
             label: "VRCT CPU/GPUバージョンの切り替え"
-
+        enable_websocket:
+            label: "WebSocketサーバーを有効にする"
+        websocket_host:
+            label: "WebSocket Host"
+        websocket_port:
+            label: "WebSocket Port"
 
 plugin_notifications:
     downloading: プラグインをダウンロード中。

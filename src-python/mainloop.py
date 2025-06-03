@@ -4,8 +4,11 @@ import time
 from typing import Any
 from threading import Thread
 from queue import Queue
-from controller import Controller
-from utils import printLog, printResponse, errorLogging, encodeBase64
+import logging
+from controller import Controller  # noqa: E402
+from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
+
+logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 run_mapping = {
     "connected_network":"/run/connected_network",
@@ -42,6 +45,8 @@ run_mapping = {
 
     "initialization_progress":"/run/initialization_progress",
     "initialization_complete":"/run/initialization_complete",
+
+    "enable_osc_query":"/run/enable_osc_query",
 }
 
 def run(status:int, endpoint:str, result:Any) -> None:
@@ -291,6 +296,15 @@ mapping = {
     "/set/enable/send_received_message_to_vrc": {"status": True, "variable":controller.setEnableSendReceivedMessageToVrc},
     "/set/disable/send_received_message_to_vrc": {"status": True, "variable":controller.setDisableSendReceivedMessageToVrc},
 
+    # WebSocket Settings
+    "/get/data/websocket_host": {"status": True, "variable":controller.getWebSocketHost},
+    "/set/data/websocket_host": {"status": True, "variable":controller.setWebSocketHost},
+    "/get/data/websocket_port": {"status": True, "variable":controller.getWebSocketPort},
+    "/set/data/websocket_port": {"status": True, "variable":controller.setWebSocketPort},
+    "/get/data/websocket_server": {"status": True, "variable":controller.getWebSocketServer},
+    "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
+    "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
@@ -367,7 +381,7 @@ class Main:
                 if status == 423:
                     self.queue.put((endpoint, data))
                 else:
-                    printLog(endpoint, {"send_data":result})
+                    printLog(endpoint, {"status": status, "send_data": result})
                     printResponse(status, endpoint, result)
             time.sleep(0.1)
 
