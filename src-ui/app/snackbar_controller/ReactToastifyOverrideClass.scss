@@ -1,0 +1,109 @@
+:root {
+    --toastify-color-light: #fff;
+    --toastify-color-dark: var(--dark_950_color);
+    --toastify-color-info: var(--sent_400_color);
+    --toastify-color-success: var(--primary_400_color);
+    --toastify-color-warning: var(--waring_bc_color);
+    --toastify-color-error: var(--error_bc_color);
+    --toastify-color-transparent: rgba(255, 255, 255, 0.7);
+
+    --toastify-icon-color-info: var(--toastify-color-info);
+    --toastify-icon-color-success: var(--toastify-color-success);
+    --toastify-icon-color-warning: var(--toastify-color-warning);
+    --toastify-icon-color-error: var(--toastify-color-error);
+
+    --toastify-container-width: fit-content;
+    --toastify-toast-width: 32rem;
+    --toastify-toast-offset: 1.6rem;
+    --toastify-toast-top: max(var(--toastify-toast-offset), env(safe-area-inset-top));
+    --toastify-toast-right: max(var(--toastify-toast-offset), env(safe-area-inset-right));
+    --toastify-toast-left: max(var(--toastify-toast-offset), env(safe-area-inset-left));
+    --toastify-toast-bottom: max(var(--toastify-toast-offset), env(safe-area-inset-bottom));
+    --toastify-toast-background: #fff;
+    --toastify-toast-padding: 1.4rem;
+    --toastify-toast-min-height: 6.4rem;
+    --toastify-toast-max-height: 80rem;
+    --toastify-toast-bd-radius: 0.6rem;
+    --toastify-toast-shadow: .0 0.4rem 1.2rem rgba(0, 0, 0, 0.1);
+    --toastify-font-family: var(--font_family);
+    --toastify-z-index: 9999;
+    --toastify-text-color-light: #757575;
+    --toastify-text-color-dark: var(--dark_basic_text_color);
+
+    /* Used only for colored theme */
+    --toastify-text-color-info: var(--dark_basic_text_color);
+    --toastify-text-color-success: var(--dark_basic_text_color);
+    --toastify-text-color-warning: var(--dark_basic_text_color);
+    --toastify-text-color-error: var(--dark_basic_text_color);
+
+    --toastify-spinner-color: #616161;
+    --toastify-spinner-color-empty-area: #e0e0e0;
+    --toastify-color-progress-light: linear-gradient(to right, #4cd964, #5ac8fa, #007aff, #34aadc, #5856d6, #ff2d55);
+    --toastify-color-progress-dark: #bb86fc;
+    --toastify-color-progress-info: var(--toastify-color-info);
+    --toastify-color-progress-success: var(--toastify-color-success);
+    --toastify-color-progress-warning: var(--toastify-color-warning);
+    --toastify-color-progress-error: var(--toastify-color-error);
+    /* used to control the opacity of the progress trail */
+    --toastify-color-progress-bgo: 0.2;
+}
+
+
+.Toastify__toast {
+    // --------------------------------------------------------
+    // Default Settings
+    // --------------------------------------------------------
+    position: relative;
+    touch-action: none;
+    // width: var(--toastify-toast-width);
+    min-height: var(--toastify-toast-min-height);
+    box-sizing: border-box;
+    margin-bottom: 1rem;
+    // padding: var(--toastify-toast-padding);
+    border-radius: 0.6rem;
+    box-shadow: none;
+    max-height: var(--toastify-toast-max-height);
+    // font-family: "Yu Gothic UI";
+    // font-family: var(--toastify-font-family);
+    // z-index: 0;
+    // display: flex;
+    // flex: 1 auto;
+    // align-items: center;
+    word-break: break-word;
+    // --------------------------------------------------------
+    // --------------------------------------------------------
+
+
+    // Comment out above and override. Commented out is just for memorization.
+    overflow: hidden;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    font-size: 1.4rem;
+    width: fit-content;
+    max-width: 50vw;
+    padding-right: 4rem;
+    background-color: var(--dark_950_color);
+    gap: 0.6rem;
+}
+
+.Toastify__progress-bar--success {
+    background: var(--success_bc_color);
+}
+
+.Toastify__progress-bar--warning {
+    background: var(--warning_bc_color);
+}
+
+.Toastify__progress-bar--error {
+    background: var(--error_bc_color);
+}
+
+
+.Toastify__toast-icon {
+    width: fit-content;
+    max-width: 2.8rem;
+    min-width: 2.8rem;
+    justify-content: center;
+    align-items: center;
+}
