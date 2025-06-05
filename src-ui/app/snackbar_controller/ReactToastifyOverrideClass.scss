@@ -3,7 +3,7 @@
     --toastify-color-dark: var(--dark_950_color);
     --toastify-color-info: var(--sent_400_color);
     --toastify-color-success: var(--primary_400_color);
-    --toastify-color-warning: var(--waring_bc_color);
+    --toastify-color-warning: var(--warning_bc_color);
     --toastify-color-error: var(--error_bc_color);
     --toastify-color-transparent: rgba(255, 255, 255, 0.7);
 
@@ -87,6 +87,9 @@
     gap: 0.6rem;
 }
 
+.Toastify__progress-bar--wrp {
+    height: 0.4rem;
+}
 .Toastify__progress-bar--success {
     background: var(--success_bc_color);
 }
