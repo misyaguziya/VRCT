@@ -35,8 +35,7 @@ export const useNotificationStatus = () => {
         });
     };
 
-    const closeNotification = (event, reason) => {
-        if (reason === "clickaway") return;
+    const closeNotification = () => {
         updateNotificationStatus((prev) => ({
             ...prev.data,
             is_open: false,

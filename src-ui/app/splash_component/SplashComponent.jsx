@@ -71,7 +71,7 @@ const AnnouncementsContainer = () => {
 };
 
 
-
+// Duplicated
 const CloseButtonContainer = () => {
     const { asyncCloseApp } = useWindow();
 
