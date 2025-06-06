@@ -65,6 +65,7 @@ const ErrorContainer = ({error}) => {
     );
 };
 
+// Duplicated
 const CloseButtonContainer = () => {
     const { asyncCloseApp } = useWindow();
     return (
