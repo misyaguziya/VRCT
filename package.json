@@ -43,6 +43,7 @@
     "react-error-boundary": "5.0.0",
     "react-i18next": "15.5.1",
     "react-resizable-layout": "0.7.2",
+    "react-toastify": "11.0.5",
     "sass": "1.79.4",
     "semver": "7.7.1"
   },
