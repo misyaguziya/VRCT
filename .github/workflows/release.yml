@@ -1,0 +1,75 @@
+name: Release VRCT
+
+on:
+  push:
+    tags:
+      - 'v*' # タグが 'v' で始まる場合にトリガー (例: v1.0.0)
+
+jobs:
+  release:
+    name: Build VRCT
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # プロジェクトに合わせて調整してください
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11' # プロジェクトに合わせて調整してください
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable # プロジェクトに合わせて調整してください
+          profile: minimal
+          override: true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup Python environment
+        run: npm run setup-python
+
+      - name: Build and package
+        run: npm run release-all
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          TAG_WITH_V="${GITHUB_REF#refs/tags/}"
+          echo "VERSION=${TAG_WITH_V#v}" >> $GITHUB_ENV
+
+      - name: Upload to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install huggingface_hub
+          huggingface-cli upload misyaguziya/VRCT VRCT.zip VRCT.zip --repo-type dataset --commit-message "Upload VRCT.zip for version ${{ env.VERSION }}"
+          huggingface-cli upload misyaguziya/VRCT VRCT_cuda.zip VRCT_cuda.zip --repo-type dataset --commit-message "Upload VRCT_cuda.zip for version ${{ env.VERSION }}"
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (NSIS Installer)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe
+          asset_name: VRCT_${{ env.VERSION }}_x64-setup.exe
+          asset_content_type: application/octet-stream
