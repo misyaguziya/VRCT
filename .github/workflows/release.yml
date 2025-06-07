@@ -36,6 +36,9 @@ jobs:
       - name: Setup Python environment
         run: npm run setup-python
 
+      - name: Install Python script dependencies
+        run: pip install tqdm
+
       - name: Build and package
         run: npm run release-all
 
