@@ -44,9 +44,11 @@ jobs:
 
       - name: Get version from tag
         id: get_version
+        shell: pwsh # 明示的に PowerShell を指定
         run: |
-          TAG_WITH_V="${GITHUB_REF#refs/tags/}"
-          echo "VERSION=${TAG_WITH_V#v}" >> $GITHUB_ENV
+          $TAG_WITH_V = $env:GITHUB_REF -replace "^refs/tags/", ""
+          $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
+          echo "VERSION=$VERSION_NUM" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Upload to Hugging Face Hub
         env:
