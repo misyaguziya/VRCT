@@ -9,6 +9,8 @@ jobs:
   release:
     name: Build VRCT
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -16,17 +18,17 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22.15.0' # プロジェクトに合わせて調整してください
+          node-version: '22.15.0'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11' # プロジェクトに合わせて調整してください
+          python-version: '3.11'
 
       - name: Set up Rust
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable # プロジェクトに合わせて調整してください
+          toolchain: stable
           profile: minimal
           override: true
 
@@ -44,7 +46,7 @@ jobs:
 
       - name: Get version from tag
         id: get_version
-        shell: pwsh # 明示的に PowerShell を指定
+        shell: pwsh
         run: |
           $TAG_WITH_V = $env:GITHUB_REF -replace "^refs/tags/", ""
           $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
