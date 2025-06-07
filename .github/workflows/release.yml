@@ -55,8 +55,8 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           pip install huggingface_hub
-          huggingface-cli upload misyaguziya/VRCT VRCT.zip VRCT.zip --repo-type dataset --commit-message "Upload VRCT.zip for version ${{ env.VERSION }}"
-          huggingface-cli upload misyaguziya/VRCT VRCT_cuda.zip VRCT_cuda.zip --repo-type dataset --commit-message "Upload VRCT_cuda.zip for version ${{ env.VERSION }}"
+          huggingface-cli upload misyaguziya/VRCT VRCT.zip VRCT.zip --repo-type dataset --commit-message "👍️[Update] ${{ env.VERSION }} Release"
+          huggingface-cli upload misyaguziya/VRCT VRCT_cuda.zip VRCT_cuda.zip --repo-type dataset --commit-message "👍️[Update] ${{ env.VERSION }} Release"
 
       - name: Create GitHub Release
         id: create_release
