@@ -24,7 +24,7 @@
 
     --error_bc_color: #bb4448;
     --error_bc_active_color: #9c3938;
-    --success_bc_color: --primary_600_color;
+    --success_bc_color: var(--primary_600_color);
     --warning_color: #cb944f;
     --warning_bc_color: #cf7b1b;
 
