@@ -134,6 +134,7 @@ const DeeplAuthKey_Box = () => {
     };
 
     useEffect(() => {
+        if (currentDeepLAuthKey.state === "pending") return;
         seInputValue(currentDeepLAuthKey.data);
     }, [currentDeepLAuthKey]);
 
