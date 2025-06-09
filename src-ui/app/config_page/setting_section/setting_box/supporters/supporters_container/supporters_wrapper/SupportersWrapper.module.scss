@@ -62,7 +62,7 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
     height: 4rem;
     aspect-ratio: 1 /1;
     border-radius: 50%;
-    background-color: #ffffff;
+    background-color: var(--dark_basic_text_color);
     overflow: hidden;
     position: relative;
     transition: transform 0.6s $progress_ease;
@@ -236,7 +236,7 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
         background-color: var(--received_300_color);
     }
     &.fuwa_bar {
-        background-color: #5788a2;
+        background-color: var(--supporters_color_fuwa);
     }
     &.basic_bar {
         background-color: var(--dark_800_color);

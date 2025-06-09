@@ -86,7 +86,7 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
 }
 
 .line_fuwa {
-    background-color: #5788a2;
+    background-color: var(--supporters_color_fuwa);
     animation: expandWidth 1s $progress_ease 0.6s forwards;
 }
 
@@ -150,8 +150,8 @@ $progress_ease: cubic-bezier(0, 1, 0.75, 1);
     box-shadow: 0 0 0.4rem 0 var(--dark_800_color);
 }
 .spiral_top::after {
-    background: #5788a2;
-    box-shadow: 0 0 0.4rem 0 #5788a2;
+    background: var(--supporters_color_fuwa);
+    box-shadow: 0 0 0.4rem 0 var(--supporters_color_fuwa);
 }
 .spiral_bottom::before {
     background: var(--received_300_color);
