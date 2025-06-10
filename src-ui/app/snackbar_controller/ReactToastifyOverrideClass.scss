@@ -81,10 +81,11 @@
     align-items: center;
     font-size: 1.4rem;
     width: fit-content;
-    max-width: 50vw;
+    max-width: 70vw;
     padding-right: 4rem;
     background-color: var(--dark_950_color);
     gap: 0.6rem;
+    white-space: pre-wrap;
 }
 
 .Toastify__progress-bar--wrp {
