@@ -11,6 +11,10 @@ from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E4
 logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 run_mapping = {
+    "enable_translation":"/run/enable_translation",
+    "enable_transcription_send":"/run/enable_transcription_send",
+    "enable_transcription_receive":"/run/enable_transcription_receive",
+
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",
 
@@ -22,6 +26,13 @@ run_mapping = {
 
     "error_device":"/run/error_device",
     "error_translation_engine":"/run/error_translation_engine",
+
+    "error_translation_chat_vram_overflow":"/run/error_translation_chat_vram_overflow",
+    "error_translation_mic_vram_overflow":"/run/error_translation_mic_vram_overflow",
+    "error_translation_speaker_vram_overflow":"/run/error_translation_speaker_vram_overflow",
+    "error_transcription_mic_vram_overflow":"/run/error_transcription_mic_vram_overflow",
+    "error_transcription_speaker_vram_overflow":"/run/error_transcription_speaker_vram_overflow",
+
     "word_filter":"/run/word_filter",
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",

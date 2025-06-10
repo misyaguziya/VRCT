@@ -5,6 +5,10 @@ import {
 } from "@logics_common";
 
 import {
+    useMainFunction,
+} from "@logics_main";
+
+import {
     useMicRecordTimeout,
     useMicPhraseTimeout,
     useMicMaxWords,
@@ -25,6 +29,8 @@ import { ui_configs } from "../ui_configs";
 export const _useBackendErrorHandling = () => {
     const { t } = useTranslation();
     const { showNotification_Error } = useNotificationStatus();
+
+    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
 
     const { updateMicRecordTimeout } = useMicRecordTimeout();
     const { updateMicPhraseTimeout } = useMicPhraseTimeout();
@@ -72,6 +78,43 @@ export const _useBackendErrorHandling = () => {
 
             case "/run/error_translation_engine":
                 if (message === "Translation engine limit error") showNotification_Error(t("common_error.translation_limit"));
+                return;
+
+            case "/run/enable_translation":
+                if (message === "Translation disabled due to VRAM overflow") {
+                    updateTranslationStatus(data);
+                    showNotification_Error("Translation disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/enable_transcription_send":
+                if (message === "Transcription send disabled due to VRAM overflow") {
+                    updateTranscriptionSendStatus(data);
+                    showNotification_Error("Transcription send disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/enable_transcription_send":
+                if (message === "Transcription receive disabled due to VRAM overflow") {
+                    updateTranscriptionReceiveStatus(data);
+                    showNotification_Error("Transcription receive disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/error_translation_chat_vram_overflow":
+                if (message === "VRAM out of memory during translation of chat") showNotification_Error("VRAM out of memory during translation of chat");
+                return;
+            case "/run/error_translation_mic_vram_overflow":
+                if (message === "VRAM out of memory during translation of mic") showNotification_Error("VRAM out of memory during translation of mic");
+                return;
+            case "/run/error_translation_speaker_vram_overflow":
+                if (message === "VRAM out of memory during translation of speaker") showNotification_Error("VRAM out of memory during translation of speaker");
+                return;
+            case "/run/error_transcription_mic_vram_overflow":
+                if (message === "VRAM out of memory during mic transcription") showNotification_Error("VRAM out of memory during mic transcription");
+                return;
+            case "/run/error_transcription_speaker_vram_overflow":
+                if (message === "VRAM out of memory during speaker transcription") showNotification_Error("VRAM out of memory during speaker transcription");
                 return;
 
             case "/set/data/deepl_auth_key":
