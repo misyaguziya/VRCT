@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./SplashComponent.module.scss";
-import { StartUpProgressContainer } from "./start_up_progress_container/StartUpProgressContainer/";
-import { DownloadModelsContainer } from "./download_models_container/DownloadModelsContainer/";
+import { StartUpProgressContainer } from "./start_up_progress_container/StartUpProgressContainer";
+import { DownloadModelsContainer } from "./download_models_container/DownloadModelsContainer";
 import MegaphoneSvg from "@images/megaphone.svg?react";
 import XMarkSvg from "@images/cancel.svg?react";
 import { useWindow } from "@logics_common";

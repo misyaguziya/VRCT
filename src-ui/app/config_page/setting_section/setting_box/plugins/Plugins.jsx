@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
-import { PluginsControlComponent } from "../_components/plugins_control_component/PluginsControlComponent";
+import { PluginsControlComponent } from "./plugins_control_component/PluginsControlComponent";
 import { useNotificationStatus } from "@logics_common";
 import ExternalLink from "@images/external_link.svg?react";
 
