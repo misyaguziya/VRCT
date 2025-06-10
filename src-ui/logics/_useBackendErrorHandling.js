@@ -15,6 +15,8 @@ import {
 
     useDeepLAuthKey,
 
+    useEnableVrcMicMuteSync,
+
     useOscIpAddress,
     useWebsocket,
 } from "@logics_configs";
@@ -33,6 +35,8 @@ export const _useBackendErrorHandling = () => {
     const { updateSpeakerMaxWords } = useSpeakerMaxWords();
 
     const { updateDeepLAuthKey } = useDeepLAuthKey();
+
+    const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
 
     const { updateOscIpAddress } = useOscIpAddress();
     const { updateEnableWebsocket, updateWebsocketHost, updateWebsocketPort } = useWebsocket();
@@ -127,6 +131,14 @@ export const _useBackendErrorHandling = () => {
                 if (message === "Speaker max phrases value is out of range") {
                     updateSpeakerMaxWords(data);
                     showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"));
+                }
+                return;
+
+            case "/set/enable/vrc_mic_mute_sync":
+                // Normally, this path shouldn't happen because VRC Mic Mute Sync is disabled and can't be turned on from the UI.
+                if (message === "Cannot enable VRC mic mute sync while OSC query is disabled") {
+                    updateEnableVrcMicMuteSync(data);
+                    showNotification_Error("Cannot enable VRC Mic Mute Sync while OSC query is disabled");
                 }
                 return;
 
