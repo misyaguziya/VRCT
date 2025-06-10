@@ -1153,8 +1153,12 @@ class Controller:
                 if model.getIsOscQueryEnabled() is True:
                     self.enableOscQuery()
                 else:
-                    self.setDisableVrcMicMuteSync()
-                    self.disableOscQuery()
+                    mute_sync_info_flag = False
+                    if config.VRC_MIC_MUTE_SYNC is True:
+                        self.setDisableVrcMicMuteSync()
+                        mute_sync_info_flag = True
+                    self.disableOscQuery(mute_sync_info=mute_sync_info_flag)
+
                 response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
@@ -1933,12 +1937,13 @@ class Controller:
             }
         )
 
-    def disableOscQuery(self):
+    def disableOscQuery(self, mute_sync_info:bool=False):
+        disabled_functions = []
+        if mute_sync_info is True:
+            disabled_functions.append("vrc_mic_mute_sync")
         self.run(200, self.run_mapping["enable_osc_query"], {
             "data": False,
-            "disabled_functions": [
-                "vrc_mic_mute_sync",
-            ]
+            "disabled_functions": disabled_functions
         })
 
     def init(self, *args, **kwargs) -> None:
@@ -2055,13 +2060,15 @@ class Controller:
         osc_query_enabled = model.getIsOscQueryEnabled()
         if osc_query_enabled is True:
             self.enableOscQuery()
+            if config.VRC_MIC_MUTE_SYNC is True:
+                self.setEnableVrcMicMuteSync()
         else:
             # OSC Query is disabled, so disable VRC some features
-            config.VRC_MIC_MUTE_SYNC = False
-            self.disableOscQuery()
-
-        if config.VRC_MIC_MUTE_SYNC is True:
-            self.setEnableVrcMicMuteSync()
+            mute_sync_info_flag = False
+            if config.VRC_MIC_MUTE_SYNC is True:
+                self.setDisableVrcMicMuteSync()
+                mute_sync_info_flag = True
+            self.disableOscQuery(mute_sync_info=mute_sync_info_flag)
 
         # init Auto device selection
         printLog("Init Device Manager")
