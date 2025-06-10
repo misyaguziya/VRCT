@@ -13,4 +13,3 @@ export { SwitchBox } from "./switch_box/SwitchBox";
 export { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 export { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 export { DownloadModels } from "./download_models/DownloadModels";
-export { PluginsControlComponent } from "./plugins_control_component/PluginsControlComponent";

@@ -11,18 +11,23 @@ import {
     TransparencyController,
     CornerRadiusController,
     PluginsController,
-} from "./_app_controllers/index.js";
+} from "./_app_controllers";
 
-import { WindowTitleBar } from "./window_title_bar/WindowTitleBar";
+import styles from "./App.module.scss";
+
 import { MainPage } from "./main_page/MainPage";
 import { ConfigPage } from "./config_page/ConfigPage";
-import { SplashComponent } from "./splash_component/SplashComponent";
-import { UpdatingComponent } from "./updating_component/UpdatingComponent";
-import { ModalController } from "./modal_controller/ModalController";
-import { SnackbarController } from "./snackbar_controller/SnackbarController";
-import styles from "./App.module.scss";
+
+import {
+    WindowTitleBar,
+    SplashComponent,
+    UpdatingComponent,
+    ModalController,
+    SnackbarController,
+    AppErrorBoundary,
+} from "./others";
+
 import { useIsBackendReady, useIsSoftwareUpdating, useIsVrctAvailable, useWindow } from "@logics_common";
-import { AppErrorBoundary } from "./error_boundary/AppErrorBoundary";
 
 export const App = () => {
     const { currentIsVrctAvailable } = useIsVrctAvailable();
