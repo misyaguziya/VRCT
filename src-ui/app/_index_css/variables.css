@@ -18,12 +18,13 @@
 
     --primary_600_color_44: #36877744;
 
+    /* primary_300_color 61b4a7 as standard */
     --sent_400_color: #6197b4;
-    --sent_300_color: #6197b4;
     --received_300_color: #a861b4;
+
     --error_bc_color: #bb4448;
     --error_bc_active_color: #9c3938;
-    --success_bc_color: #368777;
+    --success_bc_color: var(--primary_600_color);
     --warning_color: #cb944f;
     --warning_bc_color: #cf7b1b;
 
@@ -60,6 +61,8 @@
     --dark_1000_color_aa: #151517aa;
     --dark_1000_color_dd: #151517dd;
 
+    /*sent_400_color + #000 10% = */
+    --supporters_color_fuwa: #5788a2;
 
     --title_bar_height: 2rem;
     --main_page_topbar_height: 4.8rem;
@@ -69,3 +72,4 @@
     --font_family: "Yu Gothic UI";
 }
 /* https://m2.material.io/design/color/the-color-system.html#tools-for-picking-colors */
+/* https://meyerweb.com/eric/tools/color-blend/#::1:hex */

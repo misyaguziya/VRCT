@@ -50,6 +50,7 @@ const OscIpAddressContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentOscIpAddress.state === "pending") return;
         setInputValue(currentOscIpAddress.data);
     }, [currentOscIpAddress]);
 
@@ -80,6 +81,7 @@ const OscPortContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentOscPort.state === "pending") return;
         setInputValue(currentOscPort.data);
     }, [currentOscPort]);
 
@@ -169,6 +171,7 @@ const WebsocketHostContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentWebsocketHost.state === "pending") return;
         setInputValue(currentWebsocketHost.data);
     }, [currentWebsocketHost]);
 
@@ -199,6 +202,7 @@ const WebsocketPortContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentWebsocketPort.state === "pending") return;
         setInputValue(currentWebsocketPort.data);
     }, [currentWebsocketPort]);
 
