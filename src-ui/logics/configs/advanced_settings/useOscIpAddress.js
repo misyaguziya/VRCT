@@ -1,5 +1,5 @@
 import { useStore_OscIpAddress } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useOscIpAddress = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

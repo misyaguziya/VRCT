@@ -1,5 +1,5 @@
 import { useStore_SelectableCTranslate2ComputeDeviceList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSelectableCTranslate2ComputeDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

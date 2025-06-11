@@ -1,5 +1,5 @@
 import { useStore_OverlaySmallLogSettings } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useOverlaySmallLogSettings = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

@@ -1,5 +1,5 @@
 import { useStore_EnableSendMessageToVrc } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableSendMessageToVrc = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

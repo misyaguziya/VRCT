@@ -1,5 +1,5 @@
 import { useStore_MicDeviceList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

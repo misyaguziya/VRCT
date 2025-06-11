@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { currentMonitor, availableMonitors, PhysicalPosition, PhysicalSize } from "@tauri-apps/api/window";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { useStore_IsBreakPoint } from "@store";
 import { useUiScaling } from "@logics_configs";
 import { store } from "@store";

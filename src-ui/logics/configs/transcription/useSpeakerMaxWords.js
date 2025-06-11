@@ -1,5 +1,5 @@
 import { useStore_SpeakerMaxWords } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSpeakerMaxWords = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

@@ -3,7 +3,7 @@ import {
     useStore_MessageInputValue,
 } from "@store";
 
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMessage = () => {
     const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();

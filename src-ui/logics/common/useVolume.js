@@ -5,7 +5,7 @@ import {
     useStore_SpeakerThresholdCheckStatus,
 } from "@store";
 
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useVolume = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

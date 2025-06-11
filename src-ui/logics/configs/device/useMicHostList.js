@@ -1,5 +1,5 @@
 import { useStore_MicHostList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicHostList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

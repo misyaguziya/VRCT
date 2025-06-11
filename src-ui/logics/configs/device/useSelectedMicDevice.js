@@ -1,5 +1,5 @@
 import { useStore_SelectedMicDevice } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSelectedMicDevice = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
