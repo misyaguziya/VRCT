@@ -1,5 +1,5 @@
 import { useStore_MicWordFilterList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicWordFilterList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

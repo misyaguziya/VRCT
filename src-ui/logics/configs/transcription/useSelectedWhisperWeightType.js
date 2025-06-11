@@ -1,5 +1,5 @@
 import { useStore_SelectedWhisperWeightType } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSelectedWhisperWeightType = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

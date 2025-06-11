@@ -1,5 +1,5 @@
 import { useStore_EnableSendOnlyTranslatedMessages } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableSendOnlyTranslatedMessages = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

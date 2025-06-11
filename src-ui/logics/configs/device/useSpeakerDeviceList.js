@@ -1,5 +1,5 @@
 import { useStore_SpeakerDeviceList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSpeakerDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

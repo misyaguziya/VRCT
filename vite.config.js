@@ -56,7 +56,9 @@ export default defineConfig(async () => {
         resolve: {
             alias: {
                 "@root": path.resolve(__dirname),
-                "@test_data": path.resolve(__dirname, "./test_data.js"),
+
+                "@useReceiveRoutes": path.resolve(__dirname, "src-ui/logics/useReceiveRoutes.js"),
+                "@useStdoutToPython": path.resolve(__dirname, "src-ui/logics/useStdoutToPython.js"),
 
                 "@ui_configs": path.resolve(__dirname, "src-ui/ui_configs.js"),
                 "@scss_mixins": path.resolve(__dirname, "src-ui/common_css/mixins.scss"),

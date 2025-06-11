@@ -1,5 +1,5 @@
 import { useStore_MicThreshold, useStore_EnableAutomaticMicThreshold } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicThreshold = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

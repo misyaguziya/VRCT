@@ -1,5 +1,5 @@
 import { useStore_IsMainPageCompactMode } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useIsMainPageCompactMode = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

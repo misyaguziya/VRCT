@@ -1,4 +1,4 @@
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useOpenFolder = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

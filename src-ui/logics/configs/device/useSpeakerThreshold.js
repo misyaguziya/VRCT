@@ -1,5 +1,5 @@
 import { useStore_SpeakerThreshold, useStore_EnableAutomaticSpeakerThreshold } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSpeakerThreshold = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

@@ -1,5 +1,5 @@
 import { useStore_EnableVrcMicMuteSync } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableVrcMicMuteSync = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

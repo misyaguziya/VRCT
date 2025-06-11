@@ -1,5 +1,5 @@
 import { useStore_DeepLAuthKey } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { useTranslation } from "react-i18next";
 import { useNotificationStatus } from "@logics_common";
 

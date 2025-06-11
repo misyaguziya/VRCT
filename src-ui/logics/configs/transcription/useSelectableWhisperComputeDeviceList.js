@@ -1,5 +1,5 @@
 import { useStore_SelectableWhisperComputeDeviceList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSelectableWhisperComputeDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

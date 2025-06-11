@@ -1,7 +1,7 @@
 import semver from "semver";
 
 import { useStore_SoftwareVersion, useStore_LatestSoftwareVersionInfo } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSoftwareVersion = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

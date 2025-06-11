@@ -1,5 +1,5 @@
 import { useStore_MicPhraseTimeout } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicPhraseTimeout = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

@@ -1,5 +1,5 @@
 import { store, useStore_Hotkeys } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
 import { useMainFunction } from "@logics_main";
 import { register, unregisterAll, isRegistered } from "@tauri-apps/plugin-global-shortcut";
