@@ -10,7 +10,7 @@ import { useLanguageSettings } from "@logics_main";
 export const LanguageSwapButton = () => {
     const [isHovered, setIsHovered] = useState(false);
     const { t } = useTranslation();
-    const { runLanguageSwap } = useLanguageSettings();
+    const { swapSelectedLanguages } = useLanguageSettings();
 
     const label = isHovered
         ? t("main_page.swap_button_label")
@@ -29,7 +29,7 @@ export const LanguageSwapButton = () => {
                 className={styles.swap_button_wrapper}
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
-                onClick={runLanguageSwap}
+                onClick={swapSelectedLanguages}
             >
                 <NarrowArrowDownSvg className={clsx(styles.narrow_arrow_down_svg, styles.reverse)} />
                 <p className={labelClassName}>{label}</p>

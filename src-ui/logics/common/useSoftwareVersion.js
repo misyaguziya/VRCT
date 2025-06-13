@@ -13,6 +13,13 @@ export const useSoftwareVersion = () => {
         asyncStdoutToPython("/get/data/version");
     };
 
+    const updateSoftwareVersionInfo = (payload) => {
+        updateLatestSoftwareVersionInfo(prev => ({
+            is_update_available: payload.is_update_available,
+            new_version: payload.new_version || prev.data.new_version,
+        }));
+    };
+
     const isPluginCompatible = (main_version, lower_version, upper_version) => {
         // lower_version 以上かつ upper_version 以下なら互換性ありと判定
         return semver.gte(main_version, lower_version) && semver.lte(main_version, upper_version);
@@ -32,6 +39,7 @@ export const useSoftwareVersion = () => {
         getSoftwareVersion,
         updateSoftwareVersion,
 
+        updateSoftwareVersionInfo,
         currentLatestSoftwareVersionInfo,
         updateLatestSoftwareVersionInfo,
 

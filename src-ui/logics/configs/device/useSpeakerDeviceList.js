@@ -1,5 +1,6 @@
 import { useStore_SpeakerDeviceList } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { arrayToObject } from "@utils";
 
 export const useSpeakerDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -10,9 +11,16 @@ export const useSpeakerDeviceList = () => {
         asyncStdoutToPython("/get/data/speaker_device_list");
     };
 
+    const updateSpeakerDeviceList_FromBackend = (payload) => {
+        updateSpeakerDeviceList(arrayToObject(payload));
+    };
+
+
     return {
         currentSpeakerDeviceList,
         getSpeakerDeviceList,
         updateSpeakerDeviceList,
+
+        updateSpeakerDeviceList_FromBackend,
     };
 };
