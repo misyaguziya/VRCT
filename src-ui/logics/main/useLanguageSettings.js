@@ -1,13 +1,10 @@
-import { useStore_SelectedPresetTabNumber, useStore_EnableMultiTranslation, useStore_SelectedYourLanguages, useStore_SelectedTargetLanguages, useStore_TranslationEngines, useStore_SelectedTranslationEngines } from "@store";
+import { useStore_SelectedPresetTabNumber, useStore_SelectedYourLanguages, useStore_SelectedTargetLanguages, useStore_TranslationEngines, useStore_SelectedTranslationEngines, useStore_SelectableLanguageList } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { translator_status } from "@ui_configs";
 
 export const useLanguageSettings = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const {
-        currentEnableMultiTranslation,
-        updateEnableMultiTranslation,
-        pendingEnableMultiTranslation,
-    } = useStore_EnableMultiTranslation();
+
     const {
         currentSelectedYourLanguages,
         updateSelectedYourLanguages,
@@ -34,10 +31,11 @@ export const useLanguageSettings = () => {
         pendingSelectedTranslationEngines,
     } = useStore_SelectedTranslationEngines();
 
-    const getEnableMultiTranslation = () => {
-        pendingEnableMultiTranslation();
-        asyncStdoutToPython("/get/data/multi_language_translation");
-    };
+    const {
+        currentSelectableLanguageList,
+        updateSelectableLanguageList,
+    } = useStore_SelectableLanguageList();
+
 
     const getSelectedPresetTabNumber = () => {
         pendingSelectedPresetTabNumber();
@@ -112,6 +110,16 @@ export const useLanguageSettings = () => {
         asyncStdoutToPython("/get/data/translation_engines");
     };
 
+    const updateTranslatorAvailability = (payload) => {
+        const keys = payload;
+        const updated_list = translator_status.map(translator => ({
+            ...translator,
+            is_available: keys.includes(translator.id),
+        }));
+        updateTranslationEngines(updated_list);
+    };
+
+
     const getSelectedTranslationEngines = () => {
         pendingSelectedTranslationEngines();
         asyncStdoutToPython("/get/data/selected_translation_engines");
@@ -124,10 +132,20 @@ export const useLanguageSettings = () => {
         asyncStdoutToPython("/set/data/selected_translation_engines", send_obj);
     };
 
-    const runLanguageSwap = () => {
+    const swapSelectedLanguages = () => {
         pendingSelectedYourLanguages();
         pendingSelectedTargetLanguages();
         asyncStdoutToPython("/run/swap_your_language_and_target_language");
+    };
+
+    const updateBothSelectedLanguages = (payload) => {
+        updateSelectedYourLanguages(payload.your);
+        updateSelectedTargetLanguages(payload.target);
+    };
+
+
+    const getSelectableLanguageList = () => {
+        asyncStdoutToPython("/get/data/selectable_language_list");
     };
 
 
@@ -136,11 +154,6 @@ export const useLanguageSettings = () => {
         getSelectedPresetTabNumber,
         updateSelectedPresetTabNumber,
         setSelectedPresetTabNumber,
-
-        currentEnableMultiTranslation,
-        getEnableMultiTranslation,
-        updateEnableMultiTranslation,
-        // setEnableMultiTranslation,
 
         currentSelectedYourLanguages,
         getSelectedYourLanguages,
@@ -158,12 +171,18 @@ export const useLanguageSettings = () => {
         currentTranslationEngines,
         getTranslationEngines,
         updateTranslationEngines,
+        updateTranslatorAvailability,
 
         currentSelectedTranslationEngines,
         getSelectedTranslationEngines,
         updateSelectedTranslationEngines,
         setSelectedTranslationEngines,
 
-        runLanguageSwap,
+        swapSelectedLanguages,
+        updateBothSelectedLanguages,
+
+        currentSelectableLanguageList,
+        getSelectableLanguageList,
+        updateSelectableLanguageList,
     };
 };

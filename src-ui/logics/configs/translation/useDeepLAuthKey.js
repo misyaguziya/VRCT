@@ -23,6 +23,9 @@ export const useDeepLAuthKey = () => {
         pendingDeepLAuthKey();
         asyncStdoutToPython("/delete/data/deepl_auth_key");
     };
+    const deletedDeepLAuthKey = () => {
+        updateDeepLAuthKey("");
+    };
 
     const savedDeepLAuthKey = (data) => {
         updateDeepLAuthKey(data);
@@ -36,6 +39,7 @@ export const useDeepLAuthKey = () => {
         setDeepLAuthKey,
         deleteDeepLAuthKey,
 
+        deletedDeepLAuthKey,
         savedDeepLAuthKey,
     };
 };

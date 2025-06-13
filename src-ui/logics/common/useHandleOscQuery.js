@@ -7,7 +7,10 @@ export const useHandleOscQuery = () => {
     const { showNotification_Warning } = useNotificationStatus();
     const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
 
-    const handleOscQuery = ({ is_osc_query_enabled, disabled_functions }) => {
+    const handleOscQuery = (payload) => {
+        const is_osc_query_enabled = payload.data;
+        const disabled_functions = payload.disabled_functions;
+
         if (is_osc_query_enabled) {
             updateEnableVrcMicMuteSync(prev => ({
                 ...prev.data,
