@@ -3,7 +3,7 @@ import {
     useStore_WebsocketHost,
     useStore_WebsocketPort,
 } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useWebsocket = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

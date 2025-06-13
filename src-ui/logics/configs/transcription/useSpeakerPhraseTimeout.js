@@ -1,5 +1,5 @@
 import { useStore_SpeakerPhraseTimeout } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSpeakerPhraseTimeout = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

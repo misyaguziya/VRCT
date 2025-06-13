@@ -1,6 +1,5 @@
-import React from "react";
-import { SwitchBox } from "../index";
-import { _DownloadButton } from "../_atoms/_download_button/_DownloadButton";
+import { SwitchBox } from "../../_components";
+import { _DownloadButton } from "../../_components/_atoms/_download_button/_DownloadButton";
 import styles from "./PluginsControlComponent.module.scss";
 import { useTranslation } from "react-i18next";
 

@@ -1,5 +1,5 @@
 import { useStore_EnableAutoExportMessageLogs } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableAutoExportMessageLogs = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

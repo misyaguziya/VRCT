@@ -1,5 +1,5 @@
 import { useStore_UiLanguage } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useUiLanguage = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

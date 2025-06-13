@@ -1,5 +1,5 @@
 import { useStore_SendMessageButtonType } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSendMessageButtonType = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

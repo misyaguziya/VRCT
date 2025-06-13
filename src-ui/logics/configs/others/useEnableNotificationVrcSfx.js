@@ -1,5 +1,5 @@
 import { useStore_EnableNotificationVrcSfx } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableNotificationVrcSfx = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

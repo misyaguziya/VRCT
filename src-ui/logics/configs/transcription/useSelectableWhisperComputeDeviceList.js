@@ -1,5 +1,6 @@
 import { useStore_SelectableWhisperComputeDeviceList } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
+import { transformToIndexedArray } from "@utils";
 
 export const useSelectableWhisperComputeDeviceList = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -10,9 +11,15 @@ export const useSelectableWhisperComputeDeviceList = () => {
         asyncStdoutToPython("/get/data/transcription_compute_device_list");
     };
 
+    const updateSelectableWhisperComputeDeviceList_FromBackend = (payload) => {
+        updateSelectableWhisperComputeDeviceList(transformToIndexedArray(payload));
+    };
+
     return {
         currentSelectableWhisperComputeDeviceList,
         getSelectableWhisperComputeDeviceList,
         updateSelectableWhisperComputeDeviceList,
+
+        updateSelectableWhisperComputeDeviceList_FromBackend,
     };
 };

@@ -1,5 +1,5 @@
 import { useStore_MicRecordTimeout } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMicRecordTimeout = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
