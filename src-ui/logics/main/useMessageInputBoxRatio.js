@@ -1,6 +1,6 @@
 import { store } from "@store";
 import { useStore_MessageInputBoxRatio } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { clampMinMax } from "@utils";
 export const useMessageInputBoxRatio = () => {
     const appWindow = store.appWindow;

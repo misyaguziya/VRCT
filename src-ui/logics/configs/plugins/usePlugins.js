@@ -11,7 +11,7 @@ import {
     useStore_FetchedPluginsInfo,
     useStore_LoadedPlugins,
 } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, mkdir, exists, remove, readDir, BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";

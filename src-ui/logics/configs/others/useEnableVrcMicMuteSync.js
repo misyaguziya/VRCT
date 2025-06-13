@@ -1,5 +1,5 @@
 import { useStore_EnableVrcMicMuteSync } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useEnableVrcMicMuteSync = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -19,10 +19,18 @@ export const useEnableVrcMicMuteSync = () => {
         }
     };
 
+    const updateEnableVrcMicMuteSync_FromBackend = (payload) => {
+        updateEnableVrcMicMuteSync((old_value) => {
+            return {...old_value.data, is_enabled: payload};
+        });
+    };
+
     return {
         currentEnableVrcMicMuteSync,
         getEnableVrcMicMuteSync,
         toggleEnableVrcMicMuteSync,
         updateEnableVrcMicMuteSync,
+
+        updateEnableVrcMicMuteSync_FromBackend,
     };
 };

@@ -1,5 +1,5 @@
 // import { useStore_RestoreWindowGeometry } from "@store";
-// import { useStdoutToPython } from "@logics/useStdoutToPython";
+// import { useStdoutToPython } from "@useStdoutToPython";
 
 // export const useRestoreWindowGeometry = () => {
 //     const { asyncStdoutToPython } = useStdoutToPython();

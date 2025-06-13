@@ -5,8 +5,9 @@ import {
 } from "jotai";
 
 import {
-    generateTestData,
-} from "@test_data";
+    generateTestConversationData,
+} from "./_test_data.js"
+
 import {
     translator_status,
     ctranslate2_weight_type_status,
@@ -152,7 +153,6 @@ export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_
 export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAtomWithHook(false, "ForegroundStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectedPresetTabNumber, useHook: useStore_SelectedPresetTabNumber } = createAtomWithHook("1", "SelectedPresetTabNumber");
-export const { atomInstance: Atom_EnableMultiTranslation, useHook: useStore_EnableMultiTranslation } = createAtomWithHook(false, "EnableMultiTranslation");
 export const { atomInstance: Atom_SelectedYourLanguages, useHook: useStore_SelectedYourLanguages } = createAtomWithHook({}, "SelectedYourLanguages");
 export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_SelectedTargetLanguages } = createAtomWithHook({}, "SelectedTargetLanguages");
 
@@ -169,7 +169,7 @@ export const { atomInstance: Atom_SelectableLanguageList, useHook: useStore_Sele
 
 // Message Container
 export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook([], "MessageLogs");
-// export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs"); // For testing
+// export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestConversationData(20), "MessageLogs"); // For testing
 export const { atomInstance: Atom_MessageInputBoxRatio, useHook: useStore_MessageInputBoxRatio } = createAtomWithHook(20, "MessageInputBoxRatio");
 export const { atomInstance: Atom_MessageInputValue, useHook: useStore_MessageInputValue } = createAtomWithHook("", "MessageInputValue");
 export const { atomInstance: Atom_IsVisibleResendButton, useHook: useStore_IsVisibleResendButton } = createAtomWithHook(false, "IsVisibleResendButton", {is_state_ok: true});

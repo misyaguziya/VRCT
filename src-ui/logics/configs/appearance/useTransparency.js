@@ -1,5 +1,5 @@
 import { useStore_Transparency } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useTransparency = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

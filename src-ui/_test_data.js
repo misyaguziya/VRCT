@@ -1,4 +1,4 @@
-export const generateTestData = (num) => {
+export const generateTestConversationData = (num) => {
     const testDataArray = [];
     const messagesJa = [
         "今日はとてもいい天気ですね。",

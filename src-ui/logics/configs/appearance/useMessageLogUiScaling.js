@@ -1,5 +1,5 @@
 import { useStore_MessageLogUiScaling } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMessageLogUiScaling = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

@@ -1,5 +1,5 @@
 import { useStore_CTranslate2WeightTypeStatus } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useCTranslate2WeightTypeStatus = () => {
     const { asyncStdoutToPython } = useStdoutToPython();

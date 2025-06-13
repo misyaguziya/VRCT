@@ -7,8 +7,7 @@ import { useVolume } from "@logics_common";
 import MicSvg from "@images/mic.svg?react";
 import HeadphonesSvg from "@images/headphones.svg?react";
 import {
-    useMicThreshold,
-    useSpeakerThreshold,
+    useDevice,
 } from "@logics_configs";
 
 export const ThresholdComponent = (props) => {
@@ -27,7 +26,7 @@ const MicComponent = (props) => {
         currentMicThreshold,
         setMicThreshold,
         currentEnableAutomaticMicThreshold,
-    } = useMicThreshold();
+    } = useDevice();
     const [ui_threshold, setUiThreshold] = useState(currentMicThreshold.data);
     const {
         volumeCheckStart_Mic,
@@ -84,7 +83,7 @@ const SpeakerComponent = (props) => {
         currentSpeakerThreshold,
         setSpeakerThreshold,
         currentEnableAutomaticSpeakerThreshold,
-    } = useSpeakerThreshold();
+    } = useDevice();
     const [ui_threshold, setUiThreshold] = useState(currentSpeakerThreshold.data);
     const {
         volumeCheckStart_Speaker,

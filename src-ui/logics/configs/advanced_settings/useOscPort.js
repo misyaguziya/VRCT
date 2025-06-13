@@ -1,5 +1,5 @@
 import { useStore_OscPort } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
 
 export const useOscPort = () => {

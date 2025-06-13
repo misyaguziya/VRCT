@@ -1,7 +1,7 @@
 import semver from "semver";
 
 import { useStore_SoftwareVersion, useStore_LatestSoftwareVersionInfo } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useSoftwareVersion = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -11,6 +11,13 @@ export const useSoftwareVersion = () => {
     const getSoftwareVersion = () => {
         pendingSoftwareVersion();
         asyncStdoutToPython("/get/data/version");
+    };
+
+    const updateSoftwareVersionInfo = (payload) => {
+        updateLatestSoftwareVersionInfo(prev => ({
+            is_update_available: payload.is_update_available,
+            new_version: payload.new_version || prev.data.new_version,
+        }));
     };
 
     const isPluginCompatible = (main_version, lower_version, upper_version) => {
@@ -32,6 +39,7 @@ export const useSoftwareVersion = () => {
         getSoftwareVersion,
         updateSoftwareVersion,
 
+        updateSoftwareVersionInfo,
         currentLatestSoftwareVersionInfo,
         updateLatestSoftwareVersionInfo,
 
