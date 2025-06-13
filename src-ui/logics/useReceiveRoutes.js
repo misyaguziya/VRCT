@@ -91,49 +91,49 @@ export const ROUTE_META_LIST = [
 
     // Config Page
     // Device
-    { endpoint: "/get/data/auto_mic_select", ns: configs, hook_name: "useEnableAutoMicSelect", method_name: "updateEnableAutoMicSelect" },
-    { endpoint: "/set/enable/auto_mic_select", ns: configs, hook_name: "useEnableAutoMicSelect", method_name: "updateEnableAutoMicSelect" },
-    { endpoint: "/set/disable/auto_mic_select", ns: configs, hook_name: "useEnableAutoMicSelect", method_name: "updateEnableAutoMicSelect" },
-    { endpoint: "/get/data/auto_speaker_select", ns: configs, hook_name: "useEnableAutoSpeakerSelect", method_name: "updateEnableAutoSpeakerSelect" },
-    { endpoint: "/set/enable/auto_speaker_select", ns: configs, hook_name: "useEnableAutoSpeakerSelect", method_name: "updateEnableAutoSpeakerSelect" },
-    { endpoint: "/set/disable/auto_speaker_select", ns: configs, hook_name: "useEnableAutoSpeakerSelect", method_name: "updateEnableAutoSpeakerSelect" },
+    { endpoint: "/get/data/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoMicSelect" },
+    { endpoint: "/set/enable/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoMicSelect" },
+    { endpoint: "/set/disable/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoMicSelect" },
+    { endpoint: "/get/data/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoSpeakerSelect" },
+    { endpoint: "/set/enable/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoSpeakerSelect" },
+    { endpoint: "/set/disable/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoSpeakerSelect" },
 
     // Device (Mic)
-    { endpoint: "/get/data/mic_host_list", ns: configs, hook_name: "useMicHostList", method_name: "updateMicHostList_FromBackend" },
-    { endpoint: "/run/mic_host_list", ns: configs, hook_name: "useMicHostList", method_name: "updateMicHostList_FromBackend" },
+    { endpoint: "/get/data/mic_host_list", ns: configs, hook_name: "useDevice", method_name: "updateMicHostList_FromBackend" },
+    { endpoint: "/run/mic_host_list", ns: configs, hook_name: "useDevice", method_name: "updateMicHostList_FromBackend" },
 
-    { endpoint: "/get/data/selected_mic_host", ns: configs, hook_name: "useSelectedMicHost", method_name: "updateSelectedMicHost" },
-    { endpoint: "/set/data/selected_mic_host", ns: configs, hook_name: "useSelectedMicHost", method_name: "updateSelectedMicHostAndDevice" }, // Need refactoring (Duplicated, Host, Device)
+    { endpoint: "/get/data/selected_mic_host", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicHost" },
+    { endpoint: "/set/data/selected_mic_host", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicHostAndDevice" },
 
 
-    { endpoint: "/get/data/mic_device_list", ns: configs, hook_name: "useMicDeviceList", method_name: "updateMicDeviceList_FromBackend" },
-    { endpoint: "/run/mic_device_list", ns: configs, hook_name: "useMicDeviceList", method_name: "updateMicDeviceList_FromBackend" },
+    { endpoint: "/get/data/mic_device_list", ns: configs, hook_name: "useDevice", method_name: "updateMicDeviceList_FromBackend" },
+    { endpoint: "/run/mic_device_list", ns: configs, hook_name: "useDevice", method_name: "updateMicDeviceList_FromBackend" },
 
-    { endpoint: "/get/data/selected_mic_device", ns: configs, hook_name: "useSelectedMicDevice", method_name: "updateSelectedMicDevice" },
-    { endpoint: "/set/data/selected_mic_device", ns: configs, hook_name: "useSelectedMicDevice", method_name: "updateSelectedMicDevice" },
+    { endpoint: "/get/data/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicDevice" },
+    { endpoint: "/set/data/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicDevice" },
 
-    { endpoint: "/run/selected_mic_device", ns: configs, hook_name: "useSelectedMicHost", method_name: "updateSelectedMicHostAndDevice" }, // Need refactoring (Duplicated, Host, Device)
+    { endpoint: "/run/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicHostAndDevice" },
 
     // Device (Speaker)
-    { endpoint: "/get/data/speaker_device_list", ns: configs, hook_name: "useSpeakerDeviceList", method_name: "updateSpeakerDeviceList_FromBackend" },
-    { endpoint: "/run/speaker_device_list", ns: configs, hook_name: "useSpeakerDeviceList", method_name: "updateSpeakerDeviceList_FromBackend" },
+    { endpoint: "/get/data/speaker_device_list", ns: configs, hook_name: "useDevice", method_name: "updateSpeakerDeviceList_FromBackend" },
+    { endpoint: "/run/speaker_device_list", ns: configs, hook_name: "useDevice", method_name: "updateSpeakerDeviceList_FromBackend" },
 
-    { endpoint: "/get/data/selected_speaker_device", ns: configs, hook_name: "useSelectedSpeakerDevice", method_name: "updateSelectedSpeakerDevice" },
-    { endpoint: "/set/data/selected_speaker_device", ns: configs, hook_name: "useSelectedSpeakerDevice", method_name: "updateSelectedSpeakerDevice" },
-    { endpoint: "/run/selected_speaker_device", ns: configs, hook_name: "useSelectedSpeakerDevice", method_name: "updateSelectedSpeakerDevice" },
+    { endpoint: "/get/data/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedSpeakerDevice" },
+    { endpoint: "/set/data/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedSpeakerDevice" },
+    { endpoint: "/run/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedSpeakerDevice" },
 
     // Device (Threshold)
-    { endpoint: "/get/data/mic_threshold", ns: configs, hook_name: "useMicThreshold",  method_name: "updateMicThreshold" },
-    { endpoint: "/set/data/mic_threshold", ns: configs, hook_name: "useMicThreshold",  method_name: "updateMicThreshold" },
-    { endpoint: "/get/data/speaker_threshold", ns: configs, hook_name: "useSpeakerThreshold",  method_name: "updateSpeakerThreshold" },
-    { endpoint: "/set/data/speaker_threshold", ns: configs, hook_name: "useSpeakerThreshold",  method_name: "updateSpeakerThreshold" },
+    { endpoint: "/get/data/mic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateMicThreshold" },
+    { endpoint: "/set/data/mic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateMicThreshold" },
+    { endpoint: "/get/data/speaker_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateSpeakerThreshold" },
+    { endpoint: "/set/data/speaker_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateSpeakerThreshold" },
 
-    { endpoint: "/get/data/mic_automatic_threshold", ns: configs, hook_name: "useMicThreshold",  method_name: "updateEnableAutomaticMicThreshold" },
-    { endpoint: "/set/enable/mic_automatic_threshold", ns: configs, hook_name: "useMicThreshold",  method_name: "updateEnableAutomaticMicThreshold" },
-    { endpoint: "/set/disable/mic_automatic_threshold", ns: configs, hook_name: "useMicThreshold",  method_name: "updateEnableAutomaticMicThreshold" },
-    { endpoint: "/get/data/speaker_automatic_threshold", ns: configs, hook_name: "useSpeakerThreshold",  method_name: "updateEnableAutomaticSpeakerThreshold" },
-    { endpoint: "/set/enable/speaker_automatic_threshold", ns: configs, hook_name: "useSpeakerThreshold",  method_name: "updateEnableAutomaticSpeakerThreshold" },
-    { endpoint: "/set/disable/speaker_automatic_threshold", ns: configs, hook_name: "useSpeakerThreshold",  method_name: "updateEnableAutomaticSpeakerThreshold" },
+    { endpoint: "/get/data/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticMicThreshold" },
+    { endpoint: "/set/enable/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticMicThreshold" },
+    { endpoint: "/set/disable/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticMicThreshold" },
+    { endpoint: "/get/data/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticSpeakerThreshold" },
+    { endpoint: "/set/enable/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticSpeakerThreshold" },
+    { endpoint: "/set/disable/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticSpeakerThreshold" },
 
 
     // Appearance
