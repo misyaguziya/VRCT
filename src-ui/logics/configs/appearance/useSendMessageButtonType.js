@@ -10,9 +10,9 @@ export const useSendMessageButtonType = () => {
         asyncStdoutToPython("/get/data/send_message_button_type");
     };
 
-    const setSendMessageButtonType = (selected_type) => {
+    const setSendMessageButtonType = (send_message_button_type) => {
         pendingSendMessageButtonType();
-        asyncStdoutToPython("/set/data/send_message_button_type", selected_type);
+        asyncStdoutToPython("/set/data/send_message_button_type", send_message_button_type);
     };
 
     return {

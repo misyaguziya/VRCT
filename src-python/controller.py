@@ -833,6 +833,15 @@ class Controller:
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
+    def getSendMessageButtonType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
+
+    @staticmethod
+    def setSendMessageButtonType(data, *args, **kwargs) -> dict:
+        config.SEND_MESSAGE_BUTTON_TYPE = data
+        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
+
+    @staticmethod
     def getShowResendButton(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
@@ -1419,15 +1428,6 @@ class Controller:
     def setDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
         config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
-
-    @staticmethod
-    def getSendMessageButtonType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
-
-    @staticmethod
-    def setSendMessageButtonType(data, *args, **kwargs) -> dict:
-        config.SEND_MESSAGE_BUTTON_TYPE = data
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
     def getOverlaySmallLog(*args, **kwargs) -> dict:
