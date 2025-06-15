@@ -408,6 +408,18 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value, immediate_save=True)
 
     @property
+    @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
+    def SEND_MESSAGE_BUTTON_TYPE(self):
+        return self._SEND_MESSAGE_BUTTON_TYPE
+
+    @SEND_MESSAGE_BUTTON_TYPE.setter
+    def SEND_MESSAGE_BUTTON_TYPE(self, value):
+        if isinstance(value, str):
+            if value in self.SEND_MESSAGE_BUTTON_TYPE_LIST:
+                self._SEND_MESSAGE_BUTTON_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('SHOW_RESEND_BUTTON')
     def SHOW_RESEND_BUTTON(self):
         return self._SHOW_RESEND_BUTTON
@@ -816,18 +828,6 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
-    def SEND_MESSAGE_BUTTON_TYPE(self):
-        return self._SEND_MESSAGE_BUTTON_TYPE
-
-    @SEND_MESSAGE_BUTTON_TYPE.setter
-    def SEND_MESSAGE_BUTTON_TYPE(self, value):
-        if isinstance(value, str):
-            if value in self.SEND_MESSAGE_BUTTON_TYPE_LIST:
-                self._SEND_MESSAGE_BUTTON_TYPE = value
-                self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
     @json_serializable('OVERLAY_SMALL_LOG')
     def OVERLAY_SMALL_LOG(self):
         return self._OVERLAY_SMALL_LOG
@@ -1101,6 +1101,7 @@ class Config:
         self._UI_SCALING = 100
         self._TEXTBOX_UI_SCALING = 100
         self._MESSAGE_BOX_RATIO = 10
+        self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._SHOW_RESEND_BUTTON = False
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
@@ -1149,7 +1150,6 @@ class Config:
         self._WHISPER_WEIGHT_TYPE = "base"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
-        self._SEND_MESSAGE_BUTTON_TYPE = "show"
         self._OVERLAY_SMALL_LOG = False
         self._OVERLAY_SMALL_LOG_SETTINGS = {
             "x_pos": 0.0,
