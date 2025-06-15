@@ -131,6 +131,10 @@ mapping = {
     "/get/data/message_box_ratio": {"status": True, "variable":controller.getMessageBoxRatio},
     "/set/data/message_box_ratio": {"status": True, "variable":controller.setMessageBoxRatio},
 
+    "/get/data/show_resend_button": {"status": True, "variable":controller.getShowResendButton},
+    "/set/enable/show_resend_button": {"status": True, "variable":controller.setEnableShowResendButton},
+    "/set/disable/show_resend_button": {"status": True, "variable":controller.setDisableShowResendButton},
+
     "/get/data/font_family": {"status": True, "variable":controller.getFontFamily},
     "/set/data/font_family": {"status": True, "variable":controller.setFontFamily},
 

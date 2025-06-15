@@ -833,6 +833,20 @@ class Controller:
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
 
     @staticmethod
+    def getShowResendButton(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
+
+    @staticmethod
+    def setEnableShowResendButton(*args, **kwargs) -> dict:
+        config.SHOW_RESEND_BUTTON = True
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
+
+    @staticmethod
+    def setDisableShowResendButton(*args, **kwargs) -> dict:
+        config.SHOW_RESEND_BUTTON = False
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
+
+    @staticmethod
     def getFontFamily(*args, **kwargs) -> dict:
         return {"status":200, "result":config.FONT_FAMILY}
 

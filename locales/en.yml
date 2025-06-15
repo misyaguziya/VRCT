@@ -50,7 +50,6 @@ main_page:
         received: "Received"
         system: "System"
 
-        show_resend_button: "Show Resend Button"
         resend_button_on_hover_desc: "Press And Hold To Send"
 
     state_text_enabled: "Enabled"
@@ -120,6 +119,9 @@ config_page:
             hide: "Hide (Use Enter key to send)"
             show: "Show"
             show_and_disable_enter_key: "Show and disable sending using the Enter key."
+        show_resend_button:
+            label: "Show Resend Button"
+            desc: "When hovering over a sent message log, the resend button appears. Click to edit, long press to resend."
         font_family:
             label: "Font Family"
         ui_language:
