@@ -559,7 +559,7 @@ if __name__ == "__main__":
                         data = 5
                     case "/set/data/mic_max_phrases":
                         data = 5
-                    case "/set//data/mic_word_filter":
+                    case "/set/data/mic_word_filter":
                         data = "test0, test1, test2"
                     case "/set/data/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
