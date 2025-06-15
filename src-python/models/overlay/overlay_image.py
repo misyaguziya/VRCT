@@ -199,17 +199,37 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font)
         return img
 
-    def createTextboxLargeLog(self, message_type:str, message:str, your_language:str, translation:str, target_language:str, date_time:str) -> Image:
-        message_type_img = self.createTextImageMessageType(message_type, date_time)
-        if translation and target_language:
-            img = self.createTextImageLargeLog(message_type, "small", message, your_language)
-            translation_img = self.createTextImageLargeLog(message_type, "large", translation, target_language)
-            img = self.concatenateImagesVertically(img, translation_img)
-        else:
-            img = self.createTextImageLargeLog(message_type, "large", message, your_language)
-        return self.concatenateImagesVertically(message_type_img, img)
+    def createTextboxLargeLog(self, message_type: str, message: str = None, your_language: str = None, translation: list = [], target_language: list = [], date_time: str = None) -> Image:
+        # テキスト画像のリストを作成
+        images = [self.createTextImageMessageType(message_type, date_time)]
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str, translation:str="", target_language:str=None) -> Image:
+        # 翻訳がある場合
+        if translation and target_language:
+            # 元のメッセージがある場合は小さいサイズで追加
+            if message is not None:
+                images.append(
+                    self.createTextImageLargeLog(message_type, "small", message, your_language)
+                )
+
+            # 翻訳をすべて大きいサイズで追加
+            for trans, lang in zip(translation, target_language):
+                images.append(
+                    self.createTextImageLargeLog(message_type, "large", trans, lang)
+                )
+        else:
+            # 翻訳がない場合は元のメッセージのみ
+            images.append(
+                self.createTextImageLargeLog(message_type, "large", message, your_language)
+            )
+
+        # すべてのテキスト画像を縦に結合
+        combined_img = images[0]
+        for img in images[1:]:
+            combined_img = self.concatenateImagesVertically(combined_img, img)
+
+        return combined_img
+
+    def createOverlayImageLargeLog(self, message_type:str, message:str=None, your_language:str=None, translation:list=[], target_language:list=[]) -> Image:
         ui_color = self.getUiColorLargeLog()
         background_color = ui_color["background_color"]
         background_outline_color = ui_color["background_outline_color"]
