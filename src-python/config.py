@@ -408,6 +408,17 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value, immediate_save=True)
 
     @property
+    @json_serializable('SHOW_RESEND_BUTTON')
+    def SHOW_RESEND_BUTTON(self):
+        return self._SHOW_RESEND_BUTTON
+
+    @SHOW_RESEND_BUTTON.setter
+    def SHOW_RESEND_BUTTON(self, value):
+        if isinstance(value, bool):
+            self._SHOW_RESEND_BUTTON = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('FONT_FAMILY')
     def FONT_FAMILY(self):
         return self._FONT_FAMILY
@@ -1090,6 +1101,7 @@ class Config:
         self._UI_SCALING = 100
         self._TEXTBOX_UI_SCALING = 100
         self._MESSAGE_BOX_RATIO = 10
+        self._SHOW_RESEND_BUTTON = False
         self._FONT_FAMILY = "Yu Gothic UI"
         self._UI_LANGUAGE = "en"
         self._MAIN_WINDOW_GEOMETRY = {
