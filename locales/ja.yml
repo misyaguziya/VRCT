@@ -50,7 +50,6 @@ main_page:
         received: "受信"
         system: "システム"
 
-        show_resend_button: "再送信ボタンを表示する"
         resend_button_on_hover_desc: "長押しで送信"
 
     state_text_enabled: "有効"
@@ -120,6 +119,9 @@ config_page:
             hide: "非表示 （エンターキーを使って送信）"
             show: "表示"
             show_and_disable_enter_key: "表示し、エンターキーでの送信を無効"
+        show_resend_button:
+            label: "再送信ボタンを表示する"
+            desc: "送信済メッセージログにマウスホバーすると、再送信ボタンが表示されます。クリックで編集モード、長押しで再送信します。"
         font_family:
             label: "使用フォント"
         ui_language:

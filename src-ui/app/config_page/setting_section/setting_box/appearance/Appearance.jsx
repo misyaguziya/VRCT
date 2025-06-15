@@ -14,6 +14,7 @@ import {
     useUiScaling,
     useMessageLogUiScaling,
     useSendMessageButtonType,
+    useShowResendButton,
     useSelectedFontFamily,
     useTransparency,
 } from "@logics_configs";
@@ -22,6 +23,7 @@ import {
     SliderContainer,
     DropdownMenuContainer,
     RadioButtonContainer,
+    CheckboxContainer,
 } from "../_templates/Templates";
 
 export const Appearance = () => {
@@ -31,6 +33,7 @@ export const Appearance = () => {
             <UiScalingContainer />
             <MessageLogUiScalingContainer />
             <SendMessageButtonTypeContainer />
+            <ShowResendButtonContainer />
             <FontFamilyContainer />
             <TransparencyContainer />
         </>
@@ -156,6 +159,20 @@ const SendMessageButtonTypeContainer = () => {
             ]}
             checked_variable={currentSendMessageButtonType}
             column={true}
+        />
+    );
+};
+
+const ShowResendButtonContainer = () => {
+    const { t } = useTranslation();
+    const { currentShowResendButton, toggleShowResendButton } = useShowResendButton();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.appearance.show_resend_button.label")}
+            desc={t("config_page.appearance.show_resend_button.desc")}
+            variable={currentShowResendButton}
+            toggleFunction={toggleShowResendButton}
         />
     );
 };

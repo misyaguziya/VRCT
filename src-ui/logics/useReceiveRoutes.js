@@ -149,6 +149,10 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/send_message_button_type", ns: configs, hook_name: "useSendMessageButtonType", method_name: "updateSendMessageButtonType" },
     { endpoint: "/set/data/send_message_button_type", ns: configs, hook_name: "useSendMessageButtonType", method_name: "updateSendMessageButtonType" },
 
+    { endpoint: "/get/data/show_resend_button", ns: configs, hook_name: "useShowResendButton", method_name: "updateShowResendButton" },
+    { endpoint: "/set/enable/show_resend_button", ns: configs, hook_name: "useShowResendButton", method_name: "updateShowResendButton" },
+    { endpoint: "/set/disable/show_resend_button", ns: configs, hook_name: "useShowResendButton", method_name: "updateShowResendButton" },
+
     { endpoint: "/get/data/font_family", ns: configs, hook_name: "useSelectedFontFamily", method_name: "updateSelectedFontFamily" },
     { endpoint: "/set/data/font_family", ns: configs, hook_name: "useSelectedFontFamily", method_name: "updateSelectedFontFamily" },
 
