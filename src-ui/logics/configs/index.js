@@ -3,7 +3,7 @@ export { useDevice } from "./device/useDevice";
 export { useMessageLogUiScaling } from "./appearance/useMessageLogUiScaling";
 export { useSelectedFontFamily } from "./appearance/useSelectedFontFamily";
 export { useTransparency } from "./appearance/useTransparency";
-export { useSendMessageButtonType } from "./others/useSendMessageButtonType";
+export { useSendMessageButtonType } from "./appearance/useSendMessageButtonType";
 export { useShowResendButton } from "./appearance/useShowResendButton";
 export { useUiLanguage } from "./appearance/useUiLanguage";
 export { useUiScaling } from "./appearance/useUiScaling";
