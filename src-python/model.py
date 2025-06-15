@@ -96,7 +96,7 @@ class Model:
             "large": overlay_large_log_settings,
         }
         self.overlay = Overlay(overlay_settings)
-        self.overlay_image = OverlayImage()
+        self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_audio_queue = None
         self.mic_mute_status = None
         self.kks = kakasi()
@@ -725,13 +725,13 @@ class Model:
     def createOverlayImageSmallMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
-            "en": "Japanese",
+            "en": "Default",
             "jp": "Japanese",
             "ko":"Korean",
             "zh-Hans":"Chinese Simplified",
             "zh-Hant":"Chinese Traditional",
         }
-        language = convert_languages.get(ui_language, "Japanese")
+        language = convert_languages.get(ui_language, "Default")
         return self.overlay_image.createOverlayImageSmallLog(message, language)
 
     def clearOverlayImageSmallLog(self):
@@ -777,14 +777,14 @@ class Model:
     def createOverlayImageLargeMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
-            "en": "Japanese",
+            "en": "Default",
             "jp": "Japanese",
             "ko":"Korean",
             "zh-Hans":"Chinese Simplified",
             "zh-Hant":"Chinese Traditional",
         }
-        language = convert_languages.get(ui_language, "Japanese")
-        overlay_image = OverlayImage()
+        language = convert_languages.get(ui_language, "Default")
+        overlay_image = OverlayImage(config.PATH_LOCAL)
 
         for _ in range(2):
             overlay_image.createOverlayImageLargeLog("send", message, language)
