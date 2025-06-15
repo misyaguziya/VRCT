@@ -11,14 +11,20 @@ except ImportError:
 
 class OverlayImage:
     LANGUAGES = {
-        "Japanese": "NotoSansJP-Regular",
-        "Korean": "NotoSansKR-Regular",
-        "Chinese Simplified": "NotoSansSC-Regular",
-        "Chinese Traditional": "NotoSansTC-Regular",
+        "Default": "NotoSansJP-Regular.ttf",
+        "Japanese": "NotoSansJP-Regular.ttf",
+        "Korean": "NotoSansKR-Regular.ttf",
+        "Chinese Simplified": "NotoSansSC-Regular.ttf",
+        "Chinese Traditional": "NotoSansTC-Regular.ttf",
     }
 
-    def __init__(self):
+    def __init__(self, root_path: str=None):
         self.message_log = []
+        if root_path is None:
+            self.root_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts")
+        else:
+            self.root_path = os_path.join(root_path, "_internal", "fonts")
+        print(self.root_path)
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image, margin: int = 0) -> Image:
@@ -54,16 +60,16 @@ class OverlayImage:
         return colors
 
     def createTextboxSmallLog(self, text:str, language:str, text_color:tuple, base_width:int, base_height:int, font_size:int) -> Image:
-        font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
+        font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(self.root_path, font_family)
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -98,7 +104,9 @@ class OverlayImage:
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), img.size], radius=50, fill=background_color, outline=background_outline_color, width=5)
 
-        return Image.alpha_composite(background, img)
+        img = Image.alpha_composite(background, img)
+        img.save("overlay_small.png")
+        return img
 
     @staticmethod
     def getUiSizeLargeLog() -> dict:
@@ -131,17 +139,17 @@ class OverlayImage:
         anchor = "lm" if message_type == "receive" else "rm"
         text_x = 0 if message_type == "receive" else ui_size["width"]
         align = "left" if message_type == "receive" else "right"
-        font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
+        font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(self.root_path, font_family)
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -172,11 +180,11 @@ class OverlayImage:
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf")
+            font_path = os_path.join(self.root_path, self.LANGUAGES["Default"])
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", "NotoSansJP-Regular.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", self.LANGUAGES["Default"])
             font = ImageFont.truetype(font_path, font_size)
 
         text_height = font_size + ui_padding
@@ -242,7 +250,9 @@ class OverlayImage:
         background = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), (width, height)], radius=ui_radius, fill=background_color, outline=background_outline_color, width=5)
-        return Image.alpha_composite(background, img)
+        img = Image.alpha_composite(background, img)
+        img.save("overlay_large.png")
+        return img
 
 if __name__ == "__main__":
     overlay = OverlayImage()
