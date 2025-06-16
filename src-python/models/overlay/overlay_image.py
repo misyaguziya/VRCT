@@ -11,14 +11,20 @@ except ImportError:
 
 class OverlayImage:
     LANGUAGES = {
-        "Japanese": "NotoSansJP-Regular",
-        "Korean": "NotoSansKR-Regular",
-        "Chinese Simplified": "NotoSansSC-Regular",
-        "Chinese Traditional": "NotoSansTC-Regular",
+        "Default": "NotoSansJP-Regular.ttf",
+        "Japanese": "NotoSansJP-Regular.ttf",
+        "Korean": "NotoSansKR-Regular.ttf",
+        "Chinese Simplified": "NotoSansSC-Regular.ttf",
+        "Chinese Traditional": "NotoSansTC-Regular.ttf",
     }
 
-    def __init__(self):
+    def __init__(self, root_path: str=None):
         self.message_log = []
+        if root_path is None:
+            self.root_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts")
+        else:
+            self.root_path = os_path.join(root_path, "_internal", "fonts")
+        print(self.root_path)
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image, margin: int = 0) -> Image:
@@ -54,16 +60,16 @@ class OverlayImage:
         return colors
 
     def createTextboxSmallLog(self, text:str, language:str, text_color:tuple, base_width:int, base_height:int, font_size:int) -> Image:
-        font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
+        font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(self.root_path, font_family)
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -80,7 +86,8 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor="mm", stroke_width=0, font=font, align="center")
         return img
 
-    def createOverlayImageSmallLog(self, message:str, your_language:str, translation:str="", target_language:str=None) -> Image:
+    def createOverlayImageSmallLog(self, message: str, your_language: str, translation: list = [], target_language: list = []) -> Image:
+        # UI設定を取得
         ui_size = self.getUiSizeSmallLog()
         width, height, font_size = ui_size["width"], ui_size["height"], ui_size["font_size"]
 
@@ -89,16 +96,41 @@ class OverlayImage:
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        img = self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
-        if translation and target_language:
-            translation_img = self.createTextboxSmallLog(translation, target_language, text_color, width, height, font_size)
-            img = self.concatenateImagesVertically(img, translation_img)
+        # テキストボックス画像のリストを作成
+        textbox_images = []
 
+        # 翻訳がある場合
+        if translation and target_language:
+            # 元のメッセージがある場合は追加
+            if message:
+                textbox_images.append(
+                    self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
+                )
+
+            # 翻訳をすべて追加
+            for trans, lang in zip(translation, target_language):
+                textbox_images.append(
+                    self.createTextboxSmallLog(trans, lang, text_color, width, height, font_size)
+                )
+        else:
+            # 翻訳がない場合は元のメッセージのみ
+            textbox_images.append(
+                self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
+            )
+
+        # すべてのテキストボックスを縦に結合
+        img = textbox_images[0]
+        for textbox_img in textbox_images[1:]:
+            img = self.concatenateImagesVertically(img, textbox_img)
+
+        # 角丸背景を作成
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), img.size], radius=50, fill=background_color, outline=background_outline_color, width=5)
 
-        return Image.alpha_composite(background, img)
+        # 背景とテキストを合成
+        img = Image.alpha_composite(background, img)
+        return img
 
     @staticmethod
     def getUiSizeLargeLog() -> dict:
@@ -131,17 +163,17 @@ class OverlayImage:
         anchor = "lm" if message_type == "receive" else "rm"
         text_x = 0 if message_type == "receive" else ui_size["width"]
         align = "left" if message_type == "receive" else "right"
-        font_family = self.LANGUAGES.get(language, "NotoSansJP-Regular")
+        font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
 
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(self.root_path, font_family)
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", f"{font_family}.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
             font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
@@ -172,11 +204,11 @@ class OverlayImage:
         draw = ImageDraw.Draw(img)
 
         try:
-            font_path = os_path.join(os_path.dirname(os_path.dirname(os_path.dirname(__file__))), "fonts", "NotoSansJP-Regular.ttf")
+            font_path = os_path.join(self.root_path, self.LANGUAGES["Default"])
             font = ImageFont.truetype(font_path, font_size)
         except Exception:
             errorLogging()
-            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", "NotoSansJP-Regular.ttf")
+            font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", self.LANGUAGES["Default"])
             font = ImageFont.truetype(font_path, font_size)
 
         text_height = font_size + ui_padding
@@ -191,17 +223,37 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font)
         return img
 
-    def createTextboxLargeLog(self, message_type:str, message:str, your_language:str, translation:str, target_language:str, date_time:str) -> Image:
-        message_type_img = self.createTextImageMessageType(message_type, date_time)
-        if translation and target_language:
-            img = self.createTextImageLargeLog(message_type, "small", message, your_language)
-            translation_img = self.createTextImageLargeLog(message_type, "large", translation, target_language)
-            img = self.concatenateImagesVertically(img, translation_img)
-        else:
-            img = self.createTextImageLargeLog(message_type, "large", message, your_language)
-        return self.concatenateImagesVertically(message_type_img, img)
+    def createTextboxLargeLog(self, message_type: str, message: str = None, your_language: str = None, translation: list = [], target_language: list = [], date_time: str = None) -> Image:
+        # テキスト画像のリストを作成
+        images = [self.createTextImageMessageType(message_type, date_time)]
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str, translation:str="", target_language:str=None) -> Image:
+        # 翻訳がある場合
+        if translation and target_language:
+            # 元のメッセージがある場合は小さいサイズで追加
+            if message is not None:
+                images.append(
+                    self.createTextImageLargeLog(message_type, "small", message, your_language)
+                )
+
+            # 翻訳をすべて大きいサイズで追加
+            for trans, lang in zip(translation, target_language):
+                images.append(
+                    self.createTextImageLargeLog(message_type, "large", trans, lang)
+                )
+        else:
+            # 翻訳がない場合は元のメッセージのみ
+            images.append(
+                self.createTextImageLargeLog(message_type, "large", message, your_language)
+            )
+
+        # すべてのテキスト画像を縦に結合
+        combined_img = images[0]
+        for img in images[1:]:
+            combined_img = self.concatenateImagesVertically(combined_img, img)
+
+        return combined_img
+
+    def createOverlayImageLargeLog(self, message_type:str, message:str=None, your_language:str=None, translation:list=[], target_language:list=[]) -> Image:
         ui_color = self.getUiColorLargeLog()
         background_color = ui_color["background_color"]
         background_outline_color = ui_color["background_outline_color"]
@@ -242,7 +294,8 @@ class OverlayImage:
         background = Image.new("RGBA", (width, height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), (width, height)], radius=ui_radius, fill=background_color, outline=background_outline_color, width=5)
-        return Image.alpha_composite(background, img)
+        img = Image.alpha_composite(background, img)
+        return img
 
 if __name__ == "__main__":
     overlay = OverlayImage()

@@ -96,7 +96,7 @@ class Model:
             "large": overlay_large_log_settings,
         }
         self.overlay = Overlay(overlay_settings)
-        self.overlay_image = OverlayImage()
+        self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_audio_queue = None
         self.mic_mute_status = None
         self.kks = kakasi()
@@ -717,21 +717,20 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmallLog(self, message, translation):
-        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
-        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+    def createOverlayImageSmallLog(self, message:str, your_language:str, translation:list, target_language:dict):
+        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
         return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
 
     def createOverlayImageSmallMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
-            "en": "Japanese",
+            "en": "Default",
             "jp": "Japanese",
             "ko":"Korean",
             "zh-Hans":"Chinese Simplified",
             "zh-Hant":"Chinese Traditional",
         }
-        language = convert_languages.get(ui_language, "Japanese")
+        language = convert_languages.get(ui_language, "Default")
         return self.overlay_image.createOverlayImageSmallLog(message, language)
 
     def clearOverlayImageSmallLog(self):
@@ -769,22 +768,21 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str, translation:str):
-        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
-        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str,  translation:list, target_language:dict):
+        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
         return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
 
     def createOverlayImageLargeMessage(self, message):
         ui_language = config.UI_LANGUAGE
         convert_languages = {
-            "en": "Japanese",
+            "en": "Default",
             "jp": "Japanese",
             "ko":"Korean",
             "zh-Hans":"Chinese Simplified",
             "zh-Hant":"Chinese Traditional",
         }
-        language = convert_languages.get(ui_language, "Japanese")
-        overlay_image = OverlayImage()
+        language = convert_languages.get(ui_language, "Default")
+        overlay_image = OverlayImage(config.PATH_LOCAL)
 
         for _ in range(2):
             overlay_image.createOverlayImageLargeLog("send", message, language)
