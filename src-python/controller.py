@@ -340,11 +340,25 @@ class Controller:
                     model.logger.info(f"[SENT] {message}{translation}")
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageLargeLog(
+                                "send",
+                                None,
+                                None,
+                                translation,
+                                config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                            )
+                            model.updateOverlayLargeLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlayLargeLog(overlay_image)
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "send",
+                            message,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                            translation,
+                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
 
     def speakerMessage(self, result:dict) -> None:
         message = result["text"]
@@ -418,18 +432,43 @@ class Controller:
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageSmallLog(translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageSmallLog(
+                                None,
+                                None,
+                                translation,
+                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            )
+                            model.updateOverlaySmallLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageSmallLog(message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlaySmallLog(overlay_image)
+                        overlay_image = model.createOverlayImageSmallLog(
+                            message,
+                            language,
+                            translation,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        )
+                        model.updateOverlaySmallLog(overlay_image)
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageLargeLog("receive", translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageLargeLog(
+                                "receive",
+                                None,
+                                None,
+                                translation,
+                            )
+                            model.updateOverlayLargeLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlayLargeLog(overlay_image)
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "receive",
+                            message,
+                            language,
+                            translation,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
@@ -544,11 +583,25 @@ class Controller:
                 model.oscSendMessage(osc_message)
 
             if config.OVERLAY_LARGE_LOG is True:
-                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                    overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                    if len(translation) > 0:
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "send",
+                            None,
+                            None,
+                            translation,
+                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
                 else:
-                    overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
-                model.updateOverlayLargeLog(overlay_image)
+                    overlay_image = model.createOverlayImageLargeLog(
+                        "send",
+                        message,
+                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                        translation,
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                    )
+                    model.updateOverlayLargeLog(overlay_image)
 
             if model.checkWebSocketServerAlive() is True:
                 model.websocketSendMessage(
