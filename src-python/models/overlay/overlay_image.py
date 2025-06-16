@@ -86,7 +86,8 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor="mm", stroke_width=0, font=font, align="center")
         return img
 
-    def createOverlayImageSmallLog(self, message:str, your_language:str, translation:str="", target_language:str=None) -> Image:
+    def createOverlayImageSmallLog(self, message: str, your_language: str, translation: list = [], target_language: list = []) -> Image:
+        # UI設定を取得
         ui_size = self.getUiSizeSmallLog()
         width, height, font_size = ui_size["width"], ui_size["height"], ui_size["font_size"]
 
@@ -95,17 +96,40 @@ class OverlayImage:
         background_color = ui_colors["background_color"]
         background_outline_color = ui_colors["background_outline_color"]
 
-        img = self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
-        if translation and target_language:
-            translation_img = self.createTextboxSmallLog(translation, target_language, text_color, width, height, font_size)
-            img = self.concatenateImagesVertically(img, translation_img)
+        # テキストボックス画像のリストを作成
+        textbox_images = []
 
+        # 翻訳がある場合
+        if translation and target_language:
+            # 元のメッセージがある場合は追加
+            if message:
+                textbox_images.append(
+                    self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
+                )
+
+            # 翻訳をすべて追加
+            for trans, lang in zip(translation, target_language):
+                textbox_images.append(
+                    self.createTextboxSmallLog(trans, lang, text_color, width, height, font_size)
+                )
+        else:
+            # 翻訳がない場合は元のメッセージのみ
+            textbox_images.append(
+                self.createTextboxSmallLog(message, your_language, text_color, width, height, font_size)
+            )
+
+        # すべてのテキストボックスを縦に結合
+        img = textbox_images[0]
+        for textbox_img in textbox_images[1:]:
+            img = self.concatenateImagesVertically(img, textbox_img)
+
+        # 角丸背景を作成
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), img.size], radius=50, fill=background_color, outline=background_outline_color, width=5)
 
+        # 背景とテキストを合成
         img = Image.alpha_composite(background, img)
-        img.save("overlay_small.png")
         return img
 
     @staticmethod
@@ -271,7 +295,6 @@ class OverlayImage:
         draw = ImageDraw.Draw(background)
         draw.rounded_rectangle([(0, 0), (width, height)], radius=ui_radius, fill=background_color, outline=background_outline_color, width=5)
         img = Image.alpha_composite(background, img)
-        img.save("overlay_large.png")
         return img
 
 if __name__ == "__main__":
