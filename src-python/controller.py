@@ -432,11 +432,23 @@ class Controller:
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageSmallLog(translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageSmallLog(
+                                None,
+                                None,
+                                translation,
+                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            )
+                            model.updateOverlaySmallLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageSmallLog(message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlaySmallLog(overlay_image)
+                        overlay_image = model.createOverlayImageSmallLog(
+                            message,
+                            language,
+                            translation,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        )
+                        model.updateOverlaySmallLog(overlay_image)
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:

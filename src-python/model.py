@@ -717,9 +717,8 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmallLog(self, message, translation):
-        your_language = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
-        target_language = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"]
+    def createOverlayImageSmallLog(self, message:str, your_language:str, translation:list, target_language:dict):
+        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
         return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
 
     def createOverlayImageSmallMessage(self, message):
@@ -769,9 +768,9 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str,  translation:list, target_languages:dict):
-        target_languages = [data["language"] for data in target_languages.values() if data["enable"] is True]
-        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_languages)
+    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str,  translation:list, target_language:dict):
+        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
+        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
 
     def createOverlayImageLargeMessage(self, message):
         ui_language = config.UI_LANGUAGE
