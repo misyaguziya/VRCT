@@ -24,7 +24,6 @@ class OverlayImage:
             self.root_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts")
         else:
             self.root_path = os_path.join(root_path, "_internal", "fonts")
-        print(self.root_path)
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image, margin: int = 0) -> Image:
