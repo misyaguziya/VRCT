@@ -322,23 +322,6 @@ class Controller:
                         "transliteration":transliteration
                     })
 
-                if model.checkWebSocketServerAlive() is True:
-                    model.websocketSendMessage(
-                        {
-                            "type":"SENT",
-                            "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
-                            "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
-                            "message":message,
-                            "translation":translation,
-                            "transliteration":transliteration
-                        }
-                    )
-
-                if config.LOGGER_FEATURE is True:
-                    if len(translation) > 0:
-                        translation = " (" + "/".join(translation) + ")"
-                    model.logger.info(f"[SENT] {message}{translation}")
-
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
@@ -359,6 +342,22 @@ class Controller:
                             config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
                         )
                         model.updateOverlayLargeLog(overlay_image)
+
+                if model.checkWebSocketServerAlive() is True:
+                    model.websocketSendMessage(
+                        {
+                            "type":"SENT",
+                            "src_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            "message":message,
+                            "translation":translation,
+                            "transliteration":transliteration
+                        }
+                    )
+
+                if config.LOGGER_FEATURE is True:
+                    translation_text = f" ({'/'.join(translation)})" if translation else ""
+                    model.logger.info(f"[SENT] {message}{translation_text}")
 
     def speakerMessage(self, result:dict) -> None:
         message = result["text"]
@@ -497,9 +496,8 @@ class Controller:
                     )
 
                 if config.LOGGER_FEATURE is True:
-                    if len(translation) > 0:
-                        translation = " (" + "/".join(translation) + ")"
-                    model.logger.info(f"[RECEIVED] {message}{translation}")
+                    translation_text = f" ({'/'.join(translation)})" if translation else ""
+                    model.logger.info(f"[RECEIVED] {message}{translation_text}")
 
     def chatMessage(self, data) -> None:
         id = data["id"]
@@ -615,10 +613,8 @@ class Controller:
                     }
                 )
 
-            # update textbox message log (Chat)
             if config.LOGGER_FEATURE is True:
-                if len(translation) > 0:
-                    translation_text = " (" + "/".join(translation) + ")"
+                translation_text = f" ({'/'.join(translation)})" if translation else ""
                 model.logger.info(f"[CHAT] {message}{translation_text}")
 
         return {"status":200,
