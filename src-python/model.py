@@ -452,9 +452,9 @@ class Model:
                             config.MIC_AVG_LOGPROB,
                             config.MIC_NO_SPEECH_PROB
                         )
-                    if res:
-                        result = self.mic_transcriber.getTranscript()
-                        fnc(result)
+                        if res:
+                            result = self.mic_transcriber.getTranscript()
+                            fnc(result)
                 except Exception:
                     errorLogging()
 
@@ -635,9 +635,9 @@ class Model:
                             config.SPEAKER_AVG_LOGPROB,
                             config.SPEAKER_NO_SPEECH_PROB
                         )
-                    if res:
-                        result = self.speaker_transcriber.getTranscript()
-                        fnc(result)
+                        if res:
+                            result = self.speaker_transcriber.getTranscript()
+                            fnc(result)
                 except Exception:
                     errorLogging()
 
