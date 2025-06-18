@@ -90,8 +90,10 @@ class OSCHandler:
             # エラー発生時にbrowserをリセットして次回再初期化
             if self.browser is not None:
                 try:
-                    self.browser.zc.close()
-                    self.browser.browser.cancel()
+                    if hasattr(self.browser, 'zc') and self.browser.zc is not None:
+                        self.browser.zc.close()
+                    if hasattr(self.browser, 'browser') and self.browser.browser is not None:
+                        self.browser.browser.cancel()
                 except Exception:
                     pass
                 self.browser = None
@@ -140,8 +142,10 @@ class OSCHandler:
         # browserがある場合はクリーンアップ
         if self.browser is not None:
             try:
-                self.browser.zc.close()
-                self.browser.browser.cancel()
+                if hasattr(self.browser, 'zc') and self.browser.zc is not None:
+                    self.browser.zc.close()
+                if hasattr(self.browser, 'browser') and self.browser.browser is not None:
+                    self.browser.browser.cancel()
             except Exception:
                 pass
             self.browser = None

@@ -138,7 +138,8 @@ class WebSocketServer:
         finally:
             # 停止指示が出たらすべての接続を閉じ、イベントループを終了
             self._loop.run_until_complete(self._shutdown())
-            self._loop.close()
+            if self._loop is not None:
+                self._loop.close()
 
     async def _shutdown(self):
         """
