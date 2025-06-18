@@ -1,14 +1,10 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Translation.module.scss";
 import { updateLabelsById } from "@utils";
 
 import {
-    useDeepLAuthKey,
-    useCTranslate2WeightTypeStatus,
-    useSelectedCTranslate2WeightType,
-    useSelectedCTranslate2ComputeDevice,
-    useSelectableCTranslate2ComputeDeviceList,
+    useTranslation,
 } from "@logics_configs";
 
 import {
@@ -29,13 +25,15 @@ export const Translation = () => {
 };
 
 const CTranslate2WeightType_Box = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentCTranslate2WeightTypeStatus,
         pendingCTranslate2WeightType,
         downloadCTranslate2Weight,
-    } = useCTranslate2WeightTypeStatus();
-    const { currentSelectedCTranslate2WeightType, setSelectedCTranslate2WeightType } = useSelectedCTranslate2WeightType();
+
+        currentSelectedCTranslate2WeightType,
+        setSelectedCTranslate2WeightType,
+    } = useTranslation();
 
     const selectFunction = (id) => {
         setSelectedCTranslate2WeightType(id);
@@ -77,9 +75,9 @@ const CTranslate2WeightType_Box = () => {
 // Duplicate
 import { useComputeMode } from "@logics_common";
 const CTranslation2ComputeDevice_Box = () => {
-    const { t } = useTranslation();
-    const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useSelectedCTranslate2ComputeDevice();
-    const { currentSelectableCTranslate2ComputeDeviceList } = useSelectableCTranslate2ComputeDeviceList();
+    const { t } = useI18n();
+    const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useTranslation();
+    const { currentSelectableCTranslate2ComputeDeviceList } = useTranslation();
 
     const selectFunction = (selected_data) => {
         const target_obj = currentSelectableCTranslate2ComputeDeviceList.data[selected_data.selected_id];
@@ -120,8 +118,8 @@ const CTranslation2ComputeDevice_Box = () => {
 };
 
 const DeeplAuthKey_Box = () => {
-    const { t } = useTranslation();
-    const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useDeepLAuthKey();
+    const { t } = useI18n();
+    const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useTranslation();
     const [input_value, seInputValue] = useState(currentDeepLAuthKey.data);
 
     const onChangeFunction = (value) => {

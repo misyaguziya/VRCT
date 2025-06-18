@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./Vr.module.scss";
 import { ui_configs } from "@ui_configs";
@@ -15,12 +15,7 @@ import {
 } from "../_components/";
 
 import {
-    useIsEnabledOverlaySmallLog,
-    useOverlaySmallLogSettings,
-    useIsEnabledOverlayLargeLog,
-    useOverlayLargeLogSettings,
-    useOverlayShowOnlyTranslatedMessages,
-    useSendTextToOverlay,
+    useVr,
 } from "@logics_configs";
 
 import RedoSvg from "@images/redo.svg?react";
@@ -30,17 +25,23 @@ import TriangleSvg from "@images/triangle.svg?react";
 import { randomIntMinMax } from "@utils";
 
 export const Vr = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const [is_opened_small_settings, setIsOpenedSmallSettings] = useState(true);
     const toggleIsOpenedSmallSettings = () => {
         setIsOpenedSmallSettings(!is_opened_small_settings);
     };
 
-    const { currentOverlaySmallLogSettings, setOverlaySmallLogSettings } = useOverlaySmallLogSettings();
-    const { currentIsEnabledOverlaySmallLog, toggleIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
+    const {
+        currentIsEnabledOverlayLargeLog,
+        toggleIsEnabledOverlayLargeLog,
+        currentIsEnabledOverlaySmallLog,
+        toggleIsEnabledOverlaySmallLog,
+        currentOverlayLargeLogSettings,
+        setOverlayLargeLogSettings,
+        currentOverlaySmallLogSettings,
+        setOverlaySmallLogSettings,
+    } = useVr();
 
-    const { currentOverlayLargeLogSettings, setOverlayLargeLogSettings } = useOverlayLargeLogSettings();
-    const { currentIsEnabledOverlayLargeLog, toggleIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
 
     const restoreDefaultSettings = () => {
         setOverlaySmallLogSettings(ui_configs.overlay_small_log_default_settings);
@@ -99,7 +100,7 @@ const OverlaySettingsContainer = ({
     id
 }) => {
 
-    const { t } = useTranslation();
+    const { t } = useI18n();
     useEffect(() => {
         setSettings(current_overlay_settings);
     }, [current_overlay_settings]);
@@ -193,7 +194,7 @@ const PageSwitcherContainer = (props) => {
 
 
 export const PositionControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const {
         variable_display: x_variable_display,
@@ -302,7 +303,7 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
 };
 
 export const RotationControls = ({ settings, onchangeFunction, selectFunction, ui_configs, default_ui_configs }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const {
         variable_display: x_variable_display,
@@ -443,7 +444,7 @@ const AdjustButtonContainer = ({ wrapper_class_name, is_max, is_min, countUp, co
 
 
 const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const ui_variable_opacity = (settings.opacity * 100).toFixed(0);
     const ui_variable_ui_scaling = (settings.ui_scaling * 100).toFixed(0);
@@ -512,8 +513,8 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
 
 
 const CommonSettingsContainer = () => {
-    const { t } = useTranslation();
-    const { currentOverlayShowOnlyTranslatedMessages, toggleOverlayShowOnlyTranslatedMessages } = useOverlayShowOnlyTranslatedMessages();
+    const { t } = useI18n();
+    const { currentOverlayShowOnlyTranslatedMessages, toggleOverlayShowOnlyTranslatedMessages } = useVr();
 
     return (
         <div className={styles.common_container}>
@@ -536,8 +537,8 @@ const ResetButton = ({onClickFunction}) => {
 };
 
 const SendSampleTextToggleButton = () => {
-    const { t } = useTranslation();
-    const { sendTextToOverlay } = useSendTextToOverlay();
+    const { t } = useI18n();
+    const { sendTextToOverlay } = useVr();
     const [is_started, setIsStarted] = useState(false);
 
     useEffect(() => {

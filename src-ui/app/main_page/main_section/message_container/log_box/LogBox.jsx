@@ -27,9 +27,9 @@ export const LogBox = () => {
     );
 };
 
-import { useMessageLogUiScaling } from "@logics_configs";
+import { useAppearance } from "@logics_configs";
 const MessageLogUiSizeController = () => {
-    const { currentMessageLogUiScaling } = useMessageLogUiScaling();
+    const { currentMessageLogUiScaling } = useAppearance();
     const font_size = currentMessageLogUiScaling.data / 100;
 
     useEffect(() => {

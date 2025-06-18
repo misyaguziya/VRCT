@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import {
     KeyEventController,
@@ -32,7 +32,7 @@ import { useIsBackendReady, useIsSoftwareUpdating, useIsVrctAvailable, useWindow
 export const App = () => {
     const { currentIsVrctAvailable } = useIsVrctAvailable();
     const { currentIsBackendReady } = useIsBackendReady();
-    const { i18n } = useTranslation();
+    const { i18n } = useI18n();
 
     return (
         <div className={styles.container}>
