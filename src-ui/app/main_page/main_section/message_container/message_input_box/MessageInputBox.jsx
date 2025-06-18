@@ -2,7 +2,7 @@ import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import styles from "./MessageInputBox.module.scss";
 import SendMessageSvg from "@images/send_message.svg?react";
 import { useMessage } from "@logics_common";
-import { useSendMessageButtonType, useEnableAutoClearMessageInputBox } from "@logics_configs";
+import { useAppearance, useOthers } from "@logics_configs";
 import { useMessageLogScroll } from "@logics_main";
 import { store } from "@store";
 
@@ -18,8 +18,8 @@ export const MessageInputBox = () => {
         stopTyping,
     } = useMessage();
 
-    const { currentEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
-    const { currentSendMessageButtonType } = useSendMessageButtonType();
+    const { currentEnableAutoClearMessageInputBox } = useOthers();
+    const { currentSendMessageButtonType } = useAppearance();
 
     const { scrollToBottom } = useMessageLogScroll();
 

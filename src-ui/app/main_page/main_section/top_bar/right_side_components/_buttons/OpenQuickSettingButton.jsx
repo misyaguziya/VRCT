@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./OpenQuickSettingButton.module.scss";
 
 export const OpenQuickSettingButton = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const variable = (typeof props.variable === "boolean") ? props.variable : null;
     return (
         <div className={styles.container}>

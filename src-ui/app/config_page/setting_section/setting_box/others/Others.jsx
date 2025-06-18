@@ -1,15 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Others.module.scss";
 
 import { useOpenFolder } from "@logics_common";
 import {
-    useEnableAutoClearMessageInputBox,
-    useEnableSendOnlyTranslatedMessages,
-    useEnableAutoExportMessageLogs,
-    useEnableVrcMicMuteSync,
-    useEnableSendMessageToVrc,
-    useEnableSendReceivedMessageToVrc,
-    useEnableNotificationVrcSfx,
+    useOthers,
 } from "@logics_configs";
 
 import {
@@ -26,7 +20,7 @@ import { Checkbox } from "@common_components";
 import OpenFolderSvg from "@images/open_folder.svg?react";
 
 export const Others = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     return (
         <div className={styles.container}>
@@ -50,8 +44,8 @@ export const Others = () => {
 };
 
 const AutoClearMessageInputBoxContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableAutoClearMessageInputBox, toggleEnableAutoClearMessageInputBox } = useEnableAutoClearMessageInputBox();
+    const { t } = useI18n();
+    const { currentEnableAutoClearMessageInputBox, toggleEnableAutoClearMessageInputBox } = useOthers();
 
     return (
         <CheckboxContainer
@@ -62,8 +56,8 @@ const AutoClearMessageInputBoxContainer = () => {
     );
 };
 const SendOnlyTranslatedMessagesContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableSendOnlyTranslatedMessages, toggleEnableSendOnlyTranslatedMessages } = useEnableSendOnlyTranslatedMessages();
+    const { t } = useI18n();
+    const { currentEnableSendOnlyTranslatedMessages, toggleEnableSendOnlyTranslatedMessages } = useOthers();
 
     return (
         <CheckboxContainer
@@ -74,8 +68,8 @@ const SendOnlyTranslatedMessagesContainer = () => {
     );
 };
 const AutoExportMessageLogsContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableAutoExportMessageLogs, toggleEnableAutoExportMessageLogs } = useEnableAutoExportMessageLogs();
+    const { t } = useI18n();
+    const { currentEnableAutoExportMessageLogs, toggleEnableAutoExportMessageLogs } = useOthers();
     const { openFolder_MessageLogs } = useOpenFolder();
 
     return (
@@ -98,8 +92,8 @@ const AutoExportMessageLogsContainer = () => {
     );
 };
 export const VrcMicMuteSyncContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+    const { t } = useI18n();
+    const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useOthers();
 
     const variable = {
         state: currentEnableVrcMicMuteSync.state,
@@ -117,8 +111,8 @@ export const VrcMicMuteSyncContainer = () => {
     );
 };
 const SendMessageToVrcContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableSendMessageToVrc, toggleEnableSendMessageToVrc } = useEnableSendMessageToVrc();
+    const { t } = useI18n();
+    const { currentEnableSendMessageToVrc, toggleEnableSendMessageToVrc } = useOthers();
 
     return (
         <CheckboxContainer
@@ -132,8 +126,8 @@ const SendMessageToVrcContainer = () => {
 
 
 const EnableNotificationVrcSfxContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableNotificationVrcSfx, toggleEnableNotificationVrcSfx } = useEnableNotificationVrcSfx();
+    const { t } = useI18n();
+    const { currentEnableNotificationVrcSfx, toggleEnableNotificationVrcSfx } = useOthers();
 
     return (
         <CheckboxContainer
@@ -146,8 +140,8 @@ const EnableNotificationVrcSfxContainer = () => {
 };
 
 const SendReceivedMessageToVrcContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableSendReceivedMessageToVrc, toggleEnableSendReceivedMessageToVrc } = useEnableSendReceivedMessageToVrc();
+    const { t } = useI18n();
+    const { currentEnableSendReceivedMessageToVrc, toggleEnableSendReceivedMessageToVrc } = useOthers();
 
     return (
         <CheckboxContainer

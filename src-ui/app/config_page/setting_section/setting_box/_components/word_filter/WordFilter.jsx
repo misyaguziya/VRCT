@@ -1,15 +1,15 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./WordFilter.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState } from "react";
 import { useStore_IsOpenedMicWordFilterList } from "@store";
-import { useMicWordFilterList } from "@logics_configs";
+import { useTranscription } from "@logics_configs";
 
 export const WordFilter = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const [input_value, setInputValue] = useState("");
-    const { currentMicWordFilterList, updateMicWordFilterList, setMicWordFilterList } = useMicWordFilterList();
+    const { currentMicWordFilterList, updateMicWordFilterList, setMicWordFilterList } = useTranscription();
     const { currentIsOpenedMicWordFilterList, updateIsOpenedMicWordFilterList } = useStore_IsOpenedMicWordFilterList();
 
     const extractRedoableFalseItem = (updated_list) => {
@@ -126,9 +126,9 @@ const WordFilterItem = (props) => {
 
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 export const WordFilterListToggleComponent = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentIsOpenedMicWordFilterList, updateIsOpenedMicWordFilterList } = useStore_IsOpenedMicWordFilterList();
-    const { currentMicWordFilterList } = useMicWordFilterList();
+    const { currentMicWordFilterList } = useTranscription();
 
 
     const svg_class_names = clsx(styles["arrow_left_svg"], {

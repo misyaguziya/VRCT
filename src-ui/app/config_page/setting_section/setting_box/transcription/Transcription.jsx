@@ -1,22 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Transcription.module.scss";
 import { updateLabelsById, genNumObjArray } from "@utils";
 
 import {
-    useMicRecordTimeout,
-    useMicPhraseTimeout,
-    useMicMaxWords,
-
-    useSpeakerRecordTimeout,
-    useSpeakerPhraseTimeout,
-    useSpeakerMaxWords,
-
-    useSelectedTranscriptionEngine,
-    useWhisperWeightTypeStatus,
-    useSelectedWhisperWeightType,
-
-    useSelectedWhisperComputeDevice,
-    useSelectableWhisperComputeDeviceList,
+    useTranscription,
 } from "@logics_configs";
 
 import {
@@ -43,7 +30,7 @@ export const Transcription = () => {
 
 
 const Mic_Container = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     return (
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_mic")} />
@@ -56,8 +43,8 @@ const Mic_Container = () => {
 };
 
 const MicRecordTimeout_Box = () => {
-    const { t } = useTranslation();
-    const { currentMicRecordTimeout, setMicRecordTimeout } = useMicRecordTimeout();
+    const { t } = useI18n();
+    const { currentMicRecordTimeout, setMicRecordTimeout } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setMicRecordTimeout(selected_data.selected_id);
@@ -76,8 +63,8 @@ const MicRecordTimeout_Box = () => {
     );
 };
 const MicPhraseTimeout_Box = () => {
-    const { t } = useTranslation();
-    const { currentMicPhraseTimeout, setMicPhraseTimeout } = useMicPhraseTimeout();
+    const { t } = useI18n();
+    const { currentMicPhraseTimeout, setMicPhraseTimeout } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setMicPhraseTimeout(selected_data.selected_id);
@@ -96,8 +83,8 @@ const MicPhraseTimeout_Box = () => {
     );
 };
 const MicMaxWords_Box = () => {
-    const { t } = useTranslation();
-    const { currentMicMaxWords, setMicMaxWords } = useMicMaxWords();
+    const { t } = useI18n();
+    const { currentMicMaxWords, setMicMaxWords } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setMicMaxWords(selected_data.selected_id);
@@ -117,7 +104,7 @@ const MicMaxWords_Box = () => {
 };
 
 const MicWordFilter_Box = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     return (
         <WordFilterContainer
@@ -131,7 +118,7 @@ const MicWordFilter_Box = () => {
 
 
 const Speaker_Container = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     return (
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_speaker")} />
@@ -143,8 +130,8 @@ const Speaker_Container = () => {
 };
 
 const SpeakerRecordTimeout_Box = () => {
-    const { t } = useTranslation();
-    const { currentSpeakerRecordTimeout, setSpeakerRecordTimeout } = useSpeakerRecordTimeout();
+    const { t } = useI18n();
+    const { currentSpeakerRecordTimeout, setSpeakerRecordTimeout } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setSpeakerRecordTimeout(selected_data.selected_id);
@@ -163,8 +150,8 @@ const SpeakerRecordTimeout_Box = () => {
     );
 };
 const SpeakerPhraseTimeout_Box = () => {
-    const { t } = useTranslation();
-    const { currentSpeakerPhraseTimeout, setSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
+    const { t } = useI18n();
+    const { currentSpeakerPhraseTimeout, setSpeakerPhraseTimeout } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setSpeakerPhraseTimeout(selected_data.selected_id);
@@ -182,8 +169,8 @@ const SpeakerPhraseTimeout_Box = () => {
     );
 };
 const SpeakerMaxWords_Box = () => {
-    const { t } = useTranslation();
-    const { currentSpeakerMaxWords, setSpeakerMaxWords } = useSpeakerMaxWords();
+    const { t } = useI18n();
+    const { currentSpeakerMaxWords, setSpeakerMaxWords } = useTranscription();
 
     const selectFunction = (selected_data) => {
         setSpeakerMaxWords(selected_data.selected_id);
@@ -205,7 +192,7 @@ const SpeakerMaxWords_Box = () => {
 
 
 const TranscriptionEngine_Container = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     return (
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
@@ -217,8 +204,8 @@ const TranscriptionEngine_Container = () => {
 };
 
 const TranscriptionEngine_Box = () => {
-    const { t } = useTranslation();
-    const { currentSelectedTranscriptionEngine, setSelectedTranscriptionEngine } = useSelectedTranscriptionEngine();
+    const { t } = useI18n();
+    const { currentSelectedTranscriptionEngine, setSelectedTranscriptionEngine } = useTranscription();
 
     return (
         <RadioButtonContainer
@@ -235,13 +222,13 @@ const TranscriptionEngine_Box = () => {
 };
 
 const WhisperWeightType_Box = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentWhisperWeightTypeStatus,
         pendingWhisperWeightType,
         downloadWhisperWeight,
-    } = useWhisperWeightTypeStatus();
-    const { currentSelectedWhisperWeightType, setSelectedWhisperWeightType } = useSelectedWhisperWeightType();
+    } = useTranscription();
+    const { currentSelectedWhisperWeightType, setSelectedWhisperWeightType } = useTranscription();
 
     const selectFunction = (id) => {
         setSelectedWhisperWeightType(id);
@@ -288,9 +275,9 @@ const WhisperWeightType_Box = () => {
 // Duplicate
 import { useComputeMode } from "@logics_common";
 const WhisperComputeDevice_Box = () => {
-    const { t } = useTranslation();
-    const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useSelectedWhisperComputeDevice();
-    const { currentSelectableWhisperComputeDeviceList } = useSelectableWhisperComputeDeviceList();
+    const { t } = useI18n();
+    const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useTranscription();
+    const { currentSelectableWhisperComputeDeviceList } = useTranscription();
 
     const selectFunction = (selected_data) => {
         const target_obj = currentSelectableWhisperComputeDeviceList.data[selected_data.selected_id];

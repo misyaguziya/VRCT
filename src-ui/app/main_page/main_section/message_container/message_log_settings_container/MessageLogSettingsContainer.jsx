@@ -1,13 +1,13 @@
 import { useState } from "react";
 import styles from "./MessageLogSettingsContainer.module.scss";
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import { MessageLogUiScalingContainer } from "@setting_box";
 import ConfigSvg from "@images/configuration.svg?react";
 
 export const MessageLogSettingsContainer = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const [is_opened, setIsOpened] = useState(false);
     const [is_hovered, setIsHovered] = useState(false);
 

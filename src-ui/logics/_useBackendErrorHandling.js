@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import {
     useNotificationStatus,
@@ -9,43 +9,42 @@ import {
 } from "@logics_main";
 
 import {
-    useMicRecordTimeout,
-    useMicPhraseTimeout,
-    useMicMaxWords,
+    useTranscription,
 
-    useSpeakerRecordTimeout,
-    useSpeakerPhraseTimeout,
-    useSpeakerMaxWords,
+    useTranslation,
 
-    useDeepLAuthKey,
+    useOthers,
 
-    useEnableVrcMicMuteSync,
-
-    useOscIpAddress,
-    useWebsocket,
+    useAdvancedSettings,
 } from "@logics_configs";
 import { ui_configs } from "../ui_configs";
 
 export const _useBackendErrorHandling = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { showNotification_Error } = useNotificationStatus();
+
+    const {
+        updateMicRecordTimeout,
+        updateMicPhraseTimeout,
+        updateMicMaxWords,
+
+        updateSpeakerRecordTimeout,
+        updateSpeakerPhraseTimeout,
+        updateSpeakerMaxWords,
+    } = useTranscription();
 
     const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
 
-    const { updateMicRecordTimeout } = useMicRecordTimeout();
-    const { updateMicPhraseTimeout } = useMicPhraseTimeout();
-    const { updateMicMaxWords } = useMicMaxWords();
+    const { updateDeepLAuthKey } = useTranslation();
 
-    const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
-    const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
-    const { updateSpeakerMaxWords } = useSpeakerMaxWords();
+    const { updateEnableVrcMicMuteSync } = useOthers();
 
-    const { updateDeepLAuthKey } = useDeepLAuthKey();
-
-    const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
-
-    const { updateOscIpAddress } = useOscIpAddress();
-    const { updateEnableWebsocket, updateWebsocketHost, updateWebsocketPort } = useWebsocket();
+    const {
+        updateOscIpAddress,
+        updateEnableWebsocket,
+        updateWebsocketHost,
+        updateWebsocketPort,
+    } = useAdvancedSettings();
 
     const errorHandling_Backend = ({message, data, endpoint, result}) => {
         switch (endpoint) {

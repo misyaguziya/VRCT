@@ -1,12 +1,13 @@
 import clsx from "clsx";
 import styles from "./TranslatorSelector.module.scss";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import { chunkArray } from "@utils";
 import { useStore_IsOpenedTranslatorSelector } from "@store";
 import { useLanguageSettings } from "@logics_main";
 
-export const TranslatorSelector = ({selected_id, translation_engines, is_selected_same_language}) => {    const { t } = useTranslation();
+export const TranslatorSelector = ({selected_id, translation_engines, is_selected_same_language}) => {
+    const { t } = useI18n();
     const columns = chunkArray(translation_engines, 2);
 
     return (
@@ -46,7 +47,7 @@ export const TranslatorSelector = ({selected_id, translation_engines, is_selecte
 };
 
 const TranslatorBox = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { setSelectedTranslationEngines} = useLanguageSettings();
     const { updateIsOpenedTranslatorSelector} = useStore_IsOpenedTranslatorSelector();
 

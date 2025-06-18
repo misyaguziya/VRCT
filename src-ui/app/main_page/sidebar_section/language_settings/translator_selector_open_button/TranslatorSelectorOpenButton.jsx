@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { updateLabelsById } from "@utils";
 import styles from "./TranslatorSelectorOpenButton.module.scss";
 import { TranslatorSelector } from "./translator_selector/TranslatorSelector";
@@ -7,7 +7,7 @@ import { useLanguageSettings } from "@logics_main";
 import WarningSvg from "@images/warning.svg?react";
 
 export const TranslatorSelectorOpenButton = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentSelectedYourLanguages,
         currentSelectedTargetLanguages,

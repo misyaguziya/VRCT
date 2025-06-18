@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { IS_PLUGIN_PATH_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
     store,
@@ -36,7 +36,7 @@ import * as logics_common from "@logics_common";
 const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
-    const { t } = useTranslation();
+    const { t, i18n } = useI18n();
     const { showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
@@ -49,8 +49,6 @@ export const usePlugins = () => {
 
     const { asyncTauriFetchGithub } = useFetch();
 
-
-    const { i18n } = useTranslation();
 
     const generatePluginContext = (downloaded_plugin_info) => {
         const plugin_context = {

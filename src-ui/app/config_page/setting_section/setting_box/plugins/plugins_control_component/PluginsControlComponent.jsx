@@ -1,7 +1,7 @@
 import { SwitchBox } from "../../_components";
 import { _DownloadButton } from "../../_components/_atoms/_download_button/_DownloadButton";
 import styles from "./PluginsControlComponent.module.scss";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 export const PluginsControlComponent = ({
     variable_state,
@@ -9,7 +9,7 @@ export const PluginsControlComponent = ({
     toggleFunction,
     downloadStartFunction,
 }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const option = {
         id: plugin_status.plugin_id,
@@ -64,7 +64,7 @@ const DownloadedPluginControl = ({
     downloaded_version_label,
     latest_version_label,
 }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const togglePlugin = () => {
         toggleFunction(plugin_status.plugin_id);
@@ -128,7 +128,7 @@ const NotDownloadedPluginControl = ({
     downloaded_version_label,
     latest_version_label,
 }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     if (plugin_status.is_latest_version_available) {
         return (

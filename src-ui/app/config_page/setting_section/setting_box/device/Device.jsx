@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Device.module.scss";
 import clsx from "clsx";
 import { useStore_IsBreakPoint } from "@store";
@@ -28,7 +28,7 @@ export const Device = () => {
 };
 
 const Mic_Container = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentEnableAutoMicSelect,
         toggleEnableAutoMicSelect,
@@ -137,7 +137,7 @@ const Mic_Container = () => {
 };
 
 const Speaker_Container = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentEnableAutoSpeakerSelect,
         toggleEnableAutoSpeakerSelect,

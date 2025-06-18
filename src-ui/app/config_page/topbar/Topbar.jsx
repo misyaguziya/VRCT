@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 
 import styles from "./Topbar.module.scss";
@@ -10,7 +10,7 @@ import { SectionTitleBox } from "./section_title_box/SectionTitleBox";
 import { CompactSwitchBox } from "./compact_switch_box/CompactSwitchBox";
 
 export const Topbar = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentIsOpenedConfigPage, setIsOpenedConfigPage } = useIsOpenedConfigPage();
     const closeConfigPage = () => {
         setIsOpenedConfigPage(false);

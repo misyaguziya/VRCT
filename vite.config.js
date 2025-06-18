@@ -57,6 +57,8 @@ export default defineConfig(async () => {
             alias: {
                 "@root": path.resolve(__dirname),
 
+                "@useI18n": path.resolve(__dirname, "locales/useI18n.js"),
+
                 "@useReceiveRoutes": path.resolve(__dirname, "src-ui/logics/useReceiveRoutes.js"),
                 "@useStdoutToPython": path.resolve(__dirname, "src-ui/logics/useStdoutToPython.js"),
 

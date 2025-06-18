@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import CircularProgress from "@mui/material/CircularProgress";
 import styles from "./_DownloadButton.module.scss";
 
 export const _DownloadButton = ({option, ...props}) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const renderContent = () => {
         const circular_progress = Math.floor(option.progress / 10) * 10;
