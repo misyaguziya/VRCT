@@ -405,34 +405,87 @@ class Model:
         mic_host_name = config.SELECTED_MIC_HOST
         mic_device_name = config.SELECTED_MIC_DEVICE
 
-        mic_device_list = device_manager.getMicDevices().get(mic_host_name, [{"name": "NoDevice"}])
-        selected_mic_device = [device for device in mic_device_list if device["name"] == mic_device_name]
+        max_retries = 1 # Total attempts = max_retries + 1 = 2
+        attempt_successful = False
+        current_mic_device_info = None # Will hold the validated or refreshed device info
+        # Need Microphone for pre-warming, ensure it's imported. It is, as `from speech_recognition import Recognizer, Microphone`
 
-        if len(selected_mic_device) == 0 or mic_device_name == "NoDevice":
+        for attempt in range(max_retries + 1):
+            mic_device_list_for_host = device_manager.getMicDevices().get(mic_host_name, [])
+            selected_devices_by_name = [d for d in mic_device_list_for_host if d["name"] == mic_device_name]
+
+            if not selected_devices_by_name:
+                if attempt < max_retries:
+                    print(f"Mic '{mic_device_name}' not found for host '{mic_host_name}' on attempt {attempt + 1}. Refreshing.") # Placeholder
+                    device_manager.update()
+                    continue
+                else:
+                    print(f"Mic '{mic_device_name}' not found for host '{mic_host_name}' after all attempts.") # Placeholder
+                    fnc({"text": False, "language": None})
+                    return
+
+            current_mic_device_info = selected_devices_by_name[0]
+
+            try:
+                print(f"Pre-warm attempt {attempt + 1} for mic: {current_mic_device_info['name']} with index {current_mic_device_info['index']}") # Placeholder
+                temp_source = Microphone(
+                    device_index=current_mic_device_info['index'],
+                    sample_rate=int(current_mic_device_info["defaultSampleRate"]),
+                )
+                with temp_source as s:
+                    pass
+                attempt_successful = True
+                print(f"Pre-warm successful for {current_mic_device_info['name']}.") # Placeholder
+                break
+            except AssertionError as e:
+                print(f"AssertionError during pre-warm attempt {attempt + 1} for mic {current_mic_device_info['name']}: {e}") # Placeholder
+                if attempt < max_retries:
+                    print("Refreshing device list due to pre-warm failure.") # Placeholder
+                    device_manager.update()
+                else:
+                    print("Max retries reached for pre-warming. Reporting error.") # Placeholder
+                    fnc({"text": False, "language": None})
+                    return
+            except Exception as ex:
+                print(f"Unexpected error during pre-warm for mic {current_mic_device_info['name']}: {ex}") # Placeholder
+                # errorLogging(f"Unexpected pre-warm error: {ex}") # If using utils.errorLogging
+                fnc({"text": False, "language": None})
+                return
+
+        if not attempt_successful or current_mic_device_info is None:
+            print("Failed to obtain a valid microphone device after all attempts.") # Placeholder
             fnc({"text": False, "language": None})
-        else:
-            self.mic_audio_queue = Queue()
-            # self.mic_energy_queue = Queue()
+            return
 
-            mic_device = selected_mic_device[0]
-            record_timeout = config.MIC_RECORD_TIMEOUT
-            phrase_timeout = config.MIC_PHRASE_TIMEOUT
-            if record_timeout > phrase_timeout:
-                record_timeout = phrase_timeout
+        record_timeout_val = config.MIC_RECORD_TIMEOUT
+        phrase_timeout_val = config.MIC_PHRASE_TIMEOUT
+        if record_timeout_val > phrase_timeout_val:
+            record_timeout_val = phrase_timeout_val
 
+        try:
             self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(
-                device=mic_device,
+                device=current_mic_device_info, # Use the validated/refreshed device info
                 energy_threshold=config.MIC_THRESHOLD,
                 dynamic_energy_threshold=config.MIC_AUTOMATIC_THRESHOLD,
-                phrase_time_limit=record_timeout,
+                phrase_time_limit=record_timeout_val,
+                phrase_timeout=phrase_timeout_val,
+                record_timeout=record_timeout_val
             )
-            # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
-            self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
-            self.mic_transcriber = AudioTranscriber(
-                speaker=False,
-                source=self.mic_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.MIC_MAX_PHRASES,
+        except (AssertionError, ValueError) as e:
+            print(f"Error during final SelectedMicEnergyAndAudioRecorder instantiation: {e}") # Placeholder
+            # errorLogging(f"Final recorder instantiation error: {e}") # If using utils.errorLogging
+            fnc({"text": False, "language": None})
+            return
+
+        # If recorder initialization was successful, proceed:
+        self.mic_audio_queue = Queue()
+        self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
+
+        self.mic_transcriber = AudioTranscriber(
+            speaker=False,
+            source=self.mic_audio_recorder.source,
+            phrase_timeout=phrase_timeout_val,
+            max_phrases=config.MIC_MAX_PHRASES,
                 transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
                 root=config.PATH_LOCAL,
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
@@ -589,83 +642,138 @@ class Model:
     def startSpeakerTranscript(self, fnc):
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
-        speaker_device_list = device_manager.getSpeakerDevices()
-        selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
+        max_retries = 1
+        attempt_successful = False
+        current_speaker_device_info = None
 
-        if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":
+        for attempt in range(max_retries + 1):
+            speaker_device_list = device_manager.getSpeakerDevices()
+            selected_devices_by_name = [d for d in speaker_device_list if d["name"] == speaker_device_name]
+
+            if not selected_devices_by_name:
+                if attempt < max_retries:
+                    print(f"Speaker '{speaker_device_name}' not found on attempt {attempt + 1}. Refreshing.") # Placeholder
+                    device_manager.update()
+                    continue
+                else:
+                    print(f"Speaker '{speaker_device_name}' not found after all attempts.") # Placeholder
+                    fnc({"text": False, "language": None})
+                    return
+
+            current_speaker_device_info = selected_devices_by_name[0]
+
+            try:
+                print(f"Pre-warm attempt {attempt + 1} for speaker: {current_speaker_device_info['name']} with index {current_speaker_device_info['index']}") # Placeholder
+                temp_source = Microphone(
+                    speaker=True,
+                    device_index=current_speaker_device_info['index'],
+                    sample_rate=int(current_speaker_device_info["defaultSampleRate"]),
+                    chunk_size=get_sample_size(paInt16),
+                    channels=current_speaker_device_info["maxInputChannels"]
+                )
+                with temp_source as s:
+                    pass
+                attempt_successful = True
+                print(f"Pre-warm successful for {current_speaker_device_info['name']}.") # Placeholder
+                break
+            except AssertionError as e:
+                print(f"AssertionError during pre-warm attempt {attempt + 1} for speaker {current_speaker_device_info['name']}: {e}") # Placeholder
+                if attempt < max_retries:
+                    print("Refreshing device list due to pre-warm failure (speaker).") # Placeholder
+                    device_manager.update()
+                else:
+                    print("Max retries reached for pre-warming speaker. Reporting error.") # Placeholder
+                    fnc({"text": False, "language": None})
+                    return
+            except Exception as ex:
+                print(f"Unexpected error during pre-warm for speaker {current_speaker_device_info['name']}: {ex}") # Placeholder
+                # errorLogging(f"Unexpected pre-warm error (speaker): {ex}") # If using utils.errorLogging
+                fnc({"text": False, "language": None})
+                return
+
+        if not attempt_successful or current_speaker_device_info is None:
+            print("Failed to obtain a valid speaker device after all attempts.") # Placeholder
             fnc({"text": False, "language": None})
-        else:
-            speaker_audio_queue = Queue()
-            # speaker_energy_queue = Queue()
-            speaker_device = selected_speaker_device[0]
-            record_timeout = config.SPEAKER_RECORD_TIMEOUT
-            phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
-            if record_timeout > phrase_timeout:
-                record_timeout = phrase_timeout
+            return
 
+        record_timeout_val = config.SPEAKER_RECORD_TIMEOUT
+        phrase_timeout_val = config.SPEAKER_PHRASE_TIMEOUT
+        if record_timeout_val > phrase_timeout_val:
+            record_timeout_val = phrase_timeout_val
+
+        try:
             self.speaker_audio_recorder = SelectedSpeakerEnergyAndAudioRecorder(
-                device=speaker_device,
+                device=current_speaker_device_info, # Use validated/refreshed info
                 energy_threshold=config.SPEAKER_THRESHOLD,
                 dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
-                phrase_time_limit=record_timeout,
+                phrase_time_limit=record_timeout_val,
+                phrase_timeout=phrase_timeout_val,
+                record_timeout=record_timeout_val
             )
-            # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
-            self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
-            self.speaker_transcriber = AudioTranscriber(
-                speaker=True,
-                source=self.speaker_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.SPEAKER_MAX_PHRASES,
-                transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-                root=config.PATH_LOCAL,
-                whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-                device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
-                device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
-            )
-            def sendSpeakerTranscript():
-                try:
-                    selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
-                    languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
-                    countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
-                    if isinstance(self.speaker_transcriber, AudioTranscriber) is True:
-                        res = self.speaker_transcriber.transcribeAudioQueue(
-                            speaker_audio_queue,
-                            languages,
-                            countries,
-                            config.SPEAKER_AVG_LOGPROB,
-                            config.SPEAKER_NO_SPEECH_PROB
-                        )
-                        if res:
-                            result = self.speaker_transcriber.getTranscript()
-                            fnc(result)
-                except Exception:
-                    errorLogging()
+        except (AssertionError, ValueError) as e:
+            print(f"Error during final SelectedSpeakerEnergyAndAudioRecorder instantiation: {e}") # Placeholder
+            # errorLogging(f"Final speaker recorder instantiation error: {e}") # If using utils.errorLogging
+            fnc({"text": False, "language": None})
+            return
 
-            def endSpeakerTranscript():
-                while not speaker_audio_queue.empty():
-                    speaker_audio_queue.get()
-                # while not speaker_energy_queue.empty():
-                #     speaker_energy_queue.get()
-                self.speaker_transcriber = None
-                gc.collect()
+        self.speaker_audio_queue = Queue()
+        self.speaker_audio_recorder.recordIntoQueue(self.speaker_audio_queue, None)
 
-            # def sendSpeakerEnergy():
-            #     if speaker_energy_queue.empty() is False:
-            #         energy = speaker_energy_queue.get()
-            #         # print("speaker energy:", energy)
-            #         try:
-            #             fnc(energy)
-            #         except Exception:
-            #             pass
-            #     sleep(0.01)
+        self.speaker_transcriber = AudioTranscriber(
+            speaker=True,
+            source=self.speaker_audio_recorder.source,
+            phrase_timeout=phrase_timeout_val,
+            max_phrases=config.SPEAKER_MAX_PHRASES,
+                    transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+                    root=config.PATH_LOCAL,
+                    whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+                    device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
+                    device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                )
+                def sendSpeakerTranscript():
+                    try:
+                        selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                        languages = [data["language"] for data in selected_target_languages.values() if data["enable"] is True]
+                        countries = [data["country"] for data in selected_target_languages.values() if data["enable"] is True]
+                        if isinstance(self.speaker_transcriber, AudioTranscriber) is True:
+                            res = self.speaker_transcriber.transcribeAudioQueue(
+                                speaker_audio_queue, # Uses local speaker_audio_queue captured by closure
+                                languages,
+                                countries,
+                                config.SPEAKER_AVG_LOGPROB,
+                                config.SPEAKER_NO_SPEECH_PROB
+                            )
+                            if res:
+                                result = self.speaker_transcriber.getTranscript()
+                                fnc(result)
+                    except Exception:
+                        errorLogging()
 
-            self.speaker_print_transcript = threadFnc(sendSpeakerTranscript, end_fnc=endSpeakerTranscript)
-            self.speaker_print_transcript.daemon = True
-            self.speaker_print_transcript.start()
+                def endSpeakerTranscript():
+                    while not speaker_audio_queue.empty(): # Uses local speaker_audio_queue captured by closure
+                        speaker_audio_queue.get()
+                    # while not speaker_energy_queue.empty():
+                    #     speaker_energy_queue.get()
+                    self.speaker_transcriber = None
+                    gc.collect()
 
-            # self.speaker_get_energy = threadFnc(sendSpeakerEnergy)
-            # self.speaker_get_energy.daemon = True
-            # self.speaker_get_energy.start()
+                # def sendSpeakerEnergy():
+                #     if speaker_energy_queue.empty() is False:
+                #         energy = speaker_energy_queue.get()
+                #         # print("speaker energy:", energy)
+                #         try:
+                #             fnc(energy)
+                #         except Exception:
+                #             pass
+                #     sleep(0.01)
+
+                self.speaker_print_transcript = threadFnc(sendSpeakerTranscript, end_fnc=endSpeakerTranscript)
+                self.speaker_print_transcript.daemon = True
+                self.speaker_print_transcript.start()
+
+                # self.speaker_get_energy = threadFnc(sendSpeakerEnergy)
+                # self.speaker_get_energy.daemon = True
+                # self.speaker_get_energy.start()
 
     def stopSpeakerTranscript(self):
         if isinstance(self.speaker_print_transcript, threadFnc):
