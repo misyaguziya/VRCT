@@ -32,10 +32,7 @@ const generatePropertyNames = (base_name) => ({
     pending: `pending${base_name}`,
     current: `current${base_name}`,
     update: `update${base_name}`,
-    updatePart: `updatePart${base_name}`,
-    async_update: `asyncUpdate${base_name}`,
     add: `add${base_name}`,
-    async_add: `asyncAdd${base_name}`,
 });
 
 
