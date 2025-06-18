@@ -1,0 +1,22 @@
+call .venv/Scripts/activate
+nuitka ^
+    --standalone ^
+    --output-filename=VRCT-sidecar-x86_64-pc-windows-msvc.exe ^
+    --output-dir=src-tauri/bin ^
+    --include-data-dir=fonts=fonts ^
+    --include-data-dir=.venv\Lib\site-packages\pykakasi=pykakasi ^
+    --include-data-dir=.venv\Lib\site-packages\faster_whisper=faster_whisper ^
+    --enable-plugin=transformers ^
+    --follow-imports ^
+    --include-module=zeroconf ^
+    --include-module=openvr ^
+    --include-module=pykakasi ^
+    --include-module=faster_whisper ^
+    --include-module=hf_xet ^
+    --nofollow-import-to=pandas ^
+    --nofollow-import-to=matplotlib ^
+    --nofollow-import-to=PyQt5 ^
+    --assume-yes-for-downloads ^
+    --show-progress ^
+    --windows-console-mode=force ^
+    src-python/mainloop.py
