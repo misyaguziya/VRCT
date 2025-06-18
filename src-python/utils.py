@@ -115,9 +115,24 @@ def printResponse(status:int, endpoint:str, result:Any=None) -> None:
         "endpoint": endpoint,
         "result": result,
     }
-    process_logger.info(response)
-    response = json.dumps(response)
-    print(response, flush=True)
+    process_logger.info(response)  # Log the unserialized response
+
+    try:
+        serialized_response = json.dumps(response)
+    except OSError as e:
+        errorLogging()  # Log the full traceback of the OSError
+        process_logger.error(f"Problematic response object before json.dumps: {response}")
+        process_logger.error(f"OSError during json.dumps: {e}")
+        # Optionally, print a generic error JSON to stdout if needed, or re-raise
+        # For now, we'll print a simple error message to stdout as a fallback
+        error_json = json.dumps({
+            "status": 500,
+            "endpoint": endpoint,
+            "result": {"error": "Failed to serialize response due to OSError", "details": str(e)}
+        })
+        print(error_json, flush=True)
+    else:
+        print(serialized_response, flush=True)
 
 error_logger = None
 def errorLogging() -> None:
