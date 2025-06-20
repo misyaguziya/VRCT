@@ -10,7 +10,7 @@ import { useNotificationStatus } from "@logics_common";
 
 export const useAdvancedSettings = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { showNotification_Error } = useNotificationStatus();
+    const { showNotification_Error, showNotification_SaveSuccess } = useNotificationStatus();
 
     // OSC IP Address
     const { currentOscIpAddress, updateOscIpAddress, pendingOscIpAddress } = useStore_OscIpAddress();
@@ -32,6 +32,11 @@ export const useAdvancedSettings = () => {
         asyncStdoutToPython("/set/data/osc_ip_address", osc_ip_address);
     };
 
+    const setSuccessOscIpAddress = (osc_ip_address) => {
+        updateOscIpAddress(osc_ip_address);
+        showNotification_SaveSuccess();
+    };
+
     // OSC Port
     const getOscPort = () => {
         pendingOscPort();
@@ -43,12 +48,17 @@ export const useAdvancedSettings = () => {
         asyncStdoutToPython("/set/data/osc_port", osc_port);
     };
 
-    const saveErrorOscPort = ({data, message, _result}) => {
+    const setSuccessOscPort = (osc_port) => {
+        updateOscPort(osc_port);
+        showNotification_SaveSuccess();
+    };
+
+    const saveErrorOscPort = ({ data, message, _result }) => {
         updateOscPort(d => d.data);
         showNotification_Error(_result);
     };
 
-    // WebSocket
+    // WebSocket Enable
     const getEnableWebsocket = () => {
         pendingEnableWebsocket();
         asyncStdoutToPython("/get/data/websocket_server");
@@ -63,7 +73,12 @@ export const useAdvancedSettings = () => {
         }
     };
 
+    const setSuccessEnableWebsocket = (is_enabled) => {
+        updateEnableWebsocket(is_enabled);
+        showNotification_SaveSuccess();
+    };
 
+    // WebSocket Host
     const getWebsocketHost = () => {
         pendingWebsocketHost();
         asyncStdoutToPython("/get/data/websocket_host");
@@ -74,7 +89,12 @@ export const useAdvancedSettings = () => {
         asyncStdoutToPython("/set/data/websocket_host", websocket_host);
     };
 
+    const setSuccessWebsocketHost = (websocket_host) => {
+        updateWebsocketHost(websocket_host);
+        showNotification_SaveSuccess();
+    };
 
+    // WebSocket Port
     const getWebsocketPort = () => {
         pendingWebsocketPort();
         asyncStdoutToPython("/get/data/websocket_port");
@@ -85,6 +105,10 @@ export const useAdvancedSettings = () => {
         asyncStdoutToPython("/set/data/websocket_port", websocket_port);
     };
 
+    const setSuccessWebsocketPort = (websocket_port) => {
+        updateWebsocketPort(websocket_port);
+        showNotification_SaveSuccess();
+    };
 
     return {
         // OSC IP Address
@@ -92,28 +116,35 @@ export const useAdvancedSettings = () => {
         getOscIpAddress,
         updateOscIpAddress,
         setOscIpAddress,
+        setSuccessOscIpAddress,
 
         // OSC Port
         currentOscPort,
         getOscPort,
         updateOscPort,
         setOscPort,
+        setSuccessOscPort,
         saveErrorOscPort,
 
-        // WebSocket
+        // WebSocket Enable
         currentEnableWebsocket,
-        updateEnableWebsocket,
         getEnableWebsocket,
+        updateEnableWebsocket,
         toggleEnableWebsocket,
+        setSuccessEnableWebsocket,
 
+        // WebSocket Host
         currentWebsocketHost,
-        updateWebsocketHost,
         getWebsocketHost,
+        updateWebsocketHost,
         setWebsocketHost,
+        setSuccessWebsocketHost,
 
+        // WebSocket Port
         currentWebsocketPort,
-        updateWebsocketPort,
         getWebsocketPort,
+        updateWebsocketPort,
         setWebsocketPort,
+        setSuccessWebsocketPort,
     };
 };

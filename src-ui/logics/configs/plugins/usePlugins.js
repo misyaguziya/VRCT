@@ -37,7 +37,7 @@ const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
     const { t, i18n } = useI18n();
-    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
+    const { showNotification_SaveSuccess, showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo, errorFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
@@ -371,6 +371,10 @@ export const usePlugins = () => {
         });
     }
 
+    const setSuccessSavedPluginsStatus = (plugins_status) => {
+        updateSavedPluginsStatus(plugins_status);
+        showNotification_SaveSuccess();
+    };
 
 
     return {
@@ -385,6 +389,7 @@ export const usePlugins = () => {
 
         currentSavedPluginsStatus,
         updateSavedPluginsStatus,
+        setSuccessSavedPluginsStatus,
 
         currentPluginsData,
         updatePluginsData,
