@@ -18,9 +18,11 @@ import {
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { arrayToObject } from "@utils";
+import { useNotificationStatus } from "@logics_common";
 
 export const useDevice = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { showNotification_SaveSuccess } = useNotificationStatus();
 
     const { currentEnableAutoMicSelect, updateEnableAutoMicSelect, pendingEnableAutoMicSelect } = useStore_EnableAutoMicSelect();
     const { currentEnableAutoSpeakerSelect, updateEnableAutoSpeakerSelect, pendingEnableAutoSpeakerSelect } = useStore_EnableAutoSpeakerSelect();
@@ -34,11 +36,11 @@ export const useDevice = () => {
 
     const { currentSelectedSpeakerDevice, updateSelectedSpeakerDevice, pendingSelectedSpeakerDevice } = useStore_SelectedSpeakerDevice();
 
-    const { updateMicThreshold, currentMicThreshold } = useStore_MicThreshold();
-    const { updateEnableAutomaticMicThreshold, currentEnableAutomaticMicThreshold, pendingEnableAutomaticMicThreshold } = useStore_EnableAutomaticMicThreshold();
+    const { currentMicThreshold, updateMicThreshold } = useStore_MicThreshold();
+    const { currentEnableAutomaticMicThreshold, updateEnableAutomaticMicThreshold, pendingEnableAutomaticMicThreshold } = useStore_EnableAutomaticMicThreshold();
 
-    const { updateSpeakerThreshold, currentSpeakerThreshold } = useStore_SpeakerThreshold();
-    const { updateEnableAutomaticSpeakerThreshold, currentEnableAutomaticSpeakerThreshold, pendingEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
+    const { currentSpeakerThreshold, updateSpeakerThreshold } = useStore_SpeakerThreshold();
+    const { currentEnableAutomaticSpeakerThreshold, updateEnableAutomaticSpeakerThreshold, pendingEnableAutomaticSpeakerThreshold } = useStore_EnableAutomaticSpeakerThreshold();
 
     // Auto Select (Mic)
     const getEnableAutoMicSelect = () => {
@@ -54,6 +56,12 @@ export const useDevice = () => {
             asyncStdoutToPython("/set/enable/auto_mic_select");
         }
     };
+
+    const setSuccessEnableAutoMicSelect = (enabled) => {
+        updateEnableAutoMicSelect(enabled);
+        showNotification_SaveSuccess();
+    };
+
     // Auto Select (Speaker)
     const getEnableAutoSpeakerSelect = () => {
         pendingEnableAutoSpeakerSelect();
@@ -69,6 +77,10 @@ export const useDevice = () => {
         }
     };
 
+    const setSuccessEnableAutoSpeakerSelect = (enabled) => {
+        updateEnableAutoSpeakerSelect(enabled);
+        showNotification_SaveSuccess();
+    };
 
     // List (Mic device)
     const getMicDeviceList = () => {
@@ -79,6 +91,7 @@ export const useDevice = () => {
     const updateMicDeviceList_FromBackend = (payload) => {
         updateMicDeviceList(arrayToObject(payload));
     };
+
     // List (Mic host)
     const getMicHostList = () => {
         pendingMicHostList();
@@ -88,6 +101,7 @@ export const useDevice = () => {
     const updateMicHostList_FromBackend = (payload) => {
         updateMicHostList(arrayToObject(payload));
     };
+
     // List (Speaker device)
     const getSpeakerDeviceList = () => {
         pendingSpeakerDeviceList();
@@ -97,7 +111,6 @@ export const useDevice = () => {
     const updateSpeakerDeviceList_FromBackend = (payload) => {
         updateSpeakerDeviceList(arrayToObject(payload));
     };
-
 
     // Selected (Mic host)
     const getSelectedMicHost = () => {
@@ -109,6 +122,12 @@ export const useDevice = () => {
         pendingSelectedMicHost();
         asyncStdoutToPython("/set/data/selected_mic_host", selected_mic_host);
     };
+
+    const setSuccessSelectedMicHost = (payload) => {
+        updateSelectedMicHostAndDevice(payload); // Receive host and device from backend.
+        showNotification_SaveSuccess();
+    };
+
     // Selected (Mic device)
     const getSelectedMicDevice = () => {
         pendingSelectedMicDevice();
@@ -120,11 +139,16 @@ export const useDevice = () => {
         asyncStdoutToPython("/set/data/selected_mic_device", selected_mic_device);
     };
 
-    // Selected (Mic and Host)
+    const setSuccessSelectedMicDevice = (selected_mic_device) => {
+        updateSelectedMicDevice(selected_mic_device);
+        showNotification_SaveSuccess();
+    };
+
+    // Selected (Mic Device and Host)
     const updateSelectedMicHostAndDevice = (payload) => {
         updateSelectedMicHost(payload.host);
         updateSelectedMicDevice(payload.device);
-    };
+    }
 
     // Selected (Speaker device)
     const getSelectedSpeakerDevice = () => {
@@ -137,6 +161,10 @@ export const useDevice = () => {
         asyncStdoutToPython("/set/data/selected_speaker_device", selected_speaker_device);
     };
 
+    const setSuccessSelectedSpeakerDevice = (selected_speaker_device) => {
+        updateSelectedSpeakerDevice(selected_speaker_device);
+        showNotification_SaveSuccess();
+    };
 
     // Threshold (Mic)
     const getMicThreshold = () => {
@@ -145,6 +173,11 @@ export const useDevice = () => {
 
     const setMicThreshold = (mic_threshold) => {
         asyncStdoutToPython("/set/data/mic_threshold", mic_threshold);
+    };
+
+    const setSuccessMicThreshold = (mic_threshold) => {
+        updateMicThreshold(mic_threshold);
+        showNotification_SaveSuccess();
     };
 
     const getEnableAutomaticMicThreshold = () => {
@@ -160,6 +193,12 @@ export const useDevice = () => {
             asyncStdoutToPython("/set/enable/mic_automatic_threshold");
         }
     };
+
+    const setSuccessEnableAutomaticMicThreshold = (enabled) => {
+        updateEnableAutomaticMicThreshold(enabled);
+        showNotification_SaveSuccess();
+    };
+
     // Threshold (Speaker)
     const getSpeakerThreshold = () => {
         asyncStdoutToPython("/get/data/speaker_threshold");
@@ -167,6 +206,11 @@ export const useDevice = () => {
 
     const setSpeakerThreshold = (speaker_threshold) => {
         asyncStdoutToPython("/set/data/speaker_threshold", speaker_threshold);
+    };
+
+    const setSuccessSpeakerThreshold = (speaker_threshold) => {
+        updateSpeakerThreshold(speaker_threshold);
+        showNotification_SaveSuccess();
     };
 
     const getEnableAutomaticSpeakerThreshold = () => {
@@ -183,19 +227,23 @@ export const useDevice = () => {
         }
     };
 
-
+    const setSuccessEnableAutomaticSpeakerThreshold = (enabled) => {
+        updateEnableAutomaticSpeakerThreshold(enabled);
+        showNotification_SaveSuccess();
+    };
 
     return {
         currentEnableAutoMicSelect,
         getEnableAutoMicSelect,
         updateEnableAutoMicSelect,
         toggleEnableAutoMicSelect,
+        setSuccessEnableAutoMicSelect,
 
         currentEnableAutoSpeakerSelect,
         getEnableAutoSpeakerSelect,
         updateEnableAutoSpeakerSelect,
         toggleEnableAutoSpeakerSelect,
-
+        setSuccessEnableAutoSpeakerSelect,
 
         currentMicDeviceList,
         getMicDeviceList,
@@ -212,46 +260,47 @@ export const useDevice = () => {
         updateSpeakerDeviceList,
         updateSpeakerDeviceList_FromBackend,
 
-
         currentSelectedMicHost,
         getSelectedMicHost,
         updateSelectedMicHost,
         setSelectedMicHost,
+        setSuccessSelectedMicHost,
 
         currentSelectedMicDevice,
         getSelectedMicDevice,
         updateSelectedMicDevice,
         setSelectedMicDevice,
-
+        setSuccessSelectedMicDevice,
         updateSelectedMicHostAndDevice,
-
 
         currentSelectedSpeakerDevice,
         getSelectedSpeakerDevice,
         updateSelectedSpeakerDevice,
         setSelectedSpeakerDevice,
-
+        setSuccessSelectedSpeakerDevice,
 
         currentMicThreshold,
         getMicThreshold,
         setMicThreshold,
         updateMicThreshold,
+        setSuccessMicThreshold,
 
         currentEnableAutomaticMicThreshold,
         getEnableAutomaticMicThreshold,
         toggleEnableAutomaticMicThreshold,
         updateEnableAutomaticMicThreshold,
+        setSuccessEnableAutomaticMicThreshold,
 
         currentSpeakerThreshold,
         getSpeakerThreshold,
         setSpeakerThreshold,
         updateSpeakerThreshold,
+        setSuccessSpeakerThreshold,
 
         currentEnableAutomaticSpeakerThreshold,
         getEnableAutomaticSpeakerThreshold,
         toggleEnableAutomaticSpeakerThreshold,
         updateEnableAutomaticSpeakerThreshold,
-
-
+        setSuccessEnableAutomaticSpeakerThreshold,
     };
 };
