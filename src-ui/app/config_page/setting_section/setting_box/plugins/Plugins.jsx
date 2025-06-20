@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
 import { PluginsControlComponent } from "./plugins_control_component/PluginsControlComponent";
@@ -27,7 +27,7 @@ export const Plugins = () => {
 };
 
 const PluginDownloadContainer = () => {
-    const { t, i18n } = useTranslation();
+    const { t, i18n } = useI18n();
     const {
         downloadAndExtractPlugin,
         currentPluginsData,

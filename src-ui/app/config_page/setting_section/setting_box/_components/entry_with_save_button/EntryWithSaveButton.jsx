@@ -1,11 +1,11 @@
 import styles from "./EntryWithSaveButton.module.scss";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { clsx } from "clsx";
 
 export const EntryWithSaveButton = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const onChangeFunction = (e) => {
         props.onChangeFunction?.(e.target.value);
     };

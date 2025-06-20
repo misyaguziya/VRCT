@@ -16,12 +16,9 @@ import {
 
 export const store = {
     backend_subprocess: null,
-    config_page: null,
     setting_box_scroll_container: null,
     log_box_ref: null,
     text_area_ref: null,
-    is_register_window_geometry_controller: false,
-    is_applied_init_message_box_height: false,
     is_initialized_load_plugin: false,
     is_fetched_plugins_info_already: false,
     is_initialized_fetched_plugin_info: false,
@@ -32,10 +29,7 @@ const generatePropertyNames = (base_name) => ({
     pending: `pending${base_name}`,
     current: `current${base_name}`,
     update: `update${base_name}`,
-    updatePart: `updatePart${base_name}`,
-    async_update: `asyncUpdate${base_name}`,
     add: `add${base_name}`,
-    async_add: `asyncAdd${base_name}`,
 });
 
 

@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useSelectedFontFamily } from "@logics_configs";
+import { useAppearance } from "@logics_configs";
 
 export const FontFamilyController = () => {
-    const { currentSelectedFontFamily } = useSelectedFontFamily();
+    const { currentSelectedFontFamily } = useAppearance();
     useEffect(() => {
         document.documentElement.style.setProperty("--font_family", currentSelectedFontFamily.data);
     }, [currentSelectedFontFamily.data]);

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import styles from "./LanguageSwapButton.module.scss";
 
@@ -9,7 +9,7 @@ import { useLanguageSettings } from "@logics_main";
 
 export const LanguageSwapButton = () => {
     const [isHovered, setIsHovered] = useState(false);
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { swapSelectedLanguages } = useLanguageSettings();
 
     const label = isHovered

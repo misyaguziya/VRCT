@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import styles from "./UpdateModal.module.scss";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useStore_OpenedQuickSetting } from "@store";
 import { usePlugins } from "@logics_configs";
 import {
@@ -13,7 +13,7 @@ import {
 import { PluginCompatibilityList } from "./plugins_compatibility_list/PluginCompatibilityList";
 
 export const UpdateModal = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const { updateSoftware, updateSoftware_CUDA } = useUpdateSoftware();
     const { updateIsSoftwareUpdating } = useIsSoftwareUpdating();
@@ -91,7 +91,7 @@ const VersionDescComponent = (props) => {
 };
 
 const CurrentVersionLabel = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     if (props.is_latest_version_already) {
         return <p className={clsx(styles.current_version_label, {[styles.is_cuda]: props.is_cuda})}>{t("update_modal.is_latest_version_already")}</p>;

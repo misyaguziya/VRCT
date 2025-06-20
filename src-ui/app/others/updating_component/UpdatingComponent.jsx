@@ -1,10 +1,10 @@
 import styles from "./UpdatingComponent.module.scss";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import CircularProgress from "@mui/material/CircularProgress";
 import chat_white_square from "@images/chato_white_square.png";
 
 export const UpdatingComponent = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     return (
         <div className={styles.container}>
