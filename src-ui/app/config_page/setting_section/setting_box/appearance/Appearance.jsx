@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Appearance.module.scss";
 import { ui_configs } from "@ui_configs";
 import { useStore_SelectableFontFamilyList } from "@store";
@@ -10,13 +10,7 @@ import {
 } from "@logics_common";
 
 import {
-    useUiLanguage,
-    useUiScaling,
-    useMessageLogUiScaling,
-    useSendMessageButtonType,
-    useShowResendButton,
-    useSelectedFontFamily,
-    useTransparency,
+    useAppearance,
 } from "@logics_configs";
 
 import {
@@ -41,8 +35,8 @@ export const Appearance = () => {
 };
 
 const UiLanguageContainer = () => {
-    const { t } = useTranslation();
-    const { currentUiLanguage, setUiLanguage } = useUiLanguage();
+    const { t } = useI18n();
+    const { currentUiLanguage, setUiLanguage } = useAppearance();
 
     const is_not_en_lang = currentUiLanguage.data !== "en" && currentUiLanguage.data !== undefined;
     return (
@@ -58,8 +52,8 @@ const UiLanguageContainer = () => {
 };
 
 const UiScalingContainer = () => {
-    const { t } = useTranslation();
-    const { currentUiScaling, setUiScaling } = useUiScaling();
+    const { t } = useI18n();
+    const { currentUiScaling, setUiScaling } = useAppearance();
     const { asyncUpdateBreakPoint } = useWindow();
 
     const [ui_ui_scaling, setUiUiScaling] = useState(currentUiScaling.data);
@@ -103,8 +97,8 @@ const UiScalingContainer = () => {
 
 
 export const MessageLogUiScalingContainer = () => {
-    const { t } = useTranslation();
-    const { currentMessageLogUiScaling, setMessageLogUiScaling } = useMessageLogUiScaling();
+    const { t } = useI18n();
+    const { currentMessageLogUiScaling, setMessageLogUiScaling } = useAppearance();
     const [ui_message_log_ui_scaling, setUiMessageLogUiScaling] = useState(currentMessageLogUiScaling.data);
 
     const onchangeFunction = (value) => {
@@ -144,8 +138,8 @@ export const MessageLogUiScalingContainer = () => {
 };
 
 const SendMessageButtonTypeContainer = () => {
-    const { t } = useTranslation();
-    const { currentSendMessageButtonType, setSendMessageButtonType } = useSendMessageButtonType();
+    const { t } = useI18n();
+    const { currentSendMessageButtonType, setSendMessageButtonType } = useAppearance();
 
     return (
         <RadioButtonContainer
@@ -164,8 +158,8 @@ const SendMessageButtonTypeContainer = () => {
 };
 
 const ShowResendButtonContainer = () => {
-    const { t } = useTranslation();
-    const { currentShowResendButton, toggleShowResendButton } = useShowResendButton();
+    const { t } = useI18n();
+    const { currentShowResendButton, toggleShowResendButton } = useAppearance();
 
     return (
         <CheckboxContainer
@@ -178,8 +172,8 @@ const ShowResendButtonContainer = () => {
 };
 
 const FontFamilyContainer = () => {
-    const { t } = useTranslation();
-    const { currentSelectedFontFamily, setSelectedFontFamily } = useSelectedFontFamily();
+    const { t } = useI18n();
+    const { currentSelectedFontFamily, setSelectedFontFamily } = useAppearance();
 
     const selectFunction = (selected_data) => {
         setSelectedFontFamily(selected_data.selected_id);
@@ -199,8 +193,8 @@ const FontFamilyContainer = () => {
 };
 
 const TransparencyContainer = () => {
-    const { t } = useTranslation();
-    const { currentTransparency, setTransparency } = useTransparency();
+    const { t } = useI18n();
+    const { currentTransparency, setTransparency } = useAppearance();
     const [ui_message_log_ui_scaling, setUiTransparency] = useState(currentTransparency.data);
 
     const onchangeFunction = (value) => {

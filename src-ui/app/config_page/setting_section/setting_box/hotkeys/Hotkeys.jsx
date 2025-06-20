@@ -1,7 +1,7 @@
 import { useHotkeys } from "@logics_configs";
 import styles from "./Hotkeys.module.scss";
 import { HotkeysEntryContainer } from "../_templates/Templates";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 export const Hotkeys = () => {
     return (
         <div className={styles.container}>
@@ -11,7 +11,7 @@ export const Hotkeys = () => {
 };
 
 const HotkeysBoxContainer = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentHotkeys, setHotkeys } = useHotkeys();
 
     return (

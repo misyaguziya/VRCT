@@ -1,11 +1,11 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useNotificationStatus } from "@logics_common";
-import { useEnableVrcMicMuteSync } from "@logics_configs";
+import { useOthers } from "@logics_configs";
 
 export const useHandleOscQuery = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { showNotification_Warning } = useNotificationStatus();
-    const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+    const { updateEnableVrcMicMuteSync } = useOthers();
 
     const handleOscQuery = (payload) => {
         const is_osc_query_enabled = payload.data;

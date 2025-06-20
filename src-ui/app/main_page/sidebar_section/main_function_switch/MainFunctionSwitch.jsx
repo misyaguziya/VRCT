@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./MainFunctionSwitch.module.scss";
 import TranslationSvg from "@images/translation.svg?react";
@@ -11,7 +11,7 @@ import {
 } from "@logics_main";
 
 export const MainFunctionSwitch = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
 
     const {
         toggleTranslation, currentTranslationStatus,

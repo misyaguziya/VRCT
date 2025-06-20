@@ -26,11 +26,11 @@ export const SidebarSection = () => {
 
 
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useStore_SelectedConfigTabId } from "@store";
 
 const Tab = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateSelectedConfigTabId, currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
     const onclickFunction = () => {
         updateSelectedConfigTabId(props.tab_id);

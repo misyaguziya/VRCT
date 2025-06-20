@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useState } from "react";
 import clsx from "clsx";
 import styles from "./VersionLabel.module.scss";
@@ -10,7 +10,7 @@ import CheckMarkSvg from "@images/check_mark.svg?react";
 export const VersionLabel = () => {
     const [is_copied, setIsCopied] = useState(false);
 
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentSoftwareVersion } = useSoftwareVersion();
     const { currentComputeMode } = useComputeMode();
 

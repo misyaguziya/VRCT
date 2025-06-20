@@ -3,13 +3,13 @@ import vrct_logo_for_dark_mode from "@images/vrct_logo_for_dark_mode.png";
 import vrct_now_downloading from "@images/VRCT_now_downloading.png";
 
 import {
-    useCTranslate2WeightTypeStatus,
-    useWhisperWeightTypeStatus,
+    useTranslation,
+    useTranscription,
 } from "@logics_configs";
 
 export const DownloadModelsContainer = () => {
-    const { currentCTranslate2WeightTypeStatus } = useCTranslate2WeightTypeStatus();
-    const { currentWhisperWeightTypeStatus } = useWhisperWeightTypeStatus();
+    const { currentCTranslate2WeightTypeStatus } = useTranslation();
+    const { currentWhisperWeightTypeStatus } = useTranscription();
 
     const c_translate_2 = currentCTranslate2WeightTypeStatus.data.find(d => d.id === "small");
     const whisper = currentWhisperWeightTypeStatus.data.find(d => d.id === "base");
