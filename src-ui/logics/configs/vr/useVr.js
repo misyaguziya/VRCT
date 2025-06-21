@@ -6,16 +6,17 @@ import {
     useStore_OverlayShowOnlyTranslatedMessages,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { useNotificationStatus } from "@logics_common";
 
 export const useVr = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { showNotification_SaveSuccess } = useNotificationStatus();
 
     const { currentIsEnabledOverlaySmallLog, updateIsEnabledOverlaySmallLog, pendingIsEnabledOverlaySmallLog } = useStore_IsEnabledOverlaySmallLog();
     const { currentIsEnabledOverlayLargeLog, updateIsEnabledOverlayLargeLog, pendingIsEnabledOverlayLargeLog } = useStore_IsEnabledOverlayLargeLog();
     const { currentOverlaySmallLogSettings, updateOverlaySmallLogSettings, pendingOverlaySmallLogSettings } = useStore_OverlaySmallLogSettings();
     const { currentOverlayLargeLogSettings, updateOverlayLargeLogSettings, pendingOverlayLargeLogSettings } = useStore_OverlayLargeLogSettings();
     const { currentOverlayShowOnlyTranslatedMessages, updateOverlayShowOnlyTranslatedMessages, pendingOverlayShowOnlyTranslatedMessages } = useStore_OverlayShowOnlyTranslatedMessages();
-
 
     const getIsEnabledOverlaySmallLog = () => {
         pendingIsEnabledOverlaySmallLog();
@@ -31,6 +32,10 @@ export const useVr = () => {
         }
     };
 
+    const setSuccessIsEnabledOverlaySmallLog = (enabled) => {
+        updateIsEnabledOverlaySmallLog(enabled);
+        showNotification_SaveSuccess();
+    };
 
     const getIsEnabledOverlayLargeLog = () => {
         pendingIsEnabledOverlayLargeLog();
@@ -46,6 +51,10 @@ export const useVr = () => {
         }
     };
 
+    const setSuccessIsEnabledOverlayLargeLog = (enabled) => {
+        updateIsEnabledOverlayLargeLog(enabled);
+        showNotification_SaveSuccess();
+    };
 
     const getOverlaySmallLogSettings = () => {
         // pendingOverlaySmallLogSettings();
@@ -57,6 +66,10 @@ export const useVr = () => {
         asyncStdoutToPython("/set/data/overlay_small_log_settings", overlay_small_log_settings);
     };
 
+    const setSuccessOverlaySmallLogSettings = (settings) => {
+        updateOverlaySmallLogSettings(settings);
+        showNotification_SaveSuccess();
+    };
 
     const getOverlayLargeLogSettings = () => {
         // pendingOverlayLargeLogSettings();
@@ -68,6 +81,10 @@ export const useVr = () => {
         asyncStdoutToPython("/set/data/overlay_large_log_settings", overlay_large_log_settings);
     };
 
+    const setSuccessOverlayLargeLogSettings = (settings) => {
+        updateOverlayLargeLogSettings(settings);
+        showNotification_SaveSuccess();
+    };
 
     const getOverlayShowOnlyTranslatedMessages = () => {
         pendingOverlayShowOnlyTranslatedMessages();
@@ -83,37 +100,45 @@ export const useVr = () => {
         }
     };
 
+    const setSuccessOverlayShowOnlyTranslatedMessages = (enabled) => {
+        updateOverlayShowOnlyTranslatedMessages(enabled);
+        showNotification_SaveSuccess();
+    };
 
     const sendTextToOverlay = (text) => {
         asyncStdoutToPython("/run/send_text_overlay", text);
     };
 
-
     return {
         currentIsEnabledOverlaySmallLog,
         getIsEnabledOverlaySmallLog,
-        updateIsEnabledOverlaySmallLog,
         toggleIsEnabledOverlaySmallLog,
+        updateIsEnabledOverlaySmallLog,
+        setSuccessIsEnabledOverlaySmallLog,
 
         currentIsEnabledOverlayLargeLog,
         getIsEnabledOverlayLargeLog,
-        updateIsEnabledOverlayLargeLog,
         toggleIsEnabledOverlayLargeLog,
+        updateIsEnabledOverlayLargeLog,
+        setSuccessIsEnabledOverlayLargeLog,
 
         currentOverlaySmallLogSettings,
         getOverlaySmallLogSettings,
         updateOverlaySmallLogSettings,
         setOverlaySmallLogSettings,
+        setSuccessOverlaySmallLogSettings,
 
         currentOverlayLargeLogSettings,
         getOverlayLargeLogSettings,
         updateOverlayLargeLogSettings,
         setOverlayLargeLogSettings,
+        setSuccessOverlayLargeLogSettings,
 
         currentOverlayShowOnlyTranslatedMessages,
         getOverlayShowOnlyTranslatedMessages,
-        updateOverlayShowOnlyTranslatedMessages,
         toggleOverlayShowOnlyTranslatedMessages,
+        updateOverlayShowOnlyTranslatedMessages,
+        setSuccessOverlayShowOnlyTranslatedMessages,
 
         sendTextToOverlay,
     };

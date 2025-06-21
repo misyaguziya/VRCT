@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ToastContainer, toast, Bounce } from "react-toastify";
+import { ToastContainer, toast, cssTransition } from "react-toastify";
 import clsx from "clsx";
 
 import "./ReactToastifyOverrideClass.scss";
@@ -12,6 +12,13 @@ import CheckMarkSvg from "@images/check_mark.svg?react";
 import ErrorSvg from "@images/error.svg?react";
 
 import { useNotificationStatus } from "@logics_common";
+
+const CustomTransition = cssTransition({
+    enter: "fade_in",
+    exit: "fade_out",
+    collapse: false,
+});
+
 
 export const SnackbarController = () => {
     const { currentNotificationStatus, closeNotification } = useNotificationStatus();
@@ -28,56 +35,50 @@ export const SnackbarController = () => {
         }
     );
 
-    let hideDuration = 5000;
+    let hide_duration = 5000;
     if (settings.options?.hide_duration === null) {
-        hideDuration = false;
+        hide_duration = false;
     } else if (Number(settings.options?.hide_duration)) {
-        hideDuration = Number(settings.options?.hide_duration);
+        hide_duration = Number(settings.options?.hide_duration);
     }
+
 
     useEffect(() => {
         if (!settings.is_open) return;
 
         const message_text = settings.message;
+        const category_id = settings.category_id ? settings.category_id : message_text;
 
-        if (toast.isActive(message_text)) {
-            setContainerKey(prevKey => prevKey + 1);
+        const to_hide_progress_bar = (settings.options?.to_hide_progress_bar === true) ? true : false;
 
+        const asyncShowNotification = async () => {
             setTimeout(() => {
                 toast(message_text, {
-                    toastId: message_text,
+                    toastId: category_id,
                     type: settings.status,
-                    autoClose: hideDuration,
-                    transition: Bounce,
+                    autoClose: hide_duration,
+                    transition: CustomTransition,
                     toastClassName: snackbar_classname,
+                    hideProgressBar: to_hide_progress_bar,
                     progressClassName: styles.toast_progress,
                     closeButton: <CloseButtonContainer />,
                     onClose: () => {
                         closeNotification();
                     },
                 });
-            }, 50);
-        } else {
-            toast(message_text, {
-                toastId: message_text,
-                type: settings.status,
-                autoClose: hideDuration,
-                transition: Bounce,
-                toastClassName: snackbar_classname,
-                progressClassName: styles.toast_progress,
-                closeButton: <CloseButtonContainer />,
-                onClose: () => {
-                    closeNotification();
-                },
-            });
-        }
-    }, [settings, hideDuration, closeNotification, snackbar_classname]);
+            }, 100);
+        };
+
+        setContainerKey(prevKey => prevKey + 1);
+        asyncShowNotification();
+
+    }, [settings]);
 
     return (
         <ToastContainer
             key={containerKey}
             position="bottom-left"
-            transition={Bounce}
+            transition={CustomTransition}
             hideProgressBar={false}
             newestOnTop={false}
             closeOnClick={false}

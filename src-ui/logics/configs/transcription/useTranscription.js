@@ -17,9 +17,11 @@ import {
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { transformToIndexedArray } from "@utils";
+import { useNotificationStatus } from "@logics_common";
 
 export const useTranscription = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
+    const { showNotification_SaveSuccess } = useNotificationStatus();
 
     // Mic
     const { currentMicRecordTimeout, updateMicRecordTimeout, pendingMicRecordTimeout } = useStore_MicRecordTimeout();
@@ -39,7 +41,6 @@ export const useTranscription = () => {
     const { currentSelectableWhisperComputeDeviceList, updateSelectableWhisperComputeDeviceList, pendingSelectableWhisperComputeDeviceList } = useStore_SelectableWhisperComputeDeviceList();
     const { currentSelectedWhisperComputeDevice, updateSelectedWhisperComputeDevice, pendingSelectedWhisperComputeDevice } = useStore_SelectedWhisperComputeDevice();
 
-
     // Mic
     const getMicRecordTimeout = () => {
         pendingMicRecordTimeout();
@@ -51,6 +52,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/mic_record_timeout", selected_mic_record_timeout);
     };
 
+    const setSuccessMicRecordTimeout = (value) => {
+        updateMicRecordTimeout(value);
+        showNotification_SaveSuccess();
+    };
 
     const getMicPhraseTimeout = () => {
         pendingMicPhraseTimeout();
@@ -62,6 +67,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/mic_phrase_timeout", selected_mic_phrase_timeout);
     };
 
+    const setSuccessMicPhraseTimeout = (value) => {
+        updateMicPhraseTimeout(value);
+        showNotification_SaveSuccess();
+    };
 
     const getMicMaxWords = () => {
         pendingMicMaxWords();
@@ -71,6 +80,11 @@ export const useTranscription = () => {
     const setMicMaxWords = (selected_mic_max_phrases) => {
         pendingMicMaxWords();
         asyncStdoutToPython("/set/data/mic_max_phrases", selected_mic_max_phrases);
+    };
+
+    const setSuccessMicMaxWords = (value) => {
+        updateMicMaxWords(value);
+        showNotification_SaveSuccess();
     };
 
     const getMicWordFilterList = () => {
@@ -83,7 +97,7 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/mic_word_filter", selected_mic_word_filter);
     };
 
-    const updateMicWordFilterList_FromBackend = (payload) => {
+    const setSuccessMicWordFilterList = (payload) => {
         updateMicWordFilterList((prev_list) => {
             const updated_list = [...prev_list.data];
             for (const value of payload) {
@@ -96,6 +110,7 @@ export const useTranscription = () => {
             }
             return updated_list;
         });
+        showNotification_SaveSuccess();
     };
 
     // Speaker
@@ -109,6 +124,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/speaker_record_timeout", selected_speaker_record_timeout);
     };
 
+    const setSuccessSpeakerRecordTimeout = (value) => {
+        updateSpeakerRecordTimeout(value);
+        showNotification_SaveSuccess();
+    };
 
     const getSpeakerPhraseTimeout = () => {
         pendingSpeakerPhraseTimeout();
@@ -120,6 +139,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/speaker_phrase_timeout", selected_speaker_phrase_timeout);
     };
 
+    const setSuccessSpeakerPhraseTimeout = (value) => {
+        updateSpeakerPhraseTimeout(value);
+        showNotification_SaveSuccess();
+    };
 
     const getSpeakerMaxWords = () => {
         pendingSpeakerMaxWords();
@@ -131,6 +154,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/speaker_max_phrases", selected_speaker_max_phrases);
     };
 
+    const setSuccessSpeakerMaxWords = (value) => {
+        updateSpeakerMaxWords(value);
+        showNotification_SaveSuccess();
+    };
 
     // Transcription Engines
     // Transcription Engines (Google / Whisper)
@@ -144,6 +171,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/selected_transcription_engine", selected_transcription_engine);
     };
 
+    const setSuccessSelectedTranscriptionEngine = (engine) => {
+        updateSelectedTranscriptionEngine(engine);
+        showNotification_SaveSuccess();
+    };
 
     // Transcription Engines (Weight Type List)
     const updateDownloadedWhisperWeightTypeStatus = (downloaded_weight_type_status) => {
@@ -199,6 +230,10 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/whisper_weight_type", selected_whisper_weight_type);
     };
 
+    const setSuccessSelectedWhisperWeightType = (wt) => {
+        updateSelectedWhisperWeightType(wt);
+        showNotification_SaveSuccess();
+    };
 
     // Transcription Engines (Compute Device List)
     const getSelectableWhisperComputeDeviceList = () => {
@@ -221,50 +256,62 @@ export const useTranscription = () => {
         asyncStdoutToPython("/set/data/selected_transcription_compute_device", selected_transcription_compute_device);
     };
 
+    const setSuccessSelectedWhisperComputeDevice = (dev) => {
+        updateSelectedWhisperComputeDevice(dev);
+        showNotification_SaveSuccess();
+    };
+
     return {
         // Mic
         currentMicRecordTimeout,
         getMicRecordTimeout,
         updateMicRecordTimeout,
         setMicRecordTimeout,
+        setSuccessMicRecordTimeout,
 
         currentMicPhraseTimeout,
         getMicPhraseTimeout,
         updateMicPhraseTimeout,
         setMicPhraseTimeout,
+        setSuccessMicPhraseTimeout,
 
         currentMicMaxWords,
         getMicMaxWords,
         updateMicMaxWords,
         setMicMaxWords,
+        setSuccessMicMaxWords,
 
         currentMicWordFilterList,
         getMicWordFilterList,
         updateMicWordFilterList,
         setMicWordFilterList,
-        updateMicWordFilterList_FromBackend,
+        setSuccessMicWordFilterList,
 
         // Speaker
         currentSpeakerRecordTimeout,
         getSpeakerRecordTimeout,
         updateSpeakerRecordTimeout,
         setSpeakerRecordTimeout,
+        setSuccessSpeakerRecordTimeout,
 
         currentSpeakerPhraseTimeout,
         getSpeakerPhraseTimeout,
         updateSpeakerPhraseTimeout,
         setSpeakerPhraseTimeout,
+        setSuccessSpeakerPhraseTimeout,
 
         currentSpeakerMaxWords,
         getSpeakerMaxWords,
         updateSpeakerMaxWords,
         setSpeakerMaxWords,
+        setSuccessSpeakerMaxWords,
 
         // Transcription Engines
         currentSelectedTranscriptionEngine,
         getSelectedTranscriptionEngine,
         updateSelectedTranscriptionEngine,
         setSelectedTranscriptionEngine,
+        setSuccessSelectedTranscriptionEngine,
 
         currentWhisperWeightTypeStatus,
         updateWhisperWeightTypeStatus,
@@ -278,6 +325,7 @@ export const useTranscription = () => {
         getSelectedWhisperWeightType,
         updateSelectedWhisperWeightType,
         setSelectedWhisperWeightType,
+        setSuccessSelectedWhisperWeightType,
 
         currentSelectableWhisperComputeDeviceList,
         getSelectableWhisperComputeDeviceList,
@@ -288,5 +336,6 @@ export const useTranscription = () => {
         getSelectedWhisperComputeDevice,
         updateSelectedWhisperComputeDevice,
         setSelectedWhisperComputeDevice,
+        setSuccessSelectedWhisperComputeDevice,
     };
 };
