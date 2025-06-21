@@ -35,14 +35,13 @@ export const SnackbarController = () => {
         }
     );
 
-    let hideDuration = 5000;
+    let hide_duration = 5000;
     if (settings.options?.hide_duration === null) {
-        hideDuration = false;
+        hide_duration = false;
     } else if (Number(settings.options?.hide_duration)) {
-        hideDuration = Number(settings.options?.hide_duration);
+        hide_duration = Number(settings.options?.hide_duration);
     }
 
-    const to_hide_progress_bar = (settings.options?.to_hide_progress_bar === true) ? true : false;
 
     useEffect(() => {
         if (!settings.is_open) return;
@@ -50,22 +49,29 @@ export const SnackbarController = () => {
         const message_text = settings.message;
         const category_id = settings.category_id ? settings.category_id : message_text;
 
-        setContainerKey(prevKey => prevKey + 1);
+        const to_hide_progress_bar = (settings.options?.to_hide_progress_bar === true) ? true : false;
 
-        setTimeout(() => {
-            toast(message_text, {
-                toastId: category_id,
-                type: settings.status,
-                autoClose: hideDuration,
-                transition: CustomTransition,
-                toastClassName: snackbar_classname,
-                progressClassName: styles.toast_progress,
-                closeButton: <CloseButtonContainer />,
-                onClose: () => {
-                    closeNotification();
-                },
-            });
-        }, 50);
+        const asyncShowNotification = async () => {
+            setTimeout(() => {
+                toast(message_text, {
+                    toastId: category_id,
+                    type: settings.status,
+                    autoClose: hide_duration,
+                    transition: CustomTransition,
+                    toastClassName: snackbar_classname,
+                    hideProgressBar: to_hide_progress_bar,
+                    progressClassName: styles.toast_progress,
+                    closeButton: <CloseButtonContainer />,
+                    onClose: () => {
+                        closeNotification();
+                    },
+                });
+            }, 100);
+        };
+
+        setContainerKey(prevKey => prevKey + 1);
+        asyncShowNotification();
+
     }, [settings]);
 
     return (
@@ -73,7 +79,7 @@ export const SnackbarController = () => {
             key={containerKey}
             position="bottom-left"
             transition={CustomTransition}
-            hideProgressBar={to_hide_progress_bar}
+            hideProgressBar={false}
             newestOnTop={false}
             closeOnClick={false}
             pauseOnFocusLoss={false}
