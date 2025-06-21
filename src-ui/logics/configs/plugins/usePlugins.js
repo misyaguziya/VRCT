@@ -37,7 +37,7 @@ const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
     const { t, i18n } = useI18n();
-    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
+    const { showNotification_SaveSuccess, showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo, errorFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
@@ -283,6 +283,10 @@ export const usePlugins = () => {
     };
 
     const toggleSavedPluginsStatus = (target_plugin_id) => {
+        const successPluginNotification = (message) => showNotification_Success(message, {
+            hide_duration: 1000,
+            category_id: "to_enable_plugin"
+        });
         const is_exists = currentSavedPluginsStatus.data.some(
             (d) => d.plugin_id === target_plugin_id
         );
@@ -292,8 +296,8 @@ export const usePlugins = () => {
                 if (d.plugin_id === target_plugin_id) {
                     d.is_enabled = !d.is_enabled;
                     (d.is_enabled)
-                        ? showNotification_Success(t("plugin_notifications.is_enabled"))
-                        : showNotification_Success(t("plugin_notifications.is_disabled"));
+                        ? successPluginNotification(t("plugin_notifications.is_enabled"))
+                        : successPluginNotification(t("plugin_notifications.is_disabled"));
                 }
                 return d;
             });
@@ -303,7 +307,7 @@ export const usePlugins = () => {
                 plugin_id: target_plugin_id,
                 is_enabled: true,
             });
-            showNotification_Success(t("plugin_notifications.is_enabled"))
+            successPluginNotification(t("plugin_notifications.is_enabled"))
         }
 
         // 「currentPluginsData.data」でis_downloadedがtrueのものだけ残す
@@ -371,6 +375,10 @@ export const usePlugins = () => {
         });
     }
 
+    const setSuccessSavedPluginsStatus = (plugins_status) => {
+        updateSavedPluginsStatus(plugins_status);
+        showNotification_SaveSuccess();
+    };
 
 
     return {
@@ -385,6 +393,7 @@ export const usePlugins = () => {
 
         currentSavedPluginsStatus,
         updateSavedPluginsStatus,
+        setSuccessSavedPluginsStatus,
 
         currentPluginsData,
         updatePluginsData,

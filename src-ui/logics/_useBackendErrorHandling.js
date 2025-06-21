@@ -119,13 +119,13 @@ export const _useBackendErrorHandling = () => {
             case "/set/data/deepl_auth_key":
                 if (message === "DeepL auth key length is not correct") {
                     updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_invalid_length"));
+                    showNotification_Error(t("common_error.deepl_auth_key_invalid_length"), { category_id: "deepl_auth_key" });
                 } else if (message === "Authentication failure of deepL auth key") {
                     updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"));
+                    showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"), { category_id: "deepl_auth_key" });
                 } else { // Exception
                     updateDeepLAuthKey(data);
-                    showNotification_Error(message);
+                    showNotification_Error(message, { category_id: "deepl_auth_key" });
                 }
                 return;
 

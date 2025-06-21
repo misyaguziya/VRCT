@@ -20,7 +20,7 @@ export const useHotkeys = () => {
         pendingHotkeys();
         asyncStdoutToPython("/get/data/hotkeys");
     };
-    const { showNotification_Success, showNotification_Error, closeNotification } = useNotificationStatus();
+    const { showNotification_SaveSuccess, showNotification_Error, closeNotification } = useNotificationStatus();
 
     const setHotkeys = (hotkeys) => {
         pendingHotkeys();
@@ -106,11 +106,17 @@ export const useHotkeys = () => {
         }
     };
 
+    const setSuccessHotkeys = (hotkeys) => {
+        updateHotkeys(hotkeys);
+        showNotification_SaveSuccess();
+    };
+
     return {
         currentHotkeys,
         getHotkeys,
         updateHotkeys,
         setHotkeys,
+        setSuccessHotkeys,
         registerShortcuts,
         unregisterAll,
     };

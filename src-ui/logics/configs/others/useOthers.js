@@ -8,6 +8,7 @@ import {
     useStore_EnableSendReceivedMessageToVrc,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
+import { useNotificationStatus } from "@logics_common";
 
 export const useOthers = () => {
     const { asyncStdoutToPython } = useStdoutToPython();
@@ -29,6 +30,7 @@ export const useOthers = () => {
     // Send Received Message To VRC
     const { currentEnableSendReceivedMessageToVrc, updateEnableSendReceivedMessageToVrc, pendingEnableSendReceivedMessageToVrc } = useStore_EnableSendReceivedMessageToVrc();
 
+    const { showNotification_SaveSuccess } = useNotificationStatus();
 
     // Auto Clear Message Input Box
     const getEnableAutoClearMessageInputBox = () => {
@@ -43,6 +45,11 @@ export const useOthers = () => {
         } else {
             asyncStdoutToPython("/set/enable/auto_clear_message_box");
         }
+    };
+
+    const setSuccessEnableAutoClearMessageInputBox = (enabled) => {
+        updateEnableAutoClearMessageInputBox(enabled);
+        showNotification_SaveSuccess();
     };
 
     // Send Only Translated Messages
@@ -60,6 +67,11 @@ export const useOthers = () => {
         }
     };
 
+    const setSuccessEnableSendOnlyTranslatedMessages = (enabled) => {
+        updateEnableSendOnlyTranslatedMessages(enabled);
+        showNotification_SaveSuccess();
+    };
+
     // Auto Export Message Logs
     const getEnableAutoExportMessageLogs = () => {
         pendingEnableAutoExportMessageLogs();
@@ -73,6 +85,11 @@ export const useOthers = () => {
         } else {
             asyncStdoutToPython("/set/enable/logger_feature");
         }
+    };
+
+    const setSuccessEnableAutoExportMessageLogs = (enabled) => {
+        updateEnableAutoExportMessageLogs(enabled);
+        showNotification_SaveSuccess();
     };
 
     // VRC Mic Mute Sync
@@ -90,10 +107,9 @@ export const useOthers = () => {
         }
     };
 
-    const updateEnableVrcMicMuteSync_FromBackend = (payload) => {
-        updateEnableVrcMicMuteSync((old_value) => {
-            return {...old_value.data, is_enabled: payload};
-        });
+    const setSuccessEnableVrcMicMuteSync = (is_enabled) => {
+        updateEnableVrcMicMuteSync(old => ({ ...old.data, is_enabled: is_enabled }));
+        showNotification_SaveSuccess();
     };
 
     // Send Message To VRCT
@@ -109,6 +125,11 @@ export const useOthers = () => {
         } else {
             asyncStdoutToPython("/set/enable/send_message_to_vrc");
         }
+    };
+
+    const setSuccessEnableSendMessageToVrc = (enabled) => {
+        updateEnableSendMessageToVrc(enabled);
+        showNotification_SaveSuccess();
     };
 
     // Sounds
@@ -127,6 +148,11 @@ export const useOthers = () => {
         }
     };
 
+    const setSuccessEnableNotificationVrcSfx = (enabled) => {
+        updateEnableNotificationVrcSfx(enabled);
+        showNotification_SaveSuccess();
+    };
+
     // Speaker2Chatbox
     // Send Received Message To VRC
     const getEnableSendReceivedMessageToVrc = () => {
@@ -143,37 +169,46 @@ export const useOthers = () => {
         }
     };
 
+    const setSuccessEnableSendReceivedMessageToVrc = (enabled) => {
+        updateEnableSendReceivedMessageToVrc(enabled);
+        showNotification_SaveSuccess();
+    };
+
     return {
         // Auto Clear Message Input Box
         currentEnableAutoClearMessageInputBox,
         getEnableAutoClearMessageInputBox,
         toggleEnableAutoClearMessageInputBox,
         updateEnableAutoClearMessageInputBox,
+        setSuccessEnableAutoClearMessageInputBox,
 
         // Send Only Translated Messages
         currentEnableSendOnlyTranslatedMessages,
         getEnableSendOnlyTranslatedMessages,
         toggleEnableSendOnlyTranslatedMessages,
         updateEnableSendOnlyTranslatedMessages,
+        setSuccessEnableSendOnlyTranslatedMessages,
 
         // Auto Export Message Logs
         currentEnableAutoExportMessageLogs,
         getEnableAutoExportMessageLogs,
         toggleEnableAutoExportMessageLogs,
         updateEnableAutoExportMessageLogs,
+        setSuccessEnableAutoExportMessageLogs,
 
         // VRC Mic Mute Sync
         currentEnableVrcMicMuteSync,
         getEnableVrcMicMuteSync,
         toggleEnableVrcMicMuteSync,
         updateEnableVrcMicMuteSync,
-        updateEnableVrcMicMuteSync_FromBackend,
+        setSuccessEnableVrcMicMuteSync,
 
         // Send Message To VRCT
         currentEnableSendMessageToVrc,
         getEnableSendMessageToVrc,
         toggleEnableSendMessageToVrc,
         updateEnableSendMessageToVrc,
+        setSuccessEnableSendMessageToVrc,
 
         // Sounds
         // Notification VRC SFX
@@ -181,6 +216,7 @@ export const useOthers = () => {
         getEnableNotificationVrcSfx,
         toggleEnableNotificationVrcSfx,
         updateEnableNotificationVrcSfx,
+        setSuccessEnableNotificationVrcSfx,
 
         // Speaker2Chatbox
         // Send Received Message To VRC
@@ -188,5 +224,6 @@ export const useOthers = () => {
         getEnableSendReceivedMessageToVrc,
         toggleEnableSendReceivedMessageToVrc,
         updateEnableSendReceivedMessageToVrc,
+        setSuccessEnableSendReceivedMessageToVrc,
     };
 };

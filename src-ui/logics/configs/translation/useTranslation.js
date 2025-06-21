@@ -13,7 +13,7 @@ import { useNotificationStatus } from "@logics_common";
 export const useTranslation = () => {
     const { t } = useI18n();
     const { asyncStdoutToPython } = useStdoutToPython();
-    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
+    const { showNotification_SaveSuccess } = useNotificationStatus();
 
     const { currentCTranslate2WeightTypeStatus, updateCTranslate2WeightTypeStatus, pendingCTranslate2WeightTypeStatus } = useStore_CTranslate2WeightTypeStatus();
     const { currentSelectedCTranslate2WeightType, updateSelectedCTranslate2WeightType, pendingSelectedCTranslate2WeightType } = useStore_SelectedCTranslate2WeightType();
@@ -74,6 +74,11 @@ export const useTranslation = () => {
         asyncStdoutToPython("/set/data/ctranslate2_weight_type", selected_ctranslate2_weight_type);
     };
 
+    const setSuccessSelectedCTranslate2WeightType = (selected_ctranslate2_weight_type) => {
+        updateSelectedCTranslate2WeightType(selected_ctranslate2_weight_type);
+        showNotification_SaveSuccess();
+    };
+
 
     const getSelectableCTranslate2ComputeDeviceList = () => {
         pendingSelectableCTranslate2ComputeDeviceList();
@@ -95,6 +100,11 @@ export const useTranslation = () => {
         asyncStdoutToPython("/set/data/selected_translation_compute_device", selected_translation_compute_device);
     };
 
+    const setSuccessSelectedCTranslate2ComputeDevice = (selected_translation_compute_device) => {
+        updateSelectedCTranslate2ComputeDevice(selected_translation_compute_device);
+        showNotification_SaveSuccess();
+    };
+
 
     const getDeepLAuthKey = () => {
         pendingDeepLAuthKey();
@@ -106,17 +116,18 @@ export const useTranslation = () => {
         asyncStdoutToPython("/set/data/deepl_auth_key", selected_deepl_auth_key);
     };
 
+    const setSuccessDeepLAuthKey = (data) => {
+        updateDeepLAuthKey(data);
+        showNotification_SaveSuccess(t("config_page.translation.deepl_auth_key.auth_key_success"), { category_id: "deepl_auth_key" });
+    };
+
     const deleteDeepLAuthKey = () => {
         pendingDeepLAuthKey();
         asyncStdoutToPython("/delete/data/deepl_auth_key");
     };
-    const deletedDeepLAuthKey = () => {
-        updateDeepLAuthKey("");
-    };
 
-    const savedDeepLAuthKey = (data) => {
-        updateDeepLAuthKey(data);
-        showNotification_Success(t("config_page.translation.deepl_auth_key.auth_key_success"));
+    const deleteSuccessDeepLAuthKey = () => {
+        updateDeepLAuthKey("");
     };
 
 
@@ -133,6 +144,7 @@ export const useTranslation = () => {
         getSelectedCTranslate2WeightType,
         updateSelectedCTranslate2WeightType,
         setSelectedCTranslate2WeightType,
+        setSuccessSelectedCTranslate2WeightType,
 
         currentSelectableCTranslate2ComputeDeviceList,
         getSelectableCTranslate2ComputeDeviceList,
@@ -143,13 +155,14 @@ export const useTranslation = () => {
         getSelectedCTranslate2ComputeDevice,
         updateSelectedCTranslate2ComputeDevice,
         setSelectedCTranslate2ComputeDevice,
+        setSuccessSelectedCTranslate2ComputeDevice,
 
         currentDeepLAuthKey,
         getDeepLAuthKey,
         updateDeepLAuthKey,
         setDeepLAuthKey,
         deleteDeepLAuthKey,
-        deletedDeepLAuthKey,
-        savedDeepLAuthKey,
+        deleteSuccessDeepLAuthKey,
+        setSuccessDeepLAuthKey,
     };
 };
