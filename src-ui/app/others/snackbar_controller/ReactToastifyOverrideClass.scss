@@ -138,7 +138,7 @@
 .fade_out {
     opacity: 1;
     animation-name: fade_out;
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
+    animation-duration: 0.1s;
+    animation-timing-function: ease-in;
     animation-fill-mode: forwards;
 }

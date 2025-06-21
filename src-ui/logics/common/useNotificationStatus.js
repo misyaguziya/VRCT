@@ -1,7 +1,9 @@
 import { useStore_NotificationStatus } from "@store";
+import { useI18n } from "@useI18n";
 
 export const useNotificationStatus = () => {
     const { currentNotificationStatus, updateNotificationStatus } = useStore_NotificationStatus();
+    const { t } = useI18n();
 
     const showNotification_Warning = (message, options = {}) => {
         updateNotificationStatus({
@@ -34,12 +36,12 @@ export const useNotificationStatus = () => {
     };
 
     const showNotification_SaveSuccess = (options = {}) => {
-        options = { hide_duration: 2000, to_hide_progress_bar: true, ...options };
+        options = { hide_duration: 1000, to_hide_progress_bar: true, ...options };
         updateNotificationStatus({
             status: "success",
             is_open: true,
-            category_id: (options.category_id) ? options.category_id : null,
-            message: "設定の適用と、保存が完了しました。",
+            category_id: "save_success",
+            message: t("config_page.notifications.save_success"),
             options: options,
         });
     };

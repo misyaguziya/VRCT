@@ -269,6 +269,9 @@ config_page:
         websocket_port:
             label: "WebSocket Port"
 
+    notifications:
+        save_success: "Settings have been saved"
+
 plugin_notifications:
     downloading: Downloading the plugin.
     downloaded_success: Downloaded successfully.
