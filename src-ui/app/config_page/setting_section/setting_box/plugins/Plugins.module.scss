@@ -27,6 +27,7 @@
     flex-direction: column;
     gap: 0.4rem;
     max-width: 50%;
+    flex-shrink: 0;
 }
 
 .plugin_info_wrapper {

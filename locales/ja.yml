@@ -282,6 +282,7 @@ plugin_notifications:
     updated_error: プラグインのアップデートに失敗しました。
 
     disabled_out_of_support: 現在のバージョンとの互換性がありません。プラグインを無効にしました。
+    disabled_due_to_an_error: プラグイン実行中にエラーを検知しました。プラグイン開発者に報告してください。
 
     is_enabled: プラグインを有効にしました。
     is_disabled: プラグインを無効にしました。
