@@ -105,7 +105,12 @@ const PluginDownloadContainer = () => {
                         </div>
                         <div className={styles.plugin_info_wrapper}>
                             {plugin.is_error ? (
-                                <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
+                                <div>
+                                    <p style={{ color: "red" }}>{t(`plugin_notifications.${plugin.error_message_type}`)}</p>
+                                    <p style={{ color: "red" }}>plugin_version: {plugin.downloaded_plugin_info.plugin_version}</p>
+                                    <p style={{ color: "red" }}>min_supported_vrct_version: {plugin.downloaded_plugin_info.min_supported_vrct_version}</p>
+                                    <p style={{ color: "red" }}>max_supported_vrct_version: {plugin.downloaded_plugin_info.max_supported_vrct_version}</p>
+                                </div>
                             ) : (
                                 <PluginsControlComponent
                                     variable_state={variable_state}

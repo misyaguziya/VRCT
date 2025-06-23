@@ -69,14 +69,14 @@ export const SnackbarController = () => {
             }, 100);
         };
 
-        setContainerKey(prevKey => prevKey + 1);
+        // setContainerKey(prevKey => prevKey + 1);
         asyncShowNotification();
 
     }, [settings]);
 
     return (
         <ToastContainer
-            key={containerKey}
+            // key={containerKey}
             position="bottom-left"
             transition={CustomTransition}
             hideProgressBar={false}

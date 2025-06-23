@@ -10,6 +10,9 @@ export const ROUTE_META_LIST = [
     { endpoint: "/run/enable_ai_models", ns: common, hook_name: "useIsVrctAvailable", method_name: "handleAiModelsAvailability" },
     { endpoint: "/get/data/compute_mode", ns: common, hook_name: "useComputeMode", method_name: "updateComputeMode" },
 
+    { endpoint: "/run/update_software", ns: null, hook_name: null, method_name: null },
+    { endpoint: "/run/update_cuda_software", ns: null, hook_name: null, method_name: null },
+
     { endpoint: "/get/data/main_window_geometry", ns: common, hook_name: "useWindow", method_name: "restoreWindowGeometry" },
     { endpoint: "/set/data/main_window_geometry", ns: null, hook_name: null, method_name: null },
 
@@ -19,7 +22,7 @@ export const ROUTE_META_LIST = [
     // Software Version
     { endpoint: "/get/data/version", ns: common, hook_name: "useSoftwareVersion", method_name: "updateSoftwareVersion" },
     // Latest Software Version Info
-    { endpoint: "/run/software_update_info", ns: common, hook_name: "useSoftwareVersion", method_name: "updateLatestSoftwareVersionInfo" },
+    { endpoint: "/run/software_update_info", ns: common, hook_name: "useSoftwareVersion", method_name: "updateSoftwareVersionInfo" },
 
     { endpoint: "/run/connected_network", ns: common, hook_name: "useHandleNetworkConnection", method_name: "handleNetworkConnection" },
     { endpoint: "/run/enable_osc_query", ns: common, hook_name: "useHandleOscQuery", method_name: "handleOscQuery" },
