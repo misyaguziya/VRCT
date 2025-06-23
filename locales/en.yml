@@ -270,7 +270,7 @@ config_page:
             label: "WebSocket Port"
 
     notifications:
-        save_success: "Settings have been saved"
+        save_success: "Settings have been saved."
 
 plugin_notifications:
     downloading: Downloading the plugin.
@@ -282,6 +282,7 @@ plugin_notifications:
     updated_error: Update failed.
 
     disabled_out_of_support: The plugin has been disabled. It's not supported on this VRCT version.
+    disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
 
     is_enabled: The plugin has enabled.
     is_disabled: The plugin has disabled.
