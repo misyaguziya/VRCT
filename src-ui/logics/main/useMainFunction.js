@@ -6,7 +6,7 @@ import {
     useStore_TranscriptionReceiveStatus,
     useStore_ForegroundStatus,
 } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMainFunction = () => {
     const appWindow = store.appWindow;

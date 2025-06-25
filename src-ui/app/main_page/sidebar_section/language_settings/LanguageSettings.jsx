@@ -1,4 +1,4 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./LanguageSettings.module.scss";
 import { PresetTabSelector } from "./preset_tab_selector/PresetTabSelector";
 import { LanguageSelectorOpenButton } from "./language_selector_open_button/LanguageSelectorOpenButton";
@@ -8,7 +8,7 @@ import { AddRemoveTargetLanguageButtons } from "./add_remove_target_language_but
 import { useStore_IsOpenedTranslatorSelector } from "@store";
 
 export const LanguageSettings = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateIsOpenedTranslatorSelector } = useStore_IsOpenedTranslatorSelector();
     const closeTranslatorSelector = () => updateIsOpenedTranslatorSelector(false);
 
@@ -26,7 +26,7 @@ import HeadphonesSvg from "@images/headphones.svg?react";
 import { useMainFunction } from "@logics_main";
 
 const PresetContainer = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentTranscriptionSendStatus, currentTranscriptionReceiveStatus } = useMainFunction();
 
     const yourLanguageSettings = {

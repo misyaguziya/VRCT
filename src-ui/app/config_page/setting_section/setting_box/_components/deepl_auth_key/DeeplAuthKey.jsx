@@ -1,5 +1,5 @@
 import styles from "./DeeplAuthKey.module.scss";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
 import ExternalLink from "@images/external_link.svg?react";
@@ -8,7 +8,7 @@ import { useState, useRef } from "react";
 import { useEffect } from "react";
 
 export const DeeplAuthKey = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const [is_editable, seIsEditable] = useState(false);
     const entryRef = useRef(null);
 
@@ -60,7 +60,7 @@ export const DeeplAuthKey = (props) => {
 
 
 export const OpenWebpage_DeeplAuthKey = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     return (
         <div className={styles.open_webpage_button_wrapper}>
             <a className={styles.open_webpage_button} href="https://www.deepl.com/ja/your-account/keys" target="_blank" rel="noreferrer" >

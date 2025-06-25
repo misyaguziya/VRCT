@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./AdvancedSettings.module.scss";
 
 import { useOpenFolder } from "@logics_common";
 import {
-    useOscIpAddress,
-    useOscPort,
-    useWebsocket,
+    useAdvancedSettings,
 } from "@logics_configs";
 
 import {
@@ -37,8 +35,8 @@ export const AdvancedSettings = () => {
 };
 
 const OscIpAddressContainer = () => {
-    const { t } = useTranslation();
-    const { currentOscIpAddress, setOscIpAddress } = useOscIpAddress();
+    const { t } = useI18n();
+    const { currentOscIpAddress, setOscIpAddress } = useAdvancedSettings();
     const [input_value, setInputValue] = useState(currentOscIpAddress.data);
 
     const onChangeFunction = (value) => {
@@ -50,6 +48,7 @@ const OscIpAddressContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentOscIpAddress.state === "pending") return;
         setInputValue(currentOscIpAddress.data);
     }, [currentOscIpAddress]);
 
@@ -66,8 +65,8 @@ const OscIpAddressContainer = () => {
 };
 
 const OscPortContainer = () => {
-    const { t } = useTranslation();
-    const { currentOscPort, setOscPort } = useOscPort();
+    const { t } = useI18n();
+    const { currentOscPort, setOscPort } = useAdvancedSettings();
     const [input_value, setInputValue] = useState(currentOscPort.data);
 
     const onChangeFunction = (value) => {
@@ -80,6 +79,7 @@ const OscPortContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentOscPort.state === "pending") return;
         setInputValue(currentOscPort.data);
     }, [currentOscPort]);
 
@@ -96,7 +96,7 @@ const OscPortContainer = () => {
 };
 
 const OpenConfigFolderContainer = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { openFolder_ConfigFile } = useOpenFolder();
 
     return (
@@ -113,7 +113,7 @@ const OpenConfigFolderContainer = () => {
 // Duplicate
 import { useStore_OpenedQuickSetting } from "@store";
 const OpenSwitchComputeDeviceModalContainer = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
     const onClickFunction = () => {
         updateOpenedQuickSetting("update_software");
@@ -143,8 +143,8 @@ const WebsocketContainer = () => {
 };
 
 const EnableWebsocketContainer = () => {
-    const { t } = useTranslation();
-    const { currentEnableWebsocket, toggleEnableWebsocket } = useWebsocket();
+    const { t } = useI18n();
+    const { currentEnableWebsocket, toggleEnableWebsocket } = useAdvancedSettings();
 
     return (
         <CheckboxContainer
@@ -156,8 +156,8 @@ const EnableWebsocketContainer = () => {
 };
 
 const WebsocketHostContainer = () => {
-    const { t } = useTranslation();
-    const { currentWebsocketHost, setWebsocketHost } = useWebsocket();
+    const { t } = useI18n();
+    const { currentWebsocketHost, setWebsocketHost } = useAdvancedSettings();
     const [input_value, setInputValue] = useState(currentWebsocketHost.data);
 
     const onChangeFunction = (value) => {
@@ -169,6 +169,7 @@ const WebsocketHostContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentWebsocketHost.state === "pending") return;
         setInputValue(currentWebsocketHost.data);
     }, [currentWebsocketHost]);
 
@@ -185,8 +186,8 @@ const WebsocketHostContainer = () => {
 };
 
 const WebsocketPortContainer = () => {
-    const { t } = useTranslation();
-    const { currentWebsocketPort, setWebsocketPort } = useWebsocket();
+    const { t } = useI18n();
+    const { currentWebsocketPort, setWebsocketPort } = useAdvancedSettings();
     const [input_value, setInputValue] = useState(currentWebsocketPort.data);
 
     const onChangeFunction = (value) => {
@@ -199,6 +200,7 @@ const WebsocketPortContainer = () => {
     };
 
     useEffect(()=> {
+        if (currentWebsocketPort.state === "pending") return;
         setInputValue(currentWebsocketPort.data);
     }, [currentWebsocketPort]);
 

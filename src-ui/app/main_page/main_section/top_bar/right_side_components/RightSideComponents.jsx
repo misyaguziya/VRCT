@@ -1,11 +1,11 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./RightSideComponents.module.scss";
 import RefreshSvg from "@images/refresh.svg?react";
 import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
 import { useSoftwareVersion } from "@logics_common";
-import { useIsEnabledOverlaySmallLog, useIsEnabledOverlayLargeLog, useEnableVrcMicMuteSync } from "@logics_configs";
+import { useVr, useOthers } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
 export const RightSideComponents = () => {
@@ -30,10 +30,12 @@ export const RightSideComponents = () => {
 };
 
 const OpenOverlayQuickSetting = () => {
-    // const { t } = useTranslation();
+    // const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-    const { currentIsEnabledOverlaySmallLog } = useIsEnabledOverlaySmallLog();
-    const { currentIsEnabledOverlayLargeLog } = useIsEnabledOverlayLargeLog();
+    const {
+        currentIsEnabledOverlaySmallLog,
+        currentIsEnabledOverlayLargeLog,
+    } = useVr();
 
     const onClickFunction = () => {
         updateOpenedQuickSetting("overlay");
@@ -50,7 +52,7 @@ const OpenOverlayQuickSetting = () => {
     );
 };
 const PluginsQuickSetting = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
 
     const onClickFunction = () => {
@@ -66,9 +68,9 @@ const PluginsQuickSetting = () => {
 };
 
 const OpenVrcMicMuteSyncQuickSetting = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
-    const { currentEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+    const { currentEnableVrcMicMuteSync } = useOthers();
 
     const onClickFunction = () => {
         updateOpenedQuickSetting("vrc_mic_mute_sync");
@@ -85,7 +87,7 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
 
 const SoftwareUpdateAvailableButton = () => {
     const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
-    const { t } = useTranslation();
+    const { t } = useI18n();
     if (currentLatestSoftwareVersionInfo.data.is_update_available === false) return null;
 
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();

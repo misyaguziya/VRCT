@@ -50,7 +50,6 @@ main_page:
         received: "Received"
         system: "System"
 
-        show_resend_button: "Show Resend Button"
         resend_button_on_hover_desc: "Press And Hold To Send"
 
     state_text_enabled: "Enabled"
@@ -120,6 +119,9 @@ config_page:
             hide: "Hide (Use Enter key to send)"
             show: "Show"
             show_and_disable_enter_key: "Show and disable sending using the Enter key."
+        show_resend_button:
+            label: "Show Resend Button"
+            desc: "When hovering over a sent message log, the resend button appears. Click to edit, long press to resend."
         font_family:
             label: "Font Family"
         ui_language:
@@ -267,6 +269,9 @@ config_page:
         websocket_port:
             label: "WebSocket Port"
 
+    notifications:
+        save_success: "Settings have been saved."
+
 plugin_notifications:
     downloading: Downloading the plugin.
     downloaded_success: Downloaded successfully.
@@ -277,6 +282,7 @@ plugin_notifications:
     updated_error: Update failed.
 
     disabled_out_of_support: The plugin has been disabled. It's not supported on this VRCT version.
+    disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
 
     is_enabled: The plugin has enabled.
     is_disabled: The plugin has disabled.

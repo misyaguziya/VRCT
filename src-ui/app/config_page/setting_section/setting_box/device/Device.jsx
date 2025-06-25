@@ -1,19 +1,10 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./Device.module.scss";
 import clsx from "clsx";
 import { useStore_IsBreakPoint } from "@store";
 import { ui_configs } from "@ui_configs";
 import {
-    useEnableAutoMicSelect,
-    useMicHostList,
-    useSelectedMicHost,
-    useMicDeviceList,
-    useSelectedMicDevice,
-    useMicThreshold,
-    useEnableAutoSpeakerSelect,
-    useSpeakerDeviceList,
-    useSelectedSpeakerDevice,
-    useSpeakerThreshold,
+    useDevice,
 } from "@logics_configs";
 
 import {
@@ -37,14 +28,22 @@ export const Device = () => {
 };
 
 const Mic_Container = () => {
-    const { t } = useTranslation();
-    const { currentEnableAutoMicSelect, toggleEnableAutoMicSelect } = useEnableAutoMicSelect();
-    const { currentSelectedMicHost, setSelectedMicHost } = useSelectedMicHost();
-    const { currentMicHostList } = useMicHostList();
-    const { currentSelectedMicDevice, setSelectedMicDevice } = useSelectedMicDevice();
-    const { currentMicDeviceList } = useMicDeviceList();
+    const { t } = useI18n();
+    const {
+        currentEnableAutoMicSelect,
+        toggleEnableAutoMicSelect,
+        currentMicDeviceList,
+        currentMicHostList,
+
+        currentSelectedMicHost,
+        setSelectedMicHost,
+        currentSelectedMicDevice,
+        setSelectedMicDevice,
+
+        currentEnableAutomaticMicThreshold,
+        toggleEnableAutomaticMicThreshold,
+    } = useDevice();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-    const { currentEnableAutomaticMicThreshold, toggleEnableAutomaticMicThreshold } = useMicThreshold();
 
     const selectFunction_host = (selected_data) => {
         setSelectedMicHost(selected_data.selected_id);
@@ -138,12 +137,17 @@ const Mic_Container = () => {
 };
 
 const Speaker_Container = () => {
-    const { t } = useTranslation();
-    const { currentEnableAutoSpeakerSelect, toggleEnableAutoSpeakerSelect } = useEnableAutoSpeakerSelect();
-    const { currentSelectedSpeakerDevice, setSelectedSpeakerDevice } = useSelectedSpeakerDevice();
-    const { currentSpeakerDeviceList } = useSpeakerDeviceList();
+    const { t } = useI18n();
+    const {
+        currentEnableAutoSpeakerSelect,
+        toggleEnableAutoSpeakerSelect,
+        currentSpeakerDeviceList,
+        currentSelectedSpeakerDevice,
+        setSelectedSpeakerDevice,
+        currentEnableAutomaticSpeakerThreshold,
+        toggleEnableAutomaticSpeakerThreshold,
+    } = useDevice();
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-    const { currentEnableAutomaticSpeakerThreshold, toggleEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
 
     const selectFunction = (selected_data) => {
         setSelectedSpeakerDevice(selected_data.selected_id);

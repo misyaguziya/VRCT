@@ -1,0 +1,75 @@
+.snackbar_content {
+    position: relative;
+    padding: 1.2rem 1.6rem;
+    border-radius: 0.8rem;
+    font-size: 1.4rem;
+    box-shadow: 0 0.2rem 0.8rem rgba(0, 0, 0, 0.5);
+}
+
+// .is_success {
+//     background-color: var(--success_bc_color);
+// }
+
+// .is_warning {
+//     background-color: var(--warning_bc_color);
+// }
+
+// .is_error {
+//     background-color: var(--error_bc_color);
+// }
+
+
+.megaphone_svg {
+    color: var(--dark_200_color);
+    width: 2.4rem;
+}
+.error_svg {
+    color: var(--error_bc_color);
+    width: 2.4rem;
+}
+.check_mark_svg {
+    color: var(--primary_400_color);
+    width: 2rem;
+}
+.warning_svg {
+    color: var(--warning_color);
+    width: 2.4rem;
+}
+
+
+
+// Duplicated (Customized)
+.close_button_wrapper {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    width: 5.6rem;
+    aspect-ratio: 1 / 1;
+    &:hover {
+        background-color: var(--error_bc_color);
+        & .x_mark_svg {
+            color: var(--dark_200_color);
+            transform: rotate(45deg);
+        }
+    }
+    &:active {
+        background-color: var(--error_bc_active_color);
+    }
+    transition: all 0.1s ease;
+}
+
+.close_button {
+    // width: 100%;
+    // height: 100%;
+}
+
+.x_mark_svg {
+    width: 2rem;
+    transform: rotate(-45deg);
+    color: var(--dark_700_color);
+    transition: transform 0.3s ease;
+}

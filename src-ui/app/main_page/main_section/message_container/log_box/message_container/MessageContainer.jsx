@@ -1,18 +1,18 @@
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./MessageContainer.module.scss";
 import { MessageSubMenuContainer } from "./message_sub_menu_container/MessageSubMenuContainer";
 import { useMessage } from "@logics_common";
-import { useIsVisibleResendButton } from "@logics_main";
+import { useAppearance } from "@logics_configs";
 
 export const MessageContainer = ({ messages, status, category, created_at }) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         sendMessage,
         updateMessageInputValue,
     } = useMessage();
-    const { currentIsVisibleResendButton } = useIsVisibleResendButton();
+    const { currentShowResendButton } = useAppearance();
     const [is_hovered, setIsHovered] = useState(false);
     const [is_locked, setIsLocked] = useState(false);
 
@@ -77,7 +77,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                     )}
                 </div>
             </div>
-            {currentIsVisibleResendButton.data && is_sent_message && is_hovered ? (
+            {currentShowResendButton.data && is_sent_message && is_hovered ? (
                 <MessageSubMenuContainer
                     setIsHovered={lockHoverState}
                     resendFunction={resendFunction}

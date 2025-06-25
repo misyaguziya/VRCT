@@ -3,7 +3,7 @@ import {
     useStore_MessageInputValue,
 } from "@store";
 
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 export const useMessage = () => {
     const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
@@ -42,6 +42,9 @@ export const useMessage = () => {
             messages: {message: message},
         });
     };
+    const addSystemMessageLog_FromBackend = (payload) => {
+        addSystemMessageLog(payload.message);
+    };
 
     const updateSentMessageLogById = (payload) => {
         updateMessageLogs(updateItemById(payload.id, payload.translation));
@@ -66,6 +69,7 @@ export const useMessage = () => {
         currentMessageLogs,
         sendMessage,
         addSystemMessageLog,
+        addSystemMessageLog_FromBackend,
         updateSentMessageLogById,
         addSentMessageLog,
         addReceivedMessageLog,

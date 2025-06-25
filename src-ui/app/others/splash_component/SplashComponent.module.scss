@@ -1,0 +1,104 @@
+.container {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+.announcements_button_wrapper {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    opacity: 0;
+    transition: opacity 0.3s ease, border 0.3s ease;
+    padding: 4px 8px;
+    border-radius: 4px;
+    &.is_shown {
+        opacity: 1;
+    }
+    &.is_labels_active {
+        & .announcements_label {
+            display: block;
+            animation: appear .3s ease;
+        }
+        & .announcements_link_svg {
+            color: var(--dark_200_color);
+        }
+    }
+    &:hover {
+        background-color: var(--dark_825_color);
+        & .announcements_label {
+            color: var(--dark_200_color);
+        }
+        & .announcements_link_svg {
+            color: var(--primary_300_color);
+        }
+    }
+    &:active {
+        background-color: var(--dark_850_color);
+    }
+}
+
+@keyframes appear {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+.announcements_button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.1s ease;
+}
+
+.announcements_label {
+    font-size: 12px;
+    color: var(--dark_400_color);
+    display: none;
+    transition: all 0.3s ease;
+}
+.announcements_link_svg {
+    width: 20px;
+    color: var(--dark_600_color);
+}
+
+
+// Duplicated
+.close_button_wrapper {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    width: 68px;
+    aspect-ratio: 1 / 1;
+    &:hover {
+        background-color: var(--error_bc_color);
+        & .x_mark_svg {
+            color: var(--dark_200_color);
+            transform: rotate(45deg);
+        }
+    }
+    &:active {
+        background-color: var(--error_bc_active_color);
+    }
+    transition: all 0.1s ease;
+}
+
+.close_button {
+    // width: 100%;
+    // height: 100%;
+}
+
+.x_mark_svg {
+    width: 24px;
+    transform: rotate(-45deg);
+    color: var(--dark_700_color);
+    transition: transform 0.3s ease;
+}

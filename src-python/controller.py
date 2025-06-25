@@ -259,17 +259,44 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getInputTranslate(message, source_language=language)
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                try:
+                    translation, success = model.getInputTranslate(message, source_language=language)
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_mic_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of mic",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        return
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -295,6 +322,27 @@ class Controller:
                         "transliteration":transliteration
                     })
 
+                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageLargeLog(
+                                "send",
+                                None,
+                                None,
+                                translation,
+                                config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                            )
+                            model.updateOverlayLargeLog(overlay_image)
+                    else:
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "send",
+                            message,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                            translation,
+                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
+
                 if model.checkWebSocketServerAlive() is True:
                     model.websocketSendMessage(
                         {
@@ -308,16 +356,8 @@ class Controller:
                     )
 
                 if config.LOGGER_FEATURE is True:
-                    if len(translation) > 0:
-                        translation = " (" + "/".join(translation) + ")"
-                    model.logger.info(f"[SENT] {message}{translation}")
-
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
-                    else:
-                        overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlayLargeLog(overlay_image)
+                    translation_text = f" ({'/'.join(translation)})" if translation else ""
+                    model.logger.info(f"[SENT] {message}{translation_text}")
 
     def speakerMessage(self, result:dict) -> None:
         message = result["text"]
@@ -346,17 +386,44 @@ class Controller:
             elif config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                translation, success = model.getOutputTranslate(message, source_language=language)
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                try:
+                    translation, success = model.getOutputTranslate(message, source_language=language)
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_speaker_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of speaker",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        return
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -364,18 +431,43 @@ class Controller:
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageSmallLog(translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageSmallLog(
+                                None,
+                                None,
+                                translation,
+                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            )
+                            model.updateOverlaySmallLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageSmallLog(message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlaySmallLog(overlay_image)
+                        overlay_image = model.createOverlayImageSmallLog(
+                            message,
+                            language,
+                            translation,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                        )
+                        model.updateOverlaySmallLog(overlay_image)
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
-                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                        overlay_image = model.createOverlayImageLargeLog("receive", translation[0], "")
+                    if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                        if len(translation) > 0:
+                            overlay_image = model.createOverlayImageLargeLog(
+                                "receive",
+                                None,
+                                None,
+                                translation,
+                            )
+                            model.updateOverlayLargeLog(overlay_image)
                     else:
-                        overlay_image = model.createOverlayImageLargeLog("receive", message, translation[0] if len(translation) > 0 else "")
-                    model.updateOverlayLargeLog(overlay_image)
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "receive",
+                            message,
+                            language,
+                            translation,
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
                     osc_message = self.messageFormatter("RECEIVED", translation, [message])
@@ -404,9 +496,8 @@ class Controller:
                     )
 
                 if config.LOGGER_FEATURE is True:
-                    if len(translation) > 0:
-                        translation = " (" + "/".join(translation) + ")"
-                    model.logger.info(f"[RECEIVED] {message}{translation}")
+                    translation_text = f" ({'/'.join(translation)})" if translation else ""
+                    model.logger.info(f"[RECEIVED] {message}{translation_text}")
 
     def chatMessage(self, data) -> None:
         id = data["id"]
@@ -417,26 +508,62 @@ class Controller:
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
-                if config.USE_EXCLUDE_WORDS is True:
-                    replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
-                    translation, success = model.getInputTranslate(replacement_message)
+                try:
+                    if config.USE_EXCLUDE_WORDS is True:
+                        replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
+                        translation, success = model.getInputTranslate(replacement_message)
 
-                    message = self.removeExclamations(message)
-                    for i in range(len(translation)):
-                        translation[i] = self.restoreText(translation[i], replacement_dict)
-                else:
-                    translation, success = model.getInputTranslate(message)
+                        message = self.removeExclamations(message)
+                        for i in range(len(translation)):
+                            translation[i] = self.restoreText(translation[i], replacement_dict)
+                    else:
+                        translation, success = model.getInputTranslate(message)
 
-                if all(success) is not True:
-                    self.changeToCTranslate2Process()
-                    self.run(
-                        400,
-                        self.run_mapping["error_translation_engine"],
-                        {
-                            "message":"Translation engine limit error",
-                            "data": None
-                        },
-                    )
+                    if all(success) is not True:
+                        self.changeToCTranslate2Process()
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_engine"],
+                            {
+                                "message":"Translation engine limit error",
+                                "data": None
+                            },
+                        )
+                except Exception as e:
+                    # VRAM不足エラーの検出
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_chat_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory during translation of chat",
+                                "data": error_message
+                            },
+                        )
+                        # 翻訳機能をOFFにする
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        # エラー時は翻訳なしで返す
+                        return {"status":200,
+                                "result":
+                                {
+                                    "id":id,
+                                    "message":message,
+                                    "translation":[],
+                                    "transliteration":[],
+                                    },
+                                }
+                    else:
+                        # その他のエラーは通常通り処理
+                        raise
 
                 if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
@@ -454,11 +581,25 @@ class Controller:
                 model.oscSendMessage(osc_message)
 
             if config.OVERLAY_LARGE_LOG is True:
-                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True and len(translation) > 0:
-                    overlay_image = model.createOverlayImageLargeLog("send", translation[0], "")
+                if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+                    if len(translation) > 0:
+                        overlay_image = model.createOverlayImageLargeLog(
+                            "send",
+                            None,
+                            None,
+                            translation,
+                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                        )
+                        model.updateOverlayLargeLog(overlay_image)
                 else:
-                    overlay_image = model.createOverlayImageLargeLog("send", message, translation[0] if len(translation) > 0 else "")
-                model.updateOverlayLargeLog(overlay_image)
+                    overlay_image = model.createOverlayImageLargeLog(
+                        "send",
+                        message,
+                        config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
+                        translation,
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                    )
+                    model.updateOverlayLargeLog(overlay_image)
 
             if model.checkWebSocketServerAlive() is True:
                 model.websocketSendMessage(
@@ -472,10 +613,8 @@ class Controller:
                     }
                 )
 
-            # update textbox message log (Chat)
             if config.LOGGER_FEATURE is True:
-                if len(translation) > 0:
-                    translation_text = " (" + "/".join(translation) + ")"
+                translation_text = f" ({'/'.join(translation)})" if translation else ""
                 model.logger.info(f"[CHAT] {message}{translation_text}")
 
         return {"status":200,
@@ -514,8 +653,21 @@ class Controller:
     @staticmethod
     def setSelectedTranslationComputeDevice(device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
+        pre_device = config.SELECTED_TRANSLATION_COMPUTE_DEVICE
         config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
-        model.changeTranslatorCTranslate2Model()
+        try:
+            model.changeTranslatorCTranslate2Model()
+        except Exception as e:
+            # VRAM不足エラーの検出（デバイス切り替え時）
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                # 前のデバイス設定に戻す
+                printLog("VRAM error detected, reverting device setting")
+                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = pre_device
+                model.changeTranslatorCTranslate2Model()
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
@@ -728,6 +880,29 @@ class Controller:
     def setMessageBoxRatio(data, *args, **kwargs) -> dict:
         config.MESSAGE_BOX_RATIO = data
         return {"status":200, "result":config.MESSAGE_BOX_RATIO}
+
+    @staticmethod
+    def getSendMessageButtonType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
+
+    @staticmethod
+    def setSendMessageButtonType(data, *args, **kwargs) -> dict:
+        config.SEND_MESSAGE_BUTTON_TYPE = data
+        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
+
+    @staticmethod
+    def getShowResendButton(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
+
+    @staticmethod
+    def setEnableShowResendButton(*args, **kwargs) -> dict:
+        config.SHOW_RESEND_BUTTON = True
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
+
+    @staticmethod
+    def setDisableShowResendButton(*args, **kwargs) -> dict:
+        config.SHOW_RESEND_BUTTON = False
+        return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
     def getFontFamily(*args, **kwargs) -> dict:
@@ -1153,8 +1328,12 @@ class Controller:
                 if model.getIsOscQueryEnabled() is True:
                     self.enableOscQuery()
                 else:
-                    self.setDisableVrcMicMuteSync()
-                    self.disableOscQuery()
+                    mute_sync_info_flag = False
+                    if config.VRC_MIC_MUTE_SYNC is True:
+                        self.setDisableVrcMicMuteSync()
+                        mute_sync_info_flag = True
+                    self.disableOscQuery(mute_sync_info=mute_sync_info_flag)
+
                 response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
@@ -1298,15 +1477,6 @@ class Controller:
     def setDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
         config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
-
-    @staticmethod
-    def getSendMessageButtonType(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
-
-    @staticmethod
-    def setSendMessageButtonType(data, *args, **kwargs) -> dict:
-        config.SEND_MESSAGE_BUTTON_TYPE = data
-        return {"status":200, "result":config.SEND_MESSAGE_BUTTON_TYPE}
 
     @staticmethod
     def getOverlaySmallLog(*args, **kwargs) -> dict:
@@ -1628,8 +1798,35 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startMicTranscript(self.micMessage)
-        self.device_access_status = True
+        try:
+            model.startMicTranscript(self.micMessage)
+        except Exception as e:
+            # VRAM不足エラーの検出
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                self.run(
+                    400,
+                    self.run_mapping["error_transcription_mic_vram_overflow"],
+                    {
+                        "message":"VRAM out of memory during mic transcription",
+                        "data": error_message
+                    },
+                )
+                # ここでマイクの音声認識を停止
+                self.stopTranscriptionSendMessage()
+                self.run(
+                    400,
+                    self.run_mapping["enable_transcription_send"],
+                    {
+                        "message":"Transcription send disabled due to VRAM overflow",
+                        "data": False
+                    },
+                )
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
+        finally:
+            self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionSendMessage() -> None:
@@ -1650,8 +1847,35 @@ class Controller:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
-        model.startSpeakerTranscript(self.speakerMessage)
-        self.device_access_status = True
+        try:
+            model.startSpeakerTranscript(self.speakerMessage)
+        except Exception as e:
+            # VRAM不足エラーの検出
+            is_vram_error, error_message = model.detectVRAMError(e)
+            if is_vram_error:
+                self.run(
+                    400,
+                    self.run_mapping["error_transcription_speaker_vram_overflow"],
+                    {
+                        "message":"VRAM out of memory during speaker transcription",
+                        "data": error_message
+                    },
+                )
+                # ここでスピーカーの音声認識を停止
+                self.stopTranscriptionReceiveMessage()
+                self.run(
+                    400,
+                    self.run_mapping["enable_transcription_receive"],
+                    {
+                        "message":"Transcription receive disabled due to VRAM overflow",
+                        "data": False
+                    },
+                )
+            else:
+                # その他のエラーは通常通り処理
+                errorLogging()
+        finally:
+            self.device_access_status = True
 
     @staticmethod
     def stopTranscriptionReceiveMessage() -> None:
@@ -1933,12 +2157,13 @@ class Controller:
             }
         )
 
-    def disableOscQuery(self):
+    def disableOscQuery(self, mute_sync_info:bool=False):
+        disabled_functions = []
+        if mute_sync_info is True:
+            disabled_functions.append("vrc_mic_mute_sync")
         self.run(200, self.run_mapping["enable_osc_query"], {
             "data": False,
-            "disabled_functions": [
-                "vrc_mic_mute_sync",
-            ]
+            "disabled_functions": disabled_functions
         })
 
     def init(self, *args, **kwargs) -> None:
@@ -2055,13 +2280,15 @@ class Controller:
         osc_query_enabled = model.getIsOscQueryEnabled()
         if osc_query_enabled is True:
             self.enableOscQuery()
+            if config.VRC_MIC_MUTE_SYNC is True:
+                self.setEnableVrcMicMuteSync()
         else:
             # OSC Query is disabled, so disable VRC some features
-            config.VRC_MIC_MUTE_SYNC = False
-            self.disableOscQuery()
-
-        if config.VRC_MIC_MUTE_SYNC is True:
-            self.setEnableVrcMicMuteSync()
+            mute_sync_info_flag = False
+            if config.VRC_MIC_MUTE_SYNC is True:
+                self.setDisableVrcMicMuteSync()
+                mute_sync_info_flag = True
+            self.disableOscQuery(mute_sync_info=mute_sync_info_flag)
 
         # init Auto device selection
         printLog("Init Device Manager")

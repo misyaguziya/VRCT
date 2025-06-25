@@ -5,8 +5,9 @@ import {
 } from "jotai";
 
 import {
-    generateTestData,
-} from "@test_data";
+    generateTestConversationData,
+} from "./_test_data.js"
+
 import {
     translator_status,
     ctranslate2_weight_type_status,
@@ -15,12 +16,9 @@ import {
 
 export const store = {
     backend_subprocess: null,
-    config_page: null,
     setting_box_scroll_container: null,
     log_box_ref: null,
     text_area_ref: null,
-    is_register_window_geometry_controller: false,
-    is_applied_init_message_box_height: false,
     is_initialized_load_plugin: false,
     is_fetched_plugins_info_already: false,
     is_initialized_fetched_plugin_info: false,
@@ -31,10 +29,7 @@ const generatePropertyNames = (base_name) => ({
     pending: `pending${base_name}`,
     current: `current${base_name}`,
     update: `update${base_name}`,
-    updatePart: `updatePart${base_name}`,
-    async_update: `asyncUpdate${base_name}`,
     add: `add${base_name}`,
-    async_add: `asyncAdd${base_name}`,
 });
 
 
@@ -152,7 +147,6 @@ export const { atomInstance: Atom_TranscriptionReceiveStatus, useHook: useStore_
 export const { atomInstance: Atom_ForegroundStatus, useHook: useStore_ForegroundStatus } = createAtomWithHook(false, "ForegroundStatus", {is_state_ok: true});
 
 export const { atomInstance: Atom_SelectedPresetTabNumber, useHook: useStore_SelectedPresetTabNumber } = createAtomWithHook("1", "SelectedPresetTabNumber");
-export const { atomInstance: Atom_EnableMultiTranslation, useHook: useStore_EnableMultiTranslation } = createAtomWithHook(false, "EnableMultiTranslation");
 export const { atomInstance: Atom_SelectedYourLanguages, useHook: useStore_SelectedYourLanguages } = createAtomWithHook({}, "SelectedYourLanguages");
 export const { atomInstance: Atom_SelectedTargetLanguages, useHook: useStore_SelectedTargetLanguages } = createAtomWithHook({}, "SelectedTargetLanguages");
 
@@ -169,10 +163,9 @@ export const { atomInstance: Atom_SelectableLanguageList, useHook: useStore_Sele
 
 // Message Container
 export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook([], "MessageLogs");
-// export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestData(20), "MessageLogs"); // For testing
+// export const { atomInstance: Atom_MessageLogs, useHook: useStore_MessageLogs } = createAtomWithHook(generateTestConversationData(20), "MessageLogs"); // For testing
 export const { atomInstance: Atom_MessageInputBoxRatio, useHook: useStore_MessageInputBoxRatio } = createAtomWithHook(20, "MessageInputBoxRatio");
 export const { atomInstance: Atom_MessageInputValue, useHook: useStore_MessageInputValue } = createAtomWithHook("", "MessageInputValue");
-export const { atomInstance: Atom_IsVisibleResendButton, useHook: useStore_IsVisibleResendButton } = createAtomWithHook(false, "IsVisibleResendButton", {is_state_ok: true});
 
 
 
@@ -213,6 +206,7 @@ export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = c
 export const { atomInstance: Atom_UiScaling, useHook: useStore_UiScaling } = createAtomWithHook(100, "UiScaling");
 export const { atomInstance: Atom_MessageLogUiScaling, useHook: useStore_MessageLogUiScaling } = createAtomWithHook(100, "MessageLogUiScaling");
 export const { atomInstance: Atom_SendMessageButtonType, useHook: useStore_SendMessageButtonType } = createAtomWithHook("show", "SendMessageButtonType");
+export const { atomInstance: Atom_ShowResendButton, useHook: useStore_ShowResendButton } = createAtomWithHook(false, "ShowResendButton");
 export const { atomInstance: Atom_SelectedFontFamily, useHook: useStore_SelectedFontFamily } = createAtomWithHook("Yu Gothic UI", "SelectedFontFamily");
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");
 export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency } = createAtomWithHook(100, "Transparency");

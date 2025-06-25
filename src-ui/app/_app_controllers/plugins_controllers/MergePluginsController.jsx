@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { store } from "@store";
 import { usePlugins } from "@logics_configs";
 import { useSoftwareVersion } from "@logics_common";
 import { useNotificationStatus } from "@logics_common";
 
 export const MergePluginsController = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const {
         currentLoadedPlugins,
         updatePluginsData,

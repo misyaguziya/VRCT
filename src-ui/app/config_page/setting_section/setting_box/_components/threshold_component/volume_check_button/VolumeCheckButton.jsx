@@ -1,10 +1,10 @@
 import React from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./VolumeCheckButton.module.scss";
 
 export const VolumeCheckButton = React.memo((props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const getClassNames = (baseClass) => clsx(baseClass, {
         [styles.is_active]: (props.isChecking?.data === true),
         [styles.is_pending]: (props.isChecking.state === "pending"),

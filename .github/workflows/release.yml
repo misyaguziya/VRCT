@@ -1,0 +1,92 @@
+name: Release VRCT
+
+on:
+  push:
+    tags:
+      - 'v*' # タグが 'v' で始まる場合にトリガー (例: v1.0.0)
+
+jobs:
+  release:
+    name: Build VRCT
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.15.0'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Setup Python environment
+        run: npm run setup-python
+
+      - name: Install Python script dependencies
+        run: pip install tqdm
+
+      - name: Build and package
+        run: npm run release-all
+
+      - name: Get version from tag
+        id: get_version
+        shell: pwsh
+        run: |
+          $TAG_WITH_V = $env:GITHUB_REF -replace "^refs/tags/", ""
+          $VERSION_NUM = $TAG_WITH_V -replace "^v", ""
+          echo "VERSION=$VERSION_NUM" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: Upload to Hugging Face Hub
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        shell: pwsh # Explicitly use PowerShell for file operations
+        run: |
+          pip install huggingface_hub
+
+          $UPLOAD_DIR = "./hf_upload_temp"
+          New-Item -ItemType Directory -Force -Path $UPLOAD_DIR
+          Copy-Item -Path ./VRCT.zip -Destination "$UPLOAD_DIR/VRCT.zip"
+          Copy-Item -Path ./VRCT_cuda.zip -Destination "$UPLOAD_DIR/VRCT_cuda.zip"
+
+          huggingface-cli upload ms-software/VRCT $UPLOAD_DIR . --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release"
+
+          huggingface-cli tag ms-software/VRCT ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
+
+          Remove-Item -Recurse -Force $UPLOAD_DIR
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ env.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset (NSIS Installer)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./src-tauri/target/release/bundle/nsis/VRCT_${{ env.VERSION }}_x64-setup.exe
+          asset_name: VRCT_${{ env.VERSION }}_x64-setup.exe
+          asset_content_type: application/octet-stream
