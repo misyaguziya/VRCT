@@ -47,7 +47,6 @@ main_page:
         received: "已接收"
         system: "系統"
 
-        show_resend_button:
         resend_button_on_hover_desc:
 
     state_text_enabled: "啟用"

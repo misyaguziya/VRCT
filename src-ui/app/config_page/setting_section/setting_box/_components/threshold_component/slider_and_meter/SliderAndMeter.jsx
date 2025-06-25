@@ -4,8 +4,7 @@ import {
     useStore_SpeakerVolume,
 } from "@store";
 import {
-    useMicThreshold,
-    useSpeakerThreshold,
+    useDevice,
 } from "@logics_configs";
 
 export const SliderAndMeter = (props) => {
@@ -24,7 +23,7 @@ export const SliderAndMeter = (props) => {
 const ThresholdVolumeMeter_Mic = (props) => {
     const { currentMicVolume } = useStore_MicVolume();
 
-    const { currentEnableAutomaticMicThreshold } = useMicThreshold();
+    const { currentEnableAutomaticMicThreshold } = useDevice();
 
     const currentVolumeVariable = Math.min(currentMicVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;
@@ -50,7 +49,7 @@ const ThresholdVolumeMeter_Mic = (props) => {
 const ThresholdVolumeMeter_Speaker = (props) => {
     const { currentSpeakerVolume } = useStore_SpeakerVolume();
 
-    const { currentEnableAutomaticSpeakerThreshold } = useSpeakerThreshold();
+    const { currentEnableAutomaticSpeakerThreshold } = useDevice();
 
     const currentVolumeVariable = Math.min(currentSpeakerVolume.data, props.max);
     const volume_width_percentage = (currentVolumeVariable / props.max) * 100;

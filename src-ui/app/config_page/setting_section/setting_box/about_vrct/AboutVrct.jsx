@@ -27,12 +27,12 @@ import special_thanks_message_ja from "@images/about_vrct/special_thanks_message
 import poster_showcase_section_title from "@images/about_vrct/poster_showcase_section_title.png";
 
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useStore_UiLanguage } from "@store";
 import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 export const AboutVrct = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { currentUiLanguage } = useStore_UiLanguage();
     return (
         <div className={styles.container}>

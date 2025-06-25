@@ -1,9 +1,9 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import styles from "./LanguageSelectorTopBar.module.scss";
 import { useStore_IsOpenedLanguageSelector } from "@store";
 
 export const LanguageSelectorTopBar = (props) => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { updateIsOpenedLanguageSelector } = useStore_IsOpenedLanguageSelector();
     const closeLanguageSelector = () => {
         updateIsOpenedLanguageSelector({

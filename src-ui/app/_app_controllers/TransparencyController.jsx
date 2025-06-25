@@ -1,8 +1,8 @@
 import { useEffect } from "react";
-import { useTransparency } from "@logics_configs";
+import { useAppearance } from "@logics_configs";
 
 export const TransparencyController = () => {
-    const { currentTransparency } = useTransparency();
+    const { currentTransparency } = useAppearance();
     useEffect(() => {
         document.documentElement.style.setProperty("opacity", `${currentTransparency.data / 100}`);
     }, [currentTransparency.data]);

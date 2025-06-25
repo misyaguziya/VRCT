@@ -1,12 +1,12 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
-import { useSelectableLanguageList } from "@logics_main";
+import { useLanguageSettings } from "@logics_main";
 import styles from "./LanguageSelector.module.scss";
 
 import { LanguageSelectorTopBar } from "./language_selector_top_bar/LanguageSelectorTopBar";
 export const LanguageSelector = ({ title, onClickFunction }) => {
-    const { t } = useTranslation();
-    const { currentSelectableLanguageList } = useSelectableLanguageList();
+    const { t } = useI18n();
+    const { currentSelectableLanguageList } = useLanguageSettings();
 
     const groupLanguagesByFirstLetter = (languages) => {
         return languages.reduce((acc, { language, country }) => {

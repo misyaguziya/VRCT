@@ -11,6 +11,10 @@ from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E4
 logging.getLogger("huggingface_hub").setLevel(logging.ERROR)
 
 run_mapping = {
+    "enable_translation":"/run/enable_translation",
+    "enable_transcription_send":"/run/enable_transcription_send",
+    "enable_transcription_receive":"/run/enable_transcription_receive",
+
     "connected_network":"/run/connected_network",
     "enable_ai_models":"/run/enable_ai_models",
 
@@ -22,6 +26,13 @@ run_mapping = {
 
     "error_device":"/run/error_device",
     "error_translation_engine":"/run/error_translation_engine",
+
+    "error_translation_chat_vram_overflow":"/run/error_translation_chat_vram_overflow",
+    "error_translation_mic_vram_overflow":"/run/error_translation_mic_vram_overflow",
+    "error_translation_speaker_vram_overflow":"/run/error_translation_speaker_vram_overflow",
+    "error_transcription_mic_vram_overflow":"/run/error_transcription_mic_vram_overflow",
+    "error_transcription_speaker_vram_overflow":"/run/error_transcription_speaker_vram_overflow",
+
     "word_filter":"/run/word_filter",
 
     "download_progress_ctranslate2_weight":"/run/download_progress_ctranslate2_weight",
@@ -119,6 +130,13 @@ mapping = {
 
     "/get/data/message_box_ratio": {"status": True, "variable":controller.getMessageBoxRatio},
     "/set/data/message_box_ratio": {"status": True, "variable":controller.setMessageBoxRatio},
+
+    "/get/data/send_message_button_type": {"status": True, "variable":controller.getSendMessageButtonType},
+    "/set/data/send_message_button_type": {"status": True, "variable":controller.setSendMessageButtonType},
+
+    "/get/data/show_resend_button": {"status": True, "variable":controller.getShowResendButton},
+    "/set/enable/show_resend_button": {"status": True, "variable":controller.setEnableShowResendButton},
+    "/set/disable/show_resend_button": {"status": True, "variable":controller.setDisableShowResendButton},
 
     "/get/data/font_family": {"status": True, "variable":controller.getFontFamily},
     "/set/data/font_family": {"status": True, "variable":controller.setFontFamily},
@@ -274,9 +292,6 @@ mapping = {
     "/get/data/send_only_translated_messages": {"status": True, "variable":controller.getSendOnlyTranslatedMessages},
     "/set/enable/send_only_translated_messages": {"status": True, "variable":controller.setEnableSendOnlyTranslatedMessages},
     "/set/disable/send_only_translated_messages": {"status": True, "variable":controller.setDisableSendOnlyTranslatedMessages},
-
-    "/get/data/send_message_button_type": {"status": True, "variable":controller.getSendMessageButtonType},
-    "/set/data/send_message_button_type": {"status": True, "variable":controller.setSendMessageButtonType},
 
     "/get/data/logger_feature": {"status": True, "variable":controller.getLoggerFeature},
     "/set/enable/logger_feature": {"status": True, "variable":controller.setEnableLoggerFeature},
@@ -524,6 +539,8 @@ if __name__ == "__main__":
                         data = 1.5
                     case "/set/data/message_box_ratio":
                         data = 0.5
+                    case "/set/data/send_message_button_type":
+                        data = "show"
                     case "/set/data/font_family":
                         data = "Yu Gothic UI"
                     case "/set/data/ui_language":
@@ -544,7 +561,7 @@ if __name__ == "__main__":
                         data = 5
                     case "/set/data/mic_max_phrases":
                         data = 5
-                    case "/set//data/mic_word_filter":
+                    case "/set/data/mic_word_filter":
                         data = "test0, test1, test2"
                     case "/set/data/selected_speaker_device":
                         data = "スピーカー (Realtek High Definition Audio)"
@@ -574,8 +591,6 @@ if __name__ == "__main__":
                             "display_duration": 5,
                             "fadeout_duration": 0.5,
                         }
-                    case "/set/data/send_message_button_type":
-                        data = "show"
                     case "/set/data/send_message_format":
                         data = "[message]"
                     case "/set/data/send_message_format_with_t":

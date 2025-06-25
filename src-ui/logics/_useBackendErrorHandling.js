@@ -1,41 +1,50 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 
 import {
     useNotificationStatus,
 } from "@logics_common";
 
 import {
-    useMicRecordTimeout,
-    useMicPhraseTimeout,
-    useMicMaxWords,
+    useMainFunction,
+} from "@logics_main";
 
-    useSpeakerRecordTimeout,
-    useSpeakerPhraseTimeout,
-    useSpeakerMaxWords,
+import {
+    useTranscription,
 
-    useDeepLAuthKey,
+    useTranslation,
 
-    useOscIpAddress,
-    useWebsocket,
+    useOthers,
+
+    useAdvancedSettings,
 } from "@logics_configs";
 import { ui_configs } from "../ui_configs";
 
 export const _useBackendErrorHandling = () => {
-    const { t } = useTranslation();
+    const { t } = useI18n();
     const { showNotification_Error } = useNotificationStatus();
 
-    const { updateMicRecordTimeout } = useMicRecordTimeout();
-    const { updateMicPhraseTimeout } = useMicPhraseTimeout();
-    const { updateMicMaxWords } = useMicMaxWords();
+    const {
+        updateMicRecordTimeout,
+        updateMicPhraseTimeout,
+        updateMicMaxWords,
 
-    const { updateSpeakerRecordTimeout } = useSpeakerRecordTimeout();
-    const { updateSpeakerPhraseTimeout } = useSpeakerPhraseTimeout();
-    const { updateSpeakerMaxWords } = useSpeakerMaxWords();
+        updateSpeakerRecordTimeout,
+        updateSpeakerPhraseTimeout,
+        updateSpeakerMaxWords,
+    } = useTranscription();
 
-    const { updateDeepLAuthKey } = useDeepLAuthKey();
+    const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
 
-    const { updateOscIpAddress } = useOscIpAddress();
-    const { updateEnableWebsocket, updateWebsocketHost, updateWebsocketPort } = useWebsocket();
+    const { updateDeepLAuthKey } = useTranslation();
+
+    const { updateEnableVrcMicMuteSync } = useOthers();
+
+    const {
+        updateOscIpAddress,
+        updateEnableWebsocket,
+        updateWebsocketHost,
+        updateWebsocketPort,
+    } = useAdvancedSettings();
 
     const errorHandling_Backend = ({message, data, endpoint, result}) => {
         switch (endpoint) {
@@ -70,16 +79,53 @@ export const _useBackendErrorHandling = () => {
                 if (message === "Translation engine limit error") showNotification_Error(t("common_error.translation_limit"));
                 return;
 
+            case "/run/enable_translation":
+                if (message === "Translation disabled due to VRAM overflow") {
+                    updateTranslationStatus(data);
+                    showNotification_Error("Translation disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/enable_transcription_send":
+                if (message === "Transcription send disabled due to VRAM overflow") {
+                    updateTranscriptionSendStatus(data);
+                    showNotification_Error("Transcription send disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/enable_transcription_send":
+                if (message === "Transcription receive disabled due to VRAM overflow") {
+                    updateTranscriptionReceiveStatus(data);
+                    showNotification_Error("Transcription receive disabled due to VRAM overflow");
+                }
+                return;
+
+            case "/run/error_translation_chat_vram_overflow":
+                if (message === "VRAM out of memory during translation of chat") showNotification_Error("VRAM out of memory during translation of chat");
+                return;
+            case "/run/error_translation_mic_vram_overflow":
+                if (message === "VRAM out of memory during translation of mic") showNotification_Error("VRAM out of memory during translation of mic");
+                return;
+            case "/run/error_translation_speaker_vram_overflow":
+                if (message === "VRAM out of memory during translation of speaker") showNotification_Error("VRAM out of memory during translation of speaker");
+                return;
+            case "/run/error_transcription_mic_vram_overflow":
+                if (message === "VRAM out of memory during mic transcription") showNotification_Error("VRAM out of memory during mic transcription");
+                return;
+            case "/run/error_transcription_speaker_vram_overflow":
+                if (message === "VRAM out of memory during speaker transcription") showNotification_Error("VRAM out of memory during speaker transcription");
+                return;
+
             case "/set/data/deepl_auth_key":
                 if (message === "DeepL auth key length is not correct") {
                     updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_invalid_length"));
+                    showNotification_Error(t("common_error.deepl_auth_key_invalid_length"), { category_id: "deepl_auth_key" });
                 } else if (message === "Authentication failure of deepL auth key") {
                     updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"));
+                    showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"), { category_id: "deepl_auth_key" });
                 } else { // Exception
                     updateDeepLAuthKey(data);
-                    showNotification_Error(message);
+                    showNotification_Error(message, { category_id: "deepl_auth_key" });
                 }
                 return;
 
@@ -127,6 +173,14 @@ export const _useBackendErrorHandling = () => {
                 if (message === "Speaker max phrases value is out of range") {
                     updateSpeakerMaxWords(data);
                     showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"));
+                }
+                return;
+
+            case "/set/enable/vrc_mic_mute_sync":
+                // Normally, this path shouldn't happen because VRC Mic Mute Sync is disabled and can't be turned on from the UI.
+                if (message === "Cannot enable VRC mic mute sync while OSC query is disabled") {
+                    updateEnableVrcMicMuteSync(data);
+                    showNotification_Error("Cannot enable VRC Mic Mute Sync while OSC query is disabled");
                 }
                 return;
 

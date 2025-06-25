@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { IS_PLUGIN_PATH_DEV_MODE, getPluginsList } from "@ui_configs";
 import {
     store,
@@ -11,7 +11,7 @@ import {
     useStore_FetchedPluginsInfo,
     useStore_LoadedPlugins,
 } from "@store";
-import { useStdoutToPython } from "@logics/useStdoutToPython";
+import { useStdoutToPython } from "@useStdoutToPython";
 
 import { transform } from "@babel/standalone";
 import { writeFile, mkdir, exists, remove, readDir, BaseDirectory, readTextFile } from "@tauri-apps/plugin-fs";
@@ -36,8 +36,8 @@ import * as logics_common from "@logics_common";
 const PLUGIN_LIST_URL = getPluginsList();
 
 export const usePlugins = () => {
-    const { t } = useTranslation();
-    const { showNotification_Success, showNotification_Error } = useNotificationStatus();
+    const { t, i18n } = useI18n();
+    const { showNotification_SaveSuccess, showNotification_Success, showNotification_Error } = useNotificationStatus();
     const { asyncStdoutToPython } = useStdoutToPython();
 
     const { currentFetchedPluginsInfo, updateFetchedPluginsInfo, pendingFetchedPluginsInfo, errorFetchedPluginsInfo } = useStore_FetchedPluginsInfo();
@@ -49,8 +49,6 @@ export const usePlugins = () => {
 
     const { asyncTauriFetchGithub } = useFetch();
 
-
-    const { i18n } = useTranslation();
 
     const generatePluginContext = (downloaded_plugin_info) => {
         const plugin_context = {
@@ -284,40 +282,57 @@ export const usePlugins = () => {
         });
     };
 
-    const toggleSavedPluginsStatus = (target_plugin_id) => {
-        const is_exists = currentSavedPluginsStatus.data.some(
+    const setSavedPluginEnabled = (target_plugin_id, is_enabled) => {
+        const notify = () => {
+            const msg_key = is_enabled
+                ? "plugin_notifications.is_enabled"
+                : "plugin_notifications.is_disabled";
+            showNotification_Success(t(msg_key), {
+                hide_duration: 1000,
+                category_id: "switch_enable_plugin",
+            });
+        }
+
+        const exists = currentSavedPluginsStatus.data.some(
             (d) => d.plugin_id === target_plugin_id
         );
+
         let new_value = [];
-        if (is_exists) {
+
+        if (exists) {
             new_value = currentSavedPluginsStatus.data.map((d) => {
                 if (d.plugin_id === target_plugin_id) {
-                    d.is_enabled = !d.is_enabled;
-                    (d.is_enabled)
-                        ? showNotification_Success(t("plugin_notifications.is_enabled"))
-                        : showNotification_Success(t("plugin_notifications.is_disabled"));
+                    d.is_enabled = is_enabled;
+                    notify();
                 }
                 return d;
             });
         } else {
-            new_value.push(...currentSavedPluginsStatus.data);
-            new_value.push({
-                plugin_id: target_plugin_id,
-                is_enabled: true,
-            });
-            showNotification_Success(t("plugin_notifications.is_enabled"))
+            // 存在しない場合は追加
+            new_value = [
+                ...currentSavedPluginsStatus.data,
+                { plugin_id: target_plugin_id, is_enabled: is_enabled }
+            ];
+            notify();
         }
 
-        // 「currentPluginsData.data」でis_downloadedがtrueのものだけ残す
+        // ダウンロード済みプラグインのみ残す
         new_value = new_value.filter((item) =>
             currentPluginsData.data.some(
-                (plugin) => plugin.plugin_id === item.plugin_id && plugin.is_downloaded
+                (p) => p.plugin_id === item.plugin_id && p.is_downloaded
             )
         );
 
         setSavedPluginsStatus(new_value);
     };
 
+    const toggleSavedPluginsStatus = (plugin_id) => {
+        // 現在の状態を探す（未登録なら false とみなす）
+        const current = currentSavedPluginsStatus.data.find(
+            (d) => d.plugin_id === plugin_id
+        )?.is_enabled ?? false;
+        setSavedPluginEnabled(plugin_id, !current);
+    };
 
     // Init時の処理 非対応のものを無効化する際に、savedDPluginsStatusから不要なものを削除する処理が邪魔になるので該当コードを削除したバージョン。Init以外で使用する時にはリファクタが必要になる。
     const setTargetSavedPluginsStatus_Init = (target_plugin_id, is_enabled) => {
@@ -373,6 +388,19 @@ export const usePlugins = () => {
         });
     }
 
+    const setSuccessSavedPluginsStatus = (plugins_status) => {
+        updateSavedPluginsStatus(plugins_status);
+        showNotification_SaveSuccess();
+    };
+
+    const setErrorPlugin = (plugin_id, error_message_type) => {
+        const error_message = t("plugin_notifications.disabled_due_to_an_error");
+
+        setSavedPluginEnabled(plugin_id, false);
+        updateTargetPluginData(plugin_id, "is_error", true);
+        updateTargetPluginData(plugin_id, "error_message_type", error_message_type);
+        showNotification_Error(error_message);
+    };
 
 
     return {
@@ -387,6 +415,7 @@ export const usePlugins = () => {
 
         currentSavedPluginsStatus,
         updateSavedPluginsStatus,
+        setSuccessSavedPluginsStatus,
 
         currentPluginsData,
         updatePluginsData,
@@ -399,11 +428,15 @@ export const usePlugins = () => {
         currentLoadedPlugins,
         updateLoadedPlugins,
 
+        setSavedPluginEnabled,
         toggleSavedPluginsStatus,
         setTargetSavedPluginsStatus_Init,
         setSavedPluginsStatus,
 
+
         handlePendingPlugin,
+
+        setErrorPlugin,
     };
 };
 

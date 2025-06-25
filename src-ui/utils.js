@@ -58,3 +58,11 @@ export const genNumArray = (count, start_from = 0) => {
 export const genNumObjArray = (count, start_from = 0) => {
     return arrayToObject(genNumArray(count, start_from));
 };
+
+// This is using for only AI models compute device list, currently. (CTranslate2, Whisper)
+export const transformToIndexedArray = (devices) => {
+    return devices.reduce((result, device, index) => {
+        result[index] = device;
+        return result;
+    }, {});
+};

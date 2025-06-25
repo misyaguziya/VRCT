@@ -1,44 +1,47 @@
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { useNotificationStatus } from "@logics_common";
-import {
-    useEnableVrcMicMuteSync,
-} from "@logics_configs";
+import { useOthers } from "@logics_configs";
 
 export const useHandleOscQuery = () => {
-    const { t } = useTranslation();
-
+    const { t } = useI18n();
     const { showNotification_Warning } = useNotificationStatus();
-    const { updateEnableVrcMicMuteSync } = useEnableVrcMicMuteSync();
+    const { updateEnableVrcMicMuteSync } = useOthers();
 
-    const handleOscQuery = ({is_osc_query_enabled, disabled_functions}) => {
-        if (!is_osc_query_enabled && disabled_functions.length > 0) {
-            const BASE_LABEL = t("common_warning.unable_to_use_osc_query");
-            let items_label = "";
+    const handleOscQuery = (payload) => {
+        const is_osc_query_enabled = payload.data;
+        const disabled_functions = payload.disabled_functions;
 
-            for (const disabled_function of disabled_functions) {
-                if (disabled_function === "vrc_mic_mute_sync") {
-                    updateEnableVrcMicMuteSync({
-                        is_enabled: false,
-                        is_available: false,
-                    });
-                    const item = `- ${t("config_page.others.vrc_mic_mute_sync.label")}`;
-                    items_label = `${items_label}\n${item}`;
-                }
-            }
-            const label = `${BASE_LABEL}${items_label}`;
-            showNotification_Warning(
-                label,
-                { hide_duration: 10000, }
-            );
-        } else if (is_osc_query_enabled) {
-            updateEnableVrcMicMuteSync((old_value) => ({
-                ...old_value.data,
+        if (is_osc_query_enabled) {
+            updateEnableVrcMicMuteSync(prev => ({
+                ...prev.data,
                 is_available: true,
             }));
+            return;
+        }
+
+        if (!disabled_functions.length) {
+            updateEnableVrcMicMuteSync(prev => ({
+                ...prev.data,
+                is_available: false,
+            }));
+            return;
+        }
+
+        const items_label = disabled_functions
+            .filter(fn => fn === "vrc_mic_mute_sync")
+            .map(() => `- ${t("config_page.others.vrc_mic_mute_sync.label")}`)
+            .join("\n");
+
+        updateEnableVrcMicMuteSync({
+            is_enabled: false,
+            is_available: false,
+        });
+
+        if (items_label) {
+            const message = `${t("common_warning.unable_to_use_osc_query")}\n${items_label}`;
+            showNotification_Warning(message, { hide_duration: 10000 });
         }
     };
 
-    return {
-        handleOscQuery,
-    };
+    return { handleOscQuery };
 };

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useTranslation } from "react-i18next";
+import { useI18n } from "@useI18n";
 import { usePlugins } from "@logics_configs";
 import styles from "./Plugins.module.scss";
-import { PluginsControlComponent } from "../_components/plugins_control_component/PluginsControlComponent";
+import { PluginsControlComponent } from "./plugins_control_component/PluginsControlComponent";
 import { useNotificationStatus } from "@logics_common";
 import ExternalLink from "@images/external_link.svg?react";
 
@@ -27,7 +27,7 @@ export const Plugins = () => {
 };
 
 const PluginDownloadContainer = () => {
-    const { t, i18n } = useTranslation();
+    const { t, i18n } = useI18n();
     const {
         downloadAndExtractPlugin,
         currentPluginsData,
@@ -105,7 +105,12 @@ const PluginDownloadContainer = () => {
                         </div>
                         <div className={styles.plugin_info_wrapper}>
                             {plugin.is_error ? (
-                                <p style={{ color: "red" }}>Error: {plugin.error_message}</p>
+                                <div>
+                                    <p style={{ color: "red" }}>{t(`plugin_notifications.${plugin.error_message_type}`)}</p>
+                                    <p style={{ color: "red" }}>plugin_version: {plugin.downloaded_plugin_info.plugin_version}</p>
+                                    <p style={{ color: "red" }}>min_supported_vrct_version: {plugin.downloaded_plugin_info.min_supported_vrct_version}</p>
+                                    <p style={{ color: "red" }}>max_supported_vrct_version: {plugin.downloaded_plugin_info.max_supported_vrct_version}</p>
+                                </div>
                             ) : (
                                 <PluginsControlComponent
                                     variable_state={variable_state}
