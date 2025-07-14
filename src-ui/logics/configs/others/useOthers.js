@@ -107,6 +107,10 @@ export const useOthers = () => {
         }
     };
 
+    const getSuccessEnableVrcMicMuteSync = (is_enabled) => {
+        updateEnableVrcMicMuteSync(old => ({ ...old.data, is_enabled: is_enabled }));
+    };
+
     const setSuccessEnableVrcMicMuteSync = (is_enabled) => {
         updateEnableVrcMicMuteSync(old => ({ ...old.data, is_enabled: is_enabled }));
         showNotification_SaveSuccess();
@@ -199,6 +203,7 @@ export const useOthers = () => {
         // VRC Mic Mute Sync
         currentEnableVrcMicMuteSync,
         getEnableVrcMicMuteSync,
+        getSuccessEnableVrcMicMuteSync,
         toggleEnableVrcMicMuteSync,
         updateEnableVrcMicMuteSync,
         setSuccessEnableVrcMicMuteSync,
