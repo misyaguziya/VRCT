@@ -194,7 +194,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "updateMicMaxWords" },
     { endpoint: "/set/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicMaxWords" },
 
-    { endpoint: "/get/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "updateMicWordFilterList" },
+    { endpoint: "/get/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "getSuccessMicWordFilterList" },
     { endpoint: "/set/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicWordFilterList" },
 
     // Transcription (Speaker)
@@ -259,7 +259,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/set/enable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
     { endpoint: "/set/disable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
 
-    { endpoint: "/get/data/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "updateEnableVrcMicMuteSync_FromBackend" },
+    { endpoint: "/get/data/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "getSuccessEnableVrcMicMuteSync" },
     { endpoint: "/set/enable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
     { endpoint: "/set/disable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
 
@@ -334,6 +334,9 @@ export const useReceiveRoutes = () => {
         ROUTE_META_LIST.map(({ endpoint, hook_name, method_name }) => {
             const result_obj = hook_results[hook_name] || {};
             const fn = result_obj[method_name];
+            if (fn === undefined && method_name !== null) {
+                console.error("Method not found.", {endpoint, hook_name, method_name, result_obj, fn});
+            }
             return [endpoint, typeof fn === "function" ? fn : noop];
         })
     );
