@@ -164,7 +164,13 @@ config_page:
             label: "喇叭音訊 - 最大單詞數量"
             desc: "只有在單詞超過此數量時，才會記錄結果並發送到 VRChat。"
         select_transcription_engine:
-            label:
+            label: "用於語音辨識的引擎"
+        deepgram_api_key:
+            label: "Deepgram API 金鑰"
+            desc: "輸入您的 Deepgram API 金鑰。"
+            save: "儲存"
+            edit: "編輯"
+            auth_key_success: "驗證金鑰更新完成。"
         whisper_weight_type:
             label: "選擇 Whisper 模型"
             desc:

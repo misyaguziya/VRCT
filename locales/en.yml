@@ -172,6 +172,12 @@ config_page:
             desc: "It is the lower limit for the number of transcribed words, and only when this number is exceeded will the transcription results be displayed logs."
         select_transcription_engine:
             label: "Transcription Engine Used For Speech Recognition"
+        deepgram_api_key:
+            label: "Deepgram API Key"
+            desc: "Enter your Deepgram API key."
+            save: "Save"
+            edit: "Edit"
+            auth_key_success: "Auth key update completed."
         whisper_weight_type:
             label: "Whisper Model"
             desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."

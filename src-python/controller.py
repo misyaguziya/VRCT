@@ -1425,6 +1425,40 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
+    def getDeepgramAuthKey(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["Deepgram_API"]}
+
+    def setDeepgramAuthKey(self, data, *args, **kwargs) -> dict:
+        transcription_engine_name = "Deepgram"
+        try:
+            data = str(data)
+            # You can add API key validation logic here if needed
+            auth_keys = config.AUTH_KEYS
+            auth_keys["Deepgram_API"] = data
+            config.AUTH_KEYS = auth_keys
+            config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[transcription_engine_name] = True
+            self.updateTranscriptionEngine()
+            response = {"status":200, "result":config.AUTH_KEYS["Deepgram_API"]}
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS["Deepgram_API"]
+                }
+            }
+        return response
+
+    def delDeepgramAuthKey(self, *args, **kwargs) -> dict:
+        transcription_engine_name = "Deepgram"
+        auth_keys = config.AUTH_KEYS
+        auth_keys["Deepgram_API"] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[transcription_engine_name] = False
+        self.updateTranscriptionEngine()
+        return {"status":200, "result":config.AUTH_KEYS["Deepgram_API"]}
+
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
@@ -2240,6 +2274,10 @@ class Controller:
                         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
                     else:
                         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                case "Deepgram":
+                    config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS.get("Deepgram_API") is not None:
+                        config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
                 case _:
                     if connected_network is True:
                         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True

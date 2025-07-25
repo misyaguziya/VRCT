@@ -438,6 +438,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                deepgram_api_key=config.AUTH_KEYS.get("Deepgram_API"),
             )
             def sendMicTranscript():
                 try:
@@ -621,6 +622,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                deepgram_api_key=config.AUTH_KEYS.get("Deepgram_API"),
             )
             def sendSpeakerTranscript():
                 try:

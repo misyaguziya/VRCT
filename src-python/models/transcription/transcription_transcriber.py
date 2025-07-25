@@ -13,6 +13,7 @@ import torch
 import numpy as np
 from pydub import AudioSegment
 from utils import errorLogging
+from deepgram import DeepgramClient, PrerecordedOptions
 
 import warnings
 warnings.simplefilter('ignore', RuntimeWarning)
@@ -21,7 +22,7 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, phrase_timeout, max_phrases, transcription_engine, root=None, whisper_weight_type=None, device="cpu", device_index=0):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases, transcription_engine, root=None, whisper_weight_type=None, device="cpu", device_index=0, deepgram_api_key=None):
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
@@ -30,6 +31,7 @@ class AudioTranscriber:
         self.audio_recognizer = Recognizer()
         self.transcription_engine = "Google"
         self.whisper_model = None
+        self.deepgram_client = None
         self.audio_sources = {
                 "sample_rate": source.SAMPLE_RATE,
                 "sample_width": source.SAMPLE_WIDTH,
@@ -43,6 +45,9 @@ class AudioTranscriber:
         if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
             self.whisper_model = getWhisperModel(root, whisper_weight_type, device=device, device_index=device_index)
             self.transcription_engine = "Whisper"
+        elif transcription_engine == "Deepgram" and deepgram_api_key is not None:
+            self.deepgram_client = DeepgramClient(deepgram_api_key)
+            self.transcription_engine = "Deepgram"
 
     def transcribeAudioQueue(self, audio_queue, languages, countries, avg_logprob=-0.8, no_speech_prob=0.6):
         if audio_queue.empty():
@@ -93,6 +98,17 @@ class AudioTranscriber:
                         confidences.append({"confidence": info.language_probability, "text": text, "language": language})
                         if (len(languages) == 1) or (transcription_lang[language][country][self.transcription_engine] == info.language):
                             break
+                case "Deepgram":
+                    payload = {'buffer': audio_data.get_raw_data(), 'mimetype': "audio/wav"}
+                    options = PrerecordedOptions(
+                        model="nova-2",
+                        puncuate="true",
+                        language=languages[0].lower(),
+                    )
+                    response = self.deepgram_client.listen.prerecorded.v("1").transcribe_audio(payload, options)
+                    text = response.results.channels[0].alternatives[0].transcript
+                    confidence = response.results.channels[0].alternatives[0].confidence
+                    confidences.append({"confidence": confidence, "text": text, "language": languages[0]})
 
         except UnknownValueError:
             pass

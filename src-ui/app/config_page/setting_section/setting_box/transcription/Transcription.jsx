@@ -12,6 +12,7 @@ import {
     RadioButtonContainer,
     DropdownMenuContainer,
     ComputeDeviceContainer,
+    AuthKeyContainer,
 } from "../_templates/Templates";
 
 import {
@@ -197,6 +198,7 @@ const TranscriptionEngine_Container = () => {
         <div>
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
+            <DeepgramAuthKey_Box />
             <WhisperWeightType_Box />
             <WhisperComputeDevice_Box />
         </div>
@@ -215,8 +217,31 @@ const TranscriptionEngine_Box = () => {
             options={[
                 { id: "Google", label: "Google" },
                 { id: "Whisper", label: "Whisper" },
+                { id: "Deepgram", label: "Deepgram" },
             ]}
             checked_variable={currentSelectedTranscriptionEngine}
+        />
+    );
+};
+
+const DeepgramAuthKey_Box = () => {
+    const { t } = useI18n();
+    const {
+        currentDeepgramAuthKey,
+        setDeepgramAuthKey,
+        delDeepgramAuthKey,
+    } = useTranscription();
+
+    return (
+        <AuthKeyContainer
+            label={t("config_page.transcription.deepgram_api_key.label")}
+            desc={t("config_page.transcription.deepgram_api_key.desc")}
+            auth_key={currentDeepgramAuthKey}
+            setAuthKey={setDeepgramAuthKey}
+            delAuthKey={delDeepgramAuthKey}
+            save_button_label={t("config_page.transcription.deepgram_api_key.save")}
+            edit_button_label={t("config_page.transcription.deepgram_api_key.edit")}
+            auth_key_success_message={t("config_page.transcription.deepgram_api_key.auth_key_success")}
         />
     );
 };

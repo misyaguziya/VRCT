@@ -164,7 +164,13 @@ config_page:
             label: "최대 입력 절(phrases) 수"
             desc: "식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
         select_transcription_engine:
-            label:
+            label: "음성인식에 사용할 엔진"
+        deepgram_api_key:
+            label: "Deepgram API 키"
+            desc: "Deepgram API 키를 입력하세요."
+            save: "저장"
+            edit: "수정"
+            auth_key_success: "인증 키 업데이트가 완료되었습니다."
         whisper_weight_type:
             label: "Whisper 모델 타입"
             desc:

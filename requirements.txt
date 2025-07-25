@@ -3,7 +3,7 @@ faster-whisper==1.1.1
 ctranslate2==4.6.0
 transformers==4.40.2
 pillow == 10.0.0
-PyAudioWPatch == 0.2.12.6
+PyAudio == 0.2.14
 python-osc == 1.9.0
 deepl == 1.22.0
 flashtext ==2.7
@@ -16,6 +16,7 @@ psutil==5.9.8
 pykakasi==2.3.0
 pycaw==20240210
 websockets==15.0.1
+deepgram-sdk==3.5.1
 huggingface_hub==0.32.2
 hf-xet==1.1.2
 setuptools==80.8.0

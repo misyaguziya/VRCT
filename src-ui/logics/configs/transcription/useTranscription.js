@@ -14,6 +14,7 @@ import {
     useStore_SelectedWhisperWeightType,
 
     useStore_WhisperWeightTypeStatus,
+    useStore_DeepgramAuthKey,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { transformToIndexedArray } from "@utils";
@@ -353,5 +354,11 @@ export const useTranscription = () => {
         updateSelectedWhisperComputeDevice,
         setSelectedWhisperComputeDevice,
         setSuccessSelectedWhisperComputeDevice,
+
+        currentDeepgramAuthKey,
+        getDeepgramAuthKey,
+        setDeepgramAuthKey,
+        delDeepgramAuthKey,
+        setSuccessDeepgramAuthKey,
     };
 };

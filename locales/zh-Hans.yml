@@ -164,7 +164,13 @@ config_page:
             label: "语音接收时的最小单词数"
             desc: "转录字数的下限,只有超过这个数字,才会记录转录结果"
         select_transcription_engine:
-            label:
+            label: "用于语音识别的引擎"
+        deepgram_api_key:
+            label: "Deepgram API 密钥"
+            desc: "输入您的 Deepgram API 密钥。"
+            save: "保存"
+            edit: "编辑"
+            auth_key_success: "验证密钥更新完成。"
         whisper_weight_type:
             label: "选择某个Whisper模型"
             desc:

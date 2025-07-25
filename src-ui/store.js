@@ -223,6 +223,7 @@ export const { atomInstance: Atom_SelectedCTranslate2ComputeDevice, useHook: use
 export const { atomInstance: Atom_CTranslate2WeightTypeStatus, useHook: useStore_CTranslate2WeightTypeStatus } = createAtomWithHook(ctranslate2_weight_type_status, "CTranslate2WeightTypeStatus");
 
 // Transcription
+export const { atomInstance: Atom_DeepgramAuthKey, useHook: useStore_DeepgramAuthKey } = createAtomWithHook(null, "DeepgramAuthKey");
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
 export const { atomInstance: Atom_MicPhraseTimeout, useHook: useStore_MicPhraseTimeout } = createAtomWithHook(0, "MicPhraseTimeout");
 export const { atomInstance: Atom_MicMaxWords, useHook: useStore_MicMaxWords } = createAtomWithHook(0, "MicMaxWords");

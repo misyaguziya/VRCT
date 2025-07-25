@@ -172,6 +172,12 @@ config_page:
             desc: "文字起こしされた単語数の下限値で、この数値を超えた場合のみ結果をログに表示します。"
         select_transcription_engine:
             label: "音声認識で使用するエンジン"
+        deepgram_api_key:
+            label: "Deepgram APIキー"
+            desc: "DeepgramのAPIキーを入力してください。"
+            save: "保存"
+            edit: "編集"
+            auth_key_success: "認証キーの更新が完了しました。"
         whisper_weight_type:
             label: "Whisperモデルのタイプ"
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
