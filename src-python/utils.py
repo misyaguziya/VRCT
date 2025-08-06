@@ -10,6 +10,41 @@ import requests
 import ipaddress
 import socket
 
+def validateDictStructure(data: dict, structure: dict) -> bool:
+    """
+    辞書とその期待される構造（型）が完全に一致するかを判別する関数
+    Args:
+        data (dict): 検証対象の辞書
+        structure (dict): 期待される構造を定義した辞書値には型（str, int, bool等）や入れ子の辞書を指定
+
+    Returns:
+        bool: 構造が完全に一致する場合True、そうでなければFalse
+    """
+
+    if not isinstance(data, dict) or not isinstance(structure, dict):
+        return False
+
+    # キーの数と名前が完全に一致するかチェック
+    if set(data.keys()) != set(structure.keys()):
+        return False
+
+    # 各キーの値の型または構造をチェック
+    for key, expected_type_or_structure in structure.items():
+        if key not in data:
+            return False
+
+        value = data[key]
+        # 期待される型が辞書の場合（入れ子構造）
+        if isinstance(expected_type_or_structure, dict):
+            # 再帰的に検証（多重入れ子に対応）
+            if not validateDictStructure(value, expected_type_or_structure):
+                return False
+        # 期待される型が型オブジェクトの場合
+        else:
+            if not isinstance(value, expected_type_or_structure):
+                return False
+    return True
+
 def isConnectedNetwork(url="http://www.google.com", timeout=3) -> bool:
     try:
         response = requests.get(url, timeout=timeout)
