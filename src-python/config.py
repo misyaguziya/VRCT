@@ -139,7 +139,8 @@ class Config:
     def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
         return self._SEND_MESSAGE_BUTTON_TYPE_LIST
 
-     @property
+    # Read Write
+    @property
     @json_serializable('SEND_MESSAGE_FORMAT_PARTS')
     def SEND_MESSAGE_FORMAT_PARTS(self):
         return self._SEND_MESSAGE_FORMAT_PARTS
@@ -176,7 +177,6 @@ class Config:
                 self._RECEIVED_MESSAGE_FORMAT_PARTS = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-    # Read Write
     @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
