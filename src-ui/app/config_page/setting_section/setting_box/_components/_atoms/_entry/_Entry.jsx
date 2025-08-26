@@ -21,11 +21,11 @@ const _Entry = forwardRef((props, ref) => {
     });
 
     return (
-        <div className={styles.entry_container}>
-            <div
-                className={input_wrapper_class_names}
-                style={{width: props.width || "20rem" }}
-            >
+        <div
+            className={styles.entry_container}
+            style={{width: props.width || "100%" }}
+        >
+            <div className={input_wrapper_class_names}>
                 <input
                     ref={inputRef}
                     text={props.text ? props.text : "text"}

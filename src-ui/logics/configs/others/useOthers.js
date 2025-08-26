@@ -6,6 +6,9 @@ import {
     useStore_EnableSendMessageToVrc,
     useStore_EnableNotificationVrcSfx,
     useStore_EnableSendReceivedMessageToVrc,
+    useStore_MessageFormat_ExampleViewFilter,
+    useStore_SendMessageFormatParts,
+    useStore_ReceivedMessageFormatParts,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
@@ -29,6 +32,12 @@ export const useOthers = () => {
     // Speaker2Chatbox
     // Send Received Message To VRC
     const { currentEnableSendReceivedMessageToVrc, updateEnableSendReceivedMessageToVrc, pendingEnableSendReceivedMessageToVrc } = useStore_EnableSendReceivedMessageToVrc();
+    // Message Formats
+    const { currentMessageFormat_ExampleViewFilter, updateMessageFormat_ExampleViewFilter, pendingMessageFormat_ExampleViewFilter } = useStore_MessageFormat_ExampleViewFilter();
+    // Send
+    const { currentSendMessageFormatParts, updateSendMessageFormatParts, pendingSendMessageFormatParts } = useStore_SendMessageFormatParts();
+    // Received
+    const { currentReceivedMessageFormatParts, updateReceivedMessageFormatParts, pendingReceivedMessageFormatParts } = useStore_ReceivedMessageFormatParts();
 
     const { showNotification_SaveSuccess } = useNotificationStatus();
 
@@ -178,6 +187,53 @@ export const useOthers = () => {
         showNotification_SaveSuccess();
     };
 
+    // Message Formats
+    // Send
+    const getSendMessageFormatParts = () => {
+        pendingSendMessageFormatParts();
+        asyncStdoutToPython("/get/data/send_message_format_parts");
+    };
+
+    const setSendMessageFormatParts = (message_format_parts) => {
+        pendingSendMessageFormatParts();
+        asyncStdoutToPython("/set/data/send_message_format_parts", message_format_parts);
+    };
+
+    const setSuccessSendMessageFormatParts = (message_format_parts) => {
+        updateSendMessageFormatParts(message_format_parts);
+        showNotification_SaveSuccess();
+    };
+
+    // Received
+    const getReceivedMessageFormatParts = () => {
+        pendingReceivedMessageFormatParts();
+        asyncStdoutToPython("/get/data/received_message_format_parts");
+    };
+
+    const setReceivedMessageFormatParts = (message_format_parts) => {
+        pendingReceivedMessageFormatParts();
+        asyncStdoutToPython("/set/data/received_message_format_parts", message_format_parts);
+    };
+
+    const setSuccessReceivedMessageFormatParts = (message_format_parts) => {
+        updateReceivedMessageFormatParts(message_format_parts);
+        showNotification_SaveSuccess();
+    };
+
+
+    const toggleMessageFormat_ExampleViewFilter = (id) => {
+        pendingMessageFormat_ExampleViewFilter();
+        if (["send", "received"].includes(id) === false) return console.error(`id should be small case 'send' or 'received'. got id: ${id}`);
+
+        updateMessageFormat_ExampleViewFilter({
+            ...currentMessageFormat_ExampleViewFilter.data,
+            [id]: currentMessageFormat_ExampleViewFilter.data[id] === "Simplified"
+                ? "All"
+                : "Simplified"
+        });
+    };
+
+
     return {
         // Auto Clear Message Input Box
         currentEnableAutoClearMessageInputBox,
@@ -230,5 +286,22 @@ export const useOthers = () => {
         toggleEnableSendReceivedMessageToVrc,
         updateEnableSendReceivedMessageToVrc,
         setSuccessEnableSendReceivedMessageToVrc,
+
+        // Message Formats
+        currentMessageFormat_ExampleViewFilter,
+        toggleMessageFormat_ExampleViewFilter,
+        // Send
+        currentSendMessageFormatParts,
+        updateSendMessageFormatParts,
+        getSendMessageFormatParts,
+        setSendMessageFormatParts,
+        setSuccessSendMessageFormatParts,
+
+        // Received
+        currentReceivedMessageFormatParts,
+        updateReceivedMessageFormatParts,
+        getReceivedMessageFormatParts,
+        setReceivedMessageFormatParts,
+        setSuccessReceivedMessageFormatParts,
     };
 };
