@@ -3,7 +3,6 @@
 }
 
 .entry_wrapper {
-    width: 10rem;
     height: 100%;
     padding: 0.6rem;
     background-color: var(--dark_875_color);
@@ -19,6 +18,7 @@
     height: 100%;
     font-size: 1.4rem;
     resize: none;
+    font-family: Arial, sans-serif;
     &.is_disabled {
         color: var(--dark_500_color);
         pointer-events: none;

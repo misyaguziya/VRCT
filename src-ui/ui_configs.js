@@ -49,6 +49,33 @@ export const ui_configs = {
         tracker: "LeftHand",
     },
 
+    send_message_format_parts: {
+        message: {
+            prefix: "",
+            suffix: ""
+        },
+        separator: "\n",
+        translation: {
+            prefix: "",
+            separator: "\n",
+            suffix: ""
+        },
+        translation_first: false,
+    },
+    received_message_format_parts: {
+        message: {
+            prefix: "",
+            suffix: ""
+        },
+        separator: "\n",
+        translation: {
+            prefix: "",
+            separator: "\n",
+            suffix: ""
+        },
+        translation_first: false,
+    },
+
     selectable_ui_languages: [
         {id: "en", label: "English"},
         {id: "ja", label: "日本語"},

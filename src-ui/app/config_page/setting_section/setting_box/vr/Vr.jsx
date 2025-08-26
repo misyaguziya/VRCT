@@ -14,11 +14,11 @@ import {
     SectionLabelComponent,
 } from "../_components/";
 
+import { ResetButton } from "@common_components";
+
 import {
     useVr,
 } from "@logics_configs";
-
-import RedoSvg from "@images/redo.svg?react";
 
 import SquareSvg from "@images/square.svg?react";
 import TriangleSvg from "@images/triangle.svg?react";
@@ -528,13 +528,6 @@ const CommonSettingsContainer = () => {
     );
 };
 
-const ResetButton = ({onClickFunction}) => {
-    return (
-        <button className={styles.slider_reset_button} onClick={onClickFunction}>
-            <RedoSvg className={styles.slider_reset_svg}/>
-        </button>
-    );
-};
 
 const SendSampleTextToggleButton = () => {
     const { t } = useI18n();

@@ -211,6 +211,7 @@ config_page:
 
     others:
         section_label_sounds: "Sounds"
+        section_label_message_formats: "Message Formats"
         auto_clear_the_message_box:
             label: "Auto Clear Message box"
         send_only_translated_messages:
@@ -230,6 +231,26 @@ config_page:
         send_received_message_to_vrc:
             label: "Send Received Message To VRChat"
             desc: "Send the message you received from the speaker's voice to VRChat's chatbox."
+
+        message_format_common:
+            example_view:
+                title: "Preview"
+                original_translated: "Original + Translated"
+                original_translated_multi: "Original + Translated (Multi-Translation)"
+                translated_only_multi: "Translated Only (Multi-Translation)"
+                translated_only: "Translated Only"
+                original_only: "Original Only"
+            settings:
+                title: "Settings"
+                original: "Original"
+                translated: "Translated"
+                for_multi_translation: For Multi-Translation
+        send_message_format:
+            label: "Message Format (Send)"
+            desc: "You can change the decoration of the message you want to send."
+        received_message_format:
+            label: "Message Format (Speaker2Chatbox)"
+            desc: "It will be used in Speaker2Chatbox for now."
 
     hotkeys:
         toggle_vrct_visibility:
