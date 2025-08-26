@@ -1462,7 +1462,7 @@ class Controller:
 
     @staticmethod
     def setSendMessageFormatParts(data, *args, **kwargs) -> dict:
-        config.SEND_MESSAGE_FORMAT_PARTS = str(data)
+        config.SEND_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
@@ -1471,7 +1471,7 @@ class Controller:
 
     @staticmethod
     def setReceivedMessageFormatParts(data, *args, **kwargs) -> dict:
-        config.RECEIVED_MESSAGE_FORMAT_PARTS = str(data)
+        config.RECEIVED_MESSAGE_FORMAT_PARTS = dict(data)
         return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
 
     @staticmethod
