@@ -275,6 +275,12 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "updateEnableNotificationVrcSfx" },
     { endpoint: "/set/enable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
     { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
+    { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
+
+    { endpoint: "/get/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateSendMessageFormatParts" },
+    { endpoint: "/set/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessSendMessageFormatParts" },
+    { endpoint: "/get/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateReceivedMessageFormatParts" },
+    { endpoint: "/set/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessReceivedMessageFormatParts" },
 
     // Hotkeys
     { endpoint: "/get/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "updateHotkeys" },

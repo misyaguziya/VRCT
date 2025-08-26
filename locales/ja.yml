@@ -211,6 +211,7 @@ config_page:
 
     others:
         section_label_sounds: "サウンド"
+        section_label_message_formats: "メッセージフォーマット"
         auto_clear_the_message_box:
             label: "送信後はメッセージ入力欄を空にする"
         send_only_translated_messages:
@@ -230,6 +231,25 @@ config_page:
         send_received_message_to_vrc:
             label: "受信したメッセージをVRChatに送信する"
             desc: "スピーカーから聞き取り、文字起こしされたメッセージをVRChatに送信します。"
+        message_format_common:
+            example_view:
+                title: "プレビュー"
+                original_translated: "原文 + 翻訳"
+                original_translated_multi: "原文 + 翻訳（多言語）"
+                translated_only_multi: "翻訳のみ（多言語）"
+                translated_only: "翻訳のみ"
+                original_only: "原文のみ"
+            settings:
+                title: "設定"
+                original: "原文"
+                translated: "翻訳"
+                for_multi_translation: 多言語翻訳用
+        send_message_format:
+            label: メッセージフォーマット（送信）
+            desc: VRChatで相手に実際に見えるフォーマットを変更できます。
+        received_message_format:
+            label: メッセージフォーマット（Speaker2Chatbox）
+            desc: 今のところ、Speaker2Chatboxで送信した時の表示に使われます。
 
     hotkeys:
         toggle_vrct_visibility:

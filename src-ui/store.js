@@ -274,6 +274,37 @@ export const { atomInstance: Atom_EnableVrcMicMuteSync, useHook: useStore_Enable
 export const { atomInstance: Atom_EnableSendMessageToVrc, useHook: useStore_EnableSendMessageToVrc } = createAtomWithHook(true, "EnableSendMessageToVrc");
 export const { atomInstance: Atom_EnableSendReceivedMessageToVrc, useHook: useStore_EnableSendReceivedMessageToVrc } = createAtomWithHook(false, "EnableSendReceivedMessageToVrc");
 export const { atomInstance: Atom_EnableNotificationVrcSfx, useHook: useStore_EnableNotificationVrcSfx } = createAtomWithHook(true, "EnableNotificationVrcSfx");
+export const { atomInstance: Atom_MessageFormat_ExampleViewFilter, useHook: useStore_MessageFormat_ExampleViewFilter } = createAtomWithHook({
+    send: "Simplified",
+    received: "Simplified",
+}, "MessageFormat_ExampleViewFilter");
+export const { atomInstance: Atom_SendMessageFormatParts, useHook: useStore_SendMessageFormatParts } = createAtomWithHook({
+    message: {
+        prefix: "",
+        suffix: ""
+    },
+    separator: "\n",
+    translation: {
+        prefix: "",
+        separator: "\n",
+        suffix: ""
+    },
+    translation_first: false,
+}, "SendMessageFormatParts");
+export const { atomInstance: Atom_ReceivedMessageFormatParts, useHook: useStore_ReceivedMessageFormatParts } = createAtomWithHook({
+    message: {
+        prefix: "",
+        suffix: ""
+    },
+    separator: "\n",
+    translation: {
+        prefix: "",
+        separator: "\n",
+        suffix: ""
+    },
+    translation_first: false,
+}, "ReceivedMessageFormatParts");
+
 
 // Hotkeys
 export const { atomInstance: Atom_Hotkeys, useHook: useStore_Hotkeys } = createAtomWithHook({
