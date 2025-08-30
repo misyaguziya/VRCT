@@ -231,7 +231,6 @@ config_page:
         send_received_message_to_vrc:
             label: "Send Received Message To VRChat"
             desc: "Send the message you received from the speaker's voice to VRChat's chatbox."
-
         message_format_common:
             example_view:
                 title: "Preview"

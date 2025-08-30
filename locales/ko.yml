@@ -24,6 +24,9 @@ common_error:
     invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
 
+common_warning:
+    unable_to_use_osc_query:
+
 main_page:
     translation: "번역"
     transcription_send: "음성인식 (마이크)"
@@ -79,6 +82,7 @@ config_page:
         transcription: "음성인식"
         others: "기타"
         hotkeys:
+        plugins:
         advanced_settings: "고급 설정"
 
     device:
@@ -115,6 +119,9 @@ config_page:
             hide: "숨김 (Enter 키를 사용하여 전송)"
             show: "표시"
             show_and_disable_enter_key: "표시 (Enter 키 전송 비활성화)"
+        show_resend_button:
+            label:
+            desc:
         font_family:
             label: "폰트"
         ui_language:
@@ -204,6 +211,7 @@ config_page:
 
     others:
         section_label_sounds:
+        section_label_message_formats:
         auto_clear_the_message_box:
             label: "챗박스 자동 삭제"
         send_only_translated_messages:
@@ -223,6 +231,25 @@ config_page:
         send_received_message_to_vrc:
             label:
             desc:
+        message_format_common:
+            example_view:
+                title:
+                original_translated:
+                original_translated_multi:
+                translated_only_multi:
+                translated_only:
+                original_only:
+            settings:
+                title:
+                original:
+                translated:
+                for_multi_translation:
+        send_message_format:
+            label:
+            desc:
+        received_message_format:
+            label:
+            desc:
 
     hotkeys:
         toggle_vrct_visibility:
@@ -234,6 +261,18 @@ config_page:
         toggle_transcription_receive:
             label:
 
+    plugins:
+        downloaded_version:
+        latest_version:
+        available_after_updating:
+        unavailable_downloaded:
+        no_latest_info:
+        using_latest_version:
+        available_latest_version:
+        unavailable_latest_version:
+        available_in_latest_vrct_version:
+        unavailable_not_downloaded:
+
     advanced_settings:
         osc_ip_address:
             label: "OSC IP 주소"
@@ -243,3 +282,27 @@ config_page:
             label: "설정 파일 열기"
         switch_compute_device:
             label:
+        enable_websocket:
+            label:
+        websocket_host:
+            label:
+        websocket_port:
+            label:
+
+    notifications:
+        save_success:
+
+plugin_notifications:
+    downloading:
+    downloaded_success:
+    downloaded_error:
+
+    updating:
+    updated_success:
+    updated_error:
+
+    disabled_out_of_support:
+    disabled_due_to_an_error:
+
+    is_enabled:
+    is_disabled:
