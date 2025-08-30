@@ -244,7 +244,7 @@ config_page:
                 title: "Settings"
                 original: "Original"
                 translated: "Translated"
-                for_multi_translation: For Multi-Translation
+                for_multi_translation: "For Multi-Translation"
         send_message_format:
             label: "Message Format (Send)"
             desc: "You can change the decoration of the message you want to send."
@@ -294,16 +294,16 @@ config_page:
         save_success: "Settings have been saved."
 
 plugin_notifications:
-    downloading: Downloading the plugin.
-    downloaded_success: Downloaded successfully.
-    downloaded_error: Download failed.
+    downloading: "Downloading the plugin."
+    downloaded_success: "Downloaded successfully."
+    downloaded_error: "Download failed."
 
-    updating: Updating the plugin.
-    updated_success: Updated successfully.
-    updated_error: Update failed.
+    updating: "Updating the plugin."
+    updated_success: "Updated successfully."
+    updated_error: "Update failed."
 
-    disabled_out_of_support: The plugin has been disabled. It's not supported on this VRCT version.
+    disabled_out_of_support: "The plugin has been disabled. It's not supported on this VRCT version."
     disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
 
-    is_enabled: The plugin has enabled.
-    is_disabled: The plugin has disabled.
+    is_enabled: "The plugin has enabled."
+    is_disabled: "The plugin has disabled."
