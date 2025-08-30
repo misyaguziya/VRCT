@@ -24,6 +24,9 @@ common_error:
     invalid_value_speaker_phrase_timeout: "转录间隔时间大于0秒且不能小于「{{speaker_record_timeout_label}}」"
     invalid_value_speaker_max_phrase: "数值应为 0 以上"
 
+common_warning:
+    unable_to_use_osc_query:
+
 main_page:
     translation: "翻译"
     transcription_send: "你的语音转文字"
@@ -79,6 +82,7 @@ config_page:
         transcription: "转录"
         others: "其他"
         hotkeys:
+        plugins:
         advanced_settings: "高级设置"
 
     device:
@@ -115,6 +119,9 @@ config_page:
             hide: "隐藏 (可使用回车发送信息)"
             show: "显示"
             show_and_disable_enter_key: "显示,并且停用‘回车发送信息’"
+        show_resend_button:
+            label:
+            desc:
         font_family:
             label: "字体"
         ui_language:
@@ -204,6 +211,7 @@ config_page:
 
     others:
         section_label_sounds:
+        section_label_message_formats:
         auto_clear_the_message_box:
             label: "发言后自动清空chatbox"
         send_only_translated_messages:
@@ -223,6 +231,25 @@ config_page:
         send_received_message_to_vrc:
             label:
             desc:
+        message_format_common:
+            example_view:
+                title:
+                original_translated:
+                original_translated_multi:
+                translated_only_multi:
+                translated_only:
+                original_only:
+            settings:
+                title:
+                original:
+                translated:
+                for_multi_translation:
+        send_message_format:
+            label:
+            desc:
+        received_message_format:
+            label:
+            desc:
 
     hotkeys:
         toggle_vrct_visibility:
@@ -234,6 +261,18 @@ config_page:
         toggle_transcription_receive:
             label:
 
+    plugins:
+        downloaded_version:
+        latest_version:
+        available_after_updating:
+        unavailable_downloaded:
+        no_latest_info:
+        using_latest_version:
+        available_latest_version:
+        unavailable_latest_version:
+        available_in_latest_vrct_version:
+        unavailable_not_downloaded:
+
     advanced_settings:
         osc_ip_address:
             label: "OSC IP 地址"
@@ -243,3 +282,27 @@ config_page:
             label: "打开设置文件"
         switch_compute_device:
             label:
+        enable_websocket:
+            label:
+        websocket_host:
+            label:
+        websocket_port:
+            label:
+
+    notifications:
+        save_success:
+
+plugin_notifications:
+    downloading:
+    downloaded_success:
+    downloaded_error:
+
+    updating:
+    updated_success:
+    updated_error:
+
+    disabled_out_of_support:
+    disabled_due_to_an_error:
+
+    is_enabled:
+    is_disabled:
