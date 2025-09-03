@@ -42,7 +42,7 @@ main_page:
     translator_label_default: "기본값"
 
     translator_selector:
-        is_selected_same_language: "「{{your_language}}」와 「{{target_language}}」에 동일한 언어가 선택되어 있으므로, 「{{ctranslate2}}」만 사용할 수 있습니다."
+        is_selected_same_language: "'{{your_language}}'와 '{{target_language}}'에 동일한 언어가 선택되어 있으므로, 「{{ctranslate2}}」만 사용할 수 있습니다."
 
     message_log:
         all: "전체"
@@ -174,7 +174,7 @@ config_page:
             label: "음성 인식에 사용할 엔진"
         whisper_weight_type:
             label: "Whisper 모델 타입"
-            desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. ※ 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
+            desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
             model_template: "{{model_name}} 모델 ({{capacity}})"
             recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
         whisper_compute_device:
@@ -221,7 +221,7 @@ config_page:
             desc: "logs 폴더에 텍스트 파일로 로그가 저장됩니다."
         vrc_mic_mute_sync:
             label: "VRC 마이크 음소거 동기화"
-            desc: "VRChat의 마이크가 음소거 상태인 동안에는 메시지를 VRChat에 전송하지 않습니다. ※ 약간의 지연이 발생할 수 있습니다. 또한 눌러서 말하기(Push-To-Talk) 기능은 지원되지 않습니다."
+            desc: "VRChat의 마이크가 음소거 상태인 동안에는 메시지를 VRChat에 전송하지 않습니다. * 약간의 지연이 발생할 수 있습니다. 또한 눌러서 말하기(Push-To-Talk) 기능은 지원되지 않습니다."
         send_message_to_vrc:
             label: "VRChat에 메시지 전송"
             desc: "VRChat에 메시지를 보내지 않고 사용할 수 있는 방법이 있지만 지원되지 않습니다. VRChat에 메시지를 보내려면 이 기능을 활성화하세요."
@@ -255,11 +255,11 @@ config_page:
         toggle_vrct_visibility:
             label: "VRCT 최소화/활성화 전환"
         toggle_translation:
-            label: "「{{translation}}」 켜기/끄기 전환"
+            label: "'{{translation}}' 켜기/끄기 전환"
         toggle_transcription_send:
-            label: "「{{transcription_send}}」 켜기/끄기 전환"
+            label: "'{{transcription_send}}' 켜기/끄기 전환"
         toggle_transcription_receive:
-            label: "「{{transcription_receive}}」 켜기/끄기 전환"
+            label: "'{{transcription_receive}}' 켜기/끄기 전환"
 
     plugins:
         downloaded_version: "다운로드된 버전: {{downloaded_version}}"
