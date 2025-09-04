@@ -194,7 +194,7 @@ config_page:
         y_rotation: "Y축 회전"
         z_rotation: "Z축 회전"
         sample_text_button:
-            start: "샘플 텍스트를 오버레이에 전송"
+            start: "샘플 텍스트를\n오버레이에 전송"
             stop: "전송 중지"
             sample_text: "샘플 텍스트"
         opacity: "투명도"
@@ -242,7 +242,7 @@ config_page:
             settings:
                 title: "설정"
                 original: "원문"
-                translated: "\n번역문"
+                translated: "번역문"
                 for_multi_translation: "다국어 번역용"
         send_message_format:
             label: "메시지 형식 (송신)"
