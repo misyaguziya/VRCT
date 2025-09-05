@@ -224,6 +224,16 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeDevice" },
     { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeDevice" },
 
+    // Transcription (Advanced)
+    { endpoint: "/get/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateMicAvgLogprob" },
+    { endpoint: "/set/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicAvgLogprob" },
+    { endpoint: "/get/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateMicNoSpeechProb" },
+    { endpoint: "/set/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicNoSpeechProb" },
+    { endpoint: "/get/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerAvgLogprob" },
+    { endpoint: "/set/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerAvgLogprob" },
+    { endpoint: "/get/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerNoSpeechProb" },
+    { endpoint: "/set/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerNoSpeechProb" },
+
     // VR
     { endpoint: "/get/data/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "updateIsEnabledOverlaySmallLog" },
     { endpoint: "/set/enable/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "setSuccessIsEnabledOverlaySmallLog" },
