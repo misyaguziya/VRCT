@@ -238,6 +238,11 @@ export const { atomInstance: Atom_SelectedTranscriptionEngine, useHook: useStore
 export const { atomInstance: Atom_SelectableWhisperComputeDeviceList, useHook: useStore_SelectableWhisperComputeDeviceList } = createAtomWithHook({}, "SelectableWhisperComputeDeviceList");
 export const { atomInstance: Atom_SelectedWhisperComputeDevice, useHook: useStore_SelectedWhisperComputeDevice } = createAtomWithHook("", "SelectedWhisperComputeDevice");
 
+export const { atomInstance: Atom_MicAvgLogprob, useHook: useStore_MicAvgLogprob } = createAtomWithHook(-0.8, "MicAvgLogprob");
+export const { atomInstance: Atom_MicNoSpeechProb, useHook: useStore_MicNoSpeechProb } = createAtomWithHook(0.6, "MicNoSpeechProb");
+export const { atomInstance: Atom_SpeakerAvgLogprob, useHook: useStore_SpeakerAvgLogprob } = createAtomWithHook(-0.8, "SpeakerAvgLogprob");
+export const { atomInstance: Atom_SpeakerNoSpeechProb, useHook: useStore_SpeakerNoSpeechProb } = createAtomWithHook(0.6, "SpeakerNoSpeechProb");
+
 
 // VR
 export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_OverlaySmallLogSettings } = createAtomWithHook({
