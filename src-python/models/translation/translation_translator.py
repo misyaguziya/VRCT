@@ -6,8 +6,15 @@ try:
 except Exception:
     ENABLE_TRANSLATORS = False
 
-from .translation_languages import translation_lang
-from .translation_utils import ctranslate2_weights
+try:
+    from .translation_languages import translation_lang
+    from .translation_utils import ctranslate2_weights
+except Exception:
+    import sys
+    print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_languages import translation_lang
+    from translation_utils import ctranslate2_weights
 
 import ctranslate2
 import transformers
@@ -63,13 +70,19 @@ class Translator():
     def isLoadedCTranslate2Model(self):
         return self.is_loaded_ctranslate2_model
 
-    def translateCTranslate2(self, message, source_language, target_language):
+    def translateCTranslate2(self, message, source_language, target_language, weight_type):
         result = False
         if self.is_loaded_ctranslate2_model is True:
             try:
                 self.ctranslate2_tokenizer.src_lang = source_language
                 source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
-                target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                match weight_type:
+                    case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
+                        target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                    case "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
+                        target_prefix = [target_language]
+                    case _:
+                        return False
                 results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
                 target = results[0].hypotheses[0][1:]
                 result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
@@ -78,7 +91,7 @@ class Translator():
         return result
 
     @staticmethod
-    def getLanguageCode(translator_name, target_country, source_language, target_language):
+    def getLanguageCode(translator_name, weight_type, target_country, source_language, target_language):
         match translator_name:
             case "DeepL_API":
                 if target_language == "English":
@@ -91,16 +104,18 @@ class Translator():
                         target_language = "Portuguese European"
                     else:
                         target_language = "Portuguese Brazilian"
+            case "CTranslate2":
+                translator_name = weight_type
             case _:
                 pass
         source_language=translation_lang[translator_name]["source"][source_language]
         target_language=translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
-    def translate(self, translator_name, source_language, target_language, target_country, message):
+    def translate(self, translator_name, weight_type, source_language, target_language, target_country, message):
         try:
             result = ""
-            source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
+            source_language, target_language = self.getLanguageCode(translator_name, weight_type, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL":
                     if self.is_enable_translators is True:
@@ -149,8 +164,23 @@ class Translator():
                         message=message,
                         source_language=source_language,
                         target_language=target_language,
+                        weight_type=weight_type,
                         )
         except Exception:
             errorLogging()
             result = False
         return result
+    
+if __name__ == "__main__":
+    translator = Translator()
+    # test CTranslate2 model nllb-200-distilled-1.3B-ct2-int8
+    translator.changeCTranslate2Model(path=".", model_type="nllb-200-distilled-1.3B-ct2-int8", device="cpu", device_index=0)
+    result = translator.translate(
+        translator_name="CTranslate2",
+        weight_type="nllb-200-distilled-1.3B-ct2-int8",
+        source_language="English",
+        target_language="Japanese",
+        target_country="Japan",
+        message="Hello, world!"
+        )
+    print(result)

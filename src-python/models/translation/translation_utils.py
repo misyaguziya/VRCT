@@ -5,50 +5,50 @@ import transformers
 import ctranslate2
 from huggingface_hub import hf_hub_url, list_repo_files
 from requests import get as requests_get
+
 try:
-    from utils import errorLogging
+    from utils import errorLogging, getBestComputeType
 except Exception:
-    import traceback
-    def errorLogging():
-        print(traceback.format_exc())
+    import sys
+    print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from utils import errorLogging, getBestComputeType
 
 ctranslate2_weights = {
-    "small": {
-        # "hf_repo": "jncraton/m2m100_418M-ct2-int8",
-        # "directory_name": "m2m100_418M-ct2-int8",
-        # "tokenizer": "facebook/m2m100_418M",
-        "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
-        "directory_name": "nllb-200-distilled-1.3B-ct2-int8",
-        "tokenizer": "facebook/nllb-200-distilled-1.3B",
+    "m2m100_418M-ct2-int8": {
+        "hf_repo": "jncraton/m2m100_418M-ct2-int8",
+        "directory_name": "m2m100_418M-ct2-int8",
+        "tokenizer": "facebook/m2m100_418M",
     },
-    "large": {
+    "m2m100_1.2B-ct2-int8": {
         "hf_repo": "jncraton/m2m100_1.2B-ct2-int8",
         "directory_name": "m2m100_1.2B-ct2-int8",
         "tokenizer": "facebook/m2m100_1.2B",
+    },
+    "nllb-200-distilled-1.3B-ct2-int8": {
+        "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
+        "directory_name": "nllb-200-distilled-1.3B-ct2-int8",
+        "tokenizer": "facebook/nllb-200-distilled-1.3B",
     },
     "nllb-200-3.3B-ct2-int8": {
         "hf_repo": "OpenNMT/nllb-200-3.3B-ct2-int8",
         "directory_name": "nllb-200-3.3B-ct2-int8",
         "tokenizer": "facebook/nllb-200-3.3B",
     },
-    "nllb-200-distilled-1.3B": {
-        "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
-        "directory_name": "nllb-200-distilled-1.3B-ct2-int8",
-        "tokenizer": "facebook/nllb-200-distilled-1.3B",
-    },
 }
 
-def checkCTranslate2Weight(root: str, weight_type: str = "small"):
+def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     path = os_path.join(root, "weights", "ctranslate2", weight_directory_name)
     try:
         # モデルロード可能かどうかで判定
-        ctranslate2.Translator(path)
+        compute_type = getBestComputeType("cpu", 0)
+        ctranslate2.Translator(path, compute_type=compute_type)
         return True
     except Exception:
         return False
 
-def downloadCTranslate2Weight(root: str, weight_type: str = "small", callback: Callable = None, end_callback: Callable = None):
+def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None):
     hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
     files = list_repo_files(repo_id=hf_repo)
     path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
@@ -79,7 +79,7 @@ def downloadCTranslate2Weight(root: str, weight_type: str = "small", callback: C
     if end_callback is not None:
         end_callback()
 
-def downloadCTranslate2Tokenizer(path: str, weight_type: str = "small"):
+def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
     directory_name = ctranslate2_weights[weight_type]["directory_name"]
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
@@ -106,4 +106,9 @@ if __name__ == "__main__":
     #     result = checkCTranslate2Weight(root, weight_type)
     #     print(f"Model loadable: {result}")
     #     break
-    downloadCTranslate2Tokenizer(root, "small")
+    # downloadCTranslate2Tokenizer(root, "m2m100_418M-ct2-int8")
+
+    # model download test
+    downloadCTranslate2Weight(root, "nllb-200-distilled-1.3B", callback=progress_callback, end_callback=end_callback)
+    result = checkCTranslate2Weight(root, "nllb-200-distilled-1.3B")
+    print(f"Model loadable: {result}")

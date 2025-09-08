@@ -190,6 +190,7 @@ class Model:
         success_flag = False
         translation = self.translator.translate(
                         translator_name=translator_name,
+                        weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                         source_language=source_language,
                         target_language=target_language,
                         target_country=target_country,
@@ -203,6 +204,7 @@ class Model:
             while True:
                 translation = self.translator.translate(
                                     translator_name="CTranslate2",
+                                    weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                                     source_language=source_language,
                                     target_language=target_language,
                                     target_country=target_country,

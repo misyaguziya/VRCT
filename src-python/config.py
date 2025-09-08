@@ -1188,7 +1188,7 @@ class Config:
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
-        self._CTRANSLATE2_WEIGHT_TYPE = "small"
+        self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
