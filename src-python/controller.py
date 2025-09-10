@@ -1431,6 +1431,50 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
+    def getPlamoAuthKey(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
+
+    def setPlamoAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Plamo Auth Key", data)
+        translator_name = "Plamo_API"
+        try:
+            data = str(data)
+            if len(data) == 32:
+                key = data
+                auth_keys = config.AUTH_KEYS
+                auth_keys[translator_name] = key
+                config.AUTH_KEYS = auth_keys
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                self.updateTranslationEngineAndEngineList()
+                response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Plamo auth key length is not correct",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delPlamoAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "Plamo_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
@@ -2251,6 +2295,17 @@ class Controller:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                case "Plamo_API":
+                    printLog("Start check Plamo API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                         else:
                             # error update Auth key

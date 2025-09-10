@@ -9,12 +9,14 @@ except Exception:
 try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
+    from .translation_plamo import PlamoClient
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import ctranslate2_weights
+    from translation_plamo import PlamoClient
 
 import ctranslate2
 import transformers
@@ -27,6 +29,7 @@ warnings.filterwarnings("ignore")
 class Translator():
     def __init__(self):
         self.deepl_client = None
+        self.plamo_client = None
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
         self.is_loaded_ctranslate2_model = False
@@ -36,10 +39,21 @@ class Translator():
         result = True
         try:
             self.deepl_client = DeepLClient(authkey)
-            self.deepl_client.translate_text(" ", target_lang="EN-US")
+            self.deepl_client.translate_text("Hello World", target_lang="EN-US")
         except Exception:
             errorLogging()
             self.deepl_client = None
+            result = False
+        return result
+
+    def authenticationPlamoAuthKey(self, authkey):
+        result = True
+        try:
+            self.plamo_client = PlamoClient(authkey)
+            self.plamo_client.translate_text("Hello World", target_lang="English")
+        except Exception:
+            errorLogging()
+            self.plamo_client = None
             result = False
         return result
 
@@ -135,6 +149,15 @@ class Translator():
                                 source_lang=source_language,
                                 target_lang=target_language,
                                 ).text
+                case "Plamo_API":
+                    if self.plamo_client is None:
+                        result = False
+                    else:
+                        result = self.plamo_client.translate_text(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                            )
                 case "Google":
                     if self.is_enable_translators is True:
                         result = other_web_Translator(
@@ -170,7 +193,7 @@ class Translator():
             errorLogging()
             result = False
         return result
-    
+
 if __name__ == "__main__":
     translator = Translator()
     # test CTranslate2 model nllb-200-distilled-1.3B-ct2-int8

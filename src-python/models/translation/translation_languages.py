@@ -604,3 +604,41 @@ translation_lang["nllb-200-3.3B-ct2-int8"] = {
     "source":dict_nllb_languages,
     "target":dict_nllb_languages,
 }
+
+dict_plamo_languages = {
+    "English": "English",
+    "Japanese": "Japanese",
+    "Korean": "Korean",
+    "French": "French",
+    "German": "German",
+    "Spanish": "Spanish",
+    "Portuguese": "Portuguese",
+    "Russian": "Russian",
+    "Italian": "Italian",
+    "Dutch": "Dutch",
+    "Polish": "Polish",
+    "Turkish": "Turkish",
+    "Arabic": "Arabic",
+    "Hindi": "Hindi",
+    "Thai": "Thai",
+    "Vietnamese": "Vietnamese",
+    "Indonesian": "Indonesian",
+    "Malay": "Malay",
+    "Filipino": "Filipino",
+    "Swedish": "Swedish",
+    "Finnish": "Finnish",
+    "Danish": "Danish",
+    "Norwegian": "Norwegian",
+    "Romanian": "Romanian",
+    "Czech": "Czech",
+    "Hungarian": "Hungarian",
+    "Greek": "Greek",
+    "Hebrew": "Hebrew",
+    "Simplified Chinese":"Simplified Chinese",
+    "Traditional Chinese":"Traditional Chinese"
+}
+
+translation_lang["Plamo_API"] = {
+    "source":dict_plamo_languages,
+    "target":dict_plamo_languages,
+}
