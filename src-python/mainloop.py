@@ -168,6 +168,10 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
+    "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
+    "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
+    "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},
+
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable/convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
