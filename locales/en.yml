@@ -25,7 +25,7 @@ common_error:
     invalid_value_speaker_max_phrase: "You can set a number equal to or greater than 0."
 
 common_warning:
-    unable_to_use_osc_query: "The functions below have been automatically disabled because receiving OSC data is not possible due to OSC IP Address settings."
+    unable_to_use_osc_query: "The following functions have been automatically disabled due to the OSC IP Address settings preventing OSC data from being received."
 
 main_page:
     translation: "Translation"
@@ -231,26 +231,25 @@ config_page:
         send_received_message_to_vrc:
             label: "Send Received Message To VRChat"
             desc: "Send the message you received from the speaker's voice to VRChat's chatbox."
-
         message_format_common:
             example_view:
                 title: "Preview"
-                original_translated: "Original + Translated"
-                original_translated_multi: "Original + Translated (Multi-Translation)"
-                translated_only_multi: "Translated Only (Multi-Translation)"
-                translated_only: "Translated Only"
+                original_translated: "Original + Translation"
+                original_translated_multi: "Original + Translation (Multi-language)"
+                translated_only_multi: "Translation Only (Multi-language)"
+                translated_only: "Translation Only"
                 original_only: "Original Only"
             settings:
                 title: "Settings"
                 original: "Original"
-                translated: "Translated"
-                for_multi_translation: For Multi-Translation
+                translated: "Translation"
+                for_multi_translation: "For Multi-Translation"
         send_message_format:
             label: "Message Format (Send)"
-            desc: "You can change the decoration of the message you want to send."
+            desc: "This allows you to change the format of the message that others see in VRChat."
         received_message_format:
             label: "Message Format (Speaker2Chatbox)"
-            desc: "It will be used in Speaker2Chatbox for now."
+            desc: "Currently, it is used in Speaker2Chatbox."
 
     hotkeys:
         toggle_vrct_visibility:
@@ -266,7 +265,7 @@ config_page:
         downloaded_version: "Downloaded version: {{downloaded_version}}"
         latest_version: "Latest version: {{latest_version}}"
         available_after_updating: "Available after updating to the latest version"
-        unavailable_downloaded: "Currently unavailable due to incompatibility with the VRCT version in use"
+        unavailable_downloaded: "Currently Unavailable - Incompatible with the VRCT version in use"
         no_latest_info: "Unable to retrieve the latest information"
         using_latest_version: "Using the latest version"
         available_latest_version: "Latest version available"
@@ -294,16 +293,16 @@ config_page:
         save_success: "Settings have been saved."
 
 plugin_notifications:
-    downloading: Downloading the plugin.
-    downloaded_success: Downloaded successfully.
-    downloaded_error: Download failed.
+    downloading: "Downloading the plugin."
+    downloaded_success: "Downloaded successfully."
+    downloaded_error: "Download failed."
 
-    updating: Updating the plugin.
-    updated_success: Updated successfully.
-    updated_error: Update failed.
+    updating: "Updating the plugin."
+    updated_success: "Updated successfully."
+    updated_error: "Update failed."
 
-    disabled_out_of_support: The plugin has been disabled. It's not supported on this VRCT version.
+    disabled_out_of_support: "The plugin has been disabled. It's not supported on this VRCT version."
     disabled_due_to_an_error: "An error was detected while running the plugin. Please report this to the plugin developer."
 
-    is_enabled: The plugin has enabled.
-    is_disabled: The plugin has disabled.
+    is_enabled: "The plugin enabled."
+    is_disabled: "The plugin disabled."
