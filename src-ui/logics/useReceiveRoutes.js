@@ -194,7 +194,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "updateMicMaxWords" },
     { endpoint: "/set/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicMaxWords" },
 
-    { endpoint: "/get/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "updateMicWordFilterList" },
+    { endpoint: "/get/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "getSuccessMicWordFilterList" },
     { endpoint: "/set/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicWordFilterList" },
 
     // Transcription (Speaker)
@@ -223,6 +223,16 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableWhisperComputeDeviceList_FromBackend" },
     { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeDevice" },
     { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeDevice" },
+
+    // Transcription (Advanced)
+    { endpoint: "/get/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateMicAvgLogprob" },
+    { endpoint: "/set/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicAvgLogprob" },
+    { endpoint: "/get/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateMicNoSpeechProb" },
+    { endpoint: "/set/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicNoSpeechProb" },
+    { endpoint: "/get/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerAvgLogprob" },
+    { endpoint: "/set/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerAvgLogprob" },
+    { endpoint: "/get/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerNoSpeechProb" },
+    { endpoint: "/set/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerNoSpeechProb" },
 
     // VR
     { endpoint: "/get/data/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "updateIsEnabledOverlaySmallLog" },
@@ -259,7 +269,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/set/enable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
     { endpoint: "/set/disable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
 
-    { endpoint: "/get/data/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "updateEnableVrcMicMuteSync_FromBackend" },
+    { endpoint: "/get/data/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "getSuccessEnableVrcMicMuteSync" },
     { endpoint: "/set/enable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
     { endpoint: "/set/disable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
 
@@ -275,6 +285,12 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "updateEnableNotificationVrcSfx" },
     { endpoint: "/set/enable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
     { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
+    { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
+
+    { endpoint: "/get/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateSendMessageFormatParts" },
+    { endpoint: "/set/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessSendMessageFormatParts" },
+    { endpoint: "/get/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateReceivedMessageFormatParts" },
+    { endpoint: "/set/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessReceivedMessageFormatParts" },
 
     // Hotkeys
     { endpoint: "/get/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "updateHotkeys" },
@@ -334,6 +350,9 @@ export const useReceiveRoutes = () => {
         ROUTE_META_LIST.map(({ endpoint, hook_name, method_name }) => {
             const result_obj = hook_results[hook_name] || {};
             const fn = result_obj[method_name];
+            if (fn === undefined && method_name !== null) {
+                console.error("Method not found.", {endpoint, hook_name, method_name, result_obj, fn});
+            }
             return [endpoint, typeof fn === "function" ? fn : noop];
         })
     );

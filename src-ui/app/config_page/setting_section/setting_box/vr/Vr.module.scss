@@ -301,34 +301,6 @@
     @include variable-button-wrapper(bottom, 50%, right, -60%, -45deg);
 }
 
-
-
-.slider_reset_button {
-    background-color: var(--dark_875_color);
-    padding: 0.6rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border-radius: 0.4rem;
-    flex-shrink: 0;
-    &:hover {
-        background-color: var(--dark_825_color);
-        & .slider_reset_svg {
-            color: var(--dark_200_color);
-        }
-    }
-    &:active {
-        background-color: var(--dark_925_color);
-    }
-}
-
-.slider_reset_svg {
-    width: 1.4rem;
-    color: var(--dark_550_color);
-}
-
-
-
 .other_controls {
     margin-top: 6rem;
     display: flex;

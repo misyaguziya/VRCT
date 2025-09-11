@@ -8,6 +8,7 @@ import {
 
 import {
     CheckboxContainer,
+    MessageFormatContainer,
 } from "../_templates/Templates";
 
 import {
@@ -38,6 +39,11 @@ export const Others = () => {
             <div>
                 <SectionLabelComponent label="Speaker2Chatbox" />
                 <SendReceivedMessageToVrcContainer />
+            </div>
+            <div>
+                <SectionLabelComponent label={t("config_page.others.section_label_message_formats")} />
+                <SendMessageFormatPartsContainer />
+                <ReceivedMessageFormatPartsContainer />
             </div>
         </div>
     );
@@ -149,6 +155,50 @@ const SendReceivedMessageToVrcContainer = () => {
             desc={t("config_page.others.send_received_message_to_vrc.desc")}
             variable={currentEnableSendReceivedMessageToVrc}
             toggleFunction={toggleEnableSendReceivedMessageToVrc}
+        />
+    );
+};
+
+const SendMessageFormatPartsContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSendMessageFormatParts,
+        setSendMessageFormatParts,
+        currentMessageFormat_ExampleViewFilter,
+        toggleMessageFormat_ExampleViewFilter,
+    } = useOthers();
+
+    return (
+        <MessageFormatContainer
+            label={t("config_page.others.send_message_format.label")}
+            desc={t("config_page.others.send_message_format.desc")}
+            variable={currentSendMessageFormatParts}
+            setFunction={setSendMessageFormatParts}
+            example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
+            exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
+            format_id="send"
+        />
+    );
+};
+
+const ReceivedMessageFormatPartsContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentReceivedMessageFormatParts,
+        setReceivedMessageFormatParts,
+        currentMessageFormat_ExampleViewFilter,
+        toggleMessageFormat_ExampleViewFilter,
+    } = useOthers();
+
+    return (
+        <MessageFormatContainer
+            label={t("config_page.others.received_message_format.label")}
+            desc={t("config_page.others.received_message_format.desc")}
+            variable={currentReceivedMessageFormatParts}
+            setFunction={setReceivedMessageFormatParts}
+            example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
+            exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
+            format_id="received"
         />
     );
 };

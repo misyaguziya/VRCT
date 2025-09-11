@@ -306,11 +306,11 @@ class Controller:
                 if config.SEND_MESSAGE_TO_VRC is True:
                     if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                         if config.ENABLE_TRANSLATION is False:
-                            osc_message = self.messageFormatter("SEND", "", [message])
+                            osc_message = self.messageFormatter("SEND", [], message)
                         else:
-                            osc_message = self.messageFormatter("SEND", "", translation)
+                            osc_message = self.messageFormatter("SEND", translation, "")
                     else:
-                        osc_message = self.messageFormatter("SEND", translation, [message])
+                        osc_message = self.messageFormatter("SEND", translation, message)
                     model.oscSendMessage(osc_message)
 
                 self.run(
@@ -470,7 +470,13 @@ class Controller:
                         model.updateOverlayLargeLog(overlay_image)
 
                 if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
-                    osc_message = self.messageFormatter("RECEIVED", translation, [message])
+                    if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
+                        if config.ENABLE_TRANSLATION is False:
+                            osc_message = self.messageFormatter("RECEIVED", [], message)
+                        else:
+                            osc_message = self.messageFormatter("RECEIVED", translation, "")
+                    else:
+                        osc_message = self.messageFormatter("RECEIVED", translation, message)
                     model.oscSendMessage(osc_message)
 
                 # update textbox message log (Received)
@@ -573,11 +579,11 @@ class Controller:
             if config.SEND_MESSAGE_TO_VRC is True:
                 if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
                     if config.ENABLE_TRANSLATION is False:
-                        osc_message = self.messageFormatter("SEND", "", [message])
+                        osc_message = self.messageFormatter("SEND", [], message)
                     else:
-                        osc_message = self.messageFormatter("SEND", "", translation)
+                        osc_message = self.messageFormatter("SEND", translation, "")
                 else:
-                    osc_message = self.messageFormatter("SEND", translation, [message])
+                    osc_message = self.messageFormatter("SEND", translation, message)
                 model.oscSendMessage(osc_message)
 
             if config.OVERLAY_LARGE_LOG is True:
@@ -1451,6 +1457,24 @@ class Controller:
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
 
     @staticmethod
+    def getSendMessageFormatParts(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
+
+    @staticmethod
+    def setSendMessageFormatParts(data, *args, **kwargs) -> dict:
+        config.SEND_MESSAGE_FORMAT_PARTS = dict(data)
+        return {"status":200, "result":config.SEND_MESSAGE_FORMAT_PARTS}
+
+    @staticmethod
+    def getReceivedMessageFormatParts(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
+
+    @staticmethod
+    def setReceivedMessageFormatParts(data, *args, **kwargs) -> dict:
+        config.RECEIVED_MESSAGE_FORMAT_PARTS = dict(data)
+        return {"status":200, "result":config.RECEIVED_MESSAGE_FORMAT_PARTS}
+
+    @staticmethod
     def getAutoClearMessageBox(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
@@ -1769,21 +1793,27 @@ class Controller:
         return {"status":200, "result":True}
 
     @staticmethod
-    def messageFormatter(format_type:str, translation:list, message:list) -> str:
+    def messageFormatter(format_type:str, translation:list, message:str) -> str:
         if format_type == "RECEIVED":
-            FORMAT_WITH_T = config.RECEIVED_MESSAGE_FORMAT_WITH_T
-            FORMAT = config.RECEIVED_MESSAGE_FORMAT
+            format_parts = config.RECEIVED_MESSAGE_FORMAT_PARTS
         elif format_type == "SEND":
-            FORMAT_WITH_T = config.SEND_MESSAGE_FORMAT_WITH_T
-            FORMAT = config.SEND_MESSAGE_FORMAT
+            format_parts = config.SEND_MESSAGE_FORMAT_PARTS
         else:
             raise ValueError("format_type is not found", format_type)
 
-        if len(translation) > 0:
-            osc_message = FORMAT_WITH_T.replace("[message]", "\n".join(message))
-            osc_message = osc_message.replace("[translation]", "\n".join(translation))
+        message_part = format_parts["message"]["prefix"] + message + format_parts["message"]["suffix"]
+        translation_part = format_parts["translation"]["prefix"] + format_parts["translation"]["separator"].join(translation) + format_parts["translation"]["suffix"]
+
+        if len(translation) > 0 and message != "":
+            # 翻訳とメッセージの順序を決定
+            if format_parts["translation_first"]:
+                osc_message = translation_part + format_parts["separator"] + message_part
+            else:
+                osc_message = message_part + format_parts["separator"] + translation_part
+        elif len(translation) > 0 and message == "":
+            osc_message = translation_part
         else:
-            osc_message = FORMAT.replace("[message]", "\n".join(message))
+            osc_message = message_part
         return osc_message
 
     def changeToCTranslate2Process(self) -> None:

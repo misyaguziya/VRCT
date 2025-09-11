@@ -285,6 +285,11 @@ mapping = {
     "/set/disable/overlay_show_only_translated_messages": {"status": True, "variable":controller.setDisableOverlayShowOnlyTranslatedMessages},
 
     # Others
+    "/get/data/send_message_format_parts": {"status": True, "variable":controller.getSendMessageFormatParts},
+    "/set/data/send_message_format_parts": {"status": True, "variable":controller.setSendMessageFormatParts},
+    "/get/data/received_message_format_parts": {"status": True, "variable":controller.getReceivedMessageFormatParts},
+    "/set/data/received_message_format_parts": {"status": True, "variable":controller.setReceivedMessageFormatParts},
+
     "/get/data/auto_clear_message_box": {"status": True, "variable":controller.getAutoClearMessageBox},
     "/set/enable/auto_clear_message_box": {"status": True, "variable":controller.setEnableAutoClearMessageBox},
     "/set/disable/auto_clear_message_box": {"status": True, "variable":controller.setDisableAutoClearMessageBox},
@@ -591,14 +596,34 @@ if __name__ == "__main__":
                             "display_duration": 5,
                             "fadeout_duration": 0.5,
                         }
-                    case "/set/data/send_message_format":
-                        data = "[message]"
-                    case "/set/data/send_message_format_with_t":
-                        data = "[message]([translation])"
-                    case "/set/data/received_message_format":
-                        data = "[message]"
-                    case "/set/data/received_message_format_with_t":
-                        data = "[message]([translation])"
+                    case "/set/data/send_message_format_parts":
+                        data = {
+                            "message": {
+                                "prefix": "",
+                                "suffix": ""
+                                },
+                            "between_separator": "\n",
+                            "translation": {
+                                "prefix": "(",
+                                "separator": "\\",
+                                "suffix": ")"
+                            },
+                            "translation_first": False,
+                        }
+                    case "/set/data/received_message_format_parts":
+                        data = {
+                            "message": {
+                                "prefix": "",
+                                "suffix": ""
+                                },
+                            "between_separator": "\n",
+                            "translation": {
+                                "prefix": "(",
+                                "separator": "\\",
+                                "suffix": ")"
+                            },
+                            "translation_first": True,
+                        }
                     case "/set/data/osc_ip_address":
                         data = "127.0.0.1"
                     case "/set/data/osc_port":

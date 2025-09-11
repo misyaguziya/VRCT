@@ -37,7 +37,7 @@ export const PosterShowcaseWorldsContents = () => {
                     );
                     if (poster.x_post_num !== null) {
                         return (
-                            <a href={`https://x.com/Shiina_12siy/status/${poster.x_post_num}`} target="_blank" rel="noreferrer"  className={class_names} key={index}>
+                            <a href={`https://x.com/Shiina_12siy/status/${poster.x_post_num}`} target="_blank" rel="noreferrer" className={class_names} key={index}>
                                 {content}
                             </a>
                         );
