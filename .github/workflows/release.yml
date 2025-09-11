@@ -64,9 +64,9 @@ jobs:
           Copy-Item -Path ./VRCT.zip -Destination "$UPLOAD_DIR/VRCT.zip"
           Copy-Item -Path ./VRCT_cuda.zip -Destination "$UPLOAD_DIR/VRCT_cuda.zip"
 
-          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ms-software/VRCT $UPLOAD_DIR .
+          hf upload --repo-type model --commit-message "👍️[Update] ${{ env.VERSION }} Release" ms-software/VRCT $UPLOAD_DIR
 
-          hf repo tag ms-software/VRCT --repo-type model --message "Release ${{ github.ref_name }}" ${{ github.ref_name }}
+          hf repo tag create ms-software/VRCT ${{ github.ref_name }} --repo-type model --message "Release ${{ github.ref_name }}"
 
           Remove-Item -Recurse -Force $UPLOAD_DIR
 
