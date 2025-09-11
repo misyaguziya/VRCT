@@ -1432,7 +1432,7 @@ class Controller:
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
     def getPlamoModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.PLAMO_MODEL_LIST}
+        return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
 
     def setPlamoModel(self, data, *args, **kwargs) -> dict:
         printLog("Set Plamo Model", data)
