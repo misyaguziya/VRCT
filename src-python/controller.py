@@ -1431,6 +1431,36 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
+    def getPlamoModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.PLAMO_MODEL_LIST}
+
+    def setPlamoModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Plamo Model", data)
+        try:
+            data = str(data)
+            result = model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS["Plamo_API"], model_name=data)
+            if result is True:
+                config.PLAMO_MODEL = data
+                response = {"status":200, "result":config.PLAMO_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Plamo model is not valid",
+                        "data": config.PLAMO_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.PLAMO_MODEL
+                }
+            }
+        return response
+
     def getPlamoAuthKey(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
 
@@ -1439,14 +1469,24 @@ class Controller:
         translator_name = "Plamo_API"
         try:
             data = str(data)
-            if len(data) == 32:
-                key = data
-                auth_keys = config.AUTH_KEYS
-                auth_keys[translator_name] = key
-                config.AUTH_KEYS = auth_keys
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+            if len(data) == 72:
+                result = model.authenticationTranslatorPlamoAuthKey(auth_key=data, model_name=config.PLAMO_MODEL)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of plamo auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
             else:
                 response = {
                     "status":400,
@@ -2305,7 +2345,7 @@ class Controller:
                     printLog("Start check Plamo API Key")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
-                        if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                        if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine], model=config.PLAMO_MODEL) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                         else:
                             # error update Auth key
