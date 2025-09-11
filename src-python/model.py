@@ -136,12 +136,12 @@ class Model:
         del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
 
-    def authenticationTranslatorDeepLAuthKey(self, auth_key):
+    def authenticationTranslatorDeepLAuthKey(self, auth_key: str) -> bool:
         result = self.translator.authenticationDeepLAuthKey(auth_key)
         return result
 
-    def authenticationTranslatorPlamoAuthKey(self, auth_key):
-        result = self.translator.authenticationPlamoAuthKey(auth_key)
+    def authenticationTranslatorPlamoAuthKey(self, auth_key: str, model: str) -> bool:
+        result = self.translator.authenticationPlamoAuthKey(auth_key, model=model)
         return result
 
     def startLogger(self):

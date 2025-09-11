@@ -168,6 +168,8 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
+    "/get/data/plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
+    "/set/data/plamo_model": {"status": False, "variable":controller.setPlamoModel},
     "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
     "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
     "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},

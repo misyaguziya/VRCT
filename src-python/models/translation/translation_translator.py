@@ -35,10 +35,10 @@ class Translator():
         self.is_loaded_ctranslate2_model = False
         self.is_enable_translators = ENABLE_TRANSLATORS
 
-    def authenticationDeepLAuthKey(self, authkey):
+    def authenticationDeepLAuthKey(self, auth_key: str) -> bool:
         result = True
         try:
-            self.deepl_client = DeepLClient(authkey)
+            self.deepl_client = DeepLClient(auth_key)
             self.deepl_client.translate_text("Hello World", target_lang="EN-US")
         except Exception:
             errorLogging()
@@ -46,11 +46,11 @@ class Translator():
             result = False
         return result
 
-    def authenticationPlamoAuthKey(self, authkey):
+    def authenticationPlamoAuthKey(self, auth_key: str, model: str) -> bool:
         result = True
         try:
-            self.plamo_client = PlamoClient(authkey)
-            self.plamo_client.translate_text("Hello World", target_lang="English")
+            self.plamo_client = PlamoClient(auth_key, model=model)
+            self.plamo_client.checkAuthKey()
         except Exception:
             errorLogging()
             self.plamo_client = None
@@ -153,7 +153,7 @@ class Translator():
                     if self.plamo_client is None:
                         result = False
                     else:
-                        result = self.plamo_client.translate_text(
+                        result = self.plamo_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,
