@@ -69,6 +69,7 @@ const UiScalingContainer = () => {
         asyncUpdateBreakPoint();
     }, [currentUiScaling.data]);
 
+    // [Duplicated]
     const createMarks = (min, max) => {
         const marks = [];
         for (let value = min; value <= max; value += 10) {
@@ -111,6 +112,7 @@ export const MessageLogUiScalingContainer = () => {
         setUiMessageLogUiScaling(currentMessageLogUiScaling.data);
     }, [currentMessageLogUiScaling.data]);
 
+    // [Duplicated]
     const createMarks = (min, max) => {
         const marks = [];
         for (let value = min; value <= max; value += 10) {
@@ -207,6 +209,7 @@ const TransparencyContainer = () => {
         setUiTransparency(currentTransparency.data);
     }, [currentTransparency.data]);
 
+    // [Duplicated]
     const createMarks = (min, max) => {
         const marks = [];
         for (let value = min; value <= max; value += 10) {

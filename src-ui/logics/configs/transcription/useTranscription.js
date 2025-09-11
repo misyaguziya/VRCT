@@ -14,6 +14,11 @@ import {
     useStore_SelectedWhisperWeightType,
 
     useStore_WhisperWeightTypeStatus,
+
+    useStore_MicAvgLogprob,
+    useStore_MicNoSpeechProb,
+    useStore_SpeakerAvgLogprob,
+    useStore_SpeakerNoSpeechProb,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { transformToIndexedArray } from "@utils";
@@ -40,6 +45,13 @@ export const useTranscription = () => {
     const { currentSelectedWhisperWeightType, updateSelectedWhisperWeightType, pendingSelectedWhisperWeightType } = useStore_SelectedWhisperWeightType();
     const { currentSelectableWhisperComputeDeviceList, updateSelectableWhisperComputeDeviceList, pendingSelectableWhisperComputeDeviceList } = useStore_SelectableWhisperComputeDeviceList();
     const { currentSelectedWhisperComputeDevice, updateSelectedWhisperComputeDevice, pendingSelectedWhisperComputeDevice } = useStore_SelectedWhisperComputeDevice();
+
+    // Advanced Settings
+    const { currentMicAvgLogprob, updateMicAvgLogprob, pendingMicAvgLogprob } = useStore_MicAvgLogprob();
+    const { currentMicNoSpeechProb, updateMicNoSpeechProb, pendingMicNoSpeechProb } = useStore_MicNoSpeechProb();
+    const { currentSpeakerAvgLogprob, updateSpeakerAvgLogprob, pendingSpeakerAvgLogprob } = useStore_SpeakerAvgLogprob();
+    const { currentSpeakerNoSpeechProb, updateSpeakerNoSpeechProb, pendingSpeakerNoSpeechProb } = useStore_SpeakerNoSpeechProb();
+
 
     // Mic
     const getMicRecordTimeout = () => {
@@ -95,6 +107,21 @@ export const useTranscription = () => {
     const setMicWordFilterList = (selected_mic_word_filter) => {
         pendingMicWordFilterList();
         asyncStdoutToPython("/set/data/mic_word_filter", selected_mic_word_filter);
+    };
+
+    const getSuccessMicWordFilterList = (payload) => {
+        updateMicWordFilterList((prev_list) => {
+            const updated_list = [...prev_list.data];
+            for (const value of payload) {
+                const existing_item = updated_list.find(item => item.value === value);
+                if (existing_item) {
+                    existing_item.is_redoable = false;
+                } else {
+                    updated_list.push({ value, is_redoable: false });
+                }
+            }
+            return updated_list;
+        });
     };
 
     const setSuccessMicWordFilterList = (payload) => {
@@ -261,6 +288,67 @@ export const useTranscription = () => {
         showNotification_SaveSuccess();
     };
 
+    // Advanced (Mic Avg Logprob)
+    const getMicAvgLogprob = () => {
+        pendingMicAvgLogprob();
+        asyncStdoutToPython("/get/data/mic_avg_logprob");
+    };
+
+    const setMicAvgLogprob = (selected_mic_avg_logprob) => {
+        pendingMicAvgLogprob();
+        asyncStdoutToPython("/set/data/mic_avg_logprob", selected_mic_avg_logprob);
+    };
+
+    const setSuccessMicAvgLogprob = (selected_mic_avg_logprob) => {
+        updateMicAvgLogprob(selected_mic_avg_logprob);
+        showNotification_SaveSuccess();
+    };
+    // Advanced (Mic No Speech Prob)
+    const getMicNoSpeechProb = () => {
+        pendingMicNoSpeechProb();
+        asyncStdoutToPython("/get/data/mic_no_speech_prob");
+    };
+
+    const setMicNoSpeechProb = (selected_mic_no_speech_prob) => {
+        pendingMicNoSpeechProb();
+        asyncStdoutToPython("/set/data/mic_no_speech_prob", selected_mic_no_speech_prob);
+    };
+
+    const setSuccessMicNoSpeechProb = (selected_mic_no_speech_prob) => {
+        updateMicNoSpeechProb(selected_mic_no_speech_prob);
+        showNotification_SaveSuccess();
+    };
+    // Advanced (Speaker Avg Logprob)
+    const getSpeakerAvgLogprob = () => {
+        pendingSpeakerAvgLogprob();
+        asyncStdoutToPython("/get/data/speaker_avg_logprob");
+    };
+
+    const setSpeakerAvgLogprob = (selected_speaker_avg_logprob) => {
+        pendingSpeakerAvgLogprob();
+        asyncStdoutToPython("/set/data/speaker_avg_logprob", selected_speaker_avg_logprob);
+    };
+
+    const setSuccessSpeakerAvgLogprob = (selected_speaker_avg_logprob) => {
+        updateSpeakerAvgLogprob(selected_speaker_avg_logprob);
+        showNotification_SaveSuccess();
+    };
+    // Advanced (Speaker No Speech Prob)
+    const getSpeakerNoSpeechProb = () => {
+        pendingSpeakerNoSpeechProb();
+        asyncStdoutToPython("/get/data/speaker_no_speech_prob");
+    };
+
+    const setSpeakerNoSpeechProb = (selected_speaker_no_speech_prob) => {
+        pendingSpeakerNoSpeechProb();
+        asyncStdoutToPython("/set/data/speaker_no_speech_prob", selected_speaker_no_speech_prob);
+    };
+
+    const setSuccessSpeakerNoSpeechProb = (selected_speaker_no_speech_prob) => {
+        updateSpeakerNoSpeechProb(selected_speaker_no_speech_prob);
+        showNotification_SaveSuccess();
+    };
+
     return {
         // Mic
         currentMicRecordTimeout,
@@ -283,6 +371,7 @@ export const useTranscription = () => {
 
         currentMicWordFilterList,
         getMicWordFilterList,
+        getSuccessMicWordFilterList,
         updateMicWordFilterList,
         setMicWordFilterList,
         setSuccessMicWordFilterList,
@@ -337,5 +426,31 @@ export const useTranscription = () => {
         updateSelectedWhisperComputeDevice,
         setSelectedWhisperComputeDevice,
         setSuccessSelectedWhisperComputeDevice,
+
+        // Advanced
+        // Mic Avg Logprob
+        currentMicAvgLogprob,
+        getMicAvgLogprob,
+        updateMicAvgLogprob,
+        setMicAvgLogprob,
+        setSuccessMicAvgLogprob,
+        // Mic No Speech Prob
+        currentMicNoSpeechProb,
+        getMicNoSpeechProb,
+        updateMicNoSpeechProb,
+        setMicNoSpeechProb,
+        setSuccessMicNoSpeechProb,
+        // Speaker Avg Logprob
+        currentSpeakerAvgLogprob,
+        getSpeakerAvgLogprob,
+        updateSpeakerAvgLogprob,
+        setSpeakerAvgLogprob,
+        setSuccessSpeakerAvgLogprob,
+        // Speaker No Speech Prob
+        currentSpeakerNoSpeechProb,
+        getSpeakerNoSpeechProb,
+        updateSpeakerNoSpeechProb,
+        setSpeakerNoSpeechProb,
+        setSuccessSpeakerNoSpeechProb,
     };
 };

@@ -11,7 +11,7 @@ from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
-from utils import errorLogging
+from utils import errorLogging, validateDictStructure
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -139,23 +139,44 @@ class Config:
     def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
         return self._SEND_MESSAGE_BUTTON_TYPE_LIST
 
-    @property
-    def SEND_MESSAGE_FORMAT(self):
-        return self._SEND_MESSAGE_FORMAT
-
-    @property
-    def SEND_MESSAGE_FORMAT_WITH_T(self):
-        return self._SEND_MESSAGE_FORMAT_WITH_T
-
-    @property
-    def RECEIVED_MESSAGE_FORMAT(self):
-        return self._RECEIVED_MESSAGE_FORMAT
-
-    @property
-    def RECEIVED_MESSAGE_FORMAT_WITH_T(self):
-        return self._RECEIVED_MESSAGE_FORMAT_WITH_T
-
     # Read Write
+    @property
+    @json_serializable('SEND_MESSAGE_FORMAT_PARTS')
+    def SEND_MESSAGE_FORMAT_PARTS(self):
+        return self._SEND_MESSAGE_FORMAT_PARTS
+
+    @SEND_MESSAGE_FORMAT_PARTS.setter
+    def SEND_MESSAGE_FORMAT_PARTS(self, value):
+        if isinstance(value, dict):
+            valid_parts = {
+                "message": {"prefix": str, "suffix": str},
+                "separator": str,
+                "translation": {"prefix": str, "separator": str, "suffix": str},
+                "translation_first": bool
+            }
+
+            if validateDictStructure(value, valid_parts):
+                self._SEND_MESSAGE_FORMAT_PARTS = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('RECEIVED_MESSAGE_FORMAT_PARTS')
+    def RECEIVED_MESSAGE_FORMAT_PARTS(self):
+        return self._RECEIVED_MESSAGE_FORMAT_PARTS
+
+    @RECEIVED_MESSAGE_FORMAT_PARTS.setter
+    def RECEIVED_MESSAGE_FORMAT_PARTS(self, value):
+        if isinstance(value, dict):
+            valid_parts = {
+                "message": {"prefix": str, "suffix": str},
+                "separator": str,
+                "translation": {"prefix": str, "separator": str, "suffix": str},
+                "translation_first": bool
+            }
+            if validateDictStructure(value, valid_parts):
+                self._RECEIVED_MESSAGE_FORMAT_PARTS = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
     @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
@@ -997,10 +1018,9 @@ class Config:
             self._WEBSOCKET_PORT = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
-
     def init_config(self):
         # Read Only
-        self._VERSION = "3.2.1"
+        self._VERSION = "3.2.2"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1032,10 +1052,32 @@ class Config:
                 self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "device_name": torch.cuda.get_device_name(i)})
         self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
-        self._SEND_MESSAGE_FORMAT = "[message]"
-        self._SEND_MESSAGE_FORMAT_WITH_T = "[message]\n[translation]"
-        self._RECEIVED_MESSAGE_FORMAT = "[message]"
-        self._RECEIVED_MESSAGE_FORMAT_WITH_T = "[message]\n[translation]"
+        self._SEND_MESSAGE_FORMAT_PARTS = {
+            "message": {
+                "prefix": "",
+                "suffix": ""
+                },
+            "separator": "\n",
+            "translation": {
+                "prefix": "",
+                "separator": "\n",
+                "suffix": ""
+            },
+            "translation_first": False,
+        }
+        self._RECEIVED_MESSAGE_FORMAT_PARTS = {
+            "message": {
+                "prefix": "",
+                "suffix": ""
+                },
+            "separator": "\n",
+            "translation": {
+                "prefix": "",
+                "separator": "\n",
+                "suffix": ""
+            },
+            "translation_first": False,
+        }
 
         # Read Write
         self._ENABLE_TRANSLATION = False

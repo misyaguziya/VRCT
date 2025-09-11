@@ -18,6 +18,7 @@ import {
     WordFilter,
     WordFilterListToggleComponent,
     DownloadModels,
+    MessageFormat,
 } from "../_components/";
 import { Checkbox } from "@common_components";
 
@@ -130,3 +131,16 @@ export const WordFilterContainer = (props) => (
 export const DownloadModelsContainer = (props) => (
     <CommonContainer Component={DownloadModels} {...props} />
 );
+
+export const MessageFormatContainer = (props) => {
+    return (
+        <div className={clsx(styles.container, styles.flex_column)}>
+            <div className={styles.label_only_section}>
+                <LabelComponent label={props.label} desc={props.desc} />
+            </div>
+            <div className={styles.message_format_section}>
+                <MessageFormat {...props}/>
+            </div>
+        </div>
+    );
+};
