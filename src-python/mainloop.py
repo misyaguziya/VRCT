@@ -358,8 +358,11 @@ class Main:
         self.main_loop = True
 
     def receiver(self) -> None:
-        while True:
+        while self.main_loop:
             received_data = sys.stdin.readline().strip()
+            if not received_data:
+                time.sleep(0.1)
+                continue
             received_data = json.loads(received_data)
 
             if received_data:
@@ -441,11 +444,13 @@ if __name__ == "__main__":
             main.start()
 
         case "test":
-            for _ in range(100):
-                time.sleep(0.5)
-                endpoint = "/get/data/mic_host_list"
-                result, status = main.handleRequest(endpoint)
-                printResponse(status, endpoint, result)
+            endpoint = "/set/enable/translation"
+            result, status = main.handleRequest(endpoint)
+            printResponse(status, endpoint, result)
+            endpoint = "/run/send_message_box"
+            data = {"id":"123456", "message":"テスト"}
+            result, status = main.handleRequest(endpoint, data)
+            printResponse(status, endpoint, result)
 
         case "test_all":
             import time
@@ -648,3 +653,4 @@ if __name__ == "__main__":
                 result, status = main.handleRequest(endpoint, data)
                 printResponse(status, endpoint, result)
                 time.sleep(0.5)
+    main.stop()
