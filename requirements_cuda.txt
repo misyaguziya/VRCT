@@ -21,6 +21,7 @@ huggingface_hub==0.32.2
 hf-xet==1.1.2
 setuptools==80.8.0
 langchain-openai==0.3.32
+langchain-google-genai==2.1.10
 translators @ git+https://github.com/misyaguziya/translators@5.9.2.1
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.1
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
