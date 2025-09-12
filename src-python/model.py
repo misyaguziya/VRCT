@@ -275,13 +275,21 @@ class Model:
         self.previous_receive_message = message
         return repeat_flag
 
-    def convertMessageToTransliteration(self, message: str) -> str:
+    def convertMessageToTransliteration(self, message: str, hiragana: bool=True, romaji: bool=True) -> str:
+        if hiragana is False and romaji is False:
+            return message
+
+        keys_to_keep = {"orig"}
+        if hiragana:
+            keys_to_keep.add("hira")
+        if romaji:
+            keys_to_keep.add("hepburn")
+
         data_list = self.kks.convert(message)
-        keys_to_keep = {"orig", "hira", "hepburn"}
-        filtered_list = []
-        for item in data_list:
-            filtered_item = {key: value for key, value in item.items() if key in keys_to_keep}
-            filtered_list.append(filtered_item)
+        filtered_list = [
+            {key: value for key, value in item.items() if key in keys_to_keep}
+            for item in data_list
+        ]
         return filtered_list
 
     def setOscIpAddress(self, ip_address):
