@@ -298,9 +298,13 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+                        transliteration = model.convertMessageToTransliteration(
+                            translation[0],
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.SEND_MESSAGE_TO_VRC is True:
@@ -425,9 +429,13 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(message)
+                        transliteration = model.convertMessageToTransliteration(
+                            message,
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
@@ -571,9 +579,13 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+                        transliteration = model.convertMessageToTransliteration(
+                            translation[0],
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
 
             # send OSC message
             if config.SEND_MESSAGE_TO_VRC is True:
