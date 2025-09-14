@@ -14,7 +14,6 @@ from typing import Callable
 from packaging.version import parse
 
 from flashtext import KeywordProcessor
-from pykakasi import kakasi
 
 from device_manager import device_manager
 from config import config
@@ -28,6 +27,7 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
+from models.transliterate.transliterate_transliterator import Transliterator
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
@@ -99,7 +99,7 @@ class Model:
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_audio_queue = None
         self.mic_mute_status = None
-        self.kks = kakasi()
+        self.transliterator = Transliterator()
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
         self.websocket_server = None
@@ -285,7 +285,7 @@ class Model:
         if romaji:
             keys_to_keep.add("hepburn")
 
-        data_list = self.kks.convert(message)
+        data_list = self.transliterator.analyze(message, use_macron=False)
         filtered_list = [
             {key: value for key, value in item.items() if key in keys_to_keep}
             for item in data_list
