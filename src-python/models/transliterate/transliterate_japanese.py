@@ -46,29 +46,51 @@ class Transliterator:
 
         # 読みを分配
         kana_left = reading_kana
-        for is_kan, part in blocks:
+        for i, (is_kan, part) in enumerate(blocks):
             if is_kan:
-                # 仮ルール：残りの読みのうち、送り仮名分を除いた前半を充てる
-                # ex. "美しい"(うつくしい): 漢字=美, 残り送り仮名=しい
-                okuri_len = len(blocks[-1][1]) if not blocks[-1][0] else 0
-                kana_for_kan = kana_left[:-okuri_len] if okuri_len else kana_left
+                # 漢字ブロックの処理
+                if len(blocks) == 1:
+                    # 単一ブロック（全て漢字）の場合
+                    kana_for_kan = kana_left
+                elif i == len(blocks) - 1:
+                    # 最後のブロック（漢字）の場合
+                    kana_for_kan = kana_left
+                else:
+                    # 中間の漢字ブロックの場合
+                    # 後続の非漢字ブロックの文字数を計算
+                    remaining_non_kanji = sum(len(p) for is_k, p in blocks[i+1:] if not is_k)
+                    if remaining_non_kanji > 0 and len(kana_left) > remaining_non_kanji:
+                        kana_for_kan = kana_left[:-remaining_non_kanji]
+                    else:
+                        # 漢字1文字あたり最低1文字の読みを割り当て
+                        min_kana = len(part)
+                        kana_for_kan = kana_left[:max(min_kana, len(kana_left) - remaining_non_kanji)]
+                
+                # 空の読みを避ける
+                if not kana_for_kan and kana_left:
+                    kana_for_kan = kana_left[:1]
+                
                 result.append(
                     {
                         "orig": part,
                         "kana": kana_for_kan,
+                        "hira": Transliterator.kata_to_hira(kana_for_kan),
+                        "hepburn": katakana_to_hepburn(kana_for_kan, use_macron=True)
                     }
                 )
                 kana_left = kana_left[len(kana_for_kan):]
             else:
-                # 送り仮名部分 → そのまま残りを割り当てる
-                kana_for_okuri = kana_left
+                # 非漢字部分（送り仮名など）
+                kana_for_okuri = kana_left[:len(part)]
                 result.append(
                     {
                         "orig": part,
                         "kana": kana_for_okuri,
+                        "hira": Transliterator.kata_to_hira(kana_for_okuri),
+                        "hepburn": katakana_to_hepburn(kana_for_okuri, use_macron=True)
                     }
                 )
-                kana_left = ""
+                kana_left = kana_left[len(kana_for_okuri):]
 
         return result
 
@@ -78,14 +100,66 @@ class Transliterator:
         results = []
         for t in tokens:
             surface = t.surface()
-            parts = self.split_kanji_okurigana(surface, t.reading_form())
-            for p in parts:
+            reading = t.reading_form()
+            
+            # 単純に1文字ずつ処理
+            if len(surface) == 1:
+                # 1文字の場合はそのまま
                 results.append({
-                    "orig": p["orig"],
-                    "kana": p["kana"],
-                    "hira": self.kata_to_hira(p["kana"]),
-                    "hepburn": katakana_to_hepburn(p["kana"], use_macron=use_macron)
+                    "orig": surface,
+                    "kana": reading,
+                    "hira": self.kata_to_hira(reading),
+                    "hepburn": katakana_to_hepburn(reading, use_macron=use_macron)
                 })
+            else:
+                # 複数文字の場合は文字種別で分割
+                i = 0
+                reading_pos = 0
+                
+                while i < len(surface):
+                    char = surface[i]
+                    
+                    if self.is_kanji(char):
+                        # 漢字の場合、連続する漢字をまとめて処理
+                        kanji_block = ""
+                        while i < len(surface) and self.is_kanji(surface[i]):
+                            kanji_block += surface[i]
+                            i += 1
+                        
+                        # 漢字ブロックの読みを推定
+                        if i < len(surface):
+                            # 後に文字がある場合、送り仮名を考慮
+                            remaining_chars = len(surface) - i
+                            kanji_reading = reading[reading_pos:-remaining_chars] if remaining_chars > 0 else reading[reading_pos:]
+                        else:
+                            # 最後の漢字ブロックの場合
+                            kanji_reading = reading[reading_pos:]
+                        
+                        results.append({
+                            "orig": kanji_block,
+                            "kana": kanji_reading,
+                            "hira": self.kata_to_hira(kanji_reading),
+                            "hepburn": katakana_to_hepburn(kanji_reading, use_macron=use_macron)
+                        })
+                        reading_pos += len(kanji_reading)
+                    else:
+                        # 非漢字の場合
+                        non_kanji_block = ""
+                        while i < len(surface) and not self.is_kanji(surface[i]):
+                            non_kanji_block += surface[i]
+                            i += 1
+                        
+                        # 非漢字部分の読み（通常は文字数分）
+                        non_kanji_reading = reading[reading_pos:reading_pos + len(non_kanji_block)]
+                        
+                        results.append({
+                            "orig": non_kanji_block,
+                            "kana": non_kanji_reading,
+                            "hira": self.kata_to_hira(non_kanji_reading),
+                            "hepburn": katakana_to_hepburn(non_kanji_reading, use_macron=use_macron)
+                        })
+                        reading_pos += len(non_kanji_reading)
+        
         return results
 
 # --- テスト ---
@@ -103,6 +177,9 @@ if __name__ == "__main__":
         "ラーメンを食べる",
         "チョコレートが好き",
         "SessionIDを取得する",
+        "取り敢えず検索してみる",
+        "見知らぬ土地で冒険する",
+        "彼は優れたエンジニアです",
     ]
 
     transliterator = Transliterator()
