@@ -10,6 +10,7 @@ from device_manager import device_manager
 from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.translation.translation_plamo import _MODELS as plamo_models
+from models.translation.translation_gemini import _MODELS as gemini_models
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
 from utils import errorLogging, validateDictStructure
@@ -123,6 +124,10 @@ class Config:
     @property
     def SELECTABLE_PLAMO_MODEL_LIST(self):
         return self._SELECTABLE_PLAMO_MODEL_LIST
+
+    @property
+    def SELECTABLE_GEMINI_MODEL_LIST(self):
+        return self._SELECTABLE_GEMINI_MODEL_LIST
 
     @property
     def SELECTABLE_TRANSCRIPTION_ENGINE_LIST(self):
@@ -844,6 +849,18 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('GEMINI_MODEL')
+    def GEMINI_MODEL(self):
+        return self._GEMINI_MODEL
+
+    @GEMINI_MODEL.setter
+    def GEMINI_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_GEMINI_MODEL_LIST:
+                self._GEMINI_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
     def AUTO_CLEAR_MESSAGE_BOX(self):
         return self._AUTO_CLEAR_MESSAGE_BOX
@@ -1061,6 +1078,7 @@ class Config:
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = whisper_models.keys()
         self._SELECTABLE_TRANSLATION_ENGINE_LIST = translation_lang.keys()
         self._SELECTABLE_PLAMO_MODEL_LIST = plamo_models
+        self._SELECTABLE_GEMINI_MODEL_LIST = gemini_models
         self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -1203,6 +1221,7 @@ class Config:
         self._AUTH_KEYS = {
             "DeepL_API": None,
             "Plamo_API": None,
+            "Gemini_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
@@ -1210,6 +1229,7 @@ class Config:
         self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._PLAMO_MODEL = "plamo-2.0-prime"
+        self._GEMINI_MODEL = "gemini-2.5-flash-lite"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._OVERLAY_SMALL_LOG = False

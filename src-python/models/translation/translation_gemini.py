@@ -1,10 +1,14 @@
+import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
+
+logger = logging.getLogger("langchain_google_genai")
+logger.setLevel(logging.ERROR)
 
 _MODELS = [
     "gemini-2.5-pro",
     "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash-lite", # default
     "gemini-2.0-flash",
     "gemini-2.0-flash-lite",
     "gemini-1.5-pro",
@@ -13,7 +17,7 @@ _MODELS = [
     ]
 
 class GeminiClient:
-    def __init__(self, api_key: str = "", model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str = "", model: str = "gemini-2.5-flash-lite"):
         self.api_key = api_key
         self.model = model
         self.prompt_template = """
@@ -93,7 +97,7 @@ if __name__ == "__main__":
     input_lang = "Japanese"
     output_lang = "English"
 
-    gemini_client = GeminiClient(api_key=AUTH_KEY, model="gemini-1.5-flash")
+    gemini_client = GeminiClient(api_key=AUTH_KEY, model="gemini-2.5-flash-lite")
 
     print("model list:", gemini_client.getListModels())
     print("AuthKey:", gemini_client.getAuthKey())
@@ -110,41 +114,55 @@ if __name__ == "__main__":
 
 
     supported_languages = """
-    English
-    Japanese
-    Korean
-    French
-    German
-    Spanish
-    Portuguese
-    Russian
-    Italian
-    Dutch
-    Polish
-    Turkish
     Arabic
-    Hindi
-    Thai
-    Vietnamese
-    Indonesian
-    Malay
-    Filipino
-    Swedish
-    Finnish
-    Danish
-    Norwegian
-    Romanian
-    Czech
-    Hungarian
-    Greek
-    Hebrew
+    Bengali
+    Bulgarian
     Simplified Chinese
     Traditional Chinese
+    Croatian
+    Czech
+    Danish
+    Dutch
+    English
+    Estonian
+    Finnish
+    French
+    German
+    Greek
+    Hebrew
+    Hindi
+    Hungarian
+    Indonesian
+    Italian
+    Japanese
+    Korean
+    Latvian
+    Lithuanian
+    Norwegian
+    Polish
+    Portuguese
+    Romanian
+    Russian
+    Serbian
+    Slovak
+    Slovenian
+    Spanish
+    Swahili
+    Swedish
+    Thai
+    Turkish
+    Ukrainian
+    Vietnamese
     """
 
     for lang in supported_languages.split("\n"):
         if lang == "":
             continue
         print (f"Translating to {lang}:")
-        translated_text = gemini_client.translate(text, input_lang, lang)
-        print(f"Translated text: {translated_text}")
+        try:
+            translated_text = gemini_client.translate(text, input_lang, lang)
+            print(f"Translated text: {translated_text}")
+        except Exception as e:
+            print(f"Error translating to {lang} api limit")
+            print(f"Error reason: {e}")
+            break

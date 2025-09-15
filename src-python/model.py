@@ -144,6 +144,10 @@ class Model:
         result = self.translator.authenticationPlamoAuthKey(auth_key, model=model)
         return result
 
+    def authenticationTranslatorGeminiAuthKey(self, auth_key: str, model: str) -> bool:
+        result = self.translator.authenticationGeminiAuthKey(auth_key, model=model)
+        return result
+
     def startLogger(self):
         os_makedirs(config.PATH_LOGS, exist_ok=True)
         file_name = os_path.join(config.PATH_LOGS, f"{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.log")
