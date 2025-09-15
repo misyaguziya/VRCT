@@ -1515,6 +1515,90 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
+    def getGeminiModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
+
+    def setGeminiModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Gemini Model", data)
+        try:
+            data = str(data)
+            result = model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS["Gemini_API"], model_name=data)
+            if result is True:
+                config.GEMINI_MODEL = data
+                response = {"status":200, "result":config.GEMINI_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Gemini model is not valid",
+                        "data": config.GEMINI_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.GEMINI_MODEL
+                }
+            }
+        return response
+
+    def getGeminiAuthKey(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["Gemini_API"]}
+
+    def setGeminiAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Gemini Auth Key", data)
+        translator_name = "Gemini_API"
+        try:
+            data = str(data)
+            if len(data) >= 20:
+                result = model.authenticationTranslatorGeminiAuthKey(auth_key=data, model_name=config.GEMINI_MODEL)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of gemini auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Gemini auth key length is not correct",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delGeminiAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "Gemini_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}

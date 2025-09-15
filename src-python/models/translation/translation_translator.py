@@ -10,6 +10,7 @@ try:
     from .translation_languages import translation_lang
     from .translation_utils import ctranslate2_weights
     from .translation_plamo import PlamoClient
+    from .translation_gemini import GeminiClient
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -17,6 +18,7 @@ except Exception:
     from translation_languages import translation_lang
     from translation_utils import ctranslate2_weights
     from translation_plamo import PlamoClient
+    from translation_gemini import GeminiClient
 
 import ctranslate2
 import transformers
@@ -30,6 +32,7 @@ class Translator():
     def __init__(self):
         self.deepl_client = None
         self.plamo_client = None
+        self.gemini_client = None
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
         self.is_loaded_ctranslate2_model = False
@@ -54,6 +57,17 @@ class Translator():
         except Exception:
             errorLogging()
             self.plamo_client = None
+            result = False
+        return result
+
+    def authenticationGeminiAuthKey(self, auth_key: str, model: str) -> bool:
+        result = True
+        try:
+            self.gemini_client = GeminiClient(auth_key, model=model)
+            self.gemini_client.checkAuthKey()
+        except Exception:
+            errorLogging()
+            self.gemini_client = None
             result = False
         return result
 
@@ -154,6 +168,15 @@ class Translator():
                         result = False
                     else:
                         result = self.plamo_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                            )
+                case "Gemini_API":
+                    if self.gemini_client is None:
+                        result = False
+                    else:
+                        result = self.gemini_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,
