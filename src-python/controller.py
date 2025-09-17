@@ -461,17 +461,18 @@ class Controller:
                         romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                     )
 
-                if (config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese" and
-                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["enable"] is True):
-                    transliteration_translation = model.convertMessageToTransliteration(
-                        translation[0],
-                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_translation.append(
+                        model.convertMessageToTransliteration(
+                            translation[0],
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
                     )
                 else:
                     transliteration_translation.append([])
             else:
-                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
+                transliteration_translation = [[]]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
@@ -640,12 +641,13 @@ class Controller:
                 for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
                     if (config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
                         config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True):
-                        transliteration = model.convertMessageToTransliteration(
-                            translation[i],
-                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                            )
                         )
-                        transliteration_translation.append(transliteration)
                     else:
                         transliteration_translation.append([])
             else:
