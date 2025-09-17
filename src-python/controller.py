@@ -308,8 +308,10 @@ class Controller:
                     )
 
                 for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
-                    if (config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
-                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
                         transliteration_translation.append(
                             model.convertMessageToTransliteration(
                                 translation[i],
@@ -461,7 +463,9 @@ class Controller:
                         romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                     )
 
-                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                if (config.ENABLE_TRANSLATION is True and
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese"
+                    ):
                     transliteration_translation.append(
                         model.convertMessageToTransliteration(
                             translation[0],
@@ -639,8 +643,10 @@ class Controller:
                         romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                     )
                 for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
-                    if (config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
-                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
                         transliteration_translation.append(
                             model.convertMessageToTransliteration(
                                 translation[i],
