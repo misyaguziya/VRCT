@@ -309,6 +309,8 @@ export const { atomInstance: Atom_ReceivedMessageFormatParts, useHook: useStore_
     },
     translation_first: false,
 }, "ReceivedMessageFormatParts");
+export const { atomInstance: Atom_ConvertMessageToRomaji, useHook: useStore_ConvertMessageToRomaji } = createAtomWithHook(false, "ConvertMessageToRomaji");
+export const { atomInstance: Atom_ConvertMessageToHiragana, useHook: useStore_ConvertMessageToHiragana } = createAtomWithHook(false, "ConvertMessageToHiragana");
 
 
 // Hotkeys

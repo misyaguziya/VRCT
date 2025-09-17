@@ -9,6 +9,8 @@ import {
     useStore_MessageFormat_ExampleViewFilter,
     useStore_SendMessageFormatParts,
     useStore_ReceivedMessageFormatParts,
+    useStore_ConvertMessageToRomaji,
+    useStore_ConvertMessageToHiragana,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
@@ -38,6 +40,11 @@ export const useOthers = () => {
     const { currentSendMessageFormatParts, updateSendMessageFormatParts, pendingSendMessageFormatParts } = useStore_SendMessageFormatParts();
     // Received
     const { currentReceivedMessageFormatParts, updateReceivedMessageFormatParts, pendingReceivedMessageFormatParts } = useStore_ReceivedMessageFormatParts();
+
+    // Convert Message To Romaji
+    const { currentConvertMessageToRomaji, updateConvertMessageToRomaji, pendingConvertMessageToRomaji } = useStore_ConvertMessageToRomaji();
+    // Convert Message To Hiragana
+    const { currentConvertMessageToHiragana, updateConvertMessageToHiragana, pendingConvertMessageToHiragana } = useStore_ConvertMessageToHiragana();
 
     const { showNotification_SaveSuccess } = useNotificationStatus();
 
@@ -233,6 +240,45 @@ export const useOthers = () => {
         });
     };
 
+    // Convert Message To Romaji
+    const getConvertMessageToRomaji = () => {
+        pendingConvertMessageToRomaji();
+        asyncStdoutToPython("/get/data/convert_message_to_romaji");
+    };
+
+    const toggleConvertMessageToRomaji = () => {
+        pendingConvertMessageToRomaji();
+        if (currentConvertMessageToRomaji.data) {
+            asyncStdoutToPython("/set/disable/convert_message_to_romaji");
+        } else {
+            asyncStdoutToPython("/set/enable/convert_message_to_romaji");
+        }
+    };
+
+    const setSuccessConvertMessageToRomaji = (enabled) => {
+        updateConvertMessageToRomaji(enabled);
+        showNotification_SaveSuccess();
+    };
+
+    // Convert Message To Hiragana
+    const getConvertMessageToHiragana = () => {
+        pendingConvertMessageToHiragana();
+        asyncStdoutToPython("/get/data/convert_message_to_hiragana");
+    };
+
+    const toggleConvertMessageToHiragana = () => {
+        pendingConvertMessageToHiragana();
+        if (currentConvertMessageToHiragana.data) {
+            asyncStdoutToPython("/set/disable/convert_message_to_hiragana");
+        } else {
+            asyncStdoutToPython("/set/enable/convert_message_to_hiragana");
+        }
+    };
+
+    const setSuccessConvertMessageToHiragana = (enabled) => {
+        updateConvertMessageToHiragana(enabled);
+        showNotification_SaveSuccess();
+    };
 
     return {
         // Auto Clear Message Input Box
@@ -303,5 +349,19 @@ export const useOthers = () => {
         getReceivedMessageFormatParts,
         setReceivedMessageFormatParts,
         setSuccessReceivedMessageFormatParts,
+
+        // Convert Message To Romaji
+        currentConvertMessageToRomaji,
+        getConvertMessageToRomaji,
+        toggleConvertMessageToRomaji,
+        updateConvertMessageToRomaji,
+        setSuccessConvertMessageToRomaji,
+
+        // Convert Message To Hiragana
+        currentConvertMessageToHiragana,
+        getConvertMessageToHiragana,
+        toggleConvertMessageToHiragana,
+        updateConvertMessageToHiragana,
+        setSuccessConvertMessageToHiragana,
     };
 };

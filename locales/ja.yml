@@ -250,6 +250,12 @@ config_page:
         received_message_format:
             label: メッセージフォーマット（Speaker2Chatbox）
             desc: 今のところ、Speaker2Chatboxで送信した時の表示に使われます。
+        convert_message_to_romaji:
+            label: ローマ字を表示
+            desc: 翻訳言語として日本語を選択した時のみサポート。「{{convert_message_to_hiragana}}」と同時に有効にした場合は、マウスホバーで表示されます。
+        convert_message_to_hiragana:
+            label: ひらがなを表示
+            desc: 翻訳言語として日本語を選択した時のみサポート。
 
     hotkeys:
         toggle_vrct_visibility:
