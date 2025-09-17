@@ -1,9 +1,9 @@
 from sudachipy import tokenizer
 from sudachipy import dictionary
 try:
-    from .transliterate_kana_to_hepburn import katakana_to_hepburn
+    from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
-    from transliterate_kana_to_hepburn import katakana_to_hepburn
+    from transliteration_kana_to_hepburn import katakana_to_hepburn
 
 class Transliterator:
     def __init__(self):
