@@ -17,10 +17,10 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     const [is_locked, setIsLocked] = useState(false);
 
     const resendFunction = () => {
-        sendMessage(messages.original);
+        sendMessage(messages.original.message);
     };
     const editFunction = () => {
-        updateMessageInputValue(messages.original);
+        updateMessageInputValue(messages.original.message);
     };
 
     const handleMouseEnter = () => {
@@ -94,19 +94,17 @@ const MessageWithTransliteration = ({ item }) => {
         const hira = token.hira ?? "";
         const hepburn = token.hepburn ?? "";
 
-        if ((hira && orig === hira) || (hepburn && orig === hepburn) || (!hira && !hepburn)) {
+        if ((hira && orig === hira)) {
             return (
-                <span key={key} className={styles.token}>
+                <span key={key} title={hepburn} className={styles.token}>
                     {orig}
                 </span>
             );
         }
 
         if (hira && hira !== orig) {
-            const needHepburn = hepburn && hepburn !== orig;
-            const titleAttr = needHepburn ? hepburn : undefined;
             return (
-                <ruby key={key} title={titleAttr} className={styles.tokenRuby}>
+                <ruby key={key} title={hepburn} className={styles.tokenRuby}>
                     {orig}
                     <rt>{hira}</rt>
                 </ruby>
