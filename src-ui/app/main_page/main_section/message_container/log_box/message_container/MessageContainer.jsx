@@ -94,17 +94,17 @@ const MessageWithTransliteration = ({ item }) => {
         const hira = token.hira ?? "";
         const hepburn = token.hepburn ?? "";
 
-        if ((hira && orig === hira)) {
+        if (hira && hira === orig && hepburn) {
             return (
-                <span key={key} title={hepburn} className={styles.token}>
+                <span key={key} title={hepburn} className={styles.with_hepburn}>
                     {orig}
                 </span>
             );
         }
 
-        if (hira && hira !== orig) {
+        if (hira && hira !== orig && hepburn) {
             return (
-                <ruby key={key} title={hepburn} className={styles.tokenRuby}>
+                <ruby key={key} title={hepburn} className={styles.with_hepburn}>
                     {orig}
                     <rt>{hira}</rt>
                 </ruby>
@@ -113,7 +113,7 @@ const MessageWithTransliteration = ({ item }) => {
 
         if (hepburn && hepburn !== orig) {
             return (
-                <ruby key={key} className={styles.tokenRuby}>
+                <ruby key={key} className={styles.ruby}>
                     {orig}
                     <rt>{hepburn}</rt>
                 </ruby>
@@ -121,7 +121,7 @@ const MessageWithTransliteration = ({ item }) => {
         }
 
         return (
-            <span key={key} className={styles.token}>
+            <span key={key} className={styles.original_only}>
                 {orig}
             </span>
         );
