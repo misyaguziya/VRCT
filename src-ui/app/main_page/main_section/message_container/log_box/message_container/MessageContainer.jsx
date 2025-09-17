@@ -39,7 +39,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
         setIsLocked(true);
     };
 
-    const is_translated_exist = messages.translated?.length >= 1;
+    const is_translation_exist = messages.translations?.length > 0;
     const is_pending = status === "pending";
     const is_sent_message = category === "sent";
     const is_system_message = category === "system";
@@ -69,11 +69,11 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                 </div>
                 <div className={clsx(styles.message_box, message_type_class_name)}>
                     {is_system_message ? (
-                        <p className={styles.message_main_system}>{messages.message}</p>
-                    ) : is_translated_exist ? (
+                        <p className={styles.message_main_system}>{messages.original.message}</p>
+                    ) : is_translation_exist ? (
                         <WithTranslatedMessages messages={messages} />
                     ) : (
-                        <p className={styles.message_main}>{messages.original}</p>
+                        <OriginalMessage messages={messages} />
                     )}
                 </div>
             </div>
@@ -88,13 +88,74 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     );
 };
 
-const WithTranslatedMessages = ({ messages }) => {
-    const translated_data = Array.isArray(messages.translated) ? messages.translated : [messages.translated];
+const MessageWithTransliteration = ({ item }) => {
+    const renderTokenNode = (token, key) => {
+        const orig = token.orig ?? "";
+        const hira = token.hira ?? "";
+        const hepburn = token.hepburn ?? "";
+
+        if ((hira && orig === hira) || (hepburn && orig === hepburn) || (!hira && !hepburn)) {
+            return (
+                <span key={key} className={styles.token}>
+                    {orig}
+                </span>
+            );
+        }
+
+        if (hira && hira !== orig) {
+            const needHepburn = hepburn && hepburn !== orig;
+            const titleAttr = needHepburn ? hepburn : undefined;
+            return (
+                <ruby key={key} title={titleAttr} className={styles.tokenRuby}>
+                    {orig}
+                    <rt>{hira}</rt>
+                </ruby>
+            );
+        }
+
+        if (hepburn && hepburn !== orig) {
+            return (
+                <ruby key={key} className={styles.tokenRuby}>
+                    {orig}
+                    <rt>{hepburn}</rt>
+                </ruby>
+            );
+        }
+
+        return (
+            <span key={key} className={styles.token}>
+                {orig}
+            </span>
+        );
+    };
+
+    if (!item.transliteration.length) {
+        return <p className={styles.message_main}>{item.message}</p>;
+    }
+
+    return (
+        <p className={styles.message_main}>
+            {item.transliteration.map((token, idx) => renderTokenNode(token, idx))}
+        </p>
+    );
+};
+
+const OriginalMessage = ({ messages }) => {
     return (
         <>
-            <p className={styles.message_second}>{messages.original}</p>
-            {translated_data.map((message, index) => (
-                <p key={index} className={styles.message_main}>{message}</p>
+            <MessageWithTransliteration item={messages.original} />
+        </>
+    );
+};
+
+const WithTranslatedMessages = ({ messages }) => {
+    return (
+        <>
+            <p className={styles.message_second}>{messages.original.message}</p>
+            {messages.translations.map((item, idx) => (
+                <div key={idx}>
+                    <MessageWithTransliteration item={item} />
+                </div>
             ))}
         </>
     );
