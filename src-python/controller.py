@@ -1456,11 +1456,15 @@ class Controller:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
-    def getCtranslateComputeType(*args, **kwargs) -> dict:
+    def getCtranslate2ComputeTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST}
+
+    @staticmethod
+    def getCtranslate2ComputeType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_COMPUTE_TYPE}
 
     @staticmethod
-    def setCtranslateComputeType(data, *args, **kwargs) -> dict:
+    def setCtranslate2ComputeType(data, *args, **kwargs) -> dict:
         config.CTRANSLATE2_COMPUTE_TYPE = str(data)
         if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
             def callback():
