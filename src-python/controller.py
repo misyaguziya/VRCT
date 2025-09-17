@@ -246,7 +246,8 @@ class Controller:
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -298,8 +299,6 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                transliteration_message = []
-                transliteration_translation = []
                 if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration_message = model.convertMessageToTransliteration(
@@ -376,7 +375,7 @@ class Controller:
                             "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -398,7 +397,8 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -450,8 +450,6 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                transliteration_message = []
-                transliteration_translation = []
                 if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if language == "Japanese":
                         transliteration_message = model.convertMessageToTransliteration(
@@ -460,7 +458,6 @@ class Controller:
                             romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                         )
 
-                    transliteration_translation = []
                     if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration_translation = model.convertMessageToTransliteration(
                             translation[0],
@@ -543,7 +540,7 @@ class Controller:
                             "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -556,7 +553,8 @@ class Controller:
         message = data["message"]
         if len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
@@ -624,8 +622,6 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                transliteration_message = []
-                transliteration_translation = []
                 if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
                     if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
                         transliteration_message = model.convertMessageToTransliteration(
@@ -684,7 +680,7 @@ class Controller:
                         "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                         "message":message,
                         "translation":translation,
-                        "transliteration":transliteration
+                        "transliteration":transliteration_translation
                     }
                 )
 
