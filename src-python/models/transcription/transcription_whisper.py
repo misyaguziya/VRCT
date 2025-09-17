@@ -74,9 +74,10 @@ def downloadWhisperWeight(root, weight_type, callback=None, end_callback=None):
     if isinstance(end_callback, Callable):
         end_callback()
 
-def getWhisperModel(root, weight_type, device="cpu", device_index=0):
+def getWhisperModel(root, weight_type, device="cpu", device_index=0, compute_type="auto"):
     path = os_path.join(root, "weights", "whisper", weight_type)
-    compute_type = getBestComputeType(device, device_index)
+    if compute_type == "auto":
+        compute_type = getBestComputeType(device, device_index)
     try:
         model = WhisperModel(
             path,

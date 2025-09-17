@@ -21,7 +21,7 @@ PHRASE_TIMEOUT = 3
 MAX_PHRASES = 10
 
 class AudioTranscriber:
-    def __init__(self, speaker, source, phrase_timeout, max_phrases, transcription_engine, root=None, whisper_weight_type=None, device="cpu", device_index=0):
+    def __init__(self, speaker, source, phrase_timeout, max_phrases, transcription_engine, root=None, whisper_weight_type=None, device="cpu", device_index=0, compute_type="auto"):
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
         self.max_phrases = max_phrases
@@ -41,7 +41,7 @@ class AudioTranscriber:
         }
 
         if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
-            self.whisper_model = getWhisperModel(root, whisper_weight_type, device=device, device_index=device_index)
+            self.whisper_model = getWhisperModel(root, whisper_weight_type, device=device, device_index=device_index, compute_type=compute_type)
             self.transcription_engine = "Whisper"
 
     def transcribeAudioQueue(self, audio_queue, languages, countries, avg_logprob=-0.8, no_speech_prob=0.6):
