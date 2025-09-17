@@ -299,25 +299,28 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                    if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration_message = model.convertMessageToTransliteration(
-                            message,
-                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                        )
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
 
-                    for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
-                        if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese":
-                            transliteration_translation.append(
-                                model.convertMessageToTransliteration(
-                                    translation[i],
-                                    hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                                    romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                                )
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True):
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                             )
-                        else:
-                            transliteration_translation.append([])
+                        )
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.SEND_MESSAGE_TO_VRC is True:
@@ -450,20 +453,25 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                    if language == "Japanese":
-                        transliteration_message = model.convertMessageToTransliteration(
-                            message,
-                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                        )
-
-                    if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration_translation = model.convertMessageToTransliteration(
-                            translation[0],
-                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if language == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                     )
+
+                if (config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese" and
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["enable"] is True):
+                    transliteration_translation = model.convertMessageToTransliteration(
+                        translation[0],
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+                else:
+                    transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
@@ -622,23 +630,26 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
-                    if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration_message = model.convertMessageToTransliteration(
-                            message,
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True):
+                        transliteration = model.convertMessageToTransliteration(
+                            translation[i],
                             hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
                             romaji=config.CONVERT_MESSAGE_TO_ROMAJI
                         )
-                    for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
-                        if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese":
-                            transliteration = model.convertMessageToTransliteration(
-                                translation[i],
-                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
-                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
-                            )
-                            transliteration_translation.append(transliteration)
-                        else:
-                            transliteration_translation.append([])
+                        transliteration_translation.append(transliteration)
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             # send OSC message
             if config.SEND_MESSAGE_TO_VRC is True:
