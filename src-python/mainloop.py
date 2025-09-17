@@ -162,6 +162,9 @@ mapping = {
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
+    "/get/data/ctranslate2_compute_type": {"status": True, "variable":controller.getCtranslateComputeType},
+    "/set/data/ctranslate2_compute_type": {"status": True, "variable":controller.setCtranslateComputeType},
+
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
     "/get/data/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
@@ -261,8 +264,13 @@ mapping = {
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
+
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+
+    "/get/data/whisper_compute_type": {"status": True, "variable":controller.getWhisperComputeType},
+    "/set/data/whisper_compute_type": {"status": True, "variable":controller.setWhisperComputeType},
+
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR

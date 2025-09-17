@@ -112,10 +112,12 @@ class Model:
 
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(
-            config.PATH_LOCAL,
-            config.CTRANSLATE2_WEIGHT_TYPE,
-            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
-            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"])
+            path=config.PATH_LOCAL,
+            model_type=config.CTRANSLATE2_WEIGHT_TYPE,
+            device=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
+            device_index=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"],
+            compute_type=config.CTRANSLATE2_COMPUTE_TYPE
+            )
 
     def downloadCTranslate2ModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadCTranslate2Weight(config.PATH_LOCAL, weight_type, callback, end_callback)
@@ -438,6 +440,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                compute_type=config.WHISPER_COMPUTE_TYPE,
             )
             def sendMicTranscript():
                 try:
@@ -621,6 +624,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                compute_type=config.WHISPER_COMPUTE_TYPE,
             )
             def sendSpeakerTranscript():
                 try:

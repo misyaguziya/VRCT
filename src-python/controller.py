@@ -653,6 +653,14 @@ class Controller:
         return {"status":200, "result":config.SELECTABLE_COMPUTE_DEVICE_LIST}
 
     @staticmethod
+    def getCTranslate2ComputeTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST}
+
+    @staticmethod
+    def getWhisperComputeTypeList(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTABLE_WHISPER_COMPUTE_TYPE_LIST}
+
+    @staticmethod
     def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
@@ -1448,6 +1456,22 @@ class Controller:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
+    def getCtranslateComputeType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.CTRANSLATE2_COMPUTE_TYPE}
+
+    @staticmethod
+    def setCtranslateComputeType(data, *args, **kwargs) -> dict:
+        config.CTRANSLATE2_COMPUTE_TYPE = str(data)
+        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
+            def callback():
+                model.changeTranslatorCTranslate2Model()
+            th_callback = Thread(target=callback)
+            th_callback.daemon = True
+            th_callback.start()
+            th_callback.join()
+        return {"status":200, "result":config.CTRANSLATE2_COMPUTE_TYPE}
+
+    @staticmethod
     def getWhisperWeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.WHISPER_WEIGHT_TYPE}
 
@@ -1455,6 +1479,15 @@ class Controller:
     def setWhisperWeightType(data, *args, **kwargs) -> dict:
         config.WHISPER_WEIGHT_TYPE = str(data)
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
+
+    @staticmethod
+    def getWhisperComputeType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.WHISPER_COMPUTE_TYPE}
+
+    @staticmethod
+    def setWhisperComputeType(data, *args, **kwargs) -> dict:
+        config.WHISPER_COMPUTE_TYPE = str(data)
+        return {"status":200, "result":config.WHISPER_COMPUTE_TYPE}
 
     @staticmethod
     def getSendMessageFormatParts(*args, **kwargs) -> dict:
