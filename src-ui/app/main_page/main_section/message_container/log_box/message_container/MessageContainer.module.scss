@@ -113,3 +113,10 @@
         color: var(--dark_500_color);
     }
 }
+
+// For ruby
+.with_hepburn {
+    &:hover {
+        color: var(--dark_500_color);
+    }
+}

@@ -246,7 +246,8 @@ class Controller:
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -298,9 +299,30 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                            )
+                        )
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.SEND_MESSAGE_TO_VRC is True:
@@ -317,9 +339,16 @@ class Controller:
                     200,
                     self.run_mapping["transcription_mic"],
                     {
-                        "message":message,
-                        "translation":translation,
-                        "transliteration":transliteration
+                        "original": {
+                            "message": message,
+                            "transliteration": transliteration_message
+                        },
+                        "translations": [
+                            {
+                                "message": translation_message,
+                                "transliteration": transliteration
+                            } for translation_message, transliteration in zip(translation, transliteration_translation)
+                        ]
                     })
 
                 if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
@@ -351,7 +380,7 @@ class Controller:
                             "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -373,7 +402,8 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -425,9 +455,28 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(message)
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if language == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+
+                if (config.ENABLE_TRANSLATION is True and
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese"
+                    ):
+                    transliteration_translation.append(
+                        model.convertMessageToTransliteration(
+                            translation[0],
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
+                    )
+                else:
+                    transliteration_translation.append([])
+            else:
+                transliteration_translation = [[]]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
                 if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
@@ -484,9 +533,16 @@ class Controller:
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
-                        "message":message,
-                        "translation":translation,
-                        "transliteration":transliteration,
+                        "original": {
+                            "message": message,
+                            "transliteration": transliteration_message
+                        },
+                        "translations": [
+                            {
+                                "message": translation_message,
+                                "transliteration": transliteration
+                            } for translation_message, transliteration in zip(translation, transliteration_translation)
+                        ]
                     })
 
                 if model.checkWebSocketServerAlive() is True:
@@ -497,7 +553,7 @@ class Controller:
                             "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -510,7 +566,8 @@ class Controller:
         message = data["message"]
         if len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message = []
+            transliteration_translation = []
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
@@ -562,18 +619,45 @@ class Controller:
                                 "result":
                                 {
                                     "id":id,
-                                    "message":message,
-                                    "translation":[],
-                                    "transliteration":[],
+                                    "original": {
+                                        "message":message,
+                                        "transliteration":[]
                                     },
-                                }
+                                    "translations": [
+                                        {
+                                            "message": "",
+                                            "transliteration": []
+                                        } for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
+                                    ]
+                                },
+                            }
                     else:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                            )
+                        )
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             # send OSC message
             if config.SEND_MESSAGE_TO_VRC is True:
@@ -615,7 +699,7 @@ class Controller:
                         "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                         "message":message,
                         "translation":translation,
-                        "transliteration":transliteration
+                        "transliteration":transliteration_translation
                     }
                 )
 
@@ -623,14 +707,21 @@ class Controller:
                 translation_text = f" ({'/'.join(translation)})" if translation else ""
                 model.logger.info(f"[CHAT] {message}{translation_text}")
 
-        return {"status":200,
+        return {
+                "status":200,
                 "result":{
                     "id":id,
-                    "message":message,
-                    "translation":translation,
-                    "transliteration":transliteration,
+                    "original": {
+                        "message":message,
+                        "transliteration":transliteration_message
                     },
-                }
+                    "translations": [
+                        {
+                            "message": translation_message,
+                            "transliteration": transliteration
+                        } for translation_message, transliteration in zip(translation, transliteration_translation)
+                    ]
+                }}
 
     @staticmethod
     def getVersion(*args, **kwargs) -> dict:

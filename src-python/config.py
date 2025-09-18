@@ -108,6 +108,10 @@ class Config:
         return self._SELECTABLE_TAB_NO_LIST
 
     @property
+    def SELECTED_TAB_TARGET_LANGUAGES_NO_LIST(self):
+        return self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
+
+    @property
     def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
         return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST
 
@@ -1115,24 +1119,17 @@ class Config:
                 },
             }
         self._SELECTED_TARGET_LANGUAGES = {}
+        self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST = ["1", "2", "3"]
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
-            self._SELECTED_TARGET_LANGUAGES[tab_no] = {
-                "1": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": True,
-                },
-                "2": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-                "3": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-            }
+            for tab_target_lang_no in self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST:
+                if tab_no not in self._SELECTED_TARGET_LANGUAGES:
+                    self.SELECTED_TARGET_LANGUAGES[tab_no] = {}
+                if tab_target_lang_no not in self._SELECTED_TARGET_LANGUAGES[tab_no]:
+                    self.SELECTED_TARGET_LANGUAGES[tab_no][tab_target_lang_no] = {
+                        "language": "English",
+                        "country": "United States",
+                        "enable": True,
+                    }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False

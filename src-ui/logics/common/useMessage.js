@@ -24,8 +24,8 @@ export const useMessage = () => {
             status: "pending",
             created_at: generateTimeData(),
             messages: {
-                original: message,
-                translated: [],
+                original: { message: message, transliteration: [] },
+                translations: [],
             },
         });
     };
@@ -39,20 +39,26 @@ export const useMessage = () => {
             category: "system",
             status: "system",
             created_at: date,
-            messages: {message: message},
+            messages: {
+                original: { message: message, transliteration: [] },
+                translations: [],
+            },
         });
     };
+
     const addSystemMessageLog_FromBackend = (payload) => {
         addSystemMessageLog(payload.message);
     };
 
     const updateSentMessageLogById = (payload) => {
-        updateMessageLogs(updateItemById(payload.id, payload.translation));
+        updateMessageLogs(updateItemById(payload.id, payload));
     };
+
     const addSentMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "sent");
         addMessageLogs(message_object);
     };
+
     const addReceivedMessageLog = (payload) => {
         const message_object = generateMessageObject(payload, "received");
         addMessageLogs(message_object);
@@ -61,6 +67,7 @@ export const useMessage = () => {
     const startTyping = () => {
         asyncStdoutToPython("/run/typing_message_box");
     };
+
     const stopTyping = () => {
         asyncStdoutToPython("/run/stop_typing_message_box");
     };
@@ -83,11 +90,10 @@ export const useMessage = () => {
 };
 
 const generateTimeData = () => {
-    const data = new Date().toLocaleTimeString(
+    return new Date().toLocaleTimeString(
         "ja-JP",
-        { hour12: false, hour: "2-digit", minute: "2-digit" },
+        { hour12: false, hour: "2-digit", minute: "2-digit" }
     );
-    return data;
 };
 
 const generateMessageObject = (data, category) => {
@@ -97,17 +103,17 @@ const generateMessageObject = (data, category) => {
         category: category,
         status: "ok",
         messages: {
-            original: data.message,
-            translated: data.translation,
+            original: data.original,
+            translations: data.translations ?? [],
         },
     };
 };
 
-const updateItemById = (id, translated_data) => (current_items) => {
+const updateItemById = (id, updated_data) => (current_items) => {
     return current_items.data.map(item => {
         if (item.id === id) {
             item.status = "ok";
-            item.messages.translated = translated_data;
+            if (updated_data.translations) item.messages.translations = updated_data.translations;
         }
         return item;
     });
