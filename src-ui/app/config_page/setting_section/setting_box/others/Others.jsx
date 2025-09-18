@@ -45,6 +45,10 @@ export const Others = () => {
                 <SendMessageFormatPartsContainer />
                 <ReceivedMessageFormatPartsContainer />
             </div>
+            <div>
+                <ConvertMessageToRomajiContainer />
+                <ConvertMessageToHiraganaContainer />
+            </div>
         </div>
     );
 };
@@ -199,6 +203,37 @@ const ReceivedMessageFormatPartsContainer = () => {
             example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
             exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
             format_id="received"
+        />
+    );
+};
+
+const ConvertMessageToRomajiContainer = () => {
+    const { t } = useI18n();
+    const { currentConvertMessageToRomaji, toggleConvertMessageToRomaji } = useOthers();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.convert_message_to_romaji.label")}
+            desc={t(
+                "config_page.others.convert_message_to_romaji.desc",
+                { convert_message_to_hiragana: t("config_page.others.convert_message_to_hiragana.label") }
+            )}
+            variable={currentConvertMessageToRomaji}
+            toggleFunction={toggleConvertMessageToRomaji}
+        />
+    );
+};
+
+const ConvertMessageToHiraganaContainer = () => {
+    const { t } = useI18n();
+    const { currentConvertMessageToHiragana, toggleConvertMessageToHiragana } = useOthers();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.convert_message_to_hiragana.label")}
+            desc={t("config_page.others.convert_message_to_hiragana.desc")}
+            variable={currentConvertMessageToHiragana}
+            toggleFunction={toggleConvertMessageToHiragana}
         />
     );
 };

@@ -292,6 +292,14 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateReceivedMessageFormatParts" },
     { endpoint: "/set/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessReceivedMessageFormatParts" },
 
+    { endpoint: "/get/data/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "updateConvertMessageToRomaji" },
+    { endpoint: "/set/enable/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToRomaji" },
+    { endpoint: "/set/disable/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToRomaji" },
+
+    { endpoint: "/get/data/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "updateConvertMessageToHiragana" },
+    { endpoint: "/set/enable/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToHiragana" },
+    { endpoint: "/set/disable/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToHiragana" },
+
     // Hotkeys
     { endpoint: "/get/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "updateHotkeys" },
     { endpoint: "/set/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "setSuccessHotkeys" },
@@ -323,8 +331,6 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/mic_no_speech_prob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
     { endpoint: "/get/data/speaker_avg_logprob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
     { endpoint: "/get/data/speaker_no_speech_prob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
-    { endpoint: "/get/data/convert_message_to_romaji", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
-    { endpoint: "/get/data/convert_message_to_hiragana", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
     { endpoint: "/get/data/transcription_engines", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
 ];
 
