@@ -179,8 +179,10 @@ config_page:
             desc: "Larger models have higher accuracy, but they also consume more CPU or GPU resources.\nEspecially for models larger than medium, it may be difficult or even impossible to use them depending on the performance of your CPU/GPU."
             model_template: "{{model_name}} model ({{capacity}})"
             recommended_model_template: "{{model_name}} model ({{capacity}}) (Recommended)"
-        whisper_compute_device:
-            label: "Processing Device Used For Whisper"
+        whisper_compute_type:
+            label: "Processing type for AI transcription {{whisper}}"
+        transcription_compute_device:
+            label: "Processing Device Used For AI transcription"
 
     vr:
         single_line: "Single line"

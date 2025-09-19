@@ -214,18 +214,22 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionEngine" },
     { endpoint: "/set/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionEngine" },
 
+    { endpoint: "/get/data/selectable_whisper_weight_type_dict", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadedWhisperWeightTypeStatus" },
     { endpoint: "/get/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperWeightType" },
     { endpoint: "/set/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperWeightType" },
 
-    { endpoint: "/get/data/selectable_whisper_weight_type_dict", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadedWhisperWeightTypeStatus" },
+    { endpoint: "/get/data/whisper_compute_type_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableWhisperComputeTypeList_FromBackend" },
+    { endpoint: "/get/data/whisper_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeType" },
+    { endpoint: "/set/data/whisper_compute_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeType" },
+
 
     { endpoint: "/run/downloaded_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "downloadedWhisperWeightType" },
     { endpoint: "/run/download_whisper_weight", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/download_progress_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadProgressWhisperWeightTypeStatus" },
 
-    { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableWhisperComputeDeviceList_FromBackend" },
-    { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeDevice" },
-    { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeDevice" },
+    { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableTranscriptionComputeDeviceList_FromBackend" },
+    { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeDevice" },
+    { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeDevice" },
 
     // Transcription (Advanced)
     { endpoint: "/get/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateMicAvgLogprob" },

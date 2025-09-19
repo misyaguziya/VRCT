@@ -179,7 +179,9 @@ config_page:
             desc:
             model_template: "{{model_name}}模型（{{capacity}}）"
             recommended_model_template: "{{model_name}}模型（{{capacity}}）（推薦）"
-        whisper_compute_device:
+        whisper_compute_type:
+            label:
+        transcription_compute_device:
             label:
 
     vr:

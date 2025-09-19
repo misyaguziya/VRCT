@@ -179,8 +179,10 @@ config_page:
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
             model_template: "{{model_name}} モデル （{{capacity}}）"
             recommended_model_template: "{{model_name}} モデル （{{capacity}}） [推奨]"
-        whisper_compute_device:
-            label: "Whisperで使用する処理デバイス"
+        whisper_compute_type:
+            label: "AI音声認識 {{whisper}} の処理タイプ"
+        transcription_compute_device:
+            label: "AI音声認識で使用する処理デバイス"
 
     vr:
         single_line: "一行"

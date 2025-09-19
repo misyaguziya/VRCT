@@ -240,8 +240,12 @@ export const { atomInstance: Atom_SelectedWhisperWeightType, useHook: useStore_S
 export const { atomInstance: Atom_WhisperWeightTypeStatus, useHook: useStore_WhisperWeightTypeStatus } = createAtomWithHook(whisper_weight_type_status, "WhisperWeightTypeStatus");
 export const { atomInstance: Atom_SelectedTranscriptionEngine, useHook: useStore_SelectedTranscriptionEngine } = createAtomWithHook(whisper_weight_type_status, "SelectedTranscriptionEngine");
 
-export const { atomInstance: Atom_SelectableWhisperComputeDeviceList, useHook: useStore_SelectableWhisperComputeDeviceList } = createAtomWithHook({}, "SelectableWhisperComputeDeviceList");
-export const { atomInstance: Atom_SelectedWhisperComputeDevice, useHook: useStore_SelectedWhisperComputeDevice } = createAtomWithHook("", "SelectedWhisperComputeDevice");
+export const { atomInstance: Atom_SelectableWhisperComputeTypeList, useHook: useStore_SelectableWhisperComputeTypeList } = createAtomWithHook({}, "SelectableWhisperComputeTypeList");
+export const { atomInstance: Atom_SelectedWhisperComputeType, useHook: useStore_SelectedWhisperComputeType } = createAtomWithHook("", "SelectedWhisperComputeType");
+
+
+export const { atomInstance: Atom_SelectableTranscriptionComputeDeviceList, useHook: useStore_SelectableTranscriptionComputeDeviceList } = createAtomWithHook({}, "SelectableTranscriptionComputeDeviceList");
+export const { atomInstance: Atom_SelectedTranscriptionComputeDevice, useHook: useStore_SelectedTranscriptionComputeDevice } = createAtomWithHook("", "SelectedTranscriptionComputeDevice");
 
 export const { atomInstance: Atom_MicAvgLogprob, useHook: useStore_MicAvgLogprob } = createAtomWithHook(-0.8, "MicAvgLogprob");
 export const { atomInstance: Atom_MicNoSpeechProb, useHook: useStore_MicNoSpeechProb } = createAtomWithHook(0.6, "MicNoSpeechProb");
