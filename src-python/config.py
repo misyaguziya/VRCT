@@ -1122,13 +1122,13 @@ class Config:
         self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST = ["1", "2", "3"]
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
             for tab_target_lang_no in self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST:
-                if tab_no not in self._SELECTED_TARGET_LANGUAGES:
-                    self.SELECTED_TARGET_LANGUAGES[tab_no] = {}
-                if tab_target_lang_no not in self._SELECTED_TARGET_LANGUAGES[tab_no]:
-                    self.SELECTED_TARGET_LANGUAGES[tab_no][tab_target_lang_no] = {
+                if tab_no not in self.SELECTED_TARGET_LANGUAGES:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no] = {}
+                if tab_target_lang_no not in self.SELECTED_TARGET_LANGUAGES[tab_no]:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no][tab_target_lang_no] = {
                         "language": "English",
                         "country": "United States",
-                        "enable": True,
+                        "enable": True if tab_target_lang_no == self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST[0] else False,
                     }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._CONVERT_MESSAGE_TO_ROMAJI = False
