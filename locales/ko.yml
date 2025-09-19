@@ -179,8 +179,10 @@ config_page:
             desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
             model_template: "{{model_name}} 모델 ({{capacity}})"
             recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
-        whisper_compute_device:
-            label: "Whisper에서 사용할 처리 장치"
+        whisper_compute_type:
+            label:
+        transcription_compute_device:
+            label:
 
     vr:
         single_line: "한 줄"

@@ -201,7 +201,8 @@ const TranscriptionEngine_Container = () => {
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
             <WhisperWeightType_Box />
-            <WhisperComputeDevice_Box />
+            <WhisperComputeType_Box />
+            <TranscriptionComputeDevice_Box />
         </div>
     );
 };
@@ -274,46 +275,70 @@ const WhisperWeightType_Box = () => {
     );
 };
 
+const WhisperComputeType_Box = () => {
+    const { t } = useI18n();
+    const { currentSelectableWhisperComputeTypeList } = useTranscription();
+    const { currentSelectedWhisperComputeType, setSelectedWhisperComputeType } = useTranscription();
+
+    const selectFunction = (selected_data) => {
+        setSelectedWhisperComputeType(selected_data.selected_id);
+    };
+
+    const whisper_compute_type_label = t("config_page.transcription.whisper_compute_type.label", {
+        whisper: "Whisper"
+    });
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="whisper_compute_type"
+            label={whisper_compute_type_label}
+            selected_id={currentSelectedWhisperComputeType.data}
+            list={currentSelectableWhisperComputeTypeList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedWhisperComputeType.state}
+        />
+    );
+};
 
 // Duplicate
 import { useComputeMode } from "@logics_common";
-const WhisperComputeDevice_Box = () => {
+const TranscriptionComputeDevice_Box = () => {
     const { t } = useI18n();
-    const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useTranscription();
-    const { currentSelectableWhisperComputeDeviceList } = useTranscription();
+    const { currentSelectedTranscriptionComputeDevice, setSelectedTranscriptionComputeDevice } = useTranscription();
+    const { currentSelectableTranscriptionComputeDeviceList } = useTranscription();
 
     const selectFunction = (selected_data) => {
-        const target_obj = currentSelectableWhisperComputeDeviceList.data[selected_data.selected_id];
-        setSelectedWhisperComputeDevice(target_obj);
+        const target_obj = currentSelectableTranscriptionComputeDeviceList.data[selected_data.selected_id];
+        setSelectedTranscriptionComputeDevice(target_obj);
     };
 
-    const list_for_ui = transformDeviceArray(currentSelectableWhisperComputeDeviceList.data);
+    const list_for_ui = transformDeviceArray(currentSelectableTranscriptionComputeDeviceList.data);
 
-    const target_index = findKeyByDeviceValue(currentSelectableWhisperComputeDeviceList.data, currentSelectedWhisperComputeDevice.data);
+    const target_index = findKeyByDeviceValue(currentSelectableTranscriptionComputeDeviceList.data, currentSelectedTranscriptionComputeDevice.data);
 
 
     const { currentComputeMode } = useComputeMode();
     if (currentComputeMode.data === "cpu") {
         return (
             <ComputeDeviceContainer
-                label={t("config_page.transcription.whisper_compute_device.label")}
+                label={t("config_page.transcription.transcription_compute_device.label")}
                 selected_id={target_index}
                 list={list_for_ui}
                 selectFunction={selectFunction}
-                state={currentSelectedWhisperComputeDevice.state}
+                state={currentSelectedTranscriptionComputeDevice.state}
             />
         )
     }
 
     return (
         <DropdownMenuContainer
-            dropdown_id="whisper_compute_device"
-            label={t("config_page.transcription.whisper_compute_device.label")}
-            // desc={t("config_page.transcription.whisper_compute_device.label")}
+            dropdown_id="transcription_compute_device"
+            label={t("config_page.transcription.transcription_compute_device.label")}
+            // desc={t("config_page.transcription.transcription_compute_device.label")}
             selected_id={target_index}
             list={list_for_ui}
             selectFunction={selectFunction}
-            state={currentSelectedWhisperComputeDevice.state}
+            state={currentSelectedTranscriptionComputeDevice.state}
         />
     );
 };
