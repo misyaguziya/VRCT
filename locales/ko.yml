@@ -133,8 +133,10 @@ config_page:
             desc: "오프라인 번역 시의 번역 모델을 변경합니다."
             small: "일반 모델 ({{capacity}})"
             large: "정밀 모델 ({{capacity}})"
-        ctranslate2_compute_device:
-            label: "AI 번역 {{ctranslate2}} 처리 장치"
+        ctranslate2_compute_type:
+            label:
+        translation_compute_device:
+            label: "AI 번역 처리 장치"
         deepl_auth_key:
             label: "DeepL 인증키"
             desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."

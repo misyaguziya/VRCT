@@ -1,13 +1,15 @@
 import {
     useStore_CTranslate2WeightTypeStatus,
     useStore_SelectedCTranslate2WeightType,
-    useStore_SelectableCTranslate2ComputeDeviceList,
-    useStore_SelectedCTranslate2ComputeDevice,
+    useStore_SelectableCTranslate2ComputeTypeList,
+    useStore_SelectedCTranslate2ComputeType,
+    useStore_SelectableTranslationComputeDeviceList,
+    useStore_SelectedTranslationComputeDevice,
     useStore_DeepLAuthKey,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useI18n } from "@useI18n";
-import { transformToIndexedArray } from "@utils";
+import { transformToIndexedArray, arrayToObject } from "@utils";
 import { useNotificationStatus } from "@logics_common";
 
 export const useTranslation = () => {
@@ -17,8 +19,13 @@ export const useTranslation = () => {
 
     const { currentCTranslate2WeightTypeStatus, updateCTranslate2WeightTypeStatus, pendingCTranslate2WeightTypeStatus } = useStore_CTranslate2WeightTypeStatus();
     const { currentSelectedCTranslate2WeightType, updateSelectedCTranslate2WeightType, pendingSelectedCTranslate2WeightType } = useStore_SelectedCTranslate2WeightType();
-    const { currentSelectableCTranslate2ComputeDeviceList, updateSelectableCTranslate2ComputeDeviceList, pendingSelectableCTranslate2ComputeDeviceList } = useStore_SelectableCTranslate2ComputeDeviceList();
-    const { currentSelectedCTranslate2ComputeDevice, updateSelectedCTranslate2ComputeDevice, pendingSelectedCTranslate2ComputeDevice } = useStore_SelectedCTranslate2ComputeDevice();
+
+    const { currentSelectableCTranslate2ComputeTypeList, updateSelectableCTranslate2ComputeTypeList, pendingSelectableCTranslate2ComputeTypeList } = useStore_SelectableCTranslate2ComputeTypeList();
+    const { currentSelectedCTranslate2ComputeType, updateSelectedCTranslate2ComputeType, pendingSelectedCTranslate2ComputeType } = useStore_SelectedCTranslate2ComputeType();
+
+    const { currentSelectableTranslationComputeDeviceList, updateSelectableTranslationComputeDeviceList, pendingSelectableTranslationComputeDeviceList } = useStore_SelectableTranslationComputeDeviceList();
+    const { currentSelectedTranslationComputeDevice, updateSelectedTranslationComputeDevice, pendingSelectedTranslationComputeDevice } = useStore_SelectedTranslationComputeDevice();
+
     const { currentDeepLAuthKey, updateDeepLAuthKey, pendingDeepLAuthKey } = useStore_DeepLAuthKey();
 
 
@@ -80,28 +87,56 @@ export const useTranslation = () => {
     };
 
 
-    const getSelectableCTranslate2ComputeDeviceList = () => {
-        pendingSelectableCTranslate2ComputeDeviceList();
+
+    const getSelectableCTranslate2ComputeTypeList = () => {
+        pendingSelectableCTranslate2ComputeTypeList();
+        asyncStdoutToPython("/get/data/ctranslate2_compute_type_list");
+    };
+
+    const updateSelectableCTranslate2ComputeTypeList_FromBackend = (payload) => {
+        updateSelectableCTranslate2ComputeTypeList(arrayToObject(payload));
+    };
+
+
+    const getSelectedCTranslate2ComputeType = () => {
+        pendingSelectedCTranslate2ComputeType();
+        asyncStdoutToPython("/get/data/ctranslate2_compute_type");
+    };
+
+    const setSelectedCTranslate2ComputeType = (selected_ctranslate2_compute_type) => {
+        pendingSelectedCTranslate2ComputeType();
+        asyncStdoutToPython("/set/data/ctranslate2_compute_type", selected_ctranslate2_compute_type);
+    };
+
+    const setSuccessSelectedCTranslate2ComputeType = (selected_ctranslate2_compute_type) => {
+        updateSelectedCTranslate2ComputeType(selected_ctranslate2_compute_type);
+        showNotification_SaveSuccess();
+    };
+
+
+
+    const getSelectableTranslationComputeDeviceList = () => {
+        pendingSelectableTranslationComputeDeviceList();
         asyncStdoutToPython("/get/data/translation_compute_device_list");
     };
 
-    const updateSelectableCTranslate2ComputeDeviceList_FromBackend = (payload) => {
-        updateSelectableCTranslate2ComputeDeviceList(transformToIndexedArray(payload));
+    const updateSelectableTranslationComputeDeviceList_FromBackend = (payload) => {
+        updateSelectableTranslationComputeDeviceList(transformToIndexedArray(payload));
     };
 
 
-    const getSelectedCTranslate2ComputeDevice = () => {
-        pendingSelectedCTranslate2ComputeDevice();
+    const getSelectedTranslationComputeDevice = () => {
+        pendingSelectedTranslationComputeDevice();
         asyncStdoutToPython("/get/data/selected_translation_compute_device");
     };
 
-    const setSelectedCTranslate2ComputeDevice = (selected_translation_compute_device) => {
-        pendingSelectedCTranslate2ComputeDevice();
+    const setSelectedTranslationComputeDevice = (selected_translation_compute_device) => {
+        pendingSelectedTranslationComputeDevice();
         asyncStdoutToPython("/set/data/selected_translation_compute_device", selected_translation_compute_device);
     };
 
-    const setSuccessSelectedCTranslate2ComputeDevice = (selected_translation_compute_device) => {
-        updateSelectedCTranslate2ComputeDevice(selected_translation_compute_device);
+    const setSuccessSelectedTranslationComputeDevice = (selected_translation_compute_device) => {
+        updateSelectedTranslationComputeDevice(selected_translation_compute_device);
         showNotification_SaveSuccess();
     };
 
@@ -146,16 +181,29 @@ export const useTranslation = () => {
         setSelectedCTranslate2WeightType,
         setSuccessSelectedCTranslate2WeightType,
 
-        currentSelectableCTranslate2ComputeDeviceList,
-        getSelectableCTranslate2ComputeDeviceList,
-        updateSelectableCTranslate2ComputeDeviceList,
-        updateSelectableCTranslate2ComputeDeviceList_FromBackend,
 
-        currentSelectedCTranslate2ComputeDevice,
-        getSelectedCTranslate2ComputeDevice,
-        updateSelectedCTranslate2ComputeDevice,
-        setSelectedCTranslate2ComputeDevice,
-        setSuccessSelectedCTranslate2ComputeDevice,
+        currentSelectableCTranslate2ComputeTypeList,
+        getSelectableCTranslate2ComputeTypeList,
+        updateSelectableCTranslate2ComputeTypeList,
+        updateSelectableCTranslate2ComputeTypeList_FromBackend,
+
+        currentSelectedCTranslate2ComputeType,
+        getSelectedCTranslate2ComputeType,
+        updateSelectedCTranslate2ComputeType,
+        setSelectedCTranslate2ComputeType,
+        setSuccessSelectedCTranslate2ComputeType,
+
+
+        currentSelectableTranslationComputeDeviceList,
+        getSelectableTranslationComputeDeviceList,
+        updateSelectableTranslationComputeDeviceList,
+        updateSelectableTranslationComputeDeviceList_FromBackend,
+
+        currentSelectedTranslationComputeDevice,
+        getSelectedTranslationComputeDevice,
+        updateSelectedTranslationComputeDevice,
+        setSelectedTranslationComputeDevice,
+        setSuccessSelectedTranslationComputeDevice,
 
         currentDeepLAuthKey,
         getDeepLAuthKey,

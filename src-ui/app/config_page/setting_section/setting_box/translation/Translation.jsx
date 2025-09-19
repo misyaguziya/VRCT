@@ -18,7 +18,8 @@ export const Translation = () => {
     return (
         <>
             <CTranslate2WeightType_Box />
-            <CTranslation2ComputeDevice_Box />
+            <CTranslate2ComputeType_Box />
+            <TranslationComputeDevice_Box />
             <DeeplAuthKey_Box />
         </>
     );
@@ -62,7 +63,7 @@ const CTranslate2WeightType_Box = () => {
                     "config_page.translation.ctranslate2_weight_type.desc",
                     {ctranslate2: "CTranslate2"}
                 )}
-                name="ctransalte2_weight_type"
+                name="ctranslate2_weight_type"
                 options={c_translate2_weight_types}
                 checked_variable={currentSelectedCTranslate2WeightType}
                 selectFunction={selectFunction}
@@ -72,47 +73,72 @@ const CTranslate2WeightType_Box = () => {
     );
 };
 
-// Duplicate
-import { useComputeMode } from "@logics_common";
-const CTranslation2ComputeDevice_Box = () => {
+const CTranslate2ComputeType_Box = () => {
     const { t } = useI18n();
-    const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useTranslation();
-    const { currentSelectableCTranslate2ComputeDeviceList } = useTranslation();
+    const { currentSelectableCTranslate2ComputeTypeList } = useTranslation();
+    const { currentSelectedCTranslate2ComputeType, setSelectedCTranslate2ComputeType } = useTranslation();
 
     const selectFunction = (selected_data) => {
-        const target_obj = currentSelectableCTranslate2ComputeDeviceList.data[selected_data.selected_id];
-        setSelectedCTranslate2ComputeDevice(target_obj);
+        setSelectedCTranslate2ComputeType(selected_data.selected_id);
     };
 
-    const list_for_ui = transformDeviceArray(currentSelectableCTranslate2ComputeDeviceList.data);
+    const ctranslate2_compute_type_label = t("config_page.translation.ctranslate2_compute_type.label", {
+        ctranslate2: "CTranslate2"
+    });
 
-    const target_index = findKeyByDeviceValue(currentSelectableCTranslate2ComputeDeviceList.data, currentSelectedCTranslate2ComputeDevice.data);
+    return (
+        <DropdownMenuContainer
+            dropdown_id="ctranslate2_compute_type"
+            label={ctranslate2_compute_type_label}
+            selected_id={currentSelectedCTranslate2ComputeType.data}
+            list={currentSelectableCTranslate2ComputeTypeList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedCTranslate2ComputeType.state}
+        />
+    );
+};
+
+// Duplicate
+import { useComputeMode } from "@logics_common";
+const TranslationComputeDevice_Box = () => {
+    const { t } = useI18n();
+    const { currentSelectedTranslationComputeDevice, setSelectedTranslationComputeDevice } = useTranslation();
+    const { currentSelectableTranslationComputeDeviceList } = useTranslation();
+
+    const selectFunction = (selected_data) => {
+        const target_obj = currentSelectableTranslationComputeDeviceList.data[selected_data.selected_id];
+        setSelectedTranslationComputeDevice(target_obj);
+    };
+
+    const list_for_ui = transformDeviceArray(currentSelectableTranslationComputeDeviceList.data);
+
+    const target_index = findKeyByDeviceValue(currentSelectableTranslationComputeDeviceList.data, currentSelectedTranslationComputeDevice.data);
 
 
     const { currentComputeMode } = useComputeMode();
-    const ctranslate2_compute_device_label = t("config_page.translation.ctranslate2_compute_device.label", {
-        ctranslate2: "Ctranslate2"
+    const translation_compute_device_label = t("config_page.translation.translation_compute_device.label", {
+        ctranslate2: "CTranslate2"
     });
     if (currentComputeMode.data === "cpu") {
         return (
             <ComputeDeviceContainer
-                label={ctranslate2_compute_device_label}
+                label={translation_compute_device_label}
                 selected_id={target_index}
                 list={list_for_ui}
                 selectFunction={selectFunction}
-                state={currentSelectedCTranslate2ComputeDevice.state}
+                state={currentSelectedTranslationComputeDevice.state}
             />
         )
     }
 
     return (
         <DropdownMenuContainer
-            dropdown_id="ctranslate2_compute_device"
-            label={ctranslate2_compute_device_label}
+            dropdown_id="translation_compute_device"
+            label={translation_compute_device_label}
             selected_id={target_index}
             list={list_for_ui}
             selectFunction={selectFunction}
-            state={currentSelectedCTranslate2ComputeDevice.state}
+            state={currentSelectedTranslationComputeDevice.state}
         />
     );
 };

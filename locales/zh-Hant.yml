@@ -133,7 +133,9 @@ config_page:
             desc: "你可以選擇用於離線翻譯引擎的翻譯模型。"
             small: "基本模型（{{capacity}}）"
             large: "高準確率模型（{{capacity}}）"
-        ctranslate2_compute_device:
+        ctranslate2_compute_type:
+            label:
+        translation_compute_device:
             label:
         deepl_auth_key:
             label: "DeepL 授權金鑰"

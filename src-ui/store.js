@@ -218,9 +218,14 @@ export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFi
 // Translation
 export const { atomInstance: Atom_DeepLAuthKey, useHook: useStore_DeepLAuthKey } = createAtomWithHook(null, "DeepLAuthKey");
 export const { atomInstance: Atom_SelectedCTranslate2WeightType, useHook: useStore_SelectedCTranslate2WeightType } = createAtomWithHook("", "SelectedCTranslate2WeightType");
-export const { atomInstance: Atom_SelectableCTranslate2ComputeDeviceList, useHook: useStore_SelectableCTranslate2ComputeDeviceList } = createAtomWithHook({}, "SelectableCTranslate2ComputeDeviceList");
-export const { atomInstance: Atom_SelectedCTranslate2ComputeDevice, useHook: useStore_SelectedCTranslate2ComputeDevice } = createAtomWithHook("", "SelectedCTranslate2ComputeDevice");
 export const { atomInstance: Atom_CTranslate2WeightTypeStatus, useHook: useStore_CTranslate2WeightTypeStatus } = createAtomWithHook(ctranslate2_weight_type_status, "CTranslate2WeightTypeStatus");
+
+export const { atomInstance: Atom_SelectableCTranslate2ComputeTypeList, useHook: useStore_SelectableCTranslate2ComputeTypeList } = createAtomWithHook({}, "SelectableCTranslate2ComputeTypeList");
+export const { atomInstance: Atom_SelectedCTranslate2ComputeType, useHook: useStore_SelectedCTranslate2ComputeType } = createAtomWithHook("", "SelectedCTranslate2ComputeType");
+
+
+export const { atomInstance: Atom_SelectableTranslationComputeDeviceList, useHook: useStore_SelectableTranslationComputeDeviceList } = createAtomWithHook({}, "SelectableTranslationComputeDeviceList");
+export const { atomInstance: Atom_SelectedTranslationComputeDevice, useHook: useStore_SelectedTranslationComputeDevice } = createAtomWithHook("", "SelectedTranslationComputeDevice");
 
 // Transcription
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
