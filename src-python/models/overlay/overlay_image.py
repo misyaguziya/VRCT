@@ -175,7 +175,8 @@ class OverlayImage:
             font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
             font = ImageFont.truetype(font_path, font_size)
 
-        text_width = draw.textlength(text, font)
+        # 改行を含んだtextの最大の文字数を計算する
+        text_width = max(draw.textlength(line, font) for line in text.split("\n"))
         character_width = text_width // len(text)
         character_line_num = int((ui_size["width"] // character_width) - 1)
         if len(text) > character_line_num:
