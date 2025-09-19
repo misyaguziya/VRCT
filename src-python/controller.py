@@ -653,14 +653,6 @@ class Controller:
         return {"status":200, "result":config.SELECTABLE_COMPUTE_DEVICE_LIST}
 
     @staticmethod
-    def getCTranslate2ComputeTypeList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST}
-
-    @staticmethod
-    def getWhisperComputeTypeList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_WHISPER_COMPUTE_TYPE_LIST}
-
-    @staticmethod
     def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
@@ -1454,10 +1446,6 @@ class Controller:
             th_callback.start()
             th_callback.join()
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
-
-    @staticmethod
-    def getCtranslate2ComputeTypeList(*args, **kwargs) -> dict:
-        return {"status":200, "result":config.SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST}
 
     @staticmethod
     def getCtranslate2ComputeType(*args, **kwargs) -> dict:

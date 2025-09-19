@@ -11,7 +11,7 @@ from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
-from utils import errorLogging, validateDictStructure, getComputeTypeList
+from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -134,14 +134,6 @@ class Config:
     @property
     def SELECTABLE_COMPUTE_DEVICE_LIST(self):
         return self._SELECTABLE_COMPUTE_DEVICE_LIST
-
-    @property
-    def SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST(self):
-        return self._SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST
-
-    @property
-    def SELECTABLE_WHISPER_COMPUTE_TYPE_LIST(self):
-        return self._SELECTABLE_WHISPER_COMPUTE_TYPE_LIST
 
     @property
     def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
@@ -830,7 +822,7 @@ class Config:
     @CTRANSLATE2_COMPUTE_TYPE.setter
     def CTRANSLATE2_COMPUTE_TYPE(self, value):
         if isinstance(value, str):
-            if value in self.SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST:
+            if value in self.SELECTED_TRANSLATION_COMPUTE_DEVICE["compute_type"]:
                 self._CTRANSLATE2_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
@@ -854,7 +846,7 @@ class Config:
     @WHISPER_COMPUTE_TYPE.setter
     def WHISPER_COMPUTE_TYPE(self, value):
         if isinstance(value, str):
-            if value in self.SELECTABLE_WHISPER_COMPUTE_TYPE_LIST:
+            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_type"]:
                 self._WHISPER_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
@@ -1078,13 +1070,7 @@ class Config:
         self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
-        self._SELECTABLE_COMPUTE_DEVICE_LIST = []
-        if torch.cuda.is_available():
-            for i in range(torch.cuda.device_count()):
-                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "device_name": torch.cuda.get_device_name(i)})
-        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
-        self._SELECTABLE_CTRANSLATE2_COMPUTE_TYPE_LIST = ["auto"] + getComputeTypeList()
-        self._SELECTABLE_WHISPER_COMPUTE_TYPE_LIST = ["auto"] + getComputeTypeList()
+        self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
         self._SEND_MESSAGE_FORMAT_PARTS = {
             "message": {
