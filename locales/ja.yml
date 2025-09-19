@@ -133,8 +133,10 @@ config_page:
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル （{{capacity}}）"
             large: "高精度モデル （{{capacity}}）"
-        ctranslate2_compute_device:
-            label: "AI翻訳 {{ctranslate2}} の処理デバイス"
+        ctranslate2_compute_type:
+            label: "AI翻訳 {{ctranslate2}} の処理タイプ"
+        translation_compute_device:
+            label: "AI翻訳の処理デバイス"
         deepl_auth_key:
             label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"

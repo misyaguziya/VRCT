@@ -133,8 +133,10 @@ config_page:
             desc: "You can choose the translation model when using the {{ctranslate2}} translation engine."
             small: "Basic Model ({{capacity}})"
             large: "High Accuracy Model ({{capacity}})"
-        ctranslate2_compute_device:
-            label: "Processing device for AI translation {{ctranslate2}}"
+        ctranslate2_compute_type:
+            label: "Processing type for AI translation {{ctranslate2}}"
+        translation_compute_device:
+            label: "Processing device for AI translation"
         deepl_auth_key:
             label: "DeepL Auth Key"
             desc: "When using it, please change {{translator}} on the main screen to DeepL_API. ※Some languages may not be supported."
