@@ -347,9 +347,11 @@ init_mapping = {key:value for key, value in mapping.items() if key.startswith("/
 controller.setInitMapping(init_mapping)
 
 class Main:
-    def __init__(self) -> None:
+    def __init__(self, controller_instance, mapping_data) -> None:
         self.queue = Queue()
         self.main_loop = True
+        self.controller = controller_instance
+        self.mapping = mapping_data
 
     def receiver(self) -> None:
         while True:
@@ -360,7 +362,7 @@ class Main:
                 endpoint = received_data.get("endpoint", None)
                 data = received_data.get("data", None)
                 data = encodeBase64(data) if data is not None else None
-                printLog(endpoint, {"receive_data":data})
+                printLog(endpoint, {"receive_data": data})
                 self.queue.put((endpoint, data))
 
     def startReceiver(self) -> None:
@@ -369,7 +371,10 @@ class Main:
         th_receiver.start()
 
     def handleRequest(self, endpoint, data=None) -> tuple:
-        handler = mapping.get(endpoint)
+        result = None  # デフォルト値を設定
+        status = 500   # デフォルト値を設定
+
+        handler = self.mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
             status = 404
@@ -385,6 +390,7 @@ class Main:
                 errorLogging()
                 result = str(e)
                 status = 500
+
         return result, status
 
     def handler(self) -> None:
@@ -417,13 +423,15 @@ class Main:
     def stop(self) -> None:
         self.main_loop = False
 
-if __name__ == "__main__":
-    main = Main()
-    main.startReceiver()
-    main.startHandler()
+# 外部から参照可能なインスタンスを提供
+main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
-    controller.setWatchdogCallback(main.stop)
-    controller.init()
+if __name__ == "__main__":
+    main_instance.startReceiver()
+    main_instance.startHandler()
+
+    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする
     for key in mapping.keys():
@@ -432,13 +440,13 @@ if __name__ == "__main__":
     process = "main"
     match process:
         case "main":
-            main.start()
+            main_instance.start()
 
         case "test":
             for _ in range(100):
                 time.sleep(0.5)
                 endpoint = "/get/data/mic_host_list"
-                result, status = main.handleRequest(endpoint)
+                result, status = main_instance.handleRequest(endpoint)
                 printResponse(status, endpoint, result)
 
         case "test_all":
@@ -639,6 +647,6 @@ if __name__ == "__main__":
                     case _:
                         data = None
 
-                result, status = main.handleRequest(endpoint, data)
+                result, status = main_instance.handleRequest(endpoint, data)
                 printResponse(status, endpoint, result)
                 time.sleep(0.5)
