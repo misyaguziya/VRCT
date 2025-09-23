@@ -163,43 +163,55 @@ class TestMainloop():
         self.run_endpoints = {
             "/run/send_message_box": [
                 {
-                    "data": {"id":"123456", "message":"test"},
+                    "data": {"id":"000001", "message":"test"},
                     "status": 200,
-                    "result": {
-                        'id': '123456',
-                        'original': {
-                            'message': 'test',
-                            'transliteration': []
-                            },
-                        'translations': []
-                    }
-                }
+                },
+                {
+                    # 英語
+                    "data": {"id":"000002", "message":"Hello World!"},
+                    "status": 200,
+                },
+                {
+                    # 日本語
+                    "data": {"id":"000003", "message":"こんにちわ 世界！"},
+                    "status": 200,
+                },
+                {
+                    # 韓国語
+                    "data": {"id":"000004", "message":"안녕하세요 세계!"},
+                    "status": 200,
+                },
+                {
+                    # 中国語 繁体字
+                    "data": {"id":"000005", "message":"你好，世界！"},
+                    "status": 200,
+                },
             ],
             "/run/typing_message_box": [{"data": None, "status": 200, "result": True}],
             "/run/stop_typing_message_box": [{"data": None, "status": 200, "result": True}],
             "/run/send_text_overlay": [{"data": "test_overlay", "status": 200, "result": "test_overlay"}],
-            "/run/swap_your_language_and_target_language": [{"data": None, "status": 200, "result": True}],
+            "/run/swap_your_language_and_target_language": [{"data": None, "status": 200}],
             # !!!Cant be tested here!!!
             # "/run/update_software": [{"data": None, "status": 200, "result": True}],
             # "/run/update_cuda_software": [{"data": None, "status": 200, "result": True}],
-            "/run/download_ctranslate2_weight": [
-                {"data": "small", "status": 200, "result": True},
-                {"data": "large", "status": 400, "result": False},
-            ],
-            "/run/download_whisper_weight": [
-                {"data": "tiny", "status": 200, "result": True},
-                {"data": "base", "status": 200, "result": True},
-                {"data": "small", "status": 200, "result": True},
-                {"data": "medium", "status": 200, "result": True},
-                {"data": "large-v1", "status": 200, "result": True},
-                {"data": "large-v2", "status": 400, "result": False},
-                {"data": "large-v3", "status": 400, "result": False},
-                {"data": "large-v3-turbo-int8", "status": 400, "result": False},
-                {"data": "large-v3-turbo", "status": 400, "result": False}
-            ],
-            "/run/open_filepath_logs": {"data": None, "status": 200, "result": True},
-            "/run/open_filepath_config_file": {"data": None, "status": 200, "result": True},
-            "/run/feed_watchdog": {"data": None, "status": 200, "result": True},
+            # "/run/download_ctranslate2_weight": [
+            #     {"data": "small", "status": 200, "result": True},
+            #     {"data": "large", "status": 400, "result": False},
+            # ],
+            # "/run/download_whisper_weight": [
+            #     {"data": "tiny", "status": 200, "result": True},
+            #     {"data": "base", "status": 200, "result": True},
+            #     {"data": "small", "status": 200, "result": True},
+            #     {"data": "medium", "status": 200, "result": True},
+            #     {"data": "large-v1", "status": 200, "result": True},
+            #     {"data": "large-v2", "status": 400, "result": True},
+            #     {"data": "large-v3", "status": 400, "result": True},
+            #     {"data": "large-v3-turbo-int8", "status": 400, "result": True},
+            #     {"data": "large-v3-turbo", "status": 400, "result": True}
+            # ],
+            # "/run/open_filepath_logs": {"data": None, "status": 200, "result": True},
+            # "/run/open_filepath_config_file": {"data": None, "status": 200, "result": True},
+            # "/run/feed_watchdog": {"data": None, "status": 200, "result": True},
         }
 
     def test_endpoints_on_off_single(self):
@@ -226,84 +238,81 @@ class TestMainloop():
                     break
         print("----ON/OFF系のエンドポイントのテスト終了----")
 
-    def test_endpoints_on_off_random(self):
-        print("----ON/OFFでのランダムアクセスのテスト----")
-        for i in range(1000):
-            endpoint = random.choice(self.validity_endpoints)
-            print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
-            if endpoint.startswith("/set/enable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                expected_result = True
-                if result == expected_result and status == 200:
-                    self.config_dict[endpoint.split("/")[-1]] = result
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
-                else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    pprint.pprint(self.config_dict)
-                    break
-            elif endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                expected_result = False
-                if result == expected_result and status == 200:
-                    self.config_dict[endpoint.split("/")[-1]] = result
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
-                else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    pprint.pprint(self.config_dict)
-                    break
-            time.sleep(0.2)
+    # def test_endpoints_on_off_random(self):
+    #     print("----ON/OFFでのランダムアクセスのテスト----")
+    #     for i in range(1000):
+    #         endpoint = random.choice(self.validity_endpoints)
+    #         print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
+    #         if endpoint.startswith("/set/enable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #             expected_result = True
+    #             if result == expected_result and status == 200:
+    #                 self.config_dict[endpoint.split("/")[-1]] = result
+    #                 print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+    #             else:
+    #                 print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+    #                 pprint.pprint(self.config_dict)
+    #                 break
+    #         elif endpoint.startswith("/set/disable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #             expected_result = False
+    #             if result == expected_result and status == 200:
+    #                 self.config_dict[endpoint.split("/")[-1]] = result
+    #                 print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+    #             else:
+    #                 print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+    #                 pprint.pprint(self.config_dict)
+    #                 break
 
-        # 最後にすべてOFFにして終了
-        for endpoint in self.validity_endpoints:
-            if endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                time.sleep(0.2)
-        print("----ON/OFFでのランダムアクセスのテスト終了----")
+    #     # 最後にすべてOFFにして終了
+    #     for endpoint in self.validity_endpoints:
+    #         if endpoint.startswith("/set/disable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #             time.sleep(0.2)
+    #     print("----ON/OFFでのランダムアクセスのテスト終了----")
 
-    def test_endpoints_on_off_continuous(self):
-        print("----ON/OFF連続テスト----")
-        # endpoints = ["/set/enable/websocket_server", "/set/disable/websocket_server"]
-        endpoints = [
-            "/set/enable/translation",
-            "/set/disable/translation",
-            "/set/enable/transcription_send",
-            "/set/disable/transcription_send",
-            "/set/enable/transcription_receive",
-            "/set/disable/transcription_receive",
-        ]
-        for i in range(1000):
-            endpoint = random.choice(endpoints)
-            print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
-            if endpoint.startswith("/set/enable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                expected_result = True
-                if result == expected_result and status == 200:
-                    self.config_dict[endpoint.split("/")[-1]] = result
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
-                else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    pprint.pprint(self.config_dict)
-                    break
-            elif endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                expected_result = False
-                if result == expected_result and status == 200:
-                    self.config_dict[endpoint.split("/")[-1]] = result
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
-                else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    pprint.pprint(self.config_dict)
-                    break
-            time.sleep(0.2)
+    # def test_endpoints_on_off_continuous(self):
+    #     print("----ON/OFF連続テスト----")
+    #     # endpoints = ["/set/enable/websocket_server", "/set/disable/websocket_server"]
+    #     endpoints = [
+    #         "/set/enable/translation",
+    #         "/set/disable/translation",
+    #         "/set/enable/transcription_send",
+    #         "/set/disable/transcription_send",
+    #         "/set/enable/transcription_receive",
+    #         "/set/disable/transcription_receive",
+    #     ]
+    #     for i in range(1000):
+    #         endpoint = random.choice(endpoints)
+    #         print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
+    #         if endpoint.startswith("/set/enable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #             expected_result = True
+    #             if result == expected_result and status == 200:
+    #                 self.config_dict[endpoint.split("/")[-1]] = result
+    #                 print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+    #             else:
+    #                 print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+    #                 pprint.pprint(self.config_dict)
+    #                 break
+    #         elif endpoint.startswith("/set/disable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #             expected_result = False
+    #             if result == expected_result and status == 200:
+    #                 self.config_dict[endpoint.split("/")[-1]] = result
+    #                 print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+    #             else:
+    #                 print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+    #                 pprint.pprint(self.config_dict)
+    #                 break
 
-        # 最後にすべてOFFにして終了
-        for endpoint in self.validity_endpoints:
-            if endpoint.startswith("/set/disable/"):
-                result, status = self.main.handleRequest(endpoint, None)
-                time.sleep(0.2)
-        print("----ON/OFF連続テスト終了----")
+    #     # 最後にすべてOFFにして終了
+    #     for endpoint in self.validity_endpoints:
+    #         if endpoint.startswith("/set/disable/"):
+    #             result, status = self.main.handleRequest(endpoint, None)
+    #     print("----ON/OFF連続テスト終了----")
 
-    def test_set_data_endpoints(self):
+    def test_set_data_endpoints_single(self):
         print("----データ設定系のエンドポイントのテスト----")
         for endpoint in self.set_data_endpoints:
             print(f"Testing endpoint: {endpoint}", end=" ", flush=True)
@@ -465,15 +474,67 @@ class TestMainloop():
                     break
             else:
                 print(f"\t -> {Color.YELLOW}[SKIP]{Color.RESET} No data to set for this endpoint.")
-            time.sleep(0.2)
         print("----データ設定系のエンドポイントのテスト終了----")
+
+    def test_run_endpoints_single(self):
+        print("----実行系のエンドポイントのテスト----")
+        for endpoint, tests in self.run_endpoints.items():
+            print(f"Testing endpoint: {endpoint}", end=" ", flush=True)
+            match endpoint:
+                case "/run/send_message_box":
+                    for test in tests:
+                        data = test["data"]
+                        expected_status = test["status"]
+                        result, status = self.main.handleRequest(endpoint, data)
+                        if status == expected_status:
+                            print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                        else:
+                            print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
+                            print(f" Current config_dict: {self.config_dict}")
+                            break
+                case "/run/typing_message_box" | "/run/stop_typing_message_box":
+                    for test in tests:
+                        data = test["data"]
+                        expected_status = test["status"]
+                        expected_result = test["result"]
+                        result, status = self.main.handleRequest(endpoint, data)
+                        if status == expected_status and result == expected_result:
+                            print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                        else:
+                            print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+                            print(f" Current config_dict: {self.config_dict}")
+                            break
+                case "/run/send_text_overlay":
+                    for test in tests:
+                        data = test["data"]
+                        expected_status = test["status"]
+                        expected_result = test["result"]
+                        result, status = self.main.handleRequest(endpoint, data)
+                        if status == expected_status and result == expected_result:
+                            print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                        else:
+                            print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
+                            print(f" Current config_dict: {self.config_dict}")
+                            break
+                case "/run/swap_your_language_and_target_language":
+                    for test in tests:
+                        data = test["data"]
+                        expected_status = test["status"]
+                        result, status = self.main.handleRequest(endpoint, data)
+                        if status == expected_status:
+                            print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                        else:
+                            print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
+                            print(f" Current config_dict: {self.config_dict}")
+                            break
+        print("----実行系のエンドポイントのテスト終了----")
 
 if __name__ == "__main__":
     try:
         test = TestMainloop()
-        # test.test_endpoints_on_off_random()
-        # test.test_endpoints_continuous()
-        test.test_set_data_endpoints()
+        test.test_endpoints_on_off_single()
+        test.test_set_data_endpoints_single()
+        test.test_run_endpoints_single()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
     except Exception as e:

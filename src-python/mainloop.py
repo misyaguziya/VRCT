@@ -386,6 +386,7 @@ class Main:
                 response = handler["variable"](data)
                 status = response.get("status", None)
                 result = response.get("result", None)
+                time.sleep(0.2) # 処理の安定化のために少し待機
             except Exception as e:
                 errorLogging()
                 result = str(e)
