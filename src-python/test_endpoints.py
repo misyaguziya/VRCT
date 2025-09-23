@@ -73,18 +73,18 @@ class TestMainloop():
             "/set/disable/convert_message_to_romaji",
             "/set/enable/convert_message_to_hiragana",
             "/set/disable/convert_message_to_hiragana",
-            # "/set/enable/auto_mic_select",
-            # "/set/disable/auto_mic_select",
+            "/set/enable/auto_mic_select",
+            "/set/disable/auto_mic_select",
             "/set/enable/mic_automatic_threshold",
             "/set/disable/mic_automatic_threshold",
-            # "/set/enable/check_mic_threshold",
-            # "/set/disable/check_mic_threshold",
-            # "/set/enable/auto_speaker_select",
-            # "/set/disable/auto_speaker_select",
+            "/set/enable/check_mic_threshold",
+            "/set/disable/check_mic_threshold",
+            "/set/enable/auto_speaker_select",
+            "/set/disable/auto_speaker_select",
             "/set/enable/speaker_automatic_threshold",
             "/set/disable/speaker_automatic_threshold",
-            # "/set/enable/check_speaker_threshold",
-            # "/set/disable/check_speaker_threshold",
+            "/set/enable/check_speaker_threshold",
+            "/set/disable/check_speaker_threshold",
             "/set/enable/overlay_small_log",
             "/set/disable/overlay_small_log",
             "/set/enable/overlay_large_log",
@@ -251,12 +251,26 @@ class TestMainloop():
                     print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
                     pprint.pprint(self.config_dict)
                     break
+            time.sleep(0.2)
+
+        # 最後にすべてOFFにして終了
+        for endpoint in self.validity_endpoints:
+            if endpoint.startswith("/set/disable/"):
+                result, status = self.main.handleRequest(endpoint, None)
+                time.sleep(0.2)
         print("----ON/OFFでのランダムアクセスのテスト終了----")
 
-    def test_endpoints_continuous(self):
+    def test_endpoints_on_off_continuous(self):
         print("----連続テスト----")
         # endpoints = ["/set/enable/websocket_server", "/set/disable/websocket_server"]
-        endpoints = ["/set/enable/transcription_receive", "/set/disable/transcription_receive"]
+        endpoints = [
+            "/set/enable/translation",
+            "/set/disable/translation",
+            "/set/enable/transcription_send",
+            "/set/disable/transcription_send",
+            "/set/enable/transcription_receive",
+            "/set/disable/transcription_receive",
+        ]
         for i in range(1000):
             endpoint = random.choice(endpoints)
             print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
@@ -280,8 +294,21 @@ class TestMainloop():
                     print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
                     pprint.pprint(self.config_dict)
                     break
+            time.sleep(0.2)
+
+        # 最後にすべてOFFにして終了
+        for endpoint in self.validity_endpoints:
+            if endpoint.startswith("/set/disable/"):
+                result, status = self.main.handleRequest(endpoint, None)
+                time.sleep(0.2)
         print("----連続テスト終了----")
 
 if __name__ == "__main__":
-    test = TestMainloop()
-    test.test_endpoints_continuous()
+    try:
+        test = TestMainloop()
+        test.test_endpoints_on_off_random()
+        # test.test_endpoints_continuous()
+    except KeyboardInterrupt:
+        print("Interrupted by user, shutting down...")
+    except Exception as e:
+        print(f"An error occurred: {e}")
