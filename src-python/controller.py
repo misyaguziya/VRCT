@@ -1699,14 +1699,16 @@ class Controller:
 
     @staticmethod
     def setEnableLoggerFeature(*args, **kwargs) -> dict:
-        config.LOGGER_FEATURE = True
-        model.startLogger()
+        if config.LOGGER_FEATURE is False:
+            model.startLogger()
+            config.LOGGER_FEATURE = True
         return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
     def setDisableLoggerFeature(*args, **kwargs) -> dict:
-        model.stopLogger()
-        config.LOGGER_FEATURE = False
+        if config.LOGGER_FEATURE is True:
+            model.stopLogger()
+            config.LOGGER_FEATURE = False
         return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
@@ -2245,24 +2247,28 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
-            model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
-            config.WEBSOCKET_SERVER = True
-            response = {"status":200, "result":config.WEBSOCKET_SERVER}
-        else:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"WebSocket server host or port is not available",
-                    "data": config.WEBSOCKET_SERVER
+        if config.WEBSOCKET_SERVER is False:
+            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                config.WEBSOCKET_SERVER = True
+                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"WebSocket server host or port is not available",
+                        "data": config.WEBSOCKET_SERVER
+                    }
                 }
-            }
+        else:
+            response = {"status":200, "result":config.WEBSOCKET_SERVER}
         return response
 
     @staticmethod
     def setDisableWebSocketServer(*args, **kwargs) -> dict:
-        config.WEBSOCKET_SERVER = False
-        model.stopWebSocketServer()
+        if config.WEBSOCKET_SERVER is True:
+            config.WEBSOCKET_SERVER = False
+            model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     def initializationProgress(self, progress):
