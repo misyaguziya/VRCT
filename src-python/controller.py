@@ -795,24 +795,28 @@ class Controller:
 
     @staticmethod
     def setEnableTranslation(*args, **kwargs) -> dict:
-        if model.isLoadedCTranslate2Model() is False:
-            model.changeTranslatorCTranslate2Model()
-        config.ENABLE_TRANSLATION = True
+        if config.ENABLE_TRANSLATION is False:
+            if model.isLoadedCTranslate2Model() is False:
+                model.changeTranslatorCTranslate2Model()
+            config.ENABLE_TRANSLATION = True
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
     def setDisableTranslation(*args, **kwargs) -> dict:
-        config.ENABLE_TRANSLATION = False
+        if config.ENABLE_TRANSLATION is True:
+            config.ENABLE_TRANSLATION = False
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
     def setEnableForeground(*args, **kwargs) -> dict:
-        config.ENABLE_FOREGROUND = True
+        if config.ENABLE_FOREGROUND is False:
+            config.ENABLE_FOREGROUND = True
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
     @staticmethod
     def setDisableForeground(*args, **kwargs) -> dict:
-        config.ENABLE_FOREGROUND = False
+        if config.ENABLE_FOREGROUND is True:
+            config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
     @staticmethod
@@ -906,12 +910,14 @@ class Controller:
 
     @staticmethod
     def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_ROMAJI = True
+        if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+            config.CONVERT_MESSAGE_TO_ROMAJI = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
     def setDisableConvertMessageToRomaji(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_ROMAJI = False
+        if config.CONVERT_MESSAGE_TO_ROMAJI is True:
+            config.CONVERT_MESSAGE_TO_ROMAJI = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
@@ -920,12 +926,14 @@ class Controller:
 
     @staticmethod
     def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_HIRAGANA = True
+        if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+            config.CONVERT_MESSAGE_TO_HIRAGANA = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
     def setDisableConvertMessageToHiragana(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_HIRAGANA = False
+        if config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+            config.CONVERT_MESSAGE_TO_HIRAGANA = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
@@ -934,12 +942,14 @@ class Controller:
 
     @staticmethod
     def setEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+        if config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
+            config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
     def setDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        if config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+            config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
@@ -993,12 +1003,14 @@ class Controller:
 
     @staticmethod
     def setEnableShowResendButton(*args, **kwargs) -> dict:
-        config.SHOW_RESEND_BUTTON = True
+        if not config.SHOW_RESEND_BUTTON:
+            config.SHOW_RESEND_BUTTON = True
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
     def setDisableShowResendButton(*args, **kwargs) -> dict:
-        config.SHOW_RESEND_BUTTON = False
+        if config.SHOW_RESEND_BUTTON is True:
+            config.SHOW_RESEND_BUTTON = False
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
@@ -1033,19 +1045,21 @@ class Controller:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
-        config.AUTO_MIC_SELECT = True
-        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
-        device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-        device_manager.forceUpdateAndSetMicDevices()
+        if config.AUTO_MIC_SELECT is False:
+            device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
+            device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
+            device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+            device_manager.forceUpdateAndSetMicDevices()
+            config.AUTO_MIC_SELECT = True
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackProcessBeforeUpdateDevices()
-        device_manager.clearCallbackDefaultMicDevice()
-        device_manager.clearCallbackProcessAfterUpdateDevices()
-        config.AUTO_MIC_SELECT = False
+        if config.AUTO_MIC_SELECT is True:
+            device_manager.clearCallbackProcessBeforeUpdateDevices()
+            device_manager.clearCallbackDefaultMicDevice()
+            device_manager.clearCallbackProcessAfterUpdateDevices()
+            config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -1108,12 +1122,14 @@ class Controller:
 
     @staticmethod
     def setEnableMicAutomaticThreshold(*args, **kwargs) -> dict:
-        config.MIC_AUTOMATIC_THRESHOLD = True
+        if config.MIC_AUTOMATIC_THRESHOLD is False:
+            config.MIC_AUTOMATIC_THRESHOLD = True
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setDisableMicAutomaticThreshold(*args, **kwargs) -> dict:
-        config.MIC_AUTOMATIC_THRESHOLD = False
+        if config.MIC_AUTOMATIC_THRESHOLD is True:
+            config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
@@ -1226,20 +1242,21 @@ class Controller:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
-        config.AUTO_SPEAKER_SELECT = True
-        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
-        device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-        device_manager.forceUpdateAndSetSpeakerDevices()
-
+        if config.AUTO_SPEAKER_SELECT is False:
+            device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
+            device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
+            device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+            device_manager.forceUpdateAndSetSpeakerDevices()
+            config.AUTO_SPEAKER_SELECT = True
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackProcessBeforeUpdateDevices()
-        device_manager.clearCallbackDefaultSpeakerDevice()
-        device_manager.clearCallbackProcessAfterUpdateDevices()
-        config.AUTO_SPEAKER_SELECT = False
+        if config.AUTO_SPEAKER_SELECT is True:
+            device_manager.clearCallbackProcessBeforeUpdateDevices()
+            device_manager.clearCallbackDefaultSpeakerDevice()
+            device_manager.clearCallbackProcessAfterUpdateDevices()
+            config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
@@ -1285,12 +1302,14 @@ class Controller:
 
     @staticmethod
     def setEnableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        config.SPEAKER_AUTOMATIC_THRESHOLD = True
+        if config.SPEAKER_AUTOMATIC_THRESHOLD is False:
+            config.SPEAKER_AUTOMATIC_THRESHOLD = True
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setDisableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        config.SPEAKER_AUTOMATIC_THRESHOLD = False
+        if config.SPEAKER_AUTOMATIC_THRESHOLD is True:
+            config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
@@ -1459,12 +1478,14 @@ class Controller:
 
     @staticmethod
     def setEnableNotificationVrcSfx(*args, **kwargs) -> dict:
-        config.NOTIFICATION_VRC_SFX = True
+        if config.NOTIFICATION_VRC_SFX is False:
+            config.NOTIFICATION_VRC_SFX = True
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
     def setDisableNotificationVrcSfx(*args, **kwargs) -> dict:
-        config.NOTIFICATION_VRC_SFX = False
+        if config.NOTIFICATION_VRC_SFX is True:
+            config.NOTIFICATION_VRC_SFX = False
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
@@ -1571,12 +1592,14 @@ class Controller:
 
     @staticmethod
     def setEnableAutoClearMessageBox(*args, **kwargs) -> dict:
-        config.AUTO_CLEAR_MESSAGE_BOX = True
+        if config.AUTO_CLEAR_MESSAGE_BOX is False:
+            config.AUTO_CLEAR_MESSAGE_BOX = True
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
     def setDisableAutoClearMessageBox(*args, **kwargs) -> dict:
-        config.AUTO_CLEAR_MESSAGE_BOX = False
+        if config.AUTO_CLEAR_MESSAGE_BOX is True:
+            config.AUTO_CLEAR_MESSAGE_BOX = False
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
@@ -1585,12 +1608,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.SEND_ONLY_TRANSLATED_MESSAGES = True
+        if config.SEND_ONLY_TRANSLATED_MESSAGES is False:
+            config.SEND_ONLY_TRANSLATED_MESSAGES = True
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.SEND_ONLY_TRANSLATED_MESSAGES = False
+        if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
+            config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
@@ -1599,17 +1624,19 @@ class Controller:
 
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = True
-        if config.OVERLAY_LARGE_LOG is False:
-            model.startOverlay()
+        if config.OVERLAY_SMALL_LOG is False:
+            if config.OVERLAY_LARGE_LOG is False:
+                model.startOverlay()
+            config.OVERLAY_SMALL_LOG = True
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = False
-        model.clearOverlayImageSmallLog()
-        if config.OVERLAY_LARGE_LOG is False:
-            model.shutdownOverlay()
+        if config.OVERLAY_SMALL_LOG is True:
+            model.clearOverlayImageSmallLog()
+            if config.OVERLAY_LARGE_LOG is False:
+                model.shutdownOverlay()
+            config.OVERLAY_SMALL_LOG = False
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1628,17 +1655,19 @@ class Controller:
 
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
-        config.OVERLAY_LARGE_LOG = True
-        if config.OVERLAY_SMALL_LOG is False:
-            model.startOverlay()
+        if config.OVERLAY_LARGE_LOG is False:
+            if config.OVERLAY_SMALL_LOG is False:
+                model.startOverlay()
+            config.OVERLAY_LARGE_LOG = True
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
-        config.OVERLAY_LARGE_LOG = False
-        model.clearOverlayImageLargeLog()
-        if config.OVERLAY_SMALL_LOG is False:
-            model.shutdownOverlay()
+        if config.OVERLAY_LARGE_LOG is True:
+            model.clearOverlayImageLargeLog()
+            if config.OVERLAY_SMALL_LOG is False:
+                model.shutdownOverlay()
+            config.OVERLAY_LARGE_LOG = False
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1657,12 +1686,14 @@ class Controller:
 
     @staticmethod
     def setEnableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = True
+        if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is False:
+            config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = True
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setDisableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
+        if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+            config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
@@ -1671,12 +1702,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_MESSAGE_TO_VRC = True
+        if config.SEND_MESSAGE_TO_VRC is False:
+            config.SEND_MESSAGE_TO_VRC = True
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
     def setDisableSendMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_MESSAGE_TO_VRC = False
+        if config.SEND_MESSAGE_TO_VRC is True:
+            config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
@@ -1685,12 +1718,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_RECEIVED_MESSAGE_TO_VRC = True
+        if config.SEND_RECEIVED_MESSAGE_TO_VRC is False:
+            config.SEND_RECEIVED_MESSAGE_TO_VRC = True
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
     def setDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_RECEIVED_MESSAGE_TO_VRC = False
+        if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
+            config.SEND_RECEIVED_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
@@ -1717,45 +1752,53 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        if model.getIsOscQueryEnabled() is True:
-            config.VRC_MIC_MUTE_SYNC = True
-            model.setMuteSelfStatus()
-            model.changeMicTranscriptStatus()
-            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+        if config.VRC_MIC_MUTE_SYNC is False:
+            if model.getIsOscQueryEnabled() is True:
+                config.VRC_MIC_MUTE_SYNC = True
+                model.setMuteSelfStatus()
+                model.changeMicTranscriptStatus()
+                response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+            else:
+                response = {
+                        "status":400,
+                        "result":{
+                            "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
+                            "data": config.VRC_MIC_MUTE_SYNC
+                        }
+                }
         else:
-            response = {
-                    "status":400,
-                    "result":{
-                        "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
-                        "data": config.VRC_MIC_MUTE_SYNC
-                    }
-            }
+            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
         return response
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
-        config.VRC_MIC_MUTE_SYNC = False
-        model.changeMicTranscriptStatus()
+        if config.VRC_MIC_MUTE_SYNC is True:
+            config.VRC_MIC_MUTE_SYNC = False
+            model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        self.startThreadingCheckSpeakerEnergy()
-        config.ENABLE_CHECK_ENERGY_RECEIVE = True
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is False:
+            self.startThreadingCheckSpeakerEnergy()
+            config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setDisableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        self.stopThreadingCheckSpeakerEnergy()
-        config.ENABLE_CHECK_ENERGY_RECEIVE = False
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            self.stopThreadingCheckSpeakerEnergy()
+            config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        self.startThreadingCheckMicEnergy()
-        config.ENABLE_CHECK_ENERGY_SEND = True
+        if config.ENABLE_CHECK_ENERGY_SEND is False:
+            self.startThreadingCheckMicEnergy()
+            config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     def setDisableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        self.stopThreadingCheckMicEnergy()
-        config.ENABLE_CHECK_ENERGY_SEND = False
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            self.stopThreadingCheckMicEnergy()
+            config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     @staticmethod
@@ -1769,23 +1812,27 @@ class Controller:
         return {"status":200, "result":True}
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionSendMessage()
-        config.ENABLE_TRANSCRIPTION_SEND = True
+        if config.ENABLE_TRANSCRIPTION_SEND is False:
+            self.startThreadingTranscriptionSendMessage()
+            config.ENABLE_TRANSCRIPTION_SEND = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
-        self.stopThreadingTranscriptionSendMessage()
-        config.ENABLE_TRANSCRIPTION_SEND = False
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            self.stopThreadingTranscriptionSendMessage()
+            config.ENABLE_TRANSCRIPTION_SEND = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionReceiveMessage()
-        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
+            self.startThreadingTranscriptionReceiveMessage()
+            config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
-        self.stopThreadingTranscriptionReceiveMessage()
-        config.ENABLE_TRANSCRIPTION_RECEIVE = False
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def sendMessageBox(self, data, *args, **kwargs) -> dict:
