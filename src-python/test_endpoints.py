@@ -1,6 +1,5 @@
 # 初期化のため、config.jsonの削除
 import os
-import pprint
 import time
 import random
 if os.path.exists("config.json"):
@@ -220,26 +219,26 @@ class TestMainloop():
             result, status = self.main.handleRequest(endpoint, None)
             if result is True and status == 200:
                 self.config_dict[endpoint.split("/")[-1]] = result
-                print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
-                print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 print(f"Current config_dict: {self.config_dict}")
         elif endpoint.startswith("/set/disable/"):
             result, status = self.main.handleRequest(endpoint, None)
             if result is False and status == 200:
                 self.config_dict[endpoint.split("/")[-1]] = result
-                print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
-                print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 print(f"Current config_dict: {self.config_dict}")
         return success
 
     def test_endpoints_on_off_all(self):
         print("----ON/OFF系のエンドポイントのテスト----")
         for endpoint in self.validity_endpoints:
-            print(f"Testing endpoint: {endpoint}", end="", flush=True)
+            print(f"Testing endpoint: {endpoint}", flush=True)
             if self.test_endpoints_on_off_single(endpoint) is False:
                 break
         print("----ON/OFF系のエンドポイントのテスト終了----")
@@ -248,7 +247,7 @@ class TestMainloop():
         print("----ON/OFFでのランダムアクセスのテスト----")
         for i in range(1000):
             endpoint = random.choice(self.validity_endpoints)
-            print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
+            print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
             if self.test_endpoints_on_off_single(endpoint) is False:
                 break
 
@@ -272,7 +271,7 @@ class TestMainloop():
         # ]
         for i in range(1000):
             endpoint = random.choice(endpoints)
-            print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
+            print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
             if self.test_endpoints_on_off_single(endpoint) is False:
                 break
 
@@ -435,13 +434,13 @@ class TestMainloop():
             result, status = self.main.handleRequest(endpoint, data)
             if status == 200:
                 self.config_dict[endpoint.split("/")[-1]] = result
-                print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
-                print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
+                print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 print(f" Current config_dict: {self.config_dict}")
         else:
-            print(f"\t -> {Color.YELLOW}[SKIP]{Color.RESET} No data to set for this endpoint.")
+            print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No data to set for this endpoint: {endpoint}.")
             success = True
         return success
 
@@ -461,45 +460,45 @@ class TestMainloop():
                 expected_status = test["status"]
                 result, status = self.main.handleRequest(endpoint, data)
                 if status == expected_status:
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                     success = True
                 else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
-                    print(f" Current config_dict: {self.config_dict}")
+                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+                    print(f"Current config_dict: {self.config_dict}")
             case "/run/typing_message_box" | "/run/stop_typing_message_box":
                 data = test["data"]
                 expected_status = test["status"]
                 expected_result = test["result"]
                 result, status = self.main.handleRequest(endpoint, data)
                 if status == expected_status and result == expected_result:
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                     success = True
                 else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    print(f" Current config_dict: {self.config_dict}")
+                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}, Expected: {expected_result}")
+                    print(f"Current config_dict: {self.config_dict}")
             case "/run/send_text_overlay":
                 data = test["data"]
                 expected_status = test["status"]
                 expected_result = test["result"]
                 result, status = self.main.handleRequest(endpoint, data)
                 if status == expected_status and result == expected_result:
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                     success = True
                 else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    print(f" Current config_dict: {self.config_dict}")
+                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}, Expected: {expected_result}")
+                    print(f"Current config_dict: {self.config_dict}")
             case "/run/swap_your_language_and_target_language":
                 data = test["data"]
                 expected_status = test["status"]
                 result, status = self.main.handleRequest(endpoint, data)
                 if status == expected_status:
-                    print(f"\t -> {Color.GREEN}[PASS]{Color.RESET} Status: {status}, Result: {result}")
+                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                     success = True
                 else:
-                    print(f"\t -> {Color.RED}[ERROR]{Color.RESET} Status: {status}, Result: {result}")
-                    print(f" Current config_dict: {self.config_dict}")
+                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+                    print(f"Current config_dict: {self.config_dict}")
             case _:
-                print(f"\t -> {Color.YELLOW}[SKIP]{Color.RESET} No tests defined for this endpoint.")
+                print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No tests defined for this endpoint :{endpoint}.")
                 success = True
         return success
 
@@ -524,23 +523,23 @@ class TestMainloop():
             "run",
         ]
 
-        for i in range(1000):
+        for i in range(10000):
             endpoints_type = random.choice(endpoint_types)
             match endpoints_type:
                 case "validity":
                     endpoint = random.choice(self.validity_endpoints)
-                    print(f"No.{i:04} Testing endpoint: {endpoint}", end="", flush=True)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
                     if self.test_endpoints_on_off_single(endpoint) is False:
                         break
                 case "set_data":
                     endpoint = random.choice(self.set_data_endpoints)
-                    print(f"No.{i:04} Testing endpoint: {endpoint}", end=" ", flush=True)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
                     if self.test_set_data_endpoints_single(endpoint) is False:
                         break
                 case "run":
                     endpoint = random.choice(list(self.run_endpoints.keys()))
                     test = random.choice(self.run_endpoints[endpoint])
-                    print(f"No.{i:04} Testing endpoint: {endpoint}", end=" ", flush=True)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
                     if self.test_run_endpoints_single(endpoint, test) is False:
                         break
 
@@ -550,15 +549,65 @@ class TestMainloop():
                 _, _ = self.main.handleRequest(endpoint, None)
         print("----すべてのエンドポイントのランダムアクセスのテスト終了----")
 
+
+    def test_endpoints_specific_random(self):
+        print("----特定のエンドポイントのランダムアクセスのテスト----")
+
+        self.validity_specific_endpoints = [
+            "/set/enable/websocket_server",
+            "/set/disable/websocket_server",
+        ]
+
+        self.set_data_specific_endpoints = [
+            "/set/data/ctranslate2_weight_type",
+            "/set/data/websocket_host",
+            "/set/data/websocket_port",
+            "/set/data/osc_ip_address",
+            "/set/data/osc_port",
+        ]
+
+        endpoint_types = [
+            "validity",
+            "set_data",
+            # "run",
+        ]
+
+        for i in range(1000):
+            endpoints_type = random.choice(endpoint_types)
+            match endpoints_type:
+                case "validity":
+                    endpoint = random.choice(self.validity_specific_endpoints)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
+                    if self.test_endpoints_on_off_single(endpoint) is False:
+                        break
+                case "set_data":
+                    endpoint = random.choice(self.set_data_specific_endpoints)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
+                    if self.test_set_data_endpoints_single(endpoint) is False:
+                        break
+                case "run":
+                    endpoint = random.choice(list(self.run_endpoints.keys()))
+                    test = random.choice(self.run_endpoints[endpoint])
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
+                    if self.test_run_endpoints_single(endpoint, test) is False:
+                        break
+
+        # 最後にすべてOFFにして終了
+        for endpoint in self.validity_endpoints:
+            if endpoint.startswith("/set/disable/"):
+                _, _ = self.main.handleRequest(endpoint, None)
+        print("----特定のエンドポイントのランダムアクセスのテスト終了----")
+
 if __name__ == "__main__":
     try:
         test = TestMainloop()
         # test.test_endpoints_on_off_all()
         # test.test_set_data_endpoints_all()
         # test.test_run_endpoints_all()
-        test.test_endpoints_all_random()
+        # test.test_endpoints_all_random()
         # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
+        test.test_endpoints_specific_random()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
     except Exception as e:
