@@ -50,10 +50,10 @@ class TestMainloop():
         self.config_dict = {}
         for endpoint in self.main.mapping.keys():
             if endpoint.startswith("/get/data/"):
-                self.config_dict[endpoint.split("/")[-1]] = self.main.handleRequest(endpoint, None)[0]
+                self.config_dict[endpoint.split("/")[-1]], _ = self.main.handleRequest(endpoint, None)
             elif endpoint.startswith("/set/disable/"):
-                self.config_dict[endpoint.split("/")[-1]] = self.main.handleRequest(endpoint, None)[0]
-        print(self.config_dict)
+                self.config_dict[endpoint.split("/")[-1]], _ = self.main.handleRequest(endpoint, None)
+        print(self.config_dict, flush=True)
 
         self.validity_endpoints = [
             "/set/enable/translation",
@@ -112,7 +112,7 @@ class TestMainloop():
             "/set/data/selected_tab_no",
             "/set/data/selected_translation_engines",
             "/set/data/selected_your_languages",
-            "/set/data/selected_target_languages"
+            "/set/data/selected_target_languages",
             "/set/data/selected_transcription_engine",
             "/set/data/transparency",
             "/set/data/ui_scaling",
@@ -215,10 +215,18 @@ class TestMainloop():
 
     def test_endpoints_on_off_single(self, endpoint):
         success = False
+        expected_status = [200]
         if endpoint.startswith("/set/enable/"):
+            match endpoint:
+                case "/set/enable/websocket_server":
+                    expected_status = [200, 400]
+                case _:
+                    pass
+
             result, status = self.main.handleRequest(endpoint, None)
-            if result is True and status == 200:
-                self.config_dict[endpoint.split("/")[-1]] = result
+            if status in expected_status:
+                if status == 200:
+                    self.config_dict[endpoint.split("/")[-1]] = result
                 print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
@@ -226,8 +234,9 @@ class TestMainloop():
                 print(f"Current config_dict: {self.config_dict}")
         elif endpoint.startswith("/set/disable/"):
             result, status = self.main.handleRequest(endpoint, None)
-            if result is False and status == 200:
-                self.config_dict[endpoint.split("/")[-1]] = result
+            if status in expected_status:
+                if status == 200:
+                    self.config_dict[endpoint.split("/")[-1]] = result
                 print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
@@ -283,6 +292,7 @@ class TestMainloop():
 
     def test_set_data_endpoints_single(self, endpoint):
         success = False
+        expected_status = [200]
         match endpoint:
             case "/set/data/selected_tab_no":
                 data = random.choice(["1", "2", "3"])
@@ -335,19 +345,36 @@ class TestMainloop():
             case "/set/data/ctranslate2_weight_type":
                 data = random.choice(list(self.config_dict["selectable_ctranslate2_weight_type_dict"].keys()))
             case "/set/data/deepl_auth_key":
-                data = None  # Set to None to avoid using a real key
+                data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                expected_status = [400]
             case "/set/data/selected_mic_host":
                 data = random.choice(self.config_dict["mic_host_list"])
             case "/set/data/selected_mic_device":
                 data = random.choice(self.config_dict["mic_device_list"])
             case "/set/data/mic_threshold":
-                data = random.randint(0, 100)
+                data = random.randint(-1000, 3000)
+                if 0 <= data <= 2000:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/mic_record_timeout":
-                data = random.randint(1, 3)
+                data = random.randint(-1, 10)
+                if 0 <= data <= self.config_dict["mic_phrase_timeout"]:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/mic_phrase_timeout":
-                data = random.randint(5, 10)
+                data = random.randint(-1, 10)
+                if self.config_dict["mic_record_timeout"] <= data:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/mic_max_phrases":
-                data = random.randint(1, 10)
+                data = random.randint(-1, 10)
+                if 0 <= data:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/hotkeys":
                 data = {
                     'toggle_vrct_visibility': None,
@@ -373,13 +400,29 @@ class TestMainloop():
             case "/set/data/selected_speaker_device":
                 data = random.choice(self.config_dict["speaker_device_list"])
             case "/set/data/speaker_threshold":
-                data = random.randint(0, 100)
+                data = random.randint(-1000, 5000)
+                if 0 <= data <= 4000:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/speaker_record_timeout":
-                data = random.randint(1, 3)
+                data = random.randint(-1, 10)
+                if 0 <= data <= self.config_dict["speaker_phrase_timeout"]:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/speaker_phrase_timeout":
-                data = random.randint(5, 10)
+                data = random.randint(-1, 10)
+                if self.config_dict["speaker_record_timeout"] <= data:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/speaker_max_phrases":
-                data = random.randint(1, 10)
+                data = random.randint(-1, 10)
+                if 0 <= data:
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/speaker_avg_logprob":
                 data = random.uniform(-5, 0)
             case "/set/data/speaker_no_speech_prob":
@@ -419,11 +462,20 @@ class TestMainloop():
             case "/set/data/received_message_format_parts":
                 data = self.config_dict["received_message_format_parts"]
             case "/set/data/websocket_host":
-                data = "127.0.0.1"
+                data = random.choice(["127.0.0.1", "aaaaadwafasdsd", "0210.1564.845.0"])
+                if data == "127.0.0.1":
+                    expected_status = [200, 400]
+                else:
+                    expected_status = [400]
             case "/set/data/websocket_port":
                 data = random.randint(1024, 65535)
+                expected_status = [200, 400]
             case "/set/data/osc_ip_address":
-                data = "127.0.0.1"
+                data = random.choice(["127.0.0.1", "aaaaadwafasdsd", "0210.1564.845.0"])
+                if data == "127.0.0.1":
+                    expected_status = [200]
+                else:
+                    expected_status = [400]
             case "/set/data/osc_port":
                 data = random.randint(1024, 65535)
             case _:
@@ -432,8 +484,9 @@ class TestMainloop():
         if data is not None:
             print(f"data: {data}", end=" ", flush=True)
             result, status = self.main.handleRequest(endpoint, data)
-            if status == 200:
-                self.config_dict[endpoint.split("/")[-1]] = result
+            if status in expected_status:
+                if status == 200:
+                    self.config_dict[endpoint.split("/")[-1]] = result
                 print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 success = True
             else:
@@ -604,10 +657,10 @@ if __name__ == "__main__":
         # test.test_endpoints_on_off_all()
         # test.test_set_data_endpoints_all()
         # test.test_run_endpoints_all()
-        # test.test_endpoints_all_random()
+        test.test_endpoints_all_random()
         # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
-        test.test_endpoints_specific_random()
+        # test.test_endpoints_specific_random()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
     except Exception as e:
