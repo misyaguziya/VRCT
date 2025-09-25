@@ -359,6 +359,16 @@ class TestMainloop():
                 data = random.randint(1024, 65535)
             case _:
                 data = None
+                expected_status = [404]
+
+        if expected_status == [401]:
+            print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No test available for this endpoint: {endpoint}.")
+            self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            return success
+        elif expected_status == [404]:
+            print(f"-> {Color.RED}[ERROR]{Color.RESET} Unknown endpoint: {endpoint}.")
+            self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            return False
 
         if data is not None:
             print(f"data: {data}", end=" ", flush=True)
