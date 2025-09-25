@@ -162,8 +162,8 @@ mapping = {
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
-    "/get/data/ctranslate2_compute_type": {"status": True, "variable":controller.getCtranslate2ComputeType},
-    "/set/data/ctranslate2_compute_type": {"status": True, "variable":controller.setCtranslate2ComputeType},
+    "/get/data/translation_compute_type": {"status": True, "variable":controller.getTranslationComputeType},
+    "/set/data/translation_compute_type": {"status": True, "variable":controller.setTranslationComputeType},
 
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
@@ -268,8 +268,8 @@ mapping = {
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
-    "/get/data/whisper_compute_type": {"status": True, "variable":controller.getWhisperComputeType},
-    "/set/data/whisper_compute_type": {"status": True, "variable":controller.setWhisperComputeType},
+    "/get/data/transcription_compute_type": {"status": True, "variable":controller.getTranscriptionComputeType},
+    "/set/data/transcription_compute_type": {"status": True, "variable":controller.setTranscriptionComputeType},
 
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
