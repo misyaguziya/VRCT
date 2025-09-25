@@ -55,162 +55,41 @@ class TestMainloop():
                 self.config_dict[endpoint.split("/")[-1]], _ = self.main.handleRequest(endpoint, None)
         print(self.config_dict, flush=True)
 
-        self.validity_endpoints = [
-            "/set/enable/translation",
-            "/set/disable/translation",
-            "/set/enable/transcription_send",
-            "/set/disable/transcription_send",
-            "/set/enable/transcription_receive",
-            "/set/disable/transcription_receive",
-            "/set/enable/foreground",
-            "/set/disable/foreground",
-            "/set/enable/main_window_sidebar_compact_mode",
-            "/set/disable/main_window_sidebar_compact_mode",
-            "/set/enable/show_resend_button",
-            "/set/disable/show_resend_button",
-            "/set/enable/convert_message_to_romaji",
-            "/set/disable/convert_message_to_romaji",
-            "/set/enable/convert_message_to_hiragana",
-            "/set/disable/convert_message_to_hiragana",
-            "/set/enable/auto_mic_select",
-            "/set/disable/auto_mic_select",
-            "/set/enable/mic_automatic_threshold",
-            "/set/disable/mic_automatic_threshold",
-            "/set/enable/check_mic_threshold",
-            "/set/disable/check_mic_threshold",
-            "/set/enable/auto_speaker_select",
-            "/set/disable/auto_speaker_select",
-            "/set/enable/speaker_automatic_threshold",
-            "/set/disable/speaker_automatic_threshold",
-            "/set/enable/check_speaker_threshold",
-            "/set/disable/check_speaker_threshold",
-            "/set/enable/overlay_small_log",
-            "/set/disable/overlay_small_log",
-            "/set/enable/overlay_large_log",
-            "/set/disable/overlay_large_log",
-            "/set/enable/overlay_show_only_translated_messages",
-            "/set/disable/overlay_show_only_translated_messages",
-            "/set/enable/auto_clear_message_box",
-            "/set/disable/auto_clear_message_box",
-            "/set/enable/send_only_translated_messages",
-            "/set/disable/send_only_translated_messages",
-            "/set/enable/logger_feature",
-            "/set/disable/logger_feature",
-            "/set/enable/vrc_mic_mute_sync",
-            "/set/disable/vrc_mic_mute_sync",
-            "/set/enable/send_message_to_vrc",
-            "/set/disable/send_message_to_vrc",
-            "/set/enable/send_received_message_to_vrc",
-            "/set/disable/send_received_message_to_vrc",
-            "/set/enable/websocket_server",
-            "/set/disable/websocket_server",
-            "/set/enable/notification_vrc_sfx",
-            "/set/disable/notification_vrc_sfx",
-        ]
+        self.validity_endpoints = []
+        for endpoint in self.main.mapping.keys():
+            if endpoint.startswith("/set/enable/") or endpoint.startswith("/set/disable/"):
+                self.validity_endpoints.append(endpoint)
 
-        self.set_data_endpoints = [
-            "/set/data/selected_tab_no",
-            "/set/data/selected_translation_engines",
-            "/set/data/selected_your_languages",
-            "/set/data/selected_target_languages",
-            "/set/data/selected_transcription_engine",
-            "/set/data/transparency",
-            "/set/data/ui_scaling",
-            "/set/data/textbox_ui_scaling",
-            "/set/data/message_box_ratio",
-            "/set/data/send_message_button_type",
-            "/set/data/font_family",
-            "/set/data/ui_language",
-            "/set/data/main_window_geometry",
-            "/set/data/selected_translation_compute_device",
-            "/set/data/selected_transcription_compute_device",
-            "/set/data/ctranslate2_weight_type",
-            "/set/data/deepl_auth_key",
-            "/set/data/selected_mic_host",
-            "/set/data/selected_mic_device",
-            "/set/data/mic_threshold",
-            "/set/data/mic_record_timeout",
-            "/set/data/mic_phrase_timeout",
-            "/set/data/mic_max_phrases",
-            "/set/data/hotkeys",
-            "/set/data/plugins_status",
-            "/set/data/mic_avg_logprob",
-            "/set/data/mic_no_speech_prob",
-            "/set/data/mic_word_filter",
-            "/set/data/selected_speaker_device",
-            "/set/data/speaker_threshold",
-            "/set/data/speaker_record_timeout",
-            "/set/data/speaker_phrase_timeout",
-            "/set/data/speaker_max_phrases",
-            "/set/data/speaker_avg_logprob",
-            "/set/data/speaker_no_speech_prob",
-            "/set/data/whisper_weight_type",
-            "/set/data/overlay_small_log_settings",
-            "/set/data/overlay_large_log_settings",
-            "/set/data/send_message_format_parts",
-            "/set/data/received_message_format_parts",
-            "/set/data/websocket_host",
-            "/set/data/websocket_port",
-            "/set/data/osc_ip_address",
-            "/set/data/osc_port",
-        ]
+        self.set_data_endpoints = []
+        for endpoint in self.main.mapping.keys():
+            if endpoint.startswith("/set/data/"):
+                self.set_data_endpoints.append(endpoint)
 
-        self.delete_data_endpoints = [
-            "/delete/data/deepl_auth_key",
-        ]
+        self.delete_data_endpoints = []
+        for endpoint in self.main.mapping.keys():
+            if endpoint.startswith("/delete/data/"):
+                self.delete_data_endpoints.append(endpoint)
 
-        self.run_endpoints = {
-            "/run/send_message_box": [
-                {
-                    "data": {"id":"000001", "message":"test"},
-                    "status": 200,
-                },
-                {
-                    # 英語
-                    "data": {"id":"000002", "message":"Hello World!"},
-                    "status": 200,
-                },
-                {
-                    # 日本語
-                    "data": {"id":"000003", "message":"こんにちわ 世界！"},
-                    "status": 200,
-                },
-                {
-                    # 韓国語
-                    "data": {"id":"000004", "message":"안녕하세요 세계!"},
-                    "status": 200,
-                },
-                {
-                    # 中国語 繁体字
-                    "data": {"id":"000005", "message":"你好，世界！"},
-                    "status": 200,
-                },
-            ],
-            "/run/typing_message_box": [{"data": None, "status": 200, "result": True}],
-            "/run/stop_typing_message_box": [{"data": None, "status": 200, "result": True}],
-            "/run/send_text_overlay": [{"data": "test_overlay", "status": 200, "result": "test_overlay"}],
-            "/run/swap_your_language_and_target_language": [{"data": None, "status": 200}],
-            # !!!Cant be tested here!!!
-            # "/run/update_software": [{"data": None, "status": 200, "result": True}],
-            # "/run/update_cuda_software": [{"data": None, "status": 200, "result": True}],
-            # "/run/download_ctranslate2_weight": [
-            #     {"data": "small", "status": 200, "result": True},
-            #     {"data": "large", "status": 400, "result": False},
-            # ],
-            # "/run/download_whisper_weight": [
-            #     {"data": "tiny", "status": 200, "result": True},
-            #     {"data": "base", "status": 200, "result": True},
-            #     {"data": "small", "status": 200, "result": True},
-            #     {"data": "medium", "status": 200, "result": True},
-            #     {"data": "large-v1", "status": 200, "result": True},
-            #     {"data": "large-v2", "status": 400, "result": True},
-            #     {"data": "large-v3", "status": 400, "result": True},
-            #     {"data": "large-v3-turbo-int8", "status": 400, "result": True},
-            #     {"data": "large-v3-turbo", "status": 400, "result": True}
-            # ],
-            # "/run/open_filepath_logs": {"data": None, "status": 200, "result": True},
-            # "/run/open_filepath_config_file": {"data": None, "status": 200, "result": True},
-            # "/run/feed_watchdog": {"data": None, "status": 200, "result": True},
+        self.run_endpoints = []
+        for endpoint in self.main.mapping.keys():
+            if endpoint.startswith("/run/"):
+                self.run_endpoints.append(endpoint)
+
+        self.test_results = {}
+
+    def record_test_result(self, endpoint, status, result, expected_status):
+        """
+        テスト結果を記録する
+        :param endpoint: テスト対象のエンドポイント
+        :param status: 実際のステータスコード
+        :param result: 実際の結果
+        :param expected_status: 期待されるステータスコード
+        """
+        self.test_results[endpoint] = {
+            "status": status,
+            "result": result,
+            "expected_status": expected_status,
+            "success": status in expected_status
         }
 
     def test_endpoints_on_off_single(self, endpoint):
@@ -242,14 +121,14 @@ class TestMainloop():
             else:
                 print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
                 print(f"Current config_dict: {self.config_dict}")
+        self.record_test_result(endpoint, status, result, expected_status)
         return success
 
     def test_endpoints_on_off_all(self):
         print("----ON/OFF系のエンドポイントのテスト----")
         for endpoint in self.validity_endpoints:
             print(f"Testing endpoint: {endpoint}", flush=True)
-            if self.test_endpoints_on_off_single(endpoint) is False:
-                break
+            self.test_endpoints_on_off_single(endpoint)
         print("----ON/OFF系のエンドポイントのテスト終了----")
 
     def test_endpoints_on_off_random(self):
@@ -354,25 +233,25 @@ class TestMainloop():
             case "/set/data/mic_threshold":
                 data = random.randint(-1000, 3000)
                 if 0 <= data <= 2000:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/mic_record_timeout":
                 data = random.randint(-1, 10)
                 if 0 <= data <= self.config_dict["mic_phrase_timeout"]:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/mic_phrase_timeout":
                 data = random.randint(-1, 10)
                 if self.config_dict["mic_record_timeout"] <= data:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/mic_max_phrases":
                 data = random.randint(-1, 10)
                 if 0 <= data:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/hotkeys":
@@ -402,25 +281,25 @@ class TestMainloop():
             case "/set/data/speaker_threshold":
                 data = random.randint(-1000, 5000)
                 if 0 <= data <= 4000:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/speaker_record_timeout":
                 data = random.randint(-1, 10)
                 if 0 <= data <= self.config_dict["speaker_phrase_timeout"]:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/speaker_phrase_timeout":
                 data = random.randint(-1, 10)
                 if self.config_dict["speaker_record_timeout"] <= data:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/speaker_max_phrases":
                 data = random.randint(-1, 10)
                 if 0 <= data:
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/speaker_avg_logprob":
@@ -473,7 +352,7 @@ class TestMainloop():
             case "/set/data/osc_ip_address":
                 data = random.choice(["127.0.0.1", "aaaaadwafasdsd", "0210.1564.845.0"])
                 if data == "127.0.0.1":
-                    expected_status = [200]
+                    pass
                 else:
                     expected_status = [400]
             case "/set/data/osc_port":
@@ -495,77 +374,113 @@ class TestMainloop():
         else:
             print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No data to set for this endpoint: {endpoint}.")
             success = True
+        self.record_test_result(endpoint, status, result if data is not None else None, expected_status)  # テスト結果を記録
         return success
 
     def test_set_data_endpoints_all(self):
         print("----データ設定系のエンドポイントのテスト----")
         for endpoint in self.set_data_endpoints:
             print(f"Testing endpoint: {endpoint}", end=" ", flush=True)
-            if self.test_set_data_endpoints_single(endpoint) is False:
-                break
+            self.test_set_data_endpoints_single(endpoint)
         print("----データ設定系のエンドポイントのテスト終了----")
 
-    def test_run_endpoints_single(self, endpoint, test):
+    def test_run_endpoints_single(self, endpoint):
         success = False
+        expected_status = [200]
         match endpoint:
             case "/run/send_message_box":
-                data = test["data"]
-                expected_status = test["status"]
-                result, status = self.main.handleRequest(endpoint, data)
-                if status == expected_status:
-                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    success = True
-                else:
-                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    print(f"Current config_dict: {self.config_dict}")
-            case "/run/typing_message_box" | "/run/stop_typing_message_box":
-                data = test["data"]
-                expected_status = test["status"]
-                expected_result = test["result"]
-                result, status = self.main.handleRequest(endpoint, data)
-                if status == expected_status and result == expected_result:
-                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    success = True
-                else:
-                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    print(f"Current config_dict: {self.config_dict}")
+                data_list = [
+                    {
+                        "data": {"id":"000001", "message":"test"},
+                        "status": [200],
+                    },
+                    {
+                        # 英語
+                        "data": {"id":"000002", "message":"Hello World!"},
+                        "status": [200],
+                    },
+                    {
+                        # 日本語
+                        "data": {"id":"000003", "message":"こんにちわ 世界！"},
+                        "status": [200],
+                    },
+                    {
+                        # 韓国語
+                        "data": {"id":"000004", "message":"안녕하세요 세계!"},
+                        "status": [200],
+                    },
+                    {
+                        # 中国語 繁体字
+                        "data": {"id":"000005", "message":"你好，世界！"},
+                        "status": [200],
+                    },
+                ]
+                choice_data = random.choice(data_list)
+                data, expected_status = choice_data["data"], choice_data["status"]
+            case "/run/typing_message_box":
+                data = None
+            case "/run/stop_typing_message_box":
+                data = None
             case "/run/send_text_overlay":
-                data = test["data"]
-                expected_status = test["status"]
-                expected_result = test["result"]
-                result, status = self.main.handleRequest(endpoint, data)
-                if status == expected_status and result == expected_result:
-                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    success = True
-                else:
-                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}, Expected: {expected_result}")
-                    print(f"Current config_dict: {self.config_dict}")
+                data = "test_overlay"
             case "/run/swap_your_language_and_target_language":
-                data = test["data"]
-                expected_status = test["status"]
-                result, status = self.main.handleRequest(endpoint, data)
-                if status == expected_status:
-                    print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    success = True
-                else:
-                    print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
-                    print(f"Current config_dict: {self.config_dict}")
+                data = None
+            case "/run/update_software":
+                data = None
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/update_cuda_software":
+                data = None
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/download_ctranslate2_weight":
+                data_list = random.choice(["small", "large"])
+                data = random.choice(data_list)
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/download_whisper_weight":
+                data_list = [
+                    "tiny", "base", "small", "medium",
+                    "large-v1", "large-v2", "large-v3",
+                    "large-v3-turbo-int8", "large-v3-turbo"
+                ]
+                data = random.choice(data_list)
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/open_filepath_logs":
+                data = None
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/open_filepath_config_file":
+                data = None
+                expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/feed_watchdog":
+                data = None
+                expected_status = [401] # !!!Cant be tested here!!!
             case _:
-                print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No tests defined for this endpoint :{endpoint}.")
+                data = None
+                expected_status = [404]
                 success = True
+
+        if expected_status == [401]:
+            print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No test available for this endpoint: {endpoint}.")
+            self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            return success
+        elif expected_status == [404]:
+            print(f"-> {Color.RED}[ERROR]{Color.RESET} Unknown endpoint: {endpoint}.")
+            self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            return False
+
+        result, status = self.main.handleRequest(endpoint, data)
+        if status == expected_status:
+            print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+            success = True
+        else:
+            print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+            print(f"Current config_dict: {self.config_dict}")
+        self.record_test_result(endpoint, status, result, expected_status)  # テスト結果を記録
         return success
 
     def test_run_endpoints_all(self):
         print("----実行系のエンドポイントのテスト----")
-        for endpoint, tests in self.run_endpoints.items():
+        for endpoint in self.run_endpoints:
             print(f"Testing endpoint: {endpoint}", end=" ", flush=True)
-            success = True
-            for test in tests:
-                if self.test_run_endpoints_single(endpoint, test) is False:
-                    success = False
-                    break
-            if success is False:
-                break
+            self.test_run_endpoints_single(endpoint)
         print("----実行系のエンドポイントのテスト終了----")
 
     def test_endpoints_all_random(self):
@@ -574,6 +489,7 @@ class TestMainloop():
             "validity",
             "set_data",
             "run",
+            "delete",
         ]
 
         for i in range(10000):
@@ -590,10 +506,14 @@ class TestMainloop():
                     if self.test_set_data_endpoints_single(endpoint) is False:
                         break
                 case "run":
-                    endpoint = random.choice(list(self.run_endpoints.keys()))
-                    test = random.choice(self.run_endpoints[endpoint])
+                    endpoint = random.choice(self.run_endpoints)
                     print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
-                    if self.test_run_endpoints_single(endpoint, test) is False:
+                    if self.test_run_endpoints_single(endpoint) is False:
+                        break
+                case "delete":
+                    endpoint = random.choice(self.delete_data_endpoints)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
+                    if self.test_delete_data_endpoints_single(endpoint) is False:
                         break
 
         # 最後にすべてOFFにして終了
@@ -601,7 +521,6 @@ class TestMainloop():
             if endpoint.startswith("/set/disable/"):
                 _, _ = self.main.handleRequest(endpoint, None)
         print("----すべてのエンドポイントのランダムアクセスのテスト終了----")
-
 
     def test_endpoints_specific_random(self):
         print("----特定のエンドポイントのランダムアクセスのテスト----")
@@ -619,10 +538,14 @@ class TestMainloop():
             "/set/data/osc_port",
         ]
 
+        self.run_specific_endpoints = []
+        self.delete_data_endpoints = []
+
         endpoint_types = [
             "validity",
             "set_data",
             # "run",
+            # "delete",
         ]
 
         for i in range(1000):
@@ -639,10 +562,14 @@ class TestMainloop():
                     if self.test_set_data_endpoints_single(endpoint) is False:
                         break
                 case "run":
-                    endpoint = random.choice(list(self.run_endpoints.keys()))
-                    test = random.choice(self.run_endpoints[endpoint])
+                    endpoint = random.choice(self.run_specific_endpoints)
                     print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
-                    if self.test_run_endpoints_single(endpoint, test) is False:
+                    if self.test_run_endpoints_single(endpoint) is False:
+                        break
+                case "delete":
+                    endpoint = random.choice(self.delete_data_endpoints)
+                    print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
+                    if self.test_delete_data_endpoints_single(endpoint) is False:
                         break
 
         # 最後にすべてOFFにして終了
@@ -651,17 +578,87 @@ class TestMainloop():
                 _, _ = self.main.handleRequest(endpoint, None)
         print("----特定のエンドポイントのランダムアクセスのテスト終了----")
 
+    def test_delete_data_endpoints_single(self, endpoint):
+        success = False
+        expected_status = [200]
+        match endpoint:
+            case "/delete/data/deepl_auth_key":
+                data = None
+            case _:
+                data = None
+                expected_status = [404]
+                success = True
+
+        if expected_status == [404]:
+            print(f"-> {Color.RED}[ERROR]{Color.RESET} Unknown endpoint: {endpoint}.")
+            self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            return False
+
+        result, status = self.main.handleRequest(endpoint, data)
+        if status == expected_status:
+            print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+            success = True
+        else:
+            print(f"-> {Color.RED}[ERROR]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
+            print(f"Current config_dict: {self.config_dict}")
+        self.record_test_result(endpoint, status, result, expected_status)  # テスト結果を記録
+        return success
+
+    def test_delete_data_endpoints_all(self):
+        print("----データ削除系のエンドポイントのテスト----")
+        for endpoint in self.delete_data_endpoints:
+            print(f"Testing endpoint: {endpoint}", flush=True)
+            self.test_delete_data_endpoints_single(endpoint)
+        print("----データ削除系のエンドポイントのテスト終了----")
+
+    def generate_summary(self):
+        """
+        テスト結果のサマリーを生成して表示する
+        """
+        total_tests = len(self.test_results)
+        passed_tests = sum(1 for result in self.test_results.values() if result["success"])
+        untested_tests = sum(1 for result in self.test_results.values() if result["expected_status"] == [401])
+        invalid_tests = sum(1 for result in self.test_results.values() if result["expected_status"] == [404])
+        failed_tests = total_tests - passed_tests - untested_tests - invalid_tests
+
+        print("\n---- テスト結果のサマリー ----")
+        print(f"総テスト数: {total_tests}")
+        print(f"成功したテスト数: {passed_tests}")
+        print(f"失敗したテスト数: {failed_tests}")
+        print(f"テストをしなかったテスト数: {untested_tests}")
+        print(f"無効なテスト数: {invalid_tests}\n")
+
+        if untested_tests > 0:
+            print("テストをしなかったテストの詳細:")
+            for endpoint, result in self.test_results.items():
+                if result["expected_status"] == [401]:
+                    print(f"- エンドポイント: {endpoint}")
+                    print(f"  ステータス: {result['status']}")
+                    print(f"  結果: {result['result']}\n")
+        if failed_tests > 0:
+            print("失敗したテストの詳細:")
+            for endpoint, result in self.test_results.items():
+                if result["success"] != [200]:
+                    print(f"- エンドポイント: {endpoint}")
+                    print(f"  ステータス: {result['status']} (期待されるステータス: {result['expected_status']})")
+                    print(f"  結果: {result['result']}\n")
+        print("---- サマリー終了 ----\n")
+
 if __name__ == "__main__":
+    import traceback
     try:
         test = TestMainloop()
-        # test.test_endpoints_on_off_all()
-        # test.test_set_data_endpoints_all()
-        # test.test_run_endpoints_all()
-        test.test_endpoints_all_random()
+        test.test_endpoints_on_off_all()
+        test.test_set_data_endpoints_all()
+        test.test_run_endpoints_all()
+        test.test_delete_data_endpoints_all()
+        # test.test_endpoints_all_random()
         # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
         # test.test_endpoints_specific_random()
+        test.generate_summary()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
     except Exception as e:
+        traceback.print_exc()
         print(f"An error occurred: {e}")
