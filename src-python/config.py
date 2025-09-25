@@ -815,15 +815,15 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('CTRANSLATE2_COMPUTE_TYPE')
-    def CTRANSLATE2_COMPUTE_TYPE(self):
-        return self._CTRANSLATE2_COMPUTE_TYPE
+    @json_serializable('TRANSLATION_COMPUTE_TYPE')
+    def TRANSLATION_COMPUTE_TYPE(self):
+        return self._TRANSLATION_COMPUTE_TYPE
 
-    @CTRANSLATE2_COMPUTE_TYPE.setter
-    def CTRANSLATE2_COMPUTE_TYPE(self, value):
+    @TRANSLATION_COMPUTE_TYPE.setter
+    def TRANSLATION_COMPUTE_TYPE(self, value):
         if isinstance(value, str):
-            if value in self.SELECTED_TRANSLATION_COMPUTE_DEVICE["compute_type"]:
-                self._CTRANSLATE2_COMPUTE_TYPE = value
+            if value in self.SELECTED_TRANSLATION_COMPUTE_DEVICE["compute_types"]:
+                self._TRANSLATION_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -839,15 +839,15 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('WHISPER_COMPUTE_TYPE')
-    def WHISPER_COMPUTE_TYPE(self):
-        return self._WHISPER_COMPUTE_TYPE
+    @json_serializable('TRANSCRIPTION_COMPUTE_TYPE')
+    def TRANSCRIPTION_COMPUTE_TYPE(self):
+        return self._TRANSCRIPTION_COMPUTE_TYPE
 
-    @WHISPER_COMPUTE_TYPE.setter
-    def WHISPER_COMPUTE_TYPE(self, value):
+    @TRANSCRIPTION_COMPUTE_TYPE.setter
+    def TRANSCRIPTION_COMPUTE_TYPE(self, value):
         if isinstance(value, str):
-            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_type"]:
-                self._WHISPER_COMPUTE_TYPE = value
+            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_types"]:
+                self._TRANSCRIPTION_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1209,9 +1209,9 @@ class Config:
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "small"
-        self._CTRANSLATE2_COMPUTE_TYPE = "auto"
+        self._TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
-        self._WHISPER_COMPUTE_TYPE = "auto"
+        self._TRANSCRIPTION_COMPUTE_TYPE = "auto"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._OVERLAY_SMALL_LOG = False
