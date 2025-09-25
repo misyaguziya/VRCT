@@ -477,7 +477,7 @@ class TestMainloop():
             return False
 
         result, status = self.main.handleRequest(endpoint, data)
-        if status == expected_status:
+        if status in expected_status:
             print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
             success = True
         else:
@@ -605,7 +605,7 @@ class TestMainloop():
             return False
 
         result, status = self.main.handleRequest(endpoint, data)
-        if status == expected_status:
+        if status in expected_status:
             print(f"-> {Color.GREEN}[PASS]{Color.RESET} endpoint:{endpoint} Status: {status}, Result: {result}")
             success = True
         else:
