@@ -1003,7 +1003,7 @@ class Controller:
 
     @staticmethod
     def setEnableShowResendButton(*args, **kwargs) -> dict:
-        if not config.SHOW_RESEND_BUTTON:
+        if config.SHOW_RESEND_BUTTON is False:
             config.SHOW_RESEND_BUTTON = True
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
