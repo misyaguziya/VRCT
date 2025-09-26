@@ -172,9 +172,8 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedCTranslate2WeightType" },
     { endpoint: "/set/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedCTranslate2WeightType" },
 
-    { endpoint: "/get/data/ctranslate2_compute_type_list", ns: configs, hook_name: "useTranslation", method_name: "updateSelectableCTranslate2ComputeTypeList_FromBackend" },
-    { endpoint: "/get/data/ctranslate2_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedCTranslate2ComputeType" },
-    { endpoint: "/set/data/ctranslate2_compute_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedCTranslate2ComputeType" },
+    { endpoint: "/get/data/translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeType" },
+    { endpoint: "/set/data/translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedTranslationComputeType" },
 
     { endpoint: "/run/downloaded_ctranslate2_weight", ns: configs, hook_name: "useTranslation", method_name: "downloadedCTranslate2WeightType" },
     { endpoint: "/run/download_ctranslate2_weight", ns: null, hook_name: null, method_name: null },
@@ -218,9 +217,8 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperWeightType" },
     { endpoint: "/set/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperWeightType" },
 
-    { endpoint: "/get/data/whisper_compute_type_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableWhisperComputeTypeList_FromBackend" },
-    { endpoint: "/get/data/whisper_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeType" },
-    { endpoint: "/set/data/whisper_compute_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeType" },
+    { endpoint: "/get/data/transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeType" },
+    { endpoint: "/set/data/transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeType" },
 
 
     { endpoint: "/run/downloaded_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "downloadedWhisperWeightType" },

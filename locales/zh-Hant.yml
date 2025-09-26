@@ -133,7 +133,7 @@ config_page:
             desc: "你可以選擇用於離線翻譯引擎的翻譯模型。"
             small: "基本模型（{{capacity}}）"
             large: "高準確率模型（{{capacity}}）"
-        ctranslate2_compute_type:
+        translation_compute_type:
             label:
         translation_compute_device:
             label:
@@ -179,7 +179,7 @@ config_page:
             desc:
             model_template: "{{model_name}}模型（{{capacity}}）"
             recommended_model_template: "{{model_name}}模型（{{capacity}}）（推薦）"
-        whisper_compute_type:
+        transcription_compute_type:
             label:
         transcription_compute_device:
             label:
