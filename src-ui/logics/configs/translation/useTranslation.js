@@ -87,12 +87,12 @@ export const useTranslation = () => {
 
     const getSelectedTranslationComputeType = () => {
         pendingSelectedTranslationComputeType();
-        asyncStdoutToPython("/get/data/translation_compute_type");
+        asyncStdoutToPython("/get/data/selected_translation_compute_type");
     };
 
     const setSelectedTranslationComputeType = (selected_translation_compute_type) => {
         pendingSelectedTranslationComputeType();
-        asyncStdoutToPython("/set/data/translation_compute_type", selected_translation_compute_type);
+        asyncStdoutToPython("/set/data/selected_translation_compute_type", selected_translation_compute_type);
     };
 
     const setSuccessSelectedTranslationComputeType = (selected_translation_compute_type) => {
