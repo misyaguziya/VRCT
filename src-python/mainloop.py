@@ -48,6 +48,9 @@ run_mapping = {
     "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
 
+    "translation_compute_type":"/run/translation_compute_type",
+    "transcription_compute_type":"/run/transcription_compute_type",
+
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
