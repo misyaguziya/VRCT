@@ -1,8 +1,7 @@
 import {
     useStore_CTranslate2WeightTypeStatus,
     useStore_SelectedCTranslate2WeightType,
-    useStore_SelectableCTranslate2ComputeTypeList,
-    useStore_SelectedCTranslate2ComputeType,
+    useStore_SelectedTranslationComputeType,
     useStore_SelectableTranslationComputeDeviceList,
     useStore_SelectedTranslationComputeDevice,
     useStore_DeepLAuthKey,
@@ -20,8 +19,7 @@ export const useTranslation = () => {
     const { currentCTranslate2WeightTypeStatus, updateCTranslate2WeightTypeStatus, pendingCTranslate2WeightTypeStatus } = useStore_CTranslate2WeightTypeStatus();
     const { currentSelectedCTranslate2WeightType, updateSelectedCTranslate2WeightType, pendingSelectedCTranslate2WeightType } = useStore_SelectedCTranslate2WeightType();
 
-    const { currentSelectableCTranslate2ComputeTypeList, updateSelectableCTranslate2ComputeTypeList, pendingSelectableCTranslate2ComputeTypeList } = useStore_SelectableCTranslate2ComputeTypeList();
-    const { currentSelectedCTranslate2ComputeType, updateSelectedCTranslate2ComputeType, pendingSelectedCTranslate2ComputeType } = useStore_SelectedCTranslate2ComputeType();
+    const { currentSelectedTranslationComputeType, updateSelectedTranslationComputeType, pendingSelectedTranslationComputeType } = useStore_SelectedTranslationComputeType();
 
     const { currentSelectableTranslationComputeDeviceList, updateSelectableTranslationComputeDeviceList, pendingSelectableTranslationComputeDeviceList } = useStore_SelectableTranslationComputeDeviceList();
     const { currentSelectedTranslationComputeDevice, updateSelectedTranslationComputeDevice, pendingSelectedTranslationComputeDevice } = useStore_SelectedTranslationComputeDevice();
@@ -87,29 +85,18 @@ export const useTranslation = () => {
     };
 
 
-
-    const getSelectableCTranslate2ComputeTypeList = () => {
-        pendingSelectableCTranslate2ComputeTypeList();
-        asyncStdoutToPython("/get/data/ctranslate2_compute_type_list");
+    const getSelectedTranslationComputeType = () => {
+        pendingSelectedTranslationComputeType();
+        asyncStdoutToPython("/get/data/translation_compute_type");
     };
 
-    const updateSelectableCTranslate2ComputeTypeList_FromBackend = (payload) => {
-        updateSelectableCTranslate2ComputeTypeList(arrayToObject(payload));
+    const setSelectedTranslationComputeType = (selected_translation_compute_type) => {
+        pendingSelectedTranslationComputeType();
+        asyncStdoutToPython("/set/data/translation_compute_type", selected_translation_compute_type);
     };
 
-
-    const getSelectedCTranslate2ComputeType = () => {
-        pendingSelectedCTranslate2ComputeType();
-        asyncStdoutToPython("/get/data/ctranslate2_compute_type");
-    };
-
-    const setSelectedCTranslate2ComputeType = (selected_ctranslate2_compute_type) => {
-        pendingSelectedCTranslate2ComputeType();
-        asyncStdoutToPython("/set/data/ctranslate2_compute_type", selected_ctranslate2_compute_type);
-    };
-
-    const setSuccessSelectedCTranslate2ComputeType = (selected_ctranslate2_compute_type) => {
-        updateSelectedCTranslate2ComputeType(selected_ctranslate2_compute_type);
+    const setSuccessSelectedTranslationComputeType = (selected_translation_compute_type) => {
+        updateSelectedTranslationComputeType(selected_translation_compute_type);
         showNotification_SaveSuccess();
     };
 
@@ -182,16 +169,11 @@ export const useTranslation = () => {
         setSuccessSelectedCTranslate2WeightType,
 
 
-        currentSelectableCTranslate2ComputeTypeList,
-        getSelectableCTranslate2ComputeTypeList,
-        updateSelectableCTranslate2ComputeTypeList,
-        updateSelectableCTranslate2ComputeTypeList_FromBackend,
-
-        currentSelectedCTranslate2ComputeType,
-        getSelectedCTranslate2ComputeType,
-        updateSelectedCTranslate2ComputeType,
-        setSelectedCTranslate2ComputeType,
-        setSuccessSelectedCTranslate2ComputeType,
+        currentSelectedTranslationComputeType,
+        getSelectedTranslationComputeType,
+        updateSelectedTranslationComputeType,
+        setSelectedTranslationComputeType,
+        setSuccessSelectedTranslationComputeType,
 
 
         currentSelectableTranslationComputeDeviceList,

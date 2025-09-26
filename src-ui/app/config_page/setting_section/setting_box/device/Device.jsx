@@ -53,6 +53,7 @@ const Mic_Container = () => {
         setSelectedMicDevice(selected_data.selected_id);
     };
 
+    // [Fix me] currentEnableAutoMicSelect.data === "pending"; ?  not currentEnableAutoMicSelect.state === "pending"; ??(.state)
     const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
 
     const getLabels = () => {

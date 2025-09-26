@@ -14,8 +14,7 @@ import {
 
     useStore_WhisperWeightTypeStatus,
     useStore_SelectedWhisperWeightType,
-    useStore_SelectedWhisperComputeType,
-    useStore_SelectableWhisperComputeTypeList,
+    useStore_SelectedTranscriptionComputeType,
 
     useStore_MicAvgLogprob,
     useStore_MicNoSpeechProb,
@@ -48,8 +47,7 @@ export const useTranscription = () => {
     const { currentSelectedWhisperWeightType, updateSelectedWhisperWeightType, pendingSelectedWhisperWeightType } = useStore_SelectedWhisperWeightType();
 
 
-    const { currentSelectableWhisperComputeTypeList, updateSelectableWhisperComputeTypeList, pendingSelectableWhisperComputeTypeList } = useStore_SelectableWhisperComputeTypeList();
-    const { currentSelectedWhisperComputeType, updateSelectedWhisperComputeType, pendingSelectedWhisperComputeType } = useStore_SelectedWhisperComputeType();
+    const { currentSelectedTranscriptionComputeType, updateSelectedTranscriptionComputeType, pendingSelectedTranscriptionComputeType } = useStore_SelectedTranscriptionComputeType();
 
     const { currentSelectableTranscriptionComputeDeviceList, updateSelectableTranscriptionComputeDeviceList, pendingSelectableTranscriptionComputeDeviceList } = useStore_SelectableTranscriptionComputeDeviceList();
     const { currentSelectedTranscriptionComputeDevice, updateSelectedTranscriptionComputeDevice, pendingSelectedTranscriptionComputeDevice } = useStore_SelectedTranscriptionComputeDevice();
@@ -255,28 +253,19 @@ export const useTranscription = () => {
     };
 
 
-    const getSelectableWhisperComputeTypeList = () => {
-        pendingSelectableWhisperComputeTypeList();
-        asyncStdoutToPython("/get/data/whisper_compute_type_list");
+
+    const getSelectedTranscriptionComputeType = () => {
+        pendingSelectedTranscriptionComputeType();
+        asyncStdoutToPython("/get/data/transcription_compute_type");
     };
 
-    const updateSelectableWhisperComputeTypeList_FromBackend = (payload) => {
-        updateSelectableWhisperComputeTypeList(arrayToObject(payload));
+    const setSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
+        pendingSelectedTranscriptionComputeType();
+        asyncStdoutToPython("/set/data/transcription_compute_type", selected_transcription_compute_type);
     };
 
-
-    const getSelectedWhisperComputeType = () => {
-        pendingSelectedWhisperComputeType();
-        asyncStdoutToPython("/get/data/whisper_compute_type");
-    };
-
-    const setSelectedWhisperComputeType = (selected_whisper_compute_type) => {
-        pendingSelectedWhisperComputeType();
-        asyncStdoutToPython("/set/data/whisper_compute_type", selected_whisper_compute_type);
-    };
-
-    const setSuccessSelectedWhisperComputeType = (selected_whisper_compute_type) => {
-        updateSelectedWhisperComputeType(selected_whisper_compute_type);
+    const setSuccessSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
+        updateSelectedTranscriptionComputeType(selected_transcription_compute_type);
         showNotification_SaveSuccess();
     };
 
@@ -452,16 +441,11 @@ export const useTranscription = () => {
         setSuccessSelectedWhisperWeightType,
 
 
-        currentSelectableWhisperComputeTypeList,
-        getSelectableWhisperComputeTypeList,
-        updateSelectableWhisperComputeTypeList,
-        updateSelectableWhisperComputeTypeList_FromBackend,
-
-        currentSelectedWhisperComputeType,
-        getSelectedWhisperComputeType,
-        updateSelectedWhisperComputeType,
-        setSelectedWhisperComputeType,
-        setSuccessSelectedWhisperComputeType,
+        currentSelectedTranscriptionComputeType,
+        getSelectedTranscriptionComputeType,
+        updateSelectedTranscriptionComputeType,
+        setSelectedTranscriptionComputeType,
+        setSuccessSelectedTranscriptionComputeType,
 
 
         currentSelectableTranscriptionComputeDeviceList,
