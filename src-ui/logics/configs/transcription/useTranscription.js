@@ -256,12 +256,12 @@ export const useTranscription = () => {
 
     const getSelectedTranscriptionComputeType = () => {
         pendingSelectedTranscriptionComputeType();
-        asyncStdoutToPython("/get/data/transcription_compute_type");
+        asyncStdoutToPython("/get/data/selected_transcription_compute_type");
     };
 
     const setSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
         pendingSelectedTranscriptionComputeType();
-        asyncStdoutToPython("/set/data/transcription_compute_type", selected_transcription_compute_type);
+        asyncStdoutToPython("/set/data/selected_transcription_compute_type", selected_transcription_compute_type);
     };
 
     const setSuccessSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
