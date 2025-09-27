@@ -73,8 +73,17 @@ update_modal:
     is_current_compute_device: "現在使用中のバージョン"
 
 config_page:
-    version: "バージョン {{version}}"
-    model_download_button_label: "ダウンロード"
+    common:
+        version: "バージョン {{version}}"
+        model_download_button_label: "ダウンロード"
+        compute_device:
+            desc: "各処理タイプの精度・速度は、マシンスペックによって計算方法に相性があり、表示順とは異なる事があるため、大まかな目安としてください。"
+            label_device: "処理デバイス"
+            label_type: "処理タイプ"
+            type_template_auto: "自動"
+            type_template_low: "{{type_name}} （精度が悪く、処理は早い）"
+            type_template_high: "{{type_name}} （精度が良く、処理は遅い）"
+
     side_menu_labels:
         device: "デバイス"
         appearance: "デザイン"
@@ -133,8 +142,8 @@ config_page:
             desc: "翻訳エンジン「{{ctranslate2}}」で翻訳する際に、使用する翻訳モデルを選択できます。"
             small: "通常モデル （{{capacity}}）"
             large: "高精度モデル （{{capacity}}）"
-        ctranslate2_compute_device:
-            label: "AI翻訳 {{ctranslate2}} の処理デバイス"
+        translation_compute_device:
+            label: "AI翻訳の処理デバイス"
         deepl_auth_key:
             label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
@@ -177,8 +186,8 @@ config_page:
             desc: "容量が大きいモデルほど精度は高いですが、その分CPUやGPUを占有します。\n※特にmediumより容量の大きいモデルは、CPU/GPUの性能によっては使用すらも困難です。"
             model_template: "{{model_name}} モデル （{{capacity}}）"
             recommended_model_template: "{{model_name}} モデル （{{capacity}}） [推奨]"
-        whisper_compute_device:
-            label: "Whisperで使用する処理デバイス"
+        transcription_compute_device:
+            label: "AI音声認識で使用する処理デバイス"
 
     vr:
         single_line: "一行"

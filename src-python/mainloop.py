@@ -48,6 +48,9 @@ run_mapping = {
     "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
 
+    "selected_translation_compute_type":"/run/selected_translation_compute_type",
+    "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
+
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
@@ -162,6 +165,9 @@ mapping = {
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
+    "/get/data/selected_translation_compute_type": {"status": True, "variable":controller.getSelectedTranslationComputeType},
+    "/set/data/selected_translation_compute_type": {"status": True, "variable":controller.setSelectedTranslationComputeType},
+
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
     "/get/data/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
@@ -261,8 +267,13 @@ mapping = {
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
+
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+
+    "/get/data/selected_transcription_compute_type": {"status": True, "variable":controller.getSelectedTranscriptionComputeType},
+    "/set/data/selected_transcription_compute_type": {"status": True, "variable":controller.setSelectedTranscriptionComputeType},
+
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR

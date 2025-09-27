@@ -8,12 +8,13 @@ import {
     useStore_SpeakerPhraseTimeout,
     useStore_SpeakerRecordTimeout,
 
-    useStore_SelectableWhisperComputeDeviceList,
+    useStore_SelectableTranscriptionComputeDeviceList,
     useStore_SelectedTranscriptionEngine,
-    useStore_SelectedWhisperComputeDevice,
-    useStore_SelectedWhisperWeightType,
+    useStore_SelectedTranscriptionComputeDevice,
 
     useStore_WhisperWeightTypeStatus,
+    useStore_SelectedWhisperWeightType,
+    useStore_SelectedTranscriptionComputeType,
 
     useStore_MicAvgLogprob,
     useStore_MicNoSpeechProb,
@@ -21,7 +22,7 @@ import {
     useStore_SpeakerNoSpeechProb,
 } from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
-import { transformToIndexedArray } from "@utils";
+import { transformToIndexedArray, arrayToObject } from "@utils";
 import { useNotificationStatus } from "@logics_common";
 
 export const useTranscription = () => {
@@ -41,10 +42,15 @@ export const useTranscription = () => {
 
     // Transcription Engines
     const { currentSelectedTranscriptionEngine, updateSelectedTranscriptionEngine, pendingSelectedTranscriptionEngine } = useStore_SelectedTranscriptionEngine();
+
     const { currentWhisperWeightTypeStatus, updateWhisperWeightTypeStatus, pendingWhisperWeightTypeStatus } = useStore_WhisperWeightTypeStatus();
     const { currentSelectedWhisperWeightType, updateSelectedWhisperWeightType, pendingSelectedWhisperWeightType } = useStore_SelectedWhisperWeightType();
-    const { currentSelectableWhisperComputeDeviceList, updateSelectableWhisperComputeDeviceList, pendingSelectableWhisperComputeDeviceList } = useStore_SelectableWhisperComputeDeviceList();
-    const { currentSelectedWhisperComputeDevice, updateSelectedWhisperComputeDevice, pendingSelectedWhisperComputeDevice } = useStore_SelectedWhisperComputeDevice();
+
+
+    const { currentSelectedTranscriptionComputeType, updateSelectedTranscriptionComputeType, pendingSelectedTranscriptionComputeType } = useStore_SelectedTranscriptionComputeType();
+
+    const { currentSelectableTranscriptionComputeDeviceList, updateSelectableTranscriptionComputeDeviceList, pendingSelectableTranscriptionComputeDeviceList } = useStore_SelectableTranscriptionComputeDeviceList();
+    const { currentSelectedTranscriptionComputeDevice, updateSelectedTranscriptionComputeDevice, pendingSelectedTranscriptionComputeDevice } = useStore_SelectedTranscriptionComputeDevice();
 
     // Advanced Settings
     const { currentMicAvgLogprob, updateMicAvgLogprob, pendingMicAvgLogprob } = useStore_MicAvgLogprob();
@@ -246,6 +252,24 @@ export const useTranscription = () => {
         asyncStdoutToPython("/run/download_whisper_weight", weight_type);
     };
 
+
+
+    const getSelectedTranscriptionComputeType = () => {
+        pendingSelectedTranscriptionComputeType();
+        asyncStdoutToPython("/get/data/selected_transcription_compute_type");
+    };
+
+    const setSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
+        pendingSelectedTranscriptionComputeType();
+        asyncStdoutToPython("/set/data/selected_transcription_compute_type", selected_transcription_compute_type);
+    };
+
+    const setSuccessSelectedTranscriptionComputeType = (selected_transcription_compute_type) => {
+        updateSelectedTranscriptionComputeType(selected_transcription_compute_type);
+        showNotification_SaveSuccess();
+    };
+
+
     // Transcription Engines (Selected Weight Type)
     const getSelectedWhisperWeightType = () => {
         pendingSelectedWhisperWeightType();
@@ -263,28 +287,28 @@ export const useTranscription = () => {
     };
 
     // Transcription Engines (Compute Device List)
-    const getSelectableWhisperComputeDeviceList = () => {
-        pendingSelectableWhisperComputeDeviceList();
+    const getSelectableTranscriptionComputeDeviceList = () => {
+        pendingSelectableTranscriptionComputeDeviceList();
         asyncStdoutToPython("/get/data/transcription_compute_device_list");
     };
 
-    const updateSelectableWhisperComputeDeviceList_FromBackend = (payload) => {
-        updateSelectableWhisperComputeDeviceList(transformToIndexedArray(payload));
+    const updateSelectableTranscriptionComputeDeviceList_FromBackend = (payload) => {
+        updateSelectableTranscriptionComputeDeviceList(transformToIndexedArray(payload));
     };
 
     // Transcription Engines (Selected Compute Device)
-    const getSelectedWhisperComputeDevice = () => {
-        pendingSelectedWhisperComputeDevice();
+    const getSelectedTranscriptionComputeDevice = () => {
+        pendingSelectedTranscriptionComputeDevice();
         asyncStdoutToPython("/get/data/selected_transcription_compute_device");
     };
 
-    const setSelectedWhisperComputeDevice = (selected_transcription_compute_device) => {
-        pendingSelectedWhisperComputeDevice();
+    const setSelectedTranscriptionComputeDevice = (selected_transcription_compute_device) => {
+        pendingSelectedTranscriptionComputeDevice();
         asyncStdoutToPython("/set/data/selected_transcription_compute_device", selected_transcription_compute_device);
     };
 
-    const setSuccessSelectedWhisperComputeDevice = (dev) => {
-        updateSelectedWhisperComputeDevice(dev);
+    const setSuccessSelectedTranscriptionComputeDevice = (dev) => {
+        updateSelectedTranscriptionComputeDevice(dev);
         showNotification_SaveSuccess();
     };
 
@@ -416,16 +440,24 @@ export const useTranscription = () => {
         setSelectedWhisperWeightType,
         setSuccessSelectedWhisperWeightType,
 
-        currentSelectableWhisperComputeDeviceList,
-        getSelectableWhisperComputeDeviceList,
-        updateSelectableWhisperComputeDeviceList,
-        updateSelectableWhisperComputeDeviceList_FromBackend,
 
-        currentSelectedWhisperComputeDevice,
-        getSelectedWhisperComputeDevice,
-        updateSelectedWhisperComputeDevice,
-        setSelectedWhisperComputeDevice,
-        setSuccessSelectedWhisperComputeDevice,
+        currentSelectedTranscriptionComputeType,
+        getSelectedTranscriptionComputeType,
+        updateSelectedTranscriptionComputeType,
+        setSelectedTranscriptionComputeType,
+        setSuccessSelectedTranscriptionComputeType,
+
+
+        currentSelectableTranscriptionComputeDeviceList,
+        getSelectableTranscriptionComputeDeviceList,
+        updateSelectableTranscriptionComputeDeviceList,
+        updateSelectableTranscriptionComputeDeviceList_FromBackend,
+
+        currentSelectedTranscriptionComputeDevice,
+        getSelectedTranscriptionComputeDevice,
+        updateSelectedTranscriptionComputeDevice,
+        setSelectedTranscriptionComputeDevice,
+        setSuccessSelectedTranscriptionComputeDevice,
 
         // Advanced
         // Mic Avg Logprob
