@@ -278,7 +278,7 @@ const WhisperWeightType_Box = () => {
     );
 };
 
-
+// Duplicate
 const TranscriptionComputeDevice_Box = () => {
     const { t } = useI18n();
     const {
@@ -295,8 +295,72 @@ const TranscriptionComputeDevice_Box = () => {
 
     const target_index = findKeyByDeviceValue(currentSelectableTranscriptionComputeDeviceList.data, currentSelectedTranscriptionComputeDevice.data);
 
-    const selectable_compute_types = arrayToObject(currentSelectableTranscriptionComputeDeviceList.data[target_index].compute_types);
+    const DEFAULT_ORDER = [
+        "auto",
+        "int8",
+        "int8_bfloat16",
+        "int8_float16",
+        "int8_float32",
+        "bfloat16",
+        "float16",
+        "int16",
+        "float32"
+    ];
 
+    const sortComputeTypesArray = (compute_types_array = [], order) => {
+        const src_set = new Set(compute_types_array);
+
+        const from_order = order.filter((id) => src_set.has(id));
+
+        const invalid_ids = compute_types_array.filter((id) => !order.includes(id));
+        if (invalid_ids.length > 0) {
+            console.error("[sortComputeTypesArray] Unsupported compute types ignored:", invalid_ids);
+        }
+
+        return from_order;
+    };
+
+
+    const buildSimpleLabels = (ordered_array = []) => {
+        const n = ordered_array.length;
+        if (n === 0) return {};
+
+        const labels = {};
+
+        ordered_array.forEach((id, idx) => {
+            if (idx === 0 && id === "auto") {
+                labels[id] = t("config_page.common.compute_device.type_template_auto");
+                return;
+            }
+
+            if (idx === 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_low",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            if (idx === n - 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_high",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            labels[id] = id;
+        });
+
+        return labels;
+    };
+
+
+    const computeTypesArray = currentSelectableTranscriptionComputeDeviceList.data[target_index].compute_types;
+
+    const ordered_array = sortComputeTypesArray(computeTypesArray, DEFAULT_ORDER);
+
+    const new_compute_types_labels = buildSimpleLabels(ordered_array);
 
     const selectFunction_ComputeDevice = (selected_data) => {
         const target_obj = currentSelectableTranscriptionComputeDeviceList.data[selected_data.selected_id];
@@ -316,12 +380,15 @@ const TranscriptionComputeDevice_Box = () => {
     return (
         <div className={styles.mic_container}>
             <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent label={t("config_page.transcription.transcription_compute_device.label")} />
+                <LabelComponent
+                    label={t("config_page.transcription.transcription_compute_device.label")}
+                    desc={t("config_page.common.compute_device.desc")}
+                />
                 <div className={styles.device_contents}>
 
                     <div className={styles.device_dropdown_wrapper}>
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.transcription.transcription_compute_device.label")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_device")}</p>
                             <DropdownMenu
                                 dropdown_id="transcription_compute_device"
                                 selected_id={target_index}
@@ -334,11 +401,11 @@ const TranscriptionComputeDevice_Box = () => {
                         </div>
 
                         <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.transcription.transcription_compute_type.label")}</p>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_type")}</p>
                             <DropdownMenu
                                 dropdown_id="transcription_compute_type"
                                 selected_id={currentSelectedTranscriptionComputeType.data}
-                                list={selectable_compute_types}
+                                list={new_compute_types_labels}
                                 selectFunction={selectFunction_ComputeType}
                                 state={currentSelectedTranscriptionComputeType.state}
                                 is_disabled={is_disabled_selector}
