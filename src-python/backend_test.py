@@ -357,6 +357,10 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/osc_port":
                 data = random.randint(1024, 65535)
+            case "/set/data/selected_translation_compute_type":
+                data = random.choice(self.config_dict["selected_translation_compute_device"]["compute_types"])
+            case "/set/data/selected_transcription_compute_type":
+                data = random.choice(self.config_dict["selected_transcription_compute_device"]["compute_types"])
             case _:
                 data = None
                 expected_status = [404]
@@ -642,6 +646,13 @@ class TestMainloop():
             print("テストをしなかったテストの詳細:")
             for endpoint, result in self.test_results.items():
                 if result["expected_status"] == [401]:
+                    print(f"- エンドポイント: {endpoint}")
+                    print(f"  ステータス: {result['status']}")
+                    print(f"  結果: {result['result']}\n")
+        if invalid_tests > 0:
+            print("無効なテストの詳細:")
+            for endpoint, result in self.test_results.items():
+                if result["expected_status"] == [404]:
                     print(f"- エンドポイント: {endpoint}")
                     print(f"  ステータス: {result['status']}")
                     print(f"  結果: {result['result']}\n")
