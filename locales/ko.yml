@@ -73,8 +73,17 @@ update_modal:
     is_current_compute_device: "현재 사용 중인 버전"
 
 config_page:
-    version: "버전 {{version}}"
-    model_download_button_label: "다운로드"
+    common:
+        version: "버전 {{version}}"
+        model_download_button_label: "다운로드"
+        compute_device:
+            desc:
+            label_device:
+            label_type:
+            type_template_auto:
+            type_template_low:
+            type_template_high:
+
     side_menu_labels:
         device: "장치"
         appearance: "모양"
@@ -133,8 +142,6 @@ config_page:
             desc: "오프라인 번역 시의 번역 모델을 변경합니다."
             small: "일반 모델 ({{capacity}})"
             large: "정밀 모델 ({{capacity}})"
-        translation_compute_type:
-            label:
         translation_compute_device:
             label: "AI 번역 처리 장치"
         deepl_auth_key:
@@ -179,8 +186,6 @@ config_page:
             desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
             model_template: "{{model_name}} 모델 ({{capacity}})"
             recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
-        transcription_compute_type:
-            label:
         transcription_compute_device:
             label:
 
