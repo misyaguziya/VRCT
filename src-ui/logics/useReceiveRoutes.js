@@ -168,19 +168,22 @@ export const ROUTE_META_LIST = [
     { endpoint: "/delete/data/deepl_auth_key", ns: configs, hook_name: "useTranslation", method_name: "deleteSuccessDeepLAuthKey" },
 
     // Translation (AI Models)
+    { endpoint: "/get/data/selectable_ctranslate2_weight_type_dict", ns: configs, hook_name: "useTranslation", method_name: "updateDownloadedCTranslate2WeightTypeStatus" },
     { endpoint: "/get/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedCTranslate2WeightType" },
     { endpoint: "/set/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedCTranslate2WeightType" },
 
-    { endpoint: "/get/data/selectable_ctranslate2_weight_type_dict", ns: configs, hook_name: "useTranslation", method_name: "updateDownloadedCTranslate2WeightTypeStatus" },
+    { endpoint: "/run/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeType" },
+    { endpoint: "/get/data/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeType" },
+    { endpoint: "/set/data/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedTranslationComputeType" },
 
     { endpoint: "/run/downloaded_ctranslate2_weight", ns: configs, hook_name: "useTranslation", method_name: "downloadedCTranslate2WeightType" },
     { endpoint: "/run/download_ctranslate2_weight", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/download_progress_ctranslate2_weight", ns: configs, hook_name: "useTranslation", method_name: "updateDownloadProgressCTranslate2WeightTypeStatus" },
 
-    { endpoint: "/get/data/translation_compute_device_list", ns: configs, hook_name: "useTranslation", method_name: "updateSelectableCTranslate2ComputeDeviceList_FromBackend" },
+    { endpoint: "/get/data/translation_compute_device_list", ns: configs, hook_name: "useTranslation", method_name: "updateSelectableTranslationComputeDeviceList_FromBackend" },
 
-    { endpoint: "/get/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedCTranslate2ComputeDevice" },
-    { endpoint: "/set/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedCTranslate2ComputeDevice" },
+    { endpoint: "/get/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeDevice" },
+    { endpoint: "/set/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedTranslationComputeDevice" },
 
 
     // Transcription
@@ -211,18 +214,22 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionEngine" },
     { endpoint: "/set/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionEngine" },
 
+    { endpoint: "/get/data/selectable_whisper_weight_type_dict", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadedWhisperWeightTypeStatus" },
     { endpoint: "/get/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperWeightType" },
     { endpoint: "/set/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperWeightType" },
 
-    { endpoint: "/get/data/selectable_whisper_weight_type_dict", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadedWhisperWeightTypeStatus" },
+    { endpoint: "/run/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeType" },
+    { endpoint: "/get/data/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeType" },
+    { endpoint: "/set/data/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeType" },
+
 
     { endpoint: "/run/downloaded_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "downloadedWhisperWeightType" },
     { endpoint: "/run/download_whisper_weight", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/download_progress_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadProgressWhisperWeightTypeStatus" },
 
-    { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableWhisperComputeDeviceList_FromBackend" },
-    { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperComputeDevice" },
-    { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperComputeDevice" },
+    { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableTranscriptionComputeDeviceList_FromBackend" },
+    { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeDevice" },
+    { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeDevice" },
 
     // Transcription (Advanced)
     { endpoint: "/get/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateMicAvgLogprob" },

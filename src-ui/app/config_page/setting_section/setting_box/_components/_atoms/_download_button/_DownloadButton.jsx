@@ -29,7 +29,7 @@ export const _DownloadButton = ({option, ...props}) => {
                         className={styles.download_button}
                         onClick={() => props.downloadStartFunction(option.id)}
                     >
-                        <p className={styles.download_button_label}>{t("config_page.model_download_button_label")}</p>
+                        <p className={styles.download_button_label}>{t("config_page.common.model_download_button_label")}</p>
                     </button>
                 );
             case option.update_button:

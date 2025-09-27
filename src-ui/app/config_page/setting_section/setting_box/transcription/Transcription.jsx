@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./Transcription.module.scss";
-import { updateLabelsById, genNumObjArray } from "@utils";
+import { updateLabelsById, genNumObjArray, arrayToObject } from "@utils";
+import { useStore_IsBreakPoint } from "@store";
 
 import {
     useTranscription,
@@ -12,11 +13,14 @@ import {
     DownloadModelsContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
-    ComputeDeviceContainer,
     SliderContainer,
+
+    useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
 
 import {
+    DropdownMenu,
+    LabelComponent,
     SectionLabelComponent,
 } from "../_components/";
 
@@ -201,7 +205,7 @@ const TranscriptionEngine_Container = () => {
             <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <TranscriptionEngine_Box />
             <WhisperWeightType_Box />
-            <WhisperComputeDevice_Box />
+            <TranscriptionComputeDevice_Box />
         </div>
     );
 };
@@ -274,47 +278,143 @@ const WhisperWeightType_Box = () => {
     );
 };
 
-
 // Duplicate
-import { useComputeMode } from "@logics_common";
-const WhisperComputeDevice_Box = () => {
+const TranscriptionComputeDevice_Box = () => {
     const { t } = useI18n();
-    const { currentSelectedWhisperComputeDevice, setSelectedWhisperComputeDevice } = useTranscription();
-    const { currentSelectableWhisperComputeDeviceList } = useTranscription();
+    const {
+        currentSelectableTranscriptionComputeDeviceList,
+        currentSelectedTranscriptionComputeDevice,
+        setSelectedTranscriptionComputeDevice,
+        currentSelectedTranscriptionComputeType,
+        setSelectedTranscriptionComputeType,
+    } = useTranscription();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
-    const selectFunction = (selected_data) => {
-        const target_obj = currentSelectableWhisperComputeDeviceList.data[selected_data.selected_id];
-        setSelectedWhisperComputeDevice(target_obj);
+    const list_for_ui = transformDeviceArray(currentSelectableTranscriptionComputeDeviceList.data);
+
+    const target_index = findKeyByDeviceValue(currentSelectableTranscriptionComputeDeviceList.data, currentSelectedTranscriptionComputeDevice.data);
+
+    const DEFAULT_ORDER = [
+        "auto",
+        "int8",
+        "int8_bfloat16",
+        "int8_float16",
+        "int8_float32",
+        "bfloat16",
+        "float16",
+        "int16",
+        "float32"
+    ];
+
+    const sortComputeTypesArray = (compute_types_array = [], order) => {
+        const src_set = new Set(compute_types_array);
+
+        const from_order = order.filter((id) => src_set.has(id));
+
+        const invalid_ids = compute_types_array.filter((id) => !order.includes(id));
+        if (invalid_ids.length > 0) {
+            console.error("[sortComputeTypesArray] Unsupported compute types ignored:", invalid_ids);
+        }
+
+        return from_order;
     };
 
-    const list_for_ui = transformDeviceArray(currentSelectableWhisperComputeDeviceList.data);
 
-    const target_index = findKeyByDeviceValue(currentSelectableWhisperComputeDeviceList.data, currentSelectedWhisperComputeDevice.data);
+    const buildSimpleLabels = (ordered_array = []) => {
+        const n = ordered_array.length;
+        if (n === 0) return {};
+
+        const labels = {};
+
+        ordered_array.forEach((id, idx) => {
+            if (idx === 0 && id === "auto") {
+                labels[id] = t("config_page.common.compute_device.type_template_auto");
+                return;
+            }
+
+            if (idx === 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_low",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            if (idx === n - 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_high",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            labels[id] = id;
+        });
+
+        return labels;
+    };
 
 
-    const { currentComputeMode } = useComputeMode();
-    if (currentComputeMode.data === "cpu") {
-        return (
-            <ComputeDeviceContainer
-                label={t("config_page.transcription.whisper_compute_device.label")}
-                selected_id={target_index}
-                list={list_for_ui}
-                selectFunction={selectFunction}
-                state={currentSelectedWhisperComputeDevice.state}
-            />
-        )
-    }
+    const computeTypesArray = currentSelectableTranscriptionComputeDeviceList.data[target_index].compute_types;
+
+    const ordered_array = sortComputeTypesArray(computeTypesArray, DEFAULT_ORDER);
+
+    const new_compute_types_labels = buildSimpleLabels(ordered_array);
+
+    const selectFunction_ComputeDevice = (selected_data) => {
+        const target_obj = currentSelectableTranscriptionComputeDeviceList.data[selected_data.selected_id];
+        setSelectedTranscriptionComputeDevice(target_obj);
+    };
+
+    const selectFunction_ComputeType = (selected_data) => {
+        setSelectedTranscriptionComputeType(selected_data.selected_id);
+    };
+
+    const device_container_class = clsx(styles.device_container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
+    const is_disabled_selector = currentSelectedTranscriptionComputeDevice.state === "pending" || currentSelectedTranscriptionComputeType.state === "pending";
 
     return (
-        <DropdownMenuContainer
-            dropdown_id="whisper_compute_device"
-            label={t("config_page.transcription.whisper_compute_device.label")}
-            // desc={t("config_page.transcription.whisper_compute_device.label")}
-            selected_id={target_index}
-            list={list_for_ui}
-            selectFunction={selectFunction}
-            state={currentSelectedWhisperComputeDevice.state}
-        />
+        <div className={styles.mic_container}>
+            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
+                <LabelComponent
+                    label={t("config_page.transcription.transcription_compute_device.label")}
+                    desc={t("config_page.common.compute_device.desc")}
+                />
+                <div className={styles.device_contents}>
+
+                    <div className={styles.device_dropdown_wrapper}>
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_device")}</p>
+                            <DropdownMenu
+                                dropdown_id="transcription_compute_device"
+                                selected_id={target_index}
+                                list={list_for_ui}
+                                selectFunction={selectFunction_ComputeDevice}
+                                state={currentSelectedTranscriptionComputeDevice.state}
+                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
+
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_type")}</p>
+                            <DropdownMenu
+                                dropdown_id="transcription_compute_type"
+                                selected_id={currentSelectedTranscriptionComputeType.data}
+                                list={new_compute_types_labels}
+                                selectFunction={selectFunction_ComputeType}
+                                state={currentSelectedTranscriptionComputeType.state}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
@@ -374,8 +474,6 @@ const Advanced_Container = () => {
             <SpeakerNoSpeechProbContainer />
         </div>
     );
-
-
 };
 
 export const MicAvgLogprobContainer = () => {

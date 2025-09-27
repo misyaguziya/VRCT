@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useI18n } from "@useI18n";
 import styles from "./Translation.module.scss";
-import { updateLabelsById } from "@utils";
+import { updateLabelsById, arrayToObject } from "@utils";
+import { useStore_IsBreakPoint } from "@store";
 
 import {
     useTranslation,
@@ -10,15 +11,20 @@ import {
 import {
     DownloadModelsContainer,
     DeeplAuthKeyContainer,
-    DropdownMenuContainer,
-    ComputeDeviceContainer,
+
+    useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
+
+import {
+    DropdownMenu,
+    LabelComponent,
+} from "../_components/";
 
 export const Translation = () => {
     return (
         <>
             <CTranslate2WeightType_Box />
-            <CTranslation2ComputeDevice_Box />
+            <TranslationComputeDevice_Box />
             <DeeplAuthKey_Box />
         </>
     );
@@ -62,7 +68,7 @@ const CTranslate2WeightType_Box = () => {
                     "config_page.translation.ctranslate2_weight_type.desc",
                     {ctranslate2: "CTranslate2"}
                 )}
-                name="ctransalte2_weight_type"
+                name="ctranslate2_weight_type"
                 options={c_translate2_weight_types}
                 checked_variable={currentSelectedCTranslate2WeightType}
                 selectFunction={selectFunction}
@@ -71,49 +77,143 @@ const CTranslate2WeightType_Box = () => {
         </>
     );
 };
-
 // Duplicate
-import { useComputeMode } from "@logics_common";
-const CTranslation2ComputeDevice_Box = () => {
+const TranslationComputeDevice_Box = () => {
     const { t } = useI18n();
-    const { currentSelectedCTranslate2ComputeDevice, setSelectedCTranslate2ComputeDevice } = useTranslation();
-    const { currentSelectableCTranslate2ComputeDeviceList } = useTranslation();
+    const {
+        currentSelectableTranslationComputeDeviceList,
+        currentSelectedTranslationComputeDevice,
+        setSelectedTranslationComputeDevice,
+        currentSelectedTranslationComputeType,
+        setSelectedTranslationComputeType,
+    } = useTranslation();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
-    const selectFunction = (selected_data) => {
-        const target_obj = currentSelectableCTranslate2ComputeDeviceList.data[selected_data.selected_id];
-        setSelectedCTranslate2ComputeDevice(target_obj);
+    const list_for_ui = transformDeviceArray(currentSelectableTranslationComputeDeviceList.data);
+
+    const target_index = findKeyByDeviceValue(currentSelectableTranslationComputeDeviceList.data, currentSelectedTranslationComputeDevice.data);
+
+    const DEFAULT_ORDER = [
+        "auto",
+        "int8",
+        "int8_bfloat16",
+        "int8_float16",
+        "int8_float32",
+        "bfloat16",
+        "float16",
+        "int16",
+        "float32"
+    ];
+
+    const sortComputeTypesArray = (compute_types_array = [], order) => {
+        const src_set = new Set(compute_types_array);
+
+        const from_order = order.filter((id) => src_set.has(id));
+
+        const invalid_ids = compute_types_array.filter((id) => !order.includes(id));
+        if (invalid_ids.length > 0) {
+            console.error("[sortComputeTypesArray] Unsupported compute types ignored:", invalid_ids);
+        }
+
+        return from_order;
     };
 
-    const list_for_ui = transformDeviceArray(currentSelectableCTranslate2ComputeDeviceList.data);
 
-    const target_index = findKeyByDeviceValue(currentSelectableCTranslate2ComputeDeviceList.data, currentSelectedCTranslate2ComputeDevice.data);
+    const buildSimpleLabels = (ordered_array = []) => {
+        const n = ordered_array.length;
+        if (n === 0) return {};
+
+        const labels = {};
+
+        ordered_array.forEach((id, idx) => {
+            if (idx === 0 && id === "auto") {
+                labels[id] = t("config_page.common.compute_device.type_template_auto");
+                return;
+            }
+
+            if (idx === 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_low",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            if (idx === n - 1) {
+                labels[id] = t(
+                    "config_page.common.compute_device.type_template_high",
+                    { type_name: id }
+                );
+                return;
+            }
+
+            labels[id] = id;
+        });
+
+        return labels;
+    };
 
 
-    const { currentComputeMode } = useComputeMode();
-    const ctranslate2_compute_device_label = t("config_page.translation.ctranslate2_compute_device.label", {
-        ctranslate2: "Ctranslate2"
+    const computeTypesArray = currentSelectableTranslationComputeDeviceList.data[target_index].compute_types;
+
+    const ordered_array = sortComputeTypesArray(computeTypesArray, DEFAULT_ORDER);
+
+    const new_compute_types_labels = buildSimpleLabels(ordered_array);
+
+    const selectFunction_ComputeDevice = (selected_data) => {
+        const target_obj = currentSelectableTranslationComputeDeviceList.data[selected_data.selected_id];
+        setSelectedTranslationComputeDevice(target_obj);
+    };
+
+    const selectFunction_ComputeType = (selected_data) => {
+        setSelectedTranslationComputeType(selected_data.selected_id);
+    };
+
+    const device_container_class = clsx(styles.device_container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
     });
-    if (currentComputeMode.data === "cpu") {
-        return (
-            <ComputeDeviceContainer
-                label={ctranslate2_compute_device_label}
-                selected_id={target_index}
-                list={list_for_ui}
-                selectFunction={selectFunction}
-                state={currentSelectedCTranslate2ComputeDevice.state}
-            />
-        )
-    }
+
+    const is_disabled_selector = currentSelectedTranslationComputeDevice.state === "pending" || currentSelectedTranslationComputeType.state === "pending";
 
     return (
-        <DropdownMenuContainer
-            dropdown_id="ctranslate2_compute_device"
-            label={ctranslate2_compute_device_label}
-            selected_id={target_index}
-            list={list_for_ui}
-            selectFunction={selectFunction}
-            state={currentSelectedCTranslate2ComputeDevice.state}
-        />
+        <div className={styles.mic_container}>
+            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
+                <LabelComponent
+                    label={t("config_page.translation.translation_compute_device.label")}
+                    desc={t("config_page.common.compute_device.desc")}
+                />
+                <div className={styles.device_contents}>
+
+                    <div className={styles.device_dropdown_wrapper}>
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_device")}</p>
+                            <DropdownMenu
+                                dropdown_id="translation_compute_device"
+                                selected_id={target_index}
+                                list={list_for_ui}
+                                selectFunction={selectFunction_ComputeDevice}
+                                state={currentSelectedTranslationComputeDevice.state}
+                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
+
+                        <div className={styles.device_dropdown}>
+                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_type")}</p>
+                            <DropdownMenu
+                                dropdown_id="translation_compute_type"
+                                selected_id={currentSelectedTranslationComputeType.data}
+                                list={new_compute_types_labels}
+                                selectFunction={selectFunction_ComputeType}
+                                state={currentSelectedTranslationComputeType.state}
+                                is_disabled={is_disabled_selector}
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 };
 
