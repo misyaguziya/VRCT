@@ -94,6 +94,7 @@ const MessageWithTransliteration = ({ item }) => {
         const hira = token.hira ?? "";
         const hepburn = token.hepburn ?? "";
 
+        // Only hovered romaji if it exists. (No ruby cuz 'orig' and 'hira' are same.)
         if (hira && hira === orig && hepburn) {
             return (
                 <span key={key} title={hepburn} className={styles.with_hepburn}>
@@ -102,7 +103,8 @@ const MessageWithTransliteration = ({ item }) => {
             );
         }
 
-        if (hira && hira !== orig && hepburn) {
+        // Ruby hiragana and hovered romaji.
+        if (hira && hepburn) {
             return (
                 <ruby key={key} title={hepburn} className={styles.with_hepburn}>
                     {orig}
@@ -111,15 +113,20 @@ const MessageWithTransliteration = ({ item }) => {
             );
         }
 
-        if (hepburn && hepburn !== orig) {
-            return (
-                <ruby key={key} className={styles.ruby}>
-                    {orig}
-                    <rt>{hepburn}</rt>
-                </ruby>
-            );
+        // Ruby romaji or hiragana.
+        if (hepburn || hira) {
+            const ruby = hepburn ? hepburn : hira;
+            if (ruby !== orig) {
+                return (
+                    <ruby key={key} className={styles.ruby}>
+                        {orig}
+                        <rt>{ruby}</rt>
+                    </ruby>
+                );
+            };
         }
 
+        // Nothing. Original only.
         return (
             <span key={key} className={styles.original_only}>
                 {orig}
