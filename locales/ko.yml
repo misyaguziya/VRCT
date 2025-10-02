@@ -259,6 +259,14 @@ config_page:
         received_message_format:
             label: "메시지 형식 (Speaker2Chatbox)"
             desc: "현재로서는 Speaker2Chatbox로 전송할 때의 표시용으로 사용됩니다."
+        common_convert_message_hiragana_romaji:
+            desc_1:
+            desc_2:
+        convert_message_to_romaji:
+            label:
+            desc:
+        convert_message_to_hiragana:
+            label:
 
     hotkeys:
         toggle_vrct_visibility:

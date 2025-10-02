@@ -254,17 +254,19 @@ config_page:
                 translated: "翻訳"
                 for_multi_translation: "多言語翻訳用"
         send_message_format:
-            label: メッセージフォーマット（送信）
-            desc: VRChatで相手に実際に見えるフォーマットを変更できます。
+            label: "メッセージフォーマット（送信）"
+            desc: "VRChatで相手に実際に見えるフォーマットを変更できます。"
         received_message_format:
             label: メッセージフォーマット（Speaker2Chatbox）
             desc: 今のところ、Speaker2Chatboxで送信した時の表示に使われます。
+        common_convert_message_hiragana_romaji:
+            desc_1: "翻訳言語として日本語を選択した時のみサポート。"
+            desc_2: "日本語は特殊なため、精度には限界があります。"
         convert_message_to_romaji:
-            label: ローマ字を表示
-            desc: 翻訳言語として日本語を選択した時のみサポート。「{{convert_message_to_hiragana}}」と同時に有効にした場合は、マウスホバーで表示されます。
+            label: "ローマ字を表示"
+            desc: "「{{convert_message_to_hiragana}}」と同時に有効にした場合は、マウスホバーで表示されます。"
         convert_message_to_hiragana:
-            label: ひらがなを表示
-            desc: 翻訳言語として日本語を選択した時のみサポート。
+            label: "ひらがなを表示"
 
     hotkeys:
         toggle_vrct_visibility:
@@ -279,14 +281,14 @@ config_page:
     plugins:
         downloaded_version: "ダウンロード済バージョン: {{downloaded_version}}"
         latest_version: "最新バージョン: {{latest_version}}"
-        available_after_updating: 最新版にアップデート後 利用可能
-        unavailable_downloaded: 現在利用不可 使用中VRCTバージョンとの互換性なし
-        no_latest_info: 最新情報が取得できません
-        using_latest_version: 最新版を使用中
-        available_latest_version: 最新版を利用可能
-        unavailable_latest_version: 最新版は現在利用不可
-        available_in_latest_vrct_version: VRCT最新版で利用可能
-        unavailable_not_downloaded: 現在利用不可
+        available_after_updating: "最新版にアップデート後 利用可能"
+        unavailable_downloaded: "現在利用不可 使用中VRCTバージョンとの互換性なし"
+        no_latest_info: "最新情報が取得できません"
+        using_latest_version: "最新版を使用中"
+        available_latest_version: "最新版を利用可能"
+        unavailable_latest_version: "最新版は現在利用不可"
+        available_in_latest_vrct_version: "VRCT最新版で利用可能"
+        unavailable_not_downloaded: "現在利用不可"
 
     advanced_settings:
         osc_ip_address:
