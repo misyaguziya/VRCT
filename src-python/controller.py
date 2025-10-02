@@ -1050,20 +1050,20 @@ class Controller:
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is False:
+            config.AUTO_MIC_SELECT = True
             device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
             device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
             device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
             device_manager.forceUpdateAndSetMicDevices()
-            config.AUTO_MIC_SELECT = True
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is True:
+            config.AUTO_MIC_SELECT = False
             device_manager.clearCallbackProcessBeforeUpdateDevices()
             device_manager.clearCallbackDefaultMicDevice()
             device_manager.clearCallbackProcessAfterUpdateDevices()
-            config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -1247,20 +1247,20 @@ class Controller:
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is False:
+            config.AUTO_SPEAKER_SELECT = True
             device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
             device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
             device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
             device_manager.forceUpdateAndSetSpeakerDevices()
-            config.AUTO_SPEAKER_SELECT = True
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is True:
+            config.AUTO_SPEAKER_SELECT = False
             device_manager.clearCallbackProcessBeforeUpdateDevices()
             device_manager.clearCallbackDefaultSpeakerDevice()
             device_manager.clearCallbackProcessAfterUpdateDevices()
-            config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
