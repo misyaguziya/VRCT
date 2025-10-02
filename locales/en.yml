@@ -259,12 +259,14 @@ config_page:
         received_message_format:
             label: "Message Format (Speaker2Chatbox)"
             desc: "Currently, it is used in Speaker2Chatbox."
+        common_convert_message_hiragana_romaji:
+            desc_1: "Supported only when Japanese is selected as the translation language."
+            desc_2: "Due to the complexity of Japanese, it has limitations on accuracy."
         convert_message_to_romaji:
-            label: Show Romaji
-            desc: Supported only when Japanese is selected as the translation language. When enabled along with '{{convert_message_to_hiragana}}', romaji will be shown on mouse hover.
+            label: "Show Romaji"
+            desc:  "When enabled along with '{{convert_message_to_hiragana}}', romaji will be shown on mouse hover."
         convert_message_to_hiragana:
-            label: Show Hiragana
-            desc: Supported only when Japanese is selected as the translation language.
+            label: "Show Hiragana"
 
 
     hotkeys:

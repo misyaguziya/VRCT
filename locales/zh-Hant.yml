@@ -259,6 +259,14 @@ config_page:
         received_message_format:
             label:
             desc:
+        common_convert_message_hiragana_romaji:
+            desc_1:
+            desc_2:
+        convert_message_to_romaji:
+            label:
+            desc:
+        convert_message_to_hiragana:
+            label:
 
     hotkeys:
         toggle_vrct_visibility:
