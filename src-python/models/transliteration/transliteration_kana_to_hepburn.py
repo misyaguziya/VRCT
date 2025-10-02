@@ -209,7 +209,8 @@ if __name__ == "__main__":
         "ラーメン",
         "パン",
         "チョコレート",
+        "シイ"
     ]
 
     for s in tests:
-        print(s, "->", katakana_to_hepburn(s, use_macron=True))
+        print(s, "->", katakana_to_hepburn(s, use_macron=False))
