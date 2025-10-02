@@ -1,5 +1,5 @@
-from sudachipy import tokenizer
-from sudachipy import dictionary
+import spacy
+
 try:
     from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
@@ -7,8 +7,7 @@ except ImportError:
 
 class Transliterator:
     def __init__(self):
-        self.tokenizer_obj = dictionary.Dictionary().create()
-        self.mode = tokenizer.Tokenizer.SplitMode.C
+        self.ja_ginza_nlp = spacy.load('ja_ginza')
 
     @staticmethod
     def is_kanji(ch: str) -> bool:
@@ -16,10 +15,21 @@ class Transliterator:
 
     @staticmethod
     def kata_to_hira(text: str) -> str:
-        return "".join(
-            chr(ord(c) - 0x60) if 'ァ' <= c <= 'ン' else c
-            for c in text
-        )
+        if text is None:
+            return ""
+        # token.morph.get などから list/tuple が来る場合があるので正規化する
+        if isinstance(text, (list, tuple)):
+            text = text[0] if text else ""
+        # 安全のため文字列化
+        text = str(text)
+        out_chars = []
+        for c in text:
+            # ord() は長さ1の文字列を期待するので長さ1のときのみ処理する
+            if len(c) == 1 and 'ァ' <= c <= 'ン':
+                out_chars.append(chr(ord(c) - 0x60))
+            else:
+                out_chars.append(c)
+        return "".join(out_chars)
 
     @staticmethod
     def split_kanji_okurigana(surface: str, reading_kana: str):
@@ -95,105 +105,122 @@ class Transliterator:
         return result
 
     def analyze(self, text: str, use_macron: bool = True):
-        tokens = self.tokenizer_obj.tokenize(text, self.mode)
+        doc = self.ja_ginza_nlp(text)
 
         results = []
-        for t in tokens:
-            surface = t.surface()
-            reading = t.reading_form()
-            pos = t.part_of_speech()
+        for sent in doc.sents:
+            for token in sent:
+                surface = token.text
+                # token.morph.get("Reading") は list/tuple/None を返す場合があるため正規化
+                reading_raw = token.morph.get("Reading")
+                if isinstance(reading_raw, (list, tuple)):
+                    reading = reading_raw[0] if reading_raw else None
+                else:
+                    reading = reading_raw
+                # 読みが得られない場合は表層形を fallback にする
+                if reading is None:
+                    reading = surface
+                # 以後の処理のために文字列化しておく
+                reading = str(reading)
 
-            if pos and pos[0] in ["記号", "補助記号"]:
-                reading = surface
+                # 記号・補助記号は読みを表層形に合わせる
+                tag = token.tag_
+                if tag and "記号" in tag:
+                    reading = surface
 
-            if surface == reading:
-                results.append({
-                    "orig": surface,
-                    "kana": reading,
-                    "hira": surface,
-                    "hepburn": surface,
-                })
-                continue
+                if surface == reading:
+                    results.append({
+                        "orig": surface,
+                        "kana": reading,
+                        "hira": surface,
+                        "hepburn": surface,
+                    })
+                    continue
 
-            # 単純に1文字ずつ処理
-            if len(surface) == 1:
-                # 1文字の場合はそのまま
-                results.append({
-                    "orig": surface,
-                    "kana": reading,
-                    "hira": self.kata_to_hira(reading),
-                    "hepburn": katakana_to_hepburn(reading, use_macron=use_macron)
-                })
-            else:
-                # 複数文字の場合は文字種別で分割
-                i = 0
-                reading_pos = 0
-                
-                while i < len(surface):
-                    char = surface[i]
-                    
-                    if self.is_kanji(char):
-                        # 漢字の場合、連続する漢字をまとめて処理
-                        kanji_block = ""
-                        while i < len(surface) and self.is_kanji(surface[i]):
-                            kanji_block += surface[i]
-                            i += 1
-                        
-                        # 漢字ブロックの読みを推定
-                        if i < len(surface):
-                            # 後に文字がある場合、送り仮名を考慮
-                            remaining_chars = len(surface) - i
-                            kanji_reading = reading[reading_pos:-remaining_chars] if remaining_chars > 0 else reading[reading_pos:]
+                # 単純に1文字ずつ処理
+                if len(surface) == 1:
+                    # 1文字の場合はそのまま
+                    results.append({
+                        "orig": surface,
+                        "kana": reading,
+                        "hira": self.kata_to_hira(reading),
+                        "hepburn": katakana_to_hepburn(reading, use_macron=use_macron)
+                    })
+                else:
+                    # 複数文字の場合は文字種別で分割
+                    i = 0
+                    reading_pos = 0
+
+                    while i < len(surface):
+                        char = surface[i]
+
+                        if self.is_kanji(char):
+                            # 漢字の場合、連続する漢字をまとめて処理
+                            kanji_block = ""
+                            while i < len(surface) and self.is_kanji(surface[i]):
+                                kanji_block += surface[i]
+                                i += 1
+
+                            # 漢字ブロックの読みを推定
+                            if i < len(surface):
+                                # 後に文字がある場合、送り仮名を考慮
+                                remaining_chars = len(surface) - i
+                                kanji_reading = reading[reading_pos:-remaining_chars] if remaining_chars > 0 else reading[reading_pos:]
+                            else:
+                                # 最後の漢字ブロックの場合
+                                kanji_reading = reading[reading_pos:]
+
+                            # 空の読みを避ける
+                            if not kanji_reading and reading_pos < len(reading):
+                                kanji_reading = reading[reading_pos:]
+                            if not kanji_reading and kanji_block:
+                                # 読みが空だが漢字ブロックがある場合、残りの読みを全て割り当てる
+                                kanji_reading = reading[reading_pos:]
+
+                            # reading_posの更新を正確に行うために、割り当てられた読みの長さをチェック
+                            len_allocated_reading = len(kanji_reading)
+                            if reading_pos + len_allocated_reading > len(reading):
+                                len_allocated_reading = len(reading) - reading_pos
+
+                            results.append({
+                                "orig": kanji_block,
+                                "kana": kanji_reading,
+                                "hira": self.kata_to_hira(kanji_reading),
+                                "hepburn": katakana_to_hepburn(kanji_reading, use_macron=use_macron)
+                            })
+                            reading_pos += len_allocated_reading
                         else:
-                            # 最後の漢字ブロックの場合
-                            kanji_reading = reading[reading_pos:]
+                            # 非漢字の場合
+                            non_kanji_block = ""
+                            while i < len(surface) and not self.is_kanji(surface[i]):
+                                non_kanji_block += surface[i]
+                                i += 1
 
-                        # 空の読みを避ける
-                        if not kanji_reading and reading_pos < len(reading):
-                            kanji_reading = reading[reading_pos:]
-                        if not kanji_reading and kanji_block:
-                            # 読みが空だが漢字ブロックがある場合、残りの読みを全て割り当てる
-                            kanji_reading = reading[reading_pos:]
+                            # 非漢字部分の読み（通常は文字数分、または残りの読みの分だけ）
+                            len_block = len(non_kanji_block)
+                            non_kanji_reading = reading[reading_pos:reading_pos + len_block]
 
-                        # reading_posの更新を正確に行うために、割り当てられた読みの長さをチェック
-                        len_allocated_reading = len(kanji_reading)
-                        if reading_pos + len_allocated_reading > len(reading):
-                            len_allocated_reading = len(reading) - reading_pos
+                            # 割り当てられた読みの長さ
+                            len_allocated_reading = len(non_kanji_reading)
 
-                        results.append({
-                            "orig": kanji_block,
-                            "kana": kanji_reading,
-                            "hira": self.kata_to_hira(kanji_reading),
-                            "hepburn": katakana_to_hepburn(kanji_reading, use_macron=use_macron)
-                        })
-                        reading_pos += len_allocated_reading
-                    else:
-                        # 非漢字の場合
-                        non_kanji_block = ""
-                        while i < len(surface) and not self.is_kanji(surface[i]):
-                            non_kanji_block += surface[i]
-                            i += 1
-
-                        # 非漢字部分の読み（通常は文字数分、または残りの読みの分だけ）
-                        len_block = len(non_kanji_block)
-                        non_kanji_reading = reading[reading_pos:reading_pos + len_block]
-
-                        # 割り当てられた読みの長さ
-                        len_allocated_reading = len(non_kanji_reading)
-
-                        results.append({
-                            "orig": non_kanji_block,
-                            "kana": non_kanji_reading,
-                            "hira": self.kata_to_hira(non_kanji_reading),
-                            "hepburn": katakana_to_hepburn(non_kanji_reading, use_macron=use_macron)
-                        })
-                        reading_pos += len_allocated_reading
+                            results.append({
+                                "orig": non_kanji_block,
+                                "kana": non_kanji_reading,
+                                "hira": self.kata_to_hira(non_kanji_reading),
+                                "hepburn": katakana_to_hepburn(non_kanji_reading, use_macron=use_macron)
+                            })
+                            reading_pos += len_allocated_reading
 
         return results
 
 # --- テスト ---
 if __name__ == "__main__":
     test_cases = [
+        "何",
+        "何でしょうか",
+        "何が好き？",
+        "何色が好き？",
+        "何色あるの？",
         "美しい花を見る",
         "東京に行く",
         "漢字とカタカナの混在",
@@ -218,3 +245,20 @@ if __name__ == "__main__":
     transliterator = Transliterator()
     for case in test_cases:
         print(transliterator.analyze(case))
+
+    # nlp = spacy.load('ja_ginza')
+    # for case in test_cases:
+    #     doc = nlp(case)
+    #     for sent in doc.sents:
+    #         for token in sent:
+    #             print(
+    #                 token.orth_,
+    #                 token.lemma_,
+    #                 token.norm_,
+    #                 token.morph.get("Reading"),
+    #                 token.pos_,
+    #                 token.morph.get("Inflection"),
+    #                 token.tag_,
+    #                 token.dep_,
+    #                 token.head.i,
+    #             )
