@@ -102,7 +102,6 @@ class Transliterator:
             surface = t.surface()
             reading = t.reading_form()
             pos = t.part_of_speech()
-            print("surface:", surface, " reading:", reading, " pos:", pos)
 
             if pos and pos[0] in ["記号", "補助記号"]:
                 reading = surface
