@@ -8,7 +8,7 @@ except ImportError:
 class Transliterator:
     def __init__(self):
         self.tokenizer_obj = dictionary.Dictionary().create()
-        self.mode = tokenizer.Tokenizer.SplitMode.A
+        self.mode = tokenizer.Tokenizer.SplitMode.C
 
     @staticmethod
     def is_kanji(ch: str) -> bool:
@@ -101,7 +101,20 @@ class Transliterator:
         for t in tokens:
             surface = t.surface()
             reading = t.reading_form()
-            
+            pos = t.part_of_speech()
+
+            if pos and pos[0] in ["記号", "補助記号"]:
+                reading = surface
+
+            if surface == reading:
+                results.append({
+                    "orig": surface,
+                    "kana": reading,
+                    "hira": surface,
+                    "hepburn": surface,
+                })
+                continue
+
             # 単純に1文字ずつ処理
             if len(surface) == 1:
                 # 1文字の場合はそのまま
@@ -134,32 +147,48 @@ class Transliterator:
                         else:
                             # 最後の漢字ブロックの場合
                             kanji_reading = reading[reading_pos:]
-                        
+
+                        # 空の読みを避ける
+                        if not kanji_reading and reading_pos < len(reading):
+                            kanji_reading = reading[reading_pos:]
+                        if not kanji_reading and kanji_block:
+                            # 読みが空だが漢字ブロックがある場合、残りの読みを全て割り当てる
+                            kanji_reading = reading[reading_pos:]
+
+                        # reading_posの更新を正確に行うために、割り当てられた読みの長さをチェック
+                        len_allocated_reading = len(kanji_reading)
+                        if reading_pos + len_allocated_reading > len(reading):
+                            len_allocated_reading = len(reading) - reading_pos
+
                         results.append({
                             "orig": kanji_block,
                             "kana": kanji_reading,
                             "hira": self.kata_to_hira(kanji_reading),
                             "hepburn": katakana_to_hepburn(kanji_reading, use_macron=use_macron)
                         })
-                        reading_pos += len(kanji_reading)
+                        reading_pos += len_allocated_reading
                     else:
                         # 非漢字の場合
                         non_kanji_block = ""
                         while i < len(surface) and not self.is_kanji(surface[i]):
                             non_kanji_block += surface[i]
                             i += 1
-                        
-                        # 非漢字部分の読み（通常は文字数分）
-                        non_kanji_reading = reading[reading_pos:reading_pos + len(non_kanji_block)]
-                        
+
+                        # 非漢字部分の読み（通常は文字数分、または残りの読みの分だけ）
+                        len_block = len(non_kanji_block)
+                        non_kanji_reading = reading[reading_pos:reading_pos + len_block]
+
+                        # 割り当てられた読みの長さ
+                        len_allocated_reading = len(non_kanji_reading)
+
                         results.append({
                             "orig": non_kanji_block,
                             "kana": non_kanji_reading,
                             "hira": self.kata_to_hira(non_kanji_reading),
                             "hepburn": katakana_to_hepburn(non_kanji_reading, use_macron=use_macron)
                         })
-                        reading_pos += len(non_kanji_reading)
-        
+                        reading_pos += len_allocated_reading
+
         return results
 
 # --- テスト ---
@@ -180,6 +209,10 @@ if __name__ == "__main__":
         "取り敢えず検索してみる",
         "見知らぬ土地で冒険する",
         "彼は優れたエンジニアです",
+        " ".join(list("[]<>!@#$%^&*()_+-={}|\;:'\",.<>/?`~")),
+        " ".join(list("「」＜＞！＠＃＄％＾＆＊（）＿＋－＝｛｝｜＼；：＇＂，．／？｀～")),
+        " ".join(list("♪♫♬♭♮♯°℃℉№Å®©™✓✔✕✖★☆○●◎◇◆□■△▲▽▼※→←↑↓↔︎↕︎⇄⇅∞∴∵∷≪≫≦≧±×÷≠≈≡⊂⊃⊆⊇⊄⊅∪∩∈∋∅∀∃∠⊥⌒∂∇√∫∬∮∑∏∧∨¬⇒⇔∀∃∠⊥⌒∂∇√∫∬∮∑∏")),
+        " ".join(list("😀😃😄😁😆😅😂🤣😊😇🙂"))
     ]
 
     transliterator = Transliterator()
