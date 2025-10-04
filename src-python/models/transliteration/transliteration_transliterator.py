@@ -162,6 +162,8 @@ if __name__ == "__main__":
         "何が好き？",
         "何色が好き？",
         "何色ありますか？",
+        "何語ですか？",
+        "テーブルに色鉛筆は何色ありますか？"
         "美しい花を見る",
         "東京に行く",
         "漢字とカタカナの混在",
@@ -183,9 +185,9 @@ if __name__ == "__main__":
         " ".join(list("😀😃😄😁😆😅😂🤣😊😇🙂"))
     ]
 
-    transliterator = Transliterator()
-    for case in test_cases:
-        print(transliterator.analyze(case))
+    # transliterator = Transliterator()
+    # for case in test_cases:
+    #     print(transliterator.analyze(case))
 
     # nlp = spacy.load('ja_ginza')
     # for case in test_cases:
@@ -196,10 +198,71 @@ if __name__ == "__main__":
     #                 token.orth_,
     #                 token.lemma_,
     #                 token.norm_,
-    #                 token.morph.get("Reading"),
+    #                 token.morph,
     #                 token.pos_,
-    #                 token.morph.get("Inflection"),
+    #                 # token.morph.get("Inflection"),
     #                 token.tag_,
     #                 token.dep_,
     #                 token.head.i,
     #             )
+    # import MeCab
+    # import ipadic
+    # m = MeCab.Tagger(ipadic.MECAB_ARGS)
+    # for case in test_cases:
+    #     print(f"--- {case} ---")
+    #     print(m.parse(case))
+
+    # import MeCab
+    # import ipadic
+    # from furigana.furigana import print_html
+    # MeCab.Tagger(ipadic.MECAB_ARGS)
+    # for case in test_cases:
+    #     print_html(case)
+
+    # from kanjiconv import KanjiConv
+    # kanji_conv = KanjiConv(separator="/")
+    # for case in test_cases:
+    #     print(kanji_conv.to_katakana(case))
+
+    # from pykakasi import kakasi
+    # kakasi = kakasi()
+    # for case in test_cases:
+    #     result = kakasi.convert(case)
+    #     print(result)
+
+    # from janome.tokenizer import Tokenizer
+    # janome_tokenizer = Tokenizer()
+    # for case in test_cases:
+    #     print(f"--- {case} ---")
+    #     tokens = janome_tokenizer.tokenize(case)
+    #     for token in tokens:
+    #         print(token)
+
+    # from google.transliteration import transliterate_text
+    # for case in test_cases:
+    #     print(f"--- {case} ---")
+    #     suggestions = transliterate_text(case, lang_code='ja')
+    #     print(suggestions)
+
+    # from yakinori import Yakinori
+    # yakinori = Yakinori()
+    # for case in test_cases:
+    #     print(f"--- {case} ---")
+    #     result = yakinori.get_hiragana_sentence(case)
+    #     print(result)
+
+    # import pyopenjtalk
+    # for case in test_cases:
+    #     print(f"--- {case} ---")
+    #     result = pyopenjtalk.g2p(case, kana=True)
+    #     print(result)
+    
+    from transformers import AutoModel, AutoTokenizer
+    tokenizer = AutoTokenizer.from_pretrained("bandainamco-mirai/distilbert-base-japanese")
+    model = AutoModel.from_pretrained("bandainamco-mirai/distilbert-base-japanese")
+    for case in test_cases:
+        print(f"--- {case} ---")
+        inputs = tokenizer(case, return_tensors="pt")
+        outputs = model(**inputs)
+        result = outputs.last_hidden_state
+        print(result)
