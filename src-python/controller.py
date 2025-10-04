@@ -915,12 +915,16 @@ class Controller:
     @staticmethod
     def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
         if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+                model.startTransliteration()
             config.CONVERT_MESSAGE_TO_ROMAJI = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
     def setDisableConvertMessageToRomaji(*args, **kwargs) -> dict:
         if config.CONVERT_MESSAGE_TO_ROMAJI is True:
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+                model.stopTransliteration()
             config.CONVERT_MESSAGE_TO_ROMAJI = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
@@ -931,12 +935,16 @@ class Controller:
     @staticmethod
     def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
         if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+            if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+                model.startTransliteration()
             config.CONVERT_MESSAGE_TO_HIRAGANA = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
     def setDisableConvertMessageToHiragana(*args, **kwargs) -> dict:
         if config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+            if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+                model.stopTransliteration()
             config.CONVERT_MESSAGE_TO_HIRAGANA = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
@@ -2465,6 +2473,11 @@ class Controller:
         printLog("Set Transcription Engine")
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
+
+        # set Transliteration status
+        printLog("Set Transliteration")
+        if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+            model.startTransliteration()
 
         self.initializationProgress(3)
 
