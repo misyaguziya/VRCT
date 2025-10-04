@@ -99,7 +99,7 @@ class Model:
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_audio_queue = None
         self.mic_mute_status = None
-        self.transliterator = Transliterator()
+        self.transliterator = None
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
         self.websocket_server = None
@@ -277,6 +277,14 @@ class Model:
         self.previous_receive_message = message
         return repeat_flag
 
+    def startTransliteration(self):
+        if self.transliterator is None:
+            self.transliterator = Transliterator()
+
+    def stopTransliteration(self):
+        if self.transliterator is not None:
+            self.transliterator = None
+
     def convertMessageToTransliteration(self, message: str, hiragana: bool=True, romaji: bool=True) -> str:
         if hiragana is False and romaji is False:
             return message
@@ -286,6 +294,9 @@ class Model:
             keys_to_keep.add("hira")
         if romaji:
             keys_to_keep.add("hepburn")
+
+        if self.transliterator is None:
+            self.startTransliteration()
 
         data_list = self.transliterator.analyze(message, use_macron=False)
         filtered_list = [
