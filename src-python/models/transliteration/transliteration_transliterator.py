@@ -4,6 +4,10 @@ try:
     from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
     from transliteration_kana_to_hepburn import katakana_to_hepburn
+try:
+    from .transliteration_context_rules import apply_context_rules
+except ImportError:
+    from transliteration_context_rules import apply_context_rules
 
 class Transliterator:
     def __init__(self):
@@ -23,10 +27,24 @@ class Transliterator:
 
     @staticmethod
     def split_kanji_okurigana(surface: str, reading_kana: str, use_macron: bool = True):
+        """Split a single surface word and its kana reading into parts.
+
+        Inputs:
+        - surface: the surface form (may contain kanji + kana)
+        - reading_kana: the katakana reading for the whole surface
+
+        Output:
+        - a list of dicts: [{"orig": str, "kana": str, "hira": str, "hepburn": str}, ...]
+
+        Notes:
+        - The function allocates portions of ``reading_kana`` to each contiguous
+          kanji/non-kanji block in ``surface``. Allocation is heuristic: an
+          initial allocation based on block length is used and any remainder is
+          distributed left-to-right preferring kanji blocks.
+        - This function is pure (no external side effects) and returns the
+          constructed list.
         """
-        1語の表層形(surface)と読み(reading_kana)を
-        [ {"orig":..., "kana":..., "hira":..., "hepburn":...}, ... ] に分割
-        """
+
         result = []
 
         # 表層を「漢字ブロック」と「非漢字ブロック」に分割
@@ -46,53 +64,73 @@ class Transliterator:
 
         # 読みを分配
         kana_left = reading_kana
-        for i, (is_kan, part) in enumerate(blocks):
-            if is_kan:
-                # 漢字ブロックの処理
-                if len(blocks) == 1:
-                    # 単一ブロック（全て漢字）の場合
-                    kana_for_kan = kana_left
-                elif i == len(blocks) - 1:
-                    # 最後のブロック（漢字）の場合
-                    kana_for_kan = kana_left
-                else:
-                    # 中間の漢字ブロックの場合
-                    # 後続の非漢字ブロックの文字数を計算
-                    remaining_non_kanji = sum(len(p) for is_k, p in blocks[i+1:] if not is_k)
-                    if remaining_non_kanji > 0 and len(kana_left) > remaining_non_kanji:
-                        kana_for_kan = kana_left[:-remaining_non_kanji]
-                    else:
-                        # 漢字1文字あたり最低1文字の読みを割り当て
-                        min_kana = len(part)
-                        kana_for_kan = kana_left[:max(min_kana, len(kana_left) - remaining_non_kanji)]
-                
-                # 空の読みを避ける
-                if not kana_for_kan and kana_left:
-                    kana_for_kan = kana_left[:1]
+        # We'll allocate kana to each block by initial guess = len(part) (characters)
+        # and distribute any remaining kana left-to-right preferring kanji blocks.
+        kana_len = len(kana_left)
 
-                result.append({
-                    "orig": part,
-                    "kana": kana_for_kan,
-                    "hira": Transliterator.kata_to_hira(kana_for_kan),
-                    "hepburn": katakana_to_hepburn(kana_for_kan, use_macron=use_macron)
-                })
-                kana_left = kana_left[len(kana_for_kan):]
-            else:
-                # 非漢字部分（送り仮名など）
-                kana_for_okuri = kana_left[:len(part)]
-                result.append(
-                    {
-                        "orig": part,
-                        "kana": kana_for_okuri,
-                        "hira": Transliterator.kata_to_hira(kana_for_okuri),
-                        "hepburn": katakana_to_hepburn(kana_for_okuri, use_macron=use_macron)
-                    }
-                )
-                kana_left = kana_left[len(kana_for_okuri):]
+        # initial allocation per block
+        allocs = [len(part) for _, part in blocks]
+        allocated = sum(allocs)
+        remaining = kana_len - allocated
+
+        # distribute extra kana to kanji blocks first (left-to-right)
+        if remaining > 0:
+            for idx, (is_kan, _) in enumerate(blocks):
+                if remaining <= 0:
+                    break
+                if is_kan:
+                    allocs[idx] += 1
+                    remaining -= 1
+            # if still remaining, distribute to all blocks left-to-right
+            idx = 0
+            while remaining > 0 and len(blocks) > 0:
+                allocs[idx] += 1
+                remaining -= 1
+                idx = (idx + 1) % len(blocks)
+
+        # if remaining < 0 (reading shorter than base), shrink allocations from right
+        if remaining < 0:
+            # remove from rightmost blocks as needed
+            need = -remaining
+            idx = len(blocks) - 1
+            while need > 0 and idx >= 0:
+                take = min(allocs[idx] - 1, need) if allocs[idx] > 1 else 0
+                allocs[idx] -= take
+                need -= take
+                idx -= 1
+
+        # now slice kana_left according to allocs
+        pos = 0
+        for (is_kan, part), cnt in zip(blocks, allocs):
+            kana_for_part = kana_left[pos:pos+cnt]
+            pos += cnt
+            result.append({
+                "orig": part,
+                "kana": kana_for_part,
+                "hira": Transliterator.kata_to_hira(kana_for_part),
+                "hepburn": katakana_to_hepburn(kana_for_part, use_macron=use_macron)
+            })
 
         return result
 
     def analyze(self, text: str, use_macron: bool = False):
+        """Tokenize ``text`` and produce per-subunit reading information.
+
+        Returns a list of dicts for each token/sub-part with keys:
+        - orig: original surface string (one or more characters)
+        - kana: katakana reading for this part (may be adapted by context rules)
+        - hira: hiragana reading (derived from kana)
+        - hepburn: Latin transcription (derived from kana)
+
+        Side-effects / notes:
+        - The function calls ``apply_context_rules(results, use_macron=...)``
+          which both mutates ``results`` in-place and returns it. This method
+          safely accepts the returned list and then recalculates ``hira`` and
+          ``hepburn`` for entries whose ``kana`` was changed.
+        - If rule application fails, analysis still returns the best-effort
+          results.
+        """
+
         tokens = self.tokenizer_obj.tokenize(text, self.mode)
 
         results = []
@@ -127,11 +165,37 @@ class Transliterator:
                 parts = self.split_kanji_okurigana(surface, reading, use_macron=use_macron)
                 results.extend(parts)
 
+        # 文脈ルールを適用（別ファイル）
+        try:
+            results = apply_context_rules(results, use_macron=use_macron) or results
+        except Exception:
+            # ルール適用で失敗しても解析結果は返す
+            pass
+
+        # apply_context_rules が kana を書き換えた場合、hira と hepburn を再計算
+        for entry in results:
+            kana = entry.get("kana", "")
+            if kana:
+                entry["hira"] = self.kata_to_hira(kana)
+                entry["hepburn"] = katakana_to_hepburn(kana, use_macron=use_macron)
+
         return results
 
 # --- テスト ---
 if __name__ == "__main__":
+    import pprint
     test_cases = [
+        "向こうへ行く",
+        "行事を行う",
+        "上がる",
+        "上る",
+        "入り込む",
+        "何",
+        "何が好き？",
+        "何色が好き？",
+        "何色ありますか？",
+        "何語ですか？",
+        "テーブルに色鉛筆は何色ありますか？"
         "美しい花を見る",
         "東京に行く",
         "漢字とカタカナの混在",
@@ -155,4 +219,4 @@ if __name__ == "__main__":
 
     transliterator = Transliterator()
     for case in test_cases:
-        print(transliterator.analyze(case))
+        pprint.pprint(transliterator.analyze(case), sort_dicts=False)
