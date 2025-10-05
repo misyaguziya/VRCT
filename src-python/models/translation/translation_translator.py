@@ -100,6 +100,9 @@ class Translator():
 
     def translate(self, translator_name, source_language, target_language, target_country, message):
         try:
+            if source_language == target_language:
+                return message
+
             result = ""
             source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
             match translator_name:
