@@ -86,27 +86,31 @@ class Controller:
             settings,
         )
 
-    def restartAccessDevices(self) -> None:
+    def restartAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             self.startThreadingTranscriptionSendMessage()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.startCheckMicEnergy(
                 self.progressBarMicEnergy,
             )
+
+    def restartAccessSpeakerDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.startCheckSpeakerEnergy(
                 self.progressBarSpeakerEnergy,
             )
 
-    def stopAccessDevices(self) -> None:
+    def stopAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             self.stopThreadingTranscriptionSendMessage()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
+
+    def stopAccessSpeakerDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.stopCheckSpeakerEnergy()
 
@@ -1048,22 +1052,25 @@ class Controller:
     def getAutoMicSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
+    def applyAutoMicSelect(self) -> None:
+        device_manager.setCallbackProcessBeforeUpdateMicDevices(self.stopAccessMicDevices)
+        device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
+        device_manager.setCallbackProcessAfterUpdateMicDevices(self.restartAccessMicDevices)
+        device_manager.forceUpdateAndSetMicDevices()
+
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is False:
+            self.applyAutoMicSelect()
             config.AUTO_MIC_SELECT = True
-            device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
-            device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-            device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-            device_manager.forceUpdateAndSetMicDevices()
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is True:
-            config.AUTO_MIC_SELECT = False
-            device_manager.clearCallbackProcessBeforeUpdateDevices()
+            device_manager.clearCallbackProcessBeforeUpdateMicDevices()
             device_manager.clearCallbackDefaultMicDevice()
-            device_manager.clearCallbackProcessAfterUpdateDevices()
+            device_manager.clearCallbackProcessAfterUpdateMicDevices()
+            config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -1245,22 +1252,25 @@ class Controller:
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
+    def applyAutoSpeakerSelect(self) -> None:
+        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(self.stopAccessSpeakerDevices)
+        device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
+        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(self.restartAccessSpeakerDevices)
+        device_manager.forceUpdateAndSetSpeakerDevices()
+
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is False:
+            self.applyAutoSpeakerSelect()
             config.AUTO_SPEAKER_SELECT = True
-            device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
-            device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-            device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
-            device_manager.forceUpdateAndSetSpeakerDevices()
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is True:
-            config.AUTO_SPEAKER_SELECT = False
-            device_manager.clearCallbackProcessBeforeUpdateDevices()
+            device_manager.clearCallbackProcessBeforeUpdateSpeakerDevices()
             device_manager.clearCallbackDefaultSpeakerDevice()
-            device_manager.clearCallbackProcessAfterUpdateDevices()
+            device_manager.clearCallbackProcessAfterUpdateSpeakerDevices()
+            config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
@@ -2507,9 +2517,9 @@ class Controller:
 
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            self.setEnableAutoMicSelect()
+            self.applyAutoMicSelect()
         if config.AUTO_SPEAKER_SELECT is True:
-            self.setEnableAutoSpeakerSelect()
+            self.applyAutoSpeakerSelect()
 
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):

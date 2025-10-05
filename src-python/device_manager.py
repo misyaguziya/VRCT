@@ -178,7 +178,8 @@ class DeviceManager:
                         sleep(1)
                     enumerator.UnregisterEndpointNotificationCallback(cb)
                     comtypes.CoUninitialize()
-                    self.runProcessBeforeUpdateDevices()
+                    self.runProcessBeforeUpdateMicDevices()
+                    self.runProcessBeforeUpdateSpeakerDevices()
                     sleep(2)
                     for _ in range(10):
                         self.update()
@@ -186,7 +187,8 @@ class DeviceManager:
                             break
                         sleep(2)
                     self.noticeUpdateDevices()
-                    self.runProcessAfterUpdateDevices()
+                    self.runProcessAfterUpdateMicDevices()
+                    self.runProcessAfterUpdateSpeakerDevices()
                 except Exception:
                     errorLogging()
                 finally:
@@ -234,25 +236,45 @@ class DeviceManager:
     def clearCallbackSpeakerDeviceList(self):
         self.callback_speaker_device_list = None
 
-    def setCallbackProcessBeforeUpdateDevices(self, callback):
-        self.callback_process_before_update_devices = callback
+    def setCallbackProcessBeforeUpdateMicDevices(self, callback):
+        self.callback_process_before_update_mic_devices = callback
 
-    def clearCallbackProcessBeforeUpdateDevices(self):
-        self.callback_process_before_update_devices = None
+    def clearCallbackProcessBeforeUpdateMicDevices(self):
+        self.callback_process_before_update_mic_devices = None
 
-    def runProcessBeforeUpdateDevices(self):
-        if isinstance(self.callback_process_before_update_devices, Callable):
-            self.callback_process_before_update_devices()
+    def runProcessBeforeUpdateMicDevices(self):
+        if isinstance(self.callback_process_before_update_mic_devices, Callable):
+            self.callback_process_before_update_mic_devices()
 
-    def setCallbackProcessAfterUpdateDevices(self, callback):
-        self.callback_process_after_update_devices = callback
+    def setCallbackProcessAfterUpdateMicDevices(self, callback):
+        self.callback_process_after_update_mic_devices = callback
 
-    def clearCallbackProcessAfterUpdateDevices(self):
-        self.callback_process_after_update_devices = None
+    def clearCallbackProcessAfterUpdateMicDevices(self):
+        self.callback_process_after_update_mic_devices = None
 
-    def runProcessAfterUpdateDevices(self):
-        if isinstance(self.callback_process_after_update_devices, Callable):
-            self.callback_process_after_update_devices()
+    def runProcessAfterUpdateMicDevices(self):
+        if isinstance(self.callback_process_after_update_mic_devices, Callable):
+            self.callback_process_after_update_mic_devices()
+
+    def setCallbackProcessBeforeUpdateSpeakerDevices(self, callback):
+        self.callback_process_before_update_speaker_devices = callback
+
+    def clearCallbackProcessBeforeUpdateSpeakerDevices(self):
+        self.callback_process_before_update_speaker_devices = None
+
+    def runProcessBeforeUpdateSpeakerDevices(self):
+        if isinstance(self.callback_process_before_update_speaker_devices, Callable):
+            self.callback_process_before_update_speaker_devices()
+
+    def setCallbackProcessAfterUpdateSpeakerDevices(self, callback):
+        self.callback_process_after_update_speaker_devices = callback
+
+    def clearCallbackProcessAfterUpdateSpeakerDevices(self):
+        self.callback_process_after_update_speaker_devices = None
+
+    def runProcessAfterUpdateSpeakerDevices(self):
+        if isinstance(self.callback_process_after_update_speaker_devices, Callable):
+            self.callback_process_after_update_speaker_devices()
 
     def noticeUpdateDevices(self):
         if self.update_flag_default_mic_device is True:
