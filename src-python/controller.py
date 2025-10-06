@@ -1,3 +1,4 @@
+import copy
 from typing import Callable, Any
 from time import sleep
 from subprocess import Popen
@@ -753,25 +754,10 @@ class Controller:
 
     def setSelectedTranslationComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
-        pre_device = config.SELECTED_TRANSLATION_COMPUTE_DEVICE
-        pre_compute_type = config.SELECTED_TRANSLATION_COMPUTE_TYPE
         config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
         config.SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
-        try:
-            model.changeTranslatorCTranslate2Model()
-            self.run(200, self.run_mapping["selected_translation_compute_type"], config.SELECTED_TRANSLATION_COMPUTE_TYPE)
-        except Exception as e:
-            # VRAM不足エラーの検出（デバイス切り替え時）
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                # 前のデバイス設定に戻す
-                printLog("VRAM error detected, reverting device setting")
-                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = pre_device
-                config.SELECTED_TRANSLATION_COMPUTE_TYPE = pre_compute_type
-                model.changeTranslatorCTranslate2Model()
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
+        self.run(200, self.run_mapping["selected_translation_compute_type"], config.SELECTED_TRANSLATION_COMPUTE_TYPE)
+        model.setChangedTranslatorParameters(True)
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
@@ -801,12 +787,39 @@ class Controller:
     # def getMaxSpeakerThreshold(*args, **kwargs) -> dict:
     #     return {"status":200, "result":config.MAX_SPEAKER_THRESHOLD}
 
-    @staticmethod
-    def setEnableTranslation(*args, **kwargs) -> dict:
+    def setEnableTranslation(self, *args, **kwargs) -> dict:
         if config.ENABLE_TRANSLATION is False:
-            if model.isLoadedCTranslate2Model() is False:
-                model.changeTranslatorCTranslate2Model()
-            config.ENABLE_TRANSLATION = True
+            if model.isLoadedCTranslate2Model() is False or model.isChangedTranslatorParameters() is True:
+                try:
+                    model.changeTranslatorCTranslate2Model()
+                    model.setChangedTranslatorParameters(False)
+                    config.ENABLE_TRANSLATION = True
+                except Exception as e:
+                    # VRAM不足エラーの検出（デバイス切り替え時）
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        # Defaultのデバイス設定に戻す
+                        printLog("VRAM error detected, reverting device setting")
+                        self.setDisableTranslation()
+                        config.SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(config.SELECTABLE_COMPUTE_DEVICE_LIST[0])
+                        config.SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
+                        self.run(200, self.run_mapping["selected_translation_compute_device"], config.SELECTED_TRANSLATION_COMPUTE_DEVICE)
+                        self.run(200, self.run_mapping["selected_translation_compute_type"], config.SELECTED_TRANSLATION_COMPUTE_TYPE)
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        model.changeTranslatorCTranslate2Model()
+                        model.setChangedTranslatorParameters(False)
+                    else:
+                        # その他のエラーは通常通り処理
+                        errorLogging()
+            else:
+                config.ENABLE_TRANSLATION = True
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
@@ -1571,17 +1584,8 @@ class Controller:
 
     @staticmethod
     def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
-        pre_weight_type = config.CTRANSLATE2_WEIGHT_TYPE
         config.CTRANSLATE2_WEIGHT_TYPE = str(data)
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-            th_callback.join()
-        else:
-            config.CTRANSLATE2_WEIGHT_TYPE = pre_weight_type
+        model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
 
     @staticmethod
@@ -1590,17 +1594,8 @@ class Controller:
 
     @staticmethod
     def setSelectedTranslationComputeType(data, *args, **kwargs) -> dict:
-        pre_compute_type = config.SELECTED_TRANSLATION_COMPUTE_TYPE
         config.SELECTED_TRANSLATION_COMPUTE_TYPE = str(data)
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-            th_callback.join()
-        else:
-            config.SELECTED_TRANSLATION_COMPUTE_TYPE = pre_compute_type
+        model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
     @staticmethod
