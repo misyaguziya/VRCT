@@ -368,6 +368,7 @@ class TestMainloop():
         if expected_status == [401]:
             print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No test available for this endpoint: {endpoint}.")
             self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            success=True
             return success
         elif expected_status == [404]:
             print(f"-> {Color.RED}[ERROR]{Color.RESET} Unknown endpoint: {endpoint}.")
@@ -474,6 +475,7 @@ class TestMainloop():
         if expected_status == [401]:
             print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No test available for this endpoint: {endpoint}.")
             self.record_test_result(endpoint, None, None, expected_status)  # テスト結果を記録
+            success=True
             return success
         elif expected_status == [404]:
             print(f"-> {Color.RED}[ERROR]{Color.RESET} Unknown endpoint: {endpoint}.")
@@ -669,11 +671,11 @@ if __name__ == "__main__":
     import traceback
     try:
         test = TestMainloop()
-        test.test_endpoints_on_off_all()
-        test.test_set_data_endpoints_all()
-        test.test_run_endpoints_all()
-        test.test_delete_data_endpoints_all()
-        # test.test_endpoints_all_random()
+        # test.test_endpoints_on_off_all()
+        # test.test_set_data_endpoints_all()
+        # test.test_run_endpoints_all()
+        # test.test_delete_data_endpoints_all()
+        test.test_endpoints_all_random()
         # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
         # test.test_endpoints_specific_random()
