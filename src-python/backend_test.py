@@ -627,6 +627,70 @@ class TestMainloop():
             self.test_delete_data_endpoints_single(endpoint)
         print("----データ削除系のエンドポイントのテスト終了----")
 
+    def test_translate_language(self, text):
+        """
+        指定された言語ペアで翻訳をテストする
+        :param text: 翻訳するテキスト
+        :return: 翻訳結果とステータスコード
+        """
+        # エンドポイント
+        endpoint = "/run/send_message_box"
+        result, status = self.main.handleRequest(endpoint, text)
+        return result, status
+
+    def test_translate_all_language_pairs(self):
+        results = {}
+        # 翻訳機能を有効にする
+        self.main.handleRequest("/set/enable/translation", None)
+        # 対応する言語コードのリストを取得
+        self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
+        selectable_language_list = self.config_dict.get("selectable_language_list", None)
+        # すべての言語ペアで翻訳をテスト
+        for source_lang in selectable_language_list:
+            results[source_lang["language"]] = {}
+            for target_lang in selectable_language_list:
+                results[source_lang["language"]][target_lang["language"]] = {}
+                data = {}
+                for i in ["1", "2", "3"]:
+                    data[i] = {}
+                    data[i]["1"] = source_lang | {"enable": True}
+                self.main.handleRequest("/set/data/selected_your_languages", data)
+                data = {}
+                for i in ["1", "2", "3"]:
+                    data[i] = {}
+                    for j in ["1", "2", "3"]:
+                        if j == "1":
+                            data[i][j] = target_lang | {"enable": True}
+                        else:
+                            data[i][j] = target_lang | {"enable": False}
+                self.main.handleRequest("/set/data/selected_target_languages", data)
+
+                # 翻訳エンジンを設定する（例: "CTranslate2"）
+                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/translation_engines", None)
+                translation_engines = self.config_dict.get("translation_engines", None)
+                for engine in translation_engines:
+                    results[source_lang["language"]][target_lang["language"]][engine] = None
+                    data = {}
+                    for i in ["1", "2", "3"]:
+                        data[i] = engine
+                    self.main.handleRequest("/set/data/selected_translation_engines", data)
+
+                    # テスト翻訳を実行
+                    print(f"Translating from {source_lang} to {target_lang} using {engine}")
+                    result, status = self.test_translate_language({"id":"000001", "message":"こんにちわ 世界！"})
+                    if status == 200:
+                        print(f"-> {Color.GREEN}[PASS]{Color.RESET} Translation from {source_lang} to {target_lang}: {result}")
+                        results[source_lang["language"]][target_lang["language"]][engine] = True
+                    else:
+                        print(f"-> {Color.RED}[ERROR]{Color.RESET} Translation from {source_lang} to {target_lang} failed with status {status}")
+                        results[source_lang["language"]][target_lang["language"]][engine] = False
+        # 翻訳機能を無効にする
+        self.main.handleRequest("/set/disable/translation", None)
+        print("----すべての言語ペアでの翻訳テスト終了----")
+        import json
+        with open("translation_test_results.json", "w", encoding="utf-8") as f:
+            json.dump(results, f, indent=4, ensure_ascii=False)
+
     def generate_summary(self):
         """
         テスト結果のサマリーを生成して表示する
@@ -679,6 +743,7 @@ if __name__ == "__main__":
         # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
         # test.test_endpoints_specific_random()
+        # test.test_translate_all_language_pairs()
         test.generate_summary()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
