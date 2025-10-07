@@ -23,6 +23,7 @@ class Translator():
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
         self.is_loaded_ctranslate2_model = False
+        self.is_changed_translator_parameters = False
         self.is_enable_translators = ENABLE_TRANSLATORS
 
     def authenticationDeepLAuthKey(self, authkey):
@@ -63,6 +64,12 @@ class Translator():
 
     def isLoadedCTranslate2Model(self):
         return self.is_loaded_ctranslate2_model
+
+    def isChangedTranslatorParameters(self):
+        return self.is_changed_translator_parameters
+
+    def setChangedTranslatorParameters(self, is_changed):
+        self.is_changed_translator_parameters = is_changed
 
     def translateCTranslate2(self, message, source_language, target_language):
         result = False

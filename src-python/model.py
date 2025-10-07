@@ -128,6 +128,12 @@ class Model:
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
 
+    def isChangedTranslatorParameters(self):
+        return self.translator.isChangedTranslatorParameters()
+
+    def setChangedTranslatorParameters(self, is_changed):
+        self.translator.setChangedTranslatorParameters(is_changed)
+
     def checkTranscriptionWhisperModelWeight(self, weight_type:str):
         return checkWhisperWeight(config.PATH_LOCAL, weight_type)
 

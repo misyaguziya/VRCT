@@ -176,7 +176,7 @@ dict_google_languages = {
     "Belarusian":"be",
     "Cebuano":"ceb",
     "Esperanto":"eo",
-    "Basque":"eu",
+    # "Basque":"eu",
     "Irish":"ga"
 }
 translation_lang["Google"] = {
@@ -317,7 +317,7 @@ dict_ctranslate2_languages = {
     "Malayalam": "ml",
     "Welsh": "cy",
     "Slovak": "sk",
-    "Telugu": "te",
+    # "Telugu": "te",
     "Persian": "fa",
     "Latvian": "lv",
     "Bengali": "bn",
@@ -328,7 +328,7 @@ dict_ctranslate2_languages = {
     "Estonian": "et",
     "Macedonian": "mk",
     "Breton": "br",
-    "Basque": "eu",
+    # "Basque": "eu",
     "Icelandic": "is",
     "Armenian": "hy",
     "Nepali": "ne",
