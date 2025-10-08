@@ -23,10 +23,13 @@ export const ConfigPageCloseTriggerController = () => {
     const {
         currentTranslationStatus,
         setTranslation,
+        pendingTranslationStatus,
         currentTranscriptionSendStatus,
         setTranscriptionSend,
+        pendingTranscriptionSendStatus,
         currentTranscriptionReceiveStatus,
         setTranscriptionReceive,
+        pendingTranscriptionReceiveStatus,
     } = useMainFunction();
     const {
         currentMicThresholdCheckStatus,
@@ -47,6 +50,12 @@ export const ConfigPageCloseTriggerController = () => {
     };
 
     const restoreMainFunctionState = () => {
+        // First, set loading status all before waiting a backend process.
+        if (currentMainFunctionsStateMemory.data.translation === true) pendingTranslationStatus();
+        if (currentMainFunctionsStateMemory.data.transcription_send === true) pendingTranscriptionSendStatus();
+        if (currentMainFunctionsStateMemory.data.transcription_receive === true) pendingTranscriptionReceiveStatus();
+
+        // Then, restore them.
         if (currentMainFunctionsStateMemory.data.translation === true) setTranslation(true);
         if (currentMainFunctionsStateMemory.data.transcription_send === true) setTranscriptionSend(true);
         if (currentMainFunctionsStateMemory.data.transcription_receive === true) setTranscriptionReceive(true);
