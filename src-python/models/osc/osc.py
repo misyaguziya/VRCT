@@ -1,4 +1,4 @@
-import asyncio
+import time
 from typing import Any
 from time import sleep
 from threading import Thread
@@ -120,7 +120,9 @@ class OSCHandler:
 
         while True:
             try:
-                self.osc_query_service = OSCQueryService(self.osc_query_service_name, self.http_port, self.osc_server_port)
+                # osc_server_name + UTC timestampでユニークなサービス名を生成
+                service_name = f"{self.osc_query_service_name}:{int(time.time())}"
+                self.osc_query_service = OSCQueryService(service_name, self.http_port, self.osc_server_port)
                 for filter, target in self.dict_filter_and_target.items():
                     self.osc_query_service.advertise_endpoint(filter, access=OSCAccess.READWRITE_VALUE)
                 break
