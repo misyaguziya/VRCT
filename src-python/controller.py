@@ -1136,7 +1136,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1178,7 +1177,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1203,7 +1201,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1228,7 +1225,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1319,7 +1315,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1360,7 +1355,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1385,7 +1379,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1411,7 +1404,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
