@@ -1,6 +1,7 @@
 from sudachipy import tokenizer
 from sudachipy import dictionary
 from typing import List, Dict, Any
+import threading
 try:
     from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
@@ -14,6 +15,9 @@ class Transliterator:
     def __init__(self) -> None:
         self.tokenizer_obj = dictionary.Dictionary(dict_type="full").create()
         self.mode = tokenizer.Tokenizer.SplitMode.C
+        # Lock to prevent concurrent access to sudachipy tokenizer which may
+        # internally use Rust/PyO3 borrow semantics and raise "Already borrowed".
+        self._tokenizer_lock = threading.Lock()
 
     @staticmethod
     def is_kanji(ch: str) -> bool:
@@ -132,7 +136,10 @@ class Transliterator:
           results.
         """
 
-        tokens = self.tokenizer_obj.tokenize(text, self.mode)
+        # Tokenizer may raise RuntimeError: Already borrowed when called
+        # concurrently. Protect the call with a lock to serialize access.
+        with self._tokenizer_lock:
+            tokens = self.tokenizer_obj.tokenize(text, self.mode)
 
         results: List[Dict[str, Any]] = []
         for t in tokens:
