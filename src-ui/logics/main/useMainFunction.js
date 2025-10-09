@@ -87,16 +87,19 @@ export const useMainFunction = () => {
         toggleTranslation,
         updateTranslationStatus,
         setTranslation,
+        pendingTranslationStatus, // Exception.(It shouldn't be used in other function, normally.)
 
         currentTranscriptionSendStatus,
         toggleTranscriptionSend,
         updateTranscriptionSendStatus,
         setTranscriptionSend,
+        pendingTranscriptionSendStatus, // Exception.(It shouldn't be used in other function, normally.)
 
         currentTranscriptionReceiveStatus,
         toggleTranscriptionReceive,
         updateTranscriptionReceiveStatus,
         setTranscriptionReceive,
+        pendingTranscriptionReceiveStatus, // Exception.(It shouldn't be used in other function, normally.)
 
         currentForegroundStatus,
         toggleForeground,

@@ -23,6 +23,7 @@ class Translator():
         self.ctranslate2_translator = None
         self.ctranslate2_tokenizer = None
         self.is_loaded_ctranslate2_model = False
+        self.is_changed_translator_parameters = False
         self.is_enable_translators = ENABLE_TRANSLATORS
 
     def authenticationDeepLAuthKey(self, authkey):
@@ -36,14 +37,15 @@ class Translator():
             result = False
         return result
 
-    def changeCTranslate2Model(self, path, model_type, device="cpu", device_index=0):
+    def changeCTranslate2Model(self, path, model_type, device="cpu", device_index=0, compute_type="auto"):
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
         weight_path = os_path.join(path, "weights", "ctranslate2", directory_name)
         tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
 
-        compute_type = getBestComputeType(device, device_index)
+        if compute_type == "auto":
+            compute_type = getBestComputeType(device, device_index)
         self.ctranslate2_translator = ctranslate2.Translator(
             weight_path,
             device=device,
@@ -62,6 +64,12 @@ class Translator():
 
     def isLoadedCTranslate2Model(self):
         return self.is_loaded_ctranslate2_model
+
+    def isChangedTranslatorParameters(self):
+        return self.is_changed_translator_parameters
+
+    def setChangedTranslatorParameters(self, is_changed):
+        self.is_changed_translator_parameters = is_changed
 
     def translateCTranslate2(self, message, source_language, target_language):
         result = False
@@ -99,6 +107,9 @@ class Translator():
 
     def translate(self, translator_name, source_language, target_language, target_country, message):
         try:
+            if source_language == target_language:
+                return message
+
             result = ""
             source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
             match translator_name:

@@ -73,8 +73,17 @@ update_modal:
     is_current_compute_device:
 
 config_page:
-    version: "版本 {{version}}"
-    model_download_button_label:
+    common:
+        version: "版本 {{version}}"
+        model_download_button_label:
+        compute_device:
+            desc:
+            label_device:
+            label_type:
+            type_template_auto:
+            type_template_low:
+            type_template_high:
+
     side_menu_labels:
         device:
         appearance: "外观"
@@ -133,7 +142,7 @@ config_page:
             desc: "可以选择用于离线翻译的翻译模型"
             small: "普通模型 ({{capacity}})"
             large: "高精度模型 ({{capacity}})"
-        ctranslate2_compute_device:
+        translation_compute_device:
             label:
         deepl_auth_key:
             label: "DeepL 授权密匙"
@@ -177,7 +186,7 @@ config_page:
             desc:
             model_template: "{{model_name}} 模型 ({{capacity}})"
             recommended_model_template: "{{model_name}} 模型 ({{capacity}}) (推荐)"
-        whisper_compute_device:
+        transcription_compute_device:
             label:
 
     vr:
@@ -250,6 +259,14 @@ config_page:
         received_message_format:
             label:
             desc:
+        common_convert_message_hiragana_romaji:
+            desc_1:
+            desc_2:
+        convert_message_to_romaji:
+            label:
+            desc:
+        convert_message_to_hiragana:
+            label:
 
     hotkeys:
         toggle_vrct_visibility:

@@ -11,7 +11,7 @@ from models.translation.translation_languages import translation_lang
 from models.translation.translation_utils import ctranslate2_weights
 from models.transcription.transcription_languages import transcription_lang
 from models.transcription.transcription_whisper import _MODELS as whisper_models
-from utils import errorLogging, validateDictStructure
+from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -106,6 +106,10 @@ class Config:
     @property
     def SELECTABLE_TAB_NO_LIST(self):
         return self._SELECTABLE_TAB_NO_LIST
+
+    @property
+    def SELECTED_TAB_TARGET_LANGUAGES_NO_LIST(self):
+        return self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
 
     @property
     def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
@@ -815,6 +819,18 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SELECTED_TRANSLATION_COMPUTE_TYPE')
+    def SELECTED_TRANSLATION_COMPUTE_TYPE(self):
+        return self._SELECTED_TRANSLATION_COMPUTE_TYPE
+
+    @SELECTED_TRANSLATION_COMPUTE_TYPE.setter
+    def SELECTED_TRANSLATION_COMPUTE_TYPE(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTED_TRANSLATION_COMPUTE_DEVICE["compute_types"]:
+                self._SELECTED_TRANSLATION_COMPUTE_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('WHISPER_WEIGHT_TYPE')
     def WHISPER_WEIGHT_TYPE(self):
         return self._WHISPER_WEIGHT_TYPE
@@ -824,6 +840,18 @@ class Config:
         if isinstance(value, str):
             if value in self.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST:
                 self._WHISPER_WEIGHT_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_TYPE')
+    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self):
+        return self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE
+
+    @SELECTED_TRANSCRIPTION_COMPUTE_TYPE.setter
+    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_types"]:
+                self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1020,7 +1048,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "3.2.2"
+        self._VERSION = "3.3.0"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1046,11 +1074,7 @@ class Config:
         self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
-        self._SELECTABLE_COMPUTE_DEVICE_LIST = []
-        if torch.cuda.is_available():
-            for i in range(torch.cuda.device_count()):
-                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "device_name": torch.cuda.get_device_name(i)})
-        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
+        self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
         self._SEND_MESSAGE_FORMAT_PARTS = {
             "message": {
@@ -1115,24 +1139,17 @@ class Config:
                 },
             }
         self._SELECTED_TARGET_LANGUAGES = {}
+        self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST = ["1", "2", "3"]
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
-            self._SELECTED_TARGET_LANGUAGES[tab_no] = {
-                "1": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": True,
-                },
-                "2": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-                "3": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-            }
+            for tab_target_lang_no in self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST:
+                if tab_no not in self.SELECTED_TARGET_LANGUAGES:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no] = {}
+                if tab_target_lang_no not in self.SELECTED_TARGET_LANGUAGES[tab_no]:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no][tab_target_lang_no] = {
+                        "language": "English",
+                        "country": "United States",
+                        "enable": True if tab_target_lang_no == self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST[0] else False,
+                    }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False
@@ -1189,7 +1206,9 @@ class Config:
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "small"
+        self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
+        self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._OVERLAY_SMALL_LOG = False

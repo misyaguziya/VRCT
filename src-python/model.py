@@ -14,7 +14,6 @@ from typing import Callable
 from packaging.version import parse
 
 from flashtext import KeywordProcessor
-from pykakasi import kakasi
 
 from device_manager import device_manager
 from config import config
@@ -28,6 +27,7 @@ from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
 from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
+from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
@@ -99,7 +99,7 @@ class Model:
         self.overlay_image = OverlayImage(config.PATH_LOCAL)
         self.mic_audio_queue = None
         self.mic_mute_status = None
-        self.kks = kakasi()
+        self.transliterator = None
         self.watchdog = Watchdog(config.WATCHDOG_TIMEOUT, config.WATCHDOG_INTERVAL)
         self.osc_handler = OSCHandler(config.OSC_IP_ADDRESS, config.OSC_PORT)
         self.websocket_server = None
@@ -112,10 +112,12 @@ class Model:
 
     def changeTranslatorCTranslate2Model(self):
         self.translator.changeCTranslate2Model(
-            config.PATH_LOCAL,
-            config.CTRANSLATE2_WEIGHT_TYPE,
-            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
-            config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"])
+            path=config.PATH_LOCAL,
+            model_type=config.CTRANSLATE2_WEIGHT_TYPE,
+            device=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
+            device_index=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"],
+            compute_type=config.SELECTED_TRANSLATION_COMPUTE_TYPE
+            )
 
     def downloadCTranslate2ModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadCTranslate2Weight(config.PATH_LOCAL, weight_type, callback, end_callback)
@@ -125,6 +127,12 @@ class Model:
 
     def isLoadedCTranslate2Model(self):
         return self.translator.isLoadedCTranslate2Model()
+
+    def isChangedTranslatorParameters(self):
+        return self.translator.isChangedTranslatorParameters()
+
+    def setChangedTranslatorParameters(self, is_changed):
+        self.translator.setChangedTranslatorParameters(is_changed)
 
     def checkTranscriptionWhisperModelWeight(self, weight_type:str):
         return checkWhisperWeight(config.PATH_LOCAL, weight_type)
@@ -275,13 +283,32 @@ class Model:
         self.previous_receive_message = message
         return repeat_flag
 
-    def convertMessageToTransliteration(self, message: str) -> str:
-        data_list = self.kks.convert(message)
-        keys_to_keep = {"orig", "hira", "hepburn"}
-        filtered_list = []
-        for item in data_list:
-            filtered_item = {key: value for key, value in item.items() if key in keys_to_keep}
-            filtered_list.append(filtered_item)
+    def startTransliteration(self):
+        if self.transliterator is None:
+            self.transliterator = Transliterator()
+
+    def stopTransliteration(self):
+        if self.transliterator is not None:
+            self.transliterator = None
+
+    def convertMessageToTransliteration(self, message: str, hiragana: bool=True, romaji: bool=True) -> str:
+        if hiragana is False and romaji is False:
+            return message
+
+        keys_to_keep = {"orig"}
+        if hiragana:
+            keys_to_keep.add("hira")
+        if romaji:
+            keys_to_keep.add("hepburn")
+
+        if self.transliterator is None:
+            self.startTransliteration()
+
+        data_list = self.transliterator.analyze(message, use_macron=False)
+        filtered_list = [
+            {key: value for key, value in item.items() if key in keys_to_keep}
+            for item in data_list
+        ]
         return filtered_list
 
     def setOscIpAddress(self, ip_address):
@@ -438,6 +465,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             )
             def sendMicTranscript():
                 try:
@@ -621,6 +649,7 @@ class Model:
                 whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
                 device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
                 device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
             )
             def sendSpeakerTranscript():
                 try:

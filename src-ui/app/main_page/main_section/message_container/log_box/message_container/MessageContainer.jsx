@@ -17,10 +17,10 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     const [is_locked, setIsLocked] = useState(false);
 
     const resendFunction = () => {
-        sendMessage(messages.original);
+        sendMessage(messages.original.message);
     };
     const editFunction = () => {
-        updateMessageInputValue(messages.original);
+        updateMessageInputValue(messages.original.message);
     };
 
     const handleMouseEnter = () => {
@@ -39,7 +39,7 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
         setIsLocked(true);
     };
 
-    const is_translated_exist = messages.translated?.length >= 1;
+    const is_translation_exist = messages.translations?.length > 0;
     const is_pending = status === "pending";
     const is_sent_message = category === "sent";
     const is_system_message = category === "system";
@@ -69,11 +69,11 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
                 </div>
                 <div className={clsx(styles.message_box, message_type_class_name)}>
                     {is_system_message ? (
-                        <p className={styles.message_main_system}>{messages.message}</p>
-                    ) : is_translated_exist ? (
+                        <p className={styles.message_main_system}>{messages.original.message}</p>
+                    ) : is_translation_exist ? (
                         <WithTranslatedMessages messages={messages} />
                     ) : (
-                        <p className={styles.message_main}>{messages.original}</p>
+                        <OriginalMessage messages={messages} />
                     )}
                 </div>
             </div>
@@ -88,13 +88,79 @@ export const MessageContainer = ({ messages, status, category, created_at }) => 
     );
 };
 
-const WithTranslatedMessages = ({ messages }) => {
-    const translated_data = Array.isArray(messages.translated) ? messages.translated : [messages.translated];
+const MessageWithTransliteration = ({ item }) => {
+    const renderTokenNode = (token, key) => {
+        const orig = token.orig ?? "";
+        const hira = token.hira ?? "";
+        const hepburn = token.hepburn ?? "";
+
+        // Only hovered romaji if it exists. (No ruby cuz 'orig' and 'hira' are same.)
+        if (hira && hira === orig && hepburn) {
+            return (
+                <span key={key} title={hepburn} className={styles.with_hepburn}>
+                    {orig}
+                </span>
+            );
+        }
+
+        // Ruby hiragana and hovered romaji.
+        if (hira && hepburn) {
+            return (
+                <ruby key={key} title={hepburn} className={styles.with_hepburn}>
+                    {orig}
+                    <rt>{hira}</rt>
+                </ruby>
+            );
+        }
+
+        // Ruby romaji or hiragana.
+        if (hepburn || hira) {
+            const ruby = hepburn ? hepburn : hira;
+            if (ruby !== orig) {
+                return (
+                    <ruby key={key} className={styles.ruby}>
+                        {orig}
+                        <rt>{ruby}</rt>
+                    </ruby>
+                );
+            };
+        }
+
+        // Nothing. Original only.
+        return (
+            <span key={key} className={styles.original_only}>
+                {orig}
+            </span>
+        );
+    };
+
+    if (!item.transliteration.length) {
+        return <p className={styles.message_main}>{item.message}</p>;
+    }
+
+    return (
+        <p className={styles.message_main}>
+            {item.transliteration.map((token, idx) => renderTokenNode(token, idx))}
+        </p>
+    );
+};
+
+const OriginalMessage = ({ messages }) => {
     return (
         <>
-            <p className={styles.message_second}>{messages.original}</p>
-            {translated_data.map((message, index) => (
-                <p key={index} className={styles.message_main}>{message}</p>
+            <MessageWithTransliteration item={messages.original} />
+        </>
+    );
+};
+
+const WithTranslatedMessages = ({ messages }) => {
+    return (
+        <>
+            <p className={styles.message_second}>{messages.original.message}</p>
+            {messages.translations.map((item, idx) => (
+                <div key={idx}>
+                    <MessageWithTransliteration item={item} />
+                </div>
             ))}
         </>
     );

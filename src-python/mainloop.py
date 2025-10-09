@@ -48,6 +48,9 @@ run_mapping = {
     "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
 
+    "selected_translation_compute_type":"/run/selected_translation_compute_type",
+    "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
+
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
@@ -162,6 +165,9 @@ mapping = {
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
+    "/get/data/selected_translation_compute_type": {"status": True, "variable":controller.getSelectedTranslationComputeType},
+    "/set/data/selected_translation_compute_type": {"status": True, "variable":controller.setSelectedTranslationComputeType},
+
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
     "/get/data/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
@@ -261,8 +267,13 @@ mapping = {
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
+
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+
+    "/get/data/selected_transcription_compute_type": {"status": True, "variable":controller.getSelectedTranscriptionComputeType},
+    "/set/data/selected_transcription_compute_type": {"status": True, "variable":controller.setSelectedTranscriptionComputeType},
+
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR
@@ -347,9 +358,11 @@ init_mapping = {key:value for key, value in mapping.items() if key.startswith("/
 controller.setInitMapping(init_mapping)
 
 class Main:
-    def __init__(self) -> None:
+    def __init__(self, controller_instance, mapping_data) -> None:
         self.queue = Queue()
         self.main_loop = True
+        self.controller = controller_instance
+        self.mapping = mapping_data
 
     def receiver(self) -> None:
         while True:
@@ -360,7 +373,7 @@ class Main:
                 endpoint = received_data.get("endpoint", None)
                 data = received_data.get("data", None)
                 data = encodeBase64(data) if data is not None else None
-                printLog(endpoint, {"receive_data":data})
+                printLog(endpoint, {"receive_data": data})
                 self.queue.put((endpoint, data))
 
     def startReceiver(self) -> None:
@@ -369,7 +382,10 @@ class Main:
         th_receiver.start()
 
     def handleRequest(self, endpoint, data=None) -> tuple:
-        handler = mapping.get(endpoint)
+        result = None  # デフォルト値を設定
+        status = 500   # デフォルト値を設定
+
+        handler = self.mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
             status = 404
@@ -381,10 +397,12 @@ class Main:
                 response = handler["variable"](data)
                 status = response.get("status", None)
                 result = response.get("result", None)
+                time.sleep(0.2) # 処理の安定化のために少し待機
             except Exception as e:
                 errorLogging()
                 result = str(e)
                 status = 500
+
         return result, status
 
     def handler(self) -> None:
@@ -417,228 +435,18 @@ class Main:
     def stop(self) -> None:
         self.main_loop = False
 
-if __name__ == "__main__":
-    main = Main()
-    main.startReceiver()
-    main.startHandler()
+# 外部から参照可能なインスタンスを提供
+main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
-    controller.setWatchdogCallback(main.stop)
-    controller.init()
+if __name__ == "__main__":
+    main_instance.startReceiver()
+    main_instance.startHandler()
+
+    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする
     for key in mapping.keys():
         mapping[key]["status"] = True
 
-    process = "main"
-    match process:
-        case "main":
-            main.start()
-
-        case "test":
-            for _ in range(100):
-                time.sleep(0.5)
-                endpoint = "/get/data/mic_host_list"
-                result, status = main.handleRequest(endpoint)
-                printResponse(status, endpoint, result)
-
-        case "test_all":
-            import time
-            for endpoint, value in mapping.items():
-                printLog("endpoint", endpoint)
-
-                match endpoint:
-                    case  "/run/send_message_box":
-                        # handleRequest("/set/enable/translation")
-                        # handleRequest("/set/enable/convert_message_to_romaji")
-                        data = {"id":"123456", "message":"テスト"}
-                    case "/set/data/selected_translation_engines":
-                        data = {
-                            "1":"CTranslate2",
-                            "2":"CTranslate2",
-                            "3":"CTranslate2",
-                        }
-                    case "/set/data/selected_your_languages":
-                        data = {
-                            "1":{
-                                "1":{
-                                "language": "English",
-                                "country": "Hong Kong"
-                                },
-                            },
-                            "2":{
-                                "1":{
-                                    "language":"Japanese",
-                                    "country":"Japan"
-                                },
-                            },
-                            "3":{
-                                "1":{
-                                    "language":"Japanese",
-                                    "country":"Japan"
-                                },
-                            },
-                        }
-                    case "/set/data/selected_target_languages":
-                        data ={
-                            "1":{
-                                "1": {
-                                    "language": "Japanese",
-                                    "country": "Japan",
-                                    "enabled": True,
-                                },
-                                "secondary": {
-                                    "language": "English",
-                                    "country": "United States",
-                                    "enabled": True,
-                                },
-                                "tertiary": {
-                                    "language": "Chinese Simplified",
-                                    "country": "China",
-                                    "enabled": True,
-                                }
-                            },
-                            "2":{
-                                "1":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "secondary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "tertiary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                            },
-                            "3":{
-                                "1":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "secondary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "tertiary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                            },
-                        }
-                    case "/set/data/transparency":
-                        data = 0.5
-                    case "/set/appearance":
-                        data = "Dark"
-                    case "/set/data/ui_scaling":
-                        data = 1.5
-                    case "/set/data/appearance_theme":
-                        data = "Dark"
-                    case "/set/data/textbox_ui_scaling":
-                        data = 1.5
-                    case "/set/data/message_box_ratio":
-                        data = 0.5
-                    case "/set/data/send_message_button_type":
-                        data = "show"
-                    case "/set/data/font_family":
-                        data = "Yu Gothic UI"
-                    case "/set/data/ui_language":
-                        data = "ja"
-                    case "/set/data/ctranslate2_weight_type":
-                        data = "small"
-                    case "/set/data/deepl_auth_key":
-                        data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
-                    case "/set/data/selected_mic_host":
-                        data = "MME"
-                    case "/set/data/selected_mic_device":
-                        data = "マイク (Realtek High Definition Audio)"
-                    case "/set/data/mic_threshold":
-                        data = 0.5
-                    case "/set/data/mic_record_timeout":
-                        data = 1
-                    case "/set/data/mic_phrase_timeout":
-                        data = 5
-                    case "/set/data/mic_max_phrases":
-                        data = 5
-                    case "/set/data/mic_word_filter":
-                        data = "test0, test1, test2"
-                    case "/set/data/selected_speaker_device":
-                        data = "スピーカー (Realtek High Definition Audio)"
-                    case "/set/data/speaker_threshold":
-                        data = 0.5
-                    case "/set/data/speaker_record_timeout":
-                        data = 5
-                    case "/set/data/speaker_phrase_timeout":
-                        data = 5
-                    case "/set/data/speaker_max_phrases":
-                        data = 5
-                    case "/set/data/whisper_weight_type":
-                        data = "base"
-                    case "/set/data/overlay_settings":
-                        data = {
-                            "opacity": 0.5,
-                            "ui_scaling": 1.5,
-                        }
-                    case "/set/data/overlay_small_log_settings":
-                        data = {
-                            "x_pos": 0,
-                            "y_pos": 0,
-                            "z_pos": 0,
-                            "x_rotation": 0,
-                            "y_rotation": 0,
-                            "z_rotation": 0,
-                            "display_duration": 5,
-                            "fadeout_duration": 0.5,
-                        }
-                    case "/set/data/send_message_format_parts":
-                        data = {
-                            "message": {
-                                "prefix": "",
-                                "suffix": ""
-                                },
-                            "between_separator": "\n",
-                            "translation": {
-                                "prefix": "(",
-                                "separator": "\\",
-                                "suffix": ")"
-                            },
-                            "translation_first": False,
-                        }
-                    case "/set/data/received_message_format_parts":
-                        data = {
-                            "message": {
-                                "prefix": "",
-                                "suffix": ""
-                                },
-                            "between_separator": "\n",
-                            "translation": {
-                                "prefix": "(",
-                                "separator": "\\",
-                                "suffix": ")"
-                            },
-                            "translation_first": True,
-                        }
-                    case "/set/data/osc_ip_address":
-                        data = "127.0.0.1"
-                    case "/set/data/osc_port":
-                        data = 8000
-                    case "/set/data/speaker_no_speech_prob":
-                        data = 0.5
-                    case "/set/data/speaker_avg_logprob":
-                        data = 0.5
-                    case "/set/data/mic_no_speech_prob":
-                        data = 0.5
-                    case "/set/data/mic_avg_logprob":
-                        data = 0.5
-                    case _:
-                        data = None
-
-                result, status = main.handleRequest(endpoint, data)
-                printResponse(status, endpoint, result)
-                time.sleep(0.5)
+    main_instance.start()

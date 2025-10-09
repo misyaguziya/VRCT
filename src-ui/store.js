@@ -218,9 +218,11 @@ export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFi
 // Translation
 export const { atomInstance: Atom_DeepLAuthKey, useHook: useStore_DeepLAuthKey } = createAtomWithHook(null, "DeepLAuthKey");
 export const { atomInstance: Atom_SelectedCTranslate2WeightType, useHook: useStore_SelectedCTranslate2WeightType } = createAtomWithHook("", "SelectedCTranslate2WeightType");
-export const { atomInstance: Atom_SelectableCTranslate2ComputeDeviceList, useHook: useStore_SelectableCTranslate2ComputeDeviceList } = createAtomWithHook({}, "SelectableCTranslate2ComputeDeviceList");
-export const { atomInstance: Atom_SelectedCTranslate2ComputeDevice, useHook: useStore_SelectedCTranslate2ComputeDevice } = createAtomWithHook("", "SelectedCTranslate2ComputeDevice");
 export const { atomInstance: Atom_CTranslate2WeightTypeStatus, useHook: useStore_CTranslate2WeightTypeStatus } = createAtomWithHook(ctranslate2_weight_type_status, "CTranslate2WeightTypeStatus");
+
+export const { atomInstance: Atom_SelectableTranslationComputeDeviceList, useHook: useStore_SelectableTranslationComputeDeviceList } = createAtomWithHook({}, "SelectableTranslationComputeDeviceList");
+export const { atomInstance: Atom_SelectedTranslationComputeDevice, useHook: useStore_SelectedTranslationComputeDevice } = createAtomWithHook("", "SelectedTranslationComputeDevice");
+export const { atomInstance: Atom_SelectedTranslationComputeType, useHook: useStore_SelectedTranslationComputeType } = createAtomWithHook("", "SelectedTranslationComputeType");
 
 // Transcription
 export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
@@ -235,8 +237,9 @@ export const { atomInstance: Atom_SelectedWhisperWeightType, useHook: useStore_S
 export const { atomInstance: Atom_WhisperWeightTypeStatus, useHook: useStore_WhisperWeightTypeStatus } = createAtomWithHook(whisper_weight_type_status, "WhisperWeightTypeStatus");
 export const { atomInstance: Atom_SelectedTranscriptionEngine, useHook: useStore_SelectedTranscriptionEngine } = createAtomWithHook(whisper_weight_type_status, "SelectedTranscriptionEngine");
 
-export const { atomInstance: Atom_SelectableWhisperComputeDeviceList, useHook: useStore_SelectableWhisperComputeDeviceList } = createAtomWithHook({}, "SelectableWhisperComputeDeviceList");
-export const { atomInstance: Atom_SelectedWhisperComputeDevice, useHook: useStore_SelectedWhisperComputeDevice } = createAtomWithHook("", "SelectedWhisperComputeDevice");
+export const { atomInstance: Atom_SelectableTranscriptionComputeDeviceList, useHook: useStore_SelectableTranscriptionComputeDeviceList } = createAtomWithHook({}, "SelectableTranscriptionComputeDeviceList");
+export const { atomInstance: Atom_SelectedTranscriptionComputeDevice, useHook: useStore_SelectedTranscriptionComputeDevice } = createAtomWithHook("", "SelectedTranscriptionComputeDevice");
+export const { atomInstance: Atom_SelectedTranscriptionComputeType, useHook: useStore_SelectedTranscriptionComputeType } = createAtomWithHook("", "SelectedTranscriptionComputeType");
 
 export const { atomInstance: Atom_MicAvgLogprob, useHook: useStore_MicAvgLogprob } = createAtomWithHook(-0.8, "MicAvgLogprob");
 export const { atomInstance: Atom_MicNoSpeechProb, useHook: useStore_MicNoSpeechProb } = createAtomWithHook(0.6, "MicNoSpeechProb");
@@ -309,6 +312,8 @@ export const { atomInstance: Atom_ReceivedMessageFormatParts, useHook: useStore_
     },
     translation_first: false,
 }, "ReceivedMessageFormatParts");
+export const { atomInstance: Atom_ConvertMessageToRomaji, useHook: useStore_ConvertMessageToRomaji } = createAtomWithHook(false, "ConvertMessageToRomaji");
+export const { atomInstance: Atom_ConvertMessageToHiragana, useHook: useStore_ConvertMessageToHiragana } = createAtomWithHook(false, "ConvertMessageToHiragana");
 
 
 // Hotkeys
