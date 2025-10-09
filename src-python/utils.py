@@ -1,5 +1,5 @@
 import base64
-from typing import Any
+from typing import Any, List, Dict
 import json
 import traceback
 import logging
@@ -79,7 +79,7 @@ def isValidIpAddress(ip_address: str) -> bool:
     except ValueError:
         return False
 
-def getComputeDeviceList() -> dict:
+def getComputeDeviceList() -> List[Dict[str, Any]]:
     compute_types = [
         {
             "device": "cpu",
@@ -191,8 +191,8 @@ def printLog(log:str, data:Any=None) -> None:
         "data": str(data),
     }
     process_logger.info(response)
-    response = json.dumps(response)
-    print(response, flush=True)
+    serialized = json.dumps(response)
+    print(serialized, flush=True)
 
 def printResponse(status:int, endpoint:str, result:Any=None) -> None:
     global process_logger

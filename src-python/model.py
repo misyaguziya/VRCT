@@ -10,7 +10,7 @@ from time import sleep
 from queue import Queue
 from threading import Thread
 from requests import get as requests_get
-from typing import Callable
+from typing import Callable, Optional, cast
 from packaging.version import parse
 
 from flashtext import KeywordProcessor
@@ -106,6 +106,9 @@ class Model:
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
+        # default no-op callbacks for energy check functions
+        self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
+        self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
 
     def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
@@ -291,9 +294,9 @@ class Model:
         if self.transliterator is not None:
             self.transliterator = None
 
-    def convertMessageToTransliteration(self, message: str, hiragana: bool=True, romaji: bool=True) -> str:
+    def convertMessageToTransliteration(self, message: str, hiragana: bool=True, romaji: bool=True) -> list:
         if hiragana is False and romaji is False:
-            return message
+            return []
 
         keys_to_keep = {"orig"}
         if hiragana:
@@ -574,9 +577,10 @@ class Model:
         #     self.mic_get_energy.stop()
         #     self.mic_get_energy = None
 
-    def startCheckMicEnergy(self, fnc:Callable[[float], None]=None) -> None:
-        if isinstance(fnc, Callable):
-            self.check_mic_energy_fnc = fnc
+    def startCheckMicEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
+        # fnc may be None or a callable. Use cast after checking for None to satisfy type checker.
+        if fnc is not None:
+            self.check_mic_energy_fnc = cast(Callable[[float], None], fnc)
 
         mic_host_name = config.SELECTED_MIC_HOST
         mic_device_name = config.SELECTED_MIC_DEVICE
@@ -596,7 +600,7 @@ class Model:
                         errorLogging()
                 sleep(0.01)
 
-            mic_energy_queue = Queue()
+            mic_energy_queue: Queue = Queue()
             mic_device = selected_mic_device[0]
             self.mic_energy_recorder = SelectedMicEnergyRecorder(mic_device)
             self.mic_energy_recorder.recordIntoQueue(mic_energy_queue)
@@ -614,17 +618,18 @@ class Model:
             self.mic_energy_recorder.stop()
             self.mic_energy_recorder = None
 
-    def startSpeakerTranscript(self, fnc):
+    def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
         speaker_device_list = device_manager.getSpeakerDevices()
         selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":
-            fnc({"text": False, "language": None})
+            # fnc may be None; only call if callable
+            if callable(fnc):
+                fnc({"text": False, "language": None})
         else:
-            speaker_audio_queue = Queue()
-            # speaker_energy_queue = Queue()
+            speaker_audio_queue: Queue = Queue()
             speaker_device = selected_speaker_device[0]
             record_timeout = config.SPEAKER_RECORD_TIMEOUT
             phrase_timeout = config.SPEAKER_PHRASE_TIMEOUT
@@ -708,9 +713,10 @@ class Model:
         #     self.speaker_get_energy.stop()
         #     self.speaker_get_energy = None
 
-    def startCheckSpeakerEnergy(self, fnc:Callable[[float], None]=None) -> None:
-        if isinstance(fnc, Callable):
-            self.check_speaker_energy_fnc = fnc
+    def startCheckSpeakerEnergy(self, fnc:Optional[Callable[[float], None]]=None) -> None:
+        # Accept None as default and assign safely with cast after None-check
+        if fnc is not None:
+            self.check_speaker_energy_fnc = cast(Callable[[float], None], fnc)
 
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
         speaker_device_list = device_manager.getSpeakerDevices()
@@ -720,7 +726,7 @@ class Model:
             self.check_speaker_energy_fnc(False)
         else:
             def sendSpeakerEnergy():
-                if speaker_energy_queue.empty() is False:
+                if not speaker_energy_queue.empty():
                     energy = speaker_energy_queue.get()
                     try:
                         self.check_speaker_energy_fnc(energy)
@@ -728,7 +734,7 @@ class Model:
                         errorLogging()
                 sleep(0.01)
 
-            speaker_energy_queue = Queue()
+            speaker_energy_queue: Queue = Queue()
             speaker_device = selected_speaker_device[0]
             self.speaker_energy_recorder = SelectedSpeakerEnergyRecorder(speaker_device)
             self.speaker_energy_recorder.recordIntoQueue(speaker_energy_queue)
@@ -746,9 +752,12 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmallLog(self, message:str, your_language:str, translation:list, target_language:dict):
-        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
-        return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language)
+    def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict]) -> object:
+        # target_language may be provided as dict or None
+        target_language_list = []
+        if isinstance(target_language, dict):
+            target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
+        return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language_list)
 
     def createOverlayImageSmallMessage(self, message):
         ui_language = config.UI_LANGUAGE
@@ -797,9 +806,12 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str, your_language:str,  translation:list, target_language:dict):
-        target_language = [data["language"] for data in target_language.values() if data["enable"] is True]
-        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language)
+    def createOverlayImageLargeLog(self, message_type:str, message:Optional[str], your_language:Optional[str],  translation:list, target_language:Optional[dict]=None):
+        # normalize target_language dict -> list of language strings
+        target_language_list = []
+        if isinstance(target_language, dict):
+            target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
+        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language_list)
 
     def createOverlayImageLargeMessage(self, message):
         ui_language = config.UI_LANGUAGE

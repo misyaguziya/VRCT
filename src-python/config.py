@@ -5,6 +5,7 @@ from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import threading
+from typing import Optional, Dict, Any
 import torch
 from device_manager import device_manager
 from models.translation.translation_languages import translation_lang
@@ -22,8 +23,8 @@ def json_serializable(var_name):
 
 class Config:
     _instance = None
-    _config_data = {}
-    _timer = None
+    _config_data: Dict[str, Any] = {}
+    _timer: Optional[threading.Timer] = None
     _debounce_time = 2
 
     def __new__(cls):

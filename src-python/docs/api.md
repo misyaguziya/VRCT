@@ -130,9 +130,6 @@ run イベント
 `/run/selected_transcription_compute_type` (200)
   - payload: string
 
-`/run/selected_translation_compute_device` (200)
-  - payload: device descriptor (e.g. {"name":"cuda:0","type":"gpu"})
-
 `/run/selected_translation_engines` (200)
   - payload: config.SELECTED_TRANSLATION_ENGINES (list/dict per tab)
 

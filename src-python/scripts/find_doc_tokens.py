@@ -7,7 +7,6 @@ tokens = [
     'transcription_mic',
     'transcription_speaker',
     'selected_translation_compute_device',
-    '/run/selected_translation_compute_device',
     '/run/transcription_mic',
     '/run/transcription_speaker',
 ]

@@ -1,7 +1,6 @@
 from speech_recognition import Recognizer, Microphone
 from pyaudiowpatch import get_sample_size, paInt16
 from datetime import datetime
-from queue import Queue
 
 class BaseRecorder:
     def __init__(self, source, energy_threshold, dynamic_energy_threshold, record_timeout):
