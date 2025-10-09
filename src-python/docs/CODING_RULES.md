@@ -29,8 +29,6 @@
 - 定数: UPPER_SNAKE_CASE（`config.py` の定数に合わせる）。
 - run_mapping のキー: 現在は短い key（例: `transcription_mic`）を内部で使い `run_mapping` に `/run/...` を置いている。この慣習は維持する。Controller 内で `self.run_mapping[...]` を直接参照する実装は許容される。
 
-例: `selected_translation_compute_device` は内部 key、`/run/selected_translation_compute_device` が外部イベント名である点を区別して使う。
-
 ## モジュール・パッケージ構成
 - 各サブ領域（ocr, overlay, transcription, translation, websocket 等）は `models/` 下に整理済みのため、同様の粒度で新機能は追加する。
 - パッケージは必ず `__init__.py` を置く（static analysis / mypy のため）。空の `__init__.py` でも可。これにより相対インポートが安定する。

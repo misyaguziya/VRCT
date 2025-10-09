@@ -1,7 +1,7 @@
 import sys
 import json
 import time
-from typing import Any
+from typing import Any, Tuple
 from threading import Thread
 from queue import Queue
 import logging
@@ -359,7 +359,8 @@ controller.setInitMapping(init_mapping)
 
 class Main:
     def __init__(self, controller_instance, mapping_data) -> None:
-        self.queue = Queue()
+        # queue holds tuples of (endpoint, data)
+        self.queue: Queue[Tuple[str, Any]] = Queue()
         self.main_loop = True
         self.controller = controller_instance
         self.mapping = mapping_data
