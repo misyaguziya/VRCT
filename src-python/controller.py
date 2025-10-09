@@ -1,4 +1,3 @@
-import copy
 from typing import Callable, Any, List, Optional
 from time import sleep
 from subprocess import Popen
@@ -19,6 +18,25 @@ class Controller:
             return None
         self.run: Callable[[int, str, Any], None] = _noop_run
         self.device_access_status: bool = True
+        # Ensure model is initialized at controller startup so existing
+        # attribute-based checks (e.g. model.overlay.initialized) continue to work.
+        try:
+            model.init()
+        except Exception:
+            # In test or headless environments initialization may fail; log and continue.
+            errorLogging()
+
+    def _is_overlay_available(self) -> bool:
+        """Safe check whether overlay is present and initialized.
+
+        This avoids AttributeError when `model` was not fully initialized.
+        """
+        try:
+            overlay = getattr(model, "overlay", None)
+            return overlay is not None and getattr(overlay, "initialized", False)
+        except Exception:
+            errorLogging()
+            return False
 
     def setInitMapping(self, init_mapping:dict) -> None:
         self.init_mapping = init_mapping
@@ -360,7 +378,7 @@ class Controller:
                         ]
                     })
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
@@ -488,7 +506,7 @@ class Controller:
                 transliteration_translation = [[]]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_SMALL_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageSmallLog(
@@ -507,7 +525,7 @@ class Controller:
                         )
                         model.updateOverlaySmallLog(overlay_image)
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
