@@ -3,6 +3,8 @@ import ctypes
 import time
 from psutil import process_iter
 from threading import Thread
+from typing import Any, Dict, Optional, Sequence
+
 import openvr
 import numpy as np
 from PIL import Image
@@ -18,14 +20,26 @@ try:
 except ImportError:
     import overlay_utils as utils
 
-def mat34Id(array):
+def mat34Id(array: Sequence[Sequence[float]]) -> Any:
+    """Convert a 3x4 nested sequence into an openvr.HmdMatrix34_t instance.
+
+    Args:
+        array: 3x4 numeric sequence
+
+    Returns:
+        openvr HmdMatrix34_t compatible object
+    """
     arr = openvr.HmdMatrix34_t()
     for i in range(3):
         for j in range(4):
             arr[i][j] = array[i][j]
     return arr
 
-def getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation):
+def getBaseMatrix(x_pos: float, y_pos: float, z_pos: float, x_rotation: float, y_rotation: float, z_rotation: float) -> np.ndarray:
+    """Create a 3x4 base matrix for an overlay given position and Euler rotations.
+
+    Returns a numpy array of shape (3,4).
+    """
     arr = np.zeros((3, 4))
     rot = utils.euler_to_rotation_matrix((x_rotation, y_rotation, z_rotation))
 
@@ -38,7 +52,7 @@ def getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation):
     arr[2][3] = - z_pos
     return arr
 
-def getHMDBaseMatrix():
+def getHMDBaseMatrix() -> np.ndarray:
     x_pos = 0.0
     y_pos = -0.4
     z_pos = 1.0
@@ -48,7 +62,7 @@ def getHMDBaseMatrix():
     arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
-def getLeftHandBaseMatrix():
+def getLeftHandBaseMatrix() -> np.ndarray:
     x_pos = 0.3
     y_pos = 0.1
     z_pos = -0.31
@@ -58,7 +72,7 @@ def getLeftHandBaseMatrix():
     arr = getBaseMatrix(x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation)
     return arr
 
-def getRightHandBaseMatrix():
+def getRightHandBaseMatrix() -> np.ndarray:
     x_pos = -0.3
     y_pos = 0.1
     z_pos = -0.31
@@ -69,24 +83,25 @@ def getRightHandBaseMatrix():
     return arr
 
 class Overlay:
-    def __init__(self, settings_dict):
-        self.system = None
-        self.overlay = None
-        self.handle = None
-        self.init_process = False
-        self.initialized = False
-        self.loop = False
-        self.thread_overlay = None
+    """Manage OpenVR overlays for multiple sizes (e.g. 'small'/'large')."""
+    def __init__(self, settings_dict: Dict[str, Dict[str, Any]]) -> None:
+        self.system: Optional[Any] = None
+        self.overlay: Optional[Any] = None
+        self.handle: Dict[str, Any] = {}
+        self.init_process: bool = False
+        self.initialized: bool = False
+        self.loop: bool = False
+        self.thread_overlay: Optional[Thread] = None
 
-        self.settings = {}
-        self.lastUpdate = {}
-        self.fadeRatio = {}
+        self.settings: Dict[str, Dict[str, Any]] = {}
+        self.lastUpdate: Dict[str, float] = {}
+        self.fadeRatio: Dict[str, float] = {}
         for key, value in settings_dict.items():
             self.settings[key] = value
             self.lastUpdate[key] = time.monotonic()
-            self.fadeRatio[key] = 1
+            self.fadeRatio[key] = 1.0
 
-    def init(self):
+    def init(self) -> None:
         try:
             self.system = openvr.init(openvr.VRApplication_Background)
             self.overlay = openvr.IVROverlay()
@@ -119,7 +134,7 @@ class Overlay:
         except Exception:
             errorLogging()
 
-    def updateImage(self, img, size):
+    def updateImage(self, img: Image.Image, size: str) -> None:
         if self.initialized is True:
             width, height = img.size
             img = img.tobytes()
@@ -139,7 +154,7 @@ class Overlay:
             self.updateOpacity(self.settings[size]["opacity"], size)
             self.lastUpdate[size] = time.monotonic()
 
-    def clearImage(self, size):
+    def clearImage(self, size: str) -> None:
         if self.initialized is True:
             self.updateImage(Image.new("RGBA", (1, 1), (0, 0, 0, 0)), size)
 
@@ -151,7 +166,7 @@ class Overlay:
             r, g, b = col
             self.overlay.setOverlayColor(self.handle[size], r, g, b)
 
-    def updateOpacity(self, opacity, size, with_fade=False):
+    def updateOpacity(self, opacity: float, size: str, with_fade: bool = False) -> None:
         self.settings[size]["opacity"] = opacity
 
         if self.initialized is True:
@@ -161,12 +176,12 @@ class Overlay:
             else:
                 self.overlay.setOverlayAlpha(self.handle[size], self.settings[size]["opacity"])
 
-    def updateUiScaling(self, ui_scaling, size):
+    def updateUiScaling(self, ui_scaling: float, size: str) -> None:
         self.settings[size]["ui_scaling"] = ui_scaling
         if self.initialized is True:
             self.overlay.setOverlayWidthInMeters(self.handle[size], self.settings[size]["ui_scaling"])
 
-    def updatePosition(self, x_pos, y_pos, z_pos, x_rotation, y_rotation, z_rotation, tracker, size):
+    def updatePosition(self, x_pos: float, y_pos: float, z_pos: float, x_rotation: float, y_rotation: float, z_rotation: float, tracker: str, size: str) -> None:
         """
         x_pos, y_pos, z_pos are floats representing the position of overlay
         x_rotation, y_rotation, z_rotation are floats representing the rotation of overlay
@@ -208,13 +223,13 @@ class Overlay:
                     transform
                 )
 
-    def updateDisplayDuration(self, display_duration, size):
+    def updateDisplayDuration(self, display_duration: float, size: str) -> None:
         self.settings[size]["display_duration"] = display_duration
 
-    def updateFadeoutDuration(self, fadeout_duration, size):
+    def updateFadeoutDuration(self, fadeout_duration: float, size: str) -> None:
         self.settings[size]["fadeout_duration"] = fadeout_duration
 
-    def checkActive(self):
+    def checkActive(self) -> bool:
         try:
             if self.system is not None and self.initialized is True:
                 new_event = openvr.VREvent_t()
@@ -226,7 +241,7 @@ class Overlay:
             errorLogging()
             return False
 
-    def evaluateOpacityFade(self, size):
+    def evaluateOpacityFade(self, size: str) -> None:
         currentTime = time.monotonic()
         if (currentTime - self.lastUpdate[size]) > self.settings[size]["display_duration"]:
             timeThroughInterval = currentTime - self.lastUpdate[size] - self.settings[size]["display_duration"]
@@ -235,13 +250,13 @@ class Overlay:
                 self.fadeRatio[size] = 0
             self.overlay.setOverlayAlpha(self.handle[size], self.fadeRatio[size] * self.settings[size]["opacity"])
 
-    def update(self, size):
+    def update(self, size: str) -> None:
         if self.settings[size]["fadeout_duration"] != 0:
             self.evaluateOpacityFade(size)
         else:
             self.updateOpacity(self.settings[size]["opacity"], size)
 
-    def mainloop(self):
+    def mainloop(self) -> None:
         self.loop = True
         while self.checkActive() is True and self.loop is True:
             startTime = time.monotonic()
@@ -251,21 +266,21 @@ class Overlay:
             if sleepTime > 0:
                 time.sleep(sleepTime)
 
-    def main(self):
+    def main(self) -> None:
         while self.checkSteamvrRunning() is False:
             time.sleep(10)
         self.init()
         if self.initialized is True:
             self.mainloop()
 
-    def startOverlay(self):
+    def startOverlay(self) -> None:
         if self.initialized is False and self.init_process is False:
             self.init_process = True
             self.thread_overlay = Thread(target=self.main)
             self.thread_overlay.daemon = True
             self.thread_overlay.start()
 
-    def shutdownOverlay(self):
+    def shutdownOverlay(self) -> None:
         if self.initialized is True and self.init_process is False:
             if isinstance(self.thread_overlay, Thread):
                 self.loop = False
@@ -281,7 +296,7 @@ class Overlay:
                 self.system = None
             self.initialized = False
 
-    def reStartOverlay(self):
+    def reStartOverlay(self) -> None:
         self.shutdownOverlay()
         self.startOverlay()
 
