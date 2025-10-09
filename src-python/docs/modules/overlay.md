@@ -3,7 +3,7 @@
 目的: OpenVR を使ったオーバーレイ表示（複数サイズ: small/large）を管理する `Overlay` クラスを提供します。
 
 主要メソッド:
-- __init__(self, settings_dict)
+- __init__(self, settings_dict: dict)
 - init(self) -> None
 - startOverlay(self) -> None
 - shutdownOverlay(self) -> None
@@ -17,6 +17,34 @@
 使用上の注意:
 - OpenVR (SteamVR) が稼働していることが前提です。`checkSteamvrRunning()` で `vrmonitor.exe` の存在チェックを行います。
 - 例外が発生した場合は `errorLogging()` を呼んでスタックトレースを残します。
+
+短い使用例:
+
+```py
+from models.overlay.overlay_image import OverlayImage
+from models.overlay.overlay import Overlay
+from PIL import Image
+
+settings = {
+	"small": {
+		"x_pos": 0.0, "y_pos": 0.0, "z_pos": 0.0,
+		"x_rotation": 0.0, "y_rotation": 0.0, "z_rotation": 0.0,
+		"display_duration": 5, "fadeout_duration": 2,
+		"opacity": 1.0, "ui_scaling": 1.0, "tracker": "HMD"
+	}
+}
+
+overlay_img = OverlayImage()
+overlay = Overlay(settings)
+overlay.startOverlay()
+
+# wait until initialized
+while not overlay.initialized:
+		time.sleep(0.5)
+
+# push a simple blank image
+overlay.updateImage(Image.new("RGBA", (256, 64), (255,255,255,255)), "small")
+```
 
 ## モジュール構成（補足）
 
