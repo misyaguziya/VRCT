@@ -67,6 +67,19 @@ model.startWebSocketServer('127.0.0.1', 2231)
 
 ## 詳細設計
 
+### 2025-10-09 のリファクタリング要約
+
+- 遅延初期化 (lazy-init): `Model` のコンストラクタで重い初期化を行わず、`model.init()` を明示的に呼ぶか、各メソッド先頭で呼ばれる `ensure_initialized()` によって必要時に初期化する設計に変更しました。これによりインポート時の副作用（外部環境依存の初期化）が抑止されます。
+
+- `threadFnc` の堅牢化: スレッドユーティリティは args/kwargs をインスタンスで保持し、内部で発生する例外を捕捉して `utils.errorLogging()` に委ねるようになりました。これによりバックグラウンドスレッドが例外で終了するリスクを減らしています。
+
+- `device_manager` 呼び出しのガード: `getListMicHost()` / `getListMicDevice()` / `getMicDefaultDevice()` / `getListSpeakerDevice()` など、`device_manager` を参照する箇所は try/except で保護され、失敗時は安全なデフォルト（空リストや `"NoDevice"`）を返すようになりました。
+
+- WebSocket/Overlay/Watchdog 等の起動系メソッドは `ensure_initialized()` を先頭に呼ぶようになり、遅延初期化の恩恵を受けるようになっています。
+
+これらの変更は非破壊で既存の API を維持することを目的としていますが、起動フローで確実にリソースを確保したい場合はアプリ起動時に `model.init()` を呼ぶことを推奨します。
+
+
 目的: 各モデル（翻訳/転写/Overlay/Watchdog/OSC/WebSocket 等）のインスタンスを保持し、高レベルの操作を提供するファサード。
 
 主要クラス/変数:
