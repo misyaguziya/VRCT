@@ -2,8 +2,8 @@ import sys
 import json
 import time
 from typing import Any, Tuple
-from threading import Thread
-from queue import Queue
+from threading import Thread, Event
+from queue import Queue, Empty
 import logging
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
@@ -358,31 +358,47 @@ init_mapping = {key:value for key, value in mapping.items() if key.startswith("/
 controller.setInitMapping(init_mapping)
 
 class Main:
-    def __init__(self, controller_instance, mapping_data) -> None:
+    def __init__(self, controller_instance: Controller, mapping_data: dict) -> None:
         # queue holds tuples of (endpoint, data)
         self.queue: Queue[Tuple[str, Any]] = Queue()
-        self.main_loop = True
+        self._stop_event: Event = Event()
         self.controller = controller_instance
         self.mapping = mapping_data
+        self._threads: list[Thread] = []
 
     def receiver(self) -> None:
-        while True:
-            received_data = sys.stdin.readline().strip()
-            received_data = json.loads(received_data)
+        """Read lines from stdin, parse JSON and enqueue requests.
 
-            if received_data:
-                endpoint = received_data.get("endpoint", None)
-                data = received_data.get("data", None)
-                data = encodeBase64(data) if data is not None else None
-                printLog(endpoint, {"receive_data": data})
-                self.queue.put((endpoint, data))
+        Uses blocking readline but honors stop via _stop_event checked between reads.
+        """
+        while not self._stop_event.is_set():
+            try:
+                line = sys.stdin.readline()
+                if not line:
+                    # EOF reached; sleep briefly and re-check stop event
+                    time.sleep(0.1)
+                    continue
+                received_data = json.loads(line.strip())
+
+                if received_data:
+                    endpoint = received_data.get("endpoint")
+                    data = received_data.get("data")
+                    data = encodeBase64(data) if data is not None else None
+                    printLog(endpoint, {"receive_data": data})
+                    self.queue.put((endpoint, data))
+            except json.JSONDecodeError:
+                # malformed input; log and continue
+                errorLogging()
+            except Exception:
+                errorLogging()
 
     def startReceiver(self) -> None:
-        th_receiver = Thread(target=self.receiver)
+        th_receiver = Thread(target=self.receiver, name="main_receiver")
         th_receiver.daemon = True
         th_receiver.start()
+        self._threads.append(th_receiver)
 
-    def handleRequest(self, endpoint, data=None) -> tuple:
+    def handleRequest(self, endpoint: str, data: Any = None) -> tuple:
         result = None  # デフォルト値を設定
         status = 500   # デフォルト値を設定
 
@@ -396,45 +412,62 @@ class Main:
         else:
             try:
                 response = handler["variable"](data)
-                status = response.get("status", None)
-                result = response.get("result", None)
-                time.sleep(0.2) # 処理の安定化のために少し待機
-            except Exception as e:
+                status = response.get("status")
+                result = response.get("result")
+                time.sleep(0.2)  # 処理の安定化のために少し待機
+            except Exception:
                 errorLogging()
-                result = str(e)
+                result = "Internal error"
                 status = 500
 
         return result, status
 
     def handler(self) -> None:
-        while True:
-            if not self.queue.empty():
-                try:
-                    endpoint, data = self.queue.get()
-                    result, status = self.handleRequest(endpoint, data)
-                except Exception as e:
-                    errorLogging()
-                    result = str(e)
-                    status = 500
+        """Main handler loop. Uses queue.get with timeout to avoid busy polling and to allow graceful shutdown."""
+        while not self._stop_event.is_set():
+            try:
+                endpoint, data = self.queue.get(timeout=0.5)
+            except Empty:
+                continue
 
-                if status == 423:
-                    self.queue.put((endpoint, data))
-                else:
-                    printLog(endpoint, {"status": status, "send_data": result})
-                    printResponse(status, endpoint, result)
-            time.sleep(0.1)
+            try:
+                result, status = self.handleRequest(endpoint, data)
+            except Exception:
+                errorLogging()
+                result = "Internal error"
+                status = 500
+
+            if status == 423:
+                # Locked endpoint: requeue with a small delay to avoid tight loop
+                time.sleep(0.1)
+                self.queue.put((endpoint, data))
+            else:
+                printLog(endpoint, {"status": status, "send_data": result})
+                printResponse(status, endpoint, result)
 
     def startHandler(self) -> None:
-        th_handler = Thread(target=self.handler)
+        th_handler = Thread(target=self.handler, name="main_handler")
         th_handler.daemon = True
         th_handler.start()
+        self._threads.append(th_handler)
 
     def start(self) -> None:
-        while self.main_loop:
-            time.sleep(1)
+        """Start receiver and handler threads."""
+        self.startReceiver()
+        self.startHandler()
 
-    def stop(self) -> None:
-        self.main_loop = False
+    def stop(self, wait: float = 2.0) -> None:
+        """Signal threads to stop and wait for them to finish.
+
+        Args:
+            wait: maximum seconds to wait for threads to join.
+        """
+        self._stop_event.set()
+        # give threads a chance to exit
+        start = time.time()
+        for th in self._threads:
+            remaining = max(0.0, wait - (time.time() - start))
+            th.join(timeout=remaining)
 
 # 外部から参照可能なインスタンスを提供
 main_instance = Main(controller_instance=controller, mapping_data=mapping)
