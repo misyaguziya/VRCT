@@ -4,6 +4,7 @@ try:
     from translators import translate_text as other_web_Translator
     ENABLE_TRANSLATORS = True
 except Exception:
+    other_web_Translator = None  # type: ignore
     ENABLE_TRANSLATORS = False
 
 from .translation_languages import translation_lang
@@ -14,22 +15,37 @@ import transformers
 from utils import errorLogging, getBestComputeType
 
 import warnings
+from typing import Any, Optional, Tuple
+
 warnings.filterwarnings("ignore")
 
-# Translator
-class Translator():
-    def __init__(self):
-        self.deepl_client = None
-        self.ctranslate2_translator = None
-        self.ctranslate2_tokenizer = None
-        self.is_loaded_ctranslate2_model = False
-        self.is_changed_translator_parameters = False
-        self.is_enable_translators = ENABLE_TRANSLATORS
 
-    def authenticationDeepLAuthKey(self, authkey):
+class Translator:
+    """High-level translator facade.
+
+    This class wraps multiple backends (DeepL, DeepL API, Google, Bing, Papago,
+    and CTranslate2 local models). Optional dependencies may be unavailable at
+    runtime; methods degrade gracefully and return False or an empty string on
+    failure (kept compatible with existing behavior).
+    """
+
+    def __init__(self) -> None:
+        self.deepl_client: Optional[DeepLClient] = None
+        self.ctranslate2_translator: Any = None
+        self.ctranslate2_tokenizer: Any = None
+        self.is_loaded_ctranslate2_model: bool = False
+        self.is_changed_translator_parameters: bool = False
+        self.is_enable_translators: bool = ENABLE_TRANSLATORS
+
+    def authenticationDeepLAuthKey(self, authkey: str) -> bool:
+        """Authenticate DeepL API with the provided key.
+
+        Returns True on success, False on failure.
+        """
         result = True
         try:
             self.deepl_client = DeepLClient(authkey)
+            # quick smoke test
             self.deepl_client.translate_text(" ", target_lang="EN-US")
         except Exception:
             errorLogging()
@@ -37,7 +53,12 @@ class Translator():
             result = False
         return result
 
-    def changeCTranslate2Model(self, path, model_type, device="cpu", device_index=0, compute_type="auto"):
+    def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto") -> None:
+        """Load a CTranslate2 model from weights.
+
+        This sets internal translator/tokenizer objects and flips
+        ``is_loaded_ctranslate2_model`` on success.
+        """
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
         tokenizer = ctranslate2_weights[model_type]["tokenizer"]
@@ -52,7 +73,7 @@ class Translator():
             device_index=device_index,
             compute_type=compute_type,
             inter_threads=1,
-            intra_threads=4
+            intra_threads=4,
         )
         try:
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
@@ -62,17 +83,21 @@ class Translator():
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         self.is_loaded_ctranslate2_model = True
 
-    def isLoadedCTranslate2Model(self):
+    def isLoadedCTranslate2Model(self) -> bool:
         return self.is_loaded_ctranslate2_model
 
-    def isChangedTranslatorParameters(self):
+    def isChangedTranslatorParameters(self) -> bool:
         return self.is_changed_translator_parameters
 
-    def setChangedTranslatorParameters(self, is_changed):
+    def setChangedTranslatorParameters(self, is_changed: bool) -> None:
         self.is_changed_translator_parameters = is_changed
 
-    def translateCTranslate2(self, message, source_language, target_language):
-        result = False
+    def translateCTranslate2(self, message: str, source_language: str, target_language: str) -> Any:
+        """Translate using a loaded CTranslate2 model.
+
+        Returns a string on success or False on failure (keeps legacy behavior).
+        """
+        result: Any = False
         if self.is_loaded_ctranslate2_model is True:
             try:
                 self.ctranslate2_tokenizer.src_lang = source_language
@@ -86,7 +111,11 @@ class Translator():
         return result
 
     @staticmethod
-    def getLanguageCode(translator_name, target_country, source_language, target_language):
+    def getLanguageCode(translator_name: str, target_country: str, source_language: str, target_language: str) -> Tuple[str, str]:
+        """Resolve a friendly language name to translator-specific codes.
+
+        Returns (source_code, target_code).
+        """
         match translator_name:
             case "DeepL_API":
                 if target_language == "English":
@@ -101,66 +130,63 @@ class Translator():
                         target_language = "Portuguese Brazilian"
             case _:
                 pass
-        source_language=translation_lang[translator_name]["source"][source_language]
-        target_language=translation_lang[translator_name]["target"][target_language]
+        source_language = translation_lang[translator_name]["source"][source_language]
+        target_language = translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
-    def translate(self, translator_name, source_language, target_language, target_country, message):
+    def translate(self, translator_name: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:
+        """Translate `message` using the named translator backend.
+
+        Returns translated string on success, or False on failure. When
+        source_language == target_language the original message is returned.
+        """
         try:
             if source_language == target_language:
                 return message
 
-            result = ""
+            result: Any = ""
             source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL":
-                    if self.is_enable_translators is True:
+                    if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="deepl",
                             from_language=source_language,
                             to_language=target_language,
-                            )
+                        )
                 case "DeepL_API":
                     if self.is_enable_translators is True:
                         if self.deepl_client is None:
                             result = False
                         else:
-                            result = self.deepl_client.translate_text(
-                                message,
-                                source_lang=source_language,
-                                target_lang=target_language,
-                                ).text
+                            result = self.deepl_client.translate_text(message, source_lang=source_language, target_lang=target_language).text
                 case "Google":
-                    if self.is_enable_translators is True:
+                    if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="google",
                             from_language=source_language,
                             to_language=target_language,
-                            )
+                        )
                 case "Bing":
-                    if self.is_enable_translators is True:
+                    if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="bing",
                             from_language=source_language,
                             to_language=target_language,
-                            )
+                        )
                 case "Papago":
-                    if self.is_enable_translators is True:
+                    if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
                             query_text=message,
                             translator="papago",
                             from_language=source_language,
                             to_language=target_language,
-                            )
-                case "CTranslate2":
-                    result = self.translateCTranslate2(
-                        message=message,
-                        source_language=source_language,
-                        target_language=target_language,
                         )
+                case "CTranslate2":
+                    result = self.translateCTranslate2(message=message, source_language=source_language, target_language=target_language)
         except Exception:
             errorLogging()
             result = False

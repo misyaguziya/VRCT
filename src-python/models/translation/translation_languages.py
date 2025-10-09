@@ -1,4 +1,13 @@
-translation_lang = {}
+"""Language code mappings for supported translation backends.
+
+Provides `translation_lang` mapping keyed by backend name with `source` and
+`target` maps used by `Translator.getLanguageCode`.
+"""
+
+from typing import Dict
+
+translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {}
+
 dict_deepl_languages = {
     "Arabic":"ar",
     "Bulgarian":"bg",
@@ -37,10 +46,7 @@ dict_deepl_languages = {
 	"Chinese Simplified":"zh",
     "Chinese Traditional":"zh"
 }
-translation_lang["DeepL"] = {
-    "source":dict_deepl_languages,
-    "target":dict_deepl_languages,
-}
+translation_lang["DeepL"] = {"source": dict_deepl_languages, "target": dict_deepl_languages}
 
 dict_deepl_api_source_languages = {
     "Japanese":"ja",
@@ -109,10 +115,7 @@ dict_deepl_api_target_languages = {
     "Chinese Simplified":"zh",
     "Chinese Traditional":"zh"
 }
-translation_lang["DeepL_API"] = {
-    "source": dict_deepl_api_source_languages,
-    "target": dict_deepl_api_target_languages,
-}
+translation_lang["DeepL_API"] = {"source": dict_deepl_api_source_languages, "target": dict_deepl_api_target_languages}
 
 dict_google_languages = {
     "Japanese":"ja",
@@ -179,10 +182,7 @@ dict_google_languages = {
     # "Basque":"eu",
     "Irish":"ga"
 }
-translation_lang["Google"] = {
-    "source":dict_google_languages,
-    "target":dict_google_languages,
-}
+translation_lang["Google"] = {"source": dict_google_languages, "target": dict_google_languages}
 
 dict_bing_languages = {
     "Japanese":"ja",
@@ -247,10 +247,7 @@ dict_bing_languages = {
     "Punjabi":"pa",
     "Irish":"ga"
 }
-translation_lang["Bing"] = {
-    "source":dict_bing_languages,
-    "target":dict_bing_languages,
-}
+translation_lang["Bing"] = {"source": dict_bing_languages, "target": dict_bing_languages}
 
 dict_papago_languages = {
     "German": "de",
@@ -270,10 +267,7 @@ dict_papago_languages = {
     "Chinese Traditional":"zh-TW",
 }
 
-translation_lang["Papago"] = {
-    "source":dict_papago_languages,
-    "target":dict_papago_languages,
-}
+translation_lang["Papago"] = {"source": dict_papago_languages, "target": dict_papago_languages}
 
 dict_ctranslate2_languages = {
     "English": "en",
@@ -378,7 +372,4 @@ dict_ctranslate2_languages = {
     "Sundanese": "su"
 }
 
-translation_lang["CTranslate2"] = {
-    "source":dict_ctranslate2_languages,
-    "target":dict_ctranslate2_languages,
-}
+translation_lang["CTranslate2"] = {"source": dict_ctranslate2_languages, "target": dict_ctranslate2_languages}
