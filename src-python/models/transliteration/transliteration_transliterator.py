@@ -1,5 +1,6 @@
 from sudachipy import tokenizer
 from sudachipy import dictionary
+from typing import List, Dict, Any
 try:
     from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
@@ -10,7 +11,7 @@ except ImportError:
     from transliteration_context_rules import apply_context_rules
 
 class Transliterator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.tokenizer_obj = dictionary.Dictionary(dict_type="full").create()
         self.mode = tokenizer.Tokenizer.SplitMode.C
 
@@ -26,7 +27,7 @@ class Transliterator:
         )
 
     @staticmethod
-    def split_kanji_okurigana(surface: str, reading_kana: str, use_macron: bool = True):
+    def split_kanji_okurigana(surface: str, reading_kana: str, use_macron: bool = True) -> List[Dict[str, str]]:
         """Split a single surface word and its kana reading into parts.
 
         Inputs:
@@ -45,7 +46,7 @@ class Transliterator:
           constructed list.
         """
 
-        result = []
+        result: List[Dict[str, str]] = []
 
         # 表層を「漢字ブロック」と「非漢字ブロック」に分割
         buf = ""
@@ -113,7 +114,7 @@ class Transliterator:
 
         return result
 
-    def analyze(self, text: str, use_macron: bool = False):
+    def analyze(self, text: str, use_macron: bool = False) -> List[Dict[str, Any]]:
         """Tokenize ``text`` and produce per-subunit reading information.
 
         Returns a list of dicts for each token/sub-part with keys:
@@ -133,7 +134,7 @@ class Transliterator:
 
         tokens = self.tokenizer_obj.tokenize(text, self.mode)
 
-        results = []
+        results: List[Dict[str, Any]] = []
         for t in tokens:
             surface = t.surface()
             reading = t.reading_form()
