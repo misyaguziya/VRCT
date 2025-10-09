@@ -1,3 +1,33 @@
+## OSC モジュール (models.osc)
+
+このドキュメントは `models/osc/osc.py` の使い方と注意点を簡潔にまとめたものです。
+
+### 概要
+- `OSCHandler` クラスは OSC メッセージの送信 (/chatbox/input, /chatbox/typing 等) と、
+  ローカル環境では OSCQuery でエンドポイントを公開するための薄いラッパーを提供します。
+
+### 依存関係
+- `python-osc` — UDP クライアント/サーバ
+- `tinyoscquery` — OSCQuery を利用する場合に必要（オプショナル）
+
+### 使い方（例）
+
+```python
+from models.osc.osc import OSCHandler
+
+handler = OSCHandler(ip_address="127.0.0.1", port=9000)
+handler.setDictFilterAndTarget({
+    "/chatbox/input": lambda addr, *args: print(args),
+})
+handler.receiveOscParameters()
+handler.sendTyping(True)
+handler.sendMessage("Hello")
+handler.oscServerStop()
+```
+
+### 注意点
+- `tinyoscquery` がインストールされていない場合、OSCQuery 関連機能は無効になりますが、送信（UDP クライアント）は動作します。
+- サービスのアドバタイズ中に例外が発生した場合、内部でリトライします。
 # models/osc — 詳細設計
 
 目的: VRChat 等と OSC / OSCQuery 経由で値の取得やチャット送信を行う。
