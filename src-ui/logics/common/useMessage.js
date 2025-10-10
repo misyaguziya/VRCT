@@ -1,9 +1,12 @@
 import {
     useStore_MessageLogs,
     useStore_MessageInputValue,
+    store,
 } from "@store";
 
 import { useStdoutToPython } from "@useStdoutToPython";
+
+const COOLDOWN = 2000; // 2 seconds
 
 export const useMessage = () => {
     const { currentMessageLogs, addMessageLogs, updateMessageLogs } = useStore_MessageLogs();
@@ -65,7 +68,11 @@ export const useMessage = () => {
     };
 
     const startTyping = () => {
-        asyncStdoutToPython("/run/typing_message_box");
+        const now = Date.now();
+        if (now - store.last_executed_time_startTyping >= 2000) {
+            store.last_executed_time_startTyping = now;
+            asyncStdoutToPython("/run/typing_message_box");
+        }
     };
 
     const stopTyping = () => {
