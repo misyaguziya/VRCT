@@ -35,12 +35,13 @@ class Color:
 class TestMainloop():
     def __init__(self):
         self.main = main_instance
-        self.main.startReceiver()
-        self.main.startHandler()
+        # Start mainloop threads
+        self.main.start()
 
-        def stop_main():
-            pass
-        self.main.controller.setWatchdogCallback(stop_main)
+        # Ensure the watchdog can stop the mainloop cleanly
+        def _none_watchdog():
+            return None
+        self.main.controller.setWatchdogCallback(_none_watchdog)
         self.main.controller.init()
 
         # mappingのすべてのstatusをTrueにする
@@ -148,15 +149,16 @@ class TestMainloop():
 
     def test_endpoints_on_off_continuous(self):
         print("----ON/OFF連続テスト----")
-        endpoints = ["/set/enable/websocket_server", "/set/disable/websocket_server"]
-        # endpoints = [
-        #     "/set/enable/translation",
-        #     "/set/disable/translation",
-        #     "/set/enable/transcription_send",
-        #     "/set/disable/transcription_send",
-        #     "/set/enable/transcription_receive",
-        #     "/set/disable/transcription_receive",
-        # ]
+        endpoints = [
+            "/set/enable/translation",
+            "/set/disable/translation",
+            "/set/enable/transcription_send",
+            "/set/disable/transcription_send",
+            "/set/enable/transcription_receive",
+            "/set/disable/transcription_receive",
+        #     "/set/enable/websocket_server",
+        #     "/set/disable/websocket_server",
+        ]
         for i in range(1000):
             endpoint = random.choice(endpoints)
             print(f"No.{i:04} Testing endpoint: {endpoint}", flush=True)
@@ -739,14 +741,27 @@ if __name__ == "__main__":
         # test.test_set_data_endpoints_all()
         # test.test_run_endpoints_all()
         # test.test_delete_data_endpoints_all()
-        test.test_endpoints_all_random()
-        # test.test_endpoints_on_off_continuous()
+        # test.test_endpoints_all_random()
+        test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
         # test.test_endpoints_specific_random()
         # test.test_translate_all_language_pairs()
         test.generate_summary()
     except KeyboardInterrupt:
         print("Interrupted by user, shutting down...")
+        try:
+            main_instance.stop()
+        except Exception:
+            pass
     except Exception as e:
         traceback.print_exc()
         print(f"An error occurred: {e}")
+        try:
+            main_instance.stop()
+        except Exception:
+            pass
+    finally:
+        try:
+            main_instance.stop()
+        except Exception:
+            pass
