@@ -5,6 +5,10 @@
 - UI からのコマンドを受け取り、`model` の開始/停止、設定の変更、ダウンロードの開始、各種フラグの切り替え、進捗通知（`run` コールバック経由）を行います。
 - 多くのメソッドは JSON 系の応答オブジェクトを返します: {"status": int, "result": Any}。副作用で `self.run(status, run_mapping[key], payload)` を呼び出して UI に通知します。
 
+### mainloop のマルチワーカー化とカノニカルロックについて (2025-10-13)
+
+- `mainloop.Main` はデフォルトで複数（デフォルト 3）のハンドラワーカースレッドを動かすようになりました。これにより、モデルロードなどの重い操作で他のリクエストが待たされることが少なくなります。
+- `/set/enable/<feature>` と `/set/disable/<feature>` のように同一機能の ON/OFF を切り替えるエンドポイントは、内部的にカノニカルロックキー（例: `/lock/set/<feature>`）に正規化してロック取得されます。これにより、遅い disable の処理が後から来て最終状態を書き換えてしまうレースが防がれます。
 初期化とランタイムフック
 - __init__() -> None
   - フィールド: `init_mapping: dict`, `run_mapping: dict`, `run: Callable`, `device_access_status: bool`

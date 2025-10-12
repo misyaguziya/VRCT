@@ -60,7 +60,20 @@ class DeviceManager:
         if cls._instance is None:
             cls._instance = super(DeviceManager, cls).__new__(cls)
             # do NOT auto-init monitoring-heavy resources on import; require explicit init
+            # Still perform a light-weight init so that callers observing the singleton
+            # do not see uninitialized internal structures (which caused NoDevice to
+            # be seen when import order differed).
             cls._instance._initialized = False
+            try:
+                # Call init() to populate internal containers. This will NOT start
+                # the monitoring thread (startMonitoring must be called explicitly).
+                cls._instance.init()
+            except Exception:
+                # Avoid import-time crashes; log and continue.
+                try:
+                    errorLogging()
+                except Exception:
+                    pass
         return cls._instance
 
     def init(self) -> None:
@@ -107,6 +120,22 @@ class DeviceManager:
         self.th_monitoring: Optional[Thread] = None
 
         self._initialized = True
+
+        # Best-effort single update: if PyAudio is available, attempt to populate
+        # real device lists. Keep this short and ignore errors to avoid import-time
+        # failures.
+        try:
+            if PyAudio is not None:
+                try:
+                    # update() is robust and will fall back to defaults if audio libs
+                    # are missing or fail; do not let exceptions bubble up.
+                    self.update()
+                except Exception:
+                    errorLogging()
+        except Exception:
+            # defensive: if errorLogging isn't available or other issues occur,
+            # swallow to avoid breaking initialization
+            pass
 
     def update(self):
         buffer_mic_devices: Dict[str, List[Dict[str, Any]]] = {}
@@ -428,16 +457,52 @@ class DeviceManager:
                 errorLogging()
 
     def getMicDevices(self):
-        return self.mic_devices
+        # Ensure initialized and return devices (safe default if still not populated)
+        if not getattr(self, '_initialized', False):
+            try:
+                self.init()
+            except Exception:
+                try:
+                    errorLogging()
+                except Exception:
+                    pass
+        return getattr(self, 'mic_devices', {"NoHost": [{"index": -1, "name": "NoDevice"}]})
 
     def getDefaultMicDevice(self):
-        return self.default_mic_device
+        # Ensure initialized and return default mic device (safe default if still not populated)
+        if not getattr(self, '_initialized', False):
+            try:
+                self.init()
+            except Exception:
+                try:
+                    errorLogging()
+                except Exception:
+                    pass
+        return getattr(self, 'default_mic_device', {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}})
 
     def getSpeakerDevices(self):
-        return self.speaker_devices
+        # Ensure initialized and return speaker devices (safe default if still not populated)
+        if not getattr(self, '_initialized', False):
+            try:
+                self.init()
+            except Exception:
+                try:
+                    errorLogging()
+                except Exception:
+                    pass
+        return getattr(self, 'speaker_devices', [{"index": -1, "name": "NoDevice"}])
 
     def getDefaultSpeakerDevice(self):
-        return self.default_speaker_device
+        # Ensure initialized and return default speaker device (safe default if still not populated)
+        if not getattr(self, '_initialized', False):
+            try:
+                self.init()
+            except Exception:
+                try:
+                    errorLogging()
+                except Exception:
+                    pass
+        return getattr(self, 'default_speaker_device', {"device": {"index": -1, "name": "NoDevice"}})
 
     def forceUpdateAndSetMicDevices(self):
         self.update()

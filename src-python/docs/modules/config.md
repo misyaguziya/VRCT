@@ -172,6 +172,15 @@ config.saveConfig('CUSTOM_SAVE', {'foo': 'bar'}, immediate_save=True)
 - `saveConfig()` はデバウンスされるため、高頻度の設定変更では複数の変更がまとめて書き込まれます。即時書き込みが必要な操作（重要な鍵の更新など）は `immediate_save=True` を使ってください。
 - `SELECTABLE_*` 系や `*_DICT` 系は初期化時に外部モジュール（翻訳リソース、whisper_models、device_manager 等）から生成されます。これらが利用できない環境ではデフォルトが空になる可能性があります。
 
+### 2025-10-13 の変更（device_manager / config に関する挙動改善）
+
+- `DeviceManager` のシングルトン生成時に軽量 `init()` を実行するようになりました。これにより、モジュールのインポート順序に依存して `config` の `SELECTED_*` が `NoDevice` のままになる問題が軽減されます（監視スレッドは自動起動しません）。
+- `config.init_config()` はこれまで `device_manager._initialized` をチェックしていた箇所を見直し、`device_manager.getDefaultMicDevice()` / `getDefaultSpeakerDevice()` といったアクセサを利用して値を取得するように変更しました。アクセサは必要なら遅延初期化を行うため、`controller` と `config` のトップレベルインポート順に依存しません。
+- 影響: 起動時に PyAudio 等の依存が利用可能であれば、起動中に実機デバイス名が `config` に反映される確率が高くなります。依存がない場合は従来どおり `NoDevice` にフォールバックします。
+
+推奨運用:
+- `controller.init()` でコールバック登録後、`mainloop` の起動シーケンスで `device_manager.startMonitoring()` を明示的に呼ぶと、起動後もデバイス変更がコールバック経由で確実に届きます（この呼び出しは任意です）。
+
 ## 推奨改善点（将来的なドキュメント／実装）
 - 設定スキーマを JSON Schema で定義し、load 時の検証を明確化すると安全性が向上します。
 - 設定変更イベントを発火する仕組み（observer パターン）を導入すると、Controller/Model 側の再初期化処理をより明確に実装できます。

@@ -118,7 +118,17 @@ class OSCHandler:
             if service is not None:
                 osc_query_client = OSCQueryClient(service)
                 mute_self_node = osc_query_client.query_node(address)
-                value = mute_self_node.value[0]
+                # mute_self_node may be None when the node is not present on the
+                # remote OSCQuery service. Also mute_self_node.value may be None
+                # or an empty list. Guard against those cases to avoid
+                # AttributeError: 'NoneType' object has no attribute 'value'
+                if mute_self_node is None:
+                    return None
+                # prefer explicit checks rather than relying on exceptions
+                node_value = getattr(mute_self_node, 'value', None)
+                if not node_value:
+                    return None
+                value = node_value[0]
         except Exception:
             errorLogging()
             # エラー発生時にbrowserをリセットして次回再初期化

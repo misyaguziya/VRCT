@@ -1220,8 +1220,10 @@ class Config:
         # device_manager may be unavailable or not initialized; use safe defaults
         try:
             if device_manager is not None:
-                self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
-                self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
+                # getDefaultMicDevice performs lazy init/update if needed
+                dm_def = device_manager.getDefaultMicDevice()
+                self._SELECTED_MIC_HOST = dm_def.get("host", {}).get("name", "NoHost")
+                self._SELECTED_MIC_DEVICE = dm_def.get("device", {}).get("name", "NoDevice")
             else:
                 self._SELECTED_MIC_HOST = "NoHost"
                 self._SELECTED_MIC_DEVICE = "NoDevice"
@@ -1247,7 +1249,8 @@ class Config:
         self._AUTO_SPEAKER_SELECT = True
         try:
             if device_manager is not None:
-                self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
+                sp_def = device_manager.getDefaultSpeakerDevice()
+                self._SELECTED_SPEAKER_DEVICE = sp_def.get("device", {}).get("name", "NoDevice")
             else:
                 self._SELECTED_SPEAKER_DEVICE = "NoDevice"
         except Exception:
