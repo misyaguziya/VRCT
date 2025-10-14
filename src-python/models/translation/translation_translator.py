@@ -177,12 +177,14 @@ class Translator:
                         target_language = "Portuguese European"
                     else:
                         target_language = "Portuguese Brazilian"
+                source_language = translation_lang[translator_name]["source"][source_language]
+                target_language = translation_lang[translator_name]["target"][target_language]
             case "CTranslate2":
-                translator_name = weight_type
+                source_language = translation_lang[translator_name][weight_type]["source"][source_language]
+                target_language = translation_lang[translator_name][weight_type]["target"][target_language]
             case _:
-                pass
-        source_language = translation_lang[translator_name]["source"][source_language]
-        target_language = translation_lang[translator_name]["target"][target_language]
+                source_language = translation_lang[translator_name]["source"][source_language]
+                target_language = translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
     def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:

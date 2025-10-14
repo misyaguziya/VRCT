@@ -95,8 +95,8 @@ def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
     try:
-        os_makedirs(tokenizer_cache, exist_ok=True)
-        transformers.AutoTokenizer.from_pretrained(tokenizer_name, cache_dir=tokenizer_cache)
+        os_makedirs(tokenizer_path, exist_ok=True)
+        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
     except Exception:
         errorLogging()
         tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")

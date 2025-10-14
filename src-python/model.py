@@ -222,8 +222,12 @@ class Model:
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
-            for lang in translation_lang[tl_key]["source"]:
-                translation_langs.append(lang)
+            if tl_key == "CTranslate2":
+                for lang in translation_lang[tl_key][config.CTRANSLATE2_WEIGHT_TYPE]["source"]:
+                    translation_langs.append(lang)
+            else:
+                for lang in translation_lang[tl_key]["source"]:
+                    translation_langs.append(lang)
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
@@ -243,7 +247,10 @@ class Model:
         selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
-            languages = translation_lang.get(engine, {}).get("source", {})
+            if engine == "CTranslate2":
+                languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
+            else:
+                languages = translation_lang.get(engine, {}).get("source", {})
             source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
             target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
             language_list = list(languages.keys())

@@ -372,8 +372,9 @@ dict_m2m100_languages = {
     "Sundanese": "su"
 }
 
-translation_lang["m2m100_418M-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
-translation_lang["m2m100_1.2B-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
+translation_lang["CTranslate2"] = {}
+translation_lang["CTranslate2"]["m2m100_418M-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
+translation_lang["CTranslate2"]["m2m100_1.2B-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
 
 dict_nllb_languages = {
     "Acehnese (Arabic script)": "ace_Arab",
@@ -582,8 +583,8 @@ dict_nllb_languages = {
     "Zulu": "zul_Latn"
 }
 
-translation_lang["nllb-200-distilled-1.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
-translation_lang["nllb-200-3.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
+translation_lang["CTranslate2"]["nllb-200-distilled-1.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
+translation_lang["CTranslate2"]["nllb-200-3.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
 
 dict_plamo_languages = {
     "English": "English",
