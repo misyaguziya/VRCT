@@ -5,12 +5,36 @@ from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import threading
+from typing import Optional, Dict, Any
 import torch
-from device_manager import device_manager
-from models.translation.translation_languages import translation_lang
-from models.translation.translation_utils import ctranslate2_weights
-from models.transcription.transcription_languages import transcription_lang
-from models.transcription.transcription_whisper import _MODELS as whisper_models
+
+# Guard optional, potentially heavy or platform-specific imports so importing
+# config.py doesn't raise in environments missing those packages.
+try:
+    from device_manager import device_manager
+except Exception:  # pragma: no cover - optional runtime
+    device_manager = None  # type: ignore
+
+try:
+    from models.translation.translation_languages import translation_lang
+except Exception:  # pragma: no cover - optional runtime
+    translation_lang = {}  # type: ignore
+
+try:
+    from models.translation.translation_utils import ctranslate2_weights
+except Exception:  # pragma: no cover - optional runtime
+    ctranslate2_weights = {}  # type: ignore
+
+try:
+    from models.transcription.transcription_languages import transcription_lang
+except Exception:  # pragma: no cover - optional runtime
+    transcription_lang = {}  # type: ignore
+
+try:
+    from models.transcription.transcription_whisper import _MODELS as whisper_models
+except Exception:  # pragma: no cover - optional runtime
+    whisper_models = {}  # type: ignore
+
 from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
 json_serializable_vars = {}
@@ -21,23 +45,39 @@ def json_serializable(var_name):
     return decorator
 
 class Config:
+    """Application configuration singleton.
+
+    Responsibilities:
+    - expose read-only and read-write configuration via properties
+    - persist selected values to JSON with debounce
+    Implementation notes: initialization may depend on optional subsystems; any
+    exceptions during init/load are captured and logged to avoid import-time
+    crashes.
+    """
+
     _instance = None
-    _config_data = {}
-    _timer = None
-    _debounce_time = 2
+    _config_data: Dict[str, Any] = {}
+    _timer: Optional[threading.Timer] = None
+    _debounce_time: int = 2
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
-            cls._instance.init_config()
-            cls._instance.load_config()
+            try:
+                cls._instance.init_config()
+            except Exception:
+                errorLogging()
+            try:
+                cls._instance.load_config()
+            except Exception:
+                errorLogging()
         return cls._instance
 
-    def saveConfigToFile(self):
+    def saveConfigToFile(self) -> None:
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
             json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
 
-    def saveConfig(self, key, value, immediate_save=False):
+    def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
 
         if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
@@ -1068,10 +1108,16 @@ class Config:
         self._WATCHDOG_INTERVAL = 20
 
         self._SELECTABLE_TAB_NO_LIST = ["1", "2", "3"]
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = ctranslate2_weights.keys()
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = whisper_models.keys()
-        self._SELECTABLE_TRANSLATION_ENGINE_LIST = translation_lang.keys()
-        self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
+        # these external mappings may be empty dicts if the optional modules failed to import
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = getattr(ctranslate2_weights, 'keys', lambda: [])()
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = getattr(whisper_models, 'keys', lambda: [])()
+        self._SELECTABLE_TRANSLATION_ENGINE_LIST = getattr(translation_lang, 'keys', lambda: [])()
+        try:
+            # transcription_lang is nested dict; attempt to extract keys defensively
+            first_key = next(iter(transcription_lang))
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[first_key].values())[0].keys()
+        except Exception:
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
@@ -1171,8 +1217,20 @@ class Config:
             "height": 654,
         }
         self._AUTO_MIC_SELECT = True
-        self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
-        self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
+        # device_manager may be unavailable or not initialized; use safe defaults
+        try:
+            if device_manager is not None:
+                # getDefaultMicDevice performs lazy init/update if needed
+                dm_def = device_manager.getDefaultMicDevice()
+                self._SELECTED_MIC_HOST = dm_def.get("host", {}).get("name", "NoHost")
+                self._SELECTED_MIC_DEVICE = dm_def.get("device", {}).get("name", "NoDevice")
+            else:
+                self._SELECTED_MIC_HOST = "NoHost"
+                self._SELECTED_MIC_DEVICE = "NoDevice"
+        except Exception:
+            errorLogging()
+            self._SELECTED_MIC_HOST = "NoHost"
+            self._SELECTED_MIC_DEVICE = "NoDevice"
         self._MIC_THRESHOLD = 300
         self._MIC_AUTOMATIC_THRESHOLD = False
         self._MIC_RECORD_TIMEOUT = 3
@@ -1189,7 +1247,15 @@ class Config:
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._AUTO_SPEAKER_SELECT = True
-        self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
+        try:
+            if device_manager is not None:
+                sp_def = device_manager.getDefaultSpeakerDevice()
+                self._SELECTED_SPEAKER_DEVICE = sp_def.get("device", {}).get("name", "NoDevice")
+            else:
+                self._SELECTED_SPEAKER_DEVICE = "NoDevice"
+        except Exception:
+            errorLogging()
+            self._SELECTED_SPEAKER_DEVICE = "NoDevice"
         self._SPEAKER_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
         self._SPEAKER_RECORD_TIMEOUT = 3

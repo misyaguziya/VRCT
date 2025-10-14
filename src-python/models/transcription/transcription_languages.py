@@ -1,3 +1,8 @@
+"""Language table used by transcription components.
+
+Maps a display language and country to engine-specific language codes.
+"""
+
 transcription_lang = {
     "Afrikaans":{
         "South Africa":{

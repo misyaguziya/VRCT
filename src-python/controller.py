@@ -1,5 +1,4 @@
-import copy
-from typing import Callable, Any
+from typing import Callable, Any, List, Optional
 from time import sleep
 from subprocess import Popen
 from threading import Thread
@@ -11,10 +10,33 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 
 class Controller:
     def __init__(self) -> None:
-        self.init_mapping = {}
-        self.run_mapping = {}
-        self.run = None
-        self.device_access_status = True
+        # typed attributes to satisfy static type checkers
+        self.init_mapping: dict = {}
+        self.run_mapping: dict = {}
+        # initialize with a no-op callable so callers can safely call self.run
+        def _noop_run(status: int, endpoint: str, payload: Any = None) -> None:
+            return None
+        self.run: Callable[[int, str, Any], None] = _noop_run
+        self.device_access_status: bool = True
+        # Ensure model is initialized at controller startup so existing
+        # attribute-based checks (e.g. model.overlay.initialized) continue to work.
+        try:
+            model.init()
+        except Exception:
+            # In test or headless environments initialization may fail; log and continue.
+            errorLogging()
+
+    def _is_overlay_available(self) -> bool:
+        """Safe check whether overlay is present and initialized.
+
+        This avoids AttributeError when `model` was not fully initialized.
+        """
+        try:
+            overlay = getattr(model, "overlay", None)
+            return overlay is not None and getattr(overlay, "initialized", False)
+        except Exception:
+            errorLogging()
+            return False
 
     def setInitMapping(self, init_mapping:dict) -> None:
         self.init_mapping = init_mapping
@@ -251,7 +273,7 @@ class Controller:
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration_message = []
+            transliteration_message: List[Any] = []
             transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
@@ -356,7 +378,7 @@ class Controller:
                         ]
                     })
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
@@ -407,7 +429,7 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration_message = []
+            transliteration_message: List[Any] = []
             transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
@@ -484,7 +506,7 @@ class Controller:
                 transliteration_translation = [[]]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_SMALL_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageSmallLog(
@@ -503,7 +525,7 @@ class Controller:
                         )
                         model.updateOverlaySmallLog(overlay_image)
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
@@ -566,12 +588,12 @@ class Controller:
                     translation_text = f" ({'/'.join(translation)})" if translation else ""
                     model.logger.info(f"[RECEIVED] {message}{translation_text}")
 
-    def chatMessage(self, data) -> None:
+    def chatMessage(self, data) -> dict:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
             translation = []
-            transliteration_message = []
+            transliteration_message: List[Any] = []
             transliteration_translation = []
             if config.ENABLE_TRANSLATION is False:
                 pass
@@ -739,6 +761,7 @@ class Controller:
             self.run_mapping["software_update_info"],
             software_update_info,
         )
+        return {"status":200, "result": software_update_info}
 
     @staticmethod
     def getComputeMode(*args, **kwargs) -> dict:
@@ -800,11 +823,15 @@ class Controller:
                     if is_vram_error:
                         # Defaultのデバイス設定に戻す
                         printLog("VRAM error detected, reverting device setting")
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_enable_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory enabling translation",
+                                "data": error_message
+                            },
+                        )
                         self.setDisableTranslation()
-                        config.SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(config.SELECTABLE_COMPUTE_DEVICE_LIST[0])
-                        config.SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
-                        self.run(200, self.run_mapping["selected_translation_compute_device"], config.SELECTED_TRANSLATION_COMPUTE_DEVICE)
-                        self.run(200, self.run_mapping["selected_translation_compute_type"], config.SELECTED_TRANSLATION_COMPUTE_TYPE)
                         self.run(
                             400,
                             self.run_mapping["enable_translation"],
@@ -1078,6 +1105,7 @@ class Controller:
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
         device_manager.setCallbackProcessAfterUpdateMicDevices(self.restartAccessMicDevices)
         device_manager.forceUpdateAndSetMicDevices()
+        device_manager.startMonitoring()
 
     def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_MIC_SELECT is False:
@@ -1087,6 +1115,9 @@ class Controller:
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
+        if config.AUTO_SPEAKER_SELECT is False:
+            device_manager.stopMonitoring()
+
         if config.AUTO_MIC_SELECT is True:
             device_manager.clearCallbackProcessBeforeUpdateMicDevices()
             device_manager.clearCallbackDefaultMicDevice()
@@ -1274,6 +1305,7 @@ class Controller:
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
         device_manager.setCallbackProcessAfterUpdateSpeakerDevices(self.restartAccessSpeakerDevices)
         device_manager.forceUpdateAndSetSpeakerDevices()
+        device_manager.startMonitoring()
 
     def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
         if config.AUTO_SPEAKER_SELECT is False:
@@ -1283,6 +1315,9 @@ class Controller:
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
+        if config.AUTO_MIC_SELECT is False:
+            device_manager.stopMonitoring()
+
         if config.AUTO_SPEAKER_SELECT is True:
             device_manager.clearCallbackProcessBeforeUpdateSpeakerDevices()
             device_manager.clearCallbackDefaultSpeakerDevice()
@@ -2234,13 +2269,13 @@ class Controller:
         th_stopCheckSpeakerEnergy.join()
 
     @staticmethod
-    def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Callable[[float], None]) -> None:
+    def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:
         th_download = Thread(target=model.downloadCTranslate2ModelWeight, args=(weight_type, callback, end_callback))
         th_download.daemon = True
         th_download.start()
 
     @staticmethod
-    def startThreadingDownloadWhisperWeight(weight_type:str, callback:Callable[[float], None], end_callback:Callable[[float], None]) -> None:
+    def startThreadingDownloadWhisperWeight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:
         th_download = Thread(target=model.downloadWhisperModelWeight, args=(weight_type, callback, end_callback))
         th_download.daemon = True
         th_download.start()
@@ -2258,6 +2293,7 @@ class Controller:
     @staticmethod
     def setWatchdogCallback(callback) -> dict:
         model.setWatchdogCallback(callback)
+        return {"status":200, "result":True}
 
     @staticmethod
     def stopWatchdog(*args, **kwargs) -> dict:
