@@ -1,6 +1,6 @@
 from os import path as os_path
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, List, Optional
 from PIL import Image, ImageDraw, ImageFont
 try:
     from utils import errorLogging
@@ -18,8 +18,14 @@ class OverlayImage:
         "Chinese Traditional": "NotoSansTC-Regular.ttf",
     }
 
-    def __init__(self, root_path: str=None):
-        self.message_log = []
+    def __init__(self, root_path: Optional[str] = None) -> None:
+        """Overlay image helper.
+
+        Args:
+            root_path: optional project root to resolve bundled fonts. If omitted,
+                defaults to repository `fonts` directory.
+        """
+        self.message_log: List[dict] = []
         if root_path is None:
             self.root_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts")
         else:
@@ -58,7 +64,7 @@ class OverlayImage:
         }
         return colors
 
-    def createTextboxSmallLog(self, text:str, language:str, text_color:tuple, base_width:int, base_height:int, font_size:int) -> Image:
+    def createTextboxSmallLog(self, text: str, language: str, text_color: Tuple[int, int, int], base_width: int, base_height: int, font_size: int) -> Image:
         font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
@@ -92,7 +98,7 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor="mm", stroke_width=0, font=font, align="center")
         return img
 
-    def createOverlayImageSmallLog(self, message: str, your_language: str, translation: list = [], target_language: list = []) -> Image:
+    def createOverlayImageSmallLog(self, message: str, your_language: str, translation: List[str] = [], target_language: List[str] = []) -> Image:
         # UI設定を取得
         ui_size = self.getUiSizeSmallLog()
         width, height, font_size = ui_size["width"], ui_size["height"], ui_size["font_size"]
@@ -162,7 +168,7 @@ class OverlayImage:
             "text_color_time": (120, 120, 120)
         }
 
-    def createTextImageLargeLog(self, message_type:str, size:str, text:str, language:str) -> Image:
+    def createTextImageLargeLog(self, message_type: str, size: str, text: str, language: str) -> Image:
         ui_size = self.getUiSizeLargeLog()
         font_size = ui_size["font_size_large"] if size == "large" else ui_size["font_size_small"]
         text_color = self.getUiColorLargeLog()[f"text_color_{size}"]
@@ -200,7 +206,7 @@ class OverlayImage:
         draw.multiline_text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font, align=align)
         return img
 
-    def createTextImageMessageType(self, message_type:str, date_time:str) -> Image:
+    def createTextImageMessageType(self, message_type: str, date_time: str) -> Image:
         ui_size = self.getUiSizeLargeLog()
         font_size = ui_size["font_size_small"]
         ui_padding = ui_size["padding"]
@@ -242,7 +248,7 @@ class OverlayImage:
         draw.text((text_x, text_y), text, text_color, anchor=anchor, stroke_width=0, font=font)
         return img
 
-    def createTextboxLargeLog(self, message_type: str, message: str = None, your_language: str = None, translation: list = [], target_language: list = [], date_time: str = None) -> Image:
+    def createTextboxLargeLog(self, message_type: str, message: Optional[str] = None, your_language: Optional[str] = None, translation: List[str] = [], target_language: List[str] = [], date_time: Optional[str] = None) -> Image:
         # テキスト画像のリストを作成
         images = [self.createTextImageMessageType(message_type, date_time)]
 
@@ -272,7 +278,7 @@ class OverlayImage:
 
         return combined_img
 
-    def createOverlayImageLargeLog(self, message_type:str, message:str=None, your_language:str=None, translation:list=[], target_language:list=[]) -> Image:
+    def createOverlayImageLargeLog(self, message_type: str, message: Optional[str] = None, your_language: Optional[str] = None, translation: List[str] = [], target_language: List[str] = []) -> Image:
         ui_color = self.getUiColorLargeLog()
         background_color = ui_color["background_color"]
         background_outline_color = ui_color["background_outline_color"]
