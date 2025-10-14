@@ -1,9 +1,9 @@
 import sys
 import json
 import time
-from typing import Any
-from threading import Thread
-from queue import Queue
+from typing import Any, Tuple
+from threading import Thread, Event, Lock
+from queue import Queue, Empty
 import logging
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
@@ -47,6 +47,9 @@ run_mapping = {
 
     "selected_translation_engines":"/run/selected_translation_engines",
     "translation_engines":"/run/translation_engines",
+
+    "selected_translation_compute_type":"/run/selected_translation_compute_type",
+    "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
 
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
@@ -162,6 +165,9 @@ mapping = {
     "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
     "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
+    "/get/data/selected_translation_compute_type": {"status": True, "variable":controller.getSelectedTranslationComputeType},
+    "/set/data/selected_translation_compute_type": {"status": True, "variable":controller.setSelectedTranslationComputeType},
+
     "/run/download_ctranslate2_weight": {"status": True, "variable":controller.downloadCtranslate2Weight},
 
     "/get/data/deepl_auth_key": {"status": False, "variable":controller.getDeepLAuthKey},
@@ -273,8 +279,13 @@ mapping = {
     "/set/disable/check_speaker_threshold": {"status": True, "variable":controller.setDisableCheckSpeakerThreshold},
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
+
     "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
     "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+
+    "/get/data/selected_transcription_compute_type": {"status": True, "variable":controller.getSelectedTranscriptionComputeType},
+    "/set/data/selected_transcription_compute_type": {"status": True, "variable":controller.setSelectedTranscriptionComputeType},
+
     "/run/download_whisper_weight": {"status": True, "variable":controller.downloadWhisperWeight},
 
     # VR
@@ -358,33 +369,76 @@ mapping = {
 init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
 controller.setInitMapping(init_mapping)
 
+DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
+
 class Main:
-    def __init__(self) -> None:
-        self.queue = Queue()
-        self.main_loop = True
+    def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
+        self.queue: Queue[Tuple[str, Any]] = Queue()
+        self._stop_event: Event = Event()
+        self.controller = controller_instance
+        self.mapping = mapping_data
+        self._threads: list[Thread] = []
+        self._worker_count = worker_count
+
+        # エンドポイントごとの排他制御用 Lock を作成
+        # enable/disable ペアは同じロックキーに正規化する
+        def _canonical_lock_key(endpoint: str) -> str:
+            if not isinstance(endpoint, str):
+                return str(endpoint)
+            if endpoint.startswith("/set/enable/"):
+                return "/lock/set/" + endpoint[len("/set/enable/"):]
+            if endpoint.startswith("/set/disable/"):
+                return "/lock/set/" + endpoint[len("/set/disable/"):]
+            return endpoint
+
+        # mapping に含まれるすべてのエンドポイントを走査して正規化キー集合を作る
+        lock_keys = set()
+        for key in self.mapping.keys():
+            lock_keys.add(_canonical_lock_key(key))
+
+        # 正規化キーごとに Lock を割り当てる
+        self._endpoint_locks: dict[str, Lock] = {k: Lock() for k in lock_keys}
+
+        # 正規化関数をインスタンスに保存
+        self._canonical_lock_key = _canonical_lock_key
 
     def receiver(self) -> None:
-        while self.main_loop:
-            received_data = sys.stdin.readline().strip()
-            if not received_data:
-                time.sleep(0.1)
-                continue
-            received_data = json.loads(received_data)
+        """Read lines from stdin, parse JSON and enqueue requests.
 
-            if received_data:
-                endpoint = received_data.get("endpoint", None)
-                data = received_data.get("data", None)
-                data = encodeBase64(data) if data is not None else None
-                printLog(endpoint, {"receive_data":data})
-                self.queue.put((endpoint, data))
+        Uses blocking readline but honors stop via _stop_event checked between reads.
+        """
+        while not self._stop_event.is_set():
+            try:
+                line = sys.stdin.readline()
+                if not line:
+                    # EOF reached; sleep briefly and re-check stop event
+                    time.sleep(0.1)
+                    continue
+                received_data = json.loads(line.strip())
+
+                if received_data:
+                    endpoint = received_data.get("endpoint")
+                    data = received_data.get("data")
+                    data = encodeBase64(data) if data is not None else None
+                    printLog(endpoint, {"receive_data": data})
+                    self.queue.put((endpoint, data))
+            except json.JSONDecodeError:
+                # malformed input; log and continue
+                errorLogging()
+            except Exception:
+                errorLogging()
 
     def startReceiver(self) -> None:
-        th_receiver = Thread(target=self.receiver)
+        th_receiver = Thread(target=self.receiver, name="main_receiver")
         th_receiver.daemon = True
         th_receiver.start()
+        self._threads.append(th_receiver)
 
-    def handleRequest(self, endpoint, data=None) -> tuple:
-        handler = mapping.get(endpoint)
+    def handleRequest(self, endpoint: str, data: Any = None) -> tuple:
+        result = None  # デフォルト値を設定
+        status = 500   # デフォルト値を設定
+
+        handler = self.mapping.get(endpoint)
         if handler is None:
             response = "Invalid endpoint"
             status = 404
@@ -394,269 +448,104 @@ class Main:
         else:
             try:
                 response = handler["variable"](data)
-                status = response.get("status", None)
-                result = response.get("result", None)
-            except Exception as e:
+                status = response.get("status")
+                result = response.get("result")
+                time.sleep(0.2)  # 処理の安定化のために少し待機
+            except Exception:
                 errorLogging()
-                result = str(e)
+                result = "Internal error"
+                status = 500
+
+        return result, status
+
+    def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
+        result = None
+        status = 500
+        handler = self.mapping.get(endpoint)
+        if handler is None:
+            response = "Invalid endpoint"
+            status = 404
+        else:
+            try:
+                response = handler["variable"](data)
+                status = response.get("status", 500)
+                result = response.get("result", None)
+                time.sleep(0.2)
+            except Exception:
+                errorLogging()
+                result = "Internal error"
                 status = 500
         return result, status
 
     def handler(self) -> None:
-        while True:
-            if not self.queue.empty():
-                try:
-                    endpoint, data = self.queue.get()
-                    result, status = self.handleRequest(endpoint, data)
-                except Exception as e:
-                    errorLogging()
-                    result = str(e)
-                    status = 500
+        while not self._stop_event.is_set():
+            try:
+                endpoint, data = self.queue.get(timeout=0.5)
+            except Empty:
+                continue
 
-                if status == 423:
+            # endpoint をロック用の正規化キーに変換してロックを取得
+            lock_key = self._canonical_lock_key(endpoint)
+            lock = self._endpoint_locks.get(lock_key)
+
+            if lock is not None:
+                acquired = lock.acquire(blocking=False)
+                if not acquired:
+                    # 同一機能で既に処理中 -> 少し待って再キュー
+                    time.sleep(0.05)
                     self.queue.put((endpoint, data))
-                else:
-                    printLog(endpoint, {"status": status, "send_data": result})
-                    printResponse(status, endpoint, result)
-            time.sleep(0.1)
+                    continue
+                try:
+                    result, status = self._call_handler(endpoint, data)
+                finally:
+                    lock.release()
+            else:
+                result, status = self._call_handler(endpoint, data)
+
+            if status == 423:
+                time.sleep(0.1)
+                self.queue.put((endpoint, data))
+            else:
+                printLog(endpoint, {"status": status, "send_data": result})
+                printResponse(status, endpoint, result)
 
     def startHandler(self) -> None:
-        th_handler = Thread(target=self.handler)
-        th_handler.daemon = True
-        th_handler.start()
+        for i in range(max(1, self._worker_count)):
+            th_handler = Thread(target=self.handler, name=f"main_handler_{i}")
+            th_handler.daemon = True
+            th_handler.start()
+            self._threads.append(th_handler)
 
     def start(self) -> None:
-        while self.main_loop:
-            time.sleep(1)
+        """Start receiver and handler threads."""
+        self.startReceiver()
+        self.startHandler()
 
-    def stop(self) -> None:
-        self.main_loop = False
+    def stop(self, wait: float = 2.0) -> None:
+        """Signal threads to stop and wait for them to finish.
+
+        Args:
+            wait: maximum seconds to wait for threads to join.
+        """
+        self._stop_event.set()
+        # give threads a chance to exit
+        start = time.time()
+        for th in self._threads:
+            remaining = max(0.0, wait - (time.time() - start))
+            th.join(timeout=remaining)
+
+# 外部から参照可能なインスタンスを提供
+main_instance = Main(controller_instance=controller, mapping_data=mapping)
 
 if __name__ == "__main__":
-    main = Main()
-    main.startReceiver()
-    main.startHandler()
+    main_instance.startReceiver()
+    main_instance.startHandler()
 
-    controller.setWatchdogCallback(main.stop)
-    controller.init()
+    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    main_instance.controller.init()
 
     # mappingのすべてのstatusをTrueにする
     for key in mapping.keys():
         mapping[key]["status"] = True
 
-    process = "main"
-    match process:
-        case "main":
-            main.start()
-
-        case "test":
-            endpoint = "/set/enable/translation"
-            result, status = main.handleRequest(endpoint)
-            printResponse(status, endpoint, result)
-            endpoint = "/run/send_message_box"
-            data = {"id":"123456", "message":"テスト"}
-            result, status = main.handleRequest(endpoint, data)
-            printResponse(status, endpoint, result)
-
-        case "test_all":
-            import time
-            for endpoint, value in mapping.items():
-                printLog("endpoint", endpoint)
-
-                match endpoint:
-                    case  "/run/send_message_box":
-                        # handleRequest("/set/enable/translation")
-                        # handleRequest("/set/enable/convert_message_to_romaji")
-                        data = {"id":"123456", "message":"テスト"}
-                    case "/set/data/selected_translation_engines":
-                        data = {
-                            "1":"CTranslate2",
-                            "2":"CTranslate2",
-                            "3":"CTranslate2",
-                        }
-                    case "/set/data/selected_your_languages":
-                        data = {
-                            "1":{
-                                "1":{
-                                "language": "English",
-                                "country": "Hong Kong"
-                                },
-                            },
-                            "2":{
-                                "1":{
-                                    "language":"Japanese",
-                                    "country":"Japan"
-                                },
-                            },
-                            "3":{
-                                "1":{
-                                    "language":"Japanese",
-                                    "country":"Japan"
-                                },
-                            },
-                        }
-                    case "/set/data/selected_target_languages":
-                        data ={
-                            "1":{
-                                "1": {
-                                    "language": "Japanese",
-                                    "country": "Japan",
-                                    "enabled": True,
-                                },
-                                "secondary": {
-                                    "language": "English",
-                                    "country": "United States",
-                                    "enabled": True,
-                                },
-                                "tertiary": {
-                                    "language": "Chinese Simplified",
-                                    "country": "China",
-                                    "enabled": True,
-                                }
-                            },
-                            "2":{
-                                "1":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "secondary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "tertiary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                            },
-                            "3":{
-                                "1":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "secondary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                                "tertiary":{
-                                    "language":"English",
-                                    "country":"United States",
-                                    "enabled": True,
-                                },
-                            },
-                        }
-                    case "/set/data/transparency":
-                        data = 0.5
-                    case "/set/appearance":
-                        data = "Dark"
-                    case "/set/data/ui_scaling":
-                        data = 1.5
-                    case "/set/data/appearance_theme":
-                        data = "Dark"
-                    case "/set/data/textbox_ui_scaling":
-                        data = 1.5
-                    case "/set/data/message_box_ratio":
-                        data = 0.5
-                    case "/set/data/send_message_button_type":
-                        data = "show"
-                    case "/set/data/font_family":
-                        data = "Yu Gothic UI"
-                    case "/set/data/ui_language":
-                        data = "ja"
-                    case "/set/data/ctranslate2_weight_type":
-                        data = "small"
-                    case "/set/data/deepl_auth_key":
-                        data = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:fx"
-                    case "/set/data/selected_mic_host":
-                        data = "MME"
-                    case "/set/data/selected_mic_device":
-                        data = "マイク (Realtek High Definition Audio)"
-                    case "/set/data/mic_threshold":
-                        data = 0.5
-                    case "/set/data/mic_record_timeout":
-                        data = 1
-                    case "/set/data/mic_phrase_timeout":
-                        data = 5
-                    case "/set/data/mic_max_phrases":
-                        data = 5
-                    case "/set/data/mic_word_filter":
-                        data = "test0, test1, test2"
-                    case "/set/data/selected_speaker_device":
-                        data = "スピーカー (Realtek High Definition Audio)"
-                    case "/set/data/speaker_threshold":
-                        data = 0.5
-                    case "/set/data/speaker_record_timeout":
-                        data = 5
-                    case "/set/data/speaker_phrase_timeout":
-                        data = 5
-                    case "/set/data/speaker_max_phrases":
-                        data = 5
-                    case "/set/data/whisper_weight_type":
-                        data = "base"
-                    case "/set/data/overlay_settings":
-                        data = {
-                            "opacity": 0.5,
-                            "ui_scaling": 1.5,
-                        }
-                    case "/set/data/overlay_small_log_settings":
-                        data = {
-                            "x_pos": 0,
-                            "y_pos": 0,
-                            "z_pos": 0,
-                            "x_rotation": 0,
-                            "y_rotation": 0,
-                            "z_rotation": 0,
-                            "display_duration": 5,
-                            "fadeout_duration": 0.5,
-                        }
-                    case "/set/data/send_message_format_parts":
-                        data = {
-                            "message": {
-                                "prefix": "",
-                                "suffix": ""
-                                },
-                            "between_separator": "\n",
-                            "translation": {
-                                "prefix": "(",
-                                "separator": "\\",
-                                "suffix": ")"
-                            },
-                            "translation_first": False,
-                        }
-                    case "/set/data/received_message_format_parts":
-                        data = {
-                            "message": {
-                                "prefix": "",
-                                "suffix": ""
-                                },
-                            "between_separator": "\n",
-                            "translation": {
-                                "prefix": "(",
-                                "separator": "\\",
-                                "suffix": ")"
-                            },
-                            "translation_first": True,
-                        }
-                    case "/set/data/osc_ip_address":
-                        data = "127.0.0.1"
-                    case "/set/data/osc_port":
-                        data = 8000
-                    case "/set/data/speaker_no_speech_prob":
-                        data = 0.5
-                    case "/set/data/speaker_avg_logprob":
-                        data = 0.5
-                    case "/set/data/mic_no_speech_prob":
-                        data = 0.5
-                    case "/set/data/mic_avg_logprob":
-                        data = 0.5
-                    case _:
-                        data = None
-
-                result, status = main.handleRequest(endpoint, data)
-                printResponse(status, endpoint, result)
-                time.sleep(0.5)
-    main.stop()
+    main_instance.start()

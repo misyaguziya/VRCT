@@ -1,6 +1,8 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
+from requests import get as requests_get
 from typing import Callable
+import hashlib
 import transformers
 import ctranslate2
 from huggingface_hub import hf_hub_url, list_repo_files
@@ -13,6 +15,15 @@ except Exception:
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from utils import errorLogging, getBestComputeType
+
+
+"""Utilities for downloading and verifying CTranslate2 weights and tokenizers.
+
+This module provides a small, dependency-light set of helpers used by the
+translation layer. It purposely keeps behavior resilient: network errors are
+logged (via utils.errorLogging) and the functions return/complete without
+raising, which matches the repository's defensive style.
+"""
 
 ctranslate2_weights = {
     "m2m100_418M-ct2-int8": {
@@ -84,8 +95,8 @@ def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-
     tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
     tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
     try:
-        os_makedirs(tokenizer_path, exist_ok=True)
-        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        os_makedirs(tokenizer_cache, exist_ok=True)
+        transformers.AutoTokenizer.from_pretrained(tokenizer_name, cache_dir=tokenizer_cache)
     except Exception:
         errorLogging()
         tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")

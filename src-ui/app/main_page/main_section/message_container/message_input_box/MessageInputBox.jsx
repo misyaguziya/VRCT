@@ -33,7 +33,7 @@ export const MessageInputBox = () => {
         if (currentMessageLogs.data) {
             const sentMessages = currentMessageLogs.data
                 .filter(log => log.category === "sent")
-                .map(log => log.messages.original);
+                .map(log => log.messages.original.message);
             setMessageHistory(sentMessages);
         }
     }, [currentMessageLogs.data]);

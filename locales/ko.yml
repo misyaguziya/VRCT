@@ -9,11 +9,11 @@ common:
 common_error:
     no_device_mic: "마이크 디바이스를 찾지 못했습니다."
     no_device_speaker: "스피커 디바이스를 찾지 못했습니다."
-    threshold_invalid_value:
-    failed_download_weight_ctranslate2:
-    failed_download_weight_whisper:
-    translation_limit:
-    deepl_auth_key_invalid_length:
+    threshold_invalid_value: "{{min}}부터 {{max}}까지의 숫자로 설정할 수 있습니다."
+    failed_download_weight_ctranslate2: "CTranslate2 모델 다운로드에 실패했습니다."
+    failed_download_weight_whisper: "Whisper 모델 다운로드에 실패했습니다."
+    translation_limit: "번역 엔진 사용 제한에 도달했거나 일시적으로 이용 제한이 걸렸습니다."
+    deepl_auth_key_invalid_length: "DeepL 인증 키의 문자 수가 잘못되었습니다."
     deepl_auth_key_failed_authentication: "인증키가 잘못되었거나 API 사용 제한이 상한에 도달했습니다."
 
     invalid_value_mic_record_timeout: "0 이상에서 '{{mic_phrase_timeout_label}}'보다 클 수 없습니다."
@@ -23,6 +23,9 @@ common_error:
     invalid_value_speaker_record_timeout: "0 이상에서 '{{speaker_phrase_timeout_label}}'보다 클 수 없습니다."
     invalid_value_speaker_phrase_timeout: "0 이상에서 '{{speaker_record_timeout_label}}'보다 작을 수 없습니다."
     invalid_value_speaker_max_phrase: "0 이상의 숫자만 설정할 수 있습니다."
+
+common_warning:
+    unable_to_use_osc_query: "OSC IP 주소 설정으로 인해 OSC 데이터 수신이 불가능하므로, 아래 기능이 자동으로 비활성화되었습니다."
 
 main_page:
     translation: "번역"
@@ -39,7 +42,7 @@ main_page:
     translator_label_default: "기본값"
 
     translator_selector:
-        is_selected_same_language:
+        is_selected_same_language: "'{{your_language}}'와 '{{target_language}}'에 동일한 언어가 선택되어 있으므로, 「{{ctranslate2}}」만 사용할 수 있습니다."
 
     message_log:
         all: "전체"
@@ -47,7 +50,7 @@ main_page:
         received: "수신"
         system: "시스템"
 
-        resend_button_on_hover_desc:
+        resend_button_on_hover_desc: "길게 눌러서 보내기"
 
     state_text_enabled: "Enabled"
     state_text_disabled: "Disabled"
@@ -60,32 +63,42 @@ main_page:
     updating: "업데이트 중..."
 
 update_modal:
-    cpu_desc:
-    cuda_desc:
-    cuda_compare_cpu_desc:
-    cuda_disk_space_desc:
-    close_modal:
-    download_latest_and_restart:
-    is_latest_version_already:
-    is_current_compute_device:
+    cpu_desc: "처리 장치로 CPU만을 사용합니다."
+    cuda_desc: "처리 장치로 CPU와 NVIDIA GPU를 선택할 수 있습니다."
+    cuda_compare_cpu_desc: "GPU 선택 시, CPU에 비해 처리가 빠릅니다."
+    cuda_disk_space_desc: "약 {{size}}의 디스크 용량이 필요합니다."
+    close_modal: "닫기"
+    download_latest_and_restart: "최신 버전이 다운로드되면 앱이 자동으로 재시작됩니다."
+    is_latest_version_already: "이미 최신 버전을 사용 중입니다."
+    is_current_compute_device: "현재 사용 중인 버전"
 
 config_page:
-    version: "버전 {{version}}"
-    model_download_button_label:
+    common:
+        version: "버전 {{version}}"
+        model_download_button_label: "다운로드"
+        compute_device:
+            desc:
+            label_device:
+            label_type:
+            type_template_auto:
+            type_template_low:
+            type_template_high:
+
     side_menu_labels:
-        device:
+        device: "장치"
         appearance: "모양"
         translation: "번역"
         transcription: "음성인식"
         others: "기타"
-        hotkeys:
+        hotkeys: "단축키"
+        plugins: "플러그인"
         advanced_settings: "고급 설정"
 
     device:
-        check_volume:
-        label_auto_select:
+        check_volume: "음량 확인"
+        label_auto_select: "자동 선택"
         label_host: "호스트/드라이버"
-        label_device:
+        label_device: "장치"
         mic_host_device:
             label: "마이크 장치"
         mic_dynamic_energy_threshold:
@@ -115,6 +128,9 @@ config_page:
             hide: "숨김 (Enter 키를 사용하여 전송)"
             show: "표시"
             show_and_disable_enter_key: "표시 (Enter 키 전송 비활성화)"
+        show_resend_button:
+            label: "재전송 버튼 표시"
+            desc: "보낸 메시지 로그에 마우스를 올리면 재전송 버튼이 표시됩니다. 클릭하면 편집 모드로 전환되며, 길게 누르면 재전송됩니다."
         font_family:
             label: "폰트"
         ui_language:
@@ -126,20 +142,20 @@ config_page:
             desc: "오프라인 번역 시의 번역 모델을 변경합니다."
             small: "일반 모델 ({{capacity}})"
             large: "정밀 모델 ({{capacity}})"
-        ctranslate2_compute_device:
-            label:
+        translation_compute_device:
+            label: "AI 번역 처리 장치"
         deepl_auth_key:
             label: "DeepL 인증키"
             desc: "사용시 메인화면에 있는 {{translator}}를 DeepL_API로 변경해 주세요.\n지원하지 않는 언어도 있습니다."
             open_auth_key_webpage: "DeepL 계정 페이지 열기"
-            save:
-            edit:
+            save: "저장"
+            edit: "편집"
             auth_key_success: "인증키 갱신이 완료되었습니다."
 
     transcription:
         section_label_mic: "마이크"
         section_label_speaker: "스피커"
-        section_label_transcription_engines:
+        section_label_transcription_engines: "음성 인식 엔진"
         mic_record_timeout:
             label: "최대 무음 시간"
             desc: "무음을 감지하고 설정된 시간(초)만큼의 시간이 지나면 음성 입력이 종료된 것으로 판단합니다."
@@ -164,46 +180,47 @@ config_page:
             label: "최대 입력 절(phrases) 수"
             desc: "식된 단어 수의 하한값으로, 이 수치를 초과하는 경우에만 결과를 로그에 표시합니다."
         select_transcription_engine:
-            label:
+            label: "음성 인식에 사용할 엔진"
         whisper_weight_type:
             label: "Whisper 모델 타입"
-            desc:
+            desc: "용량이 큰 모델일수록 정확도는 높지만, 그만큼 CPU나 GPU를 많이 차지합니다. * 특히 medium보다 용량이 큰 모델은 CPU/GPU 성능에 따라 사용 자체가 어려울 수 있습니다."
             model_template: "{{model_name}} 모델 ({{capacity}})"
             recommended_model_template: "{{model_name}} 모델 ({{capacity}}) (권장)"
-        whisper_compute_device:
+        transcription_compute_device:
             label:
 
     vr:
-        single_line:
-        multi_lines:
-        overlay_enable:
-        restore_default_settings:
-        position:
-        rotation:
-        x_position:
-        y_position:
-        z_position:
-        x_rotation:
-        y_rotation:
-        z_rotation:
+        single_line: "한 줄"
+        multi_lines: "여러 줄"
+        overlay_enable: "활성화"
+        restore_default_settings: "초기값으로 되돌리기"
+        position: "위치"
+        rotation: "회전"
+        x_position: "X축 (좌우)"
+        y_position: "Y축 (상하)"
+        z_position: "Z축 (앞뒤)"
+        x_rotation: "X축 회전"
+        y_rotation: "Y축 회전"
+        z_rotation: "Z축 회전"
         sample_text_button:
-            start:
-            stop:
-            sample_text:
-        opacity:
-        ui_scaling:
-        display_duration:
-        fadeout_duration:
-        common_settings:
-        tracker:
-        hmd:
-        left_hand:
-        right_hand:
+            start: "샘플 텍스트를\n오버레이에 전송"
+            stop: "전송 중지"
+            sample_text: "샘플 텍스트"
+        opacity: "투명도"
+        ui_scaling: "UI 크기 조정"
+        display_duration: "표시 시간"
+        fadeout_duration: "페이드 아웃 시간"
+        common_settings: "공통 설정"
+        tracker: "표시할 트래커의 위치"
+        hmd: "HMD"
+        left_hand: "왼손"
+        right_hand: "오른손"
         overlay_show_only_translated_messages:
-            label:
+            label: "번역된 메시지만 표시"
 
     others:
-        section_label_sounds:
+        section_label_sounds: "사운드"
+        section_label_message_formats: "메시지 형식"
         auto_clear_the_message_box:
             label: "챗박스 자동 삭제"
         send_only_translated_messages:
@@ -212,27 +229,66 @@ config_page:
             label: "대화 로그 자동 저장"
             desc: "logs 폴더에 텍스트 파일로 로그가 저장됩니다."
         vrc_mic_mute_sync:
-            label:
-            desc:
+            label: "VRC 마이크 음소거 동기화"
+            desc: "VRChat의 마이크가 음소거 상태인 동안에는 메시지를 VRChat에 전송하지 않습니다. * 약간의 지연이 발생할 수 있습니다. 또한 눌러서 말하기(Push-To-Talk) 기능은 지원되지 않습니다."
         send_message_to_vrc:
             label: "VRChat에 메시지 전송"
             desc: "VRChat에 메시지를 보내지 않고 사용할 수 있는 방법이 있지만 지원되지 않습니다. VRChat에 메시지를 보내려면 이 기능을 활성화하세요."
         notification_vrc_sfx:
-            label:
-            desc:
+            label: "채팅 전송 시 채팅창 알림음 재생"
+            desc: "이 기능을 비활성화하면 다른 사람이 들을 수 있는 채팅창 알림음을 울리지 않고 조용히 전송합니다."
         send_received_message_to_vrc:
+            label: "수신한 메시지를 VRChat에 전송"
+            desc: "스피커에서 인식된 내용을 텍스트로 변환한 메시지가 VRChat에 전송됩니다."
+        message_format_common:
+            example_view:
+                title: "미리 보기"
+                original_translated: "원문 + 번역문"
+                original_translated_multi: "원문 + 번역문 (다국어)"
+                translated_only_multi: "번역문만 (다국어)"
+                translated_only: "번역문만"
+                original_only: "원문만"
+            settings:
+                title: "설정"
+                original: "원문"
+                translated: "번역문"
+                for_multi_translation: "다국어 번역용"
+        send_message_format:
+            label: "메시지 형식 (송신)"
+            desc: "VRChat에서 상대방에게 실제로 보이는 형식을 변경할 수 있습니다."
+        received_message_format:
+            label: "메시지 형식 (Speaker2Chatbox)"
+            desc: "현재로서는 Speaker2Chatbox로 전송할 때의 표시용으로 사용됩니다."
+        common_convert_message_hiragana_romaji:
+            desc_1:
+            desc_2:
+        convert_message_to_romaji:
             label:
             desc:
+        convert_message_to_hiragana:
+            label:
 
     hotkeys:
         toggle_vrct_visibility:
-            label:
+            label: "VRCT 최소화/활성화 전환"
         toggle_translation:
-            label:
+            label: "'{{translation}}' 켜기/끄기 전환"
         toggle_transcription_send:
-            label:
+            label: "'{{transcription_send}}' 켜기/끄기 전환"
         toggle_transcription_receive:
-            label:
+            label: "'{{transcription_receive}}' 켜기/끄기 전환"
+
+    plugins:
+        downloaded_version: "다운로드된 버전: {{downloaded_version}}"
+        latest_version: "최신 버전: {{latest_version}}"
+        available_after_updating: "최신 버전으로 업데이트 후 이용 가능"
+        unavailable_downloaded: "현재 사용 중인 VRCT 버전과의 호환성 문제로 인해 이용 불가"
+        no_latest_info: "최신 정보를 가져올 수 없습니다"
+        using_latest_version: "최신 버전을 사용 중"
+        available_latest_version: "최신 버전을 이용 가능"
+        unavailable_latest_version: "최신 버전은 현재 이용 불가"
+        available_in_latest_vrct_version: "VRCT 최신 버전에서 이용 가능"
+        unavailable_not_downloaded: "현재 이용 불가"
 
     advanced_settings:
         osc_ip_address:
@@ -242,4 +298,28 @@ config_page:
         open_config_filepath:
             label: "설정 파일 열기"
         switch_compute_device:
-            label:
+            label: "VRCT CPU/GPU 버전 전환"
+        enable_websocket:
+            label: "WebSocket 서버 활성화"
+        websocket_host:
+            label: "WebSocket 호스트"
+        websocket_port:
+            label: "WebSocket 포트"
+
+    notifications:
+        save_success: "설정을 저장했습니다."
+
+plugin_notifications:
+    downloading: "플러그인을 다운로드 중입니다."
+    downloaded_success: "플러그인 다운로드가 완료되었습니다."
+    downloaded_error: "플러그인 다운로드에 실패했습니다."
+
+    updating: "플러그인을 업데이트 중입니다."
+    updated_success: "플러그인 업데이트가 완료되었습니다."
+    updated_error: "플러그인 업데이트에 실패했습니다."
+
+    disabled_out_of_support: "현재 버전과 호환되지 않습니다. 플러그인을 비활성화했습니다."
+    disabled_due_to_an_error: "플러그인 실행 중 오류를 감지했습니다. 플러그인 개발자에게 보고해 주세요."
+
+    is_enabled: "플러그인을 활성화했습니다."
+    is_disabled: "플러그인을 비활성화했습니다."

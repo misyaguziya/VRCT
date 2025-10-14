@@ -1,4 +1,4 @@
-from typing import Callable, Any
+from typing import Callable, Any, List, Optional
 from time import sleep
 from subprocess import Popen
 from threading import Thread
@@ -10,10 +10,33 @@ from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValid
 
 class Controller:
     def __init__(self) -> None:
-        self.init_mapping = {}
-        self.run_mapping = {}
-        self.run = None
-        self.device_access_status = True
+        # typed attributes to satisfy static type checkers
+        self.init_mapping: dict = {}
+        self.run_mapping: dict = {}
+        # initialize with a no-op callable so callers can safely call self.run
+        def _noop_run(status: int, endpoint: str, payload: Any = None) -> None:
+            return None
+        self.run: Callable[[int, str, Any], None] = _noop_run
+        self.device_access_status: bool = True
+        # Ensure model is initialized at controller startup so existing
+        # attribute-based checks (e.g. model.overlay.initialized) continue to work.
+        try:
+            model.init()
+        except Exception:
+            # In test or headless environments initialization may fail; log and continue.
+            errorLogging()
+
+    def _is_overlay_available(self) -> bool:
+        """Safe check whether overlay is present and initialized.
+
+        This avoids AttributeError when `model` was not fully initialized.
+        """
+        try:
+            overlay = getattr(model, "overlay", None)
+            return overlay is not None and getattr(overlay, "initialized", False)
+        except Exception:
+            errorLogging()
+            return False
 
     def setInitMapping(self, init_mapping:dict) -> None:
         self.init_mapping = init_mapping
@@ -86,27 +109,31 @@ class Controller:
             settings,
         )
 
-    def restartAccessDevices(self) -> None:
+    def restartAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             self.startThreadingTranscriptionSendMessage()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.startCheckMicEnergy(
                 self.progressBarMicEnergy,
             )
+
+    def restartAccessSpeakerDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.startThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.startCheckSpeakerEnergy(
                 self.progressBarSpeakerEnergy,
             )
 
-    def stopAccessDevices(self) -> None:
+    def stopAccessMicDevices(self) -> None:
         if config.ENABLE_TRANSCRIPTION_SEND is True:
             self.stopThreadingTranscriptionSendMessage()
-        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.stopThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             model.stopCheckMicEnergy()
+
+    def stopAccessSpeakerDevices(self) -> None:
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.stopCheckSpeakerEnergy()
 
@@ -246,7 +273,8 @@ class Controller:
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message: List[Any] = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -298,9 +326,30 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                            )
+                        )
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             if config.ENABLE_TRANSCRIPTION_SEND is True:
                 if config.SEND_MESSAGE_TO_VRC is True:
@@ -317,12 +366,19 @@ class Controller:
                     200,
                     self.run_mapping["transcription_mic"],
                     {
-                        "message":message,
-                        "translation":translation,
-                        "transliteration":transliteration
+                        "original": {
+                            "message": message,
+                            "transliteration": transliteration_message
+                        },
+                        "translations": [
+                            {
+                                "message": translation_message,
+                                "transliteration": transliteration
+                            } for translation_message, transliteration in zip(translation, transliteration_translation)
+                        ]
                     })
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
@@ -351,7 +407,7 @@ class Controller:
                             "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -373,7 +429,8 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message: List[Any] = []
+            transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
                     200,
@@ -425,12 +482,31 @@ class Controller:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(message)
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if language == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+
+                if (config.ENABLE_TRANSLATION is True and
+                    config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese"
+                    ):
+                    transliteration_translation.append(
+                        model.convertMessageToTransliteration(
+                            translation[0],
+                            hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                            romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                        )
+                    )
+                else:
+                    transliteration_translation.append([])
+            else:
+                transliteration_translation = [[]]
 
             if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-                if config.OVERLAY_SMALL_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_SMALL_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageSmallLog(
@@ -449,7 +525,7 @@ class Controller:
                         )
                         model.updateOverlaySmallLog(overlay_image)
 
-                if config.OVERLAY_LARGE_LOG is True and model.overlay.initialized is True:
+                if config.OVERLAY_LARGE_LOG is True and self._is_overlay_available():
                     if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
                         if len(translation) > 0:
                             overlay_image = model.createOverlayImageLargeLog(
@@ -484,9 +560,16 @@ class Controller:
                     200,
                     self.run_mapping["transcription_speaker"],
                     {
-                        "message":message,
-                        "translation":translation,
-                        "transliteration":transliteration,
+                        "original": {
+                            "message": message,
+                            "transliteration": transliteration_message
+                        },
+                        "translations": [
+                            {
+                                "message": translation_message,
+                                "transliteration": transliteration
+                            } for translation_message, transliteration in zip(translation, transliteration_translation)
+                        ]
                     })
 
                 if model.checkWebSocketServerAlive() is True:
@@ -497,7 +580,7 @@ class Controller:
                             "dst_languages":config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
                             "message":message,
                             "translation":translation,
-                            "transliteration":transliteration
+                            "transliteration":transliteration_translation
                         }
                     )
 
@@ -505,12 +588,13 @@ class Controller:
                     translation_text = f" ({'/'.join(translation)})" if translation else ""
                     model.logger.info(f"[RECEIVED] {message}{translation_text}")
 
-    def chatMessage(self, data) -> None:
+    def chatMessage(self, data) -> dict:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
             translation = []
-            transliteration = []
+            transliteration_message: List[Any] = []
+            transliteration_translation = []
             if config.ENABLE_TRANSLATION is False:
                 pass
             else:
@@ -562,18 +646,45 @@ class Controller:
                                 "result":
                                 {
                                     "id":id,
-                                    "message":message,
-                                    "translation":[],
-                                    "transliteration":[],
+                                    "original": {
+                                        "message":message,
+                                        "transliteration":[]
                                     },
-                                }
+                                    "translations": [
+                                        {
+                                            "message": "",
+                                            "transliteration": []
+                                        } for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
+                                    ]
+                                },
+                            }
                     else:
                         # その他のエラーは通常通り処理
                         raise
 
-                if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
-                    if config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
-                        transliteration = model.convertMessageToTransliteration(translation[0])
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is True or config.CONVERT_MESSAGE_TO_ROMAJI is True:
+                if config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"] == "Japanese":
+                    transliteration_message = model.convertMessageToTransliteration(
+                        message,
+                        hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                        romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                    )
+                for i, no in enumerate(config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST):
+                    if (config.ENABLE_TRANSLATION is True and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["language"] == "Japanese" and
+                        config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO][no]["enable"] is True
+                        ):
+                        transliteration_translation.append(
+                            model.convertMessageToTransliteration(
+                                translation[i],
+                                hiragana=config.CONVERT_MESSAGE_TO_HIRAGANA,
+                                romaji=config.CONVERT_MESSAGE_TO_ROMAJI
+                            )
+                        )
+                    else:
+                        transliteration_translation.append([])
+            else:
+                transliteration_translation = [[] for _ in config.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST]
 
             # send OSC message
             if config.SEND_MESSAGE_TO_VRC is True:
@@ -615,7 +726,7 @@ class Controller:
                         "dst_languages":config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
                         "message":message,
                         "translation":translation,
-                        "transliteration":transliteration
+                        "transliteration":transliteration_translation
                     }
                 )
 
@@ -623,14 +734,21 @@ class Controller:
                 translation_text = f" ({'/'.join(translation)})" if translation else ""
                 model.logger.info(f"[CHAT] {message}{translation_text}")
 
-        return {"status":200,
+        return {
+                "status":200,
                 "result":{
                     "id":id,
-                    "message":message,
-                    "translation":translation,
-                    "transliteration":transliteration,
+                    "original": {
+                        "message":message,
+                        "transliteration":transliteration_message
                     },
-                }
+                    "translations": [
+                        {
+                            "message": translation_message,
+                            "transliteration": transliteration
+                        } for translation_message, transliteration in zip(translation, transliteration_translation)
+                    ]
+                }}
 
     @staticmethod
     def getVersion(*args, **kwargs) -> dict:
@@ -643,6 +761,7 @@ class Controller:
             self.run_mapping["software_update_info"],
             software_update_info,
         )
+        return {"status":200, "result": software_update_info}
 
     @staticmethod
     def getComputeMode(*args, **kwargs) -> dict:
@@ -656,24 +775,12 @@ class Controller:
     def getSelectedTranslationComputeDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
-    @staticmethod
-    def setSelectedTranslationComputeDevice(device:str, *args, **kwargs) -> dict:
+    def setSelectedTranslationComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranslationComputeDevice", device)
-        pre_device = config.SELECTED_TRANSLATION_COMPUTE_DEVICE
         config.SELECTED_TRANSLATION_COMPUTE_DEVICE = device
-        try:
-            model.changeTranslatorCTranslate2Model()
-        except Exception as e:
-            # VRAM不足エラーの検出（デバイス切り替え時）
-            is_vram_error, error_message = model.detectVRAMError(e)
-            if is_vram_error:
-                # 前のデバイス設定に戻す
-                printLog("VRAM error detected, reverting device setting")
-                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = pre_device
-                model.changeTranslatorCTranslate2Model()
-            else:
-                # その他のエラーは通常通り処理
-                errorLogging()
+        config.SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
+        self.run(200, self.run_mapping["selected_translation_compute_type"], config.SELECTED_TRANSLATION_COMPUTE_TYPE)
+        model.setChangedTranslatorParameters(True)
         return {"status":200,"result":config.SELECTED_TRANSLATION_COMPUTE_DEVICE}
 
     @staticmethod
@@ -684,10 +791,11 @@ class Controller:
     def getSelectedTranscriptionComputeDevice(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
-    @staticmethod
-    def setSelectedTranscriptionComputeDevice(device:str, *args, **kwargs) -> dict:
+    def setSelectedTranscriptionComputeDevice(self, device:str, *args, **kwargs) -> dict:
         printLog("setSelectedTranscriptionComputeDevice", device)
         config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = device
+        config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
+        self.run(200, self.run_mapping["selected_transcription_compute_type"], config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE)
         return {"status":200,"result":config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE}
 
     @staticmethod
@@ -702,26 +810,61 @@ class Controller:
     # def getMaxSpeakerThreshold(*args, **kwargs) -> dict:
     #     return {"status":200, "result":config.MAX_SPEAKER_THRESHOLD}
 
-    @staticmethod
-    def setEnableTranslation(*args, **kwargs) -> dict:
-        if model.isLoadedCTranslate2Model() is False:
-            model.changeTranslatorCTranslate2Model()
-        config.ENABLE_TRANSLATION = True
+    def setEnableTranslation(self, *args, **kwargs) -> dict:
+        if config.ENABLE_TRANSLATION is False:
+            if model.isLoadedCTranslate2Model() is False or model.isChangedTranslatorParameters() is True:
+                try:
+                    model.changeTranslatorCTranslate2Model()
+                    model.setChangedTranslatorParameters(False)
+                    config.ENABLE_TRANSLATION = True
+                except Exception as e:
+                    # VRAM不足エラーの検出（デバイス切り替え時）
+                    is_vram_error, error_message = model.detectVRAMError(e)
+                    if is_vram_error:
+                        # Defaultのデバイス設定に戻す
+                        printLog("VRAM error detected, reverting device setting")
+                        self.run(
+                            400,
+                            self.run_mapping["error_translation_enable_vram_overflow"],
+                            {
+                                "message":"VRAM out of memory enabling translation",
+                                "data": error_message
+                            },
+                        )
+                        self.setDisableTranslation()
+                        self.run(
+                            400,
+                            self.run_mapping["enable_translation"],
+                            {
+                                "message":"Translation disabled due to VRAM overflow",
+                                "data": False
+                            },
+                        )
+                        model.changeTranslatorCTranslate2Model()
+                        model.setChangedTranslatorParameters(False)
+                    else:
+                        # その他のエラーは通常通り処理
+                        errorLogging()
+            else:
+                config.ENABLE_TRANSLATION = True
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
     def setDisableTranslation(*args, **kwargs) -> dict:
-        config.ENABLE_TRANSLATION = False
+        if config.ENABLE_TRANSLATION is True:
+            config.ENABLE_TRANSLATION = False
         return {"status":200, "result":config.ENABLE_TRANSLATION}
 
     @staticmethod
     def setEnableForeground(*args, **kwargs) -> dict:
-        config.ENABLE_FOREGROUND = True
+        if config.ENABLE_FOREGROUND is False:
+            config.ENABLE_FOREGROUND = True
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
     @staticmethod
     def setDisableForeground(*args, **kwargs) -> dict:
-        config.ENABLE_FOREGROUND = False
+        if config.ENABLE_FOREGROUND is True:
+            config.ENABLE_FOREGROUND = False
         return {"status":200, "result":config.ENABLE_FOREGROUND}
 
     @staticmethod
@@ -815,12 +958,18 @@ class Controller:
 
     @staticmethod
     def setEnableConvertMessageToRomaji(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_ROMAJI = True
+        if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+                model.startTransliteration()
+            config.CONVERT_MESSAGE_TO_ROMAJI = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
     def setDisableConvertMessageToRomaji(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_ROMAJI = False
+        if config.CONVERT_MESSAGE_TO_ROMAJI is True:
+            if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+                model.stopTransliteration()
+            config.CONVERT_MESSAGE_TO_ROMAJI = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_ROMAJI}
 
     @staticmethod
@@ -829,12 +978,18 @@ class Controller:
 
     @staticmethod
     def setEnableConvertMessageToHiragana(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_HIRAGANA = True
+        if config.CONVERT_MESSAGE_TO_HIRAGANA is False:
+            if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+                model.startTransliteration()
+            config.CONVERT_MESSAGE_TO_HIRAGANA = True
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
     def setDisableConvertMessageToHiragana(*args, **kwargs) -> dict:
-        config.CONVERT_MESSAGE_TO_HIRAGANA = False
+        if config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+            if config.CONVERT_MESSAGE_TO_ROMAJI is False:
+                model.stopTransliteration()
+            config.CONVERT_MESSAGE_TO_HIRAGANA = False
         return {"status":200, "result":config.CONVERT_MESSAGE_TO_HIRAGANA}
 
     @staticmethod
@@ -843,12 +998,14 @@ class Controller:
 
     @staticmethod
     def setEnableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
+        if config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE is False:
+            config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = True
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
     def setDisableMainWindowSidebarCompactMode(*args, **kwargs) -> dict:
-        config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
+        if config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE is True:
+            config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE = False
         return {"status":200, "result":config.MAIN_WINDOW_SIDEBAR_COMPACT_MODE}
 
     @staticmethod
@@ -902,12 +1059,14 @@ class Controller:
 
     @staticmethod
     def setEnableShowResendButton(*args, **kwargs) -> dict:
-        config.SHOW_RESEND_BUTTON = True
+        if config.SHOW_RESEND_BUTTON is False:
+            config.SHOW_RESEND_BUTTON = True
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
     def setDisableShowResendButton(*args, **kwargs) -> dict:
-        config.SHOW_RESEND_BUTTON = False
+        if config.SHOW_RESEND_BUTTON is True:
+            config.SHOW_RESEND_BUTTON = False
         return {"status":200, "result":config.SHOW_RESEND_BUTTON}
 
     @staticmethod
@@ -941,20 +1100,29 @@ class Controller:
     def getAutoMicSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
-    def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
-        config.AUTO_MIC_SELECT = True
-        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
+    def applyAutoMicSelect(self) -> None:
+        device_manager.setCallbackProcessBeforeUpdateMicDevices(self.stopAccessMicDevices)
         device_manager.setCallbackDefaultMicDevice(self.updateSelectedMicDevice)
-        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+        device_manager.setCallbackProcessAfterUpdateMicDevices(self.restartAccessMicDevices)
         device_manager.forceUpdateAndSetMicDevices()
+        device_manager.startMonitoring()
+
+    def setEnableAutoMicSelect(self, *args, **kwargs) -> dict:
+        if config.AUTO_MIC_SELECT is False:
+            self.applyAutoMicSelect()
+            config.AUTO_MIC_SELECT = True
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
     def setDisableAutoMicSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackProcessBeforeUpdateDevices()
-        device_manager.clearCallbackDefaultMicDevice()
-        device_manager.clearCallbackProcessAfterUpdateDevices()
-        config.AUTO_MIC_SELECT = False
+        if config.AUTO_SPEAKER_SELECT is False:
+            device_manager.stopMonitoring()
+
+        if config.AUTO_MIC_SELECT is True:
+            device_manager.clearCallbackProcessBeforeUpdateMicDevices()
+            device_manager.clearCallbackDefaultMicDevice()
+            device_manager.clearCallbackProcessAfterUpdateMicDevices()
+            config.AUTO_MIC_SELECT = False
         return {"status":200, "result":config.AUTO_MIC_SELECT}
 
     @staticmethod
@@ -999,7 +1167,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1017,12 +1184,14 @@ class Controller:
 
     @staticmethod
     def setEnableMicAutomaticThreshold(*args, **kwargs) -> dict:
-        config.MIC_AUTOMATIC_THRESHOLD = True
+        if config.MIC_AUTOMATIC_THRESHOLD is False:
+            config.MIC_AUTOMATIC_THRESHOLD = True
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setDisableMicAutomaticThreshold(*args, **kwargs) -> dict:
-        config.MIC_AUTOMATIC_THRESHOLD = False
+        if config.MIC_AUTOMATIC_THRESHOLD is True:
+            config.MIC_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.MIC_AUTOMATIC_THRESHOLD}
 
     @staticmethod
@@ -1039,7 +1208,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1064,7 +1232,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1089,7 +1256,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1134,21 +1300,29 @@ class Controller:
     def getAutoSpeakerSelect(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
-    def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
-        config.AUTO_SPEAKER_SELECT = True
-        device_manager.setCallbackProcessBeforeUpdateDevices(self.stopAccessDevices)
+    def applyAutoSpeakerSelect(self) -> None:
+        device_manager.setCallbackProcessBeforeUpdateSpeakerDevices(self.stopAccessSpeakerDevices)
         device_manager.setCallbackDefaultSpeakerDevice(self.updateSelectedSpeakerDevice)
-        device_manager.setCallbackProcessAfterUpdateDevices(self.restartAccessDevices)
+        device_manager.setCallbackProcessAfterUpdateSpeakerDevices(self.restartAccessSpeakerDevices)
         device_manager.forceUpdateAndSetSpeakerDevices()
+        device_manager.startMonitoring()
 
+    def setEnableAutoSpeakerSelect(self, *args, **kwargs) -> dict:
+        if config.AUTO_SPEAKER_SELECT is False:
+            self.applyAutoSpeakerSelect()
+            config.AUTO_SPEAKER_SELECT = True
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
     def setDisableAutoSpeakerSelect(*args, **kwargs) -> dict:
-        device_manager.clearCallbackProcessBeforeUpdateDevices()
-        device_manager.clearCallbackDefaultSpeakerDevice()
-        device_manager.clearCallbackProcessAfterUpdateDevices()
-        config.AUTO_SPEAKER_SELECT = False
+        if config.AUTO_MIC_SELECT is False:
+            device_manager.stopMonitoring()
+
+        if config.AUTO_SPEAKER_SELECT is True:
+            device_manager.clearCallbackProcessBeforeUpdateSpeakerDevices()
+            device_manager.clearCallbackDefaultSpeakerDevice()
+            device_manager.clearCallbackProcessAfterUpdateSpeakerDevices()
+            config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
 
     @staticmethod
@@ -1176,7 +1350,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1194,12 +1367,14 @@ class Controller:
 
     @staticmethod
     def setEnableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        config.SPEAKER_AUTOMATIC_THRESHOLD = True
+        if config.SPEAKER_AUTOMATIC_THRESHOLD is False:
+            config.SPEAKER_AUTOMATIC_THRESHOLD = True
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
     def setDisableSpeakerAutomaticThreshold(*args, **kwargs) -> dict:
-        config.SPEAKER_AUTOMATIC_THRESHOLD = False
+        if config.SPEAKER_AUTOMATIC_THRESHOLD is True:
+            config.SPEAKER_AUTOMATIC_THRESHOLD = False
         return {"status":200, "result":config.SPEAKER_AUTOMATIC_THRESHOLD}
 
     @staticmethod
@@ -1215,7 +1390,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1240,7 +1414,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1266,7 +1439,6 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            errorLogging()
             response = {
                 "status":400,
                 "result":{
@@ -1368,12 +1540,14 @@ class Controller:
 
     @staticmethod
     def setEnableNotificationVrcSfx(*args, **kwargs) -> dict:
-        config.NOTIFICATION_VRC_SFX = True
+        if config.NOTIFICATION_VRC_SFX is False:
+            config.NOTIFICATION_VRC_SFX = True
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
     def setDisableNotificationVrcSfx(*args, **kwargs) -> dict:
-        config.NOTIFICATION_VRC_SFX = False
+        if config.NOTIFICATION_VRC_SFX is True:
+            config.NOTIFICATION_VRC_SFX = False
         return {"status":200, "result":config.NOTIFICATION_VRC_SFX}
 
     @staticmethod
@@ -1606,14 +1780,18 @@ class Controller:
     @staticmethod
     def setCtranslate2WeightType(data, *args, **kwargs) -> dict:
         config.CTRANSLATE2_WEIGHT_TYPE = str(data)
-        if model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE):
-            def callback():
-                model.changeTranslatorCTranslate2Model()
-            th_callback = Thread(target=callback)
-            th_callback.daemon = True
-            th_callback.start()
-            th_callback.join()
+        model.setChangedTranslatorParameters(True)
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
+
+    @staticmethod
+    def getSelectedTranslationComputeType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
+
+    @staticmethod
+    def setSelectedTranslationComputeType(data, *args, **kwargs) -> dict:
+        config.SELECTED_TRANSLATION_COMPUTE_TYPE = str(data)
+        model.setChangedTranslatorParameters(True)
+        return {"status":200, "result":config.SELECTED_TRANSLATION_COMPUTE_TYPE}
 
     @staticmethod
     def getWhisperWeightType(*args, **kwargs) -> dict:
@@ -1623,6 +1801,15 @@ class Controller:
     def setWhisperWeightType(data, *args, **kwargs) -> dict:
         config.WHISPER_WEIGHT_TYPE = str(data)
         return {"status":200, "result": config.WHISPER_WEIGHT_TYPE}
+
+    @staticmethod
+    def getSelectedTranscriptionComputeType(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
+
+    @staticmethod
+    def setSelectedTranscriptionComputeType(data, *args, **kwargs) -> dict:
+        config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = str(data)
+        return {"status":200, "result":config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE}
 
     @staticmethod
     def getSendMessageFormatParts(*args, **kwargs) -> dict:
@@ -1648,12 +1835,14 @@ class Controller:
 
     @staticmethod
     def setEnableAutoClearMessageBox(*args, **kwargs) -> dict:
-        config.AUTO_CLEAR_MESSAGE_BOX = True
+        if config.AUTO_CLEAR_MESSAGE_BOX is False:
+            config.AUTO_CLEAR_MESSAGE_BOX = True
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
     def setDisableAutoClearMessageBox(*args, **kwargs) -> dict:
-        config.AUTO_CLEAR_MESSAGE_BOX = False
+        if config.AUTO_CLEAR_MESSAGE_BOX is True:
+            config.AUTO_CLEAR_MESSAGE_BOX = False
         return {"status":200, "result":config.AUTO_CLEAR_MESSAGE_BOX}
 
     @staticmethod
@@ -1662,12 +1851,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.SEND_ONLY_TRANSLATED_MESSAGES = True
+        if config.SEND_ONLY_TRANSLATED_MESSAGES is False:
+            config.SEND_ONLY_TRANSLATED_MESSAGES = True
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setDisableSendOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.SEND_ONLY_TRANSLATED_MESSAGES = False
+        if config.SEND_ONLY_TRANSLATED_MESSAGES is True:
+            config.SEND_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.SEND_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
@@ -1676,17 +1867,19 @@ class Controller:
 
     @staticmethod
     def setEnableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = True
-        if config.OVERLAY_LARGE_LOG is False:
-            model.startOverlay()
+        if config.OVERLAY_SMALL_LOG is False:
+            if config.OVERLAY_LARGE_LOG is False:
+                model.startOverlay()
+            config.OVERLAY_SMALL_LOG = True
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
     def setDisableOverlaySmallLog(*args, **kwargs) -> dict:
-        config.OVERLAY_SMALL_LOG = False
-        model.clearOverlayImageSmallLog()
-        if config.OVERLAY_LARGE_LOG is False:
-            model.shutdownOverlay()
+        if config.OVERLAY_SMALL_LOG is True:
+            model.clearOverlayImageSmallLog()
+            if config.OVERLAY_LARGE_LOG is False:
+                model.shutdownOverlay()
+            config.OVERLAY_SMALL_LOG = False
         return {"status":200, "result":config.OVERLAY_SMALL_LOG}
 
     @staticmethod
@@ -1705,17 +1898,19 @@ class Controller:
 
     @staticmethod
     def setEnableOverlayLargeLog(*args, **kwargs) -> dict:
-        config.OVERLAY_LARGE_LOG = True
-        if config.OVERLAY_SMALL_LOG is False:
-            model.startOverlay()
+        if config.OVERLAY_LARGE_LOG is False:
+            if config.OVERLAY_SMALL_LOG is False:
+                model.startOverlay()
+            config.OVERLAY_LARGE_LOG = True
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
     def setDisableOverlayLargeLog(*args, **kwargs) -> dict:
-        config.OVERLAY_LARGE_LOG = False
-        model.clearOverlayImageLargeLog()
-        if config.OVERLAY_SMALL_LOG is False:
-            model.shutdownOverlay()
+        if config.OVERLAY_LARGE_LOG is True:
+            model.clearOverlayImageLargeLog()
+            if config.OVERLAY_SMALL_LOG is False:
+                model.shutdownOverlay()
+            config.OVERLAY_LARGE_LOG = False
         return {"status":200, "result":config.OVERLAY_LARGE_LOG}
 
     @staticmethod
@@ -1734,12 +1929,14 @@ class Controller:
 
     @staticmethod
     def setEnableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = True
+        if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is False:
+            config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = True
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
     def setDisableOverlayShowOnlyTranslatedMessages(*args, **kwargs) -> dict:
-        config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
+        if config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES is True:
+            config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         return {"status":200, "result":config.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES}
 
     @staticmethod
@@ -1748,12 +1945,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_MESSAGE_TO_VRC = True
+        if config.SEND_MESSAGE_TO_VRC is False:
+            config.SEND_MESSAGE_TO_VRC = True
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
     def setDisableSendMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_MESSAGE_TO_VRC = False
+        if config.SEND_MESSAGE_TO_VRC is True:
+            config.SEND_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_MESSAGE_TO_VRC}
 
     @staticmethod
@@ -1762,12 +1961,14 @@ class Controller:
 
     @staticmethod
     def setEnableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_RECEIVED_MESSAGE_TO_VRC = True
+        if config.SEND_RECEIVED_MESSAGE_TO_VRC is False:
+            config.SEND_RECEIVED_MESSAGE_TO_VRC = True
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
     def setDisableSendReceivedMessageToVrc(*args, **kwargs) -> dict:
-        config.SEND_RECEIVED_MESSAGE_TO_VRC = False
+        if config.SEND_RECEIVED_MESSAGE_TO_VRC is True:
+            config.SEND_RECEIVED_MESSAGE_TO_VRC = False
         return {"status":200, "result":config.SEND_RECEIVED_MESSAGE_TO_VRC}
 
     @staticmethod
@@ -1776,14 +1977,16 @@ class Controller:
 
     @staticmethod
     def setEnableLoggerFeature(*args, **kwargs) -> dict:
-        config.LOGGER_FEATURE = True
-        model.startLogger()
+        if config.LOGGER_FEATURE is False:
+            model.startLogger()
+            config.LOGGER_FEATURE = True
         return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
     def setDisableLoggerFeature(*args, **kwargs) -> dict:
-        model.stopLogger()
-        config.LOGGER_FEATURE = False
+        if config.LOGGER_FEATURE is True:
+            model.stopLogger()
+            config.LOGGER_FEATURE = False
         return {"status":200, "result":config.LOGGER_FEATURE}
 
     @staticmethod
@@ -1792,45 +1995,53 @@ class Controller:
 
     @staticmethod
     def setEnableVrcMicMuteSync(*args, **kwargs) -> dict:
-        if model.getIsOscQueryEnabled() is True:
-            config.VRC_MIC_MUTE_SYNC = True
-            model.setMuteSelfStatus()
-            model.changeMicTranscriptStatus()
-            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+        if config.VRC_MIC_MUTE_SYNC is False:
+            if model.getIsOscQueryEnabled() is True:
+                config.VRC_MIC_MUTE_SYNC = True
+                model.setMuteSelfStatus()
+                model.changeMicTranscriptStatus()
+                response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
+            else:
+                response = {
+                        "status":400,
+                        "result":{
+                            "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
+                            "data": config.VRC_MIC_MUTE_SYNC
+                        }
+                }
         else:
-            response = {
-                    "status":400,
-                    "result":{
-                        "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
-                        "data": config.VRC_MIC_MUTE_SYNC
-                    }
-            }
+            response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
         return response
 
     @staticmethod
     def setDisableVrcMicMuteSync(*args, **kwargs) -> dict:
-        config.VRC_MIC_MUTE_SYNC = False
-        model.changeMicTranscriptStatus()
+        if config.VRC_MIC_MUTE_SYNC is True:
+            config.VRC_MIC_MUTE_SYNC = False
+            model.changeMicTranscriptStatus()
         return {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
 
     def setEnableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        self.startThreadingCheckSpeakerEnergy()
-        config.ENABLE_CHECK_ENERGY_RECEIVE = True
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is False:
+            self.startThreadingCheckSpeakerEnergy()
+            config.ENABLE_CHECK_ENERGY_RECEIVE = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setDisableCheckSpeakerThreshold(self, *args, **kwargs) -> dict:
-        self.stopThreadingCheckSpeakerEnergy()
-        config.ENABLE_CHECK_ENERGY_RECEIVE = False
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            self.stopThreadingCheckSpeakerEnergy()
+            config.ENABLE_CHECK_ENERGY_RECEIVE = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_RECEIVE}
 
     def setEnableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        self.startThreadingCheckMicEnergy()
-        config.ENABLE_CHECK_ENERGY_SEND = True
+        if config.ENABLE_CHECK_ENERGY_SEND is False:
+            self.startThreadingCheckMicEnergy()
+            config.ENABLE_CHECK_ENERGY_SEND = True
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     def setDisableCheckMicThreshold(self, *args, **kwargs) -> dict:
-        self.stopThreadingCheckMicEnergy()
-        config.ENABLE_CHECK_ENERGY_SEND = False
+        if config.ENABLE_CHECK_ENERGY_SEND is True:
+            self.stopThreadingCheckMicEnergy()
+            config.ENABLE_CHECK_ENERGY_SEND = False
         return {"status":200, "result":config.ENABLE_CHECK_ENERGY_SEND}
 
     @staticmethod
@@ -1844,23 +2055,27 @@ class Controller:
         return {"status":200, "result":True}
 
     def setEnableTranscriptionSend(self, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionSendMessage()
-        config.ENABLE_TRANSCRIPTION_SEND = True
+        if config.ENABLE_TRANSCRIPTION_SEND is False:
+            self.startThreadingTranscriptionSendMessage()
+            config.ENABLE_TRANSCRIPTION_SEND = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setDisableTranscriptionSend(self, *args, **kwargs) -> dict:
-        self.stopThreadingTranscriptionSendMessage()
-        config.ENABLE_TRANSCRIPTION_SEND = False
+        if config.ENABLE_TRANSCRIPTION_SEND is True:
+            self.stopThreadingTranscriptionSendMessage()
+            config.ENABLE_TRANSCRIPTION_SEND = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_SEND}
 
     def setEnableTranscriptionReceive(self, *args, **kwargs) -> dict:
-        self.startThreadingTranscriptionReceiveMessage()
-        config.ENABLE_TRANSCRIPTION_RECEIVE = True
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is False:
+            self.startThreadingTranscriptionReceiveMessage()
+            config.ENABLE_TRANSCRIPTION_RECEIVE = True
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def setDisableTranscriptionReceive(self, *args, **kwargs) -> dict:
-        self.stopThreadingTranscriptionReceiveMessage()
-        config.ENABLE_TRANSCRIPTION_RECEIVE = False
+        if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
+            self.stopThreadingTranscriptionReceiveMessage()
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
         return {"status":200, "result":config.ENABLE_TRANSCRIPTION_RECEIVE}
 
     def sendMessageBox(self, data, *args, **kwargs) -> dict:
@@ -2222,13 +2437,13 @@ class Controller:
         th_stopCheckSpeakerEnergy.join()
 
     @staticmethod
-    def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Callable[[float], None]) -> None:
+    def startThreadingDownloadCtranslate2Weight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:
         th_download = Thread(target=model.downloadCTranslate2ModelWeight, args=(weight_type, callback, end_callback))
         th_download.daemon = True
         th_download.start()
 
     @staticmethod
-    def startThreadingDownloadWhisperWeight(weight_type:str, callback:Callable[[float], None], end_callback:Callable[[float], None]) -> None:
+    def startThreadingDownloadWhisperWeight(weight_type:str, callback:Callable[[float], None], end_callback:Optional[Callable[..., None]] = None) -> None:
         th_download = Thread(target=model.downloadWhisperModelWeight, args=(weight_type, callback, end_callback))
         th_download.daemon = True
         th_download.start()
@@ -2246,6 +2461,7 @@ class Controller:
     @staticmethod
     def setWatchdogCallback(callback) -> dict:
         model.setWatchdogCallback(callback)
+        return {"status":200, "result":True}
 
     @staticmethod
     def stopWatchdog(*args, **kwargs) -> dict:
@@ -2322,24 +2538,28 @@ class Controller:
 
     @staticmethod
     def setEnableWebSocketServer(*args, **kwargs) -> dict:
-        if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
-            model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
-            config.WEBSOCKET_SERVER = True
-            response = {"status":200, "result":config.WEBSOCKET_SERVER}
-        else:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"WebSocket server host or port is not available",
-                    "data": config.WEBSOCKET_SERVER
+        if config.WEBSOCKET_SERVER is False:
+            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                config.WEBSOCKET_SERVER = True
+                response = {"status":200, "result":config.WEBSOCKET_SERVER}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"WebSocket server host or port is not available",
+                        "data": config.WEBSOCKET_SERVER
+                    }
                 }
-            }
+        else:
+            response = {"status":200, "result":config.WEBSOCKET_SERVER}
         return response
 
     @staticmethod
     def setDisableWebSocketServer(*args, **kwargs) -> dict:
-        config.WEBSOCKET_SERVER = False
-        model.stopWebSocketServer()
+        if config.WEBSOCKET_SERVER is True:
+            config.WEBSOCKET_SERVER = False
+            model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
     def initializationProgress(self, progress):
@@ -2466,6 +2686,11 @@ class Controller:
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
 
+        # set Transliteration status
+        printLog("Set Transliteration")
+        if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
+            model.startTransliteration()
+
         self.initializationProgress(3)
 
         # set word filter
@@ -2507,9 +2732,9 @@ class Controller:
 
         printLog("Init Auto Device Selection")
         if config.AUTO_MIC_SELECT is True:
-            self.setEnableAutoMicSelect()
+            self.applyAutoMicSelect()
         if config.AUTO_SPEAKER_SELECT is True:
-            self.setEnableAutoSpeakerSelect()
+            self.applyAutoSpeakerSelect()
 
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):

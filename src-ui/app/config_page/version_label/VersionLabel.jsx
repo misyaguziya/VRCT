@@ -15,10 +15,10 @@ export const VersionLabel = () => {
     const { currentComputeMode } = useComputeMode();
 
     const version_label = currentComputeMode.data === "cpu"
-        ? t("config_page.version", { version: currentSoftwareVersion.data })
+        ? t("config_page.common.version", { version: currentSoftwareVersion.data })
         : currentComputeMode.data === "cuda"
-        ? t("config_page.version", { version: currentSoftwareVersion.data }) + " CUDA"
-        : t("config_page.version", { version: currentSoftwareVersion.data });
+        ? t("config_page.common.version", { version: currentSoftwareVersion.data }) + " CUDA"
+        : t("config_page.common.version", { version: currentSoftwareVersion.data });
 
         const is_cpu = currentComputeMode.data === "cpu";
 

@@ -45,6 +45,10 @@ export const Others = () => {
                 <SendMessageFormatPartsContainer />
                 <ReceivedMessageFormatPartsContainer />
             </div>
+            <div>
+                <ConvertMessageToRomajiContainer />
+                <ConvertMessageToHiraganaContainer />
+            </div>
         </div>
     );
 };
@@ -199,6 +203,46 @@ const ReceivedMessageFormatPartsContainer = () => {
             example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
             exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
             format_id="received"
+        />
+    );
+};
+
+const ConvertMessageToRomajiContainer = () => {
+    const { t } = useI18n();
+    const { currentConvertMessageToRomaji, toggleConvertMessageToRomaji } = useOthers();
+
+    const desc_1 = t("config_page.others.common_convert_message_hiragana_romaji.desc_1");
+    const desc_2 = t("config_page.others.common_convert_message_hiragana_romaji.desc_2");
+    const desc_romaji = t(
+        "config_page.others.convert_message_to_romaji.desc",
+        { convert_message_to_hiragana: t("config_page.others.convert_message_to_hiragana.label") }
+    );
+    const desc = [desc_1, desc_2, desc_romaji].join("\n");
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.convert_message_to_romaji.label")}
+            desc={desc}
+            variable={currentConvertMessageToRomaji}
+            toggleFunction={toggleConvertMessageToRomaji}
+        />
+    );
+};
+
+const ConvertMessageToHiraganaContainer = () => {
+    const { t } = useI18n();
+    const { currentConvertMessageToHiragana, toggleConvertMessageToHiragana } = useOthers();
+
+    const desc_1 = t("config_page.others.common_convert_message_hiragana_romaji.desc_1");
+    const desc_2 = t("config_page.others.common_convert_message_hiragana_romaji.desc_2");
+    const desc = [desc_1, desc_2].join("\n");
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.convert_message_to_hiragana.label")}
+            desc={desc}
+            variable={currentConvertMessageToHiragana}
+            toggleFunction={toggleConvertMessageToHiragana}
         />
     );
 };
