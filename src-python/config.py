@@ -5,15 +5,47 @@ from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
 import threading
+from typing import Optional, Dict, Any
 import torch
-from device_manager import device_manager
-from models.translation.translation_languages import translation_lang
-from models.translation.translation_utils import ctranslate2_weights
-from models.translation.translation_plamo import _MODELS as plamo_models
-from models.translation.translation_gemini import _MODELS as gemini_models
-from models.transcription.transcription_languages import transcription_lang
-from models.transcription.transcription_whisper import _MODELS as whisper_models
-from utils import errorLogging, validateDictStructure
+
+# Guard optional, potentially heavy or platform-specific imports so importing
+# config.py doesn't raise in environments missing those packages.
+try:
+    from device_manager import device_manager
+except Exception:  # pragma: no cover - optional runtime
+    device_manager = None  # type: ignore
+
+try:
+    from models.translation.translation_languages import translation_lang
+except Exception:  # pragma: no cover - optional runtime
+    translation_lang = {}  # type: ignore
+
+try:
+    from models.translation.translation_utils import ctranslate2_weights
+except Exception:  # pragma: no cover - optional runtime
+    ctranslate2_weights = {}  # type: ignore
+
+try:
+    from models.transcription.transcription_languages import transcription_lang
+except Exception:  # pragma: no cover - optional runtime
+    transcription_lang = {}  # type: ignore
+
+try:
+    from models.transcription.transcription_whisper import _MODELS as whisper_models
+except Exception:  # pragma: no cover - optional runtime
+    whisper_models = {}  # type: ignore
+
+try:
+    from models.translation.translation_gemini import _MODELS as gemini_models
+except Exception:  # pragma: no cover - optional runtime
+    gemini_models = []  # type: ignore
+
+try:
+    from models.translation.translation_plamo import _MODELS as plamo_models
+except Exception:  # pragma: no cover - optional runtime
+    plamo_models = []  # type: ignore
+
+from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
 json_serializable_vars = {}
 def json_serializable(var_name):
@@ -23,23 +55,39 @@ def json_serializable(var_name):
     return decorator
 
 class Config:
+    """Application configuration singleton.
+
+    Responsibilities:
+    - expose read-only and read-write configuration via properties
+    - persist selected values to JSON with debounce
+    Implementation notes: initialization may depend on optional subsystems; any
+    exceptions during init/load are captured and logged to avoid import-time
+    crashes.
+    """
+
     _instance = None
-    _config_data = {}
-    _timer = None
-    _debounce_time = 2
+    _config_data: Dict[str, Any] = {}
+    _timer: Optional[threading.Timer] = None
+    _debounce_time: int = 2
 
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Config, cls).__new__(cls)
-            cls._instance.init_config()
-            cls._instance.load_config()
+            try:
+                cls._instance.init_config()
+            except Exception:
+                errorLogging()
+            try:
+                cls._instance.load_config()
+            except Exception:
+                errorLogging()
         return cls._instance
 
-    def saveConfigToFile(self):
+    def saveConfigToFile(self) -> None:
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
             json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
 
-    def saveConfig(self, key, value, immediate_save=False):
+    def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
 
         if isinstance(self._timer, threading.Timer) and self._timer.is_alive():
@@ -108,6 +156,10 @@ class Config:
     @property
     def SELECTABLE_TAB_NO_LIST(self):
         return self._SELECTABLE_TAB_NO_LIST
+
+    @property
+    def SELECTED_TAB_TARGET_LANGUAGES_NO_LIST(self):
+        return self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
 
     @property
     def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
@@ -825,6 +877,18 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SELECTED_TRANSLATION_COMPUTE_TYPE')
+    def SELECTED_TRANSLATION_COMPUTE_TYPE(self):
+        return self._SELECTED_TRANSLATION_COMPUTE_TYPE
+
+    @SELECTED_TRANSLATION_COMPUTE_TYPE.setter
+    def SELECTED_TRANSLATION_COMPUTE_TYPE(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTED_TRANSLATION_COMPUTE_DEVICE["compute_types"]:
+                self._SELECTED_TRANSLATION_COMPUTE_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('WHISPER_WEIGHT_TYPE')
     def WHISPER_WEIGHT_TYPE(self):
         return self._WHISPER_WEIGHT_TYPE
@@ -834,6 +898,18 @@ class Config:
         if isinstance(value, str):
             if value in self.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST:
                 self._WHISPER_WEIGHT_TYPE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_TYPE')
+    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self):
+        return self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE
+
+    @SELECTED_TRANSCRIPTION_COMPUTE_TYPE.setter
+    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_types"]:
+                self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1054,7 +1130,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "3.2.1"
+        self._VERSION = "3.3.1"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -1074,19 +1150,21 @@ class Config:
         self._WATCHDOG_INTERVAL = 20
 
         self._SELECTABLE_TAB_NO_LIST = ["1", "2", "3"]
-        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = ctranslate2_weights.keys()
-        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = whisper_models.keys()
-        self._SELECTABLE_TRANSLATION_ENGINE_LIST = translation_lang.keys()
+        # these external mappings may be empty dicts if the optional modules failed to import
+        self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = getattr(ctranslate2_weights, 'keys', lambda: [])()
+        self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = getattr(whisper_models, 'keys', lambda: [])()
+        self._SELECTABLE_TRANSLATION_ENGINE_LIST = getattr(translation_lang, 'keys', lambda: [])()
+        try:
+            # transcription_lang is nested dict; attempt to extract keys defensively
+            first_key = next(iter(transcription_lang))
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[first_key].values())[0].keys()
+        except Exception:
+            self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
         self._SELECTABLE_PLAMO_MODEL_LIST = plamo_models
         self._SELECTABLE_GEMINI_MODEL_LIST = gemini_models
-        self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[list(transcription_lang.keys())[0]].values())[0].keys()
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
-        self._SELECTABLE_COMPUTE_DEVICE_LIST = []
-        if torch.cuda.is_available():
-            for i in range(torch.cuda.device_count()):
-                self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cuda", "device_index": i, "device_name": torch.cuda.get_device_name(i)})
-        self._SELECTABLE_COMPUTE_DEVICE_LIST.append({"device":"cpu", "device_index": 0, "device_name": "cpu"})
+        self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
         self._SEND_MESSAGE_FORMAT_PARTS = {
             "message": {
@@ -1151,24 +1229,17 @@ class Config:
                 },
             }
         self._SELECTED_TARGET_LANGUAGES = {}
+        self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST = ["1", "2", "3"]
         for tab_no in self.SELECTABLE_TAB_NO_LIST:
-            self._SELECTED_TARGET_LANGUAGES[tab_no] = {
-                "1": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": True,
-                },
-                "2": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-                "3": {
-                    "language": "English",
-                    "country": "United States",
-                    "enable": False,
-                },
-            }
+            for tab_target_lang_no in self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST:
+                if tab_no not in self.SELECTED_TARGET_LANGUAGES:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no] = {}
+                if tab_target_lang_no not in self.SELECTED_TARGET_LANGUAGES[tab_no]:
+                    self._SELECTED_TARGET_LANGUAGES[tab_no][tab_target_lang_no] = {
+                        "language": "English",
+                        "country": "United States",
+                        "enable": True if tab_target_lang_no == self.SELECTED_TAB_TARGET_LANGUAGES_NO_LIST[0] else False,
+                    }
         self._SELECTED_TRANSCRIPTION_ENGINE = "Google"
         self._CONVERT_MESSAGE_TO_ROMAJI = False
         self._CONVERT_MESSAGE_TO_HIRAGANA = False
@@ -1190,8 +1261,20 @@ class Config:
             "height": 654,
         }
         self._AUTO_MIC_SELECT = True
-        self._SELECTED_MIC_HOST = device_manager.getDefaultMicDevice()["host"]["name"]
-        self._SELECTED_MIC_DEVICE = device_manager.getDefaultMicDevice()["device"]["name"]
+        # device_manager may be unavailable or not initialized; use safe defaults
+        try:
+            if device_manager is not None:
+                # getDefaultMicDevice performs lazy init/update if needed
+                dm_def = device_manager.getDefaultMicDevice()
+                self._SELECTED_MIC_HOST = dm_def.get("host", {}).get("name", "NoHost")
+                self._SELECTED_MIC_DEVICE = dm_def.get("device", {}).get("name", "NoDevice")
+            else:
+                self._SELECTED_MIC_HOST = "NoHost"
+                self._SELECTED_MIC_DEVICE = "NoDevice"
+        except Exception:
+            errorLogging()
+            self._SELECTED_MIC_HOST = "NoHost"
+            self._SELECTED_MIC_DEVICE = "NoDevice"
         self._MIC_THRESHOLD = 300
         self._MIC_AUTOMATIC_THRESHOLD = False
         self._MIC_RECORD_TIMEOUT = 3
@@ -1208,7 +1291,15 @@ class Config:
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
         self._AUTO_SPEAKER_SELECT = True
-        self._SELECTED_SPEAKER_DEVICE = device_manager.getDefaultSpeakerDevice()["device"]["name"]
+        try:
+            if device_manager is not None:
+                sp_def = device_manager.getDefaultSpeakerDevice()
+                self._SELECTED_SPEAKER_DEVICE = sp_def.get("device", {}).get("name", "NoDevice")
+            else:
+                self._SELECTED_SPEAKER_DEVICE = "NoDevice"
+        except Exception:
+            errorLogging()
+            self._SELECTED_SPEAKER_DEVICE = "NoDevice"
         self._SPEAKER_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
         self._SPEAKER_RECORD_TIMEOUT = 3
@@ -1227,9 +1318,11 @@ class Config:
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
-        self._WHISPER_WEIGHT_TYPE = "base"
         self._PLAMO_MODEL = "plamo-2.0-prime"
         self._GEMINI_MODEL = "gemini-2.5-flash-lite"
+        self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
+        self._WHISPER_WEIGHT_TYPE = "base"
+        self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
         self._AUTO_CLEAR_MESSAGE_BOX = True
         self._SEND_ONLY_TRANSLATED_MESSAGES = False
         self._OVERLAY_SMALL_LOG = False

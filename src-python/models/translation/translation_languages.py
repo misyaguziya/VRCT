@@ -1,4 +1,13 @@
-translation_lang = {}
+"""Language code mappings for supported translation backends.
+
+Provides `translation_lang` mapping keyed by backend name with `source` and
+`target` maps used by `Translator.getLanguageCode`.
+"""
+
+from typing import Dict
+
+translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {}
+
 dict_deepl_languages = {
     "Arabic":"ar",
     "Bulgarian":"bg",
@@ -37,10 +46,7 @@ dict_deepl_languages = {
 	"Chinese Simplified":"zh",
     "Chinese Traditional":"zh"
 }
-translation_lang["DeepL"] = {
-    "source":dict_deepl_languages,
-    "target":dict_deepl_languages,
-}
+translation_lang["DeepL"] = {"source": dict_deepl_languages, "target": dict_deepl_languages}
 
 dict_deepl_api_source_languages = {
     "Japanese":"ja",
@@ -109,10 +115,7 @@ dict_deepl_api_target_languages = {
     "Chinese Simplified":"zh",
     "Chinese Traditional":"zh"
 }
-translation_lang["DeepL_API"] = {
-    "source": dict_deepl_api_source_languages,
-    "target": dict_deepl_api_target_languages,
-}
+translation_lang["DeepL_API"] = {"source": dict_deepl_api_source_languages, "target": dict_deepl_api_target_languages}
 
 dict_google_languages = {
     "Japanese":"ja",
@@ -176,13 +179,10 @@ dict_google_languages = {
     "Belarusian":"be",
     "Cebuano":"ceb",
     "Esperanto":"eo",
-    "Basque":"eu",
+    # "Basque":"eu",
     "Irish":"ga"
 }
-translation_lang["Google"] = {
-    "source":dict_google_languages,
-    "target":dict_google_languages,
-}
+translation_lang["Google"] = {"source": dict_google_languages, "target": dict_google_languages}
 
 dict_bing_languages = {
     "Japanese":"ja",
@@ -247,10 +247,7 @@ dict_bing_languages = {
     "Punjabi":"pa",
     "Irish":"ga"
 }
-translation_lang["Bing"] = {
-    "source":dict_bing_languages,
-    "target":dict_bing_languages,
-}
+translation_lang["Bing"] = {"source": dict_bing_languages, "target": dict_bing_languages}
 
 dict_papago_languages = {
     "German": "de",
@@ -270,10 +267,7 @@ dict_papago_languages = {
     "Chinese Traditional":"zh-TW",
 }
 
-translation_lang["Papago"] = {
-    "source":dict_papago_languages,
-    "target":dict_papago_languages,
-}
+translation_lang["Papago"] = {"source": dict_papago_languages, "target": dict_papago_languages}
 
 dict_m2m100_languages = {
     "English": "en",
@@ -317,7 +311,7 @@ dict_m2m100_languages = {
     "Malayalam": "ml",
     "Welsh": "cy",
     "Slovak": "sk",
-    "Telugu": "te",
+    # "Telugu": "te",
     "Persian": "fa",
     "Latvian": "lv",
     "Bengali": "bn",
@@ -328,7 +322,7 @@ dict_m2m100_languages = {
     "Estonian": "et",
     "Macedonian": "mk",
     "Breton": "br",
-    "Basque": "eu",
+    # "Basque": "eu",
     "Icelandic": "is",
     "Armenian": "hy",
     "Nepali": "ne",
@@ -378,15 +372,8 @@ dict_m2m100_languages = {
     "Sundanese": "su"
 }
 
-translation_lang["m2m100_418M-ct2-int8"] = {
-    "source":dict_m2m100_languages,
-    "target":dict_m2m100_languages,
-}
-
-translation_lang["m2m100_1.2B-ct2-int8"] = {
-    "source":dict_m2m100_languages,
-    "target":dict_m2m100_languages,
-}
+translation_lang["m2m100_418M-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
+translation_lang["m2m100_1.2B-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
 
 dict_nllb_languages = {
     "Acehnese (Arabic script)": "ace_Arab",
@@ -595,15 +582,8 @@ dict_nllb_languages = {
     "Zulu": "zul_Latn"
 }
 
-translation_lang["nllb-200-distilled-1.3B-ct2-int8"] = {
-    "source":dict_nllb_languages,
-    "target":dict_nllb_languages,
-}
-
-translation_lang["nllb-200-3.3B-ct2-int8"] = {
-    "source":dict_nllb_languages,
-    "target":dict_nllb_languages,
-}
+translation_lang["nllb-200-distilled-1.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
+translation_lang["nllb-200-3.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
 
 dict_plamo_languages = {
     "English": "English",
@@ -638,10 +618,7 @@ dict_plamo_languages = {
     "Traditional Chinese":"Traditional Chinese"
 }
 
-translation_lang["Plamo_API"] = {
-    "source":dict_plamo_languages,
-    "target":dict_plamo_languages,
-}
+translation_lang["Plamo_API"] = {"source":dict_plamo_languages, "target":dict_plamo_languages}
 
 dict_gemini_languages = {
     "Arabic": "Arabic",
@@ -685,7 +662,4 @@ dict_gemini_languages = {
     "Vietnamese": "Vietnamese",
 }
 
-translation_lang["Gemini_API"] = {
-    "source":dict_gemini_languages,
-    "target":dict_gemini_languages,
-}
+translation_lang["Gemini_API"] = {"source":dict_gemini_languages, "target":dict_gemini_languages}
