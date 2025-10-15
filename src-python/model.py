@@ -199,11 +199,11 @@ class Model:
         return result
 
     def authenticationTranslatorPlamoAuthKey(self, auth_key: str, model: str) -> bool:
-        result = self.translator.authenticationPlamoAuthKey(auth_key, model=model)
+        result = self.translator.authenticationPlamoAuthKey(auth_key, model=model, root_path=config.PATH_LOCAL)
         return result
 
     def authenticationTranslatorGeminiAuthKey(self, auth_key: str, model: str) -> bool:
-        result = self.translator.authenticationGeminiAuthKey(auth_key, model=model)
+        result = self.translator.authenticationGeminiAuthKey(auth_key, model=model, root_path=config.PATH_LOCAL)
         return result
 
     def startLogger(self):

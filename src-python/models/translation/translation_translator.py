@@ -66,14 +66,14 @@ class Translator:
             result = False
         return result
 
-    def authenticationPlamoAuthKey(self, auth_key: str, model: str) -> bool:
+    def authenticationPlamoAuthKey(self, auth_key: str, model: str, root_path: str = None) -> bool:
         """Authenticate Plamo API with the provided key.
 
         Returns True on success, False on failure.
         """
         result = True
         try:
-            self.plamo_client = PlamoClient(auth_key, model=model)
+            self.plamo_client = PlamoClient(auth_key, model=model, root_path=root_path)
             self.plamo_client.checkAuthKey()
         except Exception:
             errorLogging()
@@ -81,14 +81,14 @@ class Translator:
             result = False
         return result
 
-    def authenticationGeminiAuthKey(self, auth_key: str, model: str) -> bool:
+    def authenticationGeminiAuthKey(self, auth_key: str, model: str, root_path: str = None) -> bool:
         """Authenticate Gemini API with the provided key.
 
         Returns True on success, False on failure.
         """
         result = True
         try:
-            self.gemini_client = GeminiClient(auth_key, model=model)
+            self.gemini_client = GeminiClient(auth_key, model=model, root_path=root_path)
             self.gemini_client.checkAuthKey()
         except Exception:
             errorLogging()

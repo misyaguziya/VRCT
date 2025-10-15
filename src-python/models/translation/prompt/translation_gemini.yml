@@ -1,0 +1,45 @@
+system_prompt: |
+  Please translate the following text from {input_lang} to {output_lang}.
+  Only provide the translated text as the output.
+  {text}
+
+supported_languages: |
+  Arabic
+  Bengali
+  Bulgarian
+  Simplified Chinese
+  Traditional Chinese
+  Croatian
+  Czech
+  Danish
+  Dutch
+  English
+  Estonian
+  Finnish
+  French
+  German
+  Greek
+  Hebrew
+  Hindi
+  Hungarian
+  Indonesian
+  Italian
+  Japanese
+  Korean
+  Latvian
+  Lithuanian
+  Norwegian
+  Polish
+  Portuguese
+  Romanian
+  Russian
+  Serbian
+  Slovak
+  Slovenian
+  Spanish
+  Swahili
+  Swedish
+  Thai
+  Turkish
+  Ukrainian
+  Vietnamese
