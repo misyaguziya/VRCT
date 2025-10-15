@@ -5,7 +5,14 @@ a = Analysis(
     ['src-python\\mainloop.py'],
     pathex=[],
     binaries=[],
-    datas=[('./fonts', 'fonts/'), ('.venv/Lib/site-packages/zeroconf', 'zeroconf/'), ('.venv/Lib/site-packages/openvr', 'openvr/'), ('.venv/Lib/site-packages/faster_whisper', 'faster_whisper/'), ('.venv/Lib/site-packages/hf_xet', 'hf_xet/')],
+    datas=[
+        ('./src-python/models/overlay/fonts', 'fonts/'),
+        ('./src-python/models/translation/prompt', 'prompt/'),
+        ('.venv/Lib/site-packages/zeroconf', 'zeroconf/'),
+        ('.venv/Lib/site-packages/openvr', 'openvr/'),
+        ('.venv/Lib/site-packages/faster_whisper', 'faster_whisper/'),
+        ('.venv/Lib/site-packages/hf_xet', 'hf_xet/')
+        ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

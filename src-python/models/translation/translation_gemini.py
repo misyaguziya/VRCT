@@ -1,6 +1,8 @@
 import logging
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
+import yaml
+from os import path as os_path
 
 logger = logging.getLogger("langchain_google_genai")
 logger.setLevel(logging.ERROR)
@@ -17,18 +19,38 @@ _MODELS = [
     ]
 
 class GeminiClient:
-    def __init__(self, api_key: str = "", model: str = "gemini-2.5-flash-lite"):
+    def __init__(self, api_key: str = "", model: str = "gemini-2.5-flash-lite", root_path: str = None):
         self.api_key = api_key
         self.model = model
-        self.prompt_template = """
-        Please translate the following text from {input_lang} to {output_lang}.
-        Only provide the translated text as the output.
-        {text}
-        """
+
+        # プロンプト設定をYAMLファイルから読み込む
+        prompt_config = self._load_prompt_config(root_path)
+        self.supported_languages = prompt_config["supported_languages"]
+        self.prompt_template = prompt_config["system_prompt"]
+
         self.gemini_llm = ChatGoogleGenerativeAI(
             model=self.model,
             api_key=self.api_key,
         )
+
+    def _load_prompt_config(self, root_path: str = None) -> dict:
+        """プロンプト設定をYAMLファイルから読み込む"""
+        prompt_filename = "translation_gemini.yml"
+
+        # PyInstallerでビルドされた場合のパス
+        if root_path and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
+            prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
+        # src-pythonフォルダから直接実行している場合のパス
+        elif os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
+            prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
+        # translationフォルダから直接実行している場合のパス
+        elif os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
+            prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
+        else:
+            raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
+
+        with open(prompt_path, "r", encoding="utf-8") as f:
+            return yaml.safe_load(f)
 
     def getListModels(self) -> list[str]:
         return _MODELS
@@ -112,50 +134,8 @@ if __name__ == "__main__":
     # except Exception:
     #     print("Invalid API key. Please check your credentials.")
 
-
-    supported_languages = """
-    Arabic
-    Bengali
-    Bulgarian
-    Simplified Chinese
-    Traditional Chinese
-    Croatian
-    Czech
-    Danish
-    Dutch
-    English
-    Estonian
-    Finnish
-    French
-    German
-    Greek
-    Hebrew
-    Hindi
-    Hungarian
-    Indonesian
-    Italian
-    Japanese
-    Korean
-    Latvian
-    Lithuanian
-    Norwegian
-    Polish
-    Portuguese
-    Romanian
-    Russian
-    Serbian
-    Slovak
-    Slovenian
-    Spanish
-    Swahili
-    Swedish
-    Thai
-    Turkish
-    Ukrainian
-    Vietnamese
-    """
-
-    for lang in supported_languages.split("\n"):
+    # 外部ファイルから読み込んだサポート言語を使用
+    for lang in gemini_client.supported_languages.split("\n"):
         if lang == "":
             continue
         print (f"Translating to {lang}:")

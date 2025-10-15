@@ -26,10 +26,17 @@ class OverlayImage:
                 defaults to repository `fonts` directory.
         """
         self.message_log: List[dict] = []
-        if root_path is None:
-            self.root_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts")
-        else:
+        # PyInstallerでビルドされた場合のパス
+        if  root_path and os_path.exists(os_path.join(root_path, "_internal", "fonts")):
             self.root_path = os_path.join(root_path, "_internal", "fonts")
+        # src-pythonフォルダから直接実行している場合のパス
+        elif os_path.exists(os_path.join(os_path.dirname(__file__), "models", "overlay", "fonts")):
+            self.root_path = os_path.join(os_path.dirname(__file__), "models", "overlay", "fonts")
+        # overlayフォルダから直接実行している場合のパス
+        elif os_path.exists(os_path.join(os_path.dirname(__file__), "fonts")):
+            self.root_path = os_path.join(os_path.dirname(__file__), "fonts")
+        else:
+            raise FileNotFoundError("Font directory not found.")
 
     @staticmethod
     def concatenateImagesVertically(img1: Image, img2: Image, margin: int = 0) -> Image:
@@ -69,20 +76,8 @@ class OverlayImage:
         img = Image.new("RGBA", (base_width, base_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        try:
-            font_path = os_path.join(self.root_path, font_family)
-            font = ImageFont.truetype(font_path, font_size)
-        except Exception:
-            # overlayフォルダから操作している場合
-            if os_path.exists(os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)):
-                font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
-                font = ImageFont.truetype(font_path, font_size)
-            elif os_path.exists(os_path.join(os_path.dirname(__file__), "fonts", font_family)):
-                # src-pythonフォルダから操作している場合
-                font_path = os_path.join(os_path.dirname(__file__), "fonts", font_family)
-                font = ImageFont.truetype(font_path, font_size)
-            else:
-                raise FileNotFoundError(f"Font file not found: {font_family}")
+        font_path = os_path.join(self.root_path, font_family)
+        font = ImageFont.truetype(font_path, font_size)
 
         text_width = draw.textlength(text, font)
         character_width = text_width // len(text)
@@ -180,18 +175,8 @@ class OverlayImage:
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        try:
-            font_path = os_path.join(self.root_path, font_family)
-            font = ImageFont.truetype(font_path, font_size)
-        except Exception:
-            if os_path.exists(os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)):
-                font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", font_family)
-                font = ImageFont.truetype(font_path, font_size)
-            elif os_path.exists(os_path.join(os_path.dirname(__file__), "fonts", font_family)):
-                font_path = os_path.join(os_path.dirname(__file__), "fonts", font_family)
-                font = ImageFont.truetype(font_path, font_size)
-            else:
-                raise FileNotFoundError(f"Font file not found: {font_family}")
+        font_path = os_path.join(self.root_path, font_family)
+        font = ImageFont.truetype(font_path, font_size)
 
         # 改行を含んだtextの最大の文字数を計算する
         text_width = max(draw.textlength(line, font) for line in text.split("\n"))
@@ -221,20 +206,8 @@ class OverlayImage:
         img = Image.new("RGBA", (0, 0), (0, 0, 0, 0))
         draw = ImageDraw.Draw(img)
 
-        try:
-            font_path = os_path.join(self.root_path, self.LANGUAGES["Default"])
-            font = ImageFont.truetype(font_path, font_size)
-        except Exception:
-            # overlayフォルダから操作している場合
-            if os_path.exists(os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", self.LANGUAGES["Default"])):
-                font_path = os_path.join(os_path.dirname(__file__), "..", "..", "..", "fonts", self.LANGUAGES["Default"])
-                font = ImageFont.truetype(font_path, font_size)
-            elif os_path.exists(os_path.join(os_path.dirname(__file__), "fonts", self.LANGUAGES["Default"])):
-                # src-pythonフォルダから操作している場合
-                font_path = os_path.join(os_path.dirname(__file__), "fonts", self.LANGUAGES["Default"])
-                font = ImageFont.truetype(font_path, font_size)
-            else:
-                raise FileNotFoundError(f"Font file not found: {self.LANGUAGES['Default']}")
+        font_path = os_path.join(self.root_path, self.LANGUAGES["Default"])
+        font = ImageFont.truetype(font_path, font_size)
 
         text_height = font_size + ui_padding
         text_width = draw.textlength(date_time, font)

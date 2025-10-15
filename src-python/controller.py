@@ -2640,22 +2640,39 @@ class Controller:
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorDeepLAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("DeepL API Key is valid")
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
                             auth_keys[engine] = None
                             config.AUTH_KEYS = auth_keys
+                            printLog("DeepL API Key is invalid")
                 case "Plamo_API":
                     printLog("Start check Plamo API Key")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine], model=config.PLAMO_MODEL) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("Plamo API Key is valid")
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
                             auth_keys[engine] = None
                             config.AUTH_KEYS = auth_keys
+                            printLog("Plamo API Key is invalid")
+                case "Gemini_API":
+                    printLog("Start check Gemini API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS[engine], model=config.GEMINI_MODEL) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("Gemini API Key is valid")
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                            printLog("Gemini API Key is invalid")
                 case _:
                     if connected_network is True:
                         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True

@@ -615,8 +615,8 @@ dict_plamo_languages = {
     "Hungarian": "Hungarian",
     "Greek": "Greek",
     "Hebrew": "Hebrew",
-    "Simplified Chinese":"Simplified Chinese",
-    "Traditional Chinese":"Traditional Chinese"
+    "Chinese Simplified":"Simplified Chinese",
+    "Chinese Traditional":"Traditional Chinese"
 }
 
 translation_lang["Plamo_API"] = {"source":dict_plamo_languages, "target":dict_plamo_languages}
@@ -625,8 +625,8 @@ dict_gemini_languages = {
     "Arabic": "Arabic",
     "Bengali": "Bengali",
     "Bulgarian": "Bulgarian",
-    "Simplified Chinese": "Simplified Chinese",
-    "Traditional Chinese": "Traditional Chinese",
+    "Chinese Simplified": "Simplified Chinese",
+    "Chinese Traditional": "Traditional Chinese",
     "Croatian": "Croatian",
     "Czech": "Czech",
     "Danish": "Danish",
