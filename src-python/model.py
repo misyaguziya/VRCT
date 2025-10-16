@@ -240,7 +240,7 @@ class Model:
         self.ensure_initialized()
         return self.translator.getOpenAIModelList()
 
-    def setTranslatorOpenAiModel(self, model: str) -> bool:
+    def setTranslatorOpenAIModel(self, model: str) -> bool:
         self.ensure_initialized()
         result = self.translator.setOpenAIModel(model=model)
         return result
