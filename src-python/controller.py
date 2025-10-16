@@ -1794,10 +1794,10 @@ class Controller:
         return response
 
     @staticmethod
-    def getOpenAiAuthKey(*args, **kwargs) -> dict:
+    def getOpenAIAuthKey(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
 
-    def setOpenAiAuthKey(self, data, *args, **kwargs) -> dict:
+    def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Auth Key", data)
         translator_name = "OpenAI_API"
         try:
@@ -1808,6 +1808,12 @@ class Controller:
                 auth_keys[translator_name] = key
                 config.AUTH_KEYS = auth_keys
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
+                # ここにrunが必要
+                if config.OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                    config.OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                    # ここにrunが必要
+                model.updateTranslatorOpenAIClient()
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
             else:
@@ -1829,7 +1835,7 @@ class Controller:
             }
         return response
 
-    def delOpenAiAuthKey(self, *args, **kwargs) -> dict:
+    def delOpenAIAuthKey(self, *args, **kwargs) -> dict:
         translator_name = "OpenAI_API"
         auth_keys = config.AUTH_KEYS
         auth_keys[translator_name] = None
@@ -1838,17 +1844,17 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
-    def getOpenAiModelList(self, *args, **kwargs) -> dict:
+    def getOpenAIModelList(self, *args, **kwargs) -> dict:
         return {"status":200, "result": config.SELECTABLE_OPENAI_MODEL_LIST}
 
-    def getOpenAiModel(self, *args, **kwargs) -> dict:
+    def getOpenAIModel(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.OPENAI_MODEL}
 
-    def setOpenAiModel(self, data, *args, **kwargs) -> dict:
+    def setOpenAIModel(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Model", data)
         try:
             data = str(data)
-            result = model.setTranslatorOpenAiModel(model=data)
+            result = model.setTranslatorOpenAIModel(model=data)
             if result is True:
                 config.OPENAI_MODEL = data
                 response = {"status":200, "result":config.OPENAI_MODEL}
@@ -2791,7 +2797,7 @@ class Controller:
                             config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
                             if config.OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
                                 config.OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                            model.setTranslatorOpenAiModel(config.OPENAI_MODEL)
+                            model.setTranslatorOpenAIModel(config.OPENAI_MODEL)
                             model.updateTranslatorOpenAIClient()
                         else:
                             # error update Auth key

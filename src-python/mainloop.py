@@ -188,12 +188,12 @@ mapping = {
     "/set/data/gemini_auth_key": {"status": True, "variable":controller.setGeminiAuthKey},
     "/delete/data/gemini_auth_key": {"status": True, "variable":controller.delGeminiAuthKey},
 
-    "/get/data/openai_model_list": {"status": True, "variable":controller.getOpenAiModelList},
-    "/get/data/openai_model": {"status": True, "variable":controller.getOpenAiModel},
-    "/set/data/openai_model": {"status": True, "variable":controller.setOpenAiModel},
-    "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAiAuthKey},
-    "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAiAuthKey},
-    "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAiAuthKey},
+    "/get/data/openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
+    "/get/data/openai_model": {"status": True, "variable":controller.getOpenAIModel},
+    "/set/data/openai_model": {"status": True, "variable":controller.setOpenAIModel},
+    "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
+    "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
+    "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
