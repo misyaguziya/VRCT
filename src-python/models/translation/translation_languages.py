@@ -664,3 +664,49 @@ dict_gemini_languages = {
 }
 
 translation_lang["Gemini_API"] = {"source":dict_gemini_languages, "target":dict_gemini_languages}
+
+# OpenAI API (Chat Completions) - Gemini とほぼ同等の自然言語名を使用
+dict_openai_languages = {
+    "Arabic": "Arabic",
+    "Bengali": "Bengali",
+    "Bulgarian": "Bulgarian",
+    "Catalan": "Catalan",
+    "Chinese Simplified": "Simplified Chinese",
+    "Chinese Traditional": "Traditional Chinese",
+    "Croatian": "Croatian",
+    "Czech": "Czech",
+    "Danish": "Danish",
+    "Dutch": "Dutch",
+    "English": "English",
+    "Estonian": "Estonian",
+    "Finnish": "Finnish",
+    "French": "French",
+    "German": "German",
+    "Greek": "Greek",
+    "Hebrew": "Hebrew",
+    "Hindi": "Hindi",
+    "Hungarian": "Hungarian",
+    "Indonesian": "Indonesian",
+    "Italian": "Italian",
+    "Japanese": "Japanese",
+    "Korean": "Korean",
+    "Latvian": "Latvian",
+    "Lithuanian": "Lithuanian",
+    "Norwegian": "Norwegian",
+    "Polish": "Polish",
+    "Portuguese": "Portuguese",
+    "Romanian": "Romanian",
+    "Russian": "Russian",
+    "Serbian": "Serbian",
+    "Slovak": "Slovak",
+    "Slovenian": "Slovenian",
+    "Spanish": "Spanish",
+    "Swahili": "Swahili",
+    "Swedish": "Swedish",
+    "Thai": "Thai",
+    "Turkish": "Turkish",
+    "Ukrainian": "Ukrainian",
+    "Vietnamese": "Vietnamese",
+}
+
+translation_lang["OpenAI_API"] = {"source": dict_openai_languages, "target": dict_openai_languages}

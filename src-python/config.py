@@ -35,16 +35,6 @@ try:
 except Exception:  # pragma: no cover - optional runtime
     whisper_models = {}  # type: ignore
 
-try:
-    from models.translation.translation_gemini import _MODELS as gemini_models
-except Exception:  # pragma: no cover - optional runtime
-    gemini_models = []  # type: ignore
-
-try:
-    from models.translation.translation_plamo import _MODELS as plamo_models
-except Exception:  # pragma: no cover - optional runtime
-    plamo_models = []  # type: ignore
-
 from utils import errorLogging, validateDictStructure, getComputeDeviceList
 
 json_serializable_vars = {}
@@ -172,14 +162,6 @@ class Config:
     @property
     def SELECTABLE_TRANSLATION_ENGINE_LIST(self):
         return self._SELECTABLE_TRANSLATION_ENGINE_LIST
-
-    @property
-    def SELECTABLE_PLAMO_MODEL_LIST(self):
-        return self._SELECTABLE_PLAMO_MODEL_LIST
-
-    @property
-    def SELECTABLE_GEMINI_MODEL_LIST(self):
-        return self._SELECTABLE_GEMINI_MODEL_LIST
 
     @property
     def SELECTABLE_TRANSCRIPTION_ENGINE_LIST(self):
@@ -328,6 +310,33 @@ class Config:
     def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self, value):
         if isinstance(value, dict):
             self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = value
+
+    @property
+    def SELECTABLE_PLAMO_MODEL_LIST(self):
+        return self._SELECTABLE_PLAMO_MODEL_LIST
+
+    @SELECTABLE_PLAMO_MODEL_LIST.setter
+    def SELECTABLE_PLAMO_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_PLAMO_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_GEMINI_MODEL_LIST(self):
+        return self._SELECTABLE_GEMINI_MODEL_LIST
+
+    @SELECTABLE_GEMINI_MODEL_LIST.setter
+    def SELECTABLE_GEMINI_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_GEMINI_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_OPENAI_MODEL_LIST(self):
+        return self._SELECTABLE_OPENAI_MODEL_LIST
+
+    @SELECTABLE_OPENAI_MODEL_LIST.setter
+    def SELECTABLE_OPENAI_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_OPENAI_MODEL_LIST = value
 
     # Save Json Data
     ## Main Window
@@ -937,6 +946,18 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('OPENAI_MODEL')
+    def OPENAI_MODEL(self):
+        return self._OPENAI_MODEL
+
+    @OPENAI_MODEL.setter
+    def OPENAI_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_OPENAI_MODEL_LIST:
+                self._OPENAI_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
     def AUTO_CLEAR_MESSAGE_BOX(self):
         return self._AUTO_CLEAR_MESSAGE_BOX
@@ -1160,8 +1181,9 @@ class Config:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[first_key].values())[0].keys()
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
-        self._SELECTABLE_PLAMO_MODEL_LIST = plamo_models
-        self._SELECTABLE_GEMINI_MODEL_LIST = gemini_models
+        self._SELECTABLE_PLAMO_MODEL_LIST = []
+        self._SELECTABLE_GEMINI_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_MODEL_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
@@ -1313,13 +1335,15 @@ class Config:
             "DeepL_API": None,
             "Plamo_API": None,
             "Gemini_API": None,
+            "OpenAI_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
-        self._PLAMO_MODEL = "plamo-2.0-prime"
-        self._GEMINI_MODEL = "gemini-2.5-flash-lite"
+        self._PLAMO_MODEL = None
+        self._GEMINI_MODEL = None
+        self._OPENAI_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"

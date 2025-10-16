@@ -175,16 +175,25 @@ mapping = {
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
     "/get/data/plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
+    "/get/data/plamo_model": {"status": False, "variable":controller.getPlamoModel},
     "/set/data/plamo_model": {"status": False, "variable":controller.setPlamoModel},
     "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
     "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
     "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},
 
     "/get/data/gemini_model_list": {"status": True, "variable":controller.getGeminiModelList},
+    "/get/data/gemini_model": {"status": True, "variable":controller.getGeminiModel},
     "/set/data/gemini_model": {"status": True, "variable":controller.setGeminiModel},
     "/get/data/gemini_auth_key": {"status": True, "variable":controller.getGeminiAuthKey},
     "/set/data/gemini_auth_key": {"status": True, "variable":controller.setGeminiAuthKey},
     "/delete/data/gemini_auth_key": {"status": True, "variable":controller.delGeminiAuthKey},
+
+    "/get/data/openai_model_list": {"status": True, "variable":controller.getOpenAiModelList},
+    "/get/data/openai_model": {"status": True, "variable":controller.getOpenAiModel},
+    "/set/data/openai_model": {"status": True, "variable":controller.setOpenAiModel},
+    "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAiAuthKey},
+    "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAiAuthKey},
+    "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAiAuthKey},
 
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},

@@ -198,13 +198,56 @@ class Model:
         result = self.translator.authenticationDeepLAuthKey(auth_key)
         return result
 
-    def authenticationTranslatorPlamoAuthKey(self, auth_key: str, model: str) -> bool:
-        result = self.translator.authenticationPlamoAuthKey(auth_key, model=model, root_path=config.PATH_LOCAL)
+    def authenticationTranslatorPlamoAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationPlamoAuthKey(auth_key, root_path=config.PATH_LOCAL)
         return result
 
-    def authenticationTranslatorGeminiAuthKey(self, auth_key: str, model: str) -> bool:
-        result = self.translator.authenticationGeminiAuthKey(auth_key, model=model, root_path=config.PATH_LOCAL)
+    def getTranslatorPlamoModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getPlamoModelList()
+
+    def setTranslatorPlamoModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setPlamoModel(model=model)
         return result
+
+    def updateTranslatorPlamoClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updatePlamoClient()
+
+    def authenticationTranslatorGeminiAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationGeminiAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorGeminiModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getGeminiModelList()
+
+    def setTranslatorGeminiModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setGeminiModel(model=model)
+        return result
+
+    def updateTranslatorGeminiClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateGeminiClient()
+
+    def authenticationTranslatorOpenAIAuthKey(self, auth_key: str, base_url: Optional[str] = None) -> bool:
+        result = self.translator.authenticationOpenAIAuthKey(auth_key, base_url=base_url, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOpenAIModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenAIModelList()
+
+    def setTranslatorOpenAiModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setOpenAIModel(model=model)
+        return result
+
+    def updateTranslatorOpenAIClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenAIClient()
 
     def startLogger(self):
         self.ensure_initialized()

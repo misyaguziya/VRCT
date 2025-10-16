@@ -20,6 +20,8 @@ hf-xet==1.1.2
 setuptools==80.8.0
 langchain-openai==0.3.32
 langchain-google-genai==2.1.10
+google-genai==1.45.0
+grpcio==1.67.1
 SudachiPy==0.6.10
 SudachiDict-core==20250825
 SudachiDict-full==20250825

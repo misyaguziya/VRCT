@@ -12,6 +12,7 @@ try:
     from .translation_utils import ctranslate2_weights
     from .translation_plamo import PlamoClient
     from .translation_gemini import GeminiClient
+    from .translation_openai import OpenAIClient
 except Exception:
     import sys
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -20,6 +21,7 @@ except Exception:
     from translation_utils import ctranslate2_weights
     from translation_plamo import PlamoClient
     from translation_gemini import GeminiClient
+    from translation_openai import OpenAIClient
 
 import ctranslate2
 import transformers
@@ -44,6 +46,7 @@ class Translator:
         self.deepl_client: Optional[DeepLClient] = None
         self.plamo_client: Optional[PlamoClient] = None
         self.gemini_client: Optional[GeminiClient] = None
+        self.openai_client: Optional[OpenAIClient] = None
         self.ctranslate2_translator: Any = None
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
@@ -66,35 +69,107 @@ class Translator:
             result = False
         return result
 
-    def authenticationPlamoAuthKey(self, auth_key: str, model: str, root_path: str = None) -> bool:
+    def authenticationPlamoAuthKey(self, auth_key: str, root_path: str = None) -> bool:
         """Authenticate Plamo API with the provided key.
 
         Returns True on success, False on failure.
         """
-        result = True
-        try:
-            self.plamo_client = PlamoClient(auth_key, model=model, root_path=root_path)
-            self.plamo_client.checkAuthKey()
-        except Exception:
-            errorLogging()
+        self.plamo_client = PlamoClient(root_path=root_path)
+        if self.plamo_client.setAuthKey(auth_key):
+            return True
+        else:
             self.plamo_client = None
-            result = False
-        return result
+            return False
 
-    def authenticationGeminiAuthKey(self, auth_key: str, model: str, root_path: str = None) -> bool:
+    def getPlamoModelList(self) -> list[str]:
+        """Get available Plamo models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.plamo_client is None:
+            return []
+        return self.plamo_client.getModelList()
+
+    def setPlamoModel(self, model: str) -> bool:
+        """Change the Plamo model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.plamo_client is None:
+            return False
+        return self.plamo_client.setModel(model)
+
+    def updatePlamoClient(self) -> None:
+        """Update the Plamo client (fetch available models)."""
+        self.plamo_client.updateClient()
+
+    def authenticationGeminiAuthKey(self, auth_key: str, root_path: str = None) -> bool:
         """Authenticate Gemini API with the provided key.
 
         Returns True on success, False on failure.
         """
-        result = True
-        try:
-            self.gemini_client = GeminiClient(auth_key, model=model, root_path=root_path)
-            self.gemini_client.checkAuthKey()
-        except Exception:
-            errorLogging()
-            self.gemini_client = None
-            result = False
-        return result
+        self.gemini_client = GeminiClient(root_path=root_path)
+        if self.gemini_client.setAuthKey(auth_key):
+            return True
+        else:
+            return False
+
+    def getGeminiModelList(self) -> list[str]:
+        """Get available Gemini models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.gemini_client is None:
+            return []
+        return self.gemini_client.getModelList()
+
+    def setGeminiModel(self, model: str) -> bool:
+        """Change the Gemini model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.gemini_client is None:
+            return False
+        return self.gemini_client.setModel(model)
+
+    def updateGeminiClient(self) -> None:
+        """Update the Gemini client (fetch available models)."""
+        self.gemini_client.updateClient()
+
+    def authenticationOpenAIAuthKey(self, auth_key: str, base_url: str | None = None, root_path: str = None) -> bool:
+        """Authenticate OpenAI (Chat Completions) API with the provided key.
+
+        base_url を指定することで互換エンドポイント (例: Azure OpenAI 互換, Proxy) にも対応可能。
+        Returns True on success, False on failure.
+        """
+        self.openai_client = OpenAIClient(base_url=base_url, root_path=root_path)
+        if self.openai_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.openai_client = None
+            return False
+
+    def getOpenAIModelList(self) -> list[str]:
+        """Get available OpenAI models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.openai_client is None:
+            return []
+        return self.openai_client.getModelList()
+
+    def setOpenAIModel(self, model: str) -> bool:
+        """Change the OpenAI model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.openai_client is None:
+            return False
+        return self.openai_client.setModel(model)
+
+    def updateOpenAIClient(self) -> None:
+        """Update the OpenAI client (fetch available models)."""
+        self.openai_client.updateClient()
 
     def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto") -> None:
         """Load a CTranslate2 model from weights.
@@ -236,6 +311,15 @@ class Translator:
                             input_lang=source_language,
                             output_lang=target_language,
                             )
+                case "OpenAI_API":
+                    if self.openai_client is None:
+                        result = False
+                    else:
+                        result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
                 case "Google":
                     if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
