@@ -1605,36 +1605,6 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
-    def getPlamoModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
-
-    def setPlamoModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Plamo Model", data)
-        try:
-            data = str(data)
-            result = model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS["Plamo_API"], model_name=data)
-            if result is True:
-                config.PLAMO_MODEL = data
-                response = {"status":200, "result":config.PLAMO_MODEL}
-            else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Plamo model is not valid",
-                        "data": config.PLAMO_MODEL
-                    }
-                }
-        except Exception as e:
-            errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.PLAMO_MODEL
-                }
-            }
-        return response
-
     def getPlamoAuthKey(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["Plamo_API"]}
 
@@ -1644,13 +1614,19 @@ class Controller:
         try:
             data = str(data)
             if len(data) == 72:
-                result = model.authenticationTranslatorPlamoAuthKey(auth_key=data, model_name=config.PLAMO_MODEL)
+                result = model.authenticationTranslatorPlamoAuthKey(auth_key=data)
                 if result is True:
                     key = data
                     auth_keys = config.AUTH_KEYS
                     auth_keys[translator_name] = key
                     config.AUTH_KEYS = auth_keys
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
+                    # ここにrunが必要
+                    if config.PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
+                        config.PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
+                        # ここにrunが必要
+                    model.updateTranslatorPlamoClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
@@ -1689,23 +1665,27 @@ class Controller:
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
 
-    def getGeminiModelList(self, *args, **kwargs) -> dict:
-        return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
+    def getPlamoModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
 
-    def setGeminiModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Gemini Model", data)
+    def getPlamoModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.PLAMO_MODEL}
+
+    def setPlamoModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Plamo Model", data)
         try:
             data = str(data)
-            result = model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS["Gemini_API"], model_name=data)
+            result = model.setTranslatorPlamoModel(model=data)
             if result is True:
-                config.GEMINI_MODEL = data
-                response = {"status":200, "result":config.GEMINI_MODEL}
+                config.PLAMO_MODEL = data
+                model.updateTranslatorPlamoClient()
+                response = {"status":200, "result":config.PLAMO_MODEL}
             else:
                 response = {
                     "status":400,
                     "result":{
-                        "message":"Gemini model is not valid",
-                        "data": config.GEMINI_MODEL
+                        "message":"Plamo model is not valid",
+                        "data": config.PLAMO_MODEL
                     }
                 }
         except Exception as e:
@@ -1714,7 +1694,7 @@ class Controller:
                 "status":400,
                 "result":{
                     "message":f"Error {e}",
-                    "data": config.GEMINI_MODEL
+                    "data": config.PLAMO_MODEL
                 }
             }
         return response
@@ -1728,13 +1708,19 @@ class Controller:
         try:
             data = str(data)
             if len(data) >= 20:
-                result = model.authenticationTranslatorGeminiAuthKey(auth_key=data, model_name=config.GEMINI_MODEL)
+                result = model.authenticationTranslatorGeminiAuthKey(auth_key=data)
                 if result is True:
                     key = data
                     auth_keys = config.AUTH_KEYS
                     auth_keys[translator_name] = key
                     config.AUTH_KEYS = auth_keys
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
+                    # ここにrunが必要
+                    if config.GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
+                        config.GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
+                        # ここにrunが必要
+                    model.updateTranslatorGeminiClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
@@ -1772,6 +1758,118 @@ class Controller:
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getGeminiModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
+
+    def getGeminiModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.GEMINI_MODEL}
+
+    def setGeminiModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Gemini Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorGeminiModel(model=data)
+            if result is True:
+                config.GEMINI_MODEL = data
+                model.updateTranslatorGeminiClient()
+                response = {"status":200, "result":config.GEMINI_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Gemini model is not valid",
+                        "data": config.GEMINI_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.GEMINI_MODEL
+                }
+            }
+        return response
+
+    @staticmethod
+    def getOpenAiAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
+
+    def setOpenAiAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Auth Key", data)
+        translator_name = "OpenAI_API"
+        try:
+            data = str(data)
+            if len(data) >= 20:
+                key = data
+                auth_keys = config.AUTH_KEYS
+                auth_keys[translator_name] = key
+                config.AUTH_KEYS = auth_keys
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                self.updateTranslationEngineAndEngineList()
+                response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenAI auth key length is not correct",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delOpenAiAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "OpenAI_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getOpenAiModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_OPENAI_MODEL_LIST}
+
+    def getOpenAiModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.OPENAI_MODEL}
+
+    def setOpenAiModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorOpenAiModel(model=data)
+            if result is True:
+                config.OPENAI_MODEL = data
+                response = {"status":200, "result":config.OPENAI_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenAI model is not valid",
+                        "data": config.OPENAI_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.OPENAI_MODEL
+                }
+            }
+        return response
 
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
@@ -2651,9 +2749,14 @@ class Controller:
                     printLog("Start check Plamo API Key")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
-                        if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine], model=config.PLAMO_MODEL) is True:
+                        if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("Plamo API Key is valid")
+                            config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
+                            if config.PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
+                                config.PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
+                            model.setTranslatorPlamoModel(config.PLAMO_MODEL)
+                            model.updateTranslatorPlamoClient()
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
@@ -2664,15 +2767,38 @@ class Controller:
                     printLog("Start check Gemini API Key")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
-                        if model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS[engine], model=config.GEMINI_MODEL) is True:
+                        if model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("Gemini API Key is valid")
+                            config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
+                            if config.GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
+                                config.GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
+                            model.setTranslatorGeminiModel(config.GEMINI_MODEL)
+                            model.updateTranslatorGeminiClient()
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
                             auth_keys[engine] = None
                             config.AUTH_KEYS = auth_keys
                             printLog("Gemini API Key is invalid")
+                case "OpenAI_API":
+                    printLog("Start check OpenAI API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorOpenAIAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("OpenAI API Key is valid")
+                            config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
+                            if config.OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                                config.OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                            model.setTranslatorOpenAiModel(config.OPENAI_MODEL)
+                            model.updateTranslatorOpenAIClient()
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                            printLog("OpenAI API Key is invalid")
                 case _:
                     if connected_network is True:
                         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True

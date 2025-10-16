@@ -2,7 +2,7 @@ system_prompt: |
   You are a helpful translation assistant.
   Supported languages:
   {supported_languages}
-  
+
   Translate the user provided text from {input_lang} to {output_lang}.
   Return ONLY the translated text. Do not add quotes or extra commentary.
 
@@ -10,8 +10,9 @@ supported_languages: |
   Arabic
   Bengali
   Bulgarian
-  Simplified Chinese
-  Traditional Chinese
+  Catalan
+  Chinese Simplified
+  Chinese Traditional
   Croatian
   Czech
   Danish
