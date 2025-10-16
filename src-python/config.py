@@ -922,39 +922,39 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('PLAMO_MODEL')
-    def PLAMO_MODEL(self):
-        return self._PLAMO_MODEL
+    @json_serializable('SELECTED_PLAMO_MODEL')
+    def SELECTED_PLAMO_MODEL(self):
+        return self._SELECTED_PLAMO_MODEL
 
-    @PLAMO_MODEL.setter
-    def PLAMO_MODEL(self, value):
+    @SELECTED_PLAMO_MODEL.setter
+    def SELECTED_PLAMO_MODEL(self, value):
         if isinstance(value, str):
             if value in self.SELECTABLE_PLAMO_MODEL_LIST:
-                self._PLAMO_MODEL = value
+                self._SELECTED_PLAMO_MODEL = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('GEMINI_MODEL')
-    def GEMINI_MODEL(self):
-        return self._GEMINI_MODEL
+    def SELECTED_GEMINI_MODEL(self):
+        return self._SELECTED_GEMINI_MODEL
 
-    @GEMINI_MODEL.setter
-    def GEMINI_MODEL(self, value):
+    @SELECTED_GEMINI_MODEL.setter
+    def SELECTED_GEMINI_MODEL(self, value):
         if isinstance(value, str):
             if value in self.SELECTABLE_GEMINI_MODEL_LIST:
-                self._GEMINI_MODEL = value
+                self._SELECTED_GEMINI_MODEL = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
-    @json_serializable('OPENAI_MODEL')
-    def OPENAI_MODEL(self):
-        return self._OPENAI_MODEL
+    @json_serializable('SELECTED_OPENAI_MODEL')
+    def SELECTED_OPENAI_MODEL(self):
+        return self._SELECTED_OPENAI_MODEL
 
-    @OPENAI_MODEL.setter
-    def OPENAI_MODEL(self, value):
+    @SELECTED_OPENAI_MODEL.setter
+    def SELECTED_OPENAI_MODEL(self, value):
         if isinstance(value, str):
             if value in self.SELECTABLE_OPENAI_MODEL_LIST:
-                self._OPENAI_MODEL = value
+                self._SELECTED_OPENAI_MODEL = value
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
@@ -1181,9 +1181,6 @@ class Config:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = list(transcription_lang[first_key].values())[0].keys()
         except Exception:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST = []
-        self._SELECTABLE_PLAMO_MODEL_LIST = []
-        self._SELECTABLE_GEMINI_MODEL_LIST = []
-        self._SELECTABLE_OPENAI_MODEL_LIST = []
         self._SELECTABLE_UI_LANGUAGE_LIST = ["en", "ja", "ko", "zh-Hant", "zh-Hans"]
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
@@ -1234,6 +1231,9 @@ class Config:
         self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {}
         for engine in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self._SELECTABLE_PLAMO_MODEL_LIST = []
+        self._SELECTABLE_GEMINI_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_MODEL_LIST = []
 
         # Save Json Data
         ## Main Window
@@ -1341,9 +1341,9 @@ class Config:
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
-        self._PLAMO_MODEL = None
-        self._GEMINI_MODEL = None
-        self._OPENAI_MODEL = None
+        self._SELECTED_PLAMO_MODEL = None
+        self._SELECTED_GEMINI_MODEL = None
+        self._SELECTED_OPENAI_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
