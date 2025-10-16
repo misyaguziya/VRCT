@@ -51,6 +51,13 @@ run_mapping = {
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
 
+    "selectable_plamo_model_list":"/run/selectable_plamo_model_list",
+    "selected_plamo_model":"/run/selected_plamo_model",
+    "selectable_gemini_model_list":"/run/selectable_gemini_model_list",
+    "selected_gemini_model":"/run/selected_gemini_model",
+    "selectable_openai_model_list":"/run/selectable_openai_model_list",
+    "selected_openai_model":"/run/selected_openai_model",
+
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",

@@ -1622,10 +1622,10 @@ class Controller:
                     config.AUTH_KEYS = auth_keys
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                     config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
-                    # ここにrunが必要
-                    if config.PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
-                        config.PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
-                        # ここにrunが必要
+                    self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
+                    if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
+                        config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
                     model.updateTranslatorPlamoClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1669,7 +1669,7 @@ class Controller:
         return {"status":200, "result": config.SELECTABLE_PLAMO_MODEL_LIST}
 
     def getPlamoModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.PLAMO_MODEL}
+        return {"status":200, "result":config.SELECTED_PLAMO_MODEL}
 
     def setPlamoModel(self, data, *args, **kwargs) -> dict:
         printLog("Set Plamo Model", data)
@@ -1677,15 +1677,15 @@ class Controller:
             data = str(data)
             result = model.setTranslatorPlamoModel(model=data)
             if result is True:
-                config.PLAMO_MODEL = data
+                config.SELECTED_PLAMO_MODEL = data
                 model.updateTranslatorPlamoClient()
-                response = {"status":200, "result":config.PLAMO_MODEL}
+                response = {"status":200, "result":config.SELECTED_PLAMO_MODEL}
             else:
                 response = {
                     "status":400,
                     "result":{
                         "message":"Plamo model is not valid",
-                        "data": config.PLAMO_MODEL
+                        "data": config.SELECTED_PLAMO_MODEL
                     }
                 }
         except Exception as e:
@@ -1694,7 +1694,7 @@ class Controller:
                 "status":400,
                 "result":{
                     "message":f"Error {e}",
-                    "data": config.PLAMO_MODEL
+                    "data": config.SELECTED_PLAMO_MODEL
                 }
             }
         return response
@@ -1716,10 +1716,10 @@ class Controller:
                     config.AUTH_KEYS = auth_keys
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                     config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
-                    # ここにrunが必要
-                    if config.GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
-                        config.GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
-                        # ここにrunが必要
+                    self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
+                    if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
+                        config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
+                        self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
                     model.updateTranslatorGeminiClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1763,7 +1763,7 @@ class Controller:
         return {"status":200, "result": config.SELECTABLE_GEMINI_MODEL_LIST}
 
     def getGeminiModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.GEMINI_MODEL}
+        return {"status":200, "result":config.SELECTED_GEMINI_MODEL}
 
     def setGeminiModel(self, data, *args, **kwargs) -> dict:
         printLog("Set Gemini Model", data)
@@ -1771,15 +1771,15 @@ class Controller:
             data = str(data)
             result = model.setTranslatorGeminiModel(model=data)
             if result is True:
-                config.GEMINI_MODEL = data
+                config.SELECTED_GEMINI_MODEL = data
                 model.updateTranslatorGeminiClient()
-                response = {"status":200, "result":config.GEMINI_MODEL}
+                response = {"status":200, "result":config.SELECTED_GEMINI_MODEL}
             else:
                 response = {
                     "status":400,
                     "result":{
                         "message":"Gemini model is not valid",
-                        "data": config.GEMINI_MODEL
+                        "data": config.SELECTED_GEMINI_MODEL
                     }
                 }
         except Exception as e:
@@ -1788,7 +1788,7 @@ class Controller:
                 "status":400,
                 "result":{
                     "message":f"Error {e}",
-                    "data": config.GEMINI_MODEL
+                    "data": config.SELECTED_GEMINI_MODEL
                 }
             }
         return response
@@ -1809,10 +1809,10 @@ class Controller:
                 config.AUTH_KEYS = auth_keys
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                 config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
-                # ここにrunが必要
-                if config.OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                    config.OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                    # ここにrunが必要
+                self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                    config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
                 model.updateTranslatorOpenAIClient()
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1848,7 +1848,7 @@ class Controller:
         return {"status":200, "result": config.SELECTABLE_OPENAI_MODEL_LIST}
 
     def getOpenAIModel(self, *args, **kwargs) -> dict:
-        return {"status":200, "result":config.OPENAI_MODEL}
+        return {"status":200, "result":config.SELECTED_OPENAI_MODEL}
 
     def setOpenAIModel(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Model", data)
@@ -1856,14 +1856,14 @@ class Controller:
             data = str(data)
             result = model.setTranslatorOpenAIModel(model=data)
             if result is True:
-                config.OPENAI_MODEL = data
-                response = {"status":200, "result":config.OPENAI_MODEL}
+                config.SELECTED_OPENAI_MODEL = data
+                response = {"status":200, "result":config.SELECTED_OPENAI_MODEL}
             else:
                 response = {
                     "status":400,
                     "result":{
                         "message":"OpenAI model is not valid",
-                        "data": config.OPENAI_MODEL
+                        "data": config.SELECTED_OPENAI_MODEL
                     }
                 }
         except Exception as e:
@@ -1872,7 +1872,7 @@ class Controller:
                 "status":400,
                 "result":{
                     "message":f"Error {e}",
-                    "data": config.OPENAI_MODEL
+                    "data": config.SELECTED_OPENAI_MODEL
                 }
             }
         return response
@@ -2759,9 +2759,9 @@ class Controller:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("Plamo API Key is valid")
                             config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
-                            if config.PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
-                                config.PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
-                            model.setTranslatorPlamoModel(config.PLAMO_MODEL)
+                            if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
+                                config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
+                            model.setTranslatorPlamoModel(config.SELECTED_PLAMO_MODEL)
                             model.updateTranslatorPlamoClient()
                         else:
                             # error update Auth key
@@ -2777,9 +2777,9 @@ class Controller:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("Gemini API Key is valid")
                             config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
-                            if config.GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
-                                config.GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
-                            model.setTranslatorGeminiModel(config.GEMINI_MODEL)
+                            if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
+                                config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
+                            model.setTranslatorGeminiModel(config.SELECTED_GEMINI_MODEL)
                             model.updateTranslatorGeminiClient()
                         else:
                             # error update Auth key
@@ -2795,9 +2795,9 @@ class Controller:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("OpenAI API Key is valid")
                             config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
-                            if config.OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                                config.OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                            model.setTranslatorOpenAIModel(config.OPENAI_MODEL)
+                            if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                                config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                            model.setTranslatorOpenAIModel(config.SELECTED_OPENAI_MODEL)
                             model.updateTranslatorOpenAIClient()
                         else:
                             # error update Auth key
