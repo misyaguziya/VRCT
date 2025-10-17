@@ -13,15 +13,18 @@ try:
     from .translation_plamo import PlamoClient
     from .translation_gemini import GeminiClient
     from .translation_openai import OpenAIClient
+    from .translation_lmstudio import LMStudioClient
+    from .translation_ollama import OllamaClient
 except Exception:
     import sys
-    print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang
     from translation_utils import ctranslate2_weights
     from translation_plamo import PlamoClient
     from translation_gemini import GeminiClient
     from translation_openai import OpenAIClient
+    from translation_lmstudio import LMStudioClient
+    from translation_ollama import OllamaClient
 
 import ctranslate2
 import transformers
@@ -47,6 +50,8 @@ class Translator:
         self.plamo_client: Optional[PlamoClient] = None
         self.gemini_client: Optional[GeminiClient] = None
         self.openai_client: Optional[OpenAIClient] = None
+        self.lmstudio_client: LMStudioClient[LMStudioClient] = None
+        self.ollama_client: OllamaClient[OllamaClient] = None
         self.ctranslate2_translator: Any = None
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
@@ -170,6 +175,67 @@ class Translator:
     def updateOpenAIClient(self) -> None:
         """Update the OpenAI client (fetch available models)."""
         self.openai_client.updateClient()
+
+    def setLMStudioClientURL(self, base_url: str | None = None, root_path: str = None) -> bool:
+        """Authenticate LM Studio with the provided base URL.
+
+        Returns True on success, False on failure.
+        """
+        self.lmstudio_client = LMStudioClient(base_url=base_url, root_path=root_path)
+        result = self.lmstudio_client.setBaseURL(base_url)
+        if result is False:
+            self.lmstudio_client = None
+        return result
+
+    def getLMStudioModelList(self) -> list[str]:
+        """Get available LM Studio models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.lmstudio_client is None:
+            return []
+        return self.lmstudio_client.getModelList()
+
+    def setLMStudioModel(self, model: str) -> bool:
+        """Change the LM Studio model used for translation.
+        """
+        if self.lmstudio_client is None:
+            return False
+        return self.lmstudio_client.setModel(model)
+
+    def updateLMStudioClient(self) -> None:
+        """Update the LM Studio client (fetch available models)."""
+        self.lmstudio_client.updateClient()
+
+    def checkOllamaClient(self, root_path: str = None) -> bool:
+        """Check if Ollama client is available.
+
+        Returns True if Ollama is reachable, False otherwise.
+        """
+        self.ollama_client = OllamaClient(root_path=root_path)
+        return self.ollama_client.authenticationCheck()
+
+    def getOllamaModelList(self, root_path: str = None) -> bool:
+        """Initialize Ollama client and fetch available models.
+
+        Returns True on success, False on failure.
+        """
+        if self.ollama_client is None:
+            return []
+        return self.ollama_client.getModelList()
+
+    def setOllamaModel(self, model: str) -> bool:
+        """Change the Ollama model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.ollama_client is None:
+            return False
+        return self.ollama_client.setModel(model)
+
+    def updateOllamaClient(self) -> None:
+        """Update the Ollama client (fetch available models)."""
+        self.ollama_client.updateClient()
 
     def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto") -> None:
         """Load a CTranslate2 model from weights.
@@ -316,6 +382,24 @@ class Translator:
                         result = False
                     else:
                         result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "LMStudio":
+                    if self.lmstudio_client is None:
+                        result = False
+                    else:
+                        result = self.lmstudio_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "Ollama":
+                    if self.ollama_client is None:
+                        result = False
+                    else:
+                        result = self.ollama_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,

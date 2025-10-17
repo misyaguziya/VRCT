@@ -665,7 +665,6 @@ dict_gemini_languages = {
 
 translation_lang["Gemini_API"] = {"source":dict_gemini_languages, "target":dict_gemini_languages}
 
-# OpenAI API (Chat Completions) - Gemini とほぼ同等の自然言語名を使用
 dict_openai_languages = {
     "Arabic": "Arabic",
     "Bengali": "Bengali",
@@ -710,3 +709,5 @@ dict_openai_languages = {
 }
 
 translation_lang["OpenAI_API"] = {"source": dict_openai_languages, "target": dict_openai_languages}
+translation_lang["LMStudio"] = {"source": dict_openai_languages, "target": dict_openai_languages}
+translation_lang["Ollama"] = {"source": dict_openai_languages, "target": dict_openai_languages}

@@ -249,6 +249,38 @@ class Model:
         self.ensure_initialized()
         self.translator.updateOpenAIClient()
 
+    def authenticationTranslatorLMStudio(self, base_url: str) -> bool:
+        result = self.translator.setLMStudioClientURL(base_url=base_url, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorLMStudioModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getLMStudioModelList()
+
+    def setTranslatorLMStudioModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setLMStudioModel(model=model)
+
+    def updateTranslatorLMStudioClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateLMStudioClient()
+
+    def authenticationTranslatorOllama(self) -> bool:
+        result = self.translator.checkOllamaClient(root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOllamaModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOllamaModelList()
+
+    def setTranslatorOllamaModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setOllamaModel(model=model)
+
+    def updateTranslatorOllamaClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOllamaClient()
+
     def startLogger(self):
         self.ensure_initialized()
         os_makedirs(config.PATH_LOGS, exist_ok=True)

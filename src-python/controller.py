@@ -1877,6 +1877,129 @@ class Controller:
             }
         return response
 
+    def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.LMSTUDIO_URL}
+
+    def setTranslatorLMStudioURL(self, data, *args, **kwargs) -> dict:
+        printLog("Set Translator LMStudio URL", data)
+        try:
+            data = str(data)
+            result = model.authenticationTranslatorLMStudio(base_url=data)
+            if result is True:
+                config.LMSTUDIO_URL = data
+                response = {"status":200, "result":config.LMSTUDIO_URL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"LMStudio URL is not valid",
+                        "data": config.LMSTUDIO_URL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.LMSTUDIO_URL
+                }
+            }
+        return response
+
+    def getTranslatorLStudioModelList(self, *args, **kwargs) -> dict:
+        model_list = model.getTranslatorLMStudioModelList()
+        return {"status":200, "result": model_list}
+
+    def getTranslatorLMStudioModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
+
+    def setTranslatorLMStudioModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Translator LMStudio Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorLMStudioModel(model=data)
+            if result is True:
+                config.SELECTED_LMSTUDIO_MODEL = data
+                response = {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"LMStudio model is not valid",
+                        "data": config.SELECTED_LMSTUDIO_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_LMSTUDIO_MODEL
+                }
+            }
+        return response
+
+    def checkTranslatorLOllamaConnection(self, *args, **kwargs) -> dict:
+        printLog("Check Translator Lollama Connection")
+        try:
+            result = model.authenticationTranslatorOllama()
+            if result is True:
+                response = {"status":200, "result":True}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Cannot connect to Lollama server",
+                        "data": False
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": False
+                }
+            }
+        return response
+
+    def getTranslatorLOllamaModelList(self, *args, **kwargs) -> dict:
+        model_list = model.getTranslatorOllamaModelList()
+        return {"status":200, "result": model_list}
+
+    def getTranslatorLOllamaModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
+
+    def setTranslatorLOllamaModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Translator Lollama Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorOllamaModel(model=data)
+            if result is True:
+                config.SELECTED_OLLAMA_MODEL = data
+                response = {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Lollama model is not valid",
+                        "data": config.SELECTED_OLLAMA_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_OLLAMA_MODEL
+                }
+            }
+        return response
+
     @staticmethod
     def getCtranslate2WeightType(*args, **kwargs) -> dict:
         return {"status":200, "result":config.CTRANSLATE2_WEIGHT_TYPE}
@@ -2805,6 +2928,33 @@ class Controller:
                             auth_keys[engine] = None
                             config.AUTH_KEYS = auth_keys
                             printLog("OpenAI API Key is invalid")
+                case "LMStudio":
+                    printLog("Start check LMStudio API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.LMSTUDIO_URL is not None:
+                        if model.authenticationTranslatorLMStudio(config.LMSTUDIO_URL) is True:
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("LMStudio URL is valid")
+                            config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
+                            if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
+                                config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
+                            model.setTranslatorLMStudioModel(config.SELECTED_LMSTUDIO_MODEL)
+                            model.updateTranslatorLMStudioClient()
+                        else:
+                            printLog("LMStudio is not available")
+                case "Ollama":
+                    printLog("Start check Ollama API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if model.authenticationTranslatorOllama() is True:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                        printLog("Ollama is available")
+                        config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
+                        if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
+                            config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
+                        model.setTranslatorOllamaModel(config.SELECTED_OLLAMA_MODEL)
+                        model.updateTranslatorOllamaClient()
+                    else:
+                        printLog("Ollama is not available")
                 case _:
                     if connected_network is True:
                         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
