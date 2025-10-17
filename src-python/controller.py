@@ -140,11 +140,8 @@ class Controller:
     def updateSelectedMicDevice(self, host, device) -> None:
         config.SELECTED_MIC_HOST = host
         config.SELECTED_MIC_DEVICE = device
-        self.run(
-            200,
-            self.run_mapping["selected_mic_device"],
-            {"host":host, "device":device},
-        )
+        self.run(200, self.run_mapping["selected_mic_host"], config.SELECTED_MIC_HOST)
+        self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
 
     def updateSelectedSpeakerDevice(self, device) -> None:
         config.SELECTED_SPEAKER_DEVICE = device
@@ -1135,12 +1132,8 @@ class Controller:
         if config.ENABLE_CHECK_ENERGY_SEND is True:
             self.stopThreadingCheckMicEnergy()
             self.startThreadingTranscriptionSendMessage()
-        return {"status":200,
-                "result":{
-                    "host":config.SELECTED_MIC_HOST,
-                    "device":config.SELECTED_MIC_DEVICE,
-                    },
-                }
+        self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
+        return {"status":200, "result":config.SELECTED_MIC_HOST}
 
     @staticmethod
     def getSelectedMicDevice(*args, **kwargs) -> dict:
