@@ -42,6 +42,7 @@ run_mapping = {
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
     "error_whisper_weight":"/run/error_whisper_weight",
 
+    "selected_mic_host":"/run/selected_mic_host",
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
 
