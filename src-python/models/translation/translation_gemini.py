@@ -1,8 +1,15 @@
 import logging
 from google import genai
 from langchain_google_genai import ChatGoogleGenerativeAI
-import yaml
-from os import path as os_path
+
+try:
+    from .translation_utils import loadPromptConfig
+except Exception:
+    import sys
+    from os import path as os_path
+    print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_utils import loadPromptConfig
 
 logger = logging.getLogger("langchain_google_genai")
 logger.setLevel(logging.ERROR)
@@ -42,32 +49,13 @@ def _get_available_text_models(api_key: str) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-def _load_prompt_config(root_path: str = None) -> dict:
-    """プロンプト設定をYAMLファイルから読み込む"""
-    prompt_filename = "translation_gemini.yml"
-
-    # PyInstallerでビルドされた場合のパス
-    if root_path and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
-        prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
-    # src-pythonフォルダから直接実行している場合のパス
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
-    # translationフォルダから直接実行している場合のパス
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
-    else:
-        raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
-
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
 class GeminiClient:
     def __init__(self, root_path: str = None):
         self.api_key = None
         self.model = None
 
         # プロンプト設定をYAMLファイルから読み込む
-        prompt_config = _load_prompt_config(root_path)
+        prompt_config = loadPromptConfig(root_path, "translation_gemini.yml")
         self.supported_languages = prompt_config["supported_languages"]
         self.prompt_template = prompt_config["system_prompt"]
 

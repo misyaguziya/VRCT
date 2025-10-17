@@ -2,11 +2,10 @@ from os import path as os_path
 from os import makedirs as os_makedirs
 from requests import get as requests_get
 from typing import Callable
-import hashlib
 import transformers
 import ctranslate2
 from huggingface_hub import hf_hub_url, list_repo_files
-from requests import get as requests_get
+import yaml
 
 try:
     from utils import errorLogging, getBestComputeType
@@ -101,6 +100,21 @@ def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-
         errorLogging()
         tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
         transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+
+def loadPromptConfig(root_path: str | None = None, prompt_filename: str | None = None) -> dict:
+    # PyInstaller 展開後
+    if root_path and prompt_filename and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
+        prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
+    # src-python 直下実行
+    elif prompt_filename and os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
+        prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
+    # translation フォルダ直下実行
+    elif prompt_filename and os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
+        prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
+    else:
+        raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
 # テスト用コード（直接実行時のみ）
 if __name__ == "__main__":

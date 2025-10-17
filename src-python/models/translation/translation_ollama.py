@@ -1,8 +1,13 @@
 import requests
 from langchain_ollama import ChatOllama
-import yaml
-from os import path as os_path
 
+try:
+    from .translation_utils import loadPromptConfig
+except Exception:
+    import sys
+    from os import path as os_path
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_utils import loadPromptConfig
 
 def _authentication_check(base_url: str | None = None) -> bool:
     """Check authentication for Ollama API.
@@ -29,22 +34,6 @@ def _get_available_text_models(base_url: str | None = None) -> list[str]:
     allowed_models.sort()
     return allowed_models
 
-def _load_prompt_config(root_path: str = None) -> dict:
-    prompt_filename = "translation_ollama.yml"
-    # PyInstaller 展開後
-    if root_path and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
-        prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
-    # src-python 直下実行
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
-    # translation フォルダ直下実行
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
-    else:
-        raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
 class OllamaClient:
     """Ollama Translation simple wrapper.
     prompt/translation_ollama.yml から system_prompt / supported_languages を読み込む。
@@ -53,14 +42,17 @@ class OllamaClient:
         self.model = None
         self.base_url = "http://localhost:11434"
 
-        prompt_config = _load_prompt_config(root_path)
+        prompt_config = loadPromptConfig(root_path)
         self.supported_languages = prompt_config["supported_languages"]
         self.prompt_template = prompt_config["system_prompt"]
 
         self.openai_llm = None
 
+    def authenticationCheck(self) -> bool:
+        return _authentication_check(self.base_url)
+
     def getModelList(self) -> list[str]:
-        if _authentication_check(self.base_url):
+        if self.authenticationCheck():
             return _get_available_text_models(self.base_url)
         return []
 
@@ -111,5 +103,5 @@ if __name__ == "__main__":
         print("Available models:", models)
         model = input("Select a model: ")
         client.setModel(model)
-    client.updateClient()
-    print(client.translate("こんにちは世界", "Japanese", "English"))
+        client.updateClient()
+        print(client.translate("こんにちは世界", "Japanese", "English"))

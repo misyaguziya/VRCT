@@ -338,6 +338,24 @@ class Config:
         if isinstance(value, list):
             self._SELECTABLE_OPENAI_MODEL_LIST = value
 
+    @property
+    def SELECTABLE_LMSTUDIO_MODEL_LIST(self):
+        return self._SELECTABLE_LMSTUDIO_MODEL_LIST
+
+    @SELECTABLE_LMSTUDIO_MODEL_LIST.setter
+    def SELECTABLE_LMSTUDIO_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_LMSTUDIO_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_OLLAMA_MODEL_LIST(self):
+        return self._SELECTABLE_OLLAMA_MODEL_LIST
+
+    @SELECTABLE_OLLAMA_MODEL_LIST.setter
+    def SELECTABLE_OLLAMA_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_OLLAMA_MODEL_LIST = value
+
     # Save Json Data
     ## Main Window
     @property
@@ -958,6 +976,41 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('LMSTUDIO_URL')
+    def LMSTUDIO_URL(self):
+        return self._LMSTUDIO_URL
+
+    @LMSTUDIO_URL.setter
+    def LMSTUDIO_URL(self, value):
+        if isinstance(value, str):
+            self._LMSTUDIO_URL = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_LMSTUDIO_MODEL')
+    def SELECTED_LMSTUDIO_MODEL(self):
+        return self._SELECTED_LMSTUDIO_MODEL
+
+    @SELECTED_LMSTUDIO_MODEL.setter
+    def SELECTED_LMSTUDIO_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_LMSTUDIO_MODEL_LIST:
+                self._SELECTED_LMSTUDIO_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_OLLAMA_MODEL')
+    def SELECTED_OLLAMA_MODEL(self):
+        return self._SELECTED_OLLAMA_MODEL
+
+    @SELECTED_OLLAMA_MODEL.setter
+    def SELECTED_OLLAMA_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_OLLAMA_MODEL_LIST:
+                self._SELECTED_OLLAMA_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
     def AUTO_CLEAR_MESSAGE_BOX(self):
         return self._AUTO_CLEAR_MESSAGE_BOX
@@ -1234,6 +1287,8 @@ class Config:
         self._SELECTABLE_PLAMO_MODEL_LIST = []
         self._SELECTABLE_GEMINI_MODEL_LIST = []
         self._SELECTABLE_OPENAI_MODEL_LIST = []
+        self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
+        self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
         # Save Json Data
         ## Main Window
@@ -1344,6 +1399,9 @@ class Config:
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
+        self._LMSTUDIO_URL = "http://127.0.0.1:1234"
+        self._SELECTED_LMSTUDIO_MODEL = None
+        self._SELECTED_OLLAMA_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"

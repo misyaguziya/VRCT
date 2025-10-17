@@ -1,8 +1,14 @@
 from openai import OpenAI
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
-import yaml
-from os import path as os_path
+
+try:
+    from .translation_utils import loadPromptConfig
+except Exception:
+    import sys
+    from os import path as os_path
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_utils import loadPromptConfig
 
 def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
     """Check if the provided API key is valid by attempting to list models.
@@ -51,22 +57,6 @@ def _get_available_text_models(api_key: str, base_url: str | None = None) -> lis
     allowed_models.sort()
     return allowed_models
 
-def _load_prompt_config(root_path: str = None) -> dict:
-    prompt_filename = "translation_openai.yml"
-    # PyInstaller 展開後
-    if root_path and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
-        prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
-    # src-python 直下実行
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
-    # translation フォルダ直下実行
-    elif os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
-        prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
-    else:
-        raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
-    with open(prompt_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-
 class OpenAIClient:
     """OpenAI Translation simple wrapper.
     prompt/translation_openai.yml から system_prompt / supported_languages を読み込む。
@@ -76,7 +66,7 @@ class OpenAIClient:
         self.model = None
         self.base_url = base_url  # None の場合は公式エンドポイント
 
-        prompt_config = _load_prompt_config(root_path)
+        prompt_config = loadPromptConfig(root_path, "translation_openai.yml")
         self.supported_languages = prompt_config["supported_languages"]
         self.prompt_template = prompt_config["system_prompt"]
 
