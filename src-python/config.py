@@ -16,9 +16,11 @@ except Exception:  # pragma: no cover - optional runtime
     device_manager = None  # type: ignore
 
 try:
-    from models.translation.translation_languages import translation_lang
+    from models.translation.translation_languages import translation_lang, loadTranslationLanguages
 except Exception:  # pragma: no cover - optional runtime
     translation_lang = {}  # type: ignore
+    def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
+        return {}
 
 try:
     from models.translation.translation_utils import ctranslate2_weights
@@ -1227,6 +1229,7 @@ class Config:
         # these external mappings may be empty dicts if the optional modules failed to import
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = getattr(ctranslate2_weights, 'keys', lambda: [])()
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = getattr(whisper_models, 'keys', lambda: [])()
+        translation_lang = loadTranslationLanguages(self.PATH_LOCAL)
         self._SELECTABLE_TRANSLATION_ENGINE_LIST = getattr(translation_lang, 'keys', lambda: [])()
         try:
             # transcription_lang is nested dict; attempt to extract keys defensively

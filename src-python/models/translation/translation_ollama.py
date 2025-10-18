@@ -42,7 +42,7 @@ class OllamaClient:
         self.model = None
         self.base_url = "http://localhost:11434"
 
-        prompt_config = loadPromptConfig(root_path)
+        prompt_config = loadPromptConfig(root_path, "translation_ollama.yml")
         self.supported_languages = prompt_config["supported_languages"]
         self.prompt_template = prompt_config["system_prompt"]
 

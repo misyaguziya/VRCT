@@ -1,713 +1,144 @@
-"""Language code mappings for supported translation backends.
+"""Load translation language code mappings from YAML.
 
-Provides `translation_lang` mapping keyed by backend name with `source` and
-`target` maps used by `Translator.getLanguageCode`.
+YAML ファイル: languages/languages.yml
+構造:
+  <BackendName>:
+    source: { DisplayName: Code, ... }
+    target: { DisplayName: Code, ... }
+  CTranslate2:
+    <ModelName>:
+      source: {...}
+      target: {...}
 """
 
-from typing import Dict
+import os
+import threading
+from typing import Any, Dict
+import yaml
+try:
+    from utils import printLog, errorLogging
+except ImportError:
+    def printLog(data, *args, **kwargs):
+        print(data, *args, **kwargs)
 
+    def errorLogging():
+        import traceback
+        traceback.print_exc()
+
+
+# 型: translation_lang[backend][(model)?]['source'|'target'][display_name] = code
 translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {}
+_loaded = False
+_lock = threading.Lock()
 
-dict_deepl_languages = {
-    "Arabic":"ar",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "English":"en",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Irish":"ga",
-	"Croatian":"hr",
-	"Hungarian":"hu",
-	"Indonesian":"id",
-	"Icelandic":"is",
-	"Italian":"it",
-	"Japanese":"ja",
-	"Korean":"ko",
-	"Lithuanian":"lt",
-	"Latvian":"lv",
-	"Maltese":"mt",
-	"Bokmal":"nb",
-	"Dutch":"nl",
-	"Norwegian":"no",
-	"Polish":"pl",
-	"Portuguese":"pt",
-	"Romanian":"ro",
-	"Russian":"ru",
-	"Slovak":"sk",
-	"Slovenian":"sl",
-	"Swedish":"sv",
-	"Turkish":"tr",
-	"Ukrainian":"uk",
-	"Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-translation_lang["DeepL"] = {"source": dict_deepl_languages, "target": dict_deepl_languages}
 
-dict_deepl_api_source_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Hungarian":"hu",
-    "Indonesian":"id",
-    "Italian":"it",
-    "Korean":"ko",
-    "Lithuanian":"lt",
-    "Latvian":"lv",
-    "Norwegian":"nb",
-    "Dutch":"nl",
-    "Polish":"pl",
-    "Portuguese":"pt",
-    "Romanian":"ro",
-    "Russian":"ru",
-    "Slovak":"sk",
-    "Slovenian":"sl",
-    "Swedish":"sv",
-    "Turkish":"tr",
-    "Ukrainian":"uk",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-dict_deepl_api_target_languages = {
-    "Japanese":"ja",
-    "English American":"en-US",
-    "English British":"en-GB",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "English":"en",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Hungarian":"hu",
-    "Indonesian":"id",
-    "Italian":"it",
-    "Korean":"ko",
-    "Lithuanian":"lt",
-    "Latvian":"lv",
-    "Norwegian":"nb",
-    "Dutch":"nl",
-    "Polish":"pl",
-    "Portuguese Brazilian":"pt-BR",
-    "Portuguese European":"pt-PT",
-    "Romanian":"ro",
-    "Russian":"ru",
-    "Slovak":"sk",
-    "Slovenian":"sl",
-    "Swedish":"sv",
-    "Turkish":"tr",
-    "Ukrainian":"uk",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-translation_lang["DeepL_API"] = {"source": dict_deepl_api_source_languages, "target": dict_deepl_api_target_languages}
+def _load_languages(path: str, filename: str) -> str:
+    """Get absolute path to resource file relative to this module.
 
-dict_google_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh-TW",
-    "Arabic":"ar",
-    "Russian":"ru",
-    "French":"fr",
-    "German":"de",
-    "Spanish":"es",
-    "Portuguese":"pt",
-    "Italian":"it",
-    "Korean":"ko",
-    "Greek":"el",
-    "Dutch":"nl",
-    "Hindi":"hi",
-    "Turkish":"tr",
-    "Malay":"ms",
-    "Thai":"th",
-    "Vietnamese":"vi",
-    "Indonesian":"id",
-    "Hebrew":"he",
-    "Polish":"pl",
-    "Mongolian":"mn",
-    "Czech":"cs",
-    "Hungarian":"hu",
-    "Estonian":"et",
-    "Bulgarian":"bg",
-    "Danish":"da",
-    "Finnish":"fi",
-    "Romanian":"ro",
-    "Swedish":"sv",
-    "Slovenian":"sl",
-    "Persian/Farsi":"fa",
-    "Bosnian":"bs",
-    "Serbian":"sr",
-    "Filipino":"tl",
-    "Haitiancreole":"ht",
-    "Catalan":"ca",
-    "Croatian":"hr",
-    "Latvian":"lv",
-    "Lithuanian":"lt",
-    "Urdu":"ur",
-    "Ukrainian":"uk",
-    "Welsh":"cy",
-    "Swahili":"sw",
-    "Samoan":"sm",
-    "Slovak":"sk",
-    "Afrikaans":"af",
-    "Norwegian":"no",
-    "Bengali":"bn",
-    "Malagasy":"mg",
-    "Maltese":"mt",
-    "Gujarati":"gu",
-    "Tamil":"ta",
-    "Telugu":"te",
-    "Punjabi":"pa",
-    "Amharic":"am",
-    "Azerbaijani":"az",
-    "Belarusian":"be",
-    "Cebuano":"ceb",
-    "Esperanto":"eo",
-    # "Basque":"eu",
-    "Irish":"ga"
-}
-translation_lang["Google"] = {"source": dict_google_languages, "target": dict_google_languages}
+    Args:
+        filename: relative filename from this module's directory
 
-dict_bing_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh-Hant",
-    "Arabic":"ar",
-    "Russian":"ru",
-    "French":"fr",
-    "German":"de",
-    "Spanish":"es",
-    "Portuguese":"pt",
-    "Italian":"it",
-    "Korean":"ko",
-    "Greek":"el",
-    "Dutch":"nl",
-    "Hindi":"hi",
-    "Turkish":"tr",
-    "Malay":"ms",
-    "Thai":"th",
-    "Vietnamese":"vi",
-    "Indonesian":"id",
-    "Hebrew":"he",
-    "Polish":"pl",
-    "Czech":"cs",
-    "Hungarian":"hu",
-    "Estonian":"et",
-    "Bulgarian":"bg",
-    "Danish":"da",
-    "Finnish":"fi",
-    "Romanian":"ro",
-    "Swedish":"sv",
-    "Slovenian":"sl",
-    "Persian/Farsi":"fa",
-    "Bosnian":"bs",
-    "Serbian":"sr",
-    "Fijian":"fj",
-    "Filipino":"tl",
-    "Haitiancreole":"ht",
-    "Catalan":"ca",
-    "Croatian":"hr",
-    "Latvian":"lv",
-    "Lithuanian":"lt",
-    "Urdu":"ur",
-    "Ukrainian":"uk",
-    "Welsh":"cy",
-    "Tahiti":"ty",
-    "Tongan":"to",
-    "Swahili":"sw",
-    "Samoan":"sm",
-    "Slovak":"sk",
-    "Afrikaans":"af",
-    "Norwegian":"no",
-    "Bengali":"bn",
-    "Malagasy":"mg",
-    "Maltese":"mt",
-    "Queretaro otomi":"otq",
-    "Klingon/tlhingan Hol":"tlh",
-    "Gujarati":"gu",
-    "Tamil":"ta",
-    "Telugu":"te",
-    "Punjabi":"pa",
-    "Irish":"ga"
-}
-translation_lang["Bing"] = {"source": dict_bing_languages, "target": dict_bing_languages}
+    Returns:
+        Absolute path to the resource file
+    """
+    if os.path.exists(os.path.join(path, "_internal", "languages", "languages.yml")):
+        languages_path =  os.path.join(path, "_internal", "languages", "languages.yml")
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "languages", "languages.yml")):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "languages", "languages.yml")
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "languages", "languages.yml")):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "languages", "languages.yml")
+    else:
+        raise FileNotFoundError(f"Prompt file not found: {filename}")
+    with open(languages_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
-dict_papago_languages = {
-    "German": "de",
-    "English": "en",
-    "Spanish":"es",
-    "French": "fr",
-    "Hindi": "hi",
-    "Indonesian": "id",
-    "Italian": "it",
-    "Japanese": "ja",
-    "Korean": "ko",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Thai": "th",
-    "Vietnamese": "vi",
-    "Chinese Simplified":"zh-CN",
-    "Chinese Traditional":"zh-TW",
-}
+def _validate_source_target(backend: str, mapping: Any) -> None:
+    """Validate that a backend mapping has proper source/target structure.
 
-translation_lang["Papago"] = {"source": dict_papago_languages, "target": dict_papago_languages}
+    Args:
+        backend: backend name for error messages
+        mapping: mapping to validate
 
-dict_m2m100_languages = {
-    "English": "en",
-    "Chinese Simplified": "zh",
-    "Chinese Traditional":"zh",
-    "German": "de",
-    "Spanish": "es",
-    "Russian": "ru",
-    "Korean": "ko",
-    "French": "fr",
-    "Japanese": "ja",
-    "Portuguese": "pt",
-    "Turkish": "tr",
-    "Polish": "pl",
-    "Catalan": "ca",
-    "Dutch": "nl",
-    "Arabic": "ar",
-    "Swedish": "sv",
-    "Italian": "it",
-    "Indonesian": "id",
-    "Hindi": "hi",
-    "Finnish": "fi",
-    "Vietnamese": "vi",
-    "Hebrew": "he",
-    "Ukrainian": "uk",
-    "Greek": "el",
-    "Malay": "ms",
-    "Czech": "cs",
-    "Romanian": "ro",
-    "Danish": "da",
-    "Hungarian": "hu",
-    "Tamil": "ta",
-    "Norwegian": "no",
-    "Thai": "th",
-    "Urdu": "ur",
-    "Croatian": "hr",
-    "Bulgarian": "bg",
-    "Lithuanian": "lt",
-    "Latin": "la",
-    "Maori": "mi",
-    "Malayalam": "ml",
-    "Welsh": "cy",
-    "Slovak": "sk",
-    # "Telugu": "te",
-    "Persian": "fa",
-    "Latvian": "lv",
-    "Bengali": "bn",
-    "Serbian": "sr",
-    "Azerbaijani": "az",
-    "Slovenian": "sl",
-    "Kannada": "kn",
-    "Estonian": "et",
-    "Macedonian": "mk",
-    "Breton": "br",
-    # "Basque": "eu",
-    "Icelandic": "is",
-    "Armenian": "hy",
-    "Nepali": "ne",
-    "Mongolian": "mn",
-    "Bosnian": "bs",
-    "Kazakh": "kk",
-    "Albanian": "sq",
-    "Swahili": "sw",
-    "Galician": "gl",
-    "Marathi": "mr",
-    "Punjabi": "pa",
-    "Sinhala": "si",
-    "Khmer": "km",
-    "Shona": "sn",
-    "Yoruba": "yo",
-    "Somali": "so",
-    "Afrikaans": "af",
-    "Occitan": "oc",
-    "Georgian": "ka",
-    "Belarusian": "be",
-    "Tajik": "tg",
-    "Sindhi": "sd",
-    "Gujarati": "gu",
-    "Amharic": "am",
-    "Yiddish": "yi",
-    "Lao": "lo",
-    "Uzbek": "uz",
-    "Faroese": "fo",
-    "Haitian creole": "ht",
-    "Pashto": "ps",
-    "Turkmen": "tk",
-    "Nynorsk": "nn",
-    "Maltese": "mt",
-    "Sanskrit": "sa",
-    "Luxembourgish": "lb",
-    "Myanmar": "my",
-    "Tibetan": "bo",
-    "Filipino": "tl",
-    "Malagasy": "mg",
-    "Assamese": "as",
-    "Tatar": "tt",
-    "Hawaiian": "haw",
-    "Lingala": "ln",
-    "Hausa": "ha",
-    "Bashkir": "ba",
-    "Javanese": "jw",
-    "Sundanese": "su"
-}
+    Raises:
+        ValueError: If mapping structure is invalid
+    """
+    if not isinstance(mapping, dict):
+        raise ValueError(f"{backend}: 値は dict である必要があります。")
+    if "source" not in mapping or "target" not in mapping:
+        raise ValueError(f"{backend}: 'source' と 'target' が必要です。")
 
-translation_lang["CTranslate2"] = {}
-translation_lang["CTranslate2"]["m2m100_418M-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
-translation_lang["CTranslate2"]["m2m100_1.2B-ct2-int8"] = {"source":dict_m2m100_languages, "target":dict_m2m100_languages}
+    for key in ("source", "target"):
+        if not isinstance(mapping[key], dict):
+            raise ValueError(f"{backend}: '{key}' は dict である必要があります。")
+        # value は str を想定
+        for disp, code in mapping[key].items():
+            if not isinstance(disp, str) or not isinstance(code, str):
+                raise ValueError(
+                    f"{backend}: '{key}' のエントリは str: str である必要があります。 ({disp} => {code})"
+                )
 
-dict_nllb_languages = {
-    "Acehnese (Arabic script)": "ace_Arab",
-    "Acehnese (Latin script)": "ace_Latn",
-    "Mesopotamian Arabic": "acm_Arab",
-    "Ta’izzi-Adeni Arabic": "acq_Arab",
-    "Tunisian Arabic": "aeb_Arab",
-    "Afrikaans": "afr_Latn",
-    "South Levantine Arabic": "ajp_Arab",
-    "Akan": "aka_Latn",
-    "Amharic": "amh_Ethi",
-    "North Levantine Arabic": "apc_Arab",
-    "Modern Standard Arabic": "arb_Arab",
-    "Modern Standard Arabic (Romanized)": "arb_Latn",
-    "Najdi Arabic": "ars_Arab",
-    "Moroccan Arabic": "ary_Arab",
-    "Egyptian Arabic": "arz_Arab",
-    "Assamese": "asm_Beng",
-    "Asturian": "ast_Latn",
-    "Awadhi": "awa_Deva",
-    "Central Aymara": "ayr_Latn",
-    "South Azerbaijani": "azb_Arab",
-    "North Azerbaijani": "azj_Latn",
-    "Bashkir": "bak_Cyrl",
-    "Bambara": "bam_Latn",
-    "Balinese": "ban_Latn",
-    "Belarusian": "bel_Cyrl",
-    "Bemba": "bem_Latn",
-    "Bengali": "ben_Beng",
-    "Bhojpuri": "bho_Deva",
-    "Banjar (Arabic script)": "bjn_Arab",
-    "Banjar (Latin script)": "bjn_Latn",
-    "Standard Tibetan": "bod_Tibt",
-    "Bosnian": "bos_Latn",
-    "Buginese": "bug_Latn",
-    "Bulgarian": "bul_Cyrl",
-    "Catalan": "cat_Latn",
-    "Cebuano": "ceb_Latn",
-    "Czech": "ces_Latn",
-    "Chokwe": "cjk_Latn",
-    "Central Kurdish": "ckb_Arab",
-    "Crimean Tatar": "crh_Latn",
-    "Welsh": "cym_Latn",
-    "Danish": "dan_Latn",
-    "German": "deu_Latn",
-    "Southwestern Dinka": "dik_Latn",
-    "Dyula": "dyu_Latn",
-    "Dzongkha": "dzo_Tibt",
-    "Greek": "ell_Grek",
-    "English": "eng_Latn",
-    "Esperanto": "epo_Latn",
-    "Estonian": "est_Latn",
-    "Basque": "eus_Latn",
-    "Ewe": "ewe_Latn",
-    "Faroese": "fao_Latn",
-    "Fijian": "fij_Latn",
-    "Finnish": "fin_Latn",
-    "Fon": "fon_Latn",
-    "French": "fra_Latn",
-    "Friulian": "fur_Latn",
-    "Nigerian Fulfulde": "fuv_Latn",
-    "Scottish Gaelic": "gla_Latn",
-    "Irish": "gle_Latn",
-    "Galician": "glg_Latn",
-    "Guarani": "grn_Latn",
-    "Gujarati": "guj_Gujr",
-    "Haitian Creole": "hat_Latn",
-    "Hausa": "hau_Latn",
-    "Hebrew": "heb_Hebr",
-    "Hindi": "hin_Deva",
-    "Chhattisgarhi": "hne_Deva",
-    "Croatian": "hrv_Latn",
-    "Hungarian": "hun_Latn",
-    "Armenian": "hye_Armn",
-    "Igbo": "ibo_Latn",
-    "Ilocano": "ilo_Latn",
-    "Indonesian": "ind_Latn",
-    "Icelandic": "isl_Latn",
-    "Italian": "ita_Latn",
-    "Javanese": "jav_Latn",
-    "Japanese": "jpn_Jpan",
-    "Kabyle": "kab_Latn",
-    "Jingpho": "kac_Latn",
-    "Kamba": "kam_Latn",
-    "Kannada": "kan_Knda",
-    "Kashmiri (Arabic script)": "kas_Arab",
-    "Kashmiri (Devanagari script)": "kas_Deva",
-    "Georgian": "kat_Geor",
-    "Central Kanuri (Arabic script)": "knc_Arab",
-    "Central Kanuri (Latin script)": "knc_Latn",
-    "Kazakh": "kaz_Cyrl",
-    "Kabiyè": "kbp_Latn",
-    "Kabuverdianu": "kea_Latn",
-    "Khmer": "khm_Khmr",
-    "Kikuyu": "kik_Latn",
-    "Kinyarwanda": "kin_Latn",
-    "Kyrgyz": "kir_Cyrl",
-    "Kimbundu": "kmb_Latn",
-    "Northern Kurdish": "kmr_Latn",
-    "Kikongo": "kon_Latn",
-    "Korean": "kor_Hang",
-    "Lao": "lao_Laoo",
-    "Ligurian": "lij_Latn",
-    "Limburgish": "lim_Latn",
-    "Lingala": "lin_Latn",
-    "Lithuanian": "lit_Latn",
-    "Lombard": "lmo_Latn",
-    "Latgalian": "ltg_Latn",
-    "Luxembourgish": "ltz_Latn",
-    "Luba-Kasai": "lua_Latn",
-    "Ganda": "lug_Latn",
-    "Luo": "luo_Latn",
-    "Mizo": "lus_Latn",
-    "Standard Latvian": "lvs_Latn",
-    "Magahi": "mag_Deva",
-    "Maithili": "mai_Deva",
-    "Malayalam": "mal_Mlym",
-    "Marathi": "mar_Deva",
-    "Minangkabau (Arabic script)": "min_Arab",
-    "Minangkabau (Latin script)": "min_Latn",
-    "Macedonian": "mkd_Cyrl",
-    "Plateau Malagasy": "plt_Latn",
-    "Maltese": "mlt_Latn",
-    "Meitei (Bengali script)": "mni_Beng",
-    "Halh Mongolian": "khk_Cyrl",
-    "Mossi": "mos_Latn",
-    "Maori": "mri_Latn",
-    "Burmese": "mya_Mymr",
-    "Dutch": "nld_Latn",
-    "Norwegian Nynorsk": "nno_Latn",
-    "Norwegian Bokmål": "nob_Latn",
-    "Nepali": "npi_Deva",
-    "Northern Sotho": "nso_Latn",
-    "Nuer": "nus_Latn",
-    "Nyanja": "nya_Latn",
-    "Occitan": "oci_Latn",
-    "West Central Oromo": "gaz_Latn",
-    "Odia": "ory_Orya",
-    "Pangasinan": "pag_Latn",
-    "Eastern Panjabi": "pan_Guru",
-    "Papiamento": "pap_Latn",
-    "Western Persian": "pes_Arab",
-    "Polish": "pol_Latn",
-    "Portuguese": "por_Latn",
-    "Dari": "prs_Arab",
-    "Southern Pashto": "pbt_Arab",
-    "Ayacucho Quechua": "quy_Latn",
-    "Romanian": "ron_Latn",
-    "Rundi": "run_Latn",
-    "Russian": "rus_Cyrl",
-    "Sango": "sag_Latn",
-    "Sanskrit": "san_Deva",
-    "Santali": "sat_Olck",
-    "Sicilian": "scn_Latn",
-    "Shan": "shn_Mymr",
-    "Sinhala": "sin_Sinh",
-    "Slovak": "slk_Latn",
-    "Slovenian": "slv_Latn",
-    "Samoan": "smo_Latn",
-    "Shona": "sna_Latn",
-    "Sindhi": "snd_Arab",
-    "Somali": "som_Latn",
-    "Southern Sotho": "sot_Latn",
-    "Spanish": "spa_Latn",
-    "Tosk Albanian": "als_Latn",
-    "Sardinian": "srd_Latn",
-    "Serbian": "srp_Cyrl",
-    "Swati": "ssw_Latn",
-    "Sundanese": "sun_Latn",
-    "Swedish": "swe_Latn",
-    "Swahili": "swh_Latn",
-    "Silesian": "szl_Latn",
-    "Tamil": "tam_Taml",
-    "Tatar": "tat_Cyrl",
-    "Telugu": "tel_Telu",
-    "Tajik": "tgk_Cyrl",
-    "Tagalog": "tgl_Latn",
-    "Thai": "tha_Thai",
-    "Tigrinya": "tir_Ethi",
-    "Tamasheq (Latin script)": "taq_Latn",
-    "Tamasheq (Tifinagh script)": "taq_Tfng",
-    "Tok Pisin": "tpi_Latn",
-    "Tswana": "tsn_Latn",
-    "Tsonga": "tso_Latn",
-    "Turkmen": "tuk_Latn",
-    "Tumbuka": "tum_Latn",
-    "Turkish": "tur_Latn",
-    "Twi": "twi_Latn",
-    "Central Atlas Tamazight": "tzm_Tfng",
-    "Uyghur": "uig_Arab",
-    "Ukrainian": "ukr_Cyrl",
-    "Umbundu": "umb_Latn",
-    "Urdu": "urd_Arab",
-    "Northern Uzbek": "uzn_Latn",
-    "Venetian": "vec_Latn",
-    "Vietnamese": "vie_Latn",
-    "Waray": "war_Latn",
-    "Wolof": "wol_Latn",
-    "Xhosa": "xho_Latn",
-    "Eastern Yiddish": "ydd_Hebr",
-    "Yoruba": "yor_Latn",
-    "Yue Chinese": "yue_Hant",
-    "Chinese Simplified": "zho_Hans",
-    "Chinese Traditional": "zho_Hant",
-    "Standard Malay": "zsm_Latn",
-    "Zulu": "zul_Latn"
-}
+def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
+    """Load translation language mappings from YAML file.
 
-translation_lang["CTranslate2"]["nllb-200-distilled-1.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
-translation_lang["CTranslate2"]["nllb-200-3.3B-ct2-int8"] = {"source":dict_nllb_languages, "target":dict_nllb_languages}
+    Args:
+        path: Path to the YAML file
+        force: If True, reload even if already loaded
 
-dict_plamo_languages = {
-    "English": "English",
-    "Japanese": "Japanese",
-    "Korean": "Korean",
-    "French": "French",
-    "German": "German",
-    "Spanish": "Spanish",
-    "Portuguese": "Portuguese",
-    "Russian": "Russian",
-    "Italian": "Italian",
-    "Dutch": "Dutch",
-    "Polish": "Polish",
-    "Turkish": "Turkish",
-    "Arabic": "Arabic",
-    "Hindi": "Hindi",
-    "Thai": "Thai",
-    "Vietnamese": "Vietnamese",
-    "Indonesian": "Indonesian",
-    "Malay": "Malay",
-    "Filipino": "Filipino",
-    "Swedish": "Swedish",
-    "Finnish": "Finnish",
-    "Danish": "Danish",
-    "Norwegian": "Norwegian",
-    "Romanian": "Romanian",
-    "Czech": "Czech",
-    "Hungarian": "Hungarian",
-    "Greek": "Greek",
-    "Hebrew": "Hebrew",
-    "Chinese Simplified":"Simplified Chinese",
-    "Chinese Traditional":"Traditional Chinese"
-}
+    Returns:
+        Dictionary of translation language mappings
 
-translation_lang["Plamo_API"] = {"source":dict_plamo_languages, "target":dict_plamo_languages}
+    Raises:
+        FileNotFoundError: If languages/languages.yml is not found
+        ValueError: If YAML structure is invalid
+    """
+    global _loaded, translation_lang
+    if _loaded and not force:
+        return translation_lang
 
-dict_gemini_languages = {
-    "Arabic": "Arabic",
-    "Bengali": "Bengali",
-    "Bulgarian": "Bulgarian",
-    "Chinese Simplified": "Simplified Chinese",
-    "Chinese Traditional": "Traditional Chinese",
-    "Croatian": "Croatian",
-    "Czech": "Czech",
-    "Danish": "Danish",
-    "Dutch": "Dutch",
-    "English": "English",
-    "Estonian": "Estonian",
-    "Finnish": "Finnish",
-    "French": "French",
-    "German": "German",
-    "Greek": "Greek",
-    "Hebrew": "Hebrew",
-    "Hindi": "Hindi",
-    "Hungarian": "Hungarian",
-    "Indonesian": "Indonesian",
-    "Italian": "Italian",
-    "Japanese": "Japanese",
-    "Korean": "Korean",
-    "Latvian": "Latvian",
-    "Lithuanian": "Lithuanian",
-    "Norwegian": "Norwegian",
-    "Polish": "Polish",
-    "Portuguese": "Portuguese",
-    "Romanian": "Romanian",
-    "Russian": "Russian",
-    "Serbian": "Serbian",
-    "Slovak": "Slovak",
-    "Slovenian": "Slovenian",
-    "Spanish": "Spanish",
-    "Swahili": "Swahili",
-    "Swedish": "Swedish",
-    "Thai": "Thai",
-    "Turkish": "Turkish",
-    "Ukrainian": "Ukrainian",
-    "Vietnamese": "Vietnamese",
-}
+    with _lock:
+        if _loaded and not force:
+            return translation_lang
 
-translation_lang["Gemini_API"] = {"source":dict_gemini_languages, "target":dict_gemini_languages}
+        data = _load_languages(path, "languages/languages.yml")
 
-dict_openai_languages = {
-    "Arabic": "Arabic",
-    "Bengali": "Bengali",
-    "Bulgarian": "Bulgarian",
-    "Catalan": "Catalan",
-    "Chinese Simplified": "Simplified Chinese",
-    "Chinese Traditional": "Traditional Chinese",
-    "Croatian": "Croatian",
-    "Czech": "Czech",
-    "Danish": "Danish",
-    "Dutch": "Dutch",
-    "English": "English",
-    "Estonian": "Estonian",
-    "Finnish": "Finnish",
-    "French": "French",
-    "German": "German",
-    "Greek": "Greek",
-    "Hebrew": "Hebrew",
-    "Hindi": "Hindi",
-    "Hungarian": "Hungarian",
-    "Indonesian": "Indonesian",
-    "Italian": "Italian",
-    "Japanese": "Japanese",
-    "Korean": "Korean",
-    "Latvian": "Latvian",
-    "Lithuanian": "Lithuanian",
-    "Norwegian": "Norwegian",
-    "Polish": "Polish",
-    "Portuguese": "Portuguese",
-    "Romanian": "Romanian",
-    "Russian": "Russian",
-    "Serbian": "Serbian",
-    "Slovak": "Slovak",
-    "Slovenian": "Slovenian",
-    "Spanish": "Spanish",
-    "Swahili": "Swahili",
-    "Swedish": "Swedish",
-    "Thai": "Thai",
-    "Turkish": "Turkish",
-    "Ukrainian": "Ukrainian",
-    "Vietnamese": "Vietnamese",
-}
+        if not isinstance(data, dict):
+            raise ValueError(
+                "languages/languages.yml のルートはマッピング(dict)である必要があります。"
+            )
 
-translation_lang["OpenAI_API"] = {"source": dict_openai_languages, "target": dict_openai_languages}
-translation_lang["LMStudio"] = {"source": dict_openai_languages, "target": dict_openai_languages}
-translation_lang["Ollama"] = {"source": dict_openai_languages, "target": dict_openai_languages}
+        # 検証と正規化
+        validated: Dict[str, Dict[str, Dict[str, str]]] = {}
+        for backend, value in data.items():
+            if backend == "CTranslate2":
+                # NOTE: CTranslate2 はモデルごとに異なる言語セットを持つ
+                if not isinstance(value, dict):
+                    raise ValueError(
+                        "CTranslate2 の値はモデル名→ {source:, target:} の dict である必要があります。"
+                    )
+                validated["CTranslate2"] = {}
+                for model_name, model_map in value.items():
+                    _validate_source_target(
+                        backend=f"CTranslate2/{model_name}", mapping=model_map
+                    )
+                    validated["CTranslate2"][model_name] = {
+                        "source": model_map["source"],
+                        "target": model_map["target"],
+                    }
+            else:
+                _validate_source_target(backend=backend, mapping=value)
+                validated[backend] = {
+                    "source": value["source"],
+                    "target": value["target"],
+                }
+
+        translation_lang = validated
+        _loaded = True
+        return translation_lang
+
+if __name__ == "__main__":
+    try:
+        langs = loadTranslationLanguages(path=".", force=True)
+        printLog("Loaded translation languages:")
+        printLog(langs)
+    except Exception:
+        errorLogging()
