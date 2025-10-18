@@ -8,6 +8,7 @@ a = Analysis(
     datas=[
         ('./src-python/models/overlay/fonts', 'fonts/'),
         ('./src-python/models/translation/prompt', 'prompt/'),
+        ('./src-python/models/translation/languages', 'languages/'),
         ('.venv/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('.venv/Lib/site-packages/openvr', 'openvr/'),
         ('.venv/Lib/site-packages/faster_whisper', 'faster_whisper/'),
