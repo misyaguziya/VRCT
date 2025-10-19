@@ -1613,7 +1613,7 @@ class Controller:
         translator_name = "Plamo_API"
         try:
             data = str(data)
-            if len(data) == 72:
+            if len(data) >= 72:
                 result = model.authenticationTranslatorPlamoAuthKey(auth_key=data)
                 if result is True:
                     key = data
@@ -1707,7 +1707,7 @@ class Controller:
         translator_name = "Gemini_API"
         try:
             data = str(data)
-            if len(data) >= 20:
+            if len(data) >= 39:
                 result = model.authenticationTranslatorGeminiAuthKey(auth_key=data)
                 if result is True:
                     key = data
@@ -1802,7 +1802,7 @@ class Controller:
         translator_name = "OpenAI_API"
         try:
             data = str(data)
-            if len(data) >= 20:
+            if data.startswith("sk-") and len(data) >= 164:
                 key = data
                 auth_keys = config.AUTH_KEYS
                 auth_keys[translator_name] = key
@@ -1820,7 +1820,7 @@ class Controller:
                 response = {
                     "status":400,
                     "result":{
-                        "message":"OpenAI auth key length is not correct",
+                        "message":"OpenAI auth key is not valid",
                         "data": config.AUTH_KEYS[translator_name]
                     }
                 }
