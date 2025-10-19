@@ -25,11 +25,15 @@ def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
 def _get_available_text_models(api_key: str, base_url: str | None = None) -> list[str]:
     """Extract the list of available text models from the LM Studio.
     """
-    client = OpenAI(api_key=api_key, base_url=base_url)
-    res = client.models.list()
-    allowed_models = []
+    try:
+        client = OpenAI(api_key=api_key, base_url=base_url)
+        res = client.models.list()
+        models = res.data
+    except Exception:
+        models = []
 
-    for model in res.data:
+    allowed_models = []
+    for model in models:
         allowed_models.append(model.id)
 
     allowed_models.sort()

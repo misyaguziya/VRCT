@@ -1877,16 +1877,59 @@ class Controller:
             }
         return response
 
+    def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
+        printLog("Check Translator LMStudio Connection")
+        translator_name = "LMStudio"
+        try:
+            result = model.authenticationTranslatorLMStudio()
+            if result is True:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
+                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
+                    config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
+                model.updateTranslatorLMStudioClient()
+                self.updateTranslationEngineAndEngineList()
+                response = {"status":200, "result":True}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Cannot connect to LMStudio server",
+                        "data": False
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": False
+                }
+            }
+        return response
+
     def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.LMSTUDIO_URL}
 
     def setTranslatorLMStudioURL(self, data, *args, **kwargs) -> dict:
         printLog("Set Translator LMStudio URL", data)
+        translator_name = "LMStudio"
         try:
             data = str(data)
             result = model.authenticationTranslatorLMStudio(base_url=data)
             if result is True:
                 config.LMSTUDIO_URL = data
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
+                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
+                    config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
+                model.updateTranslatorLMStudioClient()
+                self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":config.LMSTUDIO_URL}
             else:
                 response = {
@@ -1943,9 +1986,18 @@ class Controller:
 
     def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
         printLog("Check Translator Ollama Connection")
+        translator_name = "Ollama"
         try:
             result = model.authenticationTranslatorOllama()
             if result is True:
+                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
+                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
+                if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
+                    config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
+                    self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
+                model.updateTranslatorOllamaClient()
+                self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":True}
             else:
                 response = {

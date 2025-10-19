@@ -26,8 +26,11 @@ def _authentication_check(base_url: str | None = None) -> bool:
 def _get_available_text_models(base_url: str | None = None) -> list[str]:
     """Extract available text models from Ollama.
     """
-    response = requests.get(f"{base_url}/api/tags")
-    models = response.json()["models"]
+    try:
+        response = requests.get(f"{base_url}/api/tags")
+        models = response.json()["models"]
+    except Exception:
+        models = []
 
     allowed_models = []
     for model in models:

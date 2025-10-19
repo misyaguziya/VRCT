@@ -206,6 +206,7 @@ mapping = {
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
+    "/get/data/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
     "/get/data/lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
     "/get/data/lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
     "/set/data/lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
