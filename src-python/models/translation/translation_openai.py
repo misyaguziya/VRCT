@@ -3,11 +3,13 @@ from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
 
 try:
+    from .translation_languages import translation_lang
     from .translation_utils import loadPromptConfig
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_languages import translation_lang
     from translation_utils import loadPromptConfig
 
 def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
@@ -67,7 +69,7 @@ class OpenAIClient:
         self.base_url = base_url  # None の場合は公式エンドポイント
 
         prompt_config = loadPromptConfig(root_path, "translation_openai.yml")
-        self.supported_languages = prompt_config["supported_languages"]
+        self.supported_languages = list(translation_lang["OpenAI_API"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
         self.openai_llm = None

@@ -1402,7 +1402,7 @@ class Config:
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
-        self._LMSTUDIO_URL = "http://127.0.0.1:1234"
+        self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
         self._SELECTED_LMSTUDIO_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"

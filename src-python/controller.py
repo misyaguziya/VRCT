@@ -1941,8 +1941,8 @@ class Controller:
             }
         return response
 
-    def checkTranslatorLOllamaConnection(self, *args, **kwargs) -> dict:
-        printLog("Check Translator Lollama Connection")
+    def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
+        printLog("Check Translator Ollama Connection")
         try:
             result = model.authenticationTranslatorOllama()
             if result is True:
@@ -1951,7 +1951,7 @@ class Controller:
                 response = {
                     "status":400,
                     "result":{
-                        "message":"Cannot connect to Lollama server",
+                        "message":"Cannot connect to ollama server",
                         "data": False
                     }
                 }
@@ -1966,15 +1966,15 @@ class Controller:
             }
         return response
 
-    def getTranslatorLOllamaModelList(self, *args, **kwargs) -> dict:
+    def getTranslatorOllamaModelList(self, *args, **kwargs) -> dict:
         model_list = model.getTranslatorOllamaModelList()
         return {"status":200, "result": model_list}
 
-    def getTranslatorLOllamaModel(self, *args, **kwargs) -> dict:
+    def getTranslatorOllamaModel(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
 
-    def setTranslatorLOllamaModel(self, data, *args, **kwargs) -> dict:
-        printLog("Set Translator Lollama Model", data)
+    def setTranslatorOllamaModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Translator Ollama Model", data)
         try:
             data = str(data)
             result = model.setTranslatorOllamaModel(model=data)
@@ -1985,7 +1985,7 @@ class Controller:
                 response = {
                     "status":400,
                     "result":{
-                        "message":"Lollama model is not valid",
+                        "message":"ollama model is not valid",
                         "data": config.SELECTED_OLLAMA_MODEL
                     }
                 }
