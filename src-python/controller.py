@@ -1881,7 +1881,7 @@ class Controller:
         printLog("Check Translator LMStudio Connection")
         translator_name = "LMStudio"
         try:
-            result = model.authenticationTranslatorLMStudio()
+            result = model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL)
             if result is True:
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                 config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
@@ -2984,7 +2984,7 @@ class Controller:
                     printLog("Start check LMStudio API Key")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.LMSTUDIO_URL is not None:
-                        if model.authenticationTranslatorLMStudio(config.LMSTUDIO_URL) is True:
+                        if model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL) is True:
                             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
                             printLog("LMStudio URL is valid")
                             config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()

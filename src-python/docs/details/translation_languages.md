@@ -7,6 +7,7 @@
 ## 主要機能
 
 ### 多エンジン対応
+
 - DeepL（無料版・API版）
 - Google Translate
 - Microsoft Translator（Bing）
@@ -14,6 +15,7 @@
 - その他のWeb翻訳サービス
 
 ### 言語コード統合管理
+
 - 各エンジン固有の言語コード形式を統一
 - 送信元（source）と送信先（target）言語の分離管理
 - 地域固有言語バリエーションの対応
@@ -21,6 +23,7 @@
 ## データ構造
 
 ### translation_lang
+
 ```python
 translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {
     "エンジン名": {
@@ -52,7 +55,7 @@ translation_lang["DeepL"] = {
 }
 ```
 
-### DeepL API（有料版）
+### DeepL API（有料版 概要）
 
 ```python
 translation_lang["DeepL_API"] = {
@@ -73,6 +76,7 @@ translation_lang["DeepL_API"] = {
 ## 主要対応言語
 
 ### 西欧言語
+
 - **English**: 英語（米国・英国バリエーション）
 - **German**: ドイツ語
 - **French**: フランス語
@@ -84,6 +88,7 @@ translation_lang["DeepL_API"] = {
 - **Norwegian**: ノルウェー語
 
 ### 東欧・スラブ言語
+
 - **Russian**: ロシア語
 - **Polish**: ポーランド語
 - **Czech**: チェコ語
@@ -94,6 +99,7 @@ translation_lang["DeepL_API"] = {
 - **Slovenian**: スロベニア語
 
 ### アジア言語
+
 - **Japanese**: 日本語
 - **Korean**: 韓国語
 - **Chinese Simplified**: 中国語（簡体字）
@@ -101,6 +107,7 @@ translation_lang["DeepL_API"] = {
 - **Indonesian**: インドネシア語
 
 ### その他の言語
+
 - **Arabic**: アラビア語
 - **Turkish**: トルコ語
 - **Finnish**: フィンランド語
@@ -218,21 +225,25 @@ en_code = manager.get_language_code("DeepL", "English", "target")
 ## エンジン別特徴
 
 ### DeepL（無料版）
+
 - **強み**: 高精度、自然な翻訳
 - **制限**: 月間使用量制限、API制限
 - **対応**: 26言語
 
-### DeepL API（有料版）  
+### DeepL API（有料版）
+
 - **強み**: DeepLの高精度、地域別言語対応
 - **制限**: 従量課金
 - **対応**: 地域固有言語バリエーション
 
 ### Google Translate
+
 - **強み**: 多言語対応、高速
 - **制限**: API制限、精度のばらつき
 - **対応**: 100+言語
 
 ### Microsoft Translator
+
 - **強み**: リアルタイム翻訳、音声対応
 - **制限**: APIキー必要
 - **対応**: 70+言語
@@ -240,6 +251,7 @@ en_code = manager.get_language_code("DeepL", "English", "target")
 ## 地域バリエーション対応
 
 ### 英語の地域別対応
+
 ```python
 # DeepL APIでの英語バリエーション
 "English American": "en-US",    # アメリカ英語
@@ -247,6 +259,7 @@ en_code = manager.get_language_code("DeepL", "English", "target")
 ```
 
 ### ポルトガル語の地域別対応
+
 ```python
 # ブラジル・ポルトガル語とヨーロッパ・ポルトガル語
 "Portuguese Brazilian": "pt-BR",
@@ -254,6 +267,7 @@ en_code = manager.get_language_code("DeepL", "English", "target")
 ```
 
 ### 中国語の文字体系対応
+
 ```python
 # 簡体字・繁体字の区別
 "Chinese Simplified": "zh",     # 簡体字（中国本土）
@@ -263,6 +277,7 @@ en_code = manager.get_language_code("DeepL", "English", "target")
 ## 拡張性
 
 ### 新エンジンの追加
+
 ```python
 # 新しい翻訳エンジンの追加例
 translation_lang["NewEngine"] = {
@@ -280,6 +295,7 @@ translation_lang["NewEngine"] = {
 ```
 
 ### 新言語の追加
+
 ```python
 # 既存エンジンへの新言語追加
 translation_lang["DeepL"]["source"]["Hindi"] = "hi"
@@ -289,6 +305,7 @@ translation_lang["DeepL"]["target"]["Hindi"] = "hi"
 ## エラーハンドリング
 
 ### 安全な言語コード取得
+
 ```python
 def safe_get_language_code(engine, language, direction="target", fallback="en"):
     """フォールバック機能付き言語コード取得"""
@@ -303,6 +320,7 @@ def safe_get_language_code(engine, language, direction="target", fallback="en"):
 ```
 
 ### 言語サポート検証
+
 ```python
 def validate_translation_pair(engine, source_lang, target_lang):
     """翻訳ペアの有効性検証"""
@@ -340,3 +358,32 @@ def validate_translation_pair(engine, source_lang, target_lang):
 - `transcription_languages.py`: 音声認識言語マッピング
 - `config.py`: 翻訳言語設定管理
 - `controller.py`: 言語選択UI制御
+
+## 最近の更新 (2025-10-20)
+
+### CTranslate2 言語構造変更
+
+従来: 重みタイプがトップレベルキー (`translation_lang["m2m100_418M-ct2-int8"]`).
+
+現在: `translation_lang["CTranslate2"][weight_type]["source"|"target"]` のネスト構造。`model.findTranslationEngines` / `translation_translator` で `engine == "CTranslate2"` の場合は `CTRANSLATE2_WEIGHT_TYPE` を用いて内部辞書へアクセス。
+
+### 外部 YAML 言語マッピング導入
+
+`models/translation/languages/languages.yml` を追加し、`config.init_config()` 内で `loadTranslationLanguages(path=config.PATH_LOCAL)` を呼び出し、既存 `translation_lang` にマージ/上書き。読込失敗時は空辞書を返しフォールバック。（PyYAML 追加）
+
+### LMStudio / Ollama 翻訳モデル対応準備
+
+新規ローカル LLM 接続用として LMStudio / Ollama 追加。現段階ではモデルリスト・選択用のエンドポイントとプロパティ (`SELECTABLE_LMSTUDIO_MODEL_LIST`, `SELECTED_LMSTUDIO_MODEL`, `SELECTABLE_OLLAMA_MODEL_LIST`, `SELECTED_OLLAMA_MODEL`) を定義。言語マッピングは今後 YAML 拡張で統合予定（未実装部分は翻訳本体の `translate()` に未統合）。
+
+### モデル選択プロパティ名称統一
+
+Plamo / Gemini / OpenAI の選択モデルプロパティを `PLAMO_MODEL` / `GEMINI_MODEL` / `OPENAI_MODEL` から `SELECTED_PLAMO_MODEL` / `SELECTED_GEMINI_MODEL` / `SELECTED_OPENAI_MODEL` へ統一。保存キーも `SELECTED_*` に更新。
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| CTranslate2 | ネスト化により言語参照コード修正が必要 |
+| YAML | 動的言語追加がコード編集無しに可能 |
+| LLM接続 | 今後言語マッピングを YAML で拡張予定（未実装） |
+| プロパティ | SELECTED_* へ統一で UI/設定整合性向上 |
