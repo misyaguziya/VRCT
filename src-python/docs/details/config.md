@@ -390,3 +390,60 @@ config.saveConfig("ENABLE_TRANSLATION", True, immediate_save=True)
 - 外部入力値の検証
 - APIキー等の機密情報の適切な取り扱い
 - パスインジェクション攻撃の防止
+
+## 最近の更新 (2025-10-20)
+
+### LMStudio / Ollama ローカル LLM 設定プロパティ追加
+
+- `LMSTUDIO_URL` / `SELECTABLE_LMSTUDIO_MODEL_LIST` / `SELECTED_LMSTUDIO_MODEL`
+- `SELECTABLE_OLLAMA_MODEL_LIST` / `SELECTED_OLLAMA_MODEL`
+
+ローカル推論エンジン接続用 URL と動的モデルリスト取得・選択プロパティを追加。認証は不要で接続テスト後自動でモデルリストを更新。
+
+### モデル選択プロパティ名称統一
+
+Plamo / Gemini / OpenAI の選択モデルを `PLAMO_MODEL` / `GEMINI_MODEL` / `OPENAI_MODEL` から `SELECTED_PLAMO_MODEL` / `SELECTED_GEMINI_MODEL` / `SELECTED_OPENAI_MODEL` へ統一。設定 JSON の保存キーも `SELECTED_*` に変更し UI との整合性を確保。
+
+### CTranslate2 言語マッピング構造変更対応
+
+`translation_lang` 内の CTranslate2 言語辞書が `translation_lang["CTranslate2"][weight_type]["source"|"target"]` へネスト化。`CTRANSLATE2_WEIGHT_TYPE` プロパティがアクセスのキーとなるため、重みタイプ変更時に翻訳エンジン再初期化が必要。
+
+### YAML 言語外部定義導入
+
+`loadTranslationLanguages()` を初期化時に呼び出し、`models/translation/languages/languages.yml` を読み込んで既存マッピングへマージ。失敗時は空辞書フォールバック。動的言語追加がコード改修無しで可能になったため設定初期化の失敗ログ確認が重要。
+
+### OpenAI モデルリスト自動更新
+
+`setOpenAIAuthKey()` 成功後に `SELECTABLE_OPENAI_MODEL_LIST` を取得し未選択の場合は先頭を自動選択。Gemini / Plamo / LMStudio / Ollama も同様に認証/接続確立時にリスト更新と未選択モデル補完。
+
+### フォント設定のパッケージ対応
+
+`overlay_image.py` で PyInstaller ビルド環境（`_internal/fonts/`）検出を追加。開発環境とバンドル後でフォント探索パスが異なるため、`FONT_FAMILY` はファイル名基準のまま変更無し。
+
+### 依存関係追加
+
+- `PyYAML`: 言語マッピング YAML 読み込み
+- `google-genai`: Gemini 連携
+- `grpcio`: OpenAI 連携（ストリーミング等）
+
+### VRAM エラー時の自動フォールバック
+
+翻訳有効化や翻訳実行時に VRAM 不足検出で `ENABLE_TRANSLATION` を False にし CTranslate2 へ強制切替。設定値は保持されるが UI には無効化状態を通知。再度有効化要求時に重いモデル再初期化を試行。
+
+### テスト関連
+
+包括的翻訳ペアテストにより `SELECTED_*` モデルと言語マッピング組合せを大量実行。設定値の変更頻度増加に伴いデバウンス 2 秒でファイル書き込み負荷を抑制。
+
+### 影響まとめ
+
+| 項目 | 内容 |
+|------|------|
+| ローカルLLM | LMStudio / Ollama の導入でオフライン翻訳拡張 |
+| プロパティ統一 | SELECTED_* 命名で一貫性・ドキュメント整備性向上 |
+| 言語ネスト化 | CTranslate2 重みタイプ切替処理の再初期化必要性増加 |
+| YAML外部化 | 言語追加が設定初期化のみで反映可能 |
+| モデルリスト自動更新 | 認証後の選択ミス防止・初回 UX 改善 |
+| フォント探索 | PyInstaller ビルド後でも同一コードで動作 |
+| 依存追加 | 新機能対応で環境構築ステップ増加 |
+| VRAM検知 | 安全停止と軽量エンジン切替で安定性向上 |
+| テスト増強 | 大量ペア検証で言語/モデル設定の信頼性向上 |
