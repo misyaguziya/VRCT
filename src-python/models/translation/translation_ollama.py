@@ -15,7 +15,7 @@ def _authentication_check(base_url: str | None = None) -> bool:
     """Check authentication for Ollama API.
     """
     try:
-        response = requests.get(f"{base_url}/api/ping")
+        response = requests.get(f"{base_url}")
         if response.status_code == 200:
             return True
         else:

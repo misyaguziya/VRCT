@@ -1625,6 +1625,7 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
                     if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
                         config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
+                        model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
                         self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
                     model.updateTranslatorPlamoClient()
                     self.updateTranslationEngineAndEngineList()
@@ -1678,6 +1679,7 @@ class Controller:
             result = model.setTranslatorPlamoModel(model=data)
             if result is True:
                 config.SELECTED_PLAMO_MODEL = data
+                model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
                 model.updateTranslatorPlamoClient()
                 response = {"status":200, "result":config.SELECTED_PLAMO_MODEL}
             else:
@@ -1719,6 +1721,7 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
                     if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
                         config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
+                        model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
                         self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
                     model.updateTranslatorGeminiClient()
                     self.updateTranslationEngineAndEngineList()
@@ -1772,6 +1775,7 @@ class Controller:
             result = model.setTranslatorGeminiModel(model=data)
             if result is True:
                 config.SELECTED_GEMINI_MODEL = data
+                model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
                 model.updateTranslatorGeminiClient()
                 response = {"status":200, "result":config.SELECTED_GEMINI_MODEL}
             else:
@@ -1812,6 +1816,7 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
                 if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
                     config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
                     self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
                 model.updateTranslatorOpenAIClient()
                 self.updateTranslationEngineAndEngineList()
@@ -1857,6 +1862,8 @@ class Controller:
             result = model.setTranslatorOpenAIModel(model=data)
             if result is True:
                 config.SELECTED_OPENAI_MODEL = data
+                model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
+                model.updateTranslatorOpenAIClient()
                 response = {"status":200, "result":config.SELECTED_OPENAI_MODEL}
             else:
                 response = {
@@ -1888,6 +1895,7 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
                 if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
                     config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
+                    model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
                     self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 model.updateTranslatorLMStudioClient()
                 self.updateTranslationEngineAndEngineList()
@@ -1927,6 +1935,7 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
                 if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
                     config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
+                    model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
                     self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 model.updateTranslatorLMStudioClient()
                 self.updateTranslationEngineAndEngineList()
@@ -1964,6 +1973,8 @@ class Controller:
             result = model.setTranslatorLMStudioModel(model=data)
             if result is True:
                 config.SELECTED_LMSTUDIO_MODEL = data
+                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
+                model.updateTranslatorLMStudioClient()
                 response = {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
             else:
                 response = {
@@ -1995,6 +2006,7 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
                 if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
                     config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
+                    model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
                     self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
                 model.updateTranslatorOllamaClient()
                 self.updateTranslationEngineAndEngineList()
@@ -2032,6 +2044,8 @@ class Controller:
             result = model.setTranslatorOllamaModel(model=data)
             if result is True:
                 config.SELECTED_OLLAMA_MODEL = data
+                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
+                model.updateTranslatorOllamaClient()
                 response = {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
             else:
                 response = {

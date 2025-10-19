@@ -206,18 +206,19 @@ mapping = {
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
-    "/get/data/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
+    "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
     "/get/data/lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
     "/get/data/lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
     "/set/data/lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
     "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
 
-    "/get/data/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
+    "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
     "/get/data/ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
     "/get/data/ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
     "/set/data/ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
 
+    # Transliteration
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable/convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
