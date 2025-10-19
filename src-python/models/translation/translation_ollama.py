@@ -2,11 +2,13 @@ import requests
 from langchain_ollama import ChatOllama
 
 try:
+    from .translation_languages import translation_lang
     from .translation_utils import loadPromptConfig
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_languages import translation_lang
     from translation_utils import loadPromptConfig
 
 def _authentication_check(base_url: str | None = None) -> bool:
@@ -43,7 +45,7 @@ class OllamaClient:
         self.base_url = "http://localhost:11434"
 
         prompt_config = loadPromptConfig(root_path, "translation_ollama.yml")
-        self.supported_languages = prompt_config["supported_languages"]
+        self.supported_languages = list(translation_lang["Ollama"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
         self.openai_llm = None

@@ -3,12 +3,14 @@ from google import genai
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 try:
+    from .translation_languages import translation_lang
     from .translation_utils import loadPromptConfig
 except Exception:
     import sys
     from os import path as os_path
     print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_languages import translation_lang
     from translation_utils import loadPromptConfig
 
 logger = logging.getLogger("langchain_google_genai")
@@ -56,7 +58,7 @@ class GeminiClient:
 
         # プロンプト設定をYAMLファイルから読み込む
         prompt_config = loadPromptConfig(root_path, "translation_gemini.yml")
-        self.supported_languages = prompt_config["supported_languages"]
+        self.supported_languages = list(translation_lang["Gemini_API"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
         self.gemini_llm = None

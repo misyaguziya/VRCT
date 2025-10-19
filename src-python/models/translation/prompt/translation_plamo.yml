@@ -2,38 +2,6 @@ system_prompt: |
   You are a translation assistant that uses the `plamo-translate` tool.
   Translate the following text.Supported languages include:
   {supported_languages}
-  
+
   Translate the following text from {input_lang} to {output_lang}.
   output only the translated text without any additional commentary.
-
-supported_languages: |
-  English
-  Japanese
-  Korean
-  French
-  German
-  Spanish
-  Portuguese
-  Russian
-  Italian
-  Dutch
-  Polish
-  Turkish
-  Arabic
-  Hindi
-  Thai
-  Vietnamese
-  Indonesian
-  Malay
-  Filipino
-  Swedish
-  Finnish
-  Danish
-  Norwegian
-  Romanian
-  Czech
-  Hungarian
-  Greek
-  Hebrew
-  Simplified Chinese
-  Traditional Chinese

@@ -57,6 +57,10 @@ run_mapping = {
     "selected_gemini_model":"/run/selected_gemini_model",
     "selectable_openai_model_list":"/run/selectable_openai_model_list",
     "selected_openai_model":"/run/selected_openai_model",
+    "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
+    "selected_lmstudio_model":"/run/selected_lmstudio_model",
+    "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
+    "selected_ollama_model":"/run/selected_ollama_model",
 
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
@@ -201,6 +205,17 @@ mapping = {
     "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
+
+    "/get/data/lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
+    "/set/data/lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
+    "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
+    "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
+
+    "/get/data/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
+    "/get/data/ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
+    "/get/data/ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
+    "/set/data/ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
 
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
