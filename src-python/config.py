@@ -187,43 +187,6 @@ class Config:
 
     # Read Write
     @property
-    @json_serializable('SEND_MESSAGE_FORMAT_PARTS')
-    def SEND_MESSAGE_FORMAT_PARTS(self):
-        return self._SEND_MESSAGE_FORMAT_PARTS
-
-    @SEND_MESSAGE_FORMAT_PARTS.setter
-    def SEND_MESSAGE_FORMAT_PARTS(self, value):
-        if isinstance(value, dict):
-            valid_parts = {
-                "message": {"prefix": str, "suffix": str},
-                "separator": str,
-                "translation": {"prefix": str, "separator": str, "suffix": str},
-                "translation_first": bool
-            }
-
-            if validateDictStructure(value, valid_parts):
-                self._SEND_MESSAGE_FORMAT_PARTS = value
-                self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('RECEIVED_MESSAGE_FORMAT_PARTS')
-    def RECEIVED_MESSAGE_FORMAT_PARTS(self):
-        return self._RECEIVED_MESSAGE_FORMAT_PARTS
-
-    @RECEIVED_MESSAGE_FORMAT_PARTS.setter
-    def RECEIVED_MESSAGE_FORMAT_PARTS(self, value):
-        if isinstance(value, dict):
-            valid_parts = {
-                "message": {"prefix": str, "suffix": str},
-                "separator": str,
-                "translation": {"prefix": str, "separator": str, "suffix": str},
-                "translation_first": bool
-            }
-            if validateDictStructure(value, valid_parts):
-                self._RECEIVED_MESSAGE_FORMAT_PARTS = value
-                self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
     def ENABLE_TRANSLATION(self):
         return self._ENABLE_TRANSLATION
 
@@ -1173,6 +1136,43 @@ class Config:
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SEND_MESSAGE_FORMAT_PARTS')
+    def SEND_MESSAGE_FORMAT_PARTS(self):
+        return self._SEND_MESSAGE_FORMAT_PARTS
+
+    @SEND_MESSAGE_FORMAT_PARTS.setter
+    def SEND_MESSAGE_FORMAT_PARTS(self, value):
+        if isinstance(value, dict):
+            valid_parts = {
+                "message": {"prefix": str, "suffix": str},
+                "separator": str,
+                "translation": {"prefix": str, "separator": str, "suffix": str},
+                "translation_first": bool
+            }
+
+            if validateDictStructure(value, valid_parts):
+                self._SEND_MESSAGE_FORMAT_PARTS = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('RECEIVED_MESSAGE_FORMAT_PARTS')
+    def RECEIVED_MESSAGE_FORMAT_PARTS(self):
+        return self._RECEIVED_MESSAGE_FORMAT_PARTS
+
+    @RECEIVED_MESSAGE_FORMAT_PARTS.setter
+    def RECEIVED_MESSAGE_FORMAT_PARTS(self, value):
+        if isinstance(value, dict):
+            valid_parts = {
+                "message": {"prefix": str, "suffix": str},
+                "separator": str,
+                "translation": {"prefix": str, "separator": str, "suffix": str},
+                "translation_first": bool
+            }
+            if validateDictStructure(value, valid_parts):
+                self._RECEIVED_MESSAGE_FORMAT_PARTS = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     def WEBSOCKET_SERVER(self):
         return self._WEBSOCKET_SERVER
 
@@ -1181,6 +1181,7 @@ class Config:
         if isinstance(value, bool):
             self._WEBSOCKET_SERVER = value
             self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
 
     @property
     @json_serializable('WEBSOCKET_HOST')
@@ -1241,32 +1242,6 @@ class Config:
         self._COMPUTE_MODE = "cuda" if torch.cuda.is_available() else "cpu"
         self._SELECTABLE_COMPUTE_DEVICE_LIST = getComputeDeviceList()
         self._SEND_MESSAGE_BUTTON_TYPE_LIST = ["show", "hide", "show_and_disable_enter_key"]
-        self._SEND_MESSAGE_FORMAT_PARTS = {
-            "message": {
-                "prefix": "",
-                "suffix": ""
-                },
-            "separator": "\n",
-            "translation": {
-                "prefix": "",
-                "separator": "\n",
-                "suffix": ""
-            },
-            "translation_first": False,
-        }
-        self._RECEIVED_MESSAGE_FORMAT_PARTS = {
-            "message": {
-                "prefix": "",
-                "suffix": ""
-                },
-            "separator": "\n",
-            "translation": {
-                "prefix": "",
-                "separator": "\n",
-                "suffix": ""
-            },
-            "translation_first": False,
-        }
 
         # Read Write
         self._ENABLE_TRANSLATION = False
@@ -1444,6 +1419,32 @@ class Config:
         self._LOGGER_FEATURE = False
         self._VRC_MIC_MUTE_SYNC = False
         self._NOTIFICATION_VRC_SFX = True
+        self._SEND_MESSAGE_FORMAT_PARTS = {
+            "message": {
+                "prefix": "",
+                "suffix": ""
+                },
+            "separator": "\n",
+            "translation": {
+                "prefix": "",
+                "separator": "\n",
+                "suffix": ""
+            },
+            "translation_first": False,
+        }
+        self._RECEIVED_MESSAGE_FORMAT_PARTS = {
+            "message": {
+                "prefix": "",
+                "suffix": ""
+                },
+            "separator": "\n",
+            "translation": {
+                "prefix": "",
+                "separator": "\n",
+                "suffix": ""
+            },
+            "translation_first": False,
+        }
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
