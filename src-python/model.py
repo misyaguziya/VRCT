@@ -193,10 +193,93 @@ class Model:
         del self.keyword_processor
         self.keyword_processor = KeywordProcessor()
 
-    def authenticationTranslatorDeepLAuthKey(self, auth_key):
+    def authenticationTranslatorDeepLAuthKey(self, auth_key: str) -> bool:
         self.ensure_initialized()
         result = self.translator.authenticationDeepLAuthKey(auth_key)
         return result
+
+    def authenticationTranslatorPlamoAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationPlamoAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorPlamoModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getPlamoModelList()
+
+    def setTranslatorPlamoModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setPlamoModel(model=model)
+        return result
+
+    def updateTranslatorPlamoClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updatePlamoClient()
+
+    def authenticationTranslatorGeminiAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationGeminiAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorGeminiModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getGeminiModelList()
+
+    def setTranslatorGeminiModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setGeminiModel(model=model)
+        return result
+
+    def updateTranslatorGeminiClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateGeminiClient()
+
+    def authenticationTranslatorOpenAIAuthKey(self, auth_key: str, base_url: Optional[str] = None) -> bool:
+        result = self.translator.authenticationOpenAIAuthKey(auth_key, base_url=base_url, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOpenAIModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenAIModelList()
+
+    def setTranslatorOpenAIModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setOpenAIModel(model=model)
+        return result
+
+    def updateTranslatorOpenAIClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenAIClient()
+
+    def authenticationTranslatorLMStudio(self, base_url: str) -> bool:
+        result = self.translator.setLMStudioClientURL(base_url=base_url, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorLMStudioModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getLMStudioModelList()
+
+    def setTranslatorLMStudioModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setLMStudioModel(model=model)
+
+    def updateTranslatorLMStudioClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateLMStudioClient()
+
+    def authenticationTranslatorOllama(self) -> bool:
+        result = self.translator.checkOllamaClient(root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOllamaModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOllamaModelList()
+
+    def setTranslatorOllamaModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        return self.translator.setOllamaModel(model=model)
+
+    def updateTranslatorOllamaClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOllamaClient()
 
     def startLogger(self):
         self.ensure_initialized()
@@ -214,8 +297,12 @@ class Model:
         transcription_langs = list(transcription_lang.keys())
         translation_langs = []
         for tl_key in translation_lang.keys():
-            for lang in translation_lang[tl_key]["source"]:
-                translation_langs.append(lang)
+            if tl_key == "CTranslate2":
+                for lang in translation_lang[tl_key][config.CTRANSLATE2_WEIGHT_TYPE]["source"]:
+                    translation_langs.append(lang)
+            else:
+                for lang in translation_lang[tl_key]["source"]:
+                    translation_langs.append(lang)
         translation_langs = list(set(translation_langs))
         supported_langs = list(filter(lambda x: x in transcription_langs, translation_langs))
 
@@ -235,7 +322,10 @@ class Model:
         selectable_engines = [key for key, value in engines_status.items() if value is True]
         compatible_engines = []
         for engine in list(translation_lang.keys()):
-            languages = translation_lang.get(engine, {}).get("source", {})
+            if engine == "CTranslate2":
+                languages = translation_lang.get(engine, {}).get(config.CTRANSLATE2_WEIGHT_TYPE, {}).get("source", {})
+            else:
+                languages = translation_lang.get(engine, {}).get("source", {})
             source_langs = [e["language"] for e in list(source_lang.values()) if e["enable"] is True]
             target_langs = [e["language"] for e in list(target_lang.values()) if e["enable"] is True]
             language_list = list(languages.keys())
@@ -251,6 +341,7 @@ class Model:
         success_flag = False
         translation = self.translator.translate(
                         translator_name=translator_name,
+                        weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                         source_language=source_language,
                         target_language=target_language,
                         target_country=target_country,
@@ -264,6 +355,7 @@ class Model:
             while True:
                 translation = self.translator.translate(
                                     translator_name="CTranslate2",
+                                    weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                                     source_language=source_language,
                                     target_language=target_language,
                                     target_country=target_country,

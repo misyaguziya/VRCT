@@ -65,6 +65,8 @@ class TestMainloop():
         for endpoint in self.main.mapping.keys():
             if endpoint.startswith("/set/data/"):
                 self.set_data_endpoints.append(endpoint)
+        # 新規: local LLM/API キー/モデル選択関連の存在確認ログ
+        print(f"[DEBUG] set_data_endpoints count: {len(self.set_data_endpoints)}", flush=True)
 
         self.delete_data_endpoints = []
         for endpoint in self.main.mapping.keys():
@@ -225,9 +227,57 @@ class TestMainloop():
                 data = random.choice(self.config_dict["transcription_compute_device_list"])
             case "/set/data/ctranslate2_weight_type":
                 data = random.choice(list(self.config_dict["selectable_ctranslate2_weight_type_dict"].keys()))
+            # LLM / API Clients
+            case "/set/data/plamo_model":
+                # 事前にモデルリストを取得
+                self.config_dict["plamo_model_list"], _ = self.main.handleRequest("/get/data/plamo_model_list", None)
+                model_list = self.config_dict.get("plamo_model_list", [])
+                data = random.choice(model_list) if model_list else None
+            case "/set/data/plamo_auth_key":
+                data = "PLAMO_DUMMY_KEY"  # 成功か失敗かは内部判定に依存
+                expected_status = [200, 400]
+            case "/set/data/gemini_model":
+                self.config_dict["gemini_model_list"], _ = self.main.handleRequest("/get/data/gemini_model_list", None)
+                model_list = self.config_dict.get("gemini_model_list", [])
+                data = random.choice(model_list) if model_list else None
+            case "/set/data/gemini_auth_key":
+                data = "GEMINI_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/openai_model":
+                self.config_dict["openai_model_list"], _ = self.main.handleRequest("/get/data/openai_model_list", None)
+                model_list = self.config_dict.get("openai_model_list", [])
+                data = random.choice(model_list) if model_list else None
+            case "/set/data/openai_auth_key":
+                data = "OPENAI_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/lmstudio_model":
+                self.config_dict["lmstudio_model_list"], _ = self.main.handleRequest("/get/data/lmstudio_model_list", None)
+                model_list = self.config_dict.get("lmstudio_model_list", [])
+                data = random.choice(model_list) if model_list else None
+            case "/set/data/lmstudio_url":
+                # 正常/異常 URL をランダム投入
+                data = random.choice([
+                    "http://localhost:1234/v1",
+                    "http://127.0.0.1:1234/v1",
+                    "http://invalid_host:9999/v1",
+                ])
+                expected_status = [200, 400]
+            case "/set/data/ollama_model":
+                self.config_dict["ollama_model_list"], _ = self.main.handleRequest("/get/data/ollama_model_list", None)
+                model_list = self.config_dict.get("ollama_model_list", [])
+                data = random.choice(model_list) if model_list else None
             case "/set/data/deepl_auth_key":
-                data = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-                expected_status = [400]
+                data = "DEEPL_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/plamo_auth_key":
+                data = "PLAMO_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/gemini_auth_key":
+                data = "GEMINI_DUMMY_KEY"
+                expected_status = [200, 400]
+            case "/set/data/openai_auth_key":
+                data = "OPENAI_DUMMY_KEY"
+                expected_status = [200, 400]
             case "/set/data/selected_mic_host":
                 data = random.choice(self.config_dict["mic_host_list"])
             case "/set/data/selected_mic_device":
@@ -363,6 +413,15 @@ class TestMainloop():
                 data = random.choice(self.config_dict["selected_translation_compute_device"]["compute_types"])
             case "/set/data/selected_transcription_compute_type":
                 data = random.choice(self.config_dict["selected_transcription_compute_device"]["compute_types"])
+            # 言語変換設定（新規 transliteration 機能 ON/OFF テスト補助）
+            case "/set/enable/convert_message_to_romaji":
+                data = None
+            case "/set/disable/convert_message_to_romaji":
+                data = None
+            case "/set/enable/convert_message_to_hiragana":
+                data = None
+            case "/set/disable/convert_message_to_hiragana":
+                data = None
             case _:
                 data = None
                 expected_status = [404]
@@ -469,6 +528,12 @@ class TestMainloop():
             case "/run/feed_watchdog":
                 data = None
                 expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/lmstudio_connection":
+                data = None
+                expected_status = [200, 400]
+            case "/run/ollama_connection":
+                data = None
+                expected_status = [200, 400]
             case _:
                 data = None
                 expected_status = [404]

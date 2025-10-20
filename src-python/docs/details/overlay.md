@@ -745,6 +745,27 @@ platform_limitations = {
 - `model.py`: オーバーレイ機能統合
 - `utils.py`: エラーログ・ユーティリティ
 
+## 最近の更新 (2025-10-20)
+
+### フォント探索仕様の強化
+
+`overlay_image.py` に PyInstaller ビルド後の `_internal/fonts/` ディレクトリ検出ロジックを追加。以下の優先順位でフォントディレクトリを探索:
+
+1. `root_path/_internal/fonts/` (PyInstallerバンドル環境)
+2. `src-python/models/overlay/fonts/` (開発環境相対パス)
+3. `models/overlay/fonts/` (直接実行時)
+
+見つからない場合は `FileNotFoundError` で早期通知。これにより配布バイナリと開発環境で同一コードパスを維持。
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| PyInstaller対応 | バンドル後のフォント読み込み失敗を防止 |
+| 移植性 | 環境差異をコード内条件分岐で吸収 |
+| エラー検知 | フォント未配置時の早期例外で不正描画防止 |
+
+
 ## 将来の改善点
 
 - よりリッチなUI要素対応

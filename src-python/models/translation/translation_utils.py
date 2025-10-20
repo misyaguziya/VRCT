@@ -1,12 +1,19 @@
-import tempfile
-from zipfile import ZipFile
 from os import path as os_path
 from os import makedirs as os_makedirs
 from requests import get as requests_get
-from typing import Callable, Optional
-import hashlib
+from typing import Callable
 import transformers
-from utils import errorLogging
+import ctranslate2
+from huggingface_hub import hf_hub_url, list_repo_files
+import yaml
+
+try:
+    from utils import errorLogging, getBestComputeType
+except Exception:
+    import sys
+    print(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from utils import errorLogging, getBestComputeType
 
 
 """Utilities for downloading and verifying CTranslate2 weights and tokenizers.
@@ -18,125 +25,115 @@ raising, which matches the repository's defensive style.
 """
 
 ctranslate2_weights = {
-    "small": {
-        "url": "https://github.com/misyaguziya/VRCT-weights/releases/download/v1.0/m2m100_418m.zip",
-        "directory_name": "m2m100_418m",
+    "m2m100_418M-ct2-int8": {
+        "hf_repo": "jncraton/m2m100_418M-ct2-int8",
+        "directory_name": "m2m100_418M-ct2-int8",
         "tokenizer": "facebook/m2m100_418M",
-        "hash": {
-            "model.bin": "e7c26a9abb5260abd0268fbe3040714070dec254a990b4d7fd3f74c5230e3acb",
-            "sentencepiece.model": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a",
-            "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
-        },
     },
-    "large": {
-        "url": "https://github.com/misyaguziya/VRCT-weights/releases/download/v1.0/m2m100_12b.zip",
-        "directory_name": "m2m100_12b",
-        "tokenizer": "facebook/m2m100_1.2b",
-        "hash": {
-            "model.bin": "abb7bf4ba7e5e016b6e3ed480c752459b2f783ac8fca372e7587675e5bf3a919",
-            "sentencepiece.model": "d8f7c76ed2a5e0822be39f0a4f95a55eb19c78f4593ce609e2edbc2aea4d380a",
-            "shared_vocabulary.txt": "bd440aa21b8ca3453fc792a0018a1f3fe68b3464aadddd4d16a4b72f73c86d8c",
-        },
+    "m2m100_1.2B-ct2-int8": {
+        "hf_repo": "jncraton/m2m100_1.2B-ct2-int8",
+        "directory_name": "m2m100_1.2B-ct2-int8",
+        "tokenizer": "facebook/m2m100_1.2B",
+    },
+    "nllb-200-distilled-1.3B-ct2-int8": {
+        "hf_repo": "OpenNMT/nllb-200-distilled-1.3B-ct2-int8",
+        "directory_name": "nllb-200-distilled-1.3B-ct2-int8",
+        "tokenizer": "facebook/nllb-200-distilled-1.3B",
+    },
+    "nllb-200-3.3B-ct2-int8": {
+        "hf_repo": "OpenNMT/nllb-200-3.3B-ct2-int8",
+        "directory_name": "nllb-200-3.3B-ct2-int8",
+        "tokenizer": "facebook/nllb-200-3.3B",
     },
 }
 
-
-def calculate_file_hash(file_path: str, block_size: int = 65536) -> str:
-    hash_object = hashlib.sha256()
-    with open(file_path, "rb") as f:
-        for block in iter(lambda: f.read(block_size), b""):
-            hash_object.update(block)
-    return hash_object.hexdigest()
-
-
-def checkCTranslate2Weight(root: str, weight_type: str = "small") -> bool:
-    """Return True if the requested weight files exist and match their hashes.
-
-    This function intentionally avoids raising: callers use the boolean to
-    decide whether to (re)download weights.
-    """
-    weight_info = ctranslate2_weights.get(weight_type)
-    if weight_info is None:
+def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
+    weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
+    path = os_path.join(root, "weights", "ctranslate2", weight_directory_name)
+    try:
+        # モデルロード可能かどうかで判定
+        compute_type = getBestComputeType("cpu", 0)
+        ctranslate2.Translator(path, compute_type=compute_type)
+        return True
+    except Exception:
         return False
-    weight_directory_name = weight_info["directory_name"]
-    hash_data = weight_info["hash"]
-    files = ["model.bin", "sentencepiece.model", "shared_vocabulary.txt"]
-    base_path = os_path.join(root, "weights", "ctranslate2")
-    # quick existence check
-    for f in files:
-        p = os_path.join(base_path, weight_directory_name, f)
-        if not os_path.exists(p):
-            return False
-    # verify hashes
-    for f in files:
-        p = os_path.join(base_path, weight_directory_name, f)
+
+def downloadCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8", callback: Callable = None, end_callback: Callable = None):
+    hf_repo = ctranslate2_weights[weight_type]["hf_repo"]
+    files = list_repo_files(repo_id=hf_repo)
+    path = os_path.join(root, "weights", "ctranslate2", ctranslate2_weights[weight_type]["directory_name"])
+    if checkCTranslate2Weight(root, weight_type):
+        return True
+    os_makedirs(path, exist_ok=True)
+
+    def downloadFile(url: str, file_path: str, func: Callable = None):
         try:
-            if calculate_file_hash(p) != hash_data[f]:
-                return False
+            res = requests_get(url, stream=True)
+            res.raise_for_status()
+            file_size = int(res.headers.get('content-length', 0))
+            total_chunk = 0
+            with open(file_path, 'wb') as file:
+                for chunk in res.iter_content(chunk_size=1024*2000):
+                    file.write(chunk)
+                    if func is not None:
+                        total_chunk += len(chunk)
+                        func(total_chunk/file_size)
         except Exception:
             errorLogging()
-            return False
-    return True
 
+    for filename in files:
+        file_path = os_path.join(path, filename)
+        url = hf_hub_url(hf_repo, filename)
+        downloadFile(url, file_path, func=callback if filename == "model.bin" else None)
 
-def downloadCTranslate2Weight(root: str, weight_type: str = "small", callback: Optional[Callable[[float], None]] = None, end_callback: Optional[Callable[[], None]] = None) -> None:
-    """Download and extract ctranslate2 weights for the given type.
+    if end_callback is not None:
+        end_callback()
 
-    callback receives a float between 0 and 1 for progress when available.
-    end_callback is invoked after success or failure to allow caller cleanup.
-    """
-    weight_info = ctranslate2_weights.get(weight_type)
-    if weight_info is None:
-        return
-    url = weight_info["url"]
-    filename = "weight.zip"
-    dst_path = os_path.join(root, "weights", "ctranslate2")
-    os_makedirs(dst_path, exist_ok=True)
-    if checkCTranslate2Weight(root, weight_type):
-        if callable(end_callback):
-            end_callback()
-        return
+def downloadCTranslate2Tokenizer(path: str, weight_type: str = "m2m100_418M-ct2-int8"):
+    directory_name = ctranslate2_weights[weight_type]["directory_name"]
+    tokenizer = ctranslate2_weights[weight_type]["tokenizer"]
+    tokenizer_path = os_path.join(path, "weights", "ctranslate2", directory_name, "tokenizer")
     try:
-        with tempfile.TemporaryDirectory() as tmp_path:
-            res = requests_get(url, stream=True, timeout=30)
-            total = int(res.headers.get("content-length", 0) or 0)
-            written = 0
-            out_path = os_path.join(tmp_path, filename)
-            with open(out_path, "wb") as out:
-                for chunk in res.iter_content(chunk_size=1024 * 1024):
-                    if not chunk:
-                        continue
-                    out.write(chunk)
-                    written += len(chunk)
-                    if callable(callback) and total:
-                        try:
-                            callback(written / total)
-                        except Exception:
-                            errorLogging()
-            with ZipFile(out_path) as zf:
-                zf.extractall(dst_path)
+        os_makedirs(tokenizer_path, exist_ok=True)
+        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
     except Exception:
         errorLogging()
-    finally:
-        if callable(end_callback):
-            end_callback()
+        tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
+        transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
 
+def loadPromptConfig(root_path: str | None = None, prompt_filename: str | None = None) -> dict:
+    # PyInstaller 展開後
+    if root_path and prompt_filename and os_path.exists(os_path.join(root_path, "_internal", "prompt", prompt_filename)):
+        prompt_path = os_path.join(root_path, "_internal", "prompt", prompt_filename)
+    # src-python 直下実行
+    elif prompt_filename and os_path.exists(os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)):
+        prompt_path = os_path.join(os_path.dirname(__file__), "models", "translation", "prompt", prompt_filename)
+    # translation フォルダ直下実行
+    elif prompt_filename and os_path.exists(os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)):
+        prompt_path = os_path.join(os_path.dirname(__file__), "prompt", prompt_filename)
+    else:
+        raise FileNotFoundError(f"Prompt file not found: {prompt_filename}")
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
-def downloadCTranslate2Tokenizer(root: str, weight_type: str = "small") -> None:
-    """Ensure a tokenizer for the requested weight is available (cached).
+# テスト用コード（直接実行時のみ）
+if __name__ == "__main__":
+    def progress_callback(percent):
+        print(f"Download progress: {percent*100:.2f}%")
 
-    This will attempt to download the tokenizer via Hugging Face's transformers
-    and cache it under the weights directory. It logs failures instead of
-    raising to keep runtime resilient during startup.
-    """
-    weight_info = ctranslate2_weights.get(weight_type)
-    if weight_info is None:
-        return
-    directory_name = weight_info["directory_name"]
-    tokenizer_name = weight_info["tokenizer"]
-    tokenizer_cache = os_path.join(root, "weights", "ctranslate2", directory_name, "tokenizer")
-    try:
-        os_makedirs(tokenizer_cache, exist_ok=True)
-        transformers.AutoTokenizer.from_pretrained(tokenizer_name, cache_dir=tokenizer_cache)
-    except Exception:
-        errorLogging()
+    def end_callback():
+        print("Download finished.")
+
+    root = "./"  # 必要に応じてパスを変更
+    # for weight_type in ctranslate2_weights.keys():
+    #     print(f"Testing download for: {weight_type}")
+    #     downloadCTranslate2Weight(root, weight_type, callback=progress_callback, end_callback=end_callback)
+    #     result = checkCTranslate2Weight(root, weight_type)
+    #     print(f"Model loadable: {result}")
+    #     break
+    # downloadCTranslate2Tokenizer(root, "m2m100_418M-ct2-int8")
+
+    # model download test
+    downloadCTranslate2Weight(root, "nllb-200-distilled-1.3B", callback=progress_callback, end_callback=end_callback)
+    result = checkCTranslate2Weight(root, "nllb-200-distilled-1.3B")
+    print(f"Model loadable: {result}")

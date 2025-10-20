@@ -1,0 +1,771 @@
+# Translation Language Mappings
+# Each backend defines source (input) and target (output) language codes
+
+DeepL:
+  source: &deepl_langs
+    Arabic: ar
+    Bulgarian: bg
+    Czech: cs
+    Danish: da
+    German: de
+    Greek: el
+    English: en
+    Spanish: es
+    Estonian: et
+    Finnish: fi
+    French: fr
+    Irish: ga
+    Croatian: hr
+    Hungarian: hu
+    Indonesian: id
+    Italian: it
+    Japanese: ja
+    Korean: ko
+    Lithuanian: lt
+    Latvian: lv
+    Maltese: mt
+    Norwegian: 'no'
+    Dutch: nl
+    Polish: pl
+    Portuguese: pt
+    Romanian: ro
+    Russian: ru
+    Slovak: sk
+    Slovenian: sl
+    Swedish: sv
+    Turkish: tr
+    Ukrainian: uk
+    Chinese Simplified: zh
+    Chinese Traditional: zh
+  target: *deepl_langs
+
+DeepL_API:
+  source:
+    Japanese: ja
+    English: en
+    Bulgarian: bg
+    Czech: cs
+    Danish: da
+    German: de
+    Greek: el
+    Spanish: es
+    Estonian: et
+    Finnish: fi
+    French: fr
+    Hungarian: hu
+    Indonesian: id
+    Italian: it
+    Korean: ko
+    Lithuanian: lt
+    Latvian: lv
+    Norwegian: 'no'
+    Dutch: nl
+    Polish: pl
+    Portuguese: pt
+    Romanian: ro
+    Russian: ru
+    Slovak: sk
+    Slovenian: sl
+    Swedish: sv
+    Turkish: tr
+    Ukrainian: uk
+    Chinese Simplified: zh
+    Chinese Traditional: zh
+  target:
+    Japanese: ja
+    English: en
+    English (American): en-US
+    English (British): en-GB
+    Bulgarian: bg
+    Czech: cs
+    Danish: da
+    German: de
+    Greek: el
+    Spanish: es
+    Estonian: et
+    Finnish: fi
+    French: fr
+    Hungarian: hu
+    Indonesian: id
+    Italian: it
+    Korean: ko
+    Lithuanian: lt
+    Latvian: lv
+    Norwegian: 'no'
+    Dutch: nl
+    Polish: pl
+    Portuguese (Brazilian): pt-BR
+    Portuguese (European): pt-PT
+    Romanian: ro
+    Russian: ru
+    Slovak: sk
+    Slovenian: sl
+    Swedish: sv
+    Turkish: tr
+    Ukrainian: uk
+    Chinese Simplified: zh
+    Chinese Traditional: zh
+
+Google:
+  source: &google_langs
+    Japanese: ja
+    English: en
+    Chinese Simplified: zh
+    Chinese Traditional: zh-TW
+    Arabic: ar
+    Russian: ru
+    French: fr
+    German: de
+    Spanish: es
+    Portuguese: pt
+    Italian: it
+    Korean: ko
+    Greek: el
+    Dutch: nl
+    Hindi: hi
+    Turkish: tr
+    Malay: ms
+    Thai: th
+    Vietnamese: vi
+    Indonesian: id
+    Hebrew: he
+    Polish: pl
+    Mongolian: mn
+    Czech: cs
+    Hungarian: hu
+    Estonian: et
+    Bulgarian: bg
+    Danish: da
+    Finnish: fi
+    Romanian: ro
+    Swedish: sv
+    Slovenian: sl
+    Persian/Farsi: fa
+    Bosnian: bs
+    Serbian: sr
+    Croatian: hr
+    Slovak: sk
+    Albanian: sq
+    Lithuanian: lt
+    Latvian: lv
+    Macedonian: mk
+    Ukrainian: uk
+    Belarusian: be
+    Kazakh: kk
+    Uzbek: uz
+    Armenian: hy
+    Azerbaijani: az
+    Georgian: ka
+    Kyrgyz: ky
+    Tajik: tg
+    Turkmen: tk
+    Nepali: ne
+    Sinhala: si
+    Khmer: km
+    Lao: lo
+    Burmese: my
+    Malayalam: ml
+    Telugu: te
+    Tamil: ta
+    Kannada: kn
+    Marathi: mr
+    Gujarati: gu
+    Punjabi: pa
+    Bengali: bn
+    Odia: or
+    Assamese: as
+    Urdu: ur
+    Amharic: am
+    Tigrinya: ti
+    Oromo: om
+    Somali: so
+    Swahili: sw
+    Kinyarwanda: rw
+    Yoruba: yo
+    Zulu: zu
+    Xhosa: xh
+    Afrikaans: af
+    Sesotho: st
+    Chichewa: ny
+    Malagasy: mg
+    Esperanto: eo
+    Hawaiian: haw
+    Samoan: sm
+    Shona: sn
+    Sindhi: sd
+    Pashto: ps
+    Kurdish: ku
+    Hausa: ha
+    Igbo: ig
+    Maltese: mt
+    Welsh: cy
+    Luxembourgish: lb
+    Icelandic: is
+    Irish: ga
+    Scottish Gaelic: gd
+    Basque: eu
+    Galician: gl
+    Catalan: ca
+    Corsican: co
+    Latin: la
+    Maori: mi
+    Hmong: hmn
+    Cebuano: ceb
+    Filipino: tl
+    Javanese: jw
+    Sundanese: su
+    Yiddish: yi
+    Frisian: fy
+  target: *google_langs
+
+Bing:
+  source: &bing_langs
+    Japanese: ja
+    English: en
+    Chinese Simplified: zh
+    Chinese Traditional: zh-Hant
+    Arabic: ar
+    Russian: ru
+    French: fr
+    German: de
+    Spanish: es
+    Portuguese: pt
+    Italian: it
+    Korean: ko
+    Greek: el
+    Dutch: nl
+    Hindi: hi
+    Turkish: tr
+    Malay: ms
+    Thai: th
+    Vietnamese: vi
+    Indonesian: id
+    Hebrew: he
+    Polish: pl
+    Czech: cs
+    Hungarian: hu
+    Estonian: et
+    Bulgarian: bg
+    Danish: da
+    Finnish: fi
+    Romanian: ro
+    Swedish: sv
+    Slovenian: sl
+    Persian/Farsi: fa
+    Bosnian: bs
+    Serbian: sr
+    Croatian: hr
+    Albanian: sq
+    Lithuanian: lt
+    Latvian: lv
+    Ukrainian: uk
+    Welsh: cy
+    Belarusian: be
+    Icelandic: is
+    Irish: ga
+    Maltese: mt
+    Yiddish: yi
+    Afrikaans: af
+    Norwegian: 'no'
+    Bengali: bn
+    Malagasy: mg
+    Samoan: sm
+    Slovak: sk
+    Swahili: sw
+    Filipino: tl
+    Urdu: ur
+    Haitian Creole: ht
+    Catalan: ca
+    Fijian: fj
+    Kiswahili: sw
+    Tahitian: ty
+    Tongan: to
+    Klingon: tlh
+    Queretaro Otomi: otl
+    Gujarati: gu
+    Tamil: ta
+    Telugu: te
+    Punjabi: pa
+  target: *bing_langs
+
+Papago:
+  source: &papago_langs
+    German: de
+    English: en
+    Spanish: es
+    French: fr
+    Hindi: hi
+    Indonesian: id
+    Italian: it
+    Japanese: ja
+    Korean: ko
+    Portuguese: pt
+    Russian: ru
+    Thai: th
+    Vietnamese: vi
+    Chinese Simplified: zh-CN
+    Chinese Traditional: zh-TW
+  target: *papago_langs
+
+CTranslate2:
+  m2m100_418M-ct2-int8:
+    source: &m2m100_langs
+      English: en
+      Chinese Simplified: zh
+      Chinese Traditional: zh
+      German: de
+      Spanish: es
+      Russian: ru
+      Korean: ko
+      French: fr
+      Japanese: ja
+      Portuguese: pt
+      Turkish: tr
+      Polish: pl
+      Catalan: ca
+      Dutch: nl
+      Arabic: ar
+      Swedish: sv
+      Italian: it
+      Indonesian: id
+      Hindi: hi
+      Finnish: fi
+      Vietnamese: vi
+      Hebrew: he
+      Ukrainian: uk
+      Greek: el
+      Malay: ms
+      Czech: cs
+      Romanian: ro
+      Danish: da
+      Hungarian: hu
+      Tamil: ta
+      Norwegian: 'no'
+      Thai: th
+      Urdu: ur
+      Croatian: hr
+      Bulgarian: bg
+      Lithuanian: lt
+      Latin: la
+      Maori: mi
+      Malayalam: ml
+      Welsh: cy
+      Slovak: sk
+      Telugu: te
+      Persian: fa
+      Latvian: lv
+      Bengali: bn
+      Serbian: sr
+      Azerbaijani: az
+      Slovenian: sl
+      Kannada: kn
+      Estonian: et
+      Macedonian: mk
+      Breton: br
+      Basque: eu
+      Icelandic: is
+      Armenian: hy
+      Nepali: ne
+      Mongolian: mn
+      Bosnian: bs
+      Kazakh: kk
+      Albanian: sq
+      Swahili: sw
+      Galician: gl
+      Marathi: mr
+      Punjabi: pa
+      Sinhala: si
+      Khmer: km
+      Shona: sn
+      Yoruba: yo
+      Somali: so
+      Afrikaans: af
+      Occitan: oc
+      Georgian: ka
+      Belarusian: be
+      Tajik: tg
+      Sindhi: sd
+      Gujarati: gu
+      Amharic: am
+      Yiddish: yi
+      Lao: lo
+      Uzbek: uz
+      Faroese: fo
+      Haitian creole: ht
+      Pashto: ps
+      Turkmen: tk
+      Nynorsk: nn
+      Maltese: mt
+      Sanskrit: sa
+      Luxembourgish: lb
+      Myanmar: my
+      Tibetan: bo
+      Filipino: tl
+      Malagasy: mg
+      Assamese: as
+      Tatar: tt
+      Hawaiian: haw
+      Lingala: ln
+      Hausa: ha
+      Bashkir: ba
+      Javanese: jw
+      Sundanese: su
+    target: *m2m100_langs
+  m2m100_1.2B-ct2-int8:
+    source: *m2m100_langs
+    target: *m2m100_langs
+  nllb-200-distilled-1.3B-ct2-int8:
+    source: &nllb_langs
+      Acehnese (Arabic script): ace_Arab
+      Acehnese (Latin script): ace_Latn
+      Mesopotamian Arabic: acm_Arab
+      Ta'izzi-Adeni Arabic: acq_Arab
+      Tunisian Arabic: aeb_Arab
+      Afrikaans: afr_Latn
+      South Levantine Arabic: ajp_Arab
+      Akan: aka_Latn
+      Amharic: amh_Ethi
+      North Levantine Arabic: apc_Arab
+      Standard Arabic: arb_Arab
+      Modern Standard Arabic (Romanized): arb_Latn
+      Najdi Arabic: ars_Arab
+      Moroccan Arabic: ary_Arab
+      Egyptian Arabic: arz_Arab
+      Assamese: asm_Beng
+      Asturian: ast_Latn
+      Awadhi: awa_Deva
+      Central Aymara: ayr_Latn
+      South Azerbaijani: azb_Arab
+      North Azerbaijani: azj_Latn
+      Bashkir: bak_Cyrl
+      Bambara: bam_Latn
+      Balinese: ban_Latn
+      Belarusian: bel_Cyrl
+      Bemba: bem_Latn
+      Bengali: ben_Beng
+      Bhojpuri: bho_Deva
+      Banjar (Arabic script): bjn_Arab
+      Banjar (Latin script): bjn_Latn
+      Standard Tibetan: bod_Tibt
+      Bosnian: bos_Latn
+      Buginese: bug_Latn
+      Bulgarian: bul_Cyrl
+      Catalan: cat_Latn
+      Cebuano: ceb_Latn
+      Czech: ces_Latn
+      Chokwe: cjk_Latn
+      Central Kurdish: ckb_Arab
+      Crimean Tatar: crh_Latn
+      Welsh: cym_Latn
+      Danish: dan_Latn
+      German: deu_Latn
+      Southwestern Dinka: dik_Latn
+      Dyula: dyu_Latn
+      Dzongkha: dzo_Tibt
+      Greek: ell_Grek
+      English: eng_Latn
+      Esperanto: epo_Latn
+      Estonian: est_Latn
+      Basque: eus_Latn
+      Ewe: ewe_Latn
+      Faroese: fao_Latn
+      Fijian: fij_Latn
+      Finnish: fin_Latn
+      Fon: fon_Latn
+      French: fra_Latn
+      Friulian: fur_Latn
+      Nigerian Fulfulde: fuv_Latn
+      Scottish Gaelic: gla_Latn
+      Irish: gle_Latn
+      Galician: glg_Latn
+      Guarani: grn_Latn
+      Gujarati: guj_Gujr
+      Haitian Creole: hat_Latn
+      Hausa: hau_Latn
+      Hebrew: heb_Hebr
+      Hindi: hin_Deva
+      Chhattisgarhi: hne_Deva
+      Croatian: hrv_Latn
+      Hungarian: hun_Latn
+      Armenian: hye_Armn
+      Igbo: ibo_Latn
+      Ilocano: ilo_Latn
+      Indonesian: ind_Latn
+      Icelandic: isl_Latn
+      Italian: ita_Latn
+      Javanese: jav_Latn
+      Japanese: jpn_Jpan
+      Kabyle: kab_Latn
+      Jingpho: kac_Latn
+      Kamba: kam_Latn
+      Kannada: kan_Knda
+      Kashmiri (Arabic script): kas_Arab
+      Kashmiri (Devanagari script): kas_Deva
+      Georgian: kat_Geor
+      Central Kanuri (Arabic script): knc_Arab
+      Central Kanuri (Latin script): knc_Latn
+      Kazakh: kaz_Cyrl
+      Kabiyè: kbp_Latn
+      Kabuverdianu: kea_Latn
+      Khmer: khm_Khmr
+      Kikuyu: kik_Latn
+      Kinyarwanda: kin_Latn
+      Kyrgyz: kir_Cyrl
+      Kimbundu: kmb_Latn
+      Northern Kurdish: kmr_Latn
+      Kikongo: kon_Latn
+      Korean: kor_Hang
+      Lao: lao_Laoo
+      Ligurian: lij_Latn
+      Limburgish: lim_Latn
+      Lingala: lin_Latn
+      Lithuanian: lit_Latn
+      Lombard: lmo_Latn
+      Latgalian: ltg_Latn
+      Luxembourgish: ltz_Latn
+      Luba-Kasai: lua_Latn
+      Ganda: lug_Latn
+      Luo: luo_Latn
+      Mizo: lus_Latn
+      Standard Latvian: lvs_Latn
+      Magahi: mag_Deva
+      Maithili: mai_Deva
+      Malayalam: mal_Mlym
+      Marathi: mar_Deva
+      Minangkabau (Arabic script): min_Arab
+      Minangkabau (Latin script): min_Latn
+      Macedonian: mkd_Cyrl
+      Plateau Malagasy: plt_Latn
+      Maltese: mlt_Latn
+      Meitei (Bengali script): mni_Beng
+      Halh Mongolian: khk_Cyrl
+      Mossi: mos_Latn
+      Maori: mri_Latn
+      Burmese: mya_Mymr
+      Dutch: nld_Latn
+      Norwegian Nynorsk: nno_Latn
+      Norwegian Bokmål: nob_Latn
+      Nepali: npi_Deva
+      Northern Sotho: nso_Latn
+      Nuer: nus_Latn
+      Nyanja: nya_Latn
+      Occitan: oci_Latn
+      West Central Oromo: gaz_Latn
+      Odia: ory_Orya
+      Pangasinan: pag_Latn
+      Eastern Panjabi: pan_Guru
+      Papiamento: pap_Latn
+      Western Persian: pes_Arab
+      Polish: pol_Latn
+      Portuguese: por_Latn
+      Dari: prs_Arab
+      Southern Pashto: pbt_Arab
+      Ayacucho Quechua: quy_Latn
+      Romanian: ron_Latn
+      Rundi: run_Latn
+      Russian: rus_Cyrl
+      Sango: sag_Latn
+      Sanskrit: san_Deva
+      Santali: sat_Olck
+      Sicilian: scn_Latn
+      Shan: shn_Mymr
+      Sinhala: sin_Sinh
+      Slovak: slk_Latn
+      Slovenian: slv_Latn
+      Samoan: smo_Latn
+      Shona: sna_Latn
+      Sindhi: snd_Arab
+      Somali: som_Latn
+      Southern Sotho: sot_Latn
+      Spanish: spa_Latn
+      Tosk Albanian: als_Latn
+      Sardinian: srd_Latn
+      Serbian: srp_Cyrl
+      Swati: ssw_Latn
+      Sundanese: sun_Latn
+      Swedish: swe_Latn
+      Swahili: swh_Latn
+      Silesian: szl_Latn
+      Tamil: tam_Taml
+      Tatar: tat_Cyrl
+      Telugu: tel_Telu
+      Tajik: tgk_Cyrl
+      Tagalog: tgl_Latn
+      Thai: tha_Thai
+      Tigrinya: tir_Ethi
+      Tamasheq (Latin script): taq_Latn
+      Tamasheq (Tifinagh script): taq_Tfng
+      Tok Pisin: tpi_Latn
+      Tswana: tsn_Latn
+      Tsonga: tso_Latn
+      Turkmen: tuk_Latn
+      Tumbuka: tum_Latn
+      Turkish: tur_Latn
+      Twi: twi_Latn
+      Central Atlas Tamazight: tzm_Tfng
+      Uyghur: uig_Arab
+      Ukrainian: ukr_Cyrl
+      Umbundu: umb_Latn
+      Urdu: urd_Arab
+      Northern Uzbek: uzn_Latn
+      Venetian: vec_Latn
+      Vietnamese: vie_Latn
+      Waray: war_Latn
+      Wolof: wol_Latn
+      Xhosa: xho_Latn
+      Eastern Yiddish: ydd_Hebr
+      Yoruba: yor_Latn
+      Yue Chinese: yue_Hant
+      Chinese Simplified: zho_Hans
+      Chinese Traditional: zho_Hant
+      Standard Malay: zsm_Latn
+      Zulu: zul_Latn
+    target: *nllb_langs
+  nllb-200-3.3B-ct2-int8:
+    source: *nllb_langs
+    target: *nllb_langs
+
+Plamo_API:
+  source: &plamo_langs
+    English: English
+    Japanese: Japanese
+    Korean: Korean
+    French: French
+    German: German
+    Spanish: Spanish
+    Portuguese: Portuguese
+    Russian: Russian
+    Italian: Italian
+    Dutch: Dutch
+    Polish: Polish
+    Turkish: Turkish
+    Arabic: Arabic
+    Hindi: Hindi
+    Thai: Thai
+    Vietnamese: Vietnamese
+    Indonesian: Indonesian
+    Malay: Malay
+    Filipino: Filipino
+    Swedish: Swedish
+    Finnish: Finnish
+    Danish: Danish
+    Norwegian: Norwegian
+    Romanian: Romanian
+    Czech: Czech
+    Hungarian: Hungarian
+    Greek: Greek
+    Hebrew: Hebrew
+    Chinese Simplified: Simplified Chinese
+    Chinese Traditional: Traditional Chinese
+  target: *plamo_langs
+
+Gemini_API:
+  source: &gemini_langs
+    Arabic: Arabic
+    Bengali: Bengali
+    Bulgarian: Bulgarian
+    Chinese Simplified: Simplified Chinese
+    Chinese Traditional: Traditional Chinese
+    Croatian: Croatian
+    Czech: Czech
+    Danish: Danish
+    Dutch: Dutch
+    English: English
+    Estonian: Estonian
+    Finnish: Finnish
+    French: French
+    German: German
+    Greek: Greek
+    Hebrew: Hebrew
+    Hindi: Hindi
+    Hungarian: Hungarian
+    Indonesian: Indonesian
+    Italian: Italian
+    Japanese: Japanese
+    Korean: Korean
+    Latvian: Latvian
+    Lithuanian: Lithuanian
+    Norwegian: Norwegian
+    Polish: Polish
+    Portuguese: Portuguese
+    Romanian: Romanian
+    Russian: Russian
+    Serbian: Serbian
+    Slovak: Slovak
+    Slovenian: Slovenian
+    Spanish: Spanish
+    Swedish: Swedish
+    Thai: Thai
+    Turkish: Turkish
+    Ukrainian: Ukrainian
+    Vietnamese: Vietnamese
+  target: *gemini_langs
+
+OpenAI_API:
+  source: &openai_langs
+    Afrikaans: Afrikaans
+    Arabic: Arabic
+    Armenian: Armenian
+    Azerbaijani: Azerbaijani
+    Belarusian: Belarusian
+    Bosnian: Bosnian
+    Bulgarian: Bulgarian
+    Catalan: Catalan
+    Chinese: Chinese
+    Croatian: Croatian
+    Czech: Czech
+    Danish: Danish
+    Dutch: Dutch
+    English: English
+    Estonian: Estonian
+    Finnish: Finnish
+    French: French
+    Galician: Galician
+    German: German
+    Greek: Greek
+    Hebrew: Hebrew
+    Hindi: Hindi
+    Hungarian: Hungarian
+    Icelandic: Icelandic
+    Indonesian: Indonesian
+    Italian: Italian
+    Japanese: Japanese
+    Kannada: Kannada
+    Kazakh: Kazakh
+    Korean: Korean
+    Latvian: Latvian
+    Lithuanian: Lithuanian
+    Macedonian: Macedonian
+    Malay: Malay
+    Marathi: Marathi
+    Maori: Maori
+    Nepali: Nepali
+    Norwegian: Norwegian
+    Persian: Persian
+    Polish: Polish
+    Portuguese: Portuguese
+    Romanian: Romanian
+    Russian: Russian
+    Serbian: Serbian
+    Slovak: Slovak
+    Slovenian: Slovenian
+    Spanish: Spanish
+    Swahili: Swahili
+    Swedish: Swedish
+    Tagalog: Tagalog
+    Tamil: Tamil
+    Thai: Thai
+    Turkish: Turkish
+    Ukrainian: Ukrainian
+    Urdu: Urdu
+    Vietnamese: Vietnamese
+    Welsh: Welsh
+  target: *openai_langs
+
+LMStudio:
+  source: *openai_langs
+  target: *openai_langs
+
+Ollama:
+  source: *openai_langs
+  target: *openai_langs
