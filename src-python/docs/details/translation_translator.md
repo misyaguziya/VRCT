@@ -404,3 +404,49 @@ root/
 - `config.py`: 翻訳設定管理
 - `model.py`: 翻訳機能統合
 - `controller.py`: 翻訳制御インターフェース
+
+## 最近の更新 (2025-10-20)
+
+### 新規ローカル LLM エンジン追加
+
+LMStudio / Ollama を翻訳エンジンとして追加。接続確認後にモデルリスト (`SELECTABLE_LMSTUDIO_MODEL_LIST` / `SELECTABLE_OLLAMA_MODEL_LIST`) を取得し、未選択なら先頭モデルを自動選択 (`SELECTED_LMSTUDIO_MODEL` / `SELECTED_OLLAMA_MODEL`)。現時点では CTranslate2 と同様にローカル動作を想定し、翻訳関数側は将来の統合（温度等パラメータ）に備えて抽象化維持。
+
+### モデル選択プロパティ名称統一
+
+Plamo / Gemini / OpenAI の選択モデルプロパティを `SELECTED_*` 形式へ変更。旧名称 (`PLAMO_MODEL` / `GEMINI_MODEL` / `OPENAI_MODEL`) は利用停止。自動認証後のモデルリスト更新ロジックで未選択時に先頭補完を行う。
+
+### OpenAI / Gemini / Plamo 認証後のモデルリスト自動更新
+
+Auth設定メソッド完了時に `SELECTABLE_*_MODEL_LIST` を再取得し不足時は UI へ push。OpenAI はキー設定直後に最新モデルリストを反映し高速化。Gemini / Plamo も同様に `updateTranslator*Client()` 呼び出しでクライアント再生成。
+
+### CTranslate2 言語ネスト化対応
+
+`translation_lang["CTranslate2"][weight_type]["source"|"target"]` へ構造変更。`CTRANSLATE2_WEIGHT_TYPE` により重みタイプ別の言語集合を参照。Translator 内では `translator_name == "CTranslate2"` の分岐で weight_type を参照して言語判定を行う実装に変更。
+
+### YAML 言語マッピング導入
+
+外部ファイル `languages.yml` を読み込んで翻訳エンジン別対応言語を動的拡張。新言語追加は YAML 編集のみで実現（コード再デプロイ不要）。読み込み失敗時は空辞書でフォールバックし既存ハードコードを保持。
+
+### VRAM エラー検知とフォールバック
+
+DeepL / Plamo / Gemini / OpenAI 実行時の VRAM 不足検知で自動的に CTranslate2 へ切替し翻訳を停止 (`ENABLE_TRANSLATION=False`)。ユーザー通知後は再度有効化要求時に再初期化を試行。安定性向上のためログへ VRAM エラー詳細を記録。
+
+### トークナイザーパス修正
+
+CTranslate2 トークナイザーのダウンロード処理で保存ディレクトリ作成とパス使用順序不整合を修正。これにより初回起動時の失敗率低下。
+
+### 全言語ペア包括テスト導入
+
+`backend_test.py` にて `test_translate_all_language_pairs()` を追加。複数エンジン・全言語ペアを列挙実行し `translation_test_results.json` を生成。失敗ペアの早期検出と YAML 追加言語検証に活用。
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| ローカルLLM | オフライン翻訳候補拡充 (LMStudio/Ollama) |
+| プロパティ統一 | SELECTED_* 命名で一貫性と保守性向上 |
+| CTranslate2構造 | 重みタイプ毎に最適言語集合参照可能 |
+| YAML外部化 | 言語追加/削除が設定ファイル編集のみで完結 |
+| VRAM検知 | エラー時自動停止 + 軽量エンジン切替で安定性向上 |
+| Tokenizer修正 | 初回セットアップ失敗減少 |
+| 包括テスト | 言語組合せの網羅的品質担保 |

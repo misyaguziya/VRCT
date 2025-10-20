@@ -7,8 +7,24 @@ except Exception:
     other_web_Translator = None  # type: ignore
     ENABLE_TRANSLATORS = False
 
-from .translation_languages import translation_lang
-from .translation_utils import ctranslate2_weights
+try:
+    from .translation_languages import translation_lang
+    from .translation_utils import ctranslate2_weights
+    from .translation_plamo import PlamoClient
+    from .translation_gemini import GeminiClient
+    from .translation_openai import OpenAIClient
+    from .translation_lmstudio import LMStudioClient
+    from .translation_ollama import OllamaClient
+except Exception:
+    import sys
+    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
+    from translation_languages import translation_lang
+    from translation_utils import ctranslate2_weights
+    from translation_plamo import PlamoClient
+    from translation_gemini import GeminiClient
+    from translation_openai import OpenAIClient
+    from translation_lmstudio import LMStudioClient
+    from translation_ollama import OllamaClient
 
 import ctranslate2
 import transformers
@@ -31,20 +47,25 @@ class Translator:
 
     def __init__(self) -> None:
         self.deepl_client: Optional[DeepLClient] = None
+        self.plamo_client: Optional[PlamoClient] = None
+        self.gemini_client: Optional[GeminiClient] = None
+        self.openai_client: Optional[OpenAIClient] = None
+        self.lmstudio_client: LMStudioClient[LMStudioClient] = None
+        self.ollama_client: OllamaClient[OllamaClient] = None
         self.ctranslate2_translator: Any = None
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
         self.is_changed_translator_parameters: bool = False
         self.is_enable_translators: bool = ENABLE_TRANSLATORS
 
-    def authenticationDeepLAuthKey(self, authkey: str) -> bool:
+    def authenticationDeepLAuthKey(self, auth_key: str) -> bool:
         """Authenticate DeepL API with the provided key.
 
         Returns True on success, False on failure.
         """
         result = True
         try:
-            self.deepl_client = DeepLClient(authkey)
+            self.deepl_client = DeepLClient(auth_key)
             # quick smoke test
             self.deepl_client.translate_text(" ", target_lang="EN-US")
         except Exception:
@@ -52,6 +73,169 @@ class Translator:
             self.deepl_client = None
             result = False
         return result
+
+    def authenticationPlamoAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate Plamo API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.plamo_client = PlamoClient(root_path=root_path)
+        if self.plamo_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.plamo_client = None
+            return False
+
+    def getPlamoModelList(self) -> list[str]:
+        """Get available Plamo models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.plamo_client is None:
+            return []
+        return self.plamo_client.getModelList()
+
+    def setPlamoModel(self, model: str) -> bool:
+        """Change the Plamo model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.plamo_client is None:
+            return False
+        return self.plamo_client.setModel(model)
+
+    def updatePlamoClient(self) -> None:
+        """Update the Plamo client (fetch available models)."""
+        self.plamo_client.updateClient()
+
+    def authenticationGeminiAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate Gemini API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.gemini_client = GeminiClient(root_path=root_path)
+        if self.gemini_client.setAuthKey(auth_key):
+            return True
+        else:
+            return False
+
+    def getGeminiModelList(self) -> list[str]:
+        """Get available Gemini models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.gemini_client is None:
+            return []
+        return self.gemini_client.getModelList()
+
+    def setGeminiModel(self, model: str) -> bool:
+        """Change the Gemini model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.gemini_client is None:
+            return False
+        return self.gemini_client.setModel(model)
+
+    def updateGeminiClient(self) -> None:
+        """Update the Gemini client (fetch available models)."""
+        self.gemini_client.updateClient()
+
+    def authenticationOpenAIAuthKey(self, auth_key: str, base_url: str | None = None, root_path: str = None) -> bool:
+        """Authenticate OpenAI (Chat Completions) API with the provided key.
+
+        base_url を指定することで互換エンドポイント (例: Azure OpenAI 互換, Proxy) にも対応可能。
+        Returns True on success, False on failure.
+        """
+        self.openai_client = OpenAIClient(base_url=base_url, root_path=root_path)
+        if self.openai_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.openai_client = None
+            return False
+
+    def getOpenAIModelList(self) -> list[str]:
+        """Get available OpenAI models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.openai_client is None:
+            return []
+        return self.openai_client.getModelList()
+
+    def setOpenAIModel(self, model: str) -> bool:
+        """Change the OpenAI model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.openai_client is None:
+            return False
+        return self.openai_client.setModel(model)
+
+    def updateOpenAIClient(self) -> None:
+        """Update the OpenAI client (fetch available models)."""
+        self.openai_client.updateClient()
+
+    def setLMStudioClientURL(self, base_url: str | None = None, root_path: str = None) -> bool:
+        """Authenticate LM Studio with the provided base URL.
+
+        Returns True on success, False on failure.
+        """
+        self.lmstudio_client = LMStudioClient(base_url=base_url, root_path=root_path)
+        result = self.lmstudio_client.setBaseURL(base_url)
+        if result is False:
+            self.lmstudio_client = None
+        return result
+
+    def getLMStudioModelList(self) -> list[str]:
+        """Get available LM Studio models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.lmstudio_client is None:
+            return []
+        return self.lmstudio_client.getModelList()
+
+    def setLMStudioModel(self, model: str) -> bool:
+        """Change the LM Studio model used for translation.
+        """
+        if self.lmstudio_client is None:
+            return False
+        return self.lmstudio_client.setModel(model)
+
+    def updateLMStudioClient(self) -> None:
+        """Update the LM Studio client (fetch available models)."""
+        self.lmstudio_client.updateClient()
+
+    def checkOllamaClient(self, root_path: str = None) -> bool:
+        """Check if Ollama client is available.
+
+        Returns True if Ollama is reachable, False otherwise.
+        """
+        self.ollama_client = OllamaClient(root_path=root_path)
+        return self.ollama_client.authenticationCheck()
+
+    def getOllamaModelList(self, root_path: str = None) -> bool:
+        """Initialize Ollama client and fetch available models.
+
+        Returns True on success, False on failure.
+        """
+        if self.ollama_client is None:
+            return []
+        return self.ollama_client.getModelList()
+
+    def setOllamaModel(self, model: str) -> bool:
+        """Change the Ollama model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.ollama_client is None:
+            return False
+        return self.ollama_client.setModel(model)
+
+    def updateOllamaClient(self) -> None:
+        """Update the Ollama client (fetch available models)."""
+        self.ollama_client.updateClient()
 
     def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto") -> None:
         """Load a CTranslate2 model from weights.
@@ -92,7 +276,7 @@ class Translator:
     def setChangedTranslatorParameters(self, is_changed: bool) -> None:
         self.is_changed_translator_parameters = is_changed
 
-    def translateCTranslate2(self, message: str, source_language: str, target_language: str) -> Any:
+    def translateCTranslate2(self, message: str, source_language: str, target_language, weight_type: str) -> Any:
         """Translate using a loaded CTranslate2 model.
 
         Returns a string on success or False on failure (keeps legacy behavior).
@@ -102,7 +286,13 @@ class Translator:
             try:
                 self.ctranslate2_tokenizer.src_lang = source_language
                 source = self.ctranslate2_tokenizer.convert_ids_to_tokens(self.ctranslate2_tokenizer.encode(message))
-                target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                match weight_type:
+                    case "m2m100_418M-ct2-int8" | "m2m100_1.2B-ct2-int8":
+                        target_prefix = [self.ctranslate2_tokenizer.lang_code_to_token[target_language]]
+                    case "nllb-200-distilled-1.3B-ct2-int8" | "nllb-200-3.3B-ct2-int8":
+                        target_prefix = [target_language]
+                    case _:
+                        return False
                 results = self.ctranslate2_translator.translate_batch([source], target_prefix=[target_prefix])
                 target = results[0].hypotheses[0][1:]
                 result = self.ctranslate2_tokenizer.decode(self.ctranslate2_tokenizer.convert_tokens_to_ids(target))
@@ -111,7 +301,7 @@ class Translator:
         return result
 
     @staticmethod
-    def getLanguageCode(translator_name: str, target_country: str, source_language: str, target_language: str) -> Tuple[str, str]:
+    def getLanguageCode(translator_name: str, weight_type: str, target_country: str, source_language: str, target_language: str) -> Tuple[str, str]:
         """Resolve a friendly language name to translator-specific codes.
 
         Returns (source_code, target_code).
@@ -128,13 +318,17 @@ class Translator:
                         target_language = "Portuguese European"
                     else:
                         target_language = "Portuguese Brazilian"
+                source_language = translation_lang[translator_name]["source"][source_language]
+                target_language = translation_lang[translator_name]["target"][target_language]
+            case "CTranslate2":
+                source_language = translation_lang[translator_name][weight_type]["source"][source_language]
+                target_language = translation_lang[translator_name][weight_type]["target"][target_language]
             case _:
-                pass
-        source_language = translation_lang[translator_name]["source"][source_language]
-        target_language = translation_lang[translator_name]["target"][target_language]
+                source_language = translation_lang[translator_name]["source"][source_language]
+                target_language = translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
-    def translate(self, translator_name: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:
+    def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:
         """Translate `message` using the named translator backend.
 
         Returns translated string on success, or False on failure. When
@@ -145,7 +339,7 @@ class Translator:
                 return message
 
             result: Any = ""
-            source_language, target_language = self.getLanguageCode(translator_name, target_country, source_language, target_language)
+            source_language, target_language = self.getLanguageCode(translator_name, weight_type, target_country, source_language, target_language)
             match translator_name:
                 case "DeepL":
                     if self.is_enable_translators is True and other_web_Translator is not None:
@@ -160,7 +354,56 @@ class Translator:
                         if self.deepl_client is None:
                             result = False
                         else:
-                            result = self.deepl_client.translate_text(message, source_lang=source_language, target_lang=target_language).text
+                            result = self.deepl_client.translate_text(
+                                message,
+                                source_lang=source_language,
+                                target_lang=target_language
+                                ).text
+                case "Plamo_API":
+                    if self.plamo_client is None:
+                        result = False
+                    else:
+                        result = self.plamo_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                            )
+                case "Gemini_API":
+                    if self.gemini_client is None:
+                        result = False
+                    else:
+                        result = self.gemini_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                            )
+                case "OpenAI_API":
+                    if self.openai_client is None:
+                        result = False
+                    else:
+                        result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "LMStudio":
+                    if self.lmstudio_client is None:
+                        result = False
+                    else:
+                        result = self.lmstudio_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "Ollama":
+                    if self.ollama_client is None:
+                        result = False
+                    else:
+                        result = self.ollama_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
                 case "Google":
                     if self.is_enable_translators is True and other_web_Translator is not None:
                         result = other_web_Translator(
@@ -186,8 +429,27 @@ class Translator:
                             to_language=target_language,
                         )
                 case "CTranslate2":
-                    result = self.translateCTranslate2(message=message, source_language=source_language, target_language=target_language)
+                    result = self.translateCTranslate2(
+                        message=message,
+                        source_language=source_language,
+                        target_language=target_language,
+                        weight_type=weight_type,
+                        )
         except Exception:
             errorLogging()
             result = False
         return result
+
+if __name__ == "__main__":
+    translator = Translator()
+    # test CTranslate2 model nllb-200-distilled-1.3B-ct2-int8
+    translator.changeCTranslate2Model(path=".", model_type="nllb-200-distilled-1.3B-ct2-int8", device="cpu", device_index=0)
+    result = translator.translate(
+        translator_name="CTranslate2",
+        weight_type="nllb-200-distilled-1.3B-ct2-int8",
+        source_language="English",
+        target_language="Japanese",
+        target_country="Japan",
+        message="Hello, world!"
+        )
+    print(result)

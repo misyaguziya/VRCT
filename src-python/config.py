@@ -16,9 +16,11 @@ except Exception:  # pragma: no cover - optional runtime
     device_manager = None  # type: ignore
 
 try:
-    from models.translation.translation_languages import translation_lang
+    from models.translation.translation_languages import translation_lang, loadTranslationLanguages
 except Exception:  # pragma: no cover - optional runtime
     translation_lang = {}  # type: ignore
+    def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
+        return {}
 
 try:
     from models.translation.translation_utils import ctranslate2_weights
@@ -310,6 +312,51 @@ class Config:
     def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self, value):
         if isinstance(value, dict):
             self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = value
+
+    @property
+    def SELECTABLE_PLAMO_MODEL_LIST(self):
+        return self._SELECTABLE_PLAMO_MODEL_LIST
+
+    @SELECTABLE_PLAMO_MODEL_LIST.setter
+    def SELECTABLE_PLAMO_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_PLAMO_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_GEMINI_MODEL_LIST(self):
+        return self._SELECTABLE_GEMINI_MODEL_LIST
+
+    @SELECTABLE_GEMINI_MODEL_LIST.setter
+    def SELECTABLE_GEMINI_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_GEMINI_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_OPENAI_MODEL_LIST(self):
+        return self._SELECTABLE_OPENAI_MODEL_LIST
+
+    @SELECTABLE_OPENAI_MODEL_LIST.setter
+    def SELECTABLE_OPENAI_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_OPENAI_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_LMSTUDIO_MODEL_LIST(self):
+        return self._SELECTABLE_LMSTUDIO_MODEL_LIST
+
+    @SELECTABLE_LMSTUDIO_MODEL_LIST.setter
+    def SELECTABLE_LMSTUDIO_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_LMSTUDIO_MODEL_LIST = value
+
+    @property
+    def SELECTABLE_OLLAMA_MODEL_LIST(self):
+        return self._SELECTABLE_OLLAMA_MODEL_LIST
+
+    @SELECTABLE_OLLAMA_MODEL_LIST.setter
+    def SELECTABLE_OLLAMA_MODEL_LIST(self, value):
+        if isinstance(value, list):
+            self._SELECTABLE_OLLAMA_MODEL_LIST = value
 
     # Save Json Data
     ## Main Window
@@ -895,6 +942,77 @@ class Config:
                 self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
+    @json_serializable('SELECTED_PLAMO_MODEL')
+    def SELECTED_PLAMO_MODEL(self):
+        return self._SELECTED_PLAMO_MODEL
+
+    @SELECTED_PLAMO_MODEL.setter
+    def SELECTED_PLAMO_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_PLAMO_MODEL_LIST:
+                self._SELECTED_PLAMO_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('GEMINI_MODEL')
+    def SELECTED_GEMINI_MODEL(self):
+        return self._SELECTED_GEMINI_MODEL
+
+    @SELECTED_GEMINI_MODEL.setter
+    def SELECTED_GEMINI_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_GEMINI_MODEL_LIST:
+                self._SELECTED_GEMINI_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_OPENAI_MODEL')
+    def SELECTED_OPENAI_MODEL(self):
+        return self._SELECTED_OPENAI_MODEL
+
+    @SELECTED_OPENAI_MODEL.setter
+    def SELECTED_OPENAI_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_OPENAI_MODEL_LIST:
+                self._SELECTED_OPENAI_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('LMSTUDIO_URL')
+    def LMSTUDIO_URL(self):
+        return self._LMSTUDIO_URL
+
+    @LMSTUDIO_URL.setter
+    def LMSTUDIO_URL(self, value):
+        if isinstance(value, str):
+            self._LMSTUDIO_URL = value
+            self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_LMSTUDIO_MODEL')
+    def SELECTED_LMSTUDIO_MODEL(self):
+        return self._SELECTED_LMSTUDIO_MODEL
+
+    @SELECTED_LMSTUDIO_MODEL.setter
+    def SELECTED_LMSTUDIO_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_LMSTUDIO_MODEL_LIST:
+                self._SELECTED_LMSTUDIO_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
+    @json_serializable('SELECTED_OLLAMA_MODEL')
+    def SELECTED_OLLAMA_MODEL(self):
+        return self._SELECTED_OLLAMA_MODEL
+
+    @SELECTED_OLLAMA_MODEL.setter
+    def SELECTED_OLLAMA_MODEL(self, value):
+        if isinstance(value, str):
+            if value in self.SELECTABLE_OLLAMA_MODEL_LIST:
+                self._SELECTED_OLLAMA_MODEL = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
+
+    @property
     @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
     def AUTO_CLEAR_MESSAGE_BOX(self):
         return self._AUTO_CLEAR_MESSAGE_BOX
@@ -1111,6 +1229,7 @@ class Config:
         # these external mappings may be empty dicts if the optional modules failed to import
         self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = getattr(ctranslate2_weights, 'keys', lambda: [])()
         self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = getattr(whisper_models, 'keys', lambda: [])()
+        translation_lang = loadTranslationLanguages(self.PATH_LOCAL)
         self._SELECTABLE_TRANSLATION_ENGINE_LIST = getattr(translation_lang, 'keys', lambda: [])()
         try:
             # transcription_lang is nested dict; attempt to extract keys defensively
@@ -1168,6 +1287,11 @@ class Config:
         self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = {}
         for engine in self.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
             self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
+        self._SELECTABLE_PLAMO_MODEL_LIST = []
+        self._SELECTABLE_GEMINI_MODEL_LIST = []
+        self._SELECTABLE_OPENAI_MODEL_LIST = []
+        self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
+        self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
         # Save Json Data
         ## Main Window
@@ -1267,11 +1391,20 @@ class Config:
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
             "DeepL_API": None,
+            "Plamo_API": None,
+            "Gemini_API": None,
+            "OpenAI_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
         self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
-        self._CTRANSLATE2_WEIGHT_TYPE = "small"
+        self._CTRANSLATE2_WEIGHT_TYPE = "m2m100_418M-ct2-int8"
+        self._SELECTED_PLAMO_MODEL = None
+        self._SELECTED_GEMINI_MODEL = None
+        self._SELECTED_OPENAI_MODEL = None
+        self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
+        self._SELECTED_LMSTUDIO_MODEL = None
+        self._SELECTED_OLLAMA_MODEL = None
         self._SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
         self._WHISPER_WEIGHT_TYPE = "base"
         self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"

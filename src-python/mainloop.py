@@ -52,6 +52,17 @@ run_mapping = {
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
 
+    "selectable_plamo_model_list":"/run/selectable_plamo_model_list",
+    "selected_plamo_model":"/run/selected_plamo_model",
+    "selectable_gemini_model_list":"/run/selectable_gemini_model_list",
+    "selected_gemini_model":"/run/selected_gemini_model",
+    "selectable_openai_model_list":"/run/selectable_openai_model_list",
+    "selected_openai_model":"/run/selected_openai_model",
+    "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
+    "selected_lmstudio_model":"/run/selected_lmstudio_model",
+    "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
+    "selected_ollama_model":"/run/selected_ollama_model",
+
     "mic_host_list":"/run/mic_host_list",
     "mic_device_list":"/run/mic_device_list",
     "speaker_device_list":"/run/speaker_device_list",
@@ -175,6 +186,40 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
+    "/get/data/plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
+    "/get/data/plamo_model": {"status": False, "variable":controller.getPlamoModel},
+    "/set/data/plamo_model": {"status": False, "variable":controller.setPlamoModel},
+    "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
+    "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
+    "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},
+
+    "/get/data/gemini_model_list": {"status": True, "variable":controller.getGeminiModelList},
+    "/get/data/gemini_model": {"status": True, "variable":controller.getGeminiModel},
+    "/set/data/gemini_model": {"status": True, "variable":controller.setGeminiModel},
+    "/get/data/gemini_auth_key": {"status": True, "variable":controller.getGeminiAuthKey},
+    "/set/data/gemini_auth_key": {"status": True, "variable":controller.setGeminiAuthKey},
+    "/delete/data/gemini_auth_key": {"status": True, "variable":controller.delGeminiAuthKey},
+
+    "/get/data/openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
+    "/get/data/openai_model": {"status": True, "variable":controller.getOpenAIModel},
+    "/set/data/openai_model": {"status": True, "variable":controller.setOpenAIModel},
+    "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
+    "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
+    "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
+
+    "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
+    "/get/data/lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
+    "/set/data/lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
+    "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
+    "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
+
+    "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
+    "/get/data/ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
+    "/get/data/ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
+    "/set/data/ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
+
+    # Transliteration
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable/convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
