@@ -11,6 +11,8 @@ VRCTアプリケーションのメインイベントループを管理するモ�
 - VRAM 関連エラー通知エンドポイント追加: `/run/error_translation_chat_vram_overflow` など 5 種類 (翻訳/音声認識送受信別)
 - ローカル LLM (LMStudio/Ollama) モデルリスト通知: `/run/selectable_lmstudio_model_list`, `/run/selectable_ollama_model_list` と選択モデル `/run/selected_*_model`
 - 従来の Plamo/Gemini/OpenAI モデル取得通知と形式統一
+- LMStudio/Ollama 接続確認エンドポイント: `/get/data/lmstudio_connection`, `/get/data/ollama_connection` を `/run/lmstudio_connection`, `/run/ollama_connection` に移動して非同期通知統一
+- 文字変換エンドポイント追加: `/set/data/convert_message_to_romaji`, `/set/data/convert_message_to_hiragana`, `/set/enable/convert_message_to_romaji`, `/set/enable/convert_message_to_hiragana`, `/set/disable/convert_message_to_romaji`, `/set/disable/convert_message_to_hiragana` で音訳機能制御
 
 ### エンドポイントロックキー正規化
 

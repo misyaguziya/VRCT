@@ -8,7 +8,7 @@ VRCTアプリケーションのビジネスロジックを制御するコント�
 
 ### 新規ローカルLLM翻訳エンジン統合
 
-- LMStudio / Ollama への接続確認エンドポイント追加: `/get/data/lmstudio_connection`, `/get/data/ollama_connection`
+- LMStudio / Ollama への接続確認エンドポイント追加: `/run/lmstudio_connection`, `/run/ollama_connection`
 - LMStudio URL 設定: `/get|set/data/lmstudio_url`
 - モデルリスト取得と選択: `/get/data/*_model_list`, `/get|set/data/*_model` (lmstudio / ollama / plamo / gemini / openai)
 - 認証・接続成功時に `selectable_*_model_list` / `selected_*_model` を run 経由で通知 (例: `/run/selectable_lmstudio_model_list`, `/run/selected_lmstudio_model`)
@@ -37,6 +37,17 @@ VRCTアプリケーションのビジネスロジックを制御するコント�
 ### 言語マッピング外部化
 
 - `getListLanguageAndCountry()` が YAML からロード済み `translation_lang` / `transcription_lang` を統合して互換言語のみ抽出
+
+### APIキー検証の厳格化
+
+- Plamo API: キー長判定を「==72」から「>=72」へ変更し 72 文字以上を許容
+- Gemini API: 最小キー長を 20 → 39 へ引き上げ
+- OpenAI API: "sk-" 接頭辞必須かつ長さ 164 文字以上の厳格化、エラーメッセージを「無効」に統一
+
+### 翻訳モデル選択時の適用確実化
+
+- OpenAI / Plamo / Gemini / LMStudio / Ollama でモデル設定後に `setTranslatorXModel()` と `updateTranslatorXClient()` を必ず呼び出してクライアント状態を確実反映
+- デフォルトモデル自動選択時もモデル適用を即座実行
 
 ### デバイス自動選択改善
 

@@ -528,6 +528,12 @@ class TestMainloop():
             case "/run/feed_watchdog":
                 data = None
                 expected_status = [401] # !!!Cant be tested here!!!
+            case "/run/lmstudio_connection":
+                data = None
+                expected_status = [200, 400]
+            case "/run/ollama_connection":
+                data = None
+                expected_status = [200, 400]
             case _:
                 data = None
                 expected_status = [404]
