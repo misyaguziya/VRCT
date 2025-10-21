@@ -1,6 +1,5 @@
 import sys
 import copy
-import inspect
 from os import path as os_path, makedirs as os_makedirs
 from json import load as json_load
 from json import dump as json_dump
@@ -46,24 +45,51 @@ def json_serializable(var_name):
         return func
     return decorator
 
+# Auto-register descriptors for serialization
+def _auto_register_descriptors():
+    """Automatically register ManagedProperty and ValidatedProperty descriptors
+    for JSON serialization, reducing boilerplate _json_XXX methods.
+    """
+    for name, obj in Config.__dict__.items():
+        if isinstance(obj, (ManagedProperty, ValidatedProperty)):
+            # Only register if serialize=True and not already manually registered
+            if obj.serialize and name not in json_serializable_vars:
+                # Create closure to capture current name
+                def make_serializer(attr_name):
+                    @json_serializable(attr_name)
+                    def _auto_serialize(self):
+                        return getattr(self, attr_name)
+                    return _auto_serialize
+                make_serializer(name)
+
 
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
 # It performs optional type validation, optional allowed-values check, and calls
 # instance.saveConfig(...) on successful set.
 class ManagedProperty:
-    def __init__(self, name: str, type_: type = None, allowed=None, immediate_save: bool = False):
+    def __init__(self, name: str, type_: type = None, allowed=None, immediate_save: bool = False, serialize: bool = True, readonly: bool = False):
         self.name = name
         self.type_ = type_
         self.allowed = allowed
         self.immediate_save = immediate_save
+        self.serialize = serialize
+        self.readonly = readonly
         self.private_name = f"_{name}"
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return getattr(instance, self.private_name)
+        stored = getattr(instance, self.private_name)
+        # Return deep copy for mutable types to prevent external modification
+        if isinstance(stored, (dict, list)):
+            return copy.deepcopy(stored)
+        return stored
 
     def __set__(self, instance, value):
+        # Prevent modification of read-only properties
+        if self.readonly:
+            raise AttributeError(f"Cannot set read-only property '{self.name}'")
+
         # Type check if requested
         if self.type_ is not None and not isinstance(value, self.type_):
             return
@@ -81,6 +107,10 @@ class ManagedProperty:
                 if value not in self.allowed:
                     return
 
+        # Deep copy mutable types to prevent external reference issues
+        if isinstance(value, (dict, list)):
+            value = copy.deepcopy(value)
+
         setattr(instance, self.private_name, value)
         # Persist change
         try:
@@ -95,10 +125,11 @@ class ValidatedProperty:
     validator(value, instance) -> normalized_value | None
     If returns None (or raises), value is ignored.
     """
-    def __init__(self, name: str, validator, immediate_save: bool = False):
+    def __init__(self, name: str, validator, immediate_save: bool = False, serialize: bool = True):
         self.name = name
         self.validator = validator
         self.immediate_save = immediate_save
+        self.serialize = serialize
         self.private_name = f"_{name}"
 
     def __get__(self, instance, owner):
@@ -118,6 +149,200 @@ class ValidatedProperty:
             instance.saveConfig(self.name, normalized, immediate_save=self.immediate_save)
         except Exception:
             pass
+
+
+# ============================================================================
+# Validator Functions for ValidatedProperty
+# ============================================================================
+
+def _main_window_geometry_validator(val, inst):
+    if not (isinstance(val, dict) and set(val.keys()) == set(inst.MAIN_WINDOW_GEOMETRY.keys())):
+        return None
+    new = {}
+    for key, value in val.items():
+        if isinstance(value, int):
+            new[key] = value
+        else:
+            new[key] = inst.MAIN_WINDOW_GEOMETRY[key]
+    return new
+
+def _selected_transcription_compute_type_validator(val, inst):
+    if not isinstance(val, str):
+        return None
+    compute_types = inst.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE.get("compute_types", [])
+    if val in compute_types:
+        return val
+    return None
+
+def _overlay_small_validator(val, inst):
+    if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_SMALL_LOG_SETTINGS.keys())):
+        return None
+    base = inst.OVERLAY_SMALL_LOG_SETTINGS
+    new = dict(base)
+    for key, v in val.items():
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+            new[key] = v
+        elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+        elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
+            new[key] = v
+        elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+    return new
+
+def _overlay_large_validator(val, inst):
+    if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
+        return None
+    base = inst.OVERLAY_LARGE_LOG_SETTINGS
+    new = dict(base)
+    for key, v in val.items():
+        if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
+            new[key] = v
+        elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+        elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
+            new[key] = v
+        elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
+            new[key] = float(v)
+    return new
+
+def _format_validator_send(val, inst):
+    valid_parts = {
+        "message": {"prefix": str, "suffix": str},
+        "separator": str,
+        "translation": {"prefix": str, "separator": str, "suffix": str},
+        "translation_first": bool
+    }
+    if not isinstance(val, dict):
+        return None
+    return val if validateDictStructure(val, valid_parts) else None
+
+def _format_validator_received(val, inst):
+    valid_parts = {
+        "message": {"prefix": str, "suffix": str},
+        "separator": str,
+        "translation": {"prefix": str, "separator": str, "suffix": str},
+        "translation_first": bool
+    }
+    if not isinstance(val, dict):
+        return None
+    return val if validateDictStructure(val, valid_parts) else None
+
+def _mic_word_filter_validator(val, inst):
+    if not isinstance(val, list):
+        return None
+    seen = set()
+    result = []
+    for item in val:
+        if isinstance(item, str) and item not in seen:
+            seen.add(item)
+            result.append(item)
+    return result
+
+def _plugins_status_validator(val, inst):
+    if not isinstance(val, list):
+        return None
+    if not all(isinstance(item, dict) for item in val):
+        return None
+    return [dict(item) for item in val]
+
+def _selected_translation_engines_validator(val, inst):
+    if not isinstance(val, dict):
+        return None
+    old_value = inst.SELECTED_TRANSLATION_ENGINES
+    new = {}
+    for k, v in val.items():
+        if v in inst.SELECTABLE_TRANSLATION_ENGINE_LIST:
+            new[k] = v
+        else:
+            new[k] = old_value.get(k)
+    return new
+
+def _selected_your_languages_validator(val, inst):
+    if not isinstance(val, dict):
+        return None
+    old = inst.SELECTED_YOUR_LANGUAGES
+    new = {}
+    for k0, v0 in val.items():
+        new[k0] = {}
+        for k1, v1 in v0.items():
+            language = v1.get("language")
+            country = v1.get("country")
+            enable = v1.get("enable")
+            if (language not in list(transcription_lang.keys()) or
+                country not in list(transcription_lang.get(language, {}).keys()) or
+                not isinstance(enable, bool)):
+                new[k0][k1] = old.get(k0, {}).get(k1)
+            else:
+                new[k0][k1] = {"language": language, "country": country, "enable": enable}
+    return new
+
+def _selected_target_languages_validator(val, inst):
+    if not isinstance(val, dict):
+        return None
+    old = inst.SELECTED_TARGET_LANGUAGES
+    new = {}
+    for k0, v0 in val.items():
+        new[k0] = {}
+        for k1, v1 in v0.items():
+            language = v1.get("language")
+            country = v1.get("country")
+            enable = v1.get("enable")
+            if (language not in list(transcription_lang.keys()) or
+                country not in list(transcription_lang.get(language, {}).keys()) or
+                not isinstance(enable, bool)):
+                new[k0][k1] = old.get(k0, {}).get(k1)
+            else:
+                new[k0][k1] = {"language": language, "country": country, "enable": enable}
+    return new
+
+def _selected_translation_compute_type_validator(val, inst):
+    if not isinstance(val, str):
+        return None
+    compute_types = inst.SELECTED_TRANSLATION_COMPUTE_DEVICE.get("compute_types", [])
+    if val in compute_types:
+        return val
+    return None
+
+def _mic_host_validator(val, inst):
+    if device_manager is None:
+        return None
+    if not isinstance(val, str):
+        return None
+    hosts = list(device_manager.getMicDevices().keys())
+    return val if val in hosts else None
+
+def _mic_device_validator(val, inst):
+    if device_manager is None:
+        return None
+    if not isinstance(val, str):
+        return None
+    try:
+        devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
+        names = [d.get('name') for d in devices]
+        return val if val in names else None
+    except Exception:
+        return None
+
+def _speaker_device_validator(val, inst):
+    if device_manager is None:
+        return None
+    if not isinstance(val, str):
+        return None
+    try:
+        names = [d.get('name') for d in device_manager.getSpeakerDevices()]
+        return val if val in names else None
+    except Exception:
+        return None
+
+def _compute_device_validator(val, inst):
+    if not isinstance(val, dict):
+        return None
+    for dev in inst.SELECTABLE_COMPUTE_DEVICE_LIST:
+        if dev == val:
+            return copy.deepcopy(val)
+    return None
+
 
 class Config:
     """Application configuration singleton.
@@ -165,119 +390,30 @@ class Config:
             self._timer.daemon = True
             self._timer.start()
 
-    # Generic helper to validate and set complex properties.
-    def _apply_validated_set(self, attr_name: str, value: Any, validator, immediate_save: bool = False):
-        """Run validator(value, self) which must return a normalized value or
-        raise/return None on invalid input. If valid, set private attribute
-        and persist via saveConfig.
-        """
-        try:
-            normalized = validator(value, self)
-        except Exception:
-            # Validation failed; keep previous value
-            return
-
-        if normalized is None:
-            return
-
-        setattr(self, f"_{attr_name}", normalized)
-        try:
-            self.saveConfig(attr_name, normalized, immediate_save=immediate_save)
-        except Exception:
-            pass
-
     # Read Only
-    @property
-    def VERSION(self):
-        return self._VERSION
-
-    @property
-    def PATH_LOCAL(self):
-        return self._PATH_LOCAL
-
-    @property
-    def PATH_CONFIG(self):
-        return self._PATH_CONFIG
-
-    @property
-    def PATH_LOGS(self):
-        return self._PATH_LOGS
-
-    @property
-    def GITHUB_URL(self):
-        return self._GITHUB_URL
-
-    @property
-    def UPDATER_URL(self):
-        return self._UPDATER_URL
-
-    @property
-    def BOOTH_URL(self):
-        return self._BOOTH_URL
-
-    @property
-    def DOCUMENTS_URL(self):
-        return self._DOCUMENTS_URL
-
-    @property
-    def DEEPL_AUTH_KEY_PAGE_URL(self):
-        return self._DEEPL_AUTH_KEY_PAGE_URL
-
-    @property
-    def MAX_MIC_THRESHOLD(self):
-        return self._MAX_MIC_THRESHOLD
-
-    @property
-    def MAX_SPEAKER_THRESHOLD(self):
-        return self._MAX_SPEAKER_THRESHOLD
-
-    @property
-    def WATCHDOG_TIMEOUT(self):
-        return self._WATCHDOG_TIMEOUT
-
-    @property
-    def WATCHDOG_INTERVAL(self):
-        return self._WATCHDOG_INTERVAL
-
-    @property
-    def SELECTABLE_TAB_NO_LIST(self):
-        return self._SELECTABLE_TAB_NO_LIST
-
-    @property
-    def SELECTED_TAB_TARGET_LANGUAGES_NO_LIST(self):
-        return self._SELECTED_TAB_TARGET_LANGUAGES_NO_LIST
-
-    @property
-    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST(self):
-        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST
-
-    @property
-    def SELECTABLE_WHISPER_WEIGHT_TYPE_LIST(self):
-        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_LIST
-
-    @property
-    def SELECTABLE_TRANSLATION_ENGINE_LIST(self):
-        return self._SELECTABLE_TRANSLATION_ENGINE_LIST
-
-    @property
-    def SELECTABLE_TRANSCRIPTION_ENGINE_LIST(self):
-        return self._SELECTABLE_TRANSCRIPTION_ENGINE_LIST
-
-    @property
-    def SELECTABLE_UI_LANGUAGE_LIST(self):
-        return self._SELECTABLE_UI_LANGUAGE_LIST
-
-    @property
-    def COMPUTE_MODE(self):
-        return self._COMPUTE_MODE
-
-    @property
-    def SELECTABLE_COMPUTE_DEVICE_LIST(self):
-        return self._SELECTABLE_COMPUTE_DEVICE_LIST
-
-    @property
-    def SEND_MESSAGE_BUTTON_TYPE_LIST(self):
-        return self._SEND_MESSAGE_BUTTON_TYPE_LIST
+    VERSION = ManagedProperty('VERSION', readonly=True, serialize=False)
+    PATH_LOCAL = ManagedProperty('PATH_LOCAL', readonly=True, serialize=False)
+    PATH_CONFIG = ManagedProperty('PATH_CONFIG', readonly=True, serialize=False)
+    PATH_LOGS = ManagedProperty('PATH_LOGS', readonly=True, serialize=False)
+    GITHUB_URL = ManagedProperty('GITHUB_URL', readonly=True, serialize=False)
+    UPDATER_URL = ManagedProperty('UPDATER_URL', readonly=True, serialize=False)
+    BOOTH_URL = ManagedProperty('BOOTH_URL', readonly=True, serialize=False)
+    DOCUMENTS_URL = ManagedProperty('DOCUMENTS_URL', readonly=True, serialize=False)
+    DEEPL_AUTH_KEY_PAGE_URL = ManagedProperty('DEEPL_AUTH_KEY_PAGE_URL', readonly=True, serialize=False)
+    MAX_MIC_THRESHOLD = ManagedProperty('MAX_MIC_THRESHOLD', readonly=True, serialize=False)
+    MAX_SPEAKER_THRESHOLD = ManagedProperty('MAX_SPEAKER_THRESHOLD', readonly=True, serialize=False)
+    WATCHDOG_TIMEOUT = ManagedProperty('WATCHDOG_TIMEOUT', readonly=True, serialize=False)
+    WATCHDOG_INTERVAL = ManagedProperty('WATCHDOG_INTERVAL', readonly=True, serialize=False)
+    SELECTABLE_TAB_NO_LIST = ManagedProperty('SELECTABLE_TAB_NO_LIST', readonly=True, serialize=False)
+    SELECTED_TAB_TARGET_LANGUAGES_NO_LIST = ManagedProperty('SELECTED_TAB_TARGET_LANGUAGES_NO_LIST', readonly=True, serialize=False)
+    SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST = ManagedProperty('SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST', readonly=True, serialize=False)
+    SELECTABLE_WHISPER_WEIGHT_TYPE_LIST = ManagedProperty('SELECTABLE_WHISPER_WEIGHT_TYPE_LIST', readonly=True, serialize=False)
+    SELECTABLE_TRANSLATION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_LIST', readonly=True, serialize=False)
+    SELECTABLE_TRANSCRIPTION_ENGINE_LIST = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_LIST', readonly=True, serialize=False)
+    SELECTABLE_UI_LANGUAGE_LIST = ManagedProperty('SELECTABLE_UI_LANGUAGE_LIST', readonly=True, serialize=False)
+    COMPUTE_MODE = ManagedProperty('COMPUTE_MODE', readonly=True, serialize=False)
+    SELECTABLE_COMPUTE_DEVICE_LIST = ManagedProperty('SELECTABLE_COMPUTE_DEVICE_LIST', readonly=True, serialize=False)
+    SEND_MESSAGE_BUTTON_TYPE_LIST = ManagedProperty('SEND_MESSAGE_BUTTON_TYPE_LIST', readonly=True, serialize=False)
 
     # Read Write
     # --- Simple boolean flags (managed by descriptor) ---
@@ -288,86 +424,17 @@ class Config:
     ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool)
     ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool)
 
-    @property
-    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self):
-        return self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
-
-    @SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT.setter
-    def SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT(self, value):
-        if isinstance(value, dict):
-            self._SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = value
-
-    @property
-    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self):
-        return self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
-
-    @SELECTABLE_WHISPER_WEIGHT_TYPE_DICT.setter
-    def SELECTABLE_WHISPER_WEIGHT_TYPE_DICT(self, value):
-        if isinstance(value, dict):
-            self._SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = value
-
-    @property
-    def SELECTABLE_TRANSLATION_ENGINE_STATUS(self):
-        return self._SELECTABLE_TRANSLATION_ENGINE_STATUS
-
-    @SELECTABLE_TRANSLATION_ENGINE_STATUS.setter
-    def SELECTABLE_TRANSLATION_ENGINE_STATUS(self, value):
-        if isinstance(value, dict):
-            self._SELECTABLE_TRANSLATION_ENGINE_STATUS = value
-
-    @property
-    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self):
-        return self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS
-
-    @SELECTABLE_TRANSCRIPTION_ENGINE_STATUS.setter
-    def SELECTABLE_TRANSCRIPTION_ENGINE_STATUS(self, value):
-        if isinstance(value, dict):
-            self._SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = value
-
-    @property
-    def SELECTABLE_PLAMO_MODEL_LIST(self):
-        return self._SELECTABLE_PLAMO_MODEL_LIST
-
-    @SELECTABLE_PLAMO_MODEL_LIST.setter
-    def SELECTABLE_PLAMO_MODEL_LIST(self, value):
-        if isinstance(value, list):
-            self._SELECTABLE_PLAMO_MODEL_LIST = value
-
-    @property
-    def SELECTABLE_GEMINI_MODEL_LIST(self):
-        return self._SELECTABLE_GEMINI_MODEL_LIST
-
-    @SELECTABLE_GEMINI_MODEL_LIST.setter
-    def SELECTABLE_GEMINI_MODEL_LIST(self, value):
-        if isinstance(value, list):
-            self._SELECTABLE_GEMINI_MODEL_LIST = value
-
-    @property
-    def SELECTABLE_OPENAI_MODEL_LIST(self):
-        return self._SELECTABLE_OPENAI_MODEL_LIST
-
-    @SELECTABLE_OPENAI_MODEL_LIST.setter
-    def SELECTABLE_OPENAI_MODEL_LIST(self, value):
-        if isinstance(value, list):
-            self._SELECTABLE_OPENAI_MODEL_LIST = value
-
-    @property
-    def SELECTABLE_LMSTUDIO_MODEL_LIST(self):
-        return self._SELECTABLE_LMSTUDIO_MODEL_LIST
-
-    @SELECTABLE_LMSTUDIO_MODEL_LIST.setter
-    def SELECTABLE_LMSTUDIO_MODEL_LIST(self, value):
-        if isinstance(value, list):
-            self._SELECTABLE_LMSTUDIO_MODEL_LIST = value
-
-    @property
-    def SELECTABLE_OLLAMA_MODEL_LIST(self):
-        return self._SELECTABLE_OLLAMA_MODEL_LIST
-
-    @SELECTABLE_OLLAMA_MODEL_LIST.setter
-    def SELECTABLE_OLLAMA_MODEL_LIST(self, value):
-        if isinstance(value, list):
-            self._SELECTABLE_OLLAMA_MODEL_LIST = value
+    # --- Selectable dict/list properties (managed by descriptor, not serialized) ---
+    # These are dynamically generated in init_config() based on installed packages/APIs
+    SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT', type_=dict, serialize=False)
+    SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_WHISPER_WEIGHT_TYPE_DICT', type_=dict, serialize=False)
+    SELECTABLE_TRANSLATION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_STATUS', type_=dict, serialize=False)
+    SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_STATUS', type_=dict, serialize=False)
+    SELECTABLE_PLAMO_MODEL_LIST = ManagedProperty('SELECTABLE_PLAMO_MODEL_LIST', type_=list, serialize=False)
+    SELECTABLE_GEMINI_MODEL_LIST = ManagedProperty('SELECTABLE_GEMINI_MODEL_LIST', type_=list, serialize=False)
+    SELECTABLE_OPENAI_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_MODEL_LIST', type_=list, serialize=False)
+    SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False)
+    SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
@@ -384,113 +451,7 @@ class Config:
     SHOW_RESEND_BUTTON = ManagedProperty('SHOW_RESEND_BUTTON', type_=bool)
     FONT_FAMILY = ManagedProperty('FONT_FAMILY', type_=str)
     UI_LANGUAGE = ManagedProperty('UI_LANGUAGE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_UI_LANGUAGE_LIST)
-
-    # Register json serializable functions for the ManagedProperty-backed attributes
-    @json_serializable('TRANSPARENCY')
-    def _json_TRANSPARENCY(self):
-        return self.TRANSPARENCY
-
-    @json_serializable('UI_SCALING')
-    def _json_UI_SCALING(self):
-        return self.UI_SCALING
-
-    @json_serializable('TEXTBOX_UI_SCALING')
-    def _json_TEXTBOX_UI_SCALING(self):
-        return self.TEXTBOX_UI_SCALING
-
-    @json_serializable('MESSAGE_BOX_RATIO')
-    def _json_MESSAGE_BOX_RATIO(self):
-        return self.MESSAGE_BOX_RATIO
-
-    @json_serializable('SEND_MESSAGE_BUTTON_TYPE')
-    def _json_SEND_MESSAGE_BUTTON_TYPE(self):
-        return self.SEND_MESSAGE_BUTTON_TYPE
-
-    @json_serializable('SHOW_RESEND_BUTTON')
-    def _json_SHOW_RESEND_BUTTON(self):
-        return self.SHOW_RESEND_BUTTON
-
-    @json_serializable('FONT_FAMILY')
-    def _json_FONT_FAMILY(self):
-        return self.FONT_FAMILY
-
-    @json_serializable('UI_LANGUAGE')
-    def _json_UI_LANGUAGE(self):
-        return self.UI_LANGUAGE
-
-    # Register json serializable functions for mic/speaker and other simple props
-    @json_serializable('CONVERT_MESSAGE_TO_ROMAJI')
-    def _json_CONVERT_MESSAGE_TO_ROMAJI(self):
-        return self.CONVERT_MESSAGE_TO_ROMAJI
-
-    @json_serializable('CONVERT_MESSAGE_TO_HIRAGANA')
-    def _json_CONVERT_MESSAGE_TO_HIRAGANA(self):
-        return self.CONVERT_MESSAGE_TO_HIRAGANA
-
-    @json_serializable('MAIN_WINDOW_SIDEBAR_COMPACT_MODE')
-    def _json_MAIN_WINDOW_SIDEBAR_COMPACT_MODE(self):
-        return self.MAIN_WINDOW_SIDEBAR_COMPACT_MODE
-
-    @json_serializable('MIC_THRESHOLD')
-    def _json_MIC_THRESHOLD(self):
-        return self.MIC_THRESHOLD
-
-    @json_serializable('MIC_AUTOMATIC_THRESHOLD')
-    def _json_MIC_AUTOMATIC_THRESHOLD(self):
-        return self.MIC_AUTOMATIC_THRESHOLD
-
-    @json_serializable('MIC_RECORD_TIMEOUT')
-    def _json_MIC_RECORD_TIMEOUT(self):
-        return self.MIC_RECORD_TIMEOUT
-
-    @json_serializable('MIC_PHRASE_TIMEOUT')
-    def _json_MIC_PHRASE_TIMEOUT(self):
-        return self.MIC_PHRASE_TIMEOUT
-
-    @json_serializable('MIC_MAX_PHRASES')
-    def _json_MIC_MAX_PHRASES(self):
-        return self.MIC_MAX_PHRASES
-
-    @json_serializable('SPEAKER_THRESHOLD')
-    def _json_SPEAKER_THRESHOLD(self):
-        return self.SPEAKER_THRESHOLD
-
-    @json_serializable('SPEAKER_AUTOMATIC_THRESHOLD')
-    def _json_SPEAKER_AUTOMATIC_THRESHOLD(self):
-        return self.SPEAKER_AUTOMATIC_THRESHOLD
-
-    @json_serializable('SPEAKER_RECORD_TIMEOUT')
-    def _json_SPEAKER_RECORD_TIMEOUT(self):
-        return self.SPEAKER_RECORD_TIMEOUT
-
-    @json_serializable('SPEAKER_PHRASE_TIMEOUT')
-    def _json_SPEAKER_PHRASE_TIMEOUT(self):
-        return self.SPEAKER_PHRASE_TIMEOUT
-
-    @json_serializable('SPEAKER_MAX_PHRASES')
-    def _json_SPEAKER_MAX_PHRASES(self):
-        return self.SPEAKER_MAX_PHRASES
-
-    @json_serializable('SPEAKER_AVG_LOGPROB')
-    def _json_SPEAKER_AVG_LOGPROB(self):
-        return self.SPEAKER_AVG_LOGPROB
-
-    @json_serializable('SPEAKER_NO_SPEECH_PROB')
-    def _json_SPEAKER_NO_SPEECH_PROB(self):
-        return self.SPEAKER_NO_SPEECH_PROB
-
-    @property
-    @json_serializable('MAIN_WINDOW_GEOMETRY')
-    def MAIN_WINDOW_GEOMETRY(self):
-        return self._MAIN_WINDOW_GEOMETRY
-
-    @MAIN_WINDOW_GEOMETRY.setter
-    def MAIN_WINDOW_GEOMETRY(self, value):
-        if isinstance(value, dict) and set(value.keys()) == set(self.MAIN_WINDOW_GEOMETRY.keys()):
-            for key, value in value.items():
-                if isinstance(value, int):
-                    self._MAIN_WINDOW_GEOMETRY[key] = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, self.MAIN_WINDOW_GEOMETRY, immediate_save=True)
+    MAIN_WINDOW_GEOMETRY = ValidatedProperty('MAIN_WINDOW_GEOMETRY', _main_window_geometry_validator, immediate_save=True)
 
     # --- Mic-related simple properties ---
     MIC_THRESHOLD = ManagedProperty('MIC_THRESHOLD', type_=int)
@@ -500,8 +461,6 @@ class Config:
     MIC_MAX_PHRASES = ManagedProperty('MIC_MAX_PHRASES', type_=int)
     MIC_AVG_LOGPROB = ManagedProperty('MIC_AVG_LOGPROB', type_=(int, float))
     MIC_NO_SPEECH_PROB = ManagedProperty('MIC_NO_SPEECH_PROB', type_=(int, float))
-
-    # HOTKEYS validator: dict with identical key set; each value either list or None
     HOTKEYS = ValidatedProperty('HOTKEYS',
         validator=lambda val, inst: (
             {k: (v if (isinstance(v, list) or v is None) else inst.HOTKEYS.get(k))
@@ -510,7 +469,7 @@ class Config:
         immediate_save=True
     )
 
-    # --- Speaker-related simple properties (handled by ManagedProperty) ---
+    # --- Speaker-related simple properties ---
     SPEAKER_THRESHOLD = ManagedProperty('SPEAKER_THRESHOLD', type_=int)
     SPEAKER_AUTOMATIC_THRESHOLD = ManagedProperty('SPEAKER_AUTOMATIC_THRESHOLD', type_=bool)
     SPEAKER_RECORD_TIMEOUT = ManagedProperty('SPEAKER_RECORD_TIMEOUT', type_=int)
@@ -519,95 +478,24 @@ class Config:
     SPEAKER_AVG_LOGPROB = ManagedProperty('SPEAKER_AVG_LOGPROB', type_=(int, float))
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
 
-    # --- Auth settings ---
-    # AUTH_KEYS with custom validator
+    # --- Auth and API settings ---
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
         validator=lambda val, inst: (
             {k: (v if isinstance(v, str) else inst.AUTH_KEYS.get(k)) for k, v in val.items()}
             if isinstance(val, dict) and set(val.keys()) == set(inst.AUTH_KEYS.keys()) else None
         )
     )
+    LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
 
-    @property
-    @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_TYPE')
-    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self):
-        return self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE
+    # --- Transcription settings ---
+    SELECTED_TRANSCRIPTION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_TYPE', _selected_transcription_compute_type_validator)
 
-    @SELECTED_TRANSCRIPTION_COMPUTE_TYPE.setter
-    def SELECTED_TRANSCRIPTION_COMPUTE_TYPE(self, value):
-        if isinstance(value, str):
-            if value in self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["compute_types"]:
-                self._SELECTED_TRANSCRIPTION_COMPUTE_TYPE = value
-                self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    @property
-    @json_serializable('LMSTUDIO_URL')
-    def LMSTUDIO_URL(self):
-        return self._LMSTUDIO_URL
-
-    @LMSTUDIO_URL.setter
-    def LMSTUDIO_URL(self, value):
-        if isinstance(value, str):
-            self._LMSTUDIO_URL = value
-            self.saveConfig(inspect.currentframe().f_code.co_name, value)
-
-    # --- OVERLAY settings validators ---
-    def _overlay_small_validator(val, inst):
-        if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_SMALL_LOG_SETTINGS.keys())):
-            return None
-        base = inst.OVERLAY_SMALL_LOG_SETTINGS
-        new = dict(base)  # start from existing
-        for key, v in val.items():
-            if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
-                new[key] = v
-            elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
-                new[key] = float(v)
-            elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
-                new[key] = v
-            elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
-                new[key] = float(v)
-        return new
+    # --- Overlay settings ---
     OVERLAY_SMALL_LOG_SETTINGS = ValidatedProperty('OVERLAY_SMALL_LOG_SETTINGS', _overlay_small_validator)
-
-    def _overlay_large_validator(val, inst):
-        if not (isinstance(val, dict) and set(val.keys()) == set(inst.OVERLAY_LARGE_LOG_SETTINGS.keys())):
-            return None
-        base = inst.OVERLAY_LARGE_LOG_SETTINGS
-        new = dict(base)
-        for key, v in val.items():
-            if key == 'tracker' and isinstance(v, str) and v in ['HMD', 'LeftHand', 'RightHand']:
-                new[key] = v
-            elif key in ['x_pos','y_pos','z_pos','x_rotation','y_rotation','z_rotation'] and isinstance(v,(int,float)):
-                new[key] = float(v)
-            elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
-                new[key] = v
-            elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
-                new[key] = float(v)
-        return new
     OVERLAY_LARGE_LOG_SETTINGS = ValidatedProperty('OVERLAY_LARGE_LOG_SETTINGS', _overlay_large_validator)
 
-    def _format_validator_send(val, inst):
-        valid_parts = {
-            "message": {"prefix": str, "suffix": str},
-            "separator": str,
-            "translation": {"prefix": str, "separator": str, "suffix": str},
-            "translation_first": bool
-        }
-        if not isinstance(val, dict):
-            return None
-        return val if validateDictStructure(val, valid_parts) else None
+    # --- Message format settings ---
     SEND_MESSAGE_FORMAT_PARTS = ValidatedProperty('SEND_MESSAGE_FORMAT_PARTS', _format_validator_send)
-
-    def _format_validator_received(val, inst):
-        valid_parts = {
-            "message": {"prefix": str, "suffix": str},
-            "separator": str,
-            "translation": {"prefix": str, "separator": str, "suffix": str},
-            "translation_first": bool
-        }
-        if not isinstance(val, dict):
-            return None
-        return val if validateDictStructure(val, valid_parts) else None
     RECEIVED_MESSAGE_FORMAT_PARTS = ValidatedProperty('RECEIVED_MESSAGE_FORMAT_PARTS', _format_validator_received)
 
     # Convert remaining simple properties to ManagedProperty to reduce repetition
@@ -639,274 +527,22 @@ class Config:
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_LMSTUDIO_MODEL_LIST)
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OLLAMA_MODEL_LIST)
 
-    # --- Complex properties with custom validators (ValidatedProperty) ---
-    # List/Dict validators
-    def _mic_word_filter_validator(val, inst):
-        if not isinstance(val, list):
-            return None
-        seen = set()
-        result = []
-        for item in val:
-            if isinstance(item, str) and item not in seen:
-                seen.add(item)
-                result.append(item)
-        return result
+    # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
-
-    def _plugins_status_validator(val, inst):
-        if not isinstance(val, list):
-            return None
-        if not all(isinstance(item, dict) for item in val):
-            return None
-        return [dict(item) for item in val]
     PLUGINS_STATUS = ValidatedProperty('PLUGINS_STATUS', _plugins_status_validator, immediate_save=True)
-
-    def _selected_translation_engines_validator(val, inst):
-        if not isinstance(val, dict):
-            return None
-        old_value = inst.SELECTED_TRANSLATION_ENGINES
-        new = {}
-        for k, v in val.items():
-            if v in inst.SELECTABLE_TRANSLATION_ENGINE_LIST:
-                new[k] = v
-            else:
-                new[k] = old_value.get(k)
-        return new
     SELECTED_TRANSLATION_ENGINES = ValidatedProperty('SELECTED_TRANSLATION_ENGINES', _selected_translation_engines_validator)
-
-    def _selected_your_languages_validator(val, inst):
-        if not isinstance(val, dict):
-            return None
-        old = inst.SELECTED_YOUR_LANGUAGES
-        new = {}
-        for k0, v0 in val.items():
-            new[k0] = {}
-            for k1, v1 in v0.items():
-                language = v1.get("language")
-                country = v1.get("country")
-                enable = v1.get("enable")
-                if (language not in list(transcription_lang.keys()) or
-                    country not in list(transcription_lang.get(language, {}).keys()) or
-                    not isinstance(enable, bool)):
-                    new[k0][k1] = old.get(k0, {}).get(k1)
-                else:
-                    new[k0][k1] = {"language": language, "country": country, "enable": enable}
-        return new
     SELECTED_YOUR_LANGUAGES = ValidatedProperty('SELECTED_YOUR_LANGUAGES', _selected_your_languages_validator)
-
-    def _selected_target_languages_validator(val, inst):
-        if not isinstance(val, dict):
-            return None
-        old = inst.SELECTED_TARGET_LANGUAGES
-        new = {}
-        for k0, v0 in val.items():
-            new[k0] = {}
-            for k1, v1 in v0.items():
-                language = v1.get("language")
-                country = v1.get("country")
-                enable = v1.get("enable")
-                if (language not in list(transcription_lang.keys()) or
-                    country not in list(transcription_lang.get(language, {}).keys()) or
-                    not isinstance(enable, bool)):
-                    new[k0][k1] = old.get(k0, {}).get(k1)
-                else:
-                    new[k0][k1] = {"language": language, "country": country, "enable": enable}
-        return new
     SELECTED_TARGET_LANGUAGES = ValidatedProperty('SELECTED_TARGET_LANGUAGES', _selected_target_languages_validator)
-
-    def _selected_translation_compute_type_validator(val, inst):
-        if not isinstance(val, str):
-            return None
-        compute_types = inst.SELECTED_TRANSLATION_COMPUTE_DEVICE.get("compute_types", [])
-        if val in compute_types:
-            return val
-        return None
     SELECTED_TRANSLATION_COMPUTE_TYPE = ValidatedProperty('SELECTED_TRANSLATION_COMPUTE_TYPE', _selected_translation_compute_type_validator)
 
-    # Serialization functions for new descriptors
-    @json_serializable('SELECTED_TAB_NO')
-    def _json_SELECTED_TAB_NO(self):
-        return self.SELECTED_TAB_NO
-    @json_serializable('SELECTED_TRANSCRIPTION_ENGINE')
-    def _json_SELECTED_TRANSCRIPTION_ENGINE(self):
-        return self.SELECTED_TRANSCRIPTION_ENGINE
-    @json_serializable('USE_EXCLUDE_WORDS')
-    def _json_USE_EXCLUDE_WORDS(self):
-        return self.USE_EXCLUDE_WORDS
-    @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
-    def _json_CTRANSLATE2_WEIGHT_TYPE(self):
-        return self.CTRANSLATE2_WEIGHT_TYPE
-    @json_serializable('WHISPER_WEIGHT_TYPE')
-    def _json_WHISPER_WEIGHT_TYPE(self):
-        return self.WHISPER_WEIGHT_TYPE
-    @json_serializable('SELECTED_PLAMO_MODEL')
-    def _json_SELECTED_PLAMO_MODEL(self):
-        return self.SELECTED_PLAMO_MODEL
-    @json_serializable('SELECTED_GEMINI_MODEL')
-    def _json_SELECTED_GEMINI_MODEL(self):
-        return self.SELECTED_GEMINI_MODEL
-    @json_serializable('SELECTED_OPENAI_MODEL')
-    def _json_SELECTED_OPENAI_MODEL(self):
-        return self.SELECTED_OPENAI_MODEL
-    @json_serializable('SELECTED_LMSTUDIO_MODEL')
-    def _json_SELECTED_LMSTUDIO_MODEL(self):
-        return self.SELECTED_LMSTUDIO_MODEL
-    @json_serializable('SELECTED_OLLAMA_MODEL')
-    def _json_SELECTED_OLLAMA_MODEL(self):
-        return self.SELECTED_OLLAMA_MODEL
-    @json_serializable('MIC_WORD_FILTER')
-    def _json_MIC_WORD_FILTER(self):
-        return self.MIC_WORD_FILTER
-    @json_serializable('PLUGINS_STATUS')
-    def _json_PLUGINS_STATUS(self):
-        return self.PLUGINS_STATUS
-    @json_serializable('SELECTED_TRANSLATION_ENGINES')
-    def _json_SELECTED_TRANSLATION_ENGINES(self):
-        return self.SELECTED_TRANSLATION_ENGINES
-    @json_serializable('SELECTED_YOUR_LANGUAGES')
-    def _json_SELECTED_YOUR_LANGUAGES(self):
-        return self.SELECTED_YOUR_LANGUAGES
-    @json_serializable('SELECTED_TARGET_LANGUAGES')
-    def _json_SELECTED_TARGET_LANGUAGES(self):
-        return self.SELECTED_TARGET_LANGUAGES
-    @json_serializable('SELECTED_TRANSLATION_COMPUTE_TYPE')
-    def _json_SELECTED_TRANSLATION_COMPUTE_TYPE(self):
-        return self.SELECTED_TRANSLATION_COMPUTE_TYPE
-
-    # --- Device related descriptors & validators ---
-    # AUTO_MIC_SELECT simple boolean
+    # --- Device settings ---
     AUTO_MIC_SELECT = ManagedProperty('AUTO_MIC_SELECT', type_=bool)
-
-    def _mic_host_validator(val, inst):
-        if device_manager is None:
-            return None
-        if not isinstance(val, str):
-            return None
-        hosts = list(device_manager.getMicDevices().keys())
-        return val if val in hosts else None
+    AUTO_SPEAKER_SELECT = ManagedProperty('AUTO_SPEAKER_SELECT', type_=bool)
     SELECTED_MIC_HOST = ValidatedProperty('SELECTED_MIC_HOST', _mic_host_validator)
-
-    def _mic_device_validator(val, inst):
-        if device_manager is None:
-            return None
-        if not isinstance(val, str):
-            return None
-        try:
-            devices = device_manager.getMicDevices().get(inst.SELECTED_MIC_HOST, [])
-            names = [d.get('name') for d in devices]
-            return val if val in names else None
-        except Exception:
-            return None
     SELECTED_MIC_DEVICE = ValidatedProperty('SELECTED_MIC_DEVICE', _mic_device_validator)
-
-    def _speaker_device_validator(val, inst):
-        if device_manager is None:
-            return None
-        if not isinstance(val, str):
-            return None
-        try:
-            names = [d.get('name') for d in device_manager.getSpeakerDevices()]
-            return val if val in names else None
-        except Exception:
-            return None
     SELECTED_SPEAKER_DEVICE = ValidatedProperty('SELECTED_SPEAKER_DEVICE', _speaker_device_validator)
-
-    def _compute_device_validator(val, inst):
-        # Each compute device is a dict; must be exactly one of selectable list entries
-        if not isinstance(val, dict):
-            return None
-        for dev in inst.SELECTABLE_COMPUTE_DEVICE_LIST:
-            if dev == val:
-                return copy.deepcopy(val)
-        return None
     SELECTED_TRANSLATION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSLATION_COMPUTE_DEVICE', _compute_device_validator)
     SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE', _compute_device_validator)
-
-    # JSON serialization helpers for new descriptors
-    @json_serializable('AUTO_MIC_SELECT')
-    def _json_AUTO_MIC_SELECT(self):
-        return self.AUTO_MIC_SELECT
-
-    @json_serializable('SELECTED_MIC_HOST')
-    def _json_SELECTED_MIC_HOST(self):
-        return self.SELECTED_MIC_HOST
-
-    @json_serializable('SELECTED_MIC_DEVICE')
-    def _json_SELECTED_MIC_DEVICE(self):
-        return self.SELECTED_MIC_DEVICE
-
-    @json_serializable('SELECTED_SPEAKER_DEVICE')
-    def _json_SELECTED_SPEAKER_DEVICE(self):
-        return self.SELECTED_SPEAKER_DEVICE
-
-    @json_serializable('SELECTED_TRANSLATION_COMPUTE_DEVICE')
-    def _json_SELECTED_TRANSLATION_COMPUTE_DEVICE(self):
-        return self.SELECTED_TRANSLATION_COMPUTE_DEVICE
-
-    @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE')
-    def _json_SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self):
-        return self.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE
-
-    # Register json serializable functions for the above
-    @json_serializable('WEBSOCKET_SERVER')
-    def _json_WEBSOCKET_SERVER(self):
-        return self.WEBSOCKET_SERVER
-
-    @json_serializable('OSC_IP_ADDRESS')
-    def _json_OSC_IP_ADDRESS(self):
-        return self.OSC_IP_ADDRESS
-
-    @json_serializable('OSC_PORT')
-    def _json_OSC_PORT(self):
-        return self.OSC_PORT
-
-    @json_serializable('AUTO_CLEAR_MESSAGE_BOX')
-    def _json_AUTO_CLEAR_MESSAGE_BOX(self):
-        return self.AUTO_CLEAR_MESSAGE_BOX
-
-    @json_serializable('SEND_ONLY_TRANSLATED_MESSAGES')
-    def _json_SEND_ONLY_TRANSLATED_MESSAGES(self):
-        return self.SEND_ONLY_TRANSLATED_MESSAGES
-
-    @json_serializable('OVERLAY_SMALL_LOG')
-    def _json_OVERLAY_SMALL_LOG(self):
-        return self.OVERLAY_SMALL_LOG
-
-    @json_serializable('OVERLAY_LARGE_LOG')
-    def _json_OVERLAY_LARGE_LOG(self):
-        return self.OVERLAY_LARGE_LOG
-
-    @json_serializable('OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES')
-    def _json_OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES(self):
-        return self.OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES
-
-    @json_serializable('SEND_MESSAGE_TO_VRC')
-    def _json_SEND_MESSAGE_TO_VRC(self):
-        return self.SEND_MESSAGE_TO_VRC
-
-    @json_serializable('SEND_RECEIVED_MESSAGE_TO_VRC')
-    def _json_SEND_RECEIVED_MESSAGE_TO_VRC(self):
-        return self.SEND_RECEIVED_MESSAGE_TO_VRC
-
-    @json_serializable('LOGGER_FEATURE')
-    def _json_LOGGER_FEATURE(self):
-        return self.LOGGER_FEATURE
-
-    @json_serializable('VRC_MIC_MUTE_SYNC')
-    def _json_VRC_MIC_MUTE_SYNC(self):
-        return self.VRC_MIC_MUTE_SYNC
-
-    @json_serializable('NOTIFICATION_VRC_SFX')
-    def _json_NOTIFICATION_VRC_SFX(self):
-        return self.NOTIFICATION_VRC_SFX
-
-    @json_serializable('WEBSOCKET_HOST')
-    def _json_WEBSOCKET_HOST(self):
-        return self.WEBSOCKET_HOST
-
-    @json_serializable('WEBSOCKET_PORT')
-    def _json_WEBSOCKET_PORT(self):
-        return self.WEBSOCKET_PORT
 
     def init_config(self):
         # Read Only
@@ -1169,6 +805,9 @@ class Config:
             for var_name, var_func in json_serializable_vars.items():
                 self._config_data[var_name] = var_func(self)
             json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
+
+# Auto-register all descriptors after Config class definition
+_auto_register_descriptors()
 
 config = Config()
 
