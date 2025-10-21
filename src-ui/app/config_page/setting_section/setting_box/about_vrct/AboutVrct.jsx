@@ -28,12 +28,12 @@ import poster_showcase_section_title from "@images/about_vrct/poster_showcase_se
 
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
-import { useStore_UiLanguage } from "@store";
+import { useAppearance } from "@logics_configs";
 import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
 export const AboutVrct = () => {
     const { t } = useI18n();
-    const { currentUiLanguage } = useStore_UiLanguage();
+    const { currentUiLanguage } = useAppearance();
     return (
         <div className={styles.container}>
             <div className={styles.dev_section}>

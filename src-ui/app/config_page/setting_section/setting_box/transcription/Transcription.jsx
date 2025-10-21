@@ -232,8 +232,8 @@ const WhisperWeightType_Box = () => {
     const { t } = useI18n();
     const {
         currentWhisperWeightTypeStatus,
-        pendingWhisperWeightType,
-        downloadWhisperWeight,
+        pendingWhisperWeightTypeStatus,
+        downloadWhisperWeightTypeStatus,
     } = useTranscription();
     const { currentSelectedWhisperWeightType, setSelectedWhisperWeightType } = useTranscription();
 
@@ -242,8 +242,8 @@ const WhisperWeightType_Box = () => {
     };
 
     const downloadStartFunction = (id) => {
-        pendingWhisperWeightType(id);
-        downloadWhisperWeight(id);
+        pendingWhisperWeightTypeStatus(id);
+        downloadWhisperWeightTypeStatus(id);
     };
 
     const new_labels = [

@@ -34,8 +34,8 @@ const CTranslate2WeightType_Box = () => {
     const { t } = useI18n();
     const {
         currentCTranslate2WeightTypeStatus,
-        pendingCTranslate2WeightType,
-        downloadCTranslate2Weight,
+        pendingCTranslate2WeightTypeStatus,
+        downloadCTranslate2WeightTypeStatus,
 
         currentSelectedCTranslate2WeightType,
         setSelectedCTranslate2WeightType,
@@ -46,8 +46,8 @@ const CTranslate2WeightType_Box = () => {
     };
 
     const downloadStartFunction = (id) => {
-        pendingCTranslate2WeightType(id);
-        downloadCTranslate2Weight(id);
+        pendingCTranslate2WeightTypeStatus(id);
+        downloadCTranslate2WeightTypeStatus(id);
     };
 
     const new_labels = [
