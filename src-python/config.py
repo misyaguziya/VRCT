@@ -1068,6 +1068,15 @@ class Config:
                     case "opacity" | "ui_scaling":
                         if isinstance(value, (int, float)):
                             self._OVERLAY_SMALL_LOG_SETTINGS[key] = float(value)
+                    case "ruby_font_scale":
+                        if isinstance(value, (int, float)):
+                            v = float(value)
+                            if 0.05 <= v <= 3.0:
+                                self._OVERLAY_SMALL_LOG_SETTINGS[key] = v
+                    case "ruby_line_spacing":
+                        if isinstance(value, int):
+                            if 0 <= value <= 200:
+                                self._OVERLAY_SMALL_LOG_SETTINGS[key] = value
             self.saveConfig(inspect.currentframe().f_code.co_name, self.OVERLAY_SMALL_LOG_SETTINGS)
 
     @property
@@ -1423,6 +1432,8 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "HMD",
+            "ruby_font_scale": 0.5,
+            "ruby_line_spacing": 4,
         }
         self._OVERLAY_LARGE_LOG = False
         self._OVERLAY_LARGE_LOG_SETTINGS = {
