@@ -470,14 +470,6 @@ export const SETTINGS_ARRAY = [
     },
     {
         Category: "Others",
-        Base_Name: "MessageFormat_ExampleViewFilter",
-        default_value: {},
-        ui_template_id: "object",
-        logics_template_id: "get_set",
-        base_endpoint_name: "message_format_example_view_filter",
-    },
-    {
-        Category: "Others",
         Base_Name: "SendMessageFormatParts",
         default_value: [],
         ui_template_id: "list",

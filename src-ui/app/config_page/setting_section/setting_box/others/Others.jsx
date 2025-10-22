@@ -168,8 +168,6 @@ const SendMessageFormatPartsContainer = () => {
     const {
         currentSendMessageFormatParts,
         setSendMessageFormatParts,
-        currentMessageFormat_ExampleViewFilter,
-        toggleMessageFormat_ExampleViewFilter,
     } = useOthers();
 
     return (
@@ -178,8 +176,6 @@ const SendMessageFormatPartsContainer = () => {
             desc={t("config_page.others.send_message_format.desc")}
             variable={currentSendMessageFormatParts}
             setFunction={setSendMessageFormatParts}
-            example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
-            exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
             format_id="send"
         />
     );
@@ -190,8 +186,6 @@ const ReceivedMessageFormatPartsContainer = () => {
     const {
         currentReceivedMessageFormatParts,
         setReceivedMessageFormatParts,
-        currentMessageFormat_ExampleViewFilter,
-        toggleMessageFormat_ExampleViewFilter,
     } = useOthers();
 
     return (
@@ -200,8 +194,6 @@ const ReceivedMessageFormatPartsContainer = () => {
             desc={t("config_page.others.received_message_format.desc")}
             variable={currentReceivedMessageFormatParts}
             setFunction={setReceivedMessageFormatParts}
-            example_view_filter_variable={currentMessageFormat_ExampleViewFilter.data}
-            exampleViewFilterToggleFunction={toggleMessageFormat_ExampleViewFilter}
             format_id="received"
         />
     );
