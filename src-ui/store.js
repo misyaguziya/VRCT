@@ -298,31 +298,31 @@ export const { atomInstance: Atom_IsOpenedMicWordFilterList, useHook: useStore_I
 
 
 // VR
-export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_OverlaySmallLogSettings } = createAtomWithHook({
-    x_pos: 0.0,
-    y_pos: 0.0,
-    z_pos: 0.0,
-    x_rotation: 0.0,
-    y_rotation: 0.0,
-    z_rotation: 0.0,
-    display_duration: 5,
-    fadeout_duration: 2,
-    tracker: "HMD",
-}, "OverlaySmallLogSettings");
-export const { atomInstance: Atom_IsEnabledOverlaySmallLog, useHook: useStore_IsEnabledOverlaySmallLog } = createAtomWithHook(false, "IsEnabledOverlaySmallLog");
-export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_OverlayLargeLogSettings } = createAtomWithHook({
-    x_pos: 0.0,
-    y_pos: 0.0,
-    z_pos: 0.0,
-    x_rotation: 0.0,
-    y_rotation: 0.0,
-    z_rotation: 0.0,
-    display_duration: 5,
-    fadeout_duration: 2,
-    tracker: "HMD",
-}, "OverlayLargeLogSettings");
-export const { atomInstance: Atom_IsEnabledOverlayLargeLog, useHook: useStore_IsEnabledOverlayLargeLog } = createAtomWithHook(false, "IsEnabledOverlayLargeLog");
-export const { atomInstance: Atom_OverlayShowOnlyTranslatedMessages, useHook: useStore_OverlayShowOnlyTranslatedMessages } = createAtomWithHook(false, "OverlayShowOnlyTranslatedMessages");
+// export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_OverlaySmallLogSettings } = createAtomWithHook({
+//     x_pos: 0.0,
+//     y_pos: 0.0,
+//     z_pos: 0.0,
+//     x_rotation: 0.0,
+//     y_rotation: 0.0,
+//     z_rotation: 0.0,
+//     display_duration: 5,
+//     fadeout_duration: 2,
+//     tracker: "HMD",
+// }, "OverlaySmallLogSettings");
+// export const { atomInstance: Atom_IsEnabledOverlaySmallLog, useHook: useStore_IsEnabledOverlaySmallLog } = createAtomWithHook(false, "IsEnabledOverlaySmallLog");
+// export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_OverlayLargeLogSettings } = createAtomWithHook({
+//     x_pos: 0.0,
+//     y_pos: 0.0,
+//     z_pos: 0.0,
+//     x_rotation: 0.0,
+//     y_rotation: 0.0,
+//     z_rotation: 0.0,
+//     display_duration: 5,
+//     fadeout_duration: 2,
+//     tracker: "HMD",
+// }, "OverlayLargeLogSettings");
+// export const { atomInstance: Atom_IsEnabledOverlayLargeLog, useHook: useStore_IsEnabledOverlayLargeLog } = createAtomWithHook(false, "IsEnabledOverlayLargeLog");
+// export const { atomInstance: Atom_OverlayShowOnlyTranslatedMessages, useHook: useStore_OverlayShowOnlyTranslatedMessages } = createAtomWithHook(false, "OverlayShowOnlyTranslatedMessages");
 
 // Others
 // export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
