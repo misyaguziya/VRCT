@@ -115,18 +115,20 @@ class OverlayImage:
         font_family = self.LANGUAGES.get(language, self.LANGUAGES["Default"])
         ruby_size = max(1, int(base_font_size * ruby_font_scale))
         font_ruby = self._get_font(font_family, ruby_size)
+        # Symmetric outer padding so ruby block has breathing room top/bottom
+        outer_padding = 10
         # Measure widths to center lines independently.
-        img_tmp = Image.new("RGBA", (base_width, ruby_size * 2 + ruby_line_spacing + 10), (0, 0, 0, 0))
+        img_tmp = Image.new("RGBA", (base_width, ruby_size * 2 + ruby_line_spacing + outer_padding * 2), (0, 0, 0, 0))
         draw_tmp = ImageDraw.Draw(img_tmp)
         romaji_width = draw_tmp.textlength(romaji_line, font_ruby) if romaji_line else 0
         hira_width = draw_tmp.textlength(hira_line, font_ruby) if hira_line else 0
         romaji_x = (base_width - romaji_width) // 2
         hira_x = (base_width - hira_width) // 2
-        # Construct final ruby image.
-        ruby_height = ruby_size * (2 if hira_line and romaji_line else 1) + (ruby_line_spacing if hira_line and romaji_line else 0) + 10
+        # Construct final ruby image with symmetric padding
+        ruby_height = outer_padding + ruby_size * (2 if hira_line and romaji_line else 1) + (ruby_line_spacing if hira_line and romaji_line else 0) + outer_padding
         ruby_img = Image.new("RGBA", (base_width, ruby_height), (0, 0, 0, 0))
         draw = ImageDraw.Draw(ruby_img)
-        current_y = 5 + ruby_size // 2
+        current_y = outer_padding + ruby_size // 2
         if romaji_line:
             draw.text((romaji_x + romaji_width // 2, current_y), romaji_line, text_color, anchor="mm", font=font_ruby)
             current_y += ruby_size + (ruby_line_spacing if hira_line else 0)
@@ -324,6 +326,10 @@ class OverlayImage:
         img = textbox_images[0]
         for textbox_img in textbox_images[1:]:
             img = self.concatenateImagesVertically(img, textbox_img)
+
+        # 画像周囲にUIパディングを追加して、文字が端に張り付かないようにする
+        ui_outer_padding = 50
+        img = self.addImageMargin(img, ui_outer_padding, ui_outer_padding, ui_outer_padding, ui_outer_padding, (0, 0, 0, 0))
 
         # 角丸背景を作成
         background = Image.new("RGBA", img.size, (0, 0, 0, 0))
