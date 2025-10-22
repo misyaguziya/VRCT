@@ -944,13 +944,41 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict]) -> object:
+    def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], translation_transliteration_tokens: Optional[list] = None) -> object:
         self.ensure_initialized()
-        # target_language may be provided as dict or None
+        # Normalize target_language dict -> list
         target_language_list = []
         if isinstance(target_language, dict):
             target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
-        return self.overlay_image.createOverlayImageSmallLog(message, your_language, translation, target_language_list)
+
+        # Prepare transliteration tokens only if we have an original message string.
+        transliteration_tokens = []
+        if isinstance(message, str) and message.strip():
+            try:
+                # Always request both romaji + hiragana for ruby (per spec: romaji upper, hiragana lower)
+                transliteration_tokens = self.convertMessageToTransliteration(message, hiragana=True, romaji=True)
+            except Exception:
+                transliteration_tokens = []
+                errorLogging()
+
+        # Fetch ruby settings from config (with safe defaults if missing)
+        ruby_font_scale = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_font_scale", 0.5)
+        ruby_line_spacing = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_line_spacing", 4)
+
+        # 翻訳行ルビ (任意) が指定されていれば渡す。後方互換のため None / 不正型は空リストに。
+        if not isinstance(translation_transliteration_tokens, list):
+            translation_transliteration_tokens = []
+
+        return self.overlay_image.createOverlayImageSmallLog(
+            message,
+            your_language,
+            translation,
+            target_language_list,
+            transliteration_tokens=transliteration_tokens,
+            translation_transliteration_tokens=translation_transliteration_tokens,
+            ruby_font_scale=ruby_font_scale,
+            ruby_line_spacing=ruby_line_spacing,
+        )
 
     def createOverlayImageSmallMessage(self, message):
         self.ensure_initialized()
