@@ -11,7 +11,7 @@ export const DownloadModelsContainer = () => {
     const { currentCTranslate2WeightTypeStatus } = useTranslation();
     const { currentWhisperWeightTypeStatus } = useTranscription();
 
-    const c_translate_2 = currentCTranslate2WeightTypeStatus.data.find(d => d.id === "small");
+    const c_translate_2 = currentCTranslate2WeightTypeStatus.data.find(d => d.id === "m2m100_418M-ct2-int8");
     const whisper = currentWhisperWeightTypeStatus.data.find(d => d.id === "base");
 
     if (c_translate_2.progress === null && whisper.progress === null) return null;
@@ -19,8 +19,8 @@ export const DownloadModelsContainer = () => {
     return (
         <div className={styles.container}>
             <div className={styles.progress_container}>
-                <DownloadModelsProgress progress={c_translate_2.progress} type_label="CTranslate2 Model"/>
-                <DownloadModelsProgress progress={whisper.progress} type_label="Whisper Model"/>
+                <DownloadModelsProgress progress={c_translate_2.progress} type_label="Translation Model"/>
+                <DownloadModelsProgress progress={whisper.progress} type_label="Transcription Model"/>
             </div>
             <div className={styles.labels_wrapper}>
                 <img src={vrct_logo_for_dark_mode} className={styles.logo_img}/>

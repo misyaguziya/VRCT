@@ -110,21 +110,23 @@ export const translator_status = [
 ];
 
 export const ctranslate2_weight_type_status = [
-    { id: "small", label: "small", is_downloaded: false, progress: null },
-    { id: "large", label: "large", is_downloaded: false, progress: null },
-];
+    { id: "m2m100_418M-ct2-int8", capacity: "418MB"},
+    { id: "m2m100_1.2B-ct2-int8", capacity: "1.2GB"},
+    { id: "nllb-200-distilled-1.3B-ct2-int8", capacity: "1.3GB"},
+    { id: "nllb-200-3.3B-ct2-int8", capacity: "3.3GB"},
+].map(item => ({ ...item, is_downloaded: false, progress: null }));
 
 export const whisper_weight_type_status = [
-    { id: "tiny", label: "tiny", is_downloaded: false, progress: null },
-    { id: "base", label: "base", is_downloaded: false, progress: null },
-    { id: "small", label: "small", is_downloaded: false, progress: null },
-    { id: "medium", label: "medium", is_downloaded: false, progress: null },
-    { id: "large-v1", label: "large-v1", is_downloaded: false, progress: null },
-    { id: "large-v2", label: "large-v2", is_downloaded: false, progress: null },
-    { id: "large-v3", label: "large-v3", is_downloaded: false, progress: null },
-    { id: "large-v3-turbo-int8", label: "large-v3-turbo-int8", is_downloaded: false, progress: null },
-    { id: "large-v3-turbo", label: "large-v3-turbo", is_downloaded: false, progress: null },
-];
+    { id: "tiny", capacity: "74.5MB"},
+    { id: "base", capacity: "141MB"},
+    { id: "small", capacity: "463MB"},
+    { id: "medium", capacity: "1.42GB"},
+    { id: "large-v1", capacity: "2.87GB"},
+    { id: "large-v2", capacity: "2.87GB"},
+    { id: "large-v3", capacity: "2.87GB"},
+    { id: "large-v3-turbo-int8", capacity: "794MB"},
+    { id: "large-v3-turbo", capacity: "1.58GB"},
+].map(item => ({ ...item, is_downloaded: false, progress: null }));
 
 export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";
 export const supporters_images_url = "https://ShiinaSakamoto.github.io/vrct_supporters/assets/supporters";
