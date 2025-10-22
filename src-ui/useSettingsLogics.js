@@ -185,3 +185,19 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
     return { settings: result };
 };
+
+
+export const useConfigFunctions = (Category) => {
+    const { asyncStdoutToPython } = useStdoutToPython();
+
+    switch (Category) {
+        case "Vr":
+            return {
+                sendTextToOverlay: (text) => {
+                    asyncStdoutToPython("/run/send_text_overlay", text);
+                },
+            };
+        default:
+            return {};
+    }
+};

@@ -3,9 +3,13 @@ import { createAtomWithHook } from "@store";
 import {
     ctranslate2_weight_type_status,
     whisper_weight_type_status,
+    ui_configs,
 } from "@ui_configs";
 
-import { useSettingsLogics } from "./useSettingsLogics";
+import {
+    useSettingsLogics,
+    useConfigFunctions,
+} from "./useSettingsLogics";
 
 
 export const SETTINGS_ARRAY = [
@@ -380,6 +384,14 @@ export const SETTINGS_ARRAY = [
     },
     {
         Category: "Vr",
+        Base_Name: "OverlaySmallLogSettings",
+        default_value: ui_configs.overlay_small_log_default_settings,
+        ui_template_id: "object",
+        logics_template_id: "get_set",
+        base_endpoint_name: "overlay_small_log_settings",
+    },
+    {
+        Category: "Vr",
         Base_Name: "IsEnabledOverlayLargeLog",
         default_value: false,
         ui_template_id: "toggle",
@@ -388,16 +400,8 @@ export const SETTINGS_ARRAY = [
     },
     {
         Category: "Vr",
-        Base_Name: "OverlaySmallLogSettings",
-        default_value: {},
-        ui_template_id: "object",
-        logics_template_id: "get_set",
-        base_endpoint_name: "overlay_small_log_settings",
-    },
-    {
-        Category: "Vr",
         Base_Name: "OverlayLargeLogSettings",
-        default_value: {},
+        default_value: ui_configs.overlay_large_log_default_settings,
         ui_template_id: "object",
         logics_template_id: "get_set",
         base_endpoint_name: "overlay_large_log_settings",
@@ -501,16 +505,6 @@ export const SETTINGS_ARRAY = [
         base_endpoint_name: "convert_message_to_hiragana",
     },
 
-    // Hotkeys
-    // {
-    //     Category: "Hotkeys",
-    //     Base_Name: "SendMessageHotkey",
-    //     default_value: "",
-    //     ui_template_id: "input",
-    //     logics_template_id: "get_set",
-    //     base_endpoint_name: "send_message_hotkey",
-    // },
-
     // AdvancedSettings
     {
         Category: "AdvancedSettings",
@@ -561,7 +555,7 @@ for (const setting_data of SETTINGS_ARRAY) {
     createAtomWithHook(setting_data.default_value, setting_data.Base_Name);
 }
 
-const buildCategoryApiFromSettings = (settings, settingsArray, Category) => {
+const buildCategoryApiFromSettings = (settings, settingsArray, Category, extraFunctions = {}) => {
     const api = {};
     const filtered = settingsArray.filter((s) => s.Category === Category);
 
@@ -598,14 +592,14 @@ const buildCategoryApiFromSettings = (settings, settingsArray, Category) => {
             if (typeof settings[updateFromBackendKey] === "function") api[updateFromBackendKey] = settings[updateFromBackendKey];
         }
     }
-
-    return api;
+    return { ...api, ...extraFunctions };
 };
 
 const createCategoryHook = (Category) => {
     return () => {
         const { settings } = useSettingsLogics(SETTINGS_ARRAY, Category);
-        const autoApi = buildCategoryApiFromSettings(settings, SETTINGS_ARRAY, Category);
+        const extraFunctions = useConfigFunctions(Category);
+        const autoApi = buildCategoryApiFromSettings(settings, SETTINGS_ARRAY, Category, extraFunctions);
         return { ...autoApi };
     };
 };
