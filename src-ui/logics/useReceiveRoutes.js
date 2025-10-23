@@ -2,8 +2,9 @@ import * as common from "@logics_common";
 import * as main from "@logics_main";
 import * as configs from "@logics_configs";
 import { _useBackendErrorHandling } from "./_useBackendErrorHandling";
+import { SETTINGS_ARRAY } from "../ui_config_setter";
 
-export const ROUTE_META_LIST = [
+export const STATIC_ROUTE_META_LIST = [
     // Common
     { endpoint: "/run/feed_watchdog", ns: null, hook_name: null, method_name: null },
     { endpoint: "/run/initialization_progress", ns: common, hook_name: "useInitProgress", method_name: "updateInitProgress" },
@@ -91,222 +92,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/set/data/message_box_ratio", ns: main, hook_name: "useMessageInputBoxRatio", method_name: "updateMessageInputBoxRatio" },
 
 
-
-    // Config Page
-    // Device
-    { endpoint: "/get/data/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoMicSelect" },
-    { endpoint: "/set/enable/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "setSuccessEnableAutoMicSelect" },
-    { endpoint: "/set/disable/auto_mic_select", ns: configs, hook_name: "useDevice", method_name: "setSuccessEnableAutoMicSelect" },
-    { endpoint: "/get/data/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "updateEnableAutoSpeakerSelect" },
-    { endpoint: "/set/enable/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "setSuccessEnableAutoSpeakerSelect" },
-    { endpoint: "/set/disable/auto_speaker_select", ns: configs, hook_name: "useDevice", method_name: "setSuccessEnableAutoSpeakerSelect" },
-
-    // Device (Mic)
-    { endpoint: "/get/data/mic_host_list", ns: configs, hook_name: "useDevice", method_name: "updateMicHostList_FromBackend" },
-    { endpoint: "/run/mic_host_list", ns: configs, hook_name: "useDevice", method_name: "updateMicHostList_FromBackend" },
-
-    { endpoint: "/get/data/selected_mic_host", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicHost" },
-    { endpoint: "/set/data/selected_mic_host", ns: configs, hook_name: "useDevice", method_name: "setSuccessSelectedMicHost" },
-
-
-    { endpoint: "/get/data/mic_device_list", ns: configs, hook_name: "useDevice", method_name: "updateMicDeviceList_FromBackend" },
-    { endpoint: "/run/mic_device_list", ns: configs, hook_name: "useDevice", method_name: "updateMicDeviceList_FromBackend" },
-
-    { endpoint: "/get/data/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicDevice" },
-    { endpoint: "/set/data/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "setSuccessSelectedMicDevice" },
-
-    { endpoint: "/run/selected_mic_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedMicHostAndDevice" },
-
-    // Device (Speaker)
-    { endpoint: "/get/data/speaker_device_list", ns: configs, hook_name: "useDevice", method_name: "updateSpeakerDeviceList_FromBackend" },
-    { endpoint: "/run/speaker_device_list", ns: configs, hook_name: "useDevice", method_name: "updateSpeakerDeviceList_FromBackend" },
-
-    { endpoint: "/get/data/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedSpeakerDevice" },
-    { endpoint: "/set/data/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "setSuccessSelectedSpeakerDevice" },
-    { endpoint: "/run/selected_speaker_device", ns: configs, hook_name: "useDevice", method_name: "updateSelectedSpeakerDevice" },
-
-    // Device (Threshold)
-    { endpoint: "/get/data/mic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateMicThreshold" },
-    { endpoint: "/set/data/mic_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessMicThreshold" },
-    { endpoint: "/get/data/speaker_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateSpeakerThreshold" },
-    { endpoint: "/set/data/speaker_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessSpeakerThreshold" },
-
-    { endpoint: "/get/data/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticMicThreshold" },
-    { endpoint: "/set/enable/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessEnableAutomaticMicThreshold" },
-    { endpoint: "/set/disable/mic_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessEnableAutomaticMicThreshold" },
-    { endpoint: "/get/data/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "updateEnableAutomaticSpeakerThreshold" },
-    { endpoint: "/set/enable/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessEnableAutomaticSpeakerThreshold" },
-    { endpoint: "/set/disable/speaker_automatic_threshold", ns: configs, hook_name: "useDevice",  method_name: "setSuccessEnableAutomaticSpeakerThreshold" },
-
-
-    // Appearance
-    { endpoint: "/get/data/ui_language", ns: configs, hook_name: "useAppearance", method_name: "updateUiLanguage" },
-    { endpoint: "/set/data/ui_language", ns: configs, hook_name: "useAppearance", method_name: "setSuccessUiLanguage" },
-
-    { endpoint: "/get/data/ui_scaling", ns: configs, hook_name: "useAppearance", method_name: "updateUiScaling" },
-    { endpoint: "/set/data/ui_scaling", ns: configs, hook_name: "useAppearance", method_name: "setSuccessUiScaling" },
-
-    { endpoint: "/get/data/textbox_ui_scaling", ns: configs, hook_name: "useAppearance", method_name: "updateMessageLogUiScaling" },
-    { endpoint: "/set/data/textbox_ui_scaling", ns: configs, hook_name: "useAppearance", method_name: "setSuccessMessageLogUiScaling" },
-
-    { endpoint: "/get/data/send_message_button_type", ns: configs, hook_name: "useAppearance", method_name: "updateSendMessageButtonType" },
-    { endpoint: "/set/data/send_message_button_type", ns: configs, hook_name: "useAppearance", method_name: "setSuccessSendMessageButtonType" },
-
-    { endpoint: "/get/data/show_resend_button", ns: configs, hook_name: "useAppearance", method_name: "updateShowResendButton" },
-    { endpoint: "/set/enable/show_resend_button", ns: configs, hook_name: "useAppearance", method_name: "setSuccessShowResendButton" },
-    { endpoint: "/set/disable/show_resend_button", ns: configs, hook_name: "useAppearance", method_name: "setSuccessShowResendButton" },
-
-    { endpoint: "/get/data/font_family", ns: configs, hook_name: "useAppearance", method_name: "updateSelectedFontFamily" },
-    { endpoint: "/set/data/font_family", ns: configs, hook_name: "useAppearance", method_name: "setSuccessSelectedFontFamily" },
-
-    { endpoint: "/get/data/transparency", ns: configs, hook_name: "useAppearance", method_name: "updateTransparency" },
-    { endpoint: "/set/data/transparency", ns: configs, hook_name: "useAppearance", method_name: "setSuccessTransparency" },
-
-    // Translation
-    { endpoint: "/get/data/deepl_auth_key", ns: configs, hook_name: "useTranslation", method_name: "updateDeepLAuthKey" },
-    { endpoint: "/set/data/deepl_auth_key", ns: configs, hook_name: "useTranslation", method_name: "setSuccessDeepLAuthKey" },
-    { endpoint: "/delete/data/deepl_auth_key", ns: configs, hook_name: "useTranslation", method_name: "deleteSuccessDeepLAuthKey" },
-
-    // Translation (AI Models)
-    { endpoint: "/get/data/selectable_ctranslate2_weight_type_dict", ns: configs, hook_name: "useTranslation", method_name: "updateDownloadedCTranslate2WeightTypeStatus" },
-    { endpoint: "/get/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedCTranslate2WeightType" },
-    { endpoint: "/set/data/ctranslate2_weight_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedCTranslate2WeightType" },
-
-    { endpoint: "/run/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeType" },
-    { endpoint: "/get/data/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeType" },
-    { endpoint: "/set/data/selected_translation_compute_type", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedTranslationComputeType" },
-
-    { endpoint: "/run/downloaded_ctranslate2_weight", ns: configs, hook_name: "useTranslation", method_name: "downloadedCTranslate2WeightType" },
-    { endpoint: "/run/download_ctranslate2_weight", ns: null, hook_name: null, method_name: null },
-    { endpoint: "/run/download_progress_ctranslate2_weight", ns: configs, hook_name: "useTranslation", method_name: "updateDownloadProgressCTranslate2WeightTypeStatus" },
-
-    { endpoint: "/get/data/translation_compute_device_list", ns: configs, hook_name: "useTranslation", method_name: "updateSelectableTranslationComputeDeviceList_FromBackend" },
-
-    { endpoint: "/get/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "updateSelectedTranslationComputeDevice" },
-    { endpoint: "/set/data/selected_translation_compute_device", ns: configs, hook_name: "useTranslation", method_name: "setSuccessSelectedTranslationComputeDevice" },
-
-
-    // Transcription
-    // Transcription (Mic)
-    { endpoint: "/get/data/mic_record_timeout", ns: configs, hook_name: "useTranscription", method_name: "updateMicRecordTimeout" },
-    { endpoint: "/set/data/mic_record_timeout", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicRecordTimeout" },
-
-    { endpoint: "/get/data/mic_phrase_timeout", ns: configs, hook_name: "useTranscription", method_name: "updateMicPhraseTimeout" },
-    { endpoint: "/set/data/mic_phrase_timeout", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicPhraseTimeout" },
-
-    { endpoint: "/get/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "updateMicMaxWords" },
-    { endpoint: "/set/data/mic_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicMaxWords" },
-
-    { endpoint: "/get/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "getSuccessMicWordFilterList" },
-    { endpoint: "/set/data/mic_word_filter", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicWordFilterList" },
-
-    // Transcription (Speaker)
-    { endpoint: "/get/data/speaker_record_timeout", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerRecordTimeout" },
-    { endpoint: "/set/data/speaker_record_timeout", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerRecordTimeout" },
-
-    { endpoint: "/get/data/speaker_phrase_timeout", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerPhraseTimeout" },
-    { endpoint: "/set/data/speaker_phrase_timeout", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerPhraseTimeout" },
-
-    { endpoint: "/get/data/speaker_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerMaxWords" },
-    { endpoint: "/set/data/speaker_max_phrases", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerMaxWords" },
-
-    // Transcription (AI Models)
-    { endpoint: "/get/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionEngine" },
-    { endpoint: "/set/data/selected_transcription_engine", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionEngine" },
-
-    { endpoint: "/get/data/selectable_whisper_weight_type_dict", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadedWhisperWeightTypeStatus" },
-    { endpoint: "/get/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedWhisperWeightType" },
-    { endpoint: "/set/data/whisper_weight_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedWhisperWeightType" },
-
-    { endpoint: "/run/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeType" },
-    { endpoint: "/get/data/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeType" },
-    { endpoint: "/set/data/selected_transcription_compute_type", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeType" },
-
-
-    { endpoint: "/run/downloaded_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "downloadedWhisperWeightType" },
-    { endpoint: "/run/download_whisper_weight", ns: null, hook_name: null, method_name: null },
-    { endpoint: "/run/download_progress_whisper_weight", ns: configs, hook_name: "useTranscription", method_name: "updateDownloadProgressWhisperWeightTypeStatus" },
-
-    { endpoint: "/get/data/transcription_compute_device_list", ns: configs, hook_name: "useTranscription", method_name: "updateSelectableTranscriptionComputeDeviceList_FromBackend" },
-    { endpoint: "/get/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "updateSelectedTranscriptionComputeDevice" },
-    { endpoint: "/set/data/selected_transcription_compute_device", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSelectedTranscriptionComputeDevice" },
-
-    // Transcription (Advanced)
-    { endpoint: "/get/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateMicAvgLogprob" },
-    { endpoint: "/set/data/mic_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicAvgLogprob" },
-    { endpoint: "/get/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateMicNoSpeechProb" },
-    { endpoint: "/set/data/mic_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessMicNoSpeechProb" },
-    { endpoint: "/get/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerAvgLogprob" },
-    { endpoint: "/set/data/speaker_avg_logprob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerAvgLogprob" },
-    { endpoint: "/get/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "updateSpeakerNoSpeechProb" },
-    { endpoint: "/set/data/speaker_no_speech_prob", ns: configs, hook_name: "useTranscription", method_name: "setSuccessSpeakerNoSpeechProb" },
-
-    // VR
-    { endpoint: "/get/data/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "updateIsEnabledOverlaySmallLog" },
-    { endpoint: "/set/enable/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "setSuccessIsEnabledOverlaySmallLog" },
-    { endpoint: "/set/disable/overlay_small_log", ns: configs, hook_name: "useVr", method_name: "setSuccessIsEnabledOverlaySmallLog" },
-
-    { endpoint: "/get/data/overlay_small_log_settings", ns: configs, hook_name: "useVr", method_name: "updateOverlaySmallLogSettings" },
-    { endpoint: "/set/data/overlay_small_log_settings", ns: configs, hook_name: "useVr", method_name: "setSuccessOverlaySmallLogSettings" },
-
-    { endpoint: "/get/data/overlay_large_log", ns: configs, hook_name: "useVr", method_name: "updateIsEnabledOverlayLargeLog" },
-    { endpoint: "/set/enable/overlay_large_log", ns: configs, hook_name: "useVr", method_name: "setSuccessIsEnabledOverlayLargeLog" },
-    { endpoint: "/set/disable/overlay_large_log", ns: configs, hook_name: "useVr", method_name: "setSuccessIsEnabledOverlayLargeLog" },
-
-    { endpoint: "/get/data/overlay_large_log_settings", ns: configs, hook_name: "useVr", method_name: "updateOverlayLargeLogSettings" },
-    { endpoint: "/set/data/overlay_large_log_settings", ns: configs, hook_name: "useVr", method_name: "setSuccessOverlayLargeLogSettings" },
-
-    { endpoint: "/get/data/overlay_show_only_translated_messages", ns: configs, hook_name: "useVr", method_name: "updateOverlayShowOnlyTranslatedMessages" },
-    { endpoint: "/set/enable/overlay_show_only_translated_messages", ns: configs, hook_name: "useVr", method_name: "setSuccessOverlayShowOnlyTranslatedMessages" },
-    { endpoint: "/set/disable/overlay_show_only_translated_messages", ns: configs, hook_name: "useVr", method_name: "setSuccessOverlayShowOnlyTranslatedMessages" },
-
-    { endpoint: "/run/send_text_overlay", ns: null, hook_name: null, method_name: null },
-
-
-    // Others
-    { endpoint: "/get/data/auto_clear_message_box", ns: configs, hook_name: "useOthers", method_name: "updateEnableAutoClearMessageInputBox" },
-    { endpoint: "/set/enable/auto_clear_message_box", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoClearMessageInputBox" },
-    { endpoint: "/set/disable/auto_clear_message_box", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoClearMessageInputBox" },
-
-    { endpoint: "/get/data/send_only_translated_messages", ns: configs, hook_name: "useOthers", method_name: "updateEnableSendOnlyTranslatedMessages" },
-    { endpoint: "/set/enable/send_only_translated_messages", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendOnlyTranslatedMessages" },
-    { endpoint: "/set/disable/send_only_translated_messages", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendOnlyTranslatedMessages" },
-
-    { endpoint: "/get/data/logger_feature", ns: configs, hook_name: "useOthers", method_name: "updateEnableAutoExportMessageLogs" },
-    { endpoint: "/set/enable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
-    { endpoint: "/set/disable/logger_feature", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableAutoExportMessageLogs" },
-
-    { endpoint: "/get/data/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "getSuccessEnableVrcMicMuteSync" },
-    { endpoint: "/set/enable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
-    { endpoint: "/set/disable/vrc_mic_mute_sync", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableVrcMicMuteSync" },
-
-
-    { endpoint: "/get/data/send_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "updateEnableSendMessageToVrc" },
-    { endpoint: "/set/enable/send_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendMessageToVrc" },
-    { endpoint: "/set/disable/send_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendMessageToVrc" },
-
-    { endpoint: "/get/data/send_received_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "updateEnableSendReceivedMessageToVrc" },
-    { endpoint: "/set/enable/send_received_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendReceivedMessageToVrc" },
-    { endpoint: "/set/disable/send_received_message_to_vrc", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableSendReceivedMessageToVrc" },
-
-    { endpoint: "/get/data/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "updateEnableNotificationVrcSfx" },
-    { endpoint: "/set/enable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
-    { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
-    { endpoint: "/set/disable/notification_vrc_sfx", ns: configs, hook_name: "useOthers", method_name: "setSuccessEnableNotificationVrcSfx" },
-
-    { endpoint: "/get/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateSendMessageFormatParts" },
-    { endpoint: "/set/data/send_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessSendMessageFormatParts" },
-    { endpoint: "/get/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "updateReceivedMessageFormatParts" },
-    { endpoint: "/set/data/received_message_format_parts", ns: configs, hook_name: "useOthers", method_name: "setSuccessReceivedMessageFormatParts" },
-
-    { endpoint: "/get/data/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "updateConvertMessageToRomaji" },
-    { endpoint: "/set/enable/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToRomaji" },
-    { endpoint: "/set/disable/convert_message_to_romaji", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToRomaji" },
-
-    { endpoint: "/get/data/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "updateConvertMessageToHiragana" },
-    { endpoint: "/set/enable/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToHiragana" },
-    { endpoint: "/set/disable/convert_message_to_hiragana", ns: configs, hook_name: "useOthers", method_name: "setSuccessConvertMessageToHiragana" },
-
+    // // Config Page
     // Hotkeys
     { endpoint: "/get/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "updateHotkeys" },
     { endpoint: "/set/data/hotkeys", ns: configs, hook_name: "useHotkeys", method_name: "setSuccessHotkeys" },
@@ -315,29 +101,7 @@ export const ROUTE_META_LIST = [
     { endpoint: "/get/data/plugins_status", ns: configs, hook_name: "usePlugins", method_name: "updateSavedPluginsStatus" },
     { endpoint: "/set/data/plugins_status", ns: configs, hook_name: "usePlugins", method_name: "setSuccessSavedPluginsStatus" },
 
-    // Advanced Settings
-    { endpoint: "/get/data/osc_ip_address", ns: configs, hook_name: "useAdvancedSettings", method_name: "updateOscIpAddress" },
-    { endpoint: "/set/data/osc_ip_address", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessOscIpAddress" },
-
-    { endpoint: "/get/data/osc_port", ns: configs, hook_name: "useAdvancedSettings", method_name: "updateOscPort" },
-    { endpoint: "/set/data/osc_port", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessOscPort" },
-
-    { endpoint: "/get/data/websocket_server", ns: configs, hook_name: "useAdvancedSettings", method_name: "updateEnableWebsocket" },
-    { endpoint: "/set/enable/websocket_server", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessEnableWebsocket" },
-    { endpoint: "/set/disable/websocket_server", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessEnableWebsocket" },
-
-    { endpoint: "/get/data/websocket_host", ns: configs, hook_name: "useAdvancedSettings", method_name: "updateWebsocketHost" },
-    { endpoint: "/set/data/websocket_host", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessWebsocketHost" },
-
-    { endpoint: "/get/data/websocket_port", ns: configs, hook_name: "useAdvancedSettings", method_name: "updateWebsocketPort" },
-    { endpoint: "/set/data/websocket_port", ns: configs, hook_name: "useAdvancedSettings", method_name: "setSuccessWebsocketPort" },
-
-
-    // Not Implemented Yet...
-    { endpoint: "/get/data/mic_avg_logprob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
-    { endpoint: "/get/data/mic_no_speech_prob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
-    { endpoint: "/get/data/speaker_avg_logprob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
-    { endpoint: "/get/data/speaker_no_speech_prob", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet
+    // // Not Implemented Yet...
     { endpoint: "/get/data/transcription_engines", ns: null, hook_name: null, method_name: null }, // Not implemented on UI yet. (if ai_models has not been detected, this will be blank array[]. if the ai_models are ok but just network has not connected, it'l be only ["Whisper"])
 ];
 
@@ -346,6 +110,8 @@ export const useReceiveRoutes = () => {
     const { errorHandling_Backend } = _useBackendErrorHandling();
     const { updateIsBackendReady } = common.useIsBackendReady();
 
+    const ROUTE_META_LIST = buildRouteMetaList();
+
     const handleInvalidEndpoint = (parsed_data) => {
         console.error(`Invalid endpoint: ${parsed_data.endpoint}\nresult: ${JSON.stringify(parsed_data.result)}`);
     };
@@ -353,7 +119,13 @@ export const useReceiveRoutes = () => {
     const hook_results = {};
     ROUTE_META_LIST.forEach(({ ns, hook_name }) => {
         if (ns && hook_name && !(hook_name in hook_results)) {
-            hook_results[hook_name] = ns[hook_name]();
+            const hookFn = ns[hook_name];
+            if (typeof hookFn === "function") {
+                hook_results[hook_name] = hookFn();
+            } else {
+                console.warn(`Hook not found on namespace: ${hook_name}`);
+                hook_results[hook_name] = {};
+            }
         }
     });
 
@@ -364,7 +136,7 @@ export const useReceiveRoutes = () => {
             const result_obj = hook_results[hook_name] || {};
             const fn = result_obj[method_name];
             if (fn === undefined && method_name !== null) {
-                console.error("Method not found.", {endpoint, hook_name, method_name, result_obj, fn});
+                console.error("Method not found.", { endpoint, hook_name, method_name, result_obj, fn });
             }
             return [endpoint, typeof fn === "function" ? fn : noop];
         })
@@ -385,7 +157,6 @@ export const useReceiveRoutes = () => {
             updateIsBackendReady(true);
             return;
         }
-
 
         switch (status) {
             case 200:
@@ -425,3 +196,167 @@ export const useReceiveRoutes = () => {
 const style_348 = [
     "color: gray",
 ].join(";");
+
+
+
+// Automatically set 'configs' for now.(This is only used in config)
+const buildRouteMetaList = () => {
+    const namespace_module = configs;
+    const generated = [];
+
+    for (const s of SETTINGS_ARRAY) {
+        const category = s.Category;
+        const base = s.Base_Name;
+        const ep = s.base_endpoint_name;
+        const hookName = `use${category}`;
+        const setSuccessMethodName = `setSuccess${base}`;
+        const updateFromBackendMethodName = `updateFromBackend${base}`;
+
+
+        if (s.add_endpoint_run_array?.includes("from_backend")) {
+            generated.push({
+                endpoint: `/run/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: updateFromBackendMethodName,
+            });
+        }
+
+
+
+        generated.push({
+            endpoint: `/get/data/${ep}`,
+            ns: namespace_module,
+            hook_name: hookName,
+            method_name: updateFromBackendMethodName,
+        });
+
+        if (s.logics_template_id !== "get_list") {
+            generated.push({
+                endpoint: `/set/data/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: setSuccessMethodName,
+            });
+        }
+
+        if (s.logics_template_id === "toggle_enable_disable" || s.ui_template_id === "toggle") {
+            generated.push({
+                endpoint: `/set/enable/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: setSuccessMethodName,
+            });
+            generated.push({
+                endpoint: `/set/disable/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: setSuccessMethodName,
+            });
+        }
+
+        if (s.logics_template_id === "weight_download_status") {
+            generated.push({
+                endpoint: `/get/data/selectable_${ep}_type_dict`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: `updateDownloaded${base}`,
+            });
+
+            generated.push({
+                endpoint: `/set/data/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: setSuccessMethodName,
+            });
+
+            generated.push({
+                endpoint: `/run/download_progress_${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: `updateDownloadProgress${base}`,
+            });
+
+            generated.push({
+                endpoint: `/run/downloaded_${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: `downloaded${base}`,
+            });
+            generated.push({
+                endpoint: `/run/pending_${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: `pending${base}`,
+            });
+            generated.push({
+                endpoint: `/run/download_${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: `downloaded${base}`,
+            });
+            generated.push({
+                endpoint: `/get/data/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: updateFromBackendMethodName,
+            });
+            continue;
+        }
+    }
+
+    const mergedMap = new Map();
+
+    for (const item of STATIC_ROUTE_META_LIST) {
+        if (!item || !item.endpoint) continue;
+        mergedMap.set(item.endpoint, {
+            endpoint: item.endpoint,
+            ns: item.ns ?? null,
+            hook_name: item.hook_name ?? null,
+            method_name: item.method_name ?? null,
+        });
+    }
+
+    for (const gen of generated) {
+        const ep = gen.endpoint;
+        const existing = mergedMap.get(ep);
+        if (!existing) {
+            mergedMap.set(ep, { ...gen });
+            continue;
+        }
+
+        const merged = {
+            endpoint: ep,
+            ns: existing.ns ?? gen.ns ?? null,
+            hook_name: existing.hook_name ?? gen.hook_name ?? null,
+            method_name: existing.method_name ?? gen.method_name ?? null,
+        };
+        mergedMap.set(ep, merged);
+    }
+
+    const mergedList = [];
+
+
+    for (const item of STATIC_ROUTE_META_LIST) {
+        if (!item || !item.endpoint) continue;
+        const merged = mergedMap.get(item.endpoint);
+        if (merged) {
+            mergedList.push(merged);
+            mergedMap.delete(item.endpoint);
+        }
+    }
+
+    for (const gen of generated) {
+        const ep = gen.endpoint;
+        if (mergedMap.has(ep)) {
+            mergedList.push(mergedMap.get(ep));
+            mergedMap.delete(ep);
+        }
+    }
+
+    for (const remaining of mergedMap.values()) {
+        mergedList.push(remaining);
+    }
+
+    return mergedList;
+};

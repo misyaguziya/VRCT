@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import SwapImg from "@images/swap_icon.png";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
-import { useStore_IsBreakPoint } from "@store";
+import {
+    useStore_IsBreakPoint,
+    useStore_MessageFormat_ExampleViewFilter,
+} from "@store";
 import { useAppearance } from "@logics_configs";
 import { ui_configs } from "@ui_configs";
 import { ResetButton } from "@common_components";
@@ -27,8 +30,6 @@ export const MessageFormat = (props) => {
         <div className={message_format_container_class}>
             <ExampleComponent
                 format={props.variable.data}
-                example_view_filter_variable={props.example_view_filter_variable}
-                exampleViewFilterToggleFunction={props.exampleViewFilterToggleFunction}
                 format_id={props.format_id}
             />
             <div className={styles.border}></div>
@@ -41,10 +42,13 @@ export const MessageFormat = (props) => {
     );
 };
 
-const ExampleComponent = ({ format, example_view_filter_variable, exampleViewFilterToggleFunction, format_id }) => {
+const ExampleComponent = ({ format, format_id }) => {
     const { currentUiLanguage } = useAppearance();
     const { t } = useTranslation();
-
+    const {
+        currentMessageFormat_ExampleViewFilter,
+        updateMessageFormat_ExampleViewFilter,
+    } = useStore_MessageFormat_ExampleViewFilter();
 
     const locale_base_path = "config_page.others.message_format_common.example_view.";
 
@@ -116,8 +120,8 @@ const ExampleComponent = ({ format, example_view_filter_variable, exampleViewFil
     };
 
     const svg_class_names = clsx(styles.arrow_left_svg, {
-        [styles.to_down]: example_view_filter_variable[format_id] === "Simplified",
-        [styles.to_up]: example_view_filter_variable[format_id] === "All"
+        [styles.to_down]: currentMessageFormat_ExampleViewFilter.data[format_id] === "Simplified",
+        [styles.to_up]: currentMessageFormat_ExampleViewFilter.data[format_id] === "All"
     });
 
 
@@ -151,12 +155,22 @@ const ExampleComponent = ({ format, example_view_filter_variable, exampleViewFil
         }
     };
 
+    const exampleViewFilterToggleFunction = (format_id) => {
+        if (["send", "received"].includes(format_id) === false) return console.error(`format_id should be small case 'send' or 'received'. got format_id: ${format_id}`);
+
+        updateMessageFormat_ExampleViewFilter({
+            ...currentMessageFormat_ExampleViewFilter.data,
+            [format_id]: currentMessageFormat_ExampleViewFilter.data[format_id] === "Simplified"
+                ? "All"
+                : "Simplified"
+        });
+    };
 
     return (
         <div className={styles.example_container}>
             <p className={styles.section_title}>{label_title}</p>
             <div className={styles.example_view_container}>
-                <FilteredExampleBox format_id={format_id} id={example_view_filter_variable[format_id]} />
+                <FilteredExampleBox format_id={format_id} id={currentMessageFormat_ExampleViewFilter.data[format_id]} />
             </div>
             { format_id === "send" &&
                 <div className={styles.show_more_container} onClick={() => exampleViewFilterToggleFunction(format_id)}>

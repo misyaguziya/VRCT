@@ -10,8 +10,6 @@ import {
 
 import {
     translator_status,
-    ctranslate2_weight_type_status,
-    whisper_weight_type_status,
 } from "@ui_configs";
 
 export const store = {
@@ -33,6 +31,7 @@ const generatePropertyNames = (base_name) => ({
     add: `add${base_name}`,
 });
 
+export const dynamicStoreRegistry = {};
 
 export const createAtomWithHook = (initialValue, base_name, options) => {
     const property_names = generatePropertyNames(base_name);
@@ -109,8 +108,39 @@ export const createAtomWithHook = (initialValue, base_name, options) => {
         };
     };
 
+    try {
+        const hookName = `useStore_${base_name}`;
+        const atomName = `Atom_${base_name}`;
+        dynamicStoreRegistry[hookName] = useHook;
+        dynamicStoreRegistry[atomName] = atomInstance;
+    } catch (e) {
+        console.warn("dynamic registration failed for", base_name, e);
+    }
+
     return { atomInstance, useHook };
 };
+
+
+export const getStoreHook = (baseName) => {
+    const hookName = `useStore_${baseName}`;
+    return dynamicStoreRegistry[hookName];
+};
+
+export const registerMany = (settingsArray = []) => {
+    for (const s of settingsArray) {
+        try {
+            const hookName = `useStore_${s.Base_Name}`;
+            if (dynamicStoreRegistry[hookName]) {
+                continue;
+            }
+
+            createAtomWithHook(s.default_value, s.Base_Name, s.options || {});
+        } catch (e) {
+            console.warn("registerMany failed for", s.Base_Name, e);
+        }
+    }
+};
+
 
 
 // Common
@@ -178,143 +208,21 @@ export const { atomInstance: Atom_SettingBoxScrollPosition, useHook: useStore_Se
 export const { atomInstance: Atom_IsOpenedDropdownMenu, useHook: useStore_IsOpenedDropdownMenu } = createAtomWithHook("", "IsOpenedDropdownMenu");
 
 // Device
-export const { atomInstance: Atom_EnableAutoMicSelect, useHook: useStore_EnableAutoMicSelect } = createAtomWithHook(true, "EnableAutoMicSelect");
-export const { atomInstance: Atom_EnableAutoSpeakerSelect, useHook: useStore_EnableAutoSpeakerSelect } = createAtomWithHook(true, "EnableAutoSpeakerSelect");
-
-export const { atomInstance: Atom_MicHostList, useHook: useStore_MicHostList } = createAtomWithHook({}, "MicHostList");
-export const { atomInstance: Atom_SelectedMicHost, useHook: useStore_SelectedMicHost } = createAtomWithHook("Nothing Selected", "SelectedMicHost");
-export const { atomInstance: Atom_MicDeviceList, useHook: useStore_MicDeviceList } = createAtomWithHook({}, "MicDeviceList");
-export const { atomInstance: Atom_SelectedMicDevice, useHook: useStore_SelectedMicDevice } = createAtomWithHook("Nothing Selected", "SelectedMicDevice");
-
-export const { atomInstance: Atom_SpeakerDeviceList, useHook: useStore_SpeakerDeviceList } = createAtomWithHook({}, "SpeakerDeviceList");
-export const { atomInstance: Atom_SelectedSpeakerDevice, useHook: useStore_SelectedSpeakerDevice } = createAtomWithHook("Nothing Selected", "SelectedSpeakerDevice");
-
 export const { atomInstance: Atom_MicVolume, useHook: useStore_MicVolume } = createAtomWithHook(0, "MicVolume");
 export const { atomInstance: Atom_SpeakerVolume, useHook: useStore_SpeakerVolume } = createAtomWithHook(0, "SpeakerVolume");
 
 export const { atomInstance: Atom_MicThresholdCheckStatus, useHook: useStore_MicThresholdCheckStatus } = createAtomWithHook(false, "MicThresholdCheckStatus", {is_state_ok: true});
 export const { atomInstance: Atom_SpeakerThresholdCheckStatus, useHook: useStore_SpeakerThresholdCheckStatus } = createAtomWithHook(false, "SpeakerThresholdCheckStatus", {is_state_ok: true});
 
-export const { atomInstance: Atom_MicThreshold, useHook: useStore_MicThreshold } = createAtomWithHook(0, "MicThreshold");
-export const { atomInstance: Atom_SpeakerThreshold, useHook: useStore_SpeakerThreshold } = createAtomWithHook(0, "SpeakerThreshold");
-
-export const { atomInstance: Atom_EnableAutomaticMicThreshold, useHook: useStore_EnableAutomaticMicThreshold } = createAtomWithHook(false, "EnableAutomaticMicThreshold");
-export const { atomInstance: Atom_EnableAutomaticSpeakerThreshold, useHook: useStore_EnableAutomaticSpeakerThreshold } = createAtomWithHook(false, "EnableAutomaticSpeakerThreshold");
-
-
-// Appearance
-export const { atomInstance: Atom_UiLanguage, useHook: useStore_UiLanguage } = createAtomWithHook("en", "UiLanguage");
-export const { atomInstance: Atom_UiScaling, useHook: useStore_UiScaling } = createAtomWithHook(100, "UiScaling");
-export const { atomInstance: Atom_MessageLogUiScaling, useHook: useStore_MessageLogUiScaling } = createAtomWithHook(100, "MessageLogUiScaling");
-export const { atomInstance: Atom_SendMessageButtonType, useHook: useStore_SendMessageButtonType } = createAtomWithHook("show", "SendMessageButtonType");
-export const { atomInstance: Atom_ShowResendButton, useHook: useStore_ShowResendButton } = createAtomWithHook(false, "ShowResendButton");
-export const { atomInstance: Atom_SelectedFontFamily, useHook: useStore_SelectedFontFamily } = createAtomWithHook("Yu Gothic UI", "SelectedFontFamily");
 export const { atomInstance: Atom_SelectableFontFamilyList, useHook: useStore_SelectableFontFamilyList } = createAtomWithHook({}, "SelectableFontFamilyList");
-export const { atomInstance: Atom_Transparency, useHook: useStore_Transparency } = createAtomWithHook(100, "Transparency");
 
 
 export const { atomInstance: Atom_IsOpenedMicWordFilterList, useHook: useStore_IsOpenedMicWordFilterList } = createAtomWithHook(false, "IsOpenedMicWordFilterList");
-export const { atomInstance: Atom_MicWordFilterList, useHook: useStore_MicWordFilterList } = createAtomWithHook([], "MicWordFilterList");
 
-// Translation
-export const { atomInstance: Atom_DeepLAuthKey, useHook: useStore_DeepLAuthKey } = createAtomWithHook(null, "DeepLAuthKey");
-export const { atomInstance: Atom_SelectedCTranslate2WeightType, useHook: useStore_SelectedCTranslate2WeightType } = createAtomWithHook("", "SelectedCTranslate2WeightType");
-export const { atomInstance: Atom_CTranslate2WeightTypeStatus, useHook: useStore_CTranslate2WeightTypeStatus } = createAtomWithHook(ctranslate2_weight_type_status, "CTranslate2WeightTypeStatus");
-
-export const { atomInstance: Atom_SelectableTranslationComputeDeviceList, useHook: useStore_SelectableTranslationComputeDeviceList } = createAtomWithHook({}, "SelectableTranslationComputeDeviceList");
-export const { atomInstance: Atom_SelectedTranslationComputeDevice, useHook: useStore_SelectedTranslationComputeDevice } = createAtomWithHook("", "SelectedTranslationComputeDevice");
-export const { atomInstance: Atom_SelectedTranslationComputeType, useHook: useStore_SelectedTranslationComputeType } = createAtomWithHook("", "SelectedTranslationComputeType");
-
-// Transcription
-export const { atomInstance: Atom_MicRecordTimeout, useHook: useStore_MicRecordTimeout } = createAtomWithHook(0, "MicRecordTimeout");
-export const { atomInstance: Atom_MicPhraseTimeout, useHook: useStore_MicPhraseTimeout } = createAtomWithHook(0, "MicPhraseTimeout");
-export const { atomInstance: Atom_MicMaxWords, useHook: useStore_MicMaxWords } = createAtomWithHook(0, "MicMaxWords");
-
-export const { atomInstance: Atom_SpeakerRecordTimeout, useHook: useStore_SpeakerRecordTimeout } = createAtomWithHook(0, "SpeakerRecordTimeout");
-export const { atomInstance: Atom_SpeakerPhraseTimeout, useHook: useStore_SpeakerPhraseTimeout } = createAtomWithHook(0, "SpeakerPhraseTimeout");
-export const { atomInstance: Atom_SpeakerMaxWords, useHook: useStore_SpeakerMaxWords } = createAtomWithHook(0, "SpeakerMaxWords");
-
-export const { atomInstance: Atom_SelectedWhisperWeightType, useHook: useStore_SelectedWhisperWeightType } = createAtomWithHook("", "SelectedWhisperWeightType");
-export const { atomInstance: Atom_WhisperWeightTypeStatus, useHook: useStore_WhisperWeightTypeStatus } = createAtomWithHook(whisper_weight_type_status, "WhisperWeightTypeStatus");
-export const { atomInstance: Atom_SelectedTranscriptionEngine, useHook: useStore_SelectedTranscriptionEngine } = createAtomWithHook(whisper_weight_type_status, "SelectedTranscriptionEngine");
-
-export const { atomInstance: Atom_SelectableTranscriptionComputeDeviceList, useHook: useStore_SelectableTranscriptionComputeDeviceList } = createAtomWithHook({}, "SelectableTranscriptionComputeDeviceList");
-export const { atomInstance: Atom_SelectedTranscriptionComputeDevice, useHook: useStore_SelectedTranscriptionComputeDevice } = createAtomWithHook("", "SelectedTranscriptionComputeDevice");
-export const { atomInstance: Atom_SelectedTranscriptionComputeType, useHook: useStore_SelectedTranscriptionComputeType } = createAtomWithHook("", "SelectedTranscriptionComputeType");
-
-export const { atomInstance: Atom_MicAvgLogprob, useHook: useStore_MicAvgLogprob } = createAtomWithHook(-0.8, "MicAvgLogprob");
-export const { atomInstance: Atom_MicNoSpeechProb, useHook: useStore_MicNoSpeechProb } = createAtomWithHook(0.6, "MicNoSpeechProb");
-export const { atomInstance: Atom_SpeakerAvgLogprob, useHook: useStore_SpeakerAvgLogprob } = createAtomWithHook(-0.8, "SpeakerAvgLogprob");
-export const { atomInstance: Atom_SpeakerNoSpeechProb, useHook: useStore_SpeakerNoSpeechProb } = createAtomWithHook(0.6, "SpeakerNoSpeechProb");
-
-
-// VR
-export const { atomInstance: Atom_OverlaySmallLogSettings, useHook: useStore_OverlaySmallLogSettings } = createAtomWithHook({
-    x_pos: 0.0,
-    y_pos: 0.0,
-    z_pos: 0.0,
-    x_rotation: 0.0,
-    y_rotation: 0.0,
-    z_rotation: 0.0,
-    display_duration: 5,
-    fadeout_duration: 2,
-    tracker: "HMD",
-}, "OverlaySmallLogSettings");
-export const { atomInstance: Atom_IsEnabledOverlaySmallLog, useHook: useStore_IsEnabledOverlaySmallLog } = createAtomWithHook(false, "IsEnabledOverlaySmallLog");
-export const { atomInstance: Atom_OverlayLargeLogSettings, useHook: useStore_OverlayLargeLogSettings } = createAtomWithHook({
-    x_pos: 0.0,
-    y_pos: 0.0,
-    z_pos: 0.0,
-    x_rotation: 0.0,
-    y_rotation: 0.0,
-    z_rotation: 0.0,
-    display_duration: 5,
-    fadeout_duration: 2,
-    tracker: "HMD",
-}, "OverlayLargeLogSettings");
-export const { atomInstance: Atom_IsEnabledOverlayLargeLog, useHook: useStore_IsEnabledOverlayLargeLog } = createAtomWithHook(false, "IsEnabledOverlayLargeLog");
-export const { atomInstance: Atom_OverlayShowOnlyTranslatedMessages, useHook: useStore_OverlayShowOnlyTranslatedMessages } = createAtomWithHook(false, "OverlayShowOnlyTranslatedMessages");
-
-// Others
-export const { atomInstance: Atom_EnableAutoClearMessageInputBox, useHook: useStore_EnableAutoClearMessageInputBox } = createAtomWithHook(true, "EnableAutoClearMessageInputBox");
-export const { atomInstance: Atom_EnableSendOnlyTranslatedMessages, useHook: useStore_EnableSendOnlyTranslatedMessages } = createAtomWithHook(false, "EnableSendOnlyTranslatedMessages");
-export const { atomInstance: Atom_EnableAutoExportMessageLogs, useHook: useStore_EnableAutoExportMessageLogs } = createAtomWithHook(false, "EnableAutoExportMessageLogs");
-export const { atomInstance: Atom_EnableVrcMicMuteSync, useHook: useStore_EnableVrcMicMuteSync } = createAtomWithHook(false, "EnableVrcMicMuteSync");
-export const { atomInstance: Atom_EnableSendMessageToVrc, useHook: useStore_EnableSendMessageToVrc } = createAtomWithHook(true, "EnableSendMessageToVrc");
-export const { atomInstance: Atom_EnableSendReceivedMessageToVrc, useHook: useStore_EnableSendReceivedMessageToVrc } = createAtomWithHook(false, "EnableSendReceivedMessageToVrc");
-export const { atomInstance: Atom_EnableNotificationVrcSfx, useHook: useStore_EnableNotificationVrcSfx } = createAtomWithHook(true, "EnableNotificationVrcSfx");
 export const { atomInstance: Atom_MessageFormat_ExampleViewFilter, useHook: useStore_MessageFormat_ExampleViewFilter } = createAtomWithHook({
     send: "Simplified",
     received: "Simplified",
 }, "MessageFormat_ExampleViewFilter");
-export const { atomInstance: Atom_SendMessageFormatParts, useHook: useStore_SendMessageFormatParts } = createAtomWithHook({
-    message: {
-        prefix: "",
-        suffix: ""
-    },
-    separator: "\n",
-    translation: {
-        prefix: "",
-        separator: "\n",
-        suffix: ""
-    },
-    translation_first: false,
-}, "SendMessageFormatParts");
-export const { atomInstance: Atom_ReceivedMessageFormatParts, useHook: useStore_ReceivedMessageFormatParts } = createAtomWithHook({
-    message: {
-        prefix: "",
-        suffix: ""
-    },
-    separator: "\n",
-    translation: {
-        prefix: "",
-        separator: "\n",
-        suffix: ""
-    },
-    translation_first: false,
-}, "ReceivedMessageFormatParts");
-export const { atomInstance: Atom_ConvertMessageToRomaji, useHook: useStore_ConvertMessageToRomaji } = createAtomWithHook(false, "ConvertMessageToRomaji");
-export const { atomInstance: Atom_ConvertMessageToHiragana, useHook: useStore_ConvertMessageToHiragana } = createAtomWithHook(false, "ConvertMessageToHiragana");
 
 
 // Hotkeys
@@ -330,16 +238,6 @@ export const { atomInstance: Atom_FetchedPluginsInfo, useHook: useStore_FetchedP
 export const { atomInstance: Atom_LoadedPlugins, useHook: useStore_LoadedPlugins } = createAtomWithHook([], "LoadedPlugins");
 export const { atomInstance: Atom_SavedPluginsStatus, useHook: useStore_SavedPluginsStatus } = createAtomWithHook([], "SavedPluginsStatus");
 export const { atomInstance: Atom_PluginsData, useHook: useStore_PluginsData } = createAtomWithHook([], "PluginsData");
-
-// Advanced Settings
-export const { atomInstance: Atom_OscIpAddress, useHook: useStore_OscIpAddress } = createAtomWithHook("127.0.0.1", "OscIpAddress");
-export const { atomInstance: Atom_OscPort, useHook: useStore_OscPort } = createAtomWithHook("9000", "OscPort");
-
-export const { atomInstance: Atom_EnableWebsocket, useHook: useStore_EnableWebsocket } = createAtomWithHook(true, "EnableWebsocket");
-export const { atomInstance: Atom_WebsocketHost, useHook: useStore_WebsocketHost } = createAtomWithHook("127.0.0.1", "WebsocketHost");
-export const { atomInstance: Atom_WebsocketPort, useHook: useStore_WebsocketPort } = createAtomWithHook("2231", "WebsocketPort");
-
-
 
 // Supporters
 export const { atomInstance: Atom_SupportersData, useHook: useStore_SupportersData } = createAtomWithHook(null, "SupportersData", {is_state_ok: true});
