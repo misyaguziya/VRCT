@@ -944,38 +944,30 @@ class Model:
             self.speaker_energy_recorder.stop()
             self.speaker_energy_recorder = None
 
-    def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], translation_transliteration_tokens: Optional[list] = None) -> object:
+    def createOverlayImageSmallLog(self, message:Optional[str], your_language:Optional[str], translation:list, target_language:Optional[dict], transliteration_message:Optional[dict] = None, transliteration_translation:Optional[list] = None) -> object:
         self.ensure_initialized()
         # Normalize target_language dict -> list
         target_language_list = []
         if isinstance(target_language, dict):
             target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
 
-        # Prepare transliteration tokens only if we have an original message string.
-        transliteration_tokens = []
-        if isinstance(message, str) and message.strip():
-            try:
-                # Always request both romaji + hiragana for ruby (per spec: romaji upper, hiragana lower)
-                transliteration_tokens = self.convertMessageToTransliteration(message, hiragana=True, romaji=True)
-            except Exception:
-                transliteration_tokens = []
-                errorLogging()
-
         # Fetch ruby settings from config (with safe defaults if missing)
         ruby_font_scale = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_font_scale", 0.5)
         ruby_line_spacing = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_line_spacing", 4)
 
         # 翻訳行ルビ (任意) が指定されていれば渡す。後方互換のため None / 不正型は空リストに。
-        if not isinstance(translation_transliteration_tokens, list):
-            translation_transliteration_tokens = []
+        if not isinstance(transliteration_message, list):
+            transliteration_message = []
+        if not isinstance(transliteration_translation, list):
+            transliteration_translation = [[] for _ in translation]
 
         return self.overlay_image.createOverlayImageSmallLog(
             message,
             your_language,
             translation,
             target_language_list,
-            transliteration_tokens=transliteration_tokens,
-            translation_transliteration_tokens=translation_transliteration_tokens,
+            transliteration_message=transliteration_message,
+            transliteration_translation=transliteration_translation,
             ruby_font_scale=ruby_font_scale,
             ruby_line_spacing=ruby_line_spacing,
         )
@@ -1031,13 +1023,13 @@ class Model:
         if (self.overlay.settings[size]["ui_scaling"] != config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"]):
             self.overlay.updateUiScaling(config.OVERLAY_SMALL_LOG_SETTINGS["ui_scaling"], size)
 
-    def createOverlayImageLargeLog(self, message_type:str, message:Optional[str], your_language:Optional[str],  translation:list, target_language:Optional[dict]=None):
+    def createOverlayImageLargeLog(self, message_type:str, message:Optional[str], your_language:Optional[str],  translation:list, target_language:Optional[dict]=None, transliteration_message:Optional[list]=None, transliteration_translation:Optional[list]=None) -> object:
         self.ensure_initialized()
         # normalize target_language dict -> list of language strings
         target_language_list = []
         if isinstance(target_language, dict):
             target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
-        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language_list)
+        return self.overlay_image.createOverlayImageLargeLog(message_type, message, your_language, translation, target_language_list, transliteration_message, transliteration_translation)
 
     def createOverlayImageLargeMessage(self, message):
         self.ensure_initialized()
