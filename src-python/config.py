@@ -186,7 +186,7 @@ def _overlay_small_validator(val, inst):
             new[key] = float(v)
         elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
             new[key] = v
-        elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
+        elif key in ['opacity','ui_scaling', 'ruby_font_scale', 'ruby_line_spacing'] and isinstance(v,(int,float)):
             new[key] = float(v)
     return new
 
@@ -202,7 +202,7 @@ def _overlay_large_validator(val, inst):
             new[key] = float(v)
         elif key in ['display_duration','fadeout_duration'] and isinstance(v,int):
             new[key] = v
-        elif key in ['opacity','ui_scaling'] and isinstance(v,(int,float)):
+        elif key in ['opacity','ui_scaling', 'ruby_font_scale', 'ruby_line_spacing'] and isinstance(v,(int,float)):
             new[key] = float(v)
     return new
 
@@ -737,6 +737,8 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "HMD",
+            "ruby_font_scale": 0.5,
+            "ruby_line_spacing": 4,
         }
         self._OVERLAY_LARGE_LOG = False
         self._OVERLAY_LARGE_LOG_SETTINGS = {
@@ -751,6 +753,8 @@ class Config:
             "opacity": 1.0,
             "ui_scaling": 1.0,
             "tracker": "LeftHand",
+            "ruby_font_scale": 0.5,
+            "ruby_line_spacing": 4,
         }
         self._OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES = False
         self._SEND_MESSAGE_TO_VRC = True

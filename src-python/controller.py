@@ -270,7 +270,7 @@ class Controller:
 
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration_message: List[Any] = []
+            transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
@@ -383,7 +383,9 @@ class Controller:
                                 None,
                                 None,
                                 translation,
-                                config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                                config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                                transliteration_message,
+                                transliteration_translation
                             )
                             model.updateOverlayLargeLog(overlay_image)
                     else:
@@ -392,7 +394,9 @@ class Controller:
                             message,
                             config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
                             translation,
-                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
+                            config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            transliteration_message,
+                            transliteration_translation
                         )
                         model.updateOverlayLargeLog(overlay_image)
 
@@ -426,7 +430,7 @@ class Controller:
             )
         elif isinstance(message, str) and len(message) > 0:
             translation = []
-            transliteration_message: List[Any] = []
+            transliteration_message = []
             transliteration_translation = []
             if model.checkKeywords(message):
                 self.run(
@@ -511,6 +515,8 @@ class Controller:
                                 None,
                                 translation,
                                 config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                                transliteration_message,
+                                transliteration_translation
                             )
                             model.updateOverlaySmallLog(overlay_image)
                     else:
@@ -519,6 +525,8 @@ class Controller:
                             language,
                             translation,
                             config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            transliteration_message,
+                            transliteration_translation
                         )
                         model.updateOverlaySmallLog(overlay_image)
 
@@ -530,6 +538,9 @@ class Controller:
                                 None,
                                 None,
                                 translation,
+                                config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                                transliteration_message,
+                                transliteration_translation
                             )
                             model.updateOverlayLargeLog(overlay_image)
                     else:
@@ -538,7 +549,9 @@ class Controller:
                             message,
                             language,
                             translation,
-                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
+                            config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO],
+                            transliteration_message,
+                            transliteration_translation
                         )
                         model.updateOverlayLargeLog(overlay_image)
 
@@ -703,6 +716,8 @@ class Controller:
                             None,
                             translation,
                             config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                            transliteration_message,
+                            transliteration_translation
                         )
                         model.updateOverlayLargeLog(overlay_image)
                 else:
@@ -712,6 +727,8 @@ class Controller:
                         config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]["1"]["language"],
                         translation,
                         config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO],
+                        transliteration_message,
+                        transliteration_translation
                     )
                     model.updateOverlayLargeLog(overlay_image)
 
