@@ -34,8 +34,8 @@ const CTranslate2WeightType_Box = () => {
     const { t } = useI18n();
     const {
         currentCTranslate2WeightTypeStatus,
-        pendingCTranslate2WeightType,
-        downloadCTranslate2Weight,
+        pendingCTranslate2WeightTypeStatus,
+        downloadCTranslate2WeightTypeStatus,
 
         currentSelectedCTranslate2WeightType,
         setSelectedCTranslate2WeightType,
@@ -46,16 +46,18 @@ const CTranslate2WeightType_Box = () => {
     };
 
     const downloadStartFunction = (id) => {
-        pendingCTranslate2WeightType(id);
-        downloadCTranslate2Weight(id);
+        pendingCTranslate2WeightTypeStatus(id);
+        downloadCTranslate2WeightTypeStatus(id);
     };
 
-    const new_labels = [
-        { id: "small", label: t("config_page.translation.ctranslate2_weight_type.small", {capacity: "418MB"}) },
-        { id: "large", label: t("config_page.translation.ctranslate2_weight_type.large", {capacity: "1.2GB"}) },
-    ];
 
-    const c_translate2_weight_types = updateLabelsById(currentCTranslate2WeightTypeStatus.data, new_labels);
+    const c_translate2_weight_types_object = currentCTranslate2WeightTypeStatus.data.map(item => {
+        return {
+            ...item,
+            label: `${item.id} (${item.capacity})`,
+        };
+    });
+
 
     return (
         <>
@@ -69,7 +71,7 @@ const CTranslate2WeightType_Box = () => {
                     {ctranslate2: "CTranslate2"}
                 )}
                 name="ctranslate2_weight_type"
-                options={c_translate2_weight_types}
+                options={c_translate2_weight_types_object}
                 checked_variable={currentSelectedCTranslate2WeightType}
                 selectFunction={selectFunction}
                 downloadStartFunction={downloadStartFunction}

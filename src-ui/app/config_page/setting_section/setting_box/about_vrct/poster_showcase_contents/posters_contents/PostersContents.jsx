@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import styles from "./PostersContents.module.scss";
-import { useStore_UiLanguage } from "@store";
+import { useAppearance } from "@logics_configs";
 
 import { useStore_VrctPosterIndex } from "@store";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
@@ -30,7 +30,7 @@ import poster_images_authors_m_en from "@images/about_vrct/vrct_posters/authors/
 
 export const PostersContents = () => {
     const { currentVrctPosterIndex, updateVrctPosterIndex } = useStore_VrctPosterIndex();
-    const { currentUiLanguage } = useStore_UiLanguage();
+    const { currentUiLanguage } = useAppearance();
 
 
     const updateIndex = (delta) => {

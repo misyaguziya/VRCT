@@ -25,16 +25,10 @@
     background-color: var(--dark_800_color);
     padding: 0.2rem 0.2rem 0.2rem 1rem;
     border-radius: 0.4rem;
-    &.is_redoable {
-        background-color: var(--dark_850_color);
-    }
 }
 .item_text {
     font-size: 1.4rem;
     font-weight: 300;
-    &.is_redoable {
-        text-decoration: line-through;
-    }
 }
 
 .action_button {

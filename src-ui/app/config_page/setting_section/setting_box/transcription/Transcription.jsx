@@ -232,8 +232,8 @@ const WhisperWeightType_Box = () => {
     const { t } = useI18n();
     const {
         currentWhisperWeightTypeStatus,
-        pendingWhisperWeightType,
-        downloadWhisperWeight,
+        pendingWhisperWeightTypeStatus,
+        downloadWhisperWeightTypeStatus,
     } = useTranscription();
     const { currentSelectedWhisperWeightType, setSelectedWhisperWeightType } = useTranscription();
 
@@ -242,23 +242,16 @@ const WhisperWeightType_Box = () => {
     };
 
     const downloadStartFunction = (id) => {
-        pendingWhisperWeightType(id);
-        downloadWhisperWeight(id);
+        pendingWhisperWeightTypeStatus(id);
+        downloadWhisperWeightTypeStatus(id);
     };
 
-    const new_labels = [
-        { id: "tiny", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "tiny", capacity: "74.5MB"}) },
-        { id: "base", label: t("config_page.transcription.whisper_weight_type.recommended_model_template", {model_name: "base", capacity: "141MB"}) },
-        { id: "small", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "small", capacity: "463MB"}) },
-        { id: "medium", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "medium", capacity: "1.42GB"}) },
-        { id: "large-v1", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v1", capacity: "2.87GB"}) },
-        { id: "large-v2", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v2", capacity: "2.87GB"}) },
-        { id: "large-v3", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3", capacity: "2.87GB"}) },
-        { id: "large-v3-turbo-int8", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3-turbo-int8", capacity: "794MB"}) },
-        { id: "large-v3-turbo", label: t("config_page.transcription.whisper_weight_type.model_template", {model_name: "large-v3-turbo", capacity: "1.58GB"}) },
-    ];
-
-    const whisper_weight_types = updateLabelsById(currentWhisperWeightTypeStatus.data, new_labels);
+    const whisper_weight_types = currentWhisperWeightTypeStatus.data.map(item => {
+        return {
+            ...item,
+            label: `${item.id} (${item.capacity})`,
+        };
+    });
 
     return (
         <>
