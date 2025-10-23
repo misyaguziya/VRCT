@@ -139,7 +139,7 @@ class OverlayImage:
     def createTextboxSmallLogWithRubyTokens(self, message: str, transliteration: List[dict], language: str, text_color: Tuple[int, int, int], base_width: int, font_size: int, ruby_font_scale: float, ruby_line_spacing: int, ruby_original_spacing: int) -> Image:
         """Render a single textbox (original message) with per-token centered ruby (romaji above hiragana) over each original token.
 
-        Fallback: if wrapping would occur (message too wide) or tokens mismatch, revert to block-level ruby (renderRubyBlock + createTextboxSmallLog).
+        When wrapping occurs, splits tokens into lines and renders ruby above each line separately.
         """
         if not message or not transliteration:
             return self.createTextboxSmallLog(message, language, text_color, base_width, self.getUiSizeSmallLog()["height"], font_size)
@@ -150,80 +150,96 @@ class OverlayImage:
         ruby_size = max(1, int(font_size * ruby_font_scale))
         font_ruby = self._get_font(font_family, ruby_size)
 
-        # Token width measurement
+        # Prepare temporary draw for measuring widths
         draw_tmp_img = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
         draw_tmp = ImageDraw.Draw(draw_tmp_img)
+
+        # Build token_infos with measured widths
         token_infos = []
-        total_width = 0
         for tok in transliteration:
             orig = tok.get("orig", "")
             if not orig:
                 continue
             hira = tok.get("hira", "")
             romaji = tok.get("hepburn", "")
-            orig_w = max(1, int(draw_tmp.textlength(orig, font_orig)))
-            hira_w = max(0, int(draw_tmp.textlength(hira, font_ruby))) if hira else 0
-            romaji_w = max(0, int(draw_tmp.textlength(romaji, font_ruby))) if romaji else 0
-            layout_w = max(orig_w, hira_w, romaji_w)  # allocate width so ruby lines never overflow neighboring token
+            try:
+                orig_w = max(1, int(draw_tmp.textlength(orig, font_orig)))
+                hira_w = max(0, int(draw_tmp.textlength(hira, font_ruby))) if hira else 0
+                romaji_w = max(0, int(draw_tmp.textlength(romaji, font_ruby))) if romaji else 0
+            except Exception:
+                errorLogging()
+                orig_w = len(orig) * font_size // 2
+                hira_w = len(hira) * ruby_size // 2 if hira else 0
+                romaji_w = len(romaji) * ruby_size // 2 if romaji else 0
+            layout_w = max(orig_w, hira_w, romaji_w)
             token_infos.append((orig, hira, romaji, layout_w))
-            total_width += layout_w
 
         if not token_infos:
-            # Fallback
-            ruby_block = self.renderRubyBlock(transliteration, language, base_width, font_size, ruby_font_scale, ruby_line_spacing, text_color)
-            base_img = self.createTextboxSmallLog(message, language, text_color, base_width, self.getUiSizeSmallLog()["height"], font_size)
-            if ruby_block:
-                return self.concatenateImagesVertically(ruby_block, base_img)
-            return base_img
+            return self.createTextboxSmallLog(message, language, text_color, base_width, self.getUiSizeSmallLog()["height"], font_size)
 
-        # Simple wrapping detection: if total width exceeds base_width * 0.9 → fallback
-        if total_width > base_width * 0.9:
-            ruby_block = self.renderRubyBlock(transliteration, language, base_width, font_size, ruby_font_scale, ruby_line_spacing, text_color)
-            base_img = self.createTextboxSmallLog(message, language, text_color, base_width, self.getUiSizeSmallLog()["height"], font_size)
-            if ruby_block:
-                return self.concatenateImagesVertically(ruby_block, base_img)
-            return base_img
+        # Split tokens into lines based on base_width * 0.9
+        max_line_width = base_width * 0.9
+        lines = []
+        current_line = []
+        current_line_width = 0
+        for tok_info in token_infos:
+            tok_width = tok_info[3]
+            if current_line_width + tok_width > max_line_width and current_line:
+                lines.append(current_line)
+                current_line = [tok_info]
+                current_line_width = tok_width
+            else:
+                current_line.append(tok_info)
+                current_line_width += tok_width
+        if current_line:
+            lines.append(current_line)
 
-        # Compute left start for centering complete line
-        start_x = (base_width - total_width) // 2
-        # Vertical positioning
-        # Symmetric outer padding: make top padding equal to bottom padding (previously top was 4, bottom ~10)
-        outer_padding = 10  # uniform top & bottom padding for visual balance
-        ruby_lines_count = 0
-        has_romaji_any = any(r for (_, _, r, _) in token_infos)
-        has_hira_any = any(h for (_, h, _, _) in token_infos)
-        if has_romaji_any:
-            ruby_lines_count += 1
-        if has_hira_any:
-            ruby_lines_count += 1
-        # Height calculation (replace asymmetric 4/10 with symmetric outer_padding)
-        ruby_block_height = ruby_lines_count * ruby_size + (ruby_line_spacing if ruby_lines_count == 2 else 0)
-        total_height = outer_padding + ruby_block_height + ruby_original_spacing + font_size + outer_padding
-        img = Image.new("RGBA", (base_width, total_height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
+        # Render each line with per-token ruby
+        outer_padding = 10
+        line_images = []
+        for line_tokens in lines:
+            line_width = sum(t[3] for t in line_tokens)
+            start_x = (base_width - line_width) // 2
 
-        # Y centers
-        current_y = outer_padding + ruby_size // 2
-        romaji_y = current_y if has_romaji_any else None
-        hira_y = None
-        if has_romaji_any and has_hira_any:
-            hira_y = romaji_y + ruby_size + ruby_line_spacing
-        elif has_hira_any:
-            hira_y = current_y
+            has_romaji_any = any(r for (_, _, r, _) in line_tokens)
+            has_hira_any = any(h for (_, h, _, _) in line_tokens)
+            ruby_lines_count = (1 if has_romaji_any else 0) + (1 if has_hira_any else 0)
+            ruby_block_height = ruby_lines_count * ruby_size + (ruby_line_spacing if ruby_lines_count == 2 else 0)
+            line_height = outer_padding + ruby_block_height + ruby_original_spacing + font_size + outer_padding
 
-        orig_y = outer_padding + ruby_block_height + ruby_original_spacing + font_size // 2
+            line_img = Image.new("RGBA", (base_width, line_height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(line_img)
 
-        # Draw tokens sequentially
-        cursor_x = start_x
-        for orig, hira, romaji, w in token_infos:
-            token_center_x = cursor_x + w // 2
-            if romaji_y is not None and romaji:
-                draw.text((token_center_x, romaji_y), romaji, text_color, anchor="mm", font=font_ruby)
-            if hira_y is not None and hira:
-                draw.text((token_center_x, hira_y), hira, text_color, anchor="mm", font=font_ruby)
-            draw.text((token_center_x, orig_y), orig, text_color, anchor="mm", font=font_orig)
-            cursor_x += w
-        return img
+            current_y = outer_padding + ruby_size // 2
+            romaji_y = current_y if has_romaji_any else None
+            hira_y = None
+            if has_romaji_any and has_hira_any:
+                hira_y = romaji_y + ruby_size + ruby_line_spacing
+            elif has_hira_any:
+                hira_y = current_y
+
+            orig_y = outer_padding + ruby_block_height + ruby_original_spacing + font_size // 2
+
+            cursor_x = start_x
+            for orig, hira, romaji, w in line_tokens:
+                token_center_x = cursor_x + w // 2
+                if romaji_y is not None and romaji:
+                    draw.text((token_center_x, romaji_y), romaji, text_color, anchor="mm", font=font_ruby)
+                if hira_y is not None and hira:
+                    draw.text((token_center_x, hira_y), hira, text_color, anchor="mm", font=font_ruby)
+                draw.text((token_center_x, orig_y), orig, text_color, anchor="mm", font=font_orig)
+                cursor_x += w
+
+            line_images.append(line_img)
+
+        # Concatenate all lines vertically
+        if not line_images:
+            return self.createTextboxSmallLog(message, language, text_color, base_width, self.getUiSizeSmallLog()["height"], font_size)
+        
+        result_img = line_images[0]
+        for line_img in line_images[1:]:
+            result_img = self.concatenateImagesVertically(result_img, line_img, margin=0)
+        return result_img
 
     def createOverlayImageSmallLog(self, message: str, your_language: str, translation: List[str] = [], target_language: List[str] = [], transliteration_message: List[dict] = [], transliteration_translation: List[List[dict]] = [], ruby_font_scale: float = 0.5, ruby_line_spacing: int = 4) -> Image:
         # UI設定を取得
@@ -363,7 +379,7 @@ class OverlayImage:
     def createTextboxLargeLogWithRubyTokens(self, message_type: str, size: str, message: str, transliteration: List[dict], language: str, ruby_font_scale: float, ruby_line_spacing: int) -> Image:
         """Render a large-log textbox with per-token centered ruby above each original token.
 
-        Falls back to block-level ruby if message wraps or tokens mismatch.
+        When wrapping occurs, splits tokens into lines and renders ruby above each line separately.
         """
         ui_size = self.getUiSizeLargeLog()
         font_size = ui_size["font_size_large"] if size == "large" else ui_size["font_size_small"]
@@ -377,75 +393,96 @@ class OverlayImage:
         if not message or not transliteration:
             return self.createTextImageLargeLog(message_type, size, message, language)
 
-        # Reject multiline for per-token layout; fallback to block ruby
-        if "\n" in message:
-            ruby_block = self.renderRubyBlock(transliteration, language, ui_size["width"], font_size, ruby_font_scale, ruby_line_spacing, text_color)
-            base_img = self.createTextImageLargeLog(message_type, size, message, language)
-            if ruby_block is not None:
-                return self.concatenateImagesVertically(ruby_block, base_img)
-            return base_img
-
         # Measure token widths
         draw_tmp_img = Image.new("RGBA", (1, 1), (0, 0, 0, 0))
         draw_tmp = ImageDraw.Draw(draw_tmp_img)
         token_infos = []
-        total_width = 0
         for tok in transliteration:
             orig = tok.get("orig", "")
             if not orig:
                 continue
             hira = tok.get("hira", "")
             romaji = tok.get("hepburn", "")
-            orig_w = max(1, int(draw_tmp.textlength(orig, font_orig)))
-            hira_w = max(0, int(draw_tmp.textlength(hira, font_ruby))) if hira else 0
-            romaji_w = max(0, int(draw_tmp.textlength(romaji, font_ruby))) if romaji else 0
+            try:
+                orig_w = max(1, int(draw_tmp.textlength(orig, font_orig)))
+                hira_w = max(0, int(draw_tmp.textlength(hira, font_ruby))) if hira else 0
+                romaji_w = max(0, int(draw_tmp.textlength(romaji, font_ruby))) if romaji else 0
+            except Exception:
+                errorLogging()
+                orig_w = len(orig) * font_size // 2
+                hira_w = len(hira) * ruby_size // 2 if hira else 0
+                romaji_w = len(romaji) * ruby_size // 2 if romaji else 0
             layout_w = max(orig_w, hira_w, romaji_w)
             token_infos.append((orig, hira, romaji, layout_w))
-            total_width += layout_w
 
-        # Fallback if nothing to render or would overflow
+        if not token_infos:
+            return self.createTextImageLargeLog(message_type, size, message, language)
+
+        # Split tokens into lines based on base_width * 0.9
         base_width = ui_size["width"]
-        if not token_infos or total_width > base_width * 0.9:
-            ruby_block = self.renderRubyBlock(transliteration, language, base_width, font_size, ruby_font_scale, ruby_line_spacing, text_color)
-            base_img = self.createTextImageLargeLog(message_type, size, message, language)
-            if ruby_block is not None:
-                return self.concatenateImagesVertically(ruby_block, base_img)
-            return base_img
+        max_line_width = base_width * 0.9
+        lines = []
+        current_line = []
+        current_line_width = 0
+        for tok_info in token_infos:
+            tok_width = tok_info[3]
+            if current_line_width + tok_width > max_line_width and current_line:
+                lines.append(current_line)
+                current_line = [tok_info]
+                current_line_width = tok_width
+            else:
+                current_line.append(tok_info)
+                current_line_width += tok_width
+        if current_line:
+            lines.append(current_line)
 
-        # Determine start_x according to message type (left for receive, right-align for send)
-        start_x = 0 if message_type == "receive" else (base_width - total_width)
-
-        # Vertical layout
+        # Render each line with per-token ruby
         outer_padding = 10
-        has_romaji_any = any(r for (_, _, r, _) in token_infos)
-        has_hira_any = any(h for (_, h, _, _) in token_infos)
-        ruby_lines_count = (1 if has_romaji_any else 0) + (1 if has_hira_any else 0)
-        ruby_block_height = ruby_lines_count * ruby_size + (ruby_line_spacing if ruby_lines_count == 2 else 0)
-        total_height = outer_padding + ruby_block_height + font_size + outer_padding
-        img = Image.new("RGBA", (base_width, total_height), (0, 0, 0, 0))
-        draw = ImageDraw.Draw(img)
+        line_images = []
+        for line_tokens in lines:
+            line_width = sum(t[3] for t in line_tokens)
+            # Determine start_x according to message type (left for receive, right-align for send)
+            start_x = 0 if message_type == "receive" else (base_width - line_width)
 
-        # y positions
-        current_y = outer_padding + ruby_size // 2
-        romaji_y = current_y if has_romaji_any else None
-        hira_y = None
-        if has_romaji_any and has_hira_any:
-            hira_y = romaji_y + ruby_size + ruby_line_spacing
-        elif has_hira_any:
-            hira_y = current_y
-        orig_y = outer_padding + ruby_block_height + font_size // 2
+            has_romaji_any = any(r for (_, _, r, _) in line_tokens)
+            has_hira_any = any(h for (_, h, _, _) in line_tokens)
+            ruby_lines_count = (1 if has_romaji_any else 0) + (1 if has_hira_any else 0)
+            ruby_block_height = ruby_lines_count * ruby_size + (ruby_line_spacing if ruby_lines_count == 2 else 0)
+            line_height = outer_padding + ruby_block_height + font_size + outer_padding
 
-        # Draw tokens
-        cursor_x = start_x
-        for orig, hira, romaji, w in token_infos:
-            token_center_x = cursor_x + w // 2
-            if romaji_y is not None and romaji:
-                draw.text((token_center_x, romaji_y), romaji, text_color, anchor="mm", font=font_ruby)
-            if hira_y is not None and hira:
-                draw.text((token_center_x, hira_y), hira, text_color, anchor="mm", font=font_ruby)
-            draw.text((token_center_x, orig_y), orig, text_color, anchor="mm", font=font_orig)
-            cursor_x += w
-        return img
+            line_img = Image.new("RGBA", (base_width, line_height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(line_img)
+
+            current_y = outer_padding + ruby_size // 2
+            romaji_y = current_y if has_romaji_any else None
+            hira_y = None
+            if has_romaji_any and has_hira_any:
+                hira_y = romaji_y + ruby_size + ruby_line_spacing
+            elif has_hira_any:
+                hira_y = current_y
+
+            orig_y = outer_padding + ruby_block_height + font_size // 2
+
+            cursor_x = start_x
+            for orig, hira, romaji, w in line_tokens:
+                token_center_x = cursor_x + w // 2
+                if romaji_y is not None and romaji:
+                    draw.text((token_center_x, romaji_y), romaji, text_color, anchor="mm", font=font_ruby)
+                if hira_y is not None and hira:
+                    draw.text((token_center_x, hira_y), hira, text_color, anchor="mm", font=font_ruby)
+                draw.text((token_center_x, orig_y), orig, text_color, anchor="mm", font=font_orig)
+                cursor_x += w
+
+            line_images.append(line_img)
+
+        # Concatenate all lines vertically
+        if not line_images:
+            return self.createTextImageLargeLog(message_type, size, message, language)
+        
+        result_img = line_images[0]
+        for line_img in line_images[1:]:
+            result_img = self.concatenateImagesVertically(result_img, line_img, margin=0)
+        return result_img
 
     def createTextImageMessageType(self, message_type: str, date_time: str) -> Image:
         ui_size = self.getUiSizeLargeLog()
@@ -665,3 +702,32 @@ if __name__ == "__main__":
         ]
     ])
     img.save("overlay_large.png")
+
+    # Additional tests to reproduce wrapping + ruby behaviour
+    # Long message that will force wrapping in small-log width
+    long_msg_jp = "これは非常に長いテキストです。表示幅を超えると折り返しが発生します。"*2
+    # Create simple transliteration tokens (one token per short chunk)
+    tokens = []
+    for i, part in enumerate(["これは", "非常に", "長い", "テキスト", "です", "表示幅", "を", "超える", "と", "折り返し", "が", "発生", "します", "これは", "非常に", "長い", "テキスト", "です", "表示幅", "を", "超える", "と", "折り返し", "が", "発生", "します"]):
+        tokens.append({"orig": part, "hira": part, "hepburn": "aaaaa"})
+
+    print("Generating test_overlay_long_small.png (small log, expected block ruby fallback)")
+    img_long_small = overlay.createOverlayImageSmallLog(long_msg_jp, "Japanese", [], [], transliteration_message=tokens, transliteration_translation=[[]], ruby_font_scale=0.5, ruby_line_spacing=4)
+    img_long_small.save("test_overlay_long_small.png")
+
+    print("Generating test_overlay_long_large.png (large log, already falls back for multiline)")
+    img_long_large = overlay.createOverlayImageLargeLog("receive", long_msg_jp, "Japanese", [], [], transliteration_message=tokens, transliteration_translation=[[]])
+    img_long_large.save("test_overlay_long_large.png")
+
+    print("Generating test_overlay_long_large.png (large log, already falls back for multiline)")
+    img_long_large = overlay.createOverlayImageLargeLog("receive", long_msg_jp, "Japanese", [], [], transliteration_message=tokens, transliteration_translation=[[]])
+    img_long_large.save("test_overlay_long_large.png")
+
+    print("Generating test_overlay_long_large.png (large log, already falls back for multiline)")
+    img_long_large = overlay.createOverlayImageLargeLog("receive", long_msg_jp, "Japanese", [], [], transliteration_message=tokens, transliteration_translation=[[]])
+    img_long_large.save("test_overlay_long_large.png")
+
+    print("Generating test_overlay_long_large.png (large log, already falls back for multiline)")
+    img_long_large = overlay.createOverlayImageLargeLog("receive", long_msg_jp, "Japanese", [long_msg_jp, long_msg_jp, long_msg_jp], ["Japanese", "Japanese", "Japanese"], transliteration_message=tokens, transliteration_translation=[tokens, tokens, tokens])
+    img_long_large.save("test_overlay_long_large.png")
+    print("Done. Check test_overlay_long_small.png and test_overlay_long_large.png for expected layout.")
