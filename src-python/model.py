@@ -951,10 +951,6 @@ class Model:
         if isinstance(target_language, dict):
             target_language_list = [data["language"] for data in target_language.values() if data.get("enable") is True]
 
-        # Fetch ruby settings from config (with safe defaults if missing)
-        ruby_font_scale = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_font_scale", 0.5)
-        ruby_line_spacing = config.OVERLAY_SMALL_LOG_SETTINGS.get("ruby_line_spacing", 4)
-
         # 翻訳行ルビ (任意) が指定されていれば渡す。後方互換のため None / 不正型は空リストに。
         if not isinstance(transliteration_message, list):
             transliteration_message = []
@@ -968,8 +964,6 @@ class Model:
             target_language_list,
             transliteration_message=transliteration_message,
             transliteration_translation=transliteration_translation,
-            ruby_font_scale=ruby_font_scale,
-            ruby_line_spacing=ruby_line_spacing,
         )
 
     def createOverlayImageSmallMessage(self, message):
