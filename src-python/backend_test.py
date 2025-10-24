@@ -180,17 +180,21 @@ class TestMainloop():
             case "/set/data/selected_tab_no":
                 data = random.choice(["1", "2", "3"])
             case "/set/data/selected_translation_engines":
+                print("Fetching endpoint data for translation_engines...")
+                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/translation_engines", None)
                 translation_engines = self.config_dict.get("translation_engines", None)
                 data = {}
                 for i in ["1", "2", "3"]:
                     data[i] = random.choice(translation_engines)
             case "/set/data/selected_your_languages":
+                self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
                 selectable_language_list = self.config_dict.get("selectable_language_list", None)
                 data = {}
                 for i in ["1", "2", "3"]:
                     data[i] = {}
                     data[i]["1"] = random.choice(selectable_language_list) | {"enable": True}
             case "/set/data/selected_target_languages":
+                self.config_dict["selectable_language_list"], _ = self.main.handleRequest("/get/data/selectable_language_list", None)
                 selectable_language_list = self.config_dict.get("selectable_language_list", None)
                 data = {}
                 for i in ["1", "2", "3"]:
@@ -198,6 +202,7 @@ class TestMainloop():
                     for j in ["1", "2", "3"]:
                         data[i][j] = random.choice(selectable_language_list) | {"enable": random.choice([True, False])}
             case "/set/data/selected_transcription_engine":
+                self.config_dict["transcription_engines"], _ = self.main.handleRequest("/get/data/transcription_engines", None)
                 transcription_engines = self.config_dict.get("transcription_engines", None)
                 data = random.choice(transcription_engines)
             case "/set/data/transparency":
@@ -222,11 +227,17 @@ class TestMainloop():
                     "height": random.randint(600, 1080)
                 }
             case "/set/data/selected_translation_compute_device":
-                data = random.choice(self.config_dict["translation_compute_device_list"])
+                self.config_dict["translation_compute_device_list"], _ = self.main.handleRequest("/get/data/translation_compute_device_list", None)
+                translation_compute_device_list = self.config_dict.get("translation_compute_device_list", None)
+                data = random.choice(translation_compute_device_list)
             case "/set/data/selected_transcription_compute_device":
-                data = random.choice(self.config_dict["transcription_compute_device_list"])
+                self.config_dict["transcription_compute_device_list"], _ = self.main.handleRequest("/get/data/transcription_compute_device_list", None)
+                transcription_compute_device_list = self.config_dict.get("transcription_compute_device_list", None)
+                data = random.choice(transcription_compute_device_list)
             case "/set/data/ctranslate2_weight_type":
-                data = random.choice(list(self.config_dict["selectable_ctranslate2_weight_type_dict"].keys()))
+                self.config_dict["selectable_ctranslate2_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_ctranslate2_weight_type_dict", None)
+                selectable_ctranslate2_weight_type_dict = self.config_dict.get("selectable_ctranslate2_weight_type_dict", None)
+                data = random.choice(list(selectable_ctranslate2_weight_type_dict.keys()))
             # LLM / API Clients
             case "/set/data/plamo_model":
                 # 事前にモデルリストを取得
@@ -279,9 +290,13 @@ class TestMainloop():
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
             case "/set/data/selected_mic_host":
-                data = random.choice(self.config_dict["mic_host_list"])
+                self.config_dict["mic_host_list"], _ = self.main.handleRequest("/get/data/mic_host_list", None)
+                mic_host_list = self.config_dict.get("mic_host_list", None)
+                data = random.choice(mic_host_list)
             case "/set/data/selected_mic_device":
-                data = random.choice(self.config_dict["mic_device_list"])
+                self.config_dict["mic_device_list"], _ = self.main.handleRequest("/get/data/mic_device_list", None)
+                mic_device_list = self.config_dict.get("mic_device_list", None)
+                data = random.choice(mic_device_list)
             case "/set/data/mic_threshold":
                 data = random.randint(-1000, 3000)
                 if 0 <= data <= 2000:
@@ -290,13 +305,17 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/mic_record_timeout":
                 data = random.randint(-1, 10)
-                if 0 <= data <= self.config_dict["mic_phrase_timeout"]:
+                self.config_dict["mic_phrase_timeout"], _ = self.main.handleRequest("/get/data/mic_phrase_timeout", None)
+                mic_phrase_timeout = self.config_dict.get("mic_phrase_timeout", None)
+                if 0 <= data <= mic_phrase_timeout:
                     pass
                 else:
                     expected_status = [400]
             case "/set/data/mic_phrase_timeout":
                 data = random.randint(-1, 10)
-                if self.config_dict["mic_record_timeout"] <= data:
+                self.config_dict["mic_record_timeout"], _ = self.main.handleRequest("/get/data/mic_record_timeout", None)
+                mic_record_timeout = self.config_dict.get("mic_record_timeout", None)
+                if mic_record_timeout <= data:
                     pass
                 else:
                     expected_status = [400]
@@ -329,7 +348,9 @@ class TestMainloop():
                     ]
                 )
             case "/set/data/selected_speaker_device":
-                data = random.choice(self.config_dict["speaker_device_list"])
+                self.config_dict["speaker_device_list"], _ = self.main.handleRequest("/get/data/speaker_device_list", None)
+                speaker_device_list = self.config_dict.get("speaker_device_list", None)
+                data = random.choice(speaker_device_list)
             case "/set/data/speaker_threshold":
                 data = random.randint(-1000, 5000)
                 if 0 <= data <= 4000:
@@ -338,13 +359,17 @@ class TestMainloop():
                     expected_status = [400]
             case "/set/data/speaker_record_timeout":
                 data = random.randint(-1, 10)
-                if 0 <= data <= self.config_dict["speaker_phrase_timeout"]:
+                self.config_dict["speaker_phrase_timeout"], _ = self.main.handleRequest("/get/data/speaker_phrase_timeout", None)
+                speaker_phrase_timeout = self.config_dict.get("speaker_phrase_timeout", None)
+                if 0 <= data <= speaker_phrase_timeout:
                     pass
                 else:
                     expected_status = [400]
             case "/set/data/speaker_phrase_timeout":
                 data = random.randint(-1, 10)
-                if self.config_dict["speaker_record_timeout"] <= data:
+                self.config_dict["speaker_record_timeout"], _ = self.main.handleRequest("/get/data/speaker_record_timeout", None)
+                speaker_record_timeout = self.config_dict.get("speaker_record_timeout", None)
+                if speaker_record_timeout <= data:
                     pass
                 else:
                     expected_status = [400]
@@ -359,7 +384,9 @@ class TestMainloop():
             case "/set/data/speaker_no_speech_prob":
                 data = random.uniform(0, 1)
             case "/set/data/whisper_weight_type":
-                data = random.choice([key for key, value in self.config_dict["selectable_whisper_weight_type_dict"].items() if value is True])
+                self.config_dict["selectable_whisper_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_whisper_weight_type_dict", None)
+                selectable_whisper_weight_type_dict = self.config_dict.get("selectable_whisper_weight_type_dict", None)
+                data = random.choice([key for key, value in selectable_whisper_weight_type_dict.items() if value is True])
             case "/set/data/overlay_small_log_settings":
                 data = {
                     "x_pos": random.random(),
@@ -389,9 +416,13 @@ class TestMainloop():
                     "tracker": random.choice(["HMD", "LeftHand", "RightHand"]),
                 }
             case "/set/data/send_message_format_parts":
-                data = self.config_dict["send_message_format_parts"]
+                self.config_dict["send_message_format_parts"], _ = self.main.handleRequest("/get/data/send_message_format_parts", None)
+                send_message_format_parts = self.config_dict.get("send_message_format_parts", None)
+                data = send_message_format_parts
             case "/set/data/received_message_format_parts":
-                data = self.config_dict["received_message_format_parts"]
+                self.config_dict["received_message_format_parts"], _ = self.main.handleRequest("/get/data/received_message_format_parts", None)
+                received_message_format_parts = self.config_dict.get("received_message_format_parts", None)
+                data = received_message_format_parts
             case "/set/data/websocket_host":
                 data = random.choice(["127.0.0.1", "aaaaadwafasdsd", "0210.1564.845.0"])
                 if data == "127.0.0.1":
@@ -449,6 +480,8 @@ class TestMainloop():
                 print(f" Current config_dict: {self.config_dict}")
         else:
             print(f"-> {Color.YELLOW}[SKIP]{Color.RESET} No data to set for this endpoint: {endpoint}.")
+            status = None
+            result = None
             success = True
         self.record_test_result(endpoint, status, result if data is not None else None, expected_status)  # テスト結果を記録
         return success
@@ -614,9 +647,9 @@ class TestMainloop():
         ]
 
         self.set_data_specific_endpoints = [
-            "/set/data/ctranslate2_weight_type",
-            "/set/data/websocket_host",
-            "/set/data/websocket_port",
+            # "/set/data/ctranslate2_weight_type",
+            # "/set/data/websocket_host",
+            # "/set/data/websocket_port",
             "/set/data/osc_ip_address",
             "/set/data/osc_port",
         ]
@@ -625,7 +658,7 @@ class TestMainloop():
         self.delete_data_endpoints = []
 
         endpoint_types = [
-            "validity",
+            # "validity",
             "set_data",
             # "run",
             # "delete",
@@ -807,9 +840,9 @@ if __name__ == "__main__":
         # test.test_run_endpoints_all()
         # test.test_delete_data_endpoints_all()
         # test.test_endpoints_all_random()
-        test.test_endpoints_on_off_continuous()
+        # test.test_endpoints_on_off_continuous()
         # test.test_endpoints_on_off_random()
-        # test.test_endpoints_specific_random()
+        test.test_endpoints_specific_random()
         # test.test_translate_all_language_pairs()
         test.generate_summary()
     except KeyboardInterrupt:

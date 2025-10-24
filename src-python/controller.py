@@ -201,9 +201,7 @@ class Controller:
 
         def downloaded(self) -> None:
             if model.checkTranslatorCTranslate2ModelWeight(self.weight_type) is True:
-                weight_type_dict = config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
-                weight_type_dict[self.weight_type] = True
-                config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = weight_type_dict
+                config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[self.weight_type] = True
 
                 self.run(
                     200,
@@ -236,9 +234,7 @@ class Controller:
 
         def downloaded(self) -> None:
             if model.checkTranscriptionWhisperModelWeight(self.weight_type) is True:
-                weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
-                weight_type_dict[self.weight_type] = True
-                config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = weight_type_dict
+                config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[self.weight_type] = True
 
                 self.run(
                     200,
@@ -2649,10 +2645,8 @@ class Controller:
         return cleaned_text
 
     def updateDownloadedCTranslate2ModelWeight(self) -> None:
-        weight_type_dict = config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT
-        for weight_type in weight_type_dict.keys():
-            weight_type_dict[weight_type] = model.checkTranslatorCTranslate2ModelWeight(weight_type)
-        config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = weight_type_dict
+        for weight_type in config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT.keys():
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[weight_type] = model.checkTranslatorCTranslate2ModelWeight(weight_type)
 
     def updateTranslationEngineAndEngineList(self):
         engines = config.SELECTED_TRANSLATION_ENGINES
@@ -2674,10 +2668,8 @@ class Controller:
         self.run(200, self.run_mapping["translation_engines"], selectable_engines)
 
     def updateDownloadedWhisperModelWeight(self) -> None:
-        weight_type_dict = config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT
-        for weight_type in weight_type_dict.keys():
-            weight_type_dict[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
-        config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = weight_type_dict
+        for weight_type in config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT.keys():
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
 
     def updateTranscriptionEngine(self):
         weight_type = config.WHISPER_WEIGHT_TYPE
