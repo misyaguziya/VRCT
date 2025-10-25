@@ -127,12 +127,11 @@ def getBestComputeType(device: str, device_index: int) -> str:
     }
 
     # デバイス名に基づいて優先タイプを選択
+    selected_types = preferred_types["default"]
     for key in preferred_types:
         if key in device_name:
             selected_types = preferred_types[key]
             break
-    else:
-        selected_types = preferred_types["default"]
 
     # 利用可能な計算タイプを返す
     for compute_type in selected_types:
