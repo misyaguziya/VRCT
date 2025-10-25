@@ -92,7 +92,7 @@ def getComputeDeviceList() -> dict:
     if torch.cuda.is_available():
         for device_index in range(torch.cuda.device_count()):
             gpu_device_name = torch.cuda.get_device_name(device_index)
-            gpu_compute_types = ["auto"] + list(get_supported_compute_types("cuda", device_index))
+            gpu_compute_types = ["auto"] + sorted(list(get_supported_compute_types("cuda", device_index)))
 
             # デバイスごとの計算タイプの制限
             if "GTX" in gpu_device_name:

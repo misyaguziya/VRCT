@@ -790,14 +790,9 @@ class Config:
     @SELECTED_TRANSLATION_COMPUTE_DEVICE.setter
     def SELECTED_TRANSLATION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
-            for device in self.SELECTABLE_COMPUTE_DEVICE_LIST:
-                try:
-                    if device["device"] == value["device"] and device["device_index"] == value["device_index"] and device["device_name"] == value["device_name"]:
-                        self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
-                        self.saveConfig(inspect.currentframe().f_code.co_name, value)
-                        break
-                except Exception:
-                    continue
+            if value in self.SELECTABLE_COMPUTE_DEVICE_LIST:
+                self._SELECTED_TRANSLATION_COMPUTE_DEVICE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE')
@@ -807,14 +802,9 @@ class Config:
     @SELECTED_TRANSCRIPTION_COMPUTE_DEVICE.setter
     def SELECTED_TRANSCRIPTION_COMPUTE_DEVICE(self, value):
         if isinstance(value, dict):
-            for device in self.SELECTABLE_COMPUTE_DEVICE_LIST:
-                try:
-                    if device["device"] == value["device"] and device["device_index"] == value["device_index"] and device["device_name"] == value["device_name"]:
-                        self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
-                        self.saveConfig(inspect.currentframe().f_code.co_name, value)
-                        break
-                except Exception:
-                    continue
+            if value in self.SELECTABLE_COMPUTE_DEVICE_LIST:
+                self._SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = value
+                self.saveConfig(inspect.currentframe().f_code.co_name, value)
 
     @property
     @json_serializable('CTRANSLATE2_WEIGHT_TYPE')
