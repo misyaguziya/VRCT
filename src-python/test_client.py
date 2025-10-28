@@ -13,6 +13,7 @@ import json
 import base64
 import sys
 import time
+import threading
 from typing import Optional, Dict, Any
 
 if os.path.exists("config.json"):
@@ -40,11 +41,16 @@ class TestClient:
             bufsize=1,
             cwd='.'
         )
+        self._watchdog_stop_event = threading.Event()
+        self._watchdog_thread: Optional[threading.Thread] = None
         
         # 初期化完了を待つ
         print(f"{Color.CYAN}バックエンドの初期化を待機中...{Color.RESET}")
         self._wait_for_initialization()
         print(f"{Color.GREEN}バックエンド起動完了{Color.RESET}\n")
+        
+        # 初期化完了後 watchdog 開始
+        self._start_watchdog()
 
     def _wait_for_initialization(self, timeout: Optional[float] = None):
         """バックエンド初期化完了 (/run/initialization_complete) を待機する。
@@ -252,9 +258,36 @@ class TestClient:
             traceback.print_exc()
             return {"status": 500, "endpoint": endpoint, "result": f"Error: {e}"}
 
+    def _start_watchdog(self):
+        """watchdog スレッドを開始 (30秒間隔で /run/feed_watchdog 送信)"""
+        def _watchdog_loop():
+            print(f"{Color.CYAN}[Watchdog]{Color.RESET} 開始 (30秒間隔)")
+            while not self._watchdog_stop_event.is_set():
+                if self._watchdog_stop_event.wait(timeout=30):
+                    break
+                if self.process.poll() is None:
+                    try:
+                        request = {"endpoint": "/run/feed_watchdog"}
+                        request_json = json.dumps(request, ensure_ascii=False)
+                        self.process.stdin.write(request_json + '\n')
+                        self.process.stdin.flush()
+                        # レスポンスは受信しない（バックグラウンド送信）
+                    except Exception as e:
+                        print(f"{Color.YELLOW}[Watchdog]{Color.RESET} 送信エラー: {e}")
+                        break
+            print(f"{Color.CYAN}[Watchdog]{Color.RESET} 終了")
+        
+        self._watchdog_thread = threading.Thread(target=_watchdog_loop, daemon=True)
+        self._watchdog_thread.start()
+
     def cleanup(self):
         """バックエンドプロセスを終了"""
         print(f"\n{Color.CYAN}バックエンドプロセスを終了中...{Color.RESET}")
+        # watchdog 停止
+        if self._watchdog_thread and self._watchdog_thread.is_alive():
+            self._watchdog_stop_event.set()
+            self._watchdog_thread.join(timeout=2)
+        # プロセス終了
         self.process.terminate()
         try:
             self.process.wait(timeout=5)
