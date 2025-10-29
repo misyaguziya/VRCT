@@ -551,9 +551,12 @@ class Main:
             self._threads.append(th_handler)
 
     def start(self) -> None:
-        """Start receiver and handler threads."""
-        self.startReceiver()
-        self.startHandler()
+        """Start the main loop to keep the program running."""
+        try:
+            while not self._stop_event.is_set():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.stop()
 
     def stop(self, wait: float = 2.0) -> None:
         """Signal threads to stop and wait for them to finish.

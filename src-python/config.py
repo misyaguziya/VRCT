@@ -63,23 +63,201 @@ def _auto_register_descriptors():
                 make_serializer(name)
 
 
+# Wrapper classes for mutable types that auto-save on modification
+class ManagedDict(dict):
+    """Dict wrapper that saves changes back to config."""
+    def __init__(self, instance, property_name, immediate_save):
+        self._instance = instance
+        self._property_name = property_name
+        self._immediate_save = immediate_save
+        self._internal_name = f"_{property_name}"
+        # Initialize from internal storage
+        super().__init__(getattr(instance, self._internal_name))
+
+    def _get_internal(self):
+        """Get reference to internal storage."""
+        return getattr(self._instance, self._internal_name)
+
+    def _save(self):
+        """Save current state back to config and sync internal storage."""
+        try:
+            # Update internal storage directly
+            internal_dict = self._get_internal()
+            internal_dict.clear()
+            internal_dict.update(dict.items(self))
+            # Trigger config save
+            self._instance.saveConfig(self._property_name, dict(self), immediate_save=self._immediate_save)
+        except Exception:
+            pass
+
+    def __getitem__(self, key):
+        # Always read from internal storage to get latest value
+        return self._get_internal()[key]
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key, value)
+        self._save()
+
+    def __delitem__(self, key):
+        super().__delitem__(key)
+        self._save()
+
+    def __contains__(self, key):
+        return key in self._get_internal()
+
+    def get(self, key, default=None):
+        return self._get_internal().get(key, default)
+
+    def keys(self):
+        return self._get_internal().keys()
+
+    def values(self):
+        return self._get_internal().values()
+
+    def items(self):
+        return self._get_internal().items()
+
+    def update(self, *args, **kwargs):
+        super().update(*args, **kwargs)
+        self._save()
+
+    def pop(self, *args):
+        result = super().pop(*args)
+        self._save()
+        return result
+
+    def popitem(self):
+        result = super().popitem()
+        self._save()
+        return result
+
+    def clear(self):
+        super().clear()
+        self._save()
+
+    def setdefault(self, key, default=None):
+        result = super().setdefault(key, default)
+        self._save()
+        return result
+
+
+class ManagedList(list):
+    """List wrapper that saves changes back to config."""
+    def __init__(self, instance, property_name, immediate_save):
+        self._instance = instance
+        self._property_name = property_name
+        self._immediate_save = immediate_save
+        self._internal_name = f"_{property_name}"
+        # Initialize from internal storage
+        super().__init__(getattr(instance, self._internal_name))
+
+    def _get_internal(self):
+        """Get reference to internal storage."""
+        return getattr(self._instance, self._internal_name)
+
+    def _save(self):
+        """Save current state back to config and sync internal storage."""
+        try:
+            # Update internal storage directly
+            internal_list = self._get_internal()
+            internal_list.clear()
+            internal_list.extend(list.__iter__(self))
+            # Trigger config save
+            self._instance.saveConfig(self._property_name, list(self), immediate_save=self._immediate_save)
+        except Exception:
+            pass
+
+    def __getitem__(self, index):
+        # Always read from internal storage to get latest value
+        return self._get_internal()[index]
+
+    def __setitem__(self, index, value):
+        super().__setitem__(index, value)
+        self._save()
+
+    def __delitem__(self, index):
+        super().__delitem__(index)
+        self._save()
+
+    def __len__(self):
+        return len(self._get_internal())
+
+    def __contains__(self, value):
+        return value in self._get_internal()
+
+    def __iter__(self):
+        return iter(self._get_internal())
+
+    def append(self, value):
+        super().append(value)
+        self._save()
+
+    def extend(self, iterable):
+        super().extend(iterable)
+        self._save()
+
+    def insert(self, index, value):
+        super().insert(index, value)
+        self._save()
+
+    def remove(self, value):
+        super().remove(value)
+        self._save()
+
+    def pop(self, index=-1):
+        result = super().pop(index)
+        self._save()
+        return result
+
+    def clear(self):
+        super().clear()
+        self._save()
+
+    def sort(self, *args, **kwargs):
+        super().sort(*args, **kwargs)
+        self._save()
+
+    def reverse(self):
+        super().reverse()
+        self._save()
+
+
 # Descriptor for simple managed config properties to reduce repetitive getters/setters.
 # It performs optional type validation, optional allowed-values check, and calls
 # instance.saveConfig(...) on successful set.
 class ManagedProperty:
-    def __init__(self, name: str, type_: type = None, allowed=None, immediate_save: bool = False, serialize: bool = True, readonly: bool = False):
+    def __init__(self, name: str, type_: type = None, allowed=None, immediate_save: bool = False, serialize: bool = True, readonly: bool = False, mutable_tracking: bool = False):
         self.name = name
         self.type_ = type_
         self.allowed = allowed
         self.immediate_save = immediate_save
         self.serialize = serialize
         self.readonly = readonly
+        self.mutable_tracking = mutable_tracking
         self.private_name = f"_{name}"
+        self.wrapper_cache_name = f"_wrapper_{name}"
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
         stored = getattr(instance, self.private_name)
+
+        # If mutable_tracking is enabled, return cached wrapper or create new one
+        if self.mutable_tracking and isinstance(stored, dict):
+            wrapper = getattr(instance, self.wrapper_cache_name, None)
+            if wrapper is None or not isinstance(wrapper, ManagedDict):
+                wrapper = ManagedDict(instance, self.name, self.immediate_save)
+                setattr(instance, self.wrapper_cache_name, wrapper)
+            # Wrapper automatically syncs with internal storage on access
+            return wrapper
+        elif self.mutable_tracking and isinstance(stored, list):
+            wrapper = getattr(instance, self.wrapper_cache_name, None)
+            if wrapper is None or not isinstance(wrapper, ManagedList):
+                wrapper = ManagedList(instance, self.name, self.immediate_save)
+                setattr(instance, self.wrapper_cache_name, wrapper)
+            # Wrapper automatically syncs with internal storage on access
+            return wrapper
+
         # Return deep copy for mutable types to prevent external modification
         if isinstance(stored, (dict, list)):
             return copy.deepcopy(stored)
@@ -426,15 +604,15 @@ class Config:
 
     # --- Selectable dict/list properties (managed by descriptor, not serialized) ---
     # These are dynamically generated in init_config() based on installed packages/APIs
-    SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT', type_=dict, serialize=False)
-    SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_WHISPER_WEIGHT_TYPE_DICT', type_=dict, serialize=False)
-    SELECTABLE_TRANSLATION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_STATUS', type_=dict, serialize=False)
-    SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_STATUS', type_=dict, serialize=False)
-    SELECTABLE_PLAMO_MODEL_LIST = ManagedProperty('SELECTABLE_PLAMO_MODEL_LIST', type_=list, serialize=False)
-    SELECTABLE_GEMINI_MODEL_LIST = ManagedProperty('SELECTABLE_GEMINI_MODEL_LIST', type_=list, serialize=False)
-    SELECTABLE_OPENAI_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_MODEL_LIST', type_=list, serialize=False)
-    SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False)
-    SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False)
+    SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT', type_=dict, serialize=False, mutable_tracking=True)
+    SELECTABLE_WHISPER_WEIGHT_TYPE_DICT = ManagedProperty('SELECTABLE_WHISPER_WEIGHT_TYPE_DICT', type_=dict, serialize=False, mutable_tracking=True)
+    SELECTABLE_TRANSLATION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSLATION_ENGINE_STATUS', type_=dict, serialize=False, mutable_tracking=True)
+    SELECTABLE_TRANSCRIPTION_ENGINE_STATUS = ManagedProperty('SELECTABLE_TRANSCRIPTION_ENGINE_STATUS', type_=dict, serialize=False, mutable_tracking=True)
+    SELECTABLE_PLAMO_MODEL_LIST = ManagedProperty('SELECTABLE_PLAMO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GEMINI_MODEL_LIST = ManagedProperty('SELECTABLE_GEMINI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENAI_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
     # --- Save Json Data (ManagedProperty-based) ---
     # More simple boolean flags replaced with ManagedProperty
