@@ -100,7 +100,7 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
             "device": "cpu",
             "device_index": 0,
             "device_name": "cpu",
-            "compute_types": ["auto"] + list(get_supported_compute_types("cpu", 0)),
+            "compute_types": ["auto"] + sorted(list(get_supported_compute_types("cpu", 0))),
         }
     ]
 
@@ -108,7 +108,7 @@ def getComputeDeviceList() -> List[Dict[str, Any]]:
         if torch is not None and hasattr(torch, "cuda") and torch.cuda.is_available():
             for device_index in range(torch.cuda.device_count()):
                 gpu_device_name = torch.cuda.get_device_name(device_index)
-                gpu_compute_types = ["auto"] + list(get_supported_compute_types("cuda", device_index))
+                gpu_compute_types = ["auto"] + sorted(list(get_supported_compute_types("cuda", device_index)))
 
                 # デバイスごとの計算タイプの制限
                 if "GTX" in gpu_device_name:
@@ -157,12 +157,11 @@ def getBestComputeType(device: str, device_index: int) -> str:
     }
 
     # デバイス名に基づいて優先タイプを選択
+    selected_types = preferred_types["default"]
     for key in preferred_types:
         if key in device_name:
             selected_types = preferred_types[key]
             break
-    else:
-        selected_types = preferred_types["default"]
 
     # 利用可能な計算タイプを返す
     for compute_type in selected_types:
