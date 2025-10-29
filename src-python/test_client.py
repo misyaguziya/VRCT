@@ -109,7 +109,14 @@ class TestClient:
                 endpoint = response.get("endpoint", "")
                 status = response.get("status", 0)
                 last_progress_endpoint = endpoint or last_progress_endpoint
-                print(f"{Color.CYAN}  [初期化中]{Color.RESET} {endpoint} (Status: {status})")
+                if status == 348:
+                    # 348 はログ扱い: 全フィールド展開
+                    print(f"{Color.CYAN}  [初期化ログ]{Color.RESET} Status: {status} endpoint:{endpoint or '(none)'}")
+                    expanded = json.dumps(response, ensure_ascii=False, indent=2)
+                    for line in expanded.split('\n'):
+                        print(f"    {line}")
+                else:
+                    print(f"{Color.CYAN}  [初期化中]{Color.RESET} {endpoint} (Status: {status})")
                 if endpoint == "/run/initialization_complete" and status == 200:
                     total_elapsed = time.time() - start_time
                     print(f"{Color.GREEN}  [初期化完了]{Color.RESET} 経過 {total_elapsed:.1f} 秒")
@@ -119,7 +126,7 @@ class TestClient:
                 print(f"{Color.CYAN}  [Backend]{Color.RESET} {stripped}")
                 continue
 
-    def send_request(self, endpoint: str, data: Optional[Any] = None, timeout: float = 30.0) -> Dict[str, Any]:
+    def send_request(self, endpoint: str, data: Optional[Any] = None, timeout: float = 30.0, silent: bool = False) -> Dict[str, Any]:
         """
         エンドポイントにリクエストを送信し、レスポンスを取得
         対応するエンドポイントの応答が返ってくるまで処理を待機します
@@ -149,10 +156,11 @@ class TestClient:
             
             # リクエストを送信
             request_json = json.dumps(request, ensure_ascii=False)
-            print(f"{Color.BLUE}[送信]{Color.RESET} {endpoint}")
-            if data is not None:
-                print(f"  データ: {data}")
-            print("  応答待機中...", flush=True)
+            if not silent:
+                print(f"{Color.BLUE}[送信]{Color.RESET} {endpoint}")
+                if data is not None:
+                    print(f"  データ: {data}")
+                print("  応答待機中...", flush=True)
             
             try:
                 self.process.stdin.write(request_json + '\n')
@@ -199,40 +207,54 @@ class TestClient:
                     result = response.get("result", None)
                     
                     # ステータスに応じて色分けして表示
-                    if status == 200:
-                        print(f"{Color.GREEN}[受信]{Color.RESET} Status: {status}")
-                    elif status == 400:
-                        print(f"{Color.YELLOW}[受信]{Color.RESET} Status: {status}")
-                    else:
-                        print(f"{Color.RED}[受信]{Color.RESET} Status: {status}")
+                    if not silent:
+                        if status == 200:
+                            print(f"{Color.GREEN}[受信]{Color.RESET} Status: {status}")
+                        elif status == 400:
+                            print(f"{Color.YELLOW}[受信]{Color.RESET} Status: {status}")
+                        elif status == 348:
+                            # 348 = ログ扱い: 中身を全展開
+                            print(f"{Color.CYAN}[LOG]{Color.RESET} Status: {status} (endpoint={response_endpoint})")
+                        else:
+                            print(f"{Color.RED}[受信]{Color.RESET} Status: {status}")
                     
                     # 結果を整形して表示
-                    print(f"  エンドポイント: {response_endpoint}")
-                    print("  結果:")
-                    if isinstance(result, (dict, list)):
-                        # dict/listの場合はインデント付きで表示
-                        result_str = json.dumps(result, ensure_ascii=False, indent=2)
-                        for line in result_str.split('\n'):
-                            print(f"    {line}")
-                    else:
-                        print(f"    {result}")
-                    
-                    # レスポンス全体も表示
-                    print("  完全なレスポンス:")
-                    response_str = json.dumps(response, ensure_ascii=False, indent=2)
-                    for line in response_str.split('\n'):
-                        print(f"    {line}")
-                    print()
+                    if not silent:
+                        # 348 の場合はログとしてフルコンテンツ優先表示
+                        if status == 348:
+                            print("  ログエントリ全体:")
+                            full_str = json.dumps(response, ensure_ascii=False, indent=2)
+                            for line in full_str.split('\n'):
+                                print(f"    {line}")
+                            print()
+                        else:
+                            print(f"  エンドポイント: {response_endpoint}")
+                            print("  結果:")
+                            if isinstance(result, (dict, list)):
+                                # dict/listの場合はインデント付きで表示
+                                result_str = json.dumps(result, ensure_ascii=False, indent=2)
+                                for line in result_str.split('\n'):
+                                    print(f"    {line}")
+                            else:
+                                print(f"    {result}")
+                            
+                            # レスポンス全体も表示
+                            print("  完全なレスポンス:")
+                            response_str = json.dumps(response, ensure_ascii=False, indent=2)
+                            for line in response_str.split('\n'):
+                                print(f"    {line}")
+                            print()
                     
                     return response
                 else:
                     # 別のエンドポイントのレスポンス、またはログメッセージ
-                    if response_endpoint:
-                        print(f"{Color.YELLOW}[他のエンドポイントの応答]{Color.RESET} {response_endpoint}")
-                    else:
-                        # endpointキーがない場合はログメッセージ
-                        print(f"{Color.CYAN}[Backendログ]{Color.RESET}")
-                    print(f"  {json.dumps(response, ensure_ascii=False)}")
+                    if not silent:
+                        if response_endpoint:
+                            print(f"{Color.YELLOW}[他のエンドポイントの応答]{Color.RESET} {response_endpoint}")
+                        else:
+                            # endpointキーがない場合はログメッセージ
+                            print(f"{Color.CYAN}[Backendログ]{Color.RESET}")
+                        print(f"  {json.dumps(response, ensure_ascii=False)}")
                     continue
             
         except json.JSONDecodeError as e:
@@ -326,9 +348,19 @@ def run_example_tests(client: TestClient):
     print(f"{Color.BOLD}=== サンプルテスト終了 ==={Color.RESET}\n")
 
 class AutomatedEndpointTester:
-    """backend_test.py のロジックを stdin/stdout 通信向けに移植した自動テストクラス"""
-    def __init__(self, client: TestClient):
+    """backend_test.py のロジックを stdin/stdout 通信向けに移植した自動テストクラス
+
+    Args:
+        client: TestClient インスタンス
+        silent: True の場合詳細ログを抑制
+        export_path: テスト結果を JSON に書き出すパス (None なら書き出し無し)
+        export_csv: True の場合 CSV も併せて書き出す
+    """
+    def __init__(self, client: TestClient, silent: bool = False, export_path: Optional[str] = None, export_csv: bool = False):
         self.client = client
+        self.silent = silent
+        self.export_path = export_path
+        self.export_csv = export_csv
         # config 的な値をキャッシュ
         self.cache: Dict[str, Any] = {}
         # エンドポイント分類 (動的取得手段が無いため暫定的にハードコード)
@@ -435,7 +467,7 @@ class AutomatedEndpointTester:
 
     def _get(self, endpoint: str) -> Any:
         """/get/data/* の結果をキャッシュしつつ取得"""
-        resp = self.client.send_request(endpoint)
+        resp = self.client.send_request(endpoint, silent=self.silent)
         if resp.get("status") == 200:
             self.cache[endpoint.split("/")[-1]] = resp.get("result")
             return resp.get("result")
@@ -717,7 +749,7 @@ class AutomatedEndpointTester:
             self._record(endpoint, None, None, expected)
             print(f"[SetData] {endpoint} -> {Color.YELLOW}SKIP(no data){Color.RESET}")
             return True
-        resp = self.client.send_request(endpoint, data)
+        resp = self.client.send_request(endpoint, data, silent=self.silent)
         status = resp.get("status")
         result = resp.get("result")
         self._record(endpoint, status, result, expected)
@@ -732,7 +764,7 @@ class AutomatedEndpointTester:
             self._record(endpoint, None, None, expected)
             print(f"[Run] {endpoint} -> {Color.YELLOW}SKIP(401){Color.RESET}")
             return True
-        resp = self.client.send_request(endpoint, data)
+        resp = self.client.send_request(endpoint, data, silent=self.silent)
         status = resp.get("status")
         result = resp.get("result")
         self._record(endpoint, status, result, expected)
@@ -743,7 +775,7 @@ class AutomatedEndpointTester:
 
     def test_delete_single(self, endpoint: str):
         expected=[200]
-        resp = self.client.send_request(endpoint)
+        resp = self.client.send_request(endpoint, silent=self.silent)
         status = resp.get("status")
         result = resp.get("result")
         self._record(endpoint, status, result, expected)
@@ -787,7 +819,7 @@ class AutomatedEndpointTester:
         # 最後に disable 系を OFF
         for ep in self.validity_endpoints:
             if ep.startswith("/set/disable/"):
-                self.client.send_request(ep)
+                self.client.send_request(ep, silent=True)
 
     def run_specific_random(self, iterations: int = 200):
         import random
@@ -810,6 +842,40 @@ class AutomatedEndpointTester:
                 if not r["success"] and r["expected_status"] != [401]:
                     print(f"- {ep} status={r['status']} expected={r['expected_status']} result={r['result']}")
         print(f"{Color.BOLD}======================={Color.RESET}\n")
+        # インタラクティブ指定によるエクスポート
+        if self.export_path:
+            try:
+                self.export_results(self.export_path)
+                print(f"{Color.GREEN}[EXPORT]{Color.RESET} JSONに書き出しました: {self.export_path}")
+                if self.export_csv:
+                    csv_path = self._derive_csv_path(self.export_path)
+                    self.export_results_csv(csv_path)
+                    print(f"{Color.GREEN}[EXPORT]{Color.RESET} CSVに書き出しました: {csv_path}")
+            except Exception as e:
+                print(f"{Color.RED}[EXPORT ERROR]{Color.RESET} {e}")
+
+    def _derive_csv_path(self, json_path: str) -> str:
+        base, ext = os.path.splitext(json_path)
+        return base + '.csv'
+
+    def export_results(self, filename: str):
+        """結果をJSONファイルへ書き出し"""
+        payload = {
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "total": len(self.results),
+            "results": self.results,
+        }
+        with open(filename, "w", encoding="utf-8") as f:
+            json.dump(payload, f, ensure_ascii=False, indent=2)
+
+    def export_results_csv(self, filename: str):
+        """結果をCSVへ書き出し (簡易)"""
+        import csv
+        with open(filename, "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["endpoint", "status", "expected", "success"])
+            for ep, r in self.results.items():
+                w.writerow([ep, r.get("status"), ",".join(map(str, r.get("expected_status", []))), r.get("success")])
 
 def run_interactive_mode(client: TestClient):
     """対話モードでテストを実行"""
@@ -868,6 +934,19 @@ def main():
         print("4. ランダムアクセステスト")
         print("5. 特定(osc/websocket)ランダムテスト")
         mode = input(f"{Color.CYAN}選択 (1-5): {Color.RESET}").strip()
+
+        # 追加オプション選択
+        silent_choice = input(f"{Color.CYAN}詳細ログを抑制しますか? (y/N): {Color.RESET}").strip().lower()
+        silent = silent_choice == 'y'
+        export_choice = input(f"{Color.CYAN}結果をJSON出力しますか? (y/N): {Color.RESET}").strip().lower()
+        export_path = None
+        export_csv = False
+        if export_choice == 'y':
+            default_name = f"test_results_{int(time.time())}.json"
+            path_in = input(f"{Color.CYAN}出力ファイル名[{default_name}]: {Color.RESET}").strip()
+            export_path = path_in or default_name
+            csv_choice = input(f"{Color.CYAN}CSVも出力しますか? (y/N): {Color.RESET}").strip().lower()
+            export_csv = csv_choice == 'y'
         
         print()
         
@@ -876,15 +955,15 @@ def main():
         elif mode == "2":
             run_interactive_mode(client)
         elif mode == "3":
-            tester = AutomatedEndpointTester(client)
+            tester = AutomatedEndpointTester(client, silent=silent, export_path=export_path, export_csv=export_csv)
             tester.run_all()
             tester.summary()
         elif mode == "4":
-            tester = AutomatedEndpointTester(client)
+            tester = AutomatedEndpointTester(client, silent=silent, export_path=export_path, export_csv=export_csv)
             tester.run_random()
             tester.summary()
         elif mode == "5":
-            tester = AutomatedEndpointTester(client)
+            tester = AutomatedEndpointTester(client, silent=silent, export_path=export_path, export_csv=export_csv)
             tester.run_specific_random()
             tester.summary()
         else:
