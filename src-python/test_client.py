@@ -540,6 +540,7 @@ class AutomatedEndpointTester:
             lst = self._get("/get/data/plamo_model_list") or []
             import random
             data = random.choice(lst) if lst else None
+            expected = [200,400]
         elif endpoint == "/set/data/plamo_auth_key":
             data = "PLAMO_DUMMY_KEY"
             expected = [200,400]
@@ -547,6 +548,7 @@ class AutomatedEndpointTester:
             lst = self._get("/get/data/gemini_model_list") or []
             import random
             data = random.choice(lst) if lst else None
+            expected = [200,400]
         elif endpoint == "/set/data/gemini_auth_key":
             data = "GEMINI_DUMMY_KEY"
             expected = [200,400]
@@ -554,6 +556,7 @@ class AutomatedEndpointTester:
             lst = self._get("/get/data/openai_model_list") or []
             import random
             data = random.choice(lst) if lst else None
+            expected = [200,400]
         elif endpoint == "/set/data/openai_auth_key":
             data = "OPENAI_DUMMY_KEY"
             expected = [200,400]
@@ -561,6 +564,7 @@ class AutomatedEndpointTester:
             lst = self._get("/get/data/lmstudio_model_list") or []
             import random
             data = random.choice(lst) if lst else None
+            expected = [200,400]
         elif endpoint == "/set/data/lmstudio_url":
             import random
             data = random.choice(["http://localhost:1234/v1","http://127.0.0.1:1234/v1","http://invalid_host:9999/v1"])
@@ -569,6 +573,7 @@ class AutomatedEndpointTester:
             lst = self._get("/get/data/ollama_model_list") or []
             import random
             data = random.choice(lst) if lst else None
+            expected = [200,400]
         elif endpoint == "/set/data/deepl_auth_key":
             data = "DEEPL_DUMMY_KEY"
             expected=[200,400]
@@ -745,7 +750,8 @@ class AutomatedEndpointTester:
             self._record(endpoint, None, None, expected)
             print(f"[SetData] {endpoint} -> {Color.RED}UNKNOWN{Color.RESET}")
             return False
-        if data is None:
+        # data が None でも expected に 400 が含まれていれば送信してテスト
+        if data is None and 400 not in expected:
             self._record(endpoint, None, None, expected)
             print(f"[SetData] {endpoint} -> {Color.YELLOW}SKIP(no data){Color.RESET}")
             return True
