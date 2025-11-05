@@ -619,8 +619,16 @@ export const useTranslation = createCategoryHook("Translation");
 export const useTranscription = createCategoryHook("Transcription");
 export const useVr = createCategoryHook("Vr");
 export const useOthers = createCategoryHook("Others");
-// export const useHotkeys = createCategoryHook("Hotkeys");
 export const useAdvancedSettings = createCategoryHook("AdvancedSettings");
+
+// Exceptional exports that are not part of SETTINGS_ARRAY or have custom logic.
+export { useHotkeys } from "./hotkeys/useHotkeys.js";
+export { useSupporters } from "./supporters/useSupporters.js";
+export { usePlugins } from "./plugins/usePlugins.js";
+
+export { useSettingBoxScrollPosition } from "./_aux/useSettingBoxScrollPosition.js";
+
+
 // If you later add other categories, you can either manually add:
 // export const useDevice = createCategoryHook("Device");
 // or uncomment the code below to auto-attach to module.exports (less ideal for tree-shaking).

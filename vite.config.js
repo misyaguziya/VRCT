@@ -60,7 +60,7 @@ export default defineConfig(async () => {
                 "@useI18n": path.resolve(__dirname, "locales/useI18n.js"),
 
                 "@useReceiveRoutes": path.resolve(__dirname, "src-ui/logics/useReceiveRoutes.js"),
-                "@useStdoutToPython": path.resolve(__dirname, "src-ui/logics/useStdoutToPython.js"),
+                "@useStdoutToPython": path.resolve(__dirname, "src-ui/logics/common/useStdoutToPython.js"),
 
                 "@ui_configs": path.resolve(__dirname, "src-ui/logics/ui_configs.js"),
                 "@scss_mixins": path.resolve(__dirname, "src-ui/views/common_css/mixins.scss"),
@@ -70,7 +70,7 @@ export default defineConfig(async () => {
                 "@logics": path.resolve(__dirname, "src-ui/logics"),
                 "@logics_common": path.resolve(__dirname, "src-ui/logics/common"),
                 "@logics_main": path.resolve(__dirname, "src-ui/logics/main"),
-                "@logics_configs": path.resolve(__dirname, "src-ui/logics/configs"),
+                "@logics_configs": path.resolve(__dirname, "src-ui/logics/configs/config_page_setter/ui_config_setter.js"),
 
                 "@setting_box": path.resolve(__dirname, "src-ui/views/app/config_page/setting_section/setting_box/index.js"),
                 "@common_components": path.resolve(__dirname, "src-ui/views/common_components/index.js"),
