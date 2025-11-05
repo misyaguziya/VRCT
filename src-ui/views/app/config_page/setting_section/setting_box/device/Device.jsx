@@ -16,7 +16,7 @@ import {
     DropdownMenu,
     ThresholdComponent,
     SwitchBox,
-} from "../_components/";
+} from "../_components";
 
 export const Device = () => {
     return (

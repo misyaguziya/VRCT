@@ -62,18 +62,18 @@ export default defineConfig(async () => {
                 "@useReceiveRoutes": path.resolve(__dirname, "src-ui/logics/useReceiveRoutes.js"),
                 "@useStdoutToPython": path.resolve(__dirname, "src-ui/logics/useStdoutToPython.js"),
 
-                "@ui_configs": path.resolve(__dirname, "src-ui/ui_configs.js"),
-                "@scss_mixins": path.resolve(__dirname, "src-ui/common_css/mixins.scss"),
-                "@store": path.resolve(__dirname, "src-ui/store.js"),
-                "@images": path.resolve(__dirname, "src-ui/assets"),
-                "@utils": path.resolve(__dirname, "src-ui/utils.js"),
+                "@ui_configs": path.resolve(__dirname, "src-ui/logics/ui_configs.js"),
+                "@scss_mixins": path.resolve(__dirname, "src-ui/views/common_css/mixins.scss"),
+                "@store": path.resolve(__dirname, "src-ui/logics/store.js"),
+                "@images": path.resolve(__dirname, "src-ui/views/assets"),
+                "@utils": path.resolve(__dirname, "src-ui/logics/utils.js"),
                 "@logics": path.resolve(__dirname, "src-ui/logics"),
                 "@logics_common": path.resolve(__dirname, "src-ui/logics/common"),
                 "@logics_main": path.resolve(__dirname, "src-ui/logics/main"),
                 "@logics_configs": path.resolve(__dirname, "src-ui/logics/configs"),
 
-                "@setting_box": path.resolve(__dirname, "src-ui/app/config_page/setting_section/setting_box/index.js"),
-                "@common_components": path.resolve(__dirname, "src-ui/common_components/index.js"),
+                "@setting_box": path.resolve(__dirname, "src-ui/views/app/config_page/setting_section/setting_box/index.js"),
+                "@common_components": path.resolve(__dirname, "src-ui/views/common_components/index.js"),
 
                 // Plugins
                 "@plugins_path": path.resolve(__dirname, "src-ui/plugins"),

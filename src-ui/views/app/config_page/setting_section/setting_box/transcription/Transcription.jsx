@@ -22,7 +22,7 @@ import {
     DropdownMenu,
     LabelComponent,
     SectionLabelComponent,
-} from "../_components/";
+} from "../_components";
 
 export const Transcription = () => {
     return (

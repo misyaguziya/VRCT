@@ -3,7 +3,7 @@ import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./Vr.module.scss";
 import { ui_configs } from "@ui_configs";
-import { Slider } from "../_components/";
+import { Slider } from "../_components";
 import {
     RadioButtonContainer,
     SwitchBoxContainer,
@@ -12,7 +12,7 @@ import {
 
 import {
     SectionLabelComponent,
-} from "../_components/";
+} from "../_components";
 
 import { ResetButton } from "@common_components";
 
