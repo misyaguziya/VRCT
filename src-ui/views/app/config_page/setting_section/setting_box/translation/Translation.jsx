@@ -18,7 +18,7 @@ import {
 import {
     DropdownMenu,
     LabelComponent,
-} from "../_components/";
+} from "../_components";
 
 export const Translation = () => {
     return (

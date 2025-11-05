@@ -10,7 +10,7 @@ export {
     useVr,
     // useHotkeys,
     useAdvancedSettings,
-} from "../../ui_config_setter.js";
+} from "./config_page_setter/ui_config_setter.js";
 
 // export { useOthers } from "./others/useOthers";
 // export { useTranscription } from "./transcription/useTranscription";

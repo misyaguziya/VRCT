@@ -2,7 +2,7 @@ import * as common from "@logics_common";
 import * as main from "@logics_main";
 import * as configs from "@logics_configs";
 import { _useBackendErrorHandling } from "./_useBackendErrorHandling";
-import { SETTINGS_ARRAY } from "../ui_config_setter";
+import { SETTINGS_ARRAY } from "./configs/config_page_setter/ui_config_setter";
 
 export const STATIC_ROUTE_META_LIST = [
     // Common

@@ -15,7 +15,7 @@ import {
 
 import {
     SectionLabelComponent,
-} from "../_components/";
+} from "../_components";
 
 import OpenFolderSvg from "@images/open_folder.svg?react";
 import HelpSvg from "@images/help.svg?react";

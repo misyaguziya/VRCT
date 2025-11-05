@@ -17,7 +17,7 @@ import {
 
     useAdvancedSettings,
 } from "@logics_configs";
-import { ui_configs } from "../ui_configs";
+import { ui_configs } from "./ui_configs";
 
 export const _useBackendErrorHandling = () => {
     const { t } = useI18n();
