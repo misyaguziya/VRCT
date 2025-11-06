@@ -220,6 +220,7 @@ export const useSliderLogic = ({
     }
 
     const [ui_value, setUiValue] = useState(current_value.data);
+
     const decimalPlaces = marks_step.toString().includes('.')
         ? marks_step.toString().split('.')[1].length
         : 0;
@@ -228,10 +229,13 @@ export const useSliderLogic = ({
         if (show_label_values && show_label_values.length > 0) {
             return show_label_values.includes(value) ? value : "";
         }
+
         return value.toFixed(decimalPlaces);
     }, [show_label_values, decimalPlaces]);
 
-    const marks = createMarks(min, max, marks_step, labelFormatter);
+    const marks = useMemo(() => {
+        return createMarks(min, max, marks_step, labelFormatter);
+    }, [min, max, marks_step, labelFormatter]);
 
     const onchangeFunction = useCallback((value) => {
         setUiValue(value);
@@ -260,9 +264,20 @@ export const useSliderLogic = ({
 
 const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
-    for (let value = min; value <= max; value += marks_step) {
-        value = parseFloat(value.toFixed(1));
-        marks.push({ value, label: `${labelFormatter(value)}` });
+    let current_value = min;
+
+    for (let i = 0; current_value <= max; i++) {
+        const fixedValue = parseFloat(current_value.toFixed(10));
+
+        marks.push({ value: fixedValue, label: `${labelFormatter(fixedValue)}` });
+
+        current_value += marks_step;
+        current_value = parseFloat(current_value.toFixed(10));
+
+        if (i > 1000) {
+            console.error("Loop limit exceeded (1000 iterations). createMarks()");
+            break;
+        }
     }
     return marks;
 };
