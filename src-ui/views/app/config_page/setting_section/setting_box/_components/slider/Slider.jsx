@@ -16,6 +16,7 @@ export const Slider = (props) => {
     } = useSliderLogic({
         current_value: props.current_value,
         setterFunction: props.setterFunction,
+        postUpdateAction: props.postUpdateAction,
         min: props.min,
         max: props.max,
         step: props.step,
