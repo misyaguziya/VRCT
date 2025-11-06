@@ -212,16 +212,13 @@ export const useSliderLogic = ({
     min,
     max,
     step = 1,
-    hidden_label_values
+    show_label_values
 }) => {
     const [ui_value, setUiValue] = useState(current_value.data);
 
     const labelFormatter = useCallback((value) => {
-        if (hidden_label_values && hidden_label_values.includes(value)) {
-            return "";
-        }
-        return value;
-    }, [hidden_label_values]);
+        return (show_label_values && show_label_values.includes(value)) ? value : "";
+    }, [show_label_values]);
 
     const marks = useMemo(() => {
         return createMarks(min, max, step, labelFormatter);
