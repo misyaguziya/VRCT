@@ -212,17 +212,26 @@ export const useSliderLogic = ({
     min,
     max,
     step = 1,
-    show_label_values
+    show_label_values = [],
+    marks_step,
 }) => {
+    if (marks_step === undefined) {
+        marks_step = step;
+    }
+
     const [ui_value, setUiValue] = useState(current_value.data);
+    const decimalPlaces = marks_step.toString().includes('.')
+        ? marks_step.toString().split('.')[1].length
+        : 0;
 
     const labelFormatter = useCallback((value) => {
-        return (show_label_values && show_label_values.includes(value)) ? value : "";
-    }, [show_label_values]);
+        if (show_label_values && show_label_values.length > 0) {
+            return show_label_values.includes(value) ? value : "";
+        }
+        return value.toFixed(decimalPlaces);
+    }, [show_label_values, decimalPlaces]);
 
-    const marks = useMemo(() => {
-        return createMarks(min, max, step, labelFormatter);
-    }, [min, max, step, labelFormatter]);
+    const marks = createMarks(min, max, marks_step, labelFormatter);
 
     const onchangeFunction = useCallback((value) => {
         setUiValue(value);
@@ -239,7 +248,7 @@ export const useSliderLogic = ({
         if (postUpdateAction) {
             postUpdateAction();
         }
-    }, [current_value.data]);
+    }, [current_value.data, postUpdateAction]);
 
     return {
         ui_value,
@@ -249,14 +258,11 @@ export const useSliderLogic = ({
     };
 };
 
-const createMarks = (min, max, step = 1, labelFormatter = (value) => value) => {
+const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
-    let current_value = min;
-    while (current_value <= max) {
-        const fixedValue = parseFloat(current_value.toFixed(1));
-        const label = labelFormatter(fixedValue);
-        marks.push({ value: fixedValue, label: `${label}` });
-        current_value += step;
+    for (let value = min; value <= max; value += marks_step) {
+        value = parseFloat(value.toFixed(1));
+        marks.push({ value, label: `${labelFormatter(value)}` });
     }
     return marks;
 };

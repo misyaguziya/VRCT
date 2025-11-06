@@ -25,6 +25,7 @@ import TriangleSvg from "@images/triangle.svg?react";
 import { randomIntMinMax } from "@utils";
 
 export const Vr = () => {
+    return null;
     const { t } = useI18n();
     const [is_opened_small_settings, setIsOpenedSmallSettings] = useState(true);
     const toggleIsOpenedSmallSettings = () => {

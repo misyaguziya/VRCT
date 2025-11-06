@@ -460,7 +460,7 @@ const Advanced_Container = () => {
     return (
         <div>
             <SectionLabelComponent label="Advanced Settings (Whisper Model)" />
-            {/* <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} /> */}
+            <SectionLabelComponent label={t("config_page.transcription.section_label_transcription_engines")} />
             <MicAvgLogprobContainer />
             <MicNoSpeechProbContainer />
             <SpeakerAvgLogprobContainer />
@@ -472,42 +472,16 @@ const Advanced_Container = () => {
 export const MicAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentMicAvgLogprob, setMicAvgLogprob } = useTranscription();
-    const [ui_mic_avg_logprob, setUiMicAvgLogprob] = useState(currentMicAvgLogprob.data);
-
-    const onchangeFunction = (value) => {
-        setUiMicAvgLogprob(value);
-    };
-    const onchangeCommittedFunction = (value) => {
-        setMicAvgLogprob(value);
-    };
-    useEffect(() => {
-        setUiMicAvgLogprob(currentMicAvgLogprob.data);
-    }, [currentMicAvgLogprob.data]);
-
-    // [Duplicated]
-    const createMarks = (min, max) => {
-        const marks = [];
-        for (let value = min; value <= max; value += 0.2) {
-            value = parseFloat(value.toFixed(1));
-            marks.push({ value, label: `${value}` });
-        }
-        return marks;
-    };
-
-    const marks = createMarks(-2, 0);
-
     return (
         <SliderContainer
             label="Mic Avg Logprob"
             desc="Default: -0.8"
-            min="-2"
-            max="0"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_mic_avg_logprob}
-            marks={marks}
+            current_value={currentMicAvgLogprob}
+            setterFunction={setMicAvgLogprob}
+            min={-2}
+            max={0}
             step={0.1}
-            track={false}
+            marks_step={0.2}
         />
     );
 };
@@ -515,42 +489,16 @@ export const MicAvgLogprobContainer = () => {
 export const MicNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentMicNoSpeechProb, setMicNoSpeechProb } = useTranscription();
-    const [ui_mic_no_speech_prob, setUiMicNoSpeechProb] = useState(currentMicNoSpeechProb.data);
-
-    const onchangeFunction = (value) => {
-        setUiMicNoSpeechProb(value);
-    };
-    const onchangeCommittedFunction = (value) => {
-        setMicNoSpeechProb(value);
-    };
-    useEffect(() => {
-        setUiMicNoSpeechProb(currentMicNoSpeechProb.data);
-    }, [currentMicNoSpeechProb.data]);
-
-    // [Duplicated]
-    const createMarks = (min, max) => {
-        const marks = [];
-        for (let value = min; value <= max; value += 0.1) {
-            value = parseFloat(value.toFixed(1));
-            marks.push({ value, label: `${value}` });
-        }
-        return marks;
-    };
-
-    const marks = createMarks(0, 1);
 
     return (
         <SliderContainer
             label="Mic No Speech Prob"
             desc="Default: 0.6"
-            min="0"
-            max="1"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_mic_no_speech_prob}
-            marks={marks}
+            current_value={currentMicNoSpeechProb}
+            setterFunction={setMicNoSpeechProb}
+            min={0}
+            max={1}
             step={0.1}
-            track={false}
         />
     );
 };
@@ -558,42 +506,17 @@ export const MicNoSpeechProbContainer = () => {
 export const SpeakerAvgLogprobContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerAvgLogprob, setSpeakerAvgLogprob } = useTranscription();
-    const [ui_speaker_avg_logprob, setUiSpeakerAvgLogprob] = useState(currentSpeakerAvgLogprob.data);
-
-    const onchangeFunction = (value) => {
-        setUiSpeakerAvgLogprob(value);
-    };
-    const onchangeCommittedFunction = (value) => {
-        setSpeakerAvgLogprob(value);
-    };
-    useEffect(() => {
-        setUiSpeakerAvgLogprob(currentSpeakerAvgLogprob.data);
-    }, [currentSpeakerAvgLogprob.data]);
-
-    // [Duplicated]
-    const createMarks = (min, max) => {
-        const marks = [];
-        for (let value = min; value <= max; value += 0.2) {
-            value = parseFloat(value.toFixed(1));
-            marks.push({ value, label: `${value}` });
-        }
-        return marks;
-    };
-
-    const marks = createMarks(-2, 0);
 
     return (
         <SliderContainer
             label="Speaker Avg Logprob"
             desc="Default: -0.8"
-            min="-2"
-            max="0"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_speaker_avg_logprob}
-            marks={marks}
+            current_value={currentSpeakerAvgLogprob}
+            setterFunction={setSpeakerAvgLogprob}
+            min={-2}
+            max={0}
             step={0.1}
-            track={false}
+            marks_step={0.2}
         />
     );
 };
@@ -601,42 +524,16 @@ export const SpeakerAvgLogprobContainer = () => {
 export const SpeakerNoSpeechProbContainer = () => {
     const { t } = useI18n();
     const { currentSpeakerNoSpeechProb, setSpeakerNoSpeechProb } = useTranscription();
-    const [ui_speaker_no_speech_prob, setUiSpeakerNoSpeechProb] = useState(currentSpeakerNoSpeechProb.data);
-
-    const onchangeFunction = (value) => {
-        setUiSpeakerNoSpeechProb(value);
-    };
-    const onchangeCommittedFunction = (value) => {
-        setSpeakerNoSpeechProb(value);
-    };
-    useEffect(() => {
-        setUiSpeakerNoSpeechProb(currentSpeakerNoSpeechProb.data);
-    }, [currentSpeakerNoSpeechProb.data]);
-
-    // [Duplicated]
-    const createMarks = (min, max) => {
-        const marks = [];
-        for (let value = min; value <= max; value += 0.1) {
-            value = parseFloat(value.toFixed(1));
-            marks.push({ value, label: `${value}` });
-        }
-        return marks;
-    };
-
-    const marks = createMarks(0, 1);
 
     return (
         <SliderContainer
             label="Speaker No Speech Prob"
             desc="Default: 0.6"
-            min="0"
-            max="1"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_speaker_no_speech_prob}
-            marks={marks}
+            current_value={currentSpeakerNoSpeechProb}
+            setterFunction={setSpeakerNoSpeechProb}
+            min={0}
+            max={1}
             step={0.1}
-            track={false}
         />
     );
 };
