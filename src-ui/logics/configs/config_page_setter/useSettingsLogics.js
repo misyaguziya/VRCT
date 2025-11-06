@@ -252,7 +252,7 @@ export const useSliderLogic = ({
         if (postUpdateAction) {
             postUpdateAction();
         }
-    }, [current_value.data, postUpdateAction]);
+    }, [current_value.data]);
 
     return {
         ui_value,
