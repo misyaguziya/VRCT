@@ -201,3 +201,65 @@ export const useConfigFunctions = (Category) => {
             return {};
     }
 };
+
+
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+export const useSliderLogic = ({
+    current_value,
+    setterFunction,
+    postUpdateAction,
+    min,
+    max,
+    step = 1,
+    hidden_label_values
+}) => {
+    const [ui_value, setUiValue] = useState(current_value.data);
+
+    const labelFormatter = useCallback((value) => {
+        if (hidden_label_values && hidden_label_values.includes(value)) {
+            return "";
+        }
+        return value;
+    }, [hidden_label_values]);
+
+    const marks = useMemo(() => {
+        return createMarks(min, max, step, labelFormatter);
+    }, [min, max, step, labelFormatter]);
+
+    const onchangeFunction = useCallback((value) => {
+        setUiValue(value);
+    }, []);
+
+    const onchangeCommittedFunction = useCallback((value) => {
+        setterFunction(value);
+    }, [setterFunction]);
+
+    useEffect(() => {
+        if (current_value.data !== ui_value) {
+            setUiValue(current_value.data);
+        }
+        if (postUpdateAction) {
+            postUpdateAction();
+        }
+    }, [current_value.data]);
+
+    return {
+        ui_value,
+        onchangeFunction,
+        onchangeCommittedFunction,
+        marks,
+    };
+};
+
+const createMarks = (min, max, step = 1, labelFormatter = (value) => value) => {
+    const marks = [];
+    let current_value = min;
+    while (current_value <= max) {
+        const fixedValue = parseFloat(current_value.toFixed(1));
+        const label = labelFormatter(fixedValue);
+        marks.push({ value: fixedValue, label: `${label}` });
+        current_value += step;
+    }
+    return marks;
+};
