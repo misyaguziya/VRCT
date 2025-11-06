@@ -14,3 +14,8 @@ export { useSupporters } from "./config_page_setter/supporters/useSupporters.js"
 export { usePlugins } from "./config_page_setter/plugins/usePlugins.js";
 
 export { useSettingBoxScrollPosition } from "./config_page_setter/_aux/useSettingBoxScrollPosition.js";
+
+
+export {
+    useSliderLogic,
+} from "./config_page_setter/useSettingsLogics.js";
