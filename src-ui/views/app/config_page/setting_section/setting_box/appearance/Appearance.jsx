@@ -70,7 +70,7 @@ const UiScalingContainer = () => {
         min: 40,
         max: 200,
         step: 10,
-        hidden_label_values: [50, 70, 90, 110, 130, 150, 170, 190],
+        show_label_values: [40, 60, 80, 100, 120, 140, 160, 180, 200],
     });
 
     return (
@@ -104,7 +104,7 @@ export const MessageLogUiScalingContainer = () => {
         min: 40,
         max: 200,
         step: 10,
-        hidden_label_values: [50, 70, 90, 110, 130, 150, 170, 190],
+        show_label_values: [40, 60, 80, 100, 120, 140, 160, 180, 200],
     });
 
     return (
