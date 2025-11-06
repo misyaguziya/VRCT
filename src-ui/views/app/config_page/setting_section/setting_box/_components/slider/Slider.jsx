@@ -3,8 +3,26 @@ import styles from "./Slider.module.scss";
 import MUI_Slider from "@mui/material/Slider";
 import clsx from "clsx";
 
+import { useSliderLogic } from "@logics_configs";
+
 export const Slider = (props) => {
     const location = props.valueLabelDisplayLocation || "top";
+
+    const {
+        ui_value,
+        onchangeFunction,
+        onchangeCommittedFunction,
+        marks
+    } = useSliderLogic({
+        current_value: props.current_value,
+        setterFunction: props.setterFunction,
+        min: props.min,
+        max: props.max,
+        step: props.step,
+        show_label_values: props.show_label_values,
+        marks_step: props.marks_step,
+    });
+
 
     const sliderSx = {
         color: "var(--dark_700_color)",
@@ -86,13 +104,13 @@ export const Slider = (props) => {
                 aria-label="Default"
                 // valueLabelDisplay="on"
                 valueLabelDisplay={props.valueLabelDisplay ? props.valueLabelDisplay : "auto"}
-                value={props.variable}
-                step={props.step}
+                value={ui_value}
+                step={props.step == null ? null : Number(props.step)}
                 min={Number(props.min)}
                 max={Number(props.max)}
-                onChange={(_e, value) => props.onchangeFunction(value)}
+                onChange={(_e, value) => onchangeFunction(value)}
                 onChangeCommitted={(_e, value) =>
-                    props.onchangeCommittedFunction ? props.onchangeCommittedFunction(value) : null
+                    onchangeCommittedFunction ? onchangeCommittedFunction(value) : null
                 }
                 onMouseEnter={(event) =>
                     props.onMouseEnterFunction ? props.onMouseEnterFunction(event) : null
@@ -100,10 +118,10 @@ export const Slider = (props) => {
                 onMouseLeave={(event) =>
                     props.onMouseLeaveFunction ? props.onMouseLeaveFunction(event) : null
                 }
-                marks={props.marks}
-                track={props.track}
+                marks={marks}
+                track={props.track === undefined ? false : props.track}
                 orientation={props.orientation}
-                valueLabelFormat={`${props.valueLabelFormat ? props.valueLabelFormat : props.variable}`}
+                valueLabelFormat={`${props.valueLabelFormat ? props.valueLabelFormat : ui_value}`}
                 sx={sliderSx}
             />
         </div>

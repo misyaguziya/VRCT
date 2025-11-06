@@ -58,32 +58,16 @@ const UiScalingContainer = () => {
     const { currentUiScaling, setUiScaling } = useAppearance();
     const { asyncUpdateBreakPoint } = useWindow();
 
-    const {
-        ui_value,
-        onchangeFunction,
-        onchangeCommittedFunction,
-        marks
-    } = useSliderLogic({
-        current_value: currentUiScaling,
-        setterFunction: setUiScaling,
-        postUpdateAction: asyncUpdateBreakPoint,
-        min: 40,
-        max: 200,
-        step: 10,
-        show_label_values: [40, 60, 80, 100, 120, 140, 160, 180, 200],
-    });
-
     return (
         <SliderContainer
             label={t("config_page.appearance.ui_size.label") + " (%)"}
-            min="40"
-            max="200"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_value}
-            marks={marks}
-            step={null}
-            track={false}
+            current_value={currentUiScaling}
+            setterFunction={setUiScaling}
+            postUpdateAction={asyncUpdateBreakPoint}
+            min={40}
+            max={200}
+            step={10}
+            show_label_values={[40, 60, 80, 100, 120, 140, 160, 180, 200]}
         />
     );
 };
@@ -93,31 +77,15 @@ export const MessageLogUiScalingContainer = () => {
     const { t } = useI18n();
     const { currentMessageLogUiScaling, setMessageLogUiScaling } = useAppearance();
 
-    const {
-        ui_value,
-        onchangeFunction,
-        onchangeCommittedFunction,
-        marks
-    } = useSliderLogic({
-        current_value: currentMessageLogUiScaling,
-        setterFunction: setMessageLogUiScaling,
-        min: 40,
-        max: 200,
-        step: 10,
-        show_label_values: [40, 60, 80, 100, 120, 140, 160, 180, 200],
-    });
-
     return (
         <SliderContainer
             label={t("config_page.appearance.textbox_ui_size.label") + " (%)"}
-            min="40"
-            max="200"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_value}
-            marks={marks}
-            step={null}
-            track={false}
+            current_value={currentMessageLogUiScaling}
+            setterFunction={setMessageLogUiScaling}
+            min={40}
+            max={200}
+            step={10}
+            show_label_values={[40, 60, 80, 100, 120, 140, 160, 180, 200]}
         />
     );
 };
@@ -180,40 +148,16 @@ const FontFamilyContainer = () => {
 const TransparencyContainer = () => {
     const { t } = useI18n();
     const { currentTransparency, setTransparency } = useAppearance();
-    const [ui_message_log_ui_scaling, setUiTransparency] = useState(currentTransparency.data);
-
-    const onchangeFunction = (value) => {
-        setUiTransparency(value);
-    };
-    const onchangeCommittedFunction = (value) => {
-        setTransparency(value);
-    };
-    useEffect(() => {
-        setUiTransparency(currentTransparency.data);
-    }, [currentTransparency.data]);
-
-    // [Duplicated]
-    const createMarks = (min, max) => {
-        const marks = [];
-        for (let value = min; value <= max; value += 10) {
-            marks.push({ value, label: `${value}` });
-        }
-        return marks;
-    };
-
-    const marks = createMarks(40, 100);
 
     return (
         <SliderContainer
             label={t("config_page.appearance.transparency.label") + " (%)"}
-            min="40"
-            max="100"
-            onchangeCommittedFunction={onchangeCommittedFunction}
-            onchangeFunction={onchangeFunction}
-            variable={ui_message_log_ui_scaling}
-            marks={marks}
-            step={null}
-            track={false}
+            current_value={currentTransparency}
+            setterFunction={setTransparency}
+            min={40}
+            max={100}
+            step={10}
+            show_label_values={[40, 60, 80, 100, 120, 140, 160, 180, 200]}
         />
     );
 };
