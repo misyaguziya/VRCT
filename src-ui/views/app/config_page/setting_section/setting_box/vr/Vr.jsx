@@ -3,7 +3,7 @@ import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import styles from "./Vr.module.scss";
 import { ui_configs } from "@ui_configs";
-import { Slider } from "../_components/";
+import { Slider } from "../_components";
 import {
     RadioButtonContainer,
     SwitchBoxContainer,
@@ -12,7 +12,7 @@ import {
 
 import {
     SectionLabelComponent,
-} from "../_components/";
+} from "../_components";
 
 import { ResetButton } from "@common_components";
 
@@ -63,7 +63,7 @@ export const Vr = () => {
                         ui_configs={ui_configs.overlay_small_log}
                         default_ui_configs={ui_configs.overlay_small_log_default_settings}
                         current_overlay_settings={currentOverlaySmallLogSettings.data}
-                        set_overlay_settings={setOverlaySmallLogSettings}
+                        setOverlaySettings={setOverlaySmallLogSettings}
                         current_is_enabled_overlay={currentIsEnabledOverlaySmallLog}
                         toggle_is_enabled_overlay={toggleIsEnabledOverlaySmallLog}
                     />
@@ -73,7 +73,7 @@ export const Vr = () => {
                         ui_configs={ui_configs.overlay_large_log}
                         default_ui_configs={ui_configs.overlay_large_log_default_settings}
                         current_overlay_settings={currentOverlayLargeLogSettings.data}
-                        set_overlay_settings={setOverlayLargeLogSettings}
+                        setOverlaySettings={setOverlayLargeLogSettings}
                         current_is_enabled_overlay={currentIsEnabledOverlayLargeLog}
                         toggle_is_enabled_overlay={toggleIsEnabledOverlayLargeLog}
                     />
@@ -92,21 +92,21 @@ export const Vr = () => {
 
 const OverlaySettingsContainer = ({
     current_overlay_settings,
-    set_overlay_settings,
+    setOverlaySettings,
     current_is_enabled_overlay,
     toggle_is_enabled_overlay,
     ui_configs,
     default_ui_configs,
     id
 }) => {
-
     const { t } = useI18n();
+    const [settings, setSettings] = useState(current_overlay_settings);
+    const [timeout_id, setTimeoutId] = useState(null);
+
     useEffect(() => {
         setSettings(current_overlay_settings);
     }, [current_overlay_settings]);
 
-    const [settings, setSettings] = useState(current_overlay_settings);
-    const [timeout_id, setTimeoutId] = useState(null);
 
     const [is_opened_position_controller, setIsOpenedPositionController] = useState(true);
     const togglePositionRotationController = () => {
@@ -118,17 +118,17 @@ const OverlaySettingsContainer = ({
 
         if (timeout_id) clearTimeout(timeout_id);
 
-        const newTimeoutId = setTimeout(() => {
+        const new_timeout_id = setTimeout(() => {
             const new_data = { ...settings, [key]: value };
-            set_overlay_settings(new_data);
+            setOverlaySettings(new_data);
         }, 50);
 
-        setTimeoutId(newTimeoutId);
+        setTimeoutId(new_timeout_id);
     };
 
     const selectFunction = (key, value) => {
         const new_data = { ...settings, [key]: value };
-        set_overlay_settings(new_data);
+        setOverlaySettings(new_data);
     };
 
 
@@ -234,7 +234,8 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.x_pos.step}
                     min={ui_configs.x_pos.min}
                     max={ui_configs.x_pos.max}
-                    onchangeFunction={(value) => onchangeFunction("x_pos", value)}
+                    setterFunction={(value) => onchangeFunction("x_pos", value)}
+                    setter_timing="on_change"
                     valueLabelDisplay={x_variable_display}
                     valueLabelDisplayLocation="top"
                 />
@@ -259,7 +260,8 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.y_pos.step}
                     min={ui_configs.y_pos.min}
                     max={ui_configs.y_pos.max}
-                    onchangeFunction={(value) => onchangeFunction("y_pos", value)}
+                    setterFunction={(value) => onchangeFunction("y_pos", value)}
+                    setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={y_variable_display}
                     valueLabelDisplayLocation="right"
@@ -285,7 +287,8 @@ export const PositionControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.z_pos.step}
                     min={ui_configs.z_pos.min}
                     max={ui_configs.z_pos.max}
-                    onchangeFunction={(value) => onchangeFunction("z_pos", value)}
+                    setterFunction={(value) => onchangeFunction("z_pos", value)}
+                    setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={z_variable_display}
                     valueLabelDisplayLocation="left"
@@ -344,7 +347,8 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.x_rotation.step}
                     min={ui_configs.x_rotation.min}
                     max={ui_configs.x_rotation.max}
-                    onchangeFunction={(value) => onchangeFunction("x_rotation", -value)}
+                    setterFunction={(value) => onchangeFunction("x_rotation", -value)}
+                    setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={x_variable_display}
                     valueLabelDisplayLocation="right"
@@ -370,7 +374,8 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.y_rotation.step}
                     min={ui_configs.y_rotation.min}
                     max={ui_configs.y_rotation.max}
-                    onchangeFunction={(value) => onchangeFunction("y_rotation", value)}
+                    setterFunction={(value) => onchangeFunction("y_rotation", value)}
+                    setter_timing="on_change"
                     valueLabelDisplay={y_variable_display}
                     valueLabelDisplayLocation="top"
                 />
@@ -395,7 +400,8 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     step={ui_configs.z_rotation.step}
                     min={ui_configs.z_rotation.min}
                     max={ui_configs.z_rotation.max}
-                    onchangeFunction={(value) => onchangeFunction("z_rotation", value)}
+                    setterFunction={(value) => onchangeFunction("z_rotation", value)}
+                    setter_timing="on_change"
                     orientation="vertical"
                     valueLabelDisplay={z_variable_display}
                     valueLabelDisplayLocation="left"
@@ -463,7 +469,8 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={5}
                     min={10}
                     max={100}
-                    onchangeFunction={(value) => onchangeFunction("opacity", value / 100)}
+                    setterFunction={(value) => onchangeFunction("opacity", value / 100)}
+                    setter_timing="on_change"
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
@@ -478,7 +485,8 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={ui_configs.ui_scaling.step}
                     min={ui_configs.ui_scaling.min}
                     max={ui_configs.ui_scaling.max}
-                    onchangeFunction={(value) => onchangeFunction("ui_scaling", value / 100)}
+                    setterFunction={(value) => onchangeFunction("ui_scaling", value / 100)}
+                    setter_timing="on_change"
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
@@ -491,7 +499,8 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={1}
                     min={1}
                     max={60}
-                    onchangeFunction={(value) => onchangeFunction("display_duration", value)}
+                    setterFunction={(value) => onchangeFunction("display_duration", value)}
+                    setter_timing="on_change"
                 />
             </div>
             <div className={styles.other_controls_wrapper}>
@@ -504,7 +513,8 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     step={1}
                     min={0}
                     max={5}
-                    onchangeFunction={(value) => onchangeFunction("fadeout_duration", value)}
+                    setterFunction={(value) => onchangeFunction("fadeout_duration", value)}
+                    setter_timing="on_change"
                 />
             </div>
         </div>

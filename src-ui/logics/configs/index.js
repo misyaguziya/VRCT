@@ -1,25 +1,21 @@
-// export { useDevice } from "./device/useDevice";
-// export { useAppearance } from "./appearance/useAppearance";
+import { createCategoryHook } from "./config_page_setter/ui_config_setter.js";
+
+export const useAppearance = createCategoryHook("Appearance");
+export const useDevice = createCategoryHook("Device");
+export const useTranslation = createCategoryHook("Translation");
+export const useTranscription = createCategoryHook("Transcription");
+export const useVr = createCategoryHook("Vr");
+export const useOthers = createCategoryHook("Others");
+export const useAdvancedSettings = createCategoryHook("AdvancedSettings");
+
+// Exceptional exports that are not part of SETTINGS_ARRAY or have custom logic.
+export { useHotkeys } from "./config_page_setter/hotkeys/useHotkeys.js";
+export { useSupporters } from "./config_page_setter/supporters/useSupporters.js";
+export { usePlugins } from "./config_page_setter/plugins/usePlugins.js";
+
+export { useSettingBoxScrollPosition } from "./config_page_setter/_aux/useSettingBoxScrollPosition.js";
+
 
 export {
-    useAppearance,
-    useDevice,
-    useOthers,
-    useTranscription,
-    useTranslation,
-    useVr,
-    // useHotkeys,
-    useAdvancedSettings,
-} from "../../ui_config_setter.js";
-
-// export { useOthers } from "./others/useOthers";
-// export { useTranscription } from "./transcription/useTranscription";
-// export { useTranslation } from "./translation/useTranslation";
-// export { useVr } from "./vr/useVr";
-export { useHotkeys } from "./hotkeys/useHotkeys";
-// export { useAdvancedSettings } from "./advanced_settings/useAdvancedSettings";
-
-export { useSupporters } from "./supporters/useSupporters";
-export { usePlugins } from "./plugins/usePlugins";
-
-export { useSettingBoxScrollPosition } from "./useSettingBoxScrollPosition";
+    useSliderLogic,
+} from "./config_page_setter/useSettingsLogics.js";

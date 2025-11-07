@@ -595,7 +595,7 @@ const buildCategoryApiFromSettings = (settings, settingsArray, Category, extraFu
     return { ...api, ...extraFunctions };
 };
 
-const createCategoryHook = (Category) => {
+export const createCategoryHook = (Category) => {
     return () => {
         const { settings } = useSettingsLogics(SETTINGS_ARRAY, Category);
         const extraFunctions = useConfigFunctions(Category);
@@ -603,32 +603,3 @@ const createCategoryHook = (Category) => {
         return { ...autoApi };
     };
 };
-
-
-
-// --- 自動エクスポート: SETTINGS_ARRAY に含まれるユニークな Category ごとに use<Category> を作って export ---
-// 例: Category === "Appearance" -> export const useAppearance = createCategoryHook("Appearance");
-
-// const uniqueCategories = Array.from(new Set(SETTINGS_ARRAY.map((s) => s.Category)));
-
-// 動的に named export を作る（静的解析を壊さないために明示的に定義）
-/* eslint-disable import/prefer-default-export */
-export const useAppearance = createCategoryHook("Appearance");
-export const useDevice = createCategoryHook("Device");
-export const useTranslation = createCategoryHook("Translation");
-export const useTranscription = createCategoryHook("Transcription");
-export const useVr = createCategoryHook("Vr");
-export const useOthers = createCategoryHook("Others");
-// export const useHotkeys = createCategoryHook("Hotkeys");
-export const useAdvancedSettings = createCategoryHook("AdvancedSettings");
-// If you later add other categories, you can either manually add:
-// export const useDevice = createCategoryHook("Device");
-// or uncomment the code below to auto-attach to module.exports (less ideal for tree-shaking).
-//
-// Auto-attach (not recommended for tree-shaking in bundlers):
-// uniqueCategories.forEach((Category) => {
-//     const hookName = `use${Category}`;
-//     module.exports[hookName] = createCategoryHook(Category);
-// });
-
-/* eslint-enable import/prefer-default-export */
