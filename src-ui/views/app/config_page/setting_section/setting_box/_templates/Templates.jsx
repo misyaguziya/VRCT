@@ -19,7 +19,7 @@ import {
     WordFilterListToggleComponent,
     DownloadModels,
     MessageFormat,
-} from "../_components/";
+} from "../_components";
 import { Checkbox } from "@common_components";
 
 const LabeledContainer = ({ children, label, desc, custom_class_name }) => (

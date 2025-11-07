@@ -201,3 +201,102 @@ export const useConfigFunctions = (Category) => {
             return {};
     }
 };
+
+
+import { useState, useEffect, useCallback, useMemo } from "react";
+
+export const useSliderLogic = ({
+    variable,
+    setterFunction,
+    postUpdateAction,
+    min,
+    max,
+    step = 1,
+    show_label_values = null,
+    marks_step,
+    setter_timing = "on_change_committed",
+}) => {
+    if (marks_step === undefined) {
+        marks_step = step;
+    }
+
+    const [ui_value, setUiValue] = useState(variable);
+
+    const decimalPlaces = marks_step.toString().includes('.')
+        ? marks_step.toString().split('.')[1].length
+        : 0;
+
+    const labelFormatter = useCallback((value) => {
+        if (show_label_values && show_label_values.length > 0) {
+            return show_label_values.includes(value) ? value : "";
+        }
+
+        return value.toFixed(decimalPlaces);
+    }, [show_label_values, decimalPlaces]);
+
+    const marks = useMemo(() => {
+        if (show_label_values === null) {
+            return null;
+        }
+        return createMarks(min, max, marks_step, labelFormatter);
+    }, [min, max, marks_step, labelFormatter, show_label_values]);
+
+    let onchangeFunction;
+    let onchangeCommittedFunction;
+
+    if (setter_timing === "on_change") {
+        onchangeFunction = useCallback((value) => {
+            setUiValue(value);
+            setterFunction(value);
+        }, [setterFunction]);
+
+        onchangeCommittedFunction = null;
+
+    } else if (setter_timing === "on_change_committed") {
+        onchangeFunction = useCallback((value) => {
+            setUiValue(value);
+        }, []);
+
+        onchangeCommittedFunction = useCallback((value) => {
+            setterFunction(value);
+        }, [setterFunction]);
+    } else {
+        console.error(`Invalid 'setter_timing' value provided to useSliderLogic. Expected 'on_change' or 'on_change_committed'. Received: ${setter_timing}`);
+    }
+
+    useEffect(() => {
+        if (variable !== ui_value) {
+            setUiValue(variable);
+        }
+        if (postUpdateAction) {
+            postUpdateAction();
+        }
+    }, [variable]);
+
+    return {
+        ui_value,
+        onchangeFunction,
+        onchangeCommittedFunction,
+        marks,
+    };
+};
+
+const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
+    const marks = [];
+    let variable = min;
+
+    for (let i = 0; variable <= max; i++) {
+        const fixedValue = parseFloat(variable.toFixed(10));
+
+        marks.push({ value: fixedValue, label: `${labelFormatter(fixedValue)}` });
+
+        variable += marks_step;
+        variable = parseFloat(variable.toFixed(10));
+
+        if (i > 1000) {
+            console.error("Loop limit exceeded (1000 iterations). createMarks()");
+            break;
+        }
+    }
+    return marks;
+};
