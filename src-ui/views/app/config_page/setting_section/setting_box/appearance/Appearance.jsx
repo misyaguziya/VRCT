@@ -11,8 +11,6 @@ import {
 
 import {
     useAppearance,
-
-    useSliderLogic,
 } from "@logics_configs";
 
 import {
@@ -61,7 +59,7 @@ const UiScalingContainer = () => {
     return (
         <SliderContainer
             label={t("config_page.appearance.ui_size.label") + " (%)"}
-            current_value={currentUiScaling}
+            variable={currentUiScaling.data}
             setterFunction={setUiScaling}
             postUpdateAction={asyncUpdateBreakPoint}
             min={40}
@@ -80,7 +78,7 @@ export const MessageLogUiScalingContainer = () => {
     return (
         <SliderContainer
             label={t("config_page.appearance.textbox_ui_size.label") + " (%)"}
-            current_value={currentMessageLogUiScaling}
+            variable={currentMessageLogUiScaling.data}
             setterFunction={setMessageLogUiScaling}
             min={40}
             max={200}
@@ -152,7 +150,7 @@ const TransparencyContainer = () => {
     return (
         <SliderContainer
             label={t("config_page.appearance.transparency.label") + " (%)"}
-            current_value={currentTransparency}
+            variable={currentTransparency.data}
             setterFunction={setTransparency}
             min={40}
             max={100}

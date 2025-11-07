@@ -7,15 +7,15 @@ import { useSliderLogic } from "@logics_configs";
 
 export const Slider = (props) => {
     const location = props.valueLabelDisplayLocation || "top";
-
     const {
         ui_value,
         onchangeFunction,
         onchangeCommittedFunction,
         marks
     } = useSliderLogic({
-        current_value: props.current_value,
+        variable: props.variable,
         setterFunction: props.setterFunction,
+        setter_timing: props.setter_timing,
         postUpdateAction: props.postUpdateAction,
         min: props.min,
         max: props.max,

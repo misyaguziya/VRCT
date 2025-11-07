@@ -476,7 +476,7 @@ export const MicAvgLogprobContainer = () => {
         <SliderContainer
             label="Mic Avg Logprob"
             desc="Default: -0.8"
-            current_value={currentMicAvgLogprob}
+            variable={currentMicAvgLogprob.data}
             setterFunction={setMicAvgLogprob}
             min={-2}
             max={0}
@@ -494,7 +494,7 @@ export const MicNoSpeechProbContainer = () => {
         <SliderContainer
             label="Mic No Speech Prob"
             desc="Default: 0.6"
-            current_value={currentMicNoSpeechProb}
+            variable={currentMicNoSpeechProb.data}
             setterFunction={setMicNoSpeechProb}
             min={0}
             max={1}
@@ -511,7 +511,7 @@ export const SpeakerAvgLogprobContainer = () => {
         <SliderContainer
             label="Speaker Avg Logprob"
             desc="Default: -0.8"
-            current_value={currentSpeakerAvgLogprob}
+            variable={currentSpeakerAvgLogprob.data}
             setterFunction={setSpeakerAvgLogprob}
             min={-2}
             max={0}
@@ -529,7 +529,7 @@ export const SpeakerNoSpeechProbContainer = () => {
         <SliderContainer
             label="Speaker No Speech Prob"
             desc="Default: 0.6"
-            current_value={currentSpeakerNoSpeechProb}
+            variable={currentSpeakerNoSpeechProb.data}
             setterFunction={setSpeakerNoSpeechProb}
             min={0}
             max={1}
