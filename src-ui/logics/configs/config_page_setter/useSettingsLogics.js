@@ -206,20 +206,21 @@ export const useConfigFunctions = (Category) => {
 import { useState, useEffect, useCallback, useMemo } from "react";
 
 export const useSliderLogic = ({
-    current_value,
+    variable,
     setterFunction,
     postUpdateAction,
     min,
     max,
     step = 1,
-    show_label_values = [],
+    show_label_values = null,
     marks_step,
+    setter_timing = "on_change_committed",
 }) => {
     if (marks_step === undefined) {
         marks_step = step;
     }
 
-    const [ui_value, setUiValue] = useState(current_value.data);
+    const [ui_value, setUiValue] = useState(variable);
 
     const decimalPlaces = marks_step.toString().includes('.')
         ? marks_step.toString().split('.')[1].length
@@ -234,25 +235,43 @@ export const useSliderLogic = ({
     }, [show_label_values, decimalPlaces]);
 
     const marks = useMemo(() => {
+        if (show_label_values === null) {
+            return null;
+        }
         return createMarks(min, max, marks_step, labelFormatter);
-    }, [min, max, marks_step, labelFormatter]);
+    }, [min, max, marks_step, labelFormatter, show_label_values]);
 
-    const onchangeFunction = useCallback((value) => {
-        setUiValue(value);
-    }, []);
+    let onchangeFunction;
+    let onchangeCommittedFunction;
 
-    const onchangeCommittedFunction = useCallback((value) => {
-        setterFunction(value);
-    }, [setterFunction]);
+    if (setter_timing === "on_change") {
+        onchangeFunction = useCallback((value) => {
+            setUiValue(value);
+            setterFunction(value);
+        }, [setterFunction]);
+
+        onchangeCommittedFunction = null;
+
+    } else if (setter_timing === "on_change_committed") {
+        onchangeFunction = useCallback((value) => {
+            setUiValue(value);
+        }, []);
+
+        onchangeCommittedFunction = useCallback((value) => {
+            setterFunction(value);
+        }, [setterFunction]);
+    } else {
+        console.error(`Invalid 'setter_timing' value provided to useSliderLogic. Expected 'on_change' or 'on_change_committed'. Received: ${setter_timing}`);
+    }
 
     useEffect(() => {
-        if (current_value.data !== ui_value) {
-            setUiValue(current_value.data);
+        if (variable !== ui_value) {
+            setUiValue(variable);
         }
         if (postUpdateAction) {
             postUpdateAction();
         }
-    }, [current_value.data]);
+    }, [variable]);
 
     return {
         ui_value,
@@ -264,15 +283,15 @@ export const useSliderLogic = ({
 
 const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
-    let current_value = min;
+    let variable = min;
 
-    for (let i = 0; current_value <= max; i++) {
-        const fixedValue = parseFloat(current_value.toFixed(10));
+    for (let i = 0; variable <= max; i++) {
+        const fixedValue = parseFloat(variable.toFixed(10));
 
         marks.push({ value: fixedValue, label: `${labelFormatter(fixedValue)}` });
 
-        current_value += marks_step;
-        current_value = parseFloat(current_value.toFixed(10));
+        variable += marks_step;
+        variable = parseFloat(variable.toFixed(10));
 
         if (i > 1000) {
             console.error("Loop limit exceeded (1000 iterations). createMarks()");
