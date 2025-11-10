@@ -155,13 +155,17 @@ export const DownloadModelsContainer = (props) => (
 
 export const MessageFormatContainer = (props) => {
     return (
-        <div className={clsx(styles.container, styles.flex_column)}>
-            <div className={styles.label_only_section}>
-                <LabelComponent label={props.label} desc={props.desc} />
-            </div>
-            <div className={styles.message_format_section}>
-                <MessageFormat {...props}/>
-            </div>
-        </div>
+        <>
+            <CommonContainer
+                remove_border_bottom={true}
+                label_type="label_only"
+                {...props}
+            />
+            <CommonContainer
+                Component={MessageFormat}
+                label_type="no_label"
+                {...props}
+            />
+        </>
     );
 };
