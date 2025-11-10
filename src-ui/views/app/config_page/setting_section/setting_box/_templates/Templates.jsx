@@ -42,6 +42,27 @@ export const DropdownMenuContainer = (props) => {
     );
 };
 
+const TemplatesContainerWrapper = ({
+    children,
+    add_break_point = true,
+    flex_column = false,
+    remove_border_bottom = false,
+}) => {
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: add_break_point && currentIsBreakPoint.data,
+        [styles.flex_column]: flex_column,
+        [styles.remove_border_bottom]: remove_border_bottom,
+    });
+
+    return (
+        <div className={container_class} >
+            {children}
+        </div>
+    );
+};
+
 const CommonContainer = ({
     label_type = "label_component",
     add_break_point = true,
@@ -52,33 +73,34 @@ const CommonContainer = ({
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
-    const container_class = clsx(styles.container, {
-        [styles.is_break_point]: add_break_point && currentIsBreakPoint.data,
-        [styles.flex_column]: flex_column,
-        [styles.remove_border_bottom]: remove_border_bottom,
-    });
+    const container_wrapper_props = {
+        add_break_point: add_break_point,
+        flex_column: flex_column,
+        remove_border_bottom: remove_border_bottom,
+    };
 
     if (label_type === "label_component") {
         return (
-            <div className={container_class}>
+            <TemplatesContainerWrapper {...container_wrapper_props}>
                 <LabelComponent label={props.label} desc={props.desc} />
                 <Component {...props} is_break_point={currentIsBreakPoint.data} />
-            </div>
+            </TemplatesContainerWrapper>
         );
     } else if (label_type === "no_label") {
         return (
-            <div className={container_class}>
+            <TemplatesContainerWrapper {...container_wrapper_props}>
                 <Component {...props} is_break_point={currentIsBreakPoint.data} />
-            </div>
+            </TemplatesContainerWrapper>
         );
     } else if (label_type === "label_only") {
         return (
-            <div className={container_class}>
+            <TemplatesContainerWrapper {...container_wrapper_props}>
                 <LabelComponent label={props.label} desc={props.desc} />
-            </div>
+            </TemplatesContainerWrapper>
         );
     }
 };
+
 
 export const SliderContainer = (props) => (
     <CommonContainer Component={Slider} {...props} />
@@ -108,19 +130,14 @@ export const RadioButtonContainer = (props) => (
 );
 
 export const DeeplAuthKeyContainer = (props) => {
-    const { currentIsBreakPoint } = useStore_IsBreakPoint();
-    const container_class = clsx(styles.container, {
-        [styles.is_break_point]: currentIsBreakPoint.data,
-    });
-
     return (
-        <div className={container_class}>
+        <TemplatesContainerWrapper>
             <div className={styles.deepl_auth_key_label_section}>
                 <LabelComponent label={props.label} desc={props.desc} />
                 <OpenWebpage_DeeplAuthKey />
             </div>
             <DeeplAuthKey {...props} />
-        </div>
+        </TemplatesContainerWrapper>
     );
 };
 
