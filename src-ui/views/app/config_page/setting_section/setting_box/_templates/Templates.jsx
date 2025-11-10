@@ -22,13 +22,6 @@ import {
 } from "../_components";
 import { Checkbox } from "@common_components";
 
-const LabeledContainer = ({ children, label, desc, custom_class_name }) => (
-    <div className={clsx(styles.container, custom_class_name)}>
-        <LabelComponent label={label} desc={desc} />
-        {children}
-    </div>
-);
-
 export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
@@ -49,19 +42,44 @@ export const DropdownMenuContainer = (props) => {
     );
 };
 
-const CommonContainer = ({ Component, ...props }) => {
+const CommonContainer = ({
+    label_type = "label_component",
+    add_break_point = true,
+    flex_column = false,
+    remove_border_bottom = false,
+    Component,
+    ...props
+}) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
     const container_class = clsx(styles.container, {
-        [styles.is_break_point]: props.add_break_point ?? currentIsBreakPoint.data,
+        [styles.is_break_point]: add_break_point && currentIsBreakPoint.data,
+        [styles.flex_column]: flex_column,
+        [styles.remove_border_bottom]: remove_border_bottom,
     });
 
-    return (
-        <LabeledContainer label={props.label} desc={props.desc} custom_class_name={container_class}>
-            <Component {...props} is_break_point={currentIsBreakPoint.data} />
-        </LabeledContainer>
-    );
+    if (label_type === "label_component") {
+        return (
+            <div className={container_class}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <Component {...props} is_break_point={currentIsBreakPoint.data} />
+            </div>
+        );
+    } else if (label_type === "no_label") {
+        return (
+            <div className={container_class}>
+                <Component {...props} is_break_point={currentIsBreakPoint.data} />
+            </div>
+        );
+    } else if (label_type === "label_only") {
+        return (
+            <div className={container_class}>
+                <LabelComponent label={props.label} desc={props.desc} />
+            </div>
+        );
+    }
 };
+
 export const SliderContainer = (props) => (
     <CommonContainer Component={Slider} {...props} />
 );
@@ -114,19 +132,22 @@ export const ComputeDeviceContainer = (props) => (
     <CommonContainer Component={ComputeDevice} {...props} />
 );
 
-export const WordFilterContainer = (props) => (
-    <div className={styles.word_filter_container}>
-        <div className={styles.word_filter_switch_section}>
-            <div className={styles.word_filter_label_wrapper}>
-                <LabelComponent label={props.label} desc={props.desc} />
-            </div>
-            <WordFilterListToggleComponent />
-        </div>
-        <div className={styles.word_filter_section}>
-            <WordFilter {...props} />
-        </div>
-    </div>
-);
+export const WordFilterContainer = (props) => {
+    return (
+        <>
+            <CommonContainer
+                Component={WordFilterListToggleComponent}
+                remove_border_bottom={true}
+                {...props}
+            />
+            <CommonContainer
+                Component={WordFilter}
+                label_type="no_label"
+                {...props}
+            />
+        </>
+    );
+};
 
 export const DownloadModelsContainer = (props) => (
     <CommonContainer Component={DownloadModels} {...props} />
