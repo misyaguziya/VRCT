@@ -181,7 +181,7 @@ class TestMainloop():
                 data = random.choice(["1", "2", "3"])
             case "/set/data/selected_translation_engines":
                 print("Fetching endpoint data for translation_engines...")
-                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/translation_engines", None)
+                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/selectable_translation_engines", None)
                 translation_engines = self.config_dict.get("translation_engines", None)
                 data = {}
                 for i in ["1", "2", "3"]:
@@ -202,7 +202,7 @@ class TestMainloop():
                     for j in ["1", "2", "3"]:
                         data[i][j] = random.choice(selectable_language_list) | {"enable": random.choice([True, False])}
             case "/set/data/selected_transcription_engine":
-                self.config_dict["transcription_engines"], _ = self.main.handleRequest("/get/data/transcription_engines", None)
+                self.config_dict["transcription_engines"], _ = self.main.handleRequest("/get/data/selectable_transcription_engines", None)
                 transcription_engines = self.config_dict.get("transcription_engines", None)
                 data = random.choice(transcription_engines)
             case "/set/data/transparency":
@@ -227,42 +227,42 @@ class TestMainloop():
                     "height": random.randint(600, 1080)
                 }
             case "/set/data/selected_translation_compute_device":
-                self.config_dict["translation_compute_device_list"], _ = self.main.handleRequest("/get/data/translation_compute_device_list", None)
+                self.config_dict["translation_compute_device_list"], _ = self.main.handleRequest("/get/data/selectable_translation_compute_device_list", None)
                 translation_compute_device_list = self.config_dict.get("translation_compute_device_list", None)
                 data = random.choice(translation_compute_device_list)
             case "/set/data/selected_transcription_compute_device":
-                self.config_dict["transcription_compute_device_list"], _ = self.main.handleRequest("/get/data/transcription_compute_device_list", None)
+                self.config_dict["transcription_compute_device_list"], _ = self.main.handleRequest("/get/data/selectable_transcription_compute_device_list", None)
                 transcription_compute_device_list = self.config_dict.get("transcription_compute_device_list", None)
                 data = random.choice(transcription_compute_device_list)
-            case "/set/data/ctranslate2_weight_type":
+            case "/set/data/selected_ctranslate2_weight_type":
                 self.config_dict["selectable_ctranslate2_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_ctranslate2_weight_type_dict", None)
                 selectable_ctranslate2_weight_type_dict = self.config_dict.get("selectable_ctranslate2_weight_type_dict", None)
                 data = random.choice(list(selectable_ctranslate2_weight_type_dict.keys()))
             # LLM / API Clients
-            case "/set/data/plamo_model":
+            case "/set/data/selected_plamo_model":
                 # 事前にモデルリストを取得
-                self.config_dict["plamo_model_list"], _ = self.main.handleRequest("/get/data/plamo_model_list", None)
+                self.config_dict["plamo_model_list"], _ = self.main.handleRequest("/get/data/selectable_plamo_model_list", None)
                 model_list = self.config_dict.get("plamo_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/plamo_auth_key":
                 data = "PLAMO_DUMMY_KEY"  # 成功か失敗かは内部判定に依存
                 expected_status = [200, 400]
-            case "/set/data/gemini_model":
-                self.config_dict["gemini_model_list"], _ = self.main.handleRequest("/get/data/gemini_model_list", None)
+            case "/set/data/selected_gemini_model":
+                self.config_dict["gemini_model_list"], _ = self.main.handleRequest("/get/data/selectable_gemini_model_list", None)
                 model_list = self.config_dict.get("gemini_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/gemini_auth_key":
                 data = "GEMINI_DUMMY_KEY"
                 expected_status = [200, 400]
-            case "/set/data/openai_model":
-                self.config_dict["openai_model_list"], _ = self.main.handleRequest("/get/data/openai_model_list", None)
+            case "/set/data/selected_openai_model":
+                self.config_dict["openai_model_list"], _ = self.main.handleRequest("/get/data/selectable_openai_model_list", None)
                 model_list = self.config_dict.get("openai_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/openai_auth_key":
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
-            case "/set/data/lmstudio_model":
-                self.config_dict["lmstudio_model_list"], _ = self.main.handleRequest("/get/data/lmstudio_model_list", None)
+            case "/set/data/selected_lmstudio_model":
+                self.config_dict["lmstudio_model_list"], _ = self.main.handleRequest("/get/data/selectable_lmstudio_model_list", None)
                 model_list = self.config_dict.get("lmstudio_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/lmstudio_url":
@@ -273,8 +273,8 @@ class TestMainloop():
                     "http://invalid_host:9999/v1",
                 ])
                 expected_status = [200, 400]
-            case "/set/data/ollama_model":
-                self.config_dict["ollama_model_list"], _ = self.main.handleRequest("/get/data/ollama_model_list", None)
+            case "/set/data/selected_ollama_model":
+                self.config_dict["ollama_model_list"], _ = self.main.handleRequest("/get/data/selectable_ollama_model_list", None)
                 model_list = self.config_dict.get("ollama_model_list", [])
                 data = random.choice(model_list) if model_list else None
             case "/set/data/deepl_auth_key":
@@ -290,12 +290,12 @@ class TestMainloop():
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
             case "/set/data/selected_mic_host":
-                self.config_dict["mic_host_list"], _ = self.main.handleRequest("/get/data/mic_host_list", None)
-                mic_host_list = self.config_dict.get("mic_host_list", None)
+                self.config_dict["selectable_mic_host_list"], _ = self.main.handleRequest("/get/data/selectable_mic_host_list", None)
+                mic_host_list = self.config_dict.get("selectable_mic_host_list", None)
                 data = random.choice(mic_host_list)
             case "/set/data/selected_mic_device":
-                self.config_dict["mic_device_list"], _ = self.main.handleRequest("/get/data/mic_device_list", None)
-                mic_device_list = self.config_dict.get("mic_device_list", None)
+                self.config_dict["selectable_mic_device_list"], _ = self.main.handleRequest("/get/data/selectable_mic_device_list", None)
+                mic_device_list = self.config_dict.get("selectable_mic_device_list", None)
                 data = random.choice(mic_device_list)
             case "/set/data/mic_threshold":
                 data = random.randint(-1000, 3000)
@@ -348,8 +348,8 @@ class TestMainloop():
                     ]
                 )
             case "/set/data/selected_speaker_device":
-                self.config_dict["speaker_device_list"], _ = self.main.handleRequest("/get/data/speaker_device_list", None)
-                speaker_device_list = self.config_dict.get("speaker_device_list", None)
+                self.config_dict["selectable_speaker_device_list"], _ = self.main.handleRequest("/get/data/selectable_speaker_device_list", None)
+                speaker_device_list = self.config_dict.get("selectable_speaker_device_list", None)
                 data = random.choice(speaker_device_list)
             case "/set/data/speaker_threshold":
                 data = random.randint(-1000, 5000)
@@ -383,7 +383,7 @@ class TestMainloop():
                 data = random.uniform(-5, 0)
             case "/set/data/speaker_no_speech_prob":
                 data = random.uniform(0, 1)
-            case "/set/data/whisper_weight_type":
+            case "/set/data/selected_whisper_weight_type":
                 self.config_dict["selectable_whisper_weight_type_dict"], _ = self.main.handleRequest("/get/data/selectable_whisper_weight_type_dict", None)
                 selectable_whisper_weight_type_dict = self.config_dict.get("selectable_whisper_weight_type_dict", None)
                 data = random.choice([key for key, value in selectable_whisper_weight_type_dict.items() if value is True])
@@ -647,7 +647,7 @@ class TestMainloop():
         ]
 
         self.set_data_specific_endpoints = [
-            # "/set/data/ctranslate2_weight_type",
+            # "/set/data/selected_ctranslate2_weight_type",
             # "/set/data/websocket_host",
             # "/set/data/websocket_port",
             "/set/data/osc_ip_address",
@@ -766,7 +766,7 @@ class TestMainloop():
                 self.main.handleRequest("/set/data/selected_target_languages", data)
 
                 # 翻訳エンジンを設定する（例: "CTranslate2"）
-                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/translation_engines", None)
+                self.config_dict["translation_engines"], _ = self.main.handleRequest("/get/data/selectable_translation_engines", None)
                 translation_engines = self.config_dict.get("translation_engines", None)
                 for engine in translation_engines:
                     results[source_lang["language"]][target_lang["language"]][engine] = None

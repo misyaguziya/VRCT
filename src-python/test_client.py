@@ -394,16 +394,16 @@ class AutomatedEndpointTester:
             "/set/data/main_window_geometry",
             "/set/data/selected_translation_compute_device",
             "/set/data/selected_transcription_compute_device",
-            "/set/data/ctranslate2_weight_type",
-            "/set/data/plamo_model",
+            "/set/data/selected_ctranslate2_weight_type",
+            "/set/data/selected_plamo_model",
             "/set/data/plamo_auth_key",
-            "/set/data/gemini_model",
+            "/set/data/selected_gemini_model",
             "/set/data/gemini_auth_key",
-            "/set/data/openai_model",
+            "/set/data/selected_openai_model",
             "/set/data/openai_auth_key",
-            "/set/data/lmstudio_model",
+            "/set/data/selected_lmstudio_model",
             "/set/data/lmstudio_url",
-            "/set/data/ollama_model",
+            "/set/data/selected_ollama_model",
             "/set/data/deepl_auth_key",
             "/set/data/selected_mic_host",
             "/set/data/selected_mic_device",
@@ -423,7 +423,7 @@ class AutomatedEndpointTester:
             "/set/data/speaker_max_phrases",
             "/set/data/speaker_avg_logprob",
             "/set/data/speaker_no_speech_prob",
-            "/set/data/whisper_weight_type",
+            "/set/data/selected_whisper_weight_type",
             "/set/data/overlay_small_log_settings",
             "/set/data/overlay_large_log_settings",
             "/set/data/send_message_format_parts",
@@ -482,7 +482,7 @@ class AutomatedEndpointTester:
             data = sys.modules.get('__random_tab_choices', None) or None  # placeholder for future dynamic
             data = data or "1"
         elif endpoint == "/set/data/selected_translation_engines":
-            engines = self._get("/get/data/translation_engines") or []
+            engines = self._get("/get/data/selectable_translation_engines") or []
             data = {i: (engines and (engines[0] if len(engines) else None)) for i in ["1","2","3"]}
         elif endpoint == "/set/data/selected_your_languages":
             lang_list = self._get("/get/data/selectable_language_list") or []
@@ -495,7 +495,7 @@ class AutomatedEndpointTester:
                 base = lang_list[0]
                 data = {i: {j: {**base, "enable": (j=="1")} for j in ["1","2","3"]} for i in ["1","2","3"]}
         elif endpoint == "/set/data/selected_transcription_engine":
-            engines = self._get("/get/data/transcription_engines") or []
+            engines = self._get("/get/data/selectable_transcription_engines") or []
             data = engines[0] if engines else None
         elif endpoint == "/set/data/transparency":
             import random
@@ -524,44 +524,44 @@ class AutomatedEndpointTester:
                 "height": random.randint(600,1080)
             }
         elif endpoint == "/set/data/selected_translation_compute_device":
-            lst = self._get("/get/data/translation_compute_device_list") or []
+            lst = self._get("/get/data/selectable_translation_compute_device_list") or []
             import random
             data = random.choice(lst) if lst else None
         elif endpoint == "/set/data/selected_transcription_compute_device":
-            lst = self._get("/get/data/transcription_compute_device_list") or []
+            lst = self._get("/get/data/selectable_transcription_compute_device_list") or []
             import random
             data = random.choice(lst) if lst else None
-        elif endpoint == "/set/data/ctranslate2_weight_type":
+        elif endpoint == "/set/data/selected_ctranslate2_weight_type":
             dct = self._get("/get/data/selectable_ctranslate2_weight_type_dict") or {}
             keys = list(dct.keys())
             import random
             data = random.choice(keys) if keys else None
-        elif endpoint == "/set/data/plamo_model":
-            lst = self._get("/get/data/plamo_model_list") or []
+        elif endpoint == "/set/data/selected_plamo_model":
+            lst = self._get("/get/data/selectable_plamo_model_list") or []
             import random
             data = random.choice(lst) if lst else None
             expected = [200,400]
         elif endpoint == "/set/data/plamo_auth_key":
             data = "PLAMO_DUMMY_KEY"
             expected = [200,400]
-        elif endpoint == "/set/data/gemini_model":
-            lst = self._get("/get/data/gemini_model_list") or []
+        elif endpoint == "/set/data/selected_gemini_model":
+            lst = self._get("/get/data/selectable_gemini_model_list") or []
             import random
             data = random.choice(lst) if lst else None
             expected = [200,400]
         elif endpoint == "/set/data/gemini_auth_key":
             data = "GEMINI_DUMMY_KEY"
             expected = [200,400]
-        elif endpoint == "/set/data/openai_model":
-            lst = self._get("/get/data/openai_model_list") or []
+        elif endpoint == "/set/data/selected_openai_model":
+            lst = self._get("/get/data/selectable_openai_model_list") or []
             import random
             data = random.choice(lst) if lst else None
             expected = [200,400]
         elif endpoint == "/set/data/openai_auth_key":
             data = "OPENAI_DUMMY_KEY"
             expected = [200,400]
-        elif endpoint == "/set/data/lmstudio_model":
-            lst = self._get("/get/data/lmstudio_model_list") or []
+        elif endpoint == "/set/data/selected_lmstudio_model":
+            lst = self._get("/get/data/selectable_lmstudio_model_list") or []
             import random
             data = random.choice(lst) if lst else None
             expected = [200,400]
@@ -569,8 +569,8 @@ class AutomatedEndpointTester:
             import random
             data = random.choice(["http://localhost:1234/v1","http://127.0.0.1:1234/v1","http://invalid_host:9999/v1"])
             expected=[200,400]
-        elif endpoint == "/set/data/ollama_model":
-            lst = self._get("/get/data/ollama_model_list") or []
+        elif endpoint == "/set/data/selected_ollama_model":
+            lst = self._get("/get/data/selectable_ollama_model_list") or []
             import random
             data = random.choice(lst) if lst else None
             expected = [200,400]
@@ -578,11 +578,11 @@ class AutomatedEndpointTester:
             data = "DEEPL_DUMMY_KEY"
             expected=[200,400]
         elif endpoint == "/set/data/selected_mic_host":
-            lst = self._get("/get/data/mic_host_list") or []
+            lst = self._get("/get/data/selectable_mic_host_list") or []
             import random
             data = random.choice(lst) if lst else None
         elif endpoint == "/set/data/selected_mic_device":
-            lst = self._get("/get/data/mic_device_list") or []
+            lst = self._get("/get/data/selectable_mic_device_list") or []
             import random
             data = random.choice(lst) if lst else None
         elif endpoint == "/set/data/mic_threshold":
@@ -623,7 +623,7 @@ class AutomatedEndpointTester:
             import random
             data = random.choice([["test_0_0","test_0_1","test_0_2",None],["test_1_0","test_1_1",None],["test_2_0",None],[None]])
         elif endpoint == "/set/data/selected_speaker_device":
-            lst = self._get("/get/data/speaker_device_list") or []
+            lst = self._get("/get/data/selectable_speaker_device_list") or []
             import random
             data = random.choice(lst) if lst else None
         elif endpoint == "/set/data/speaker_threshold":
@@ -654,7 +654,7 @@ class AutomatedEndpointTester:
         elif endpoint == "/set/data/speaker_no_speech_prob":
             import random
             data = random.uniform(0,1)
-        elif endpoint == "/set/data/whisper_weight_type":
+        elif endpoint == "/set/data/selected_whisper_weight_type":
             dct = self._get("/get/data/selectable_whisper_weight_type_dict") or {}
             import random
             keys=[k for k,v in dct.items() if v]

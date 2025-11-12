@@ -63,9 +63,9 @@ run_mapping = {
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
     "selected_ollama_model":"/run/selected_ollama_model",
 
-    "mic_host_list":"/run/mic_host_list",
-    "mic_device_list":"/run/mic_device_list",
-    "speaker_device_list":"/run/speaker_device_list",
+    "selectable_mic_host_list":"/run/selectable_mic_host_list",
+    "selectable_mic_device_list":"/run/selectable_mic_device_list",
+    "selectable_speaker_device_list":"/run/selectable_speaker_device_list",
 
     "software_update_info":"/run/software_update_info",
 
@@ -103,7 +103,7 @@ mapping = {
     "/set/enable/main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
     "/set/disable/main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
 
-    "/get/data/translation_engines": {"status": True, "variable":controller.getTranslationEngines},
+    "/get/data/selectable_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
     "/get/data/selectable_language_list": {"status": True, "variable":controller.getListLanguageAndCountry},
 
     "/get/data/selected_translation_engines": {"status": False, "variable":controller.getSelectedTranslationEngines},
@@ -115,7 +115,7 @@ mapping = {
     "/get/data/selected_target_languages": {"status": True, "variable":controller.getSelectedTargetLanguages},
     "/set/data/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
 
-    "/get/data/transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
+    "/get/data/selectable_transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
@@ -164,18 +164,18 @@ mapping = {
 
     # Compute device
     "/get/data/compute_mode": {"status": True, "variable":controller.getComputeMode},
-    "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/selectable_translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
-    "/get/data/transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/selectable_transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
     "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
     # Translation
     "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
 
-    "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
-    "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
+    "/get/data/selected_ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
+    "/set/data/selected_ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
     "/get/data/selected_translation_compute_type": {"status": True, "variable":controller.getSelectedTranslationComputeType},
     "/set/data/selected_translation_compute_type": {"status": True, "variable":controller.setSelectedTranslationComputeType},
@@ -186,38 +186,38 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
-    "/get/data/plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
-    "/get/data/plamo_model": {"status": False, "variable":controller.getPlamoModel},
-    "/set/data/plamo_model": {"status": False, "variable":controller.setPlamoModel},
+    "/get/data/selectable_plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
+    "/get/data/selected_plamo_model": {"status": False, "variable":controller.getPlamoModel},
+    "/set/data/selected_plamo_model": {"status": False, "variable":controller.setPlamoModel},
     "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
     "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
     "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},
 
-    "/get/data/gemini_model_list": {"status": True, "variable":controller.getGeminiModelList},
-    "/get/data/gemini_model": {"status": True, "variable":controller.getGeminiModel},
-    "/set/data/gemini_model": {"status": True, "variable":controller.setGeminiModel},
+    "/get/data/selectable_gemini_model_list": {"status": True, "variable":controller.getGeminiModelList},
+    "/get/data/selected_gemini_model": {"status": True, "variable":controller.getGeminiModel},
+    "/set/data/selected_gemini_model": {"status": True, "variable":controller.setGeminiModel},
     "/get/data/gemini_auth_key": {"status": True, "variable":controller.getGeminiAuthKey},
     "/set/data/gemini_auth_key": {"status": True, "variable":controller.setGeminiAuthKey},
     "/delete/data/gemini_auth_key": {"status": True, "variable":controller.delGeminiAuthKey},
 
-    "/get/data/openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
-    "/get/data/openai_model": {"status": True, "variable":controller.getOpenAIModel},
-    "/set/data/openai_model": {"status": True, "variable":controller.setOpenAIModel},
+    "/get/data/selectable_openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
+    "/get/data/selected_openai_model": {"status": True, "variable":controller.getOpenAIModel},
+    "/set/data/selected_openai_model": {"status": True, "variable":controller.setOpenAIModel},
     "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
     "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
-    "/get/data/lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
-    "/get/data/lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
-    "/set/data/lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
+    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/selected_lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
+    "/set/data/selected_lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
     "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
 
     "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
-    "/get/data/ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
-    "/get/data/ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
-    "/set/data/ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
+    "/get/data/selectable_ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
+    "/get/data/selected_ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
+    "/set/data/selected_ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
 
     # Transliteration
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
@@ -229,9 +229,9 @@ mapping = {
     "/set/disable/convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
 
     # Transcription
-    "/get/data/mic_host_list": {"status": True, "variable":controller.getMicHostList},
-    "/get/data/mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
-    "/get/data/speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
+    "/get/data/selectable_mic_host_list": {"status": True, "variable":controller.getMicHostList},
+    "/get/data/selectable_mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
+    "/get/data/selectable_speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
     # "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
     # "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
@@ -314,8 +314,8 @@ mapping = {
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
 
-    "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
-    "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+    "/get/data/selected_whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
+    "/set/data/selected_whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
     "/get/data/selected_transcription_compute_type": {"status": True, "variable":controller.getSelectedTranscriptionComputeType},
     "/set/data/selected_transcription_compute_type": {"status": True, "variable":controller.setSelectedTranscriptionComputeType},
