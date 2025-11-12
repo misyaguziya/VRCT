@@ -1,5 +1,5 @@
 import styles from "./ComputeDevice.module.scss";
-import { DropdownMenu } from "../_atoms/_dropdown_menu/_DropdownMenu";
+import { DropdownMenu } from "../dropdown_menu/DropdownMenu";
 import { ActionButton } from "../action_button/ActionButton";
 import HelpSvg from "@images/help.svg?react";
 import { useStore_OpenedQuickSetting } from "@store"

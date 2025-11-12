@@ -3,7 +3,7 @@ import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useStore_IsOpenedDropdownMenu } from "@store";
 
-export const DropdownMenu = (props) => {
+export const _DropdownMenu = (props) => {
     const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
     const toggleDropdownMenu = () => {
