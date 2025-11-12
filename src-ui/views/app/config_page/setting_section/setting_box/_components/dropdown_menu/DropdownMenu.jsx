@@ -13,8 +13,8 @@ export const DropdownMenu = (props) => {
 export const MultiDropdownMenu = (props) => {
     return (
         <div className={styles.container}>
-            {props.settings.map((dropdown_props, index) => (
-                <DropdownMenu {...dropdown_props} />
+            {props.dropdown_settings.map((dropdown_props, index) => (
+                <DropdownMenu key={dropdown_props.dropdown_id} {...dropdown_props} />
             ))}
         </div>
     );

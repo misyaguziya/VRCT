@@ -11,6 +11,7 @@ import {
 import {
     WordFilterContainer,
     DownloadModelsContainer,
+    MultiDropdownMenuContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
     SliderContainer,
@@ -282,8 +283,6 @@ const TranscriptionComputeDevice_Box = () => {
         currentSelectedTranscriptionComputeType,
         setSelectedTranscriptionComputeType,
     } = useTranscription();
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-    const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
     const list_for_ui = transformDeviceArray(currentSelectableTranscriptionComputeDeviceList.data);
 
@@ -365,46 +364,34 @@ const TranscriptionComputeDevice_Box = () => {
         setSelectedTranscriptionComputeType(selected_data.selected_id);
     };
 
-    const device_container_class = clsx(styles.device_container, {
-        [styles.is_break_point]: currentIsBreakPoint.data,
-    });
-
     const is_disabled_selector = currentSelectedTranscriptionComputeDevice.state === "pending" || currentSelectedTranscriptionComputeType.state === "pending";
 
     return (
-        <div className={styles.mic_container}>
-            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent
-                    label={t("config_page.transcription.transcription_compute_device.label")}
-                    desc={t("config_page.common.compute_device.desc")}
-                />
-                <div className={styles.device_contents}>
-                    <MultiDropdownMenu
-                        settings={[
-                            {
-                                secondary_label: t("config_page.common.compute_device.label_device"),
-                                dropdown_id: "transcription_compute_device",
-                                selected_id: target_index,
-                                list: list_for_ui,
-                                selectFunction: selectFunction_ComputeDevice,
-                                state: currentSelectedTranscriptionComputeDevice.state,
-                                style: { maxWidth: "20rem", minWidth: "10rem" },
-                                is_disabled: is_disabled_selector,
-                            },
-                            {
-                                secondary_label: t("config_page.common.compute_device.label_type"),
-                                dropdown_id: "transcription_compute_type",
-                                selected_id: currentSelectedTranscriptionComputeType.data,
-                                list: new_compute_types_labels,
-                                selectFunction: selectFunction_ComputeType,
-                                state: currentSelectedTranscriptionComputeType.state,
-                                is_disabled: is_disabled_selector,
-                            }
-                        ]}
-                    />
-                </div>
-            </div>
-        </div>
+        <MultiDropdownMenuContainer
+            label={t("config_page.transcription.transcription_compute_device.label")}
+            desc={t("config_page.common.compute_device.desc")}
+            dropdown_settings={[
+                {
+                    secondary_label: t("config_page.common.compute_device.label_device"),
+                    dropdown_id: "transcription_compute_device",
+                    selected_id: target_index,
+                    list: list_for_ui,
+                    selectFunction: selectFunction_ComputeDevice,
+                    state: currentSelectedTranscriptionComputeDevice.state,
+                    style: { maxWidth: "20rem", minWidth: "10rem" },
+                    is_disabled: is_disabled_selector,
+                },
+                {
+                    secondary_label: t("config_page.common.compute_device.label_type"),
+                    dropdown_id: "transcription_compute_type",
+                    selected_id: currentSelectedTranscriptionComputeType.data,
+                    list: new_compute_types_labels,
+                    selectFunction: selectFunction_ComputeType,
+                    state: currentSelectedTranscriptionComputeType.state,
+                    is_disabled: is_disabled_selector,
+                }
+            ]}
+        />
     );
 };
 
