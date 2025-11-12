@@ -20,6 +20,7 @@ import {
 
 import {
     DropdownMenu,
+    MultiDropdownMenu,
     LabelComponent,
     SectionLabelComponent,
 } from "../_components";
@@ -378,33 +379,29 @@ const TranscriptionComputeDevice_Box = () => {
                     desc={t("config_page.common.compute_device.desc")}
                 />
                 <div className={styles.device_contents}>
-
-                    <div className={styles.device_dropdown_wrapper}>
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_device")}</p>
-                            <DropdownMenu
-                                dropdown_id="transcription_compute_device"
-                                selected_id={target_index}
-                                list={list_for_ui}
-                                selectFunction={selectFunction_ComputeDevice}
-                                state={currentSelectedTranscriptionComputeDevice.state}
-                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_type")}</p>
-                            <DropdownMenu
-                                dropdown_id="transcription_compute_type"
-                                selected_id={currentSelectedTranscriptionComputeType.data}
-                                list={new_compute_types_labels}
-                                selectFunction={selectFunction_ComputeType}
-                                state={currentSelectedTranscriptionComputeType.state}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-                    </div>
+                    <MultiDropdownMenu
+                        settings={[
+                            {
+                                secondary_label: t("config_page.common.compute_device.label_device"),
+                                dropdown_id: "transcription_compute_device",
+                                selected_id: target_index,
+                                list: list_for_ui,
+                                selectFunction: selectFunction_ComputeDevice,
+                                state: currentSelectedTranscriptionComputeDevice.state,
+                                style: { maxWidth: "20rem", minWidth: "10rem" },
+                                is_disabled: is_disabled_selector,
+                            },
+                            {
+                                secondary_label: t("config_page.common.compute_device.label_type"),
+                                dropdown_id: "transcription_compute_type",
+                                selected_id: currentSelectedTranscriptionComputeType.data,
+                                list: new_compute_types_labels,
+                                selectFunction: selectFunction_ComputeType,
+                                state: currentSelectedTranscriptionComputeType.state,
+                                is_disabled: is_disabled_selector,
+                            }
+                        ]}
+                    />
                 </div>
             </div>
         </div>
