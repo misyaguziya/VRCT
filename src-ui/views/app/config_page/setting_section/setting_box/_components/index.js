@@ -1,7 +1,7 @@
 export { ActionButton } from "./action_button/ActionButton";
 export { ComputeDevice } from "./compute_device/ComputeDevice";
 export { DeeplAuthKey, OpenWebpage_DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
-export { DropdownMenu } from "./dropdown_menu/DropdownMenu";
+export { DropdownMenu } from "./_atoms/_dropdown_menu/_DropdownMenu";
 export { Entry } from "./entry/Entry";
 export { EntryWithSaveButton } from "./entry_with_save_button/EntryWithSaveButton";
 export { HotkeysEntry } from "./hotkeys_entry/HotkeysEntry";

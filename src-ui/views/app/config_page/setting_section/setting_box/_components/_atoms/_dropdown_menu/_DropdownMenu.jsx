@@ -1,4 +1,4 @@
-import styles from "./DropdownMenu.module.scss";
+import styles from "./_DropdownMenu.module.scss";
 import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useStore_IsOpenedDropdownMenu } from "@store";
