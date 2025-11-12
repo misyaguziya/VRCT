@@ -35,27 +35,23 @@ export const useOnMouseLeaveDropdownMenu = () => {
 
 export const DropdownMenuContainer = (props) => {
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
     return (
-        <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
+        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <DropdownMenu {...props} />
-        </div>
+        </TemplatesContainerWrapper>
     );
 };
 
 export const MultiDropdownMenuContainer = (props) => {
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-    const { currentIsBreakPoint } = useStore_IsBreakPoint();
-
-    const container_class = clsx(styles.container, {
-        [styles.is_break_point]: currentIsBreakPoint.data,
-    });
 
     return (
-        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
+        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <MultiDropdownMenu dropdown_settings={props.dropdown_settings} />
-        </div>
+        </TemplatesContainerWrapper>
     );
 };
 
@@ -64,6 +60,7 @@ const TemplatesContainerWrapper = ({
     add_break_point = true,
     flex_column = false,
     remove_border_bottom = false,
+    onMouseLeaveFunction = null,
 }) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
@@ -74,7 +71,7 @@ const TemplatesContainerWrapper = ({
     });
 
     return (
-        <div className={container_class} >
+        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
             {children}
         </div>
     );
