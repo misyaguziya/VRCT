@@ -11,6 +11,7 @@ import {
 import {
     DownloadModelsContainer,
     DeeplAuthKeyContainer,
+    MultiDropdownMenuContainer,
 
     useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
@@ -180,39 +181,31 @@ const TranslationComputeDevice_Box = () => {
     const is_disabled_selector = currentSelectedTranslationComputeDevice.state === "pending" || currentSelectedTranslationComputeType.state === "pending";
 
     return (
-        <div className={styles.mic_container}>
-            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
-                <LabelComponent
-                    label={t("config_page.translation.translation_compute_device.label")}
-                    desc={t("config_page.common.compute_device.desc")}
-                />
-                <div className={styles.device_contents}>
-                    <MultiDropdownMenu
-                        settings={[
-                            {
-                                dropdown_id: "translation_compute_device",
-                                secondary_label: t("config_page.common.compute_device.label_device"),
-                                selected_id: target_index,
-                                list: list_for_ui,
-                                selectFunction: selectFunction_ComputeDevice,
-                                state: currentSelectedTranslationComputeDevice.state,
-                                style: { maxWidth: "20rem", minWidth: "10rem" },
-                                is_disabled: is_disabled_selector,
-                            },
-                            {
-                                dropdown_id: "translation_compute_type",
-                                secondary_label: t("config_page.common.compute_device.label_type"),
-                                selected_id: currentSelectedTranslationComputeType.data,
-                                list: new_compute_types_labels,
-                                selectFunction: selectFunction_ComputeType,
-                                state: currentSelectedTranslationComputeType.state,
-                                is_disabled: is_disabled_selector,
-                            }
-                        ]}
-                    />
-                </div>
-            </div>
-        </div>
+        <MultiDropdownMenuContainer
+            label={t("config_page.translation.translation_compute_device.label")}
+            desc={t("config_page.common.compute_device.desc")}
+            dropdown_settings={[
+                {
+                    dropdown_id: "translation_compute_device",
+                    secondary_label: t("config_page.common.compute_device.label_device"),
+                    selected_id: target_index,
+                    list: list_for_ui,
+                    selectFunction: selectFunction_ComputeDevice,
+                    state: currentSelectedTranslationComputeDevice.state,
+                    style: { maxWidth: "20rem", minWidth: "10rem" },
+                    is_disabled: is_disabled_selector,
+                },
+                {
+                    dropdown_id: "translation_compute_type",
+                    secondary_label: t("config_page.common.compute_device.label_type"),
+                    selected_id: currentSelectedTranslationComputeType.data,
+                    list: new_compute_types_labels,
+                    selectFunction: selectFunction_ComputeType,
+                    state: currentSelectedTranslationComputeType.state,
+                    is_disabled: is_disabled_selector,
+                }
+            ]}
+        />
     );
 };
 

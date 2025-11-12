@@ -5,6 +5,7 @@ import { useStore_IsOpenedDropdownMenu, useStore_IsBreakPoint } from "@store";
 import {
     LabelComponent,
     DropdownMenu,
+    MultiDropdownMenu,
     Slider,
     SwitchBox,
     Entry,
@@ -38,6 +39,22 @@ export const DropdownMenuContainer = (props) => {
         <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
             <LabelComponent label={props.label} desc={props.desc} />
             <DropdownMenu {...props} />
+        </div>
+    );
+};
+
+export const MultiDropdownMenuContainer = (props) => {
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
+    return (
+        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <MultiDropdownMenu dropdown_settings={props.dropdown_settings} />
         </div>
     );
 };

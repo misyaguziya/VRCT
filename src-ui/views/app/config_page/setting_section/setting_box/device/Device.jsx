@@ -90,7 +90,7 @@ const Mic_Container = () => {
                         />
                     </div>
                     <MultiDropdownMenu
-                        settings={[
+                        dropdown_settings={[
                             {
                                 dropdown_id: "mic_host",
                                 secondary_label: t("config_page.device.label_host"),
