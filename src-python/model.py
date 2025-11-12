@@ -664,7 +664,10 @@ class Model:
                             languages,
                             countries,
                             config.MIC_AVG_LOGPROB,
-                            config.MIC_NO_SPEECH_PROB
+                            config.MIC_NO_SPEECH_PROB,
+                            config.MIC_NO_REPEAT_NGRAM_SIZE,
+                            config.MIC_VAD_FILTER,
+                            config.MIC_VAD_PARAMETERS,
                         )
                         if res:
                             result = self.mic_transcriber.getTranscript()
@@ -856,7 +859,10 @@ class Model:
                             languages,
                             countries,
                             config.SPEAKER_AVG_LOGPROB,
-                            config.SPEAKER_NO_SPEECH_PROB
+                            config.SPEAKER_NO_SPEECH_PROB,
+                            config.SPEAKER_NO_REPEAT_NGRAM_SIZE,
+                            config.SPEAKER_VAD_FILTER,
+                            config.SPEAKER_VAD_PARAMETERS,
                         )
                         if res:
                             result = self.speaker_transcriber.getTranscript()
