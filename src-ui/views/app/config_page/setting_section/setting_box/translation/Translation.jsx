@@ -91,8 +91,6 @@ const TranslationComputeDevice_Box = () => {
         currentSelectedTranslationComputeType,
         setSelectedTranslationComputeType,
     } = useTranslation();
-    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
-    const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
     const list_for_ui = transformDeviceArray(currentSelectableTranslationComputeDeviceList.data);
 
@@ -173,10 +171,6 @@ const TranslationComputeDevice_Box = () => {
     const selectFunction_ComputeType = (selected_data) => {
         setSelectedTranslationComputeType(selected_data.selected_id);
     };
-
-    const device_container_class = clsx(styles.device_container, {
-        [styles.is_break_point]: currentIsBreakPoint.data,
-    });
 
     const is_disabled_selector = currentSelectedTranslationComputeDevice.state === "pending" || currentSelectedTranslationComputeType.state === "pending";
 
