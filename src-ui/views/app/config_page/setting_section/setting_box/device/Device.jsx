@@ -14,6 +14,7 @@ import {
 import {
     LabelComponent,
     DropdownMenu,
+    MultiDropdownMenu,
     ThresholdComponent,
     SwitchBox,
 } from "../_components";
@@ -88,33 +89,29 @@ const Mic_Container = () => {
                             toggleFunction={toggleEnableAutoMicSelect}
                         />
                     </div>
-
-                    <div className={styles.device_dropdown_wrapper}>
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.device.label_host")}</p>
-                            <DropdownMenu
-                                dropdown_id="mic_host"
-                                selected_id={currentSelectedMicHost.data}
-                                list={currentMicHostList.data}
-                                selectFunction={selectFunction_host}
-                                state={currentSelectedMicHost.state}
-                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.device.label_device")}</p>
-                            <DropdownMenu
-                                dropdown_id="mic_device"
-                                selected_id={currentSelectedMicDevice.data}
-                                list={currentMicDeviceList.data}
-                                selectFunction={selectFunction_device}
-                                state={currentSelectedMicDevice.state}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-                    </div>
+                    <MultiDropdownMenu
+                        settings={[
+                            {
+                                dropdown_id: "mic_host",
+                                secondary_label: t("config_page.device.label_host"),
+                                selected_id: currentSelectedMicHost.data,
+                                list: currentMicHostList.data,
+                                selectFunction: selectFunction_host,
+                                state: currentSelectedMicHost.state,
+                                style: { maxWidth: "20rem", minWidth: "10rem" },
+                                is_disabled: is_disabled_selector,
+                            },
+                            {
+                                dropdown_id: "mic_device",
+                                secondary_label: t("config_page.device.label_device"),
+                                selected_id: currentSelectedMicDevice.data,
+                                list: currentMicDeviceList.data,
+                                selectFunction: selectFunction_device,
+                                state: currentSelectedMicDevice.state,
+                                is_disabled: is_disabled_selector,
+                            }
+                        ]}
+                    />
                 </div>
             </div>
             <div className={styles.threshold_container}>
@@ -189,19 +186,16 @@ const Speaker_Container = () => {
                             toggleFunction={toggleEnableAutoSpeakerSelect}
                         />
                     </div>
-
-                    <div className={styles.device_dropdown}>
-                        <p className={styles.device_secondary_label}>{t("config_page.device.label_device")}</p>
-                        <DropdownMenu
-                            dropdown_id="speaker_device"
-                            label={t("config_page.device.speaker_device.label")}
-                            selected_id={currentSelectedSpeakerDevice.data}
-                            list={currentSpeakerDeviceList.data}
-                            selectFunction={selectFunction}
-                            state={currentSelectedSpeakerDevice.state}
-                            is_disabled={is_disabled_selector}
-                        />
-                    </div>
+                    <DropdownMenu
+                        dropdown_id="speaker_device"
+                        secondary_label={t("config_page.device.label_device")}
+                        label={t("config_page.device.speaker_device.label")}
+                        selected_id={currentSelectedSpeakerDevice.data}
+                        list={currentSpeakerDeviceList.data}
+                        selectFunction={selectFunction}
+                        state={currentSelectedSpeakerDevice.state}
+                        is_disabled={is_disabled_selector}
+                    />
                 </div>
             </div>
             <div className={styles.threshold_container}>

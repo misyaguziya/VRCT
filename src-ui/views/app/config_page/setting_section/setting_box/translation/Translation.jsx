@@ -17,6 +17,7 @@ import {
 
 import {
     DropdownMenu,
+    MultiDropdownMenu,
     LabelComponent,
 } from "../_components";
 
@@ -186,33 +187,29 @@ const TranslationComputeDevice_Box = () => {
                     desc={t("config_page.common.compute_device.desc")}
                 />
                 <div className={styles.device_contents}>
-
-                    <div className={styles.device_dropdown_wrapper}>
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_device")}</p>
-                            <DropdownMenu
-                                dropdown_id="translation_compute_device"
-                                selected_id={target_index}
-                                list={list_for_ui}
-                                selectFunction={selectFunction_ComputeDevice}
-                                state={currentSelectedTranslationComputeDevice.state}
-                                style={{ maxWidth: "20rem", minWidth: "10rem" }}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-
-                        <div className={styles.device_dropdown}>
-                            <p className={styles.device_secondary_label}>{t("config_page.common.compute_device.label_type")}</p>
-                            <DropdownMenu
-                                dropdown_id="translation_compute_type"
-                                selected_id={currentSelectedTranslationComputeType.data}
-                                list={new_compute_types_labels}
-                                selectFunction={selectFunction_ComputeType}
-                                state={currentSelectedTranslationComputeType.state}
-                                is_disabled={is_disabled_selector}
-                            />
-                        </div>
-                    </div>
+                    <MultiDropdownMenu
+                        settings={[
+                            {
+                                dropdown_id: "translation_compute_device",
+                                secondary_label: t("config_page.common.compute_device.label_device"),
+                                selected_id: target_index,
+                                list: list_for_ui,
+                                selectFunction: selectFunction_ComputeDevice,
+                                state: currentSelectedTranslationComputeDevice.state,
+                                style: { maxWidth: "20rem", minWidth: "10rem" },
+                                is_disabled: is_disabled_selector,
+                            },
+                            {
+                                dropdown_id: "translation_compute_type",
+                                secondary_label: t("config_page.common.compute_device.label_type"),
+                                selected_id: currentSelectedTranslationComputeType.data,
+                                list: new_compute_types_labels,
+                                selectFunction: selectFunction_ComputeType,
+                                state: currentSelectedTranslationComputeType.state,
+                                is_disabled: is_disabled_selector,
+                            }
+                        ]}
+                    />
                 </div>
             </div>
         </div>
