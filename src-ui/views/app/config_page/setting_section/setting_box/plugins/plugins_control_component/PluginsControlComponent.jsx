@@ -1,5 +1,5 @@
-import { SwitchBox } from "../../_components";
 import { _DownloadButton } from "../../_components/_atoms/_download_button/_DownloadButton";
+import { _SwitchBox } from "../../_components/_atoms/_switch_box/_SwitchBox";
 import styles from "./PluginsControlComponent.module.scss";
 import { useI18n } from "@useI18n";
 
@@ -90,7 +90,7 @@ const DownloadedPluginControl = ({
         return (
             <div className={styles.container}>
                 <p>{t("config_page.plugins.no_latest_info")}</p>
-                <SwitchBox variable={option} toggleFunction={togglePlugin} />
+                <_SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else if (plugin_status.is_latest_version_already) {
@@ -98,7 +98,7 @@ const DownloadedPluginControl = ({
             <div className={styles.container}>
                 <p>{latest_version_label}</p>
                 <p>{t("config_page.plugins.using_latest_version")}</p>
-                <SwitchBox variable={option} toggleFunction={togglePlugin} />
+                <_SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else if (plugin_status.is_latest_version_available) {
@@ -107,14 +107,14 @@ const DownloadedPluginControl = ({
                 <p>{latest_version_label}</p>
                 <p>{t("config_page.plugins.available_latest_version")}</p>
                 <_DownloadButton option={option} downloadStartFunction={downloadStartFunction} />
-                <SwitchBox variable={option} toggleFunction={togglePlugin} />
+                <_SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     } else {
         return (
             <div className={styles.container}>
                 <p>{t("config_page.plugins.available_latest_version")}</p>
-                <SwitchBox variable={option} toggleFunction={togglePlugin} />
+                <_SwitchBox variable={option} toggleFunction={togglePlugin} />
             </div>
         );
     }
