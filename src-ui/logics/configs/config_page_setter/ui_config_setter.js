@@ -29,7 +29,7 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "list",
         logics_template_id: "get_set",
         add_endpoint_run_array: ["from_backend"],
-        base_endpoint_name: "mic_host_list",
+        base_endpoint_name: "selectable_mic_host_list",
         response_transform: "arrayToObject",
     },
     {
@@ -39,7 +39,7 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "list",
         logics_template_id: "get_set",
         add_endpoint_run_array: ["from_backend"],
-        base_endpoint_name: "mic_device_list",
+        base_endpoint_name: "selectable_mic_device_list",
         response_transform: "arrayToObject",
     },
     {
@@ -91,7 +91,7 @@ export const SETTINGS_ARRAY = [
         ui_template_id: "list",
         logics_template_id: "get_set",
         add_endpoint_run_array: ["from_backend"],
-        base_endpoint_name: "speaker_device_list",
+        base_endpoint_name: "selectable_speaker_device_list",
         response_transform: "arrayToObject",
     },
     {
@@ -194,7 +194,7 @@ export const SETTINGS_ARRAY = [
         default_value: "",
         ui_template_id: "select",
         logics_template_id: "get_set",
-        base_endpoint_name: "ctranslate2_weight_type",
+        base_endpoint_name: "selected_ctranslate2_weight_type",
     },
     {
         Category: "Translation",
@@ -210,7 +210,7 @@ export const SETTINGS_ARRAY = [
         default_value: [],
         ui_template_id: "list",
         logics_template_id: "get_set",
-        base_endpoint_name: "translation_compute_device_list",
+        base_endpoint_name: "selectable_translation_compute_device_list",
         response_transform: "transformToIndexedArray",
     },
     {
@@ -312,7 +312,7 @@ export const SETTINGS_ARRAY = [
         default_value: "",
         ui_template_id: "select",
         logics_template_id: "get_set",
-        base_endpoint_name: "whisper_weight_type",
+        base_endpoint_name: "selected_whisper_weight_type",
     },
     {
         Category: "Transcription",
@@ -328,7 +328,7 @@ export const SETTINGS_ARRAY = [
         default_value: [],
         ui_template_id: "list",
         logics_template_id: "get_set",
-        base_endpoint_name: "transcription_compute_device_list",
+        base_endpoint_name: "selectable_transcription_compute_device_list",
         response_transform: "transformToIndexedArray",
     },
     {
