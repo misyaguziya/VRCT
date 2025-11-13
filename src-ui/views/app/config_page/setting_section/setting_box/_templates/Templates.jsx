@@ -12,7 +12,6 @@ import {
     EntryWithSaveButton,
     HotkeysEntry,
     RadioButton,
-    OpenWebpage_DeeplAuthKey,
     DeeplAuthKey,
     ActionButton,
     ComputeDevice,
@@ -22,6 +21,8 @@ import {
     MessageFormat,
 } from "../_components";
 import { Checkbox } from "@common_components";
+
+import { _OpenWebpageButton } from "../_components/_atoms/_open_webpage_button/_OpenWebpageButton";
 
 export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
@@ -148,7 +149,7 @@ export const DeeplAuthKeyContainer = (props) => {
         <TemplatesContainerWrapper>
             <div className={styles.deepl_auth_key_label_section}>
                 <LabelComponent label={props.label} desc={props.desc} />
-                <OpenWebpage_DeeplAuthKey {...props} />
+                <_OpenWebpageButton {...props} />
             </div>
             <DeeplAuthKey {...props} />
         </TemplatesContainerWrapper>

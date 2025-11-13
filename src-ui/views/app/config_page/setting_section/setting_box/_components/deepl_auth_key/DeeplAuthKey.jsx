@@ -2,7 +2,6 @@ import styles from "./DeeplAuthKey.module.scss";
 import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
-import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 import { useEffect } from "react";
@@ -54,18 +53,6 @@ export const DeeplAuthKey = (props) => {
                     </div>
                 }
             </div>
-        </div>
-    );
-};
-
-
-export const OpenWebpage_DeeplAuthKey = (props) => {
-    return (
-        <div className={styles.open_webpage_button_wrapper}>
-            <a className={styles.open_webpage_button} href={props.webpage_url} target="_blank" rel="noreferrer" >
-                <p className={styles.open_webpage_text}>{props.open_webpage_label}</p>
-                <ExternalLink className={styles.external_link_svg} />
-            </a>
         </div>
     );
 };
