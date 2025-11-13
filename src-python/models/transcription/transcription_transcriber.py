@@ -8,7 +8,7 @@ import time
 from io import BytesIO
 from threading import Event
 import wave
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Union
 from speech_recognition import Recognizer, AudioData, AudioFile
 from speech_recognition.exceptions import UnknownValueError
 from datetime import timedelta
@@ -84,6 +84,9 @@ class AudioTranscriber:
         countries: List[str],
         avg_logprob: float = -0.8,
         no_speech_prob: float = 0.6,
+        no_repeat_ngram_size: int = 0,
+        vad_filter: bool = False,
+        vad_parameters: Optional[Union[dict, Any]] = None,
     ) -> bool:
         if audio_queue.empty():
             time.sleep(0.01)
@@ -130,7 +133,9 @@ class AudioTranscriber:
                             word_timestamps=False,
                             without_timestamps=True,
                             task="transcribe",
-                            vad_filter=False,
+                            no_repeat_ngram_size=no_repeat_ngram_size,
+                            vad_filter=vad_filter,
+                            vad_parameters=vad_parameters,
                         )
                         for s in segments:
                             if s.avg_logprob < avg_logprob or s.no_speech_prob > no_speech_prob:
