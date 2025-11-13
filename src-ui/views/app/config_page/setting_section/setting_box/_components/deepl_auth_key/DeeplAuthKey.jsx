@@ -59,12 +59,11 @@ export const DeeplAuthKey = (props) => {
 };
 
 
-export const OpenWebpage_DeeplAuthKey = () => {
-    const { t } = useI18n();
+export const OpenWebpage_DeeplAuthKey = (props) => {
     return (
         <div className={styles.open_webpage_button_wrapper}>
-            <a className={styles.open_webpage_button} href="https://www.deepl.com/ja/your-account/keys" target="_blank" rel="noreferrer" >
-                <p className={styles.open_webpage_text}>{t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}</p>
+            <a className={styles.open_webpage_button} href={props.webpage_url} target="_blank" rel="noreferrer" >
+                <p className={styles.open_webpage_text}>{props.open_webpage_label}</p>
                 <ExternalLink className={styles.external_link_svg} />
             </a>
         </div>
