@@ -55,8 +55,10 @@ export const useSettingsLogics = (settingsArray, Category) => {
         const updateFromBackendExportName = `updateFromBackend${base}`;
         const getExportName = `get${base}`;
         const setExportName = `set${base}`;
+        const deleteExportName = `delete${base}`;
         const toggleExportName = `toggle${base}`;
         const setSuccessExportName = `setSuccess${base}`;
+        const deleteSuccessExportName = `deleteSuccess${base}`;
 
         const runExportName = `runSuccess${base}`;
 
@@ -75,6 +77,13 @@ export const useSettingsLogics = (settingsArray, Category) => {
             };
         };
 
+        const buildDelete = () => {
+            return (value) => {
+                if (pending) pending();
+                asyncStdoutToPython(`/delete/data/${s.base_endpoint_name}`, value);
+            };
+        };
+
         const buildRun = () => {
             return () => {
                 asyncStdoutToPython(`/run/${s.base_endpoint_name}`);
@@ -84,6 +93,14 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
         // To use a response from backend------------------------------------
         const buildSetSuccess = (transformName) => {
+            return (payload) => {
+                const transformed = transformResponse(transformName, payload);
+                if (update) update(transformed);
+                showNotification_SaveSuccess();
+            };
+        };
+
+        const buildDeleteSuccess = (transformName) => {
             return (payload) => {
                 const transformed = transformResponse(transformName, payload);
                 if (update) update(transformed);
@@ -117,6 +134,15 @@ export const useSettingsLogics = (settingsArray, Category) => {
             result[getExportName] = buildGet();
             result[setExportName] = buildSet();
             result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            continue;
+        }
+
+        if (s.logics_template_id === "get_set_delete") {
+            result[getExportName] = buildGet();
+            result[setExportName] = buildSet();
+            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[deleteExportName] = buildDelete();
+            result[deleteSuccessExportName] = buildDeleteSuccess(s.response_transform ?? null);
             continue;
         }
 

@@ -215,7 +215,9 @@ const DeeplAuthKey_Box = () => {
     };
 
     const saveFunction = () => {
-        if (input_value === "") return deleteDeepLAuthKey();
+        if (input_value === "" || input_value === null) {
+            return deleteDeepLAuthKey();
+        };
         setDeepLAuthKey(input_value);
     };
 
