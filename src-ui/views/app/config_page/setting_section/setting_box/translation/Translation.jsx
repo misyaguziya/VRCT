@@ -10,7 +10,7 @@ import {
 
 import {
     DownloadModelsContainer,
-    DeeplAuthKeyContainer,
+    AuthKeyContainer,
     MultiDropdownMenuContainer,
 
     useOnMouseLeaveDropdownMenu,
@@ -226,7 +226,7 @@ const DeeplAuthKey_Box = () => {
 
     return (
         <>
-            <DeeplAuthKeyContainer
+            <AuthKeyContainer
                 label={t("config_page.translation.deepl_auth_key.label")}
                 desc={t(
                     "config_page.translation.deepl_auth_key.desc",

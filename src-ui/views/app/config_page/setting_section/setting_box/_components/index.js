@@ -1,6 +1,6 @@
 export { ActionButton } from "./action_button/ActionButton";
 export { ComputeDevice } from "./compute_device/ComputeDevice";
-export { DeeplAuthKey } from "./deepl_auth_key/DeeplAuthKey";
+export { AuthKey } from "./auth_key/AuthKey";
 export { DropdownMenu, MultiDropdownMenu } from "./dropdown_menu/DropdownMenu";
 export { Entry } from "./entry/Entry";
 export { EntryWithSaveButton } from "./entry_with_save_button/EntryWithSaveButton";
