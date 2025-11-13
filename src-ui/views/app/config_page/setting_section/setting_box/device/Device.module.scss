@@ -78,28 +78,3 @@
     justify-content: center;
     align-items: center;
 }
-
-.device_dropdown_wrapper {
-    display: flex;
-    flex-direction: row;
-    gap: 2.8rem;
-}
-
-.device_dropdown {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-    white-space: nowrap;
-    max-width: 24rem;
-    &.is_disabled {
-        pointer-events: none;
-    }
-}
-
-.device_secondary_label {
-    padding-left: 0.2rem;
-    padding-right: 0.4rem;
-    font-size: 1.4rem;
-    color: var(--dark_500_color);
-    white-space: nowrap;
-}

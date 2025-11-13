@@ -4,11 +4,13 @@
     align-items: center;
     flex-direction: column;
     gap: 2rem;
+    width: 100%;
 }
 
 
 .list_section_wrapper {
     display: flex;
+    justify-content: center;
     flex-wrap: wrap;
     width: 100%;
     gap: 0.6rem;

@@ -5,6 +5,7 @@ import { useStore_IsOpenedDropdownMenu, useStore_IsBreakPoint } from "@store";
 import {
     LabelComponent,
     DropdownMenu,
+    MultiDropdownMenu,
     Slider,
     SwitchBox,
     Entry,
@@ -22,13 +23,6 @@ import {
 } from "../_components";
 import { Checkbox } from "@common_components";
 
-const LabeledContainer = ({ children, label, desc, custom_class_name }) => (
-    <div className={clsx(styles.container, custom_class_name)}>
-        <LabelComponent label={label} desc={desc} />
-        {children}
-    </div>
-);
-
 export const useOnMouseLeaveDropdownMenu = () => {
     const { updateIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
 
@@ -41,27 +35,87 @@ export const useOnMouseLeaveDropdownMenu = () => {
 
 export const DropdownMenuContainer = (props) => {
     const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
     return (
-        <div className={styles.container} onMouseLeave={onMouseLeaveFunction}>
+        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
             <LabelComponent label={props.label} desc={props.desc} />
             <DropdownMenu {...props} />
+        </TemplatesContainerWrapper>
+    );
+};
+
+export const MultiDropdownMenuContainer = (props) => {
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
+    return (
+        <TemplatesContainerWrapper onMouseLeaveFunction={onMouseLeaveFunction} {...props}>
+            <LabelComponent label={props.label} desc={props.desc} />
+            <MultiDropdownMenu dropdown_settings={props.dropdown_settings} />
+        </TemplatesContainerWrapper>
+    );
+};
+
+const TemplatesContainerWrapper = ({
+    children,
+    add_break_point = true,
+    flex_column = false,
+    remove_border_bottom = false,
+    onMouseLeaveFunction = null,
+}) => {
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: add_break_point && currentIsBreakPoint.data,
+        [styles.flex_column]: flex_column,
+        [styles.remove_border_bottom]: remove_border_bottom,
+    });
+
+    return (
+        <div className={container_class} onMouseLeave={onMouseLeaveFunction}>
+            {children}
         </div>
     );
 };
 
-const CommonContainer = ({ Component, ...props }) => {
+const CommonContainer = ({
+    label_type = "label_component",
+    add_break_point = true,
+    flex_column = false,
+    remove_border_bottom = false,
+    Component,
+    ...props
+}) => {
     const { currentIsBreakPoint } = useStore_IsBreakPoint();
 
-    const container_class = clsx(styles.container, {
-        [styles.is_break_point]: props.add_break_point ?? currentIsBreakPoint.data,
-    });
+    const container_wrapper_props = {
+        add_break_point: add_break_point,
+        flex_column: flex_column,
+        remove_border_bottom: remove_border_bottom,
+    };
 
-    return (
-        <LabeledContainer label={props.label} desc={props.desc} custom_class_name={container_class}>
-            <Component {...props} is_break_point={currentIsBreakPoint.data} />
-        </LabeledContainer>
-    );
+    if (label_type === "label_component") {
+        return (
+            <TemplatesContainerWrapper {...container_wrapper_props}>
+                <LabelComponent label={props.label} desc={props.desc} />
+                <Component {...props} is_break_point={currentIsBreakPoint.data} />
+            </TemplatesContainerWrapper>
+        );
+    } else if (label_type === "no_label") {
+        return (
+            <TemplatesContainerWrapper {...container_wrapper_props}>
+                <Component {...props} is_break_point={currentIsBreakPoint.data} />
+            </TemplatesContainerWrapper>
+        );
+    } else if (label_type === "label_only") {
+        return (
+            <TemplatesContainerWrapper {...container_wrapper_props}>
+                <LabelComponent label={props.label} desc={props.desc} />
+            </TemplatesContainerWrapper>
+        );
+    }
 };
+
+
 export const SliderContainer = (props) => (
     <CommonContainer Component={Slider} {...props} />
 );
@@ -90,19 +144,14 @@ export const RadioButtonContainer = (props) => (
 );
 
 export const DeeplAuthKeyContainer = (props) => {
-    const { currentIsBreakPoint } = useStore_IsBreakPoint();
-    const container_class = clsx(styles.container, {
-        [styles.is_break_point]: currentIsBreakPoint.data,
-    });
-
     return (
-        <div className={container_class}>
+        <TemplatesContainerWrapper>
             <div className={styles.deepl_auth_key_label_section}>
                 <LabelComponent label={props.label} desc={props.desc} />
                 <OpenWebpage_DeeplAuthKey />
             </div>
             <DeeplAuthKey {...props} />
-        </div>
+        </TemplatesContainerWrapper>
     );
 };
 
@@ -114,19 +163,22 @@ export const ComputeDeviceContainer = (props) => (
     <CommonContainer Component={ComputeDevice} {...props} />
 );
 
-export const WordFilterContainer = (props) => (
-    <div className={styles.word_filter_container}>
-        <div className={styles.word_filter_switch_section}>
-            <div className={styles.word_filter_label_wrapper}>
-                <LabelComponent label={props.label} desc={props.desc} />
-            </div>
-            <WordFilterListToggleComponent />
-        </div>
-        <div className={styles.word_filter_section}>
-            <WordFilter {...props} />
-        </div>
-    </div>
-);
+export const WordFilterContainer = (props) => {
+    return (
+        <>
+            <CommonContainer
+                Component={WordFilterListToggleComponent}
+                remove_border_bottom={true}
+                {...props}
+            />
+            <CommonContainer
+                Component={WordFilter}
+                label_type="no_label"
+                {...props}
+            />
+        </>
+    );
+};
 
 export const DownloadModelsContainer = (props) => (
     <CommonContainer Component={DownloadModels} {...props} />
@@ -134,13 +186,17 @@ export const DownloadModelsContainer = (props) => (
 
 export const MessageFormatContainer = (props) => {
     return (
-        <div className={clsx(styles.container, styles.flex_column)}>
-            <div className={styles.label_only_section}>
-                <LabelComponent label={props.label} desc={props.desc} />
-            </div>
-            <div className={styles.message_format_section}>
-                <MessageFormat {...props}/>
-            </div>
-        </div>
+        <>
+            <CommonContainer
+                remove_border_bottom={true}
+                label_type="label_only"
+                {...props}
+            />
+            <CommonContainer
+                Component={MessageFormat}
+                label_type="no_label"
+                {...props}
+            />
+        </>
     );
 };

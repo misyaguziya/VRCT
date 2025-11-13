@@ -1,76 +1,28 @@
 import styles from "./DropdownMenu.module.scss";
-import clsx from "clsx";
-import ArrowLeftSvg from "@images/arrow_left.svg?react";
-import { useStore_IsOpenedDropdownMenu } from "@store";
+import { _DropdownMenu } from "../_atoms/_dropdown_menu/_DropdownMenu";
 
 export const DropdownMenu = (props) => {
-    const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
+    return (
+        <div className={styles.each_dropdown_menu_wrapper}>
+            {props.secondary_label && <p className={styles.secondary_label}>{props.secondary_label}</p>}
+            <_DropdownMenu {...props} />
+        </div>
+    );
+};
 
-    const toggleDropdownMenu = () => {
-        if (currentIsOpenedDropdownMenu.data === props.dropdown_id) {
-            updateIsOpenedDropdownMenu("");
-        } else {
-            if (props.openListFunction !== undefined) props.openListFunction();
-            updateIsOpenedDropdownMenu(props.dropdown_id);
-        }
-    };
-
-    const selectValue = (key) => {
-        updateIsOpenedDropdownMenu("");
-        props.selectFunction({
-            dropdown_id: props.dropdown_id,
-            selected_id: key,
-        });
-    };
-
-    const dropdown_content_wrapper_class_name = clsx(styles["dropdown_content_wrapper"], {
-        [styles.is_opened]: (currentIsOpenedDropdownMenu.data === props.dropdown_id) ? true : false,
-        [styles.is_disabled]: props.is_disabled,
-    });
-
-    const dropdown_toggle_button_class_name = clsx(styles["dropdown_toggle_button"], {
-        [styles.is_pending]: (props.state === "pending") ? true : false,
-        [styles.is_disabled]: props.is_disabled,
-    });
-
-    const arrow_class_names = clsx(styles["arrow_left_svg"], {
-        [styles.is_opened]: (currentIsOpenedDropdownMenu.data === props.dropdown_id) ? true : false
-    });
-
-    const getSelectedText = () => {
-        if (props.state !== "ok") return;
-        if (props.list[props.selected_id] === undefined) return props.selected_id; // [Fix me]
-
-        return props.list[props.selected_id];
-    };
-    const list = (props.list === undefined) ? {} : props.list;
-
+export const MultiDropdownMenu = (props) => {
     return (
         <div className={styles.container}>
-            <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu} style={props.style}>
-                {(props.state === "pending")
-                    ? <p className={styles.dropdown_selected_text}>Loading...</p>
-                    : <p className={styles.dropdown_selected_text}>{getSelectedText()}</p>
+            {props.dropdown_settings.map((dropdown_props, index) => {
+                if (dropdown_props.insert_component) {
+                    const InsertComponent = dropdown_props.insert_component;
+                    return <InsertComponent key={index} {...dropdown_props.insert_component_props} />;
                 }
-                {(props.state === "pending")
-                    ? <span className={styles.loader}></span>
-                    : <ArrowLeftSvg className={arrow_class_names} />
-                }
-            </div>
-            <div className={dropdown_content_wrapper_class_name}>
-                <div className={styles.dropdown_content}>
-                    {(props.state === "ok")
-                        ? Object.entries(list).map(([key, value]) => {
-                            return (
-                                <div key={key} className={styles.value_button} onClick={() => selectValue(key)}>
-                                    <p className={styles.value_text}>{value}</p>
-                                </div>
-                            );
-                        })
-                        : null
-                    }
-                </div>
-            </div>
+                return (
+                    <DropdownMenu key={dropdown_props.dropdown_id} {...dropdown_props} />
+                );
+            }
+        )}
         </div>
     );
 };

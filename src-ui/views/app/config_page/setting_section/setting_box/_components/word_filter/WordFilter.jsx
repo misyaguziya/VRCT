@@ -50,14 +50,14 @@ export const WordFilter = () => {
 
     return (
         <div className={styles.container}>
-            { currentIsOpenedMicWordFilterList.data &&
-            <div className={styles.list_section_wrapper}>
-                {
-                    currentMicWordFilterList.data.map((item, index) => {
-                        return <WordFilterItem value={item} key={index} deleteAction={deleteAction}/>;
-                    })
-                }
-            </div>
+            { currentIsOpenedMicWordFilterList.data && currentMicWordFilterList.data.length > 0 &&
+                <div className={styles.list_section_wrapper}>
+                    {
+                        currentMicWordFilterList.data.map((item, index) => {
+                            return <WordFilterItem value={item} key={index} deleteAction={deleteAction}/>;
+                        })
+                    }
+                </div>
             }
             <div className={styles.entry_section_wrapper}>
                 <_Entry width="30rem" onChange={onChangeEntry} ui_variable={input_value}/>
