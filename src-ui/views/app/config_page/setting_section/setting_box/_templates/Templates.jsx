@@ -148,7 +148,7 @@ export const DeeplAuthKeyContainer = (props) => {
         <TemplatesContainerWrapper>
             <div className={styles.deepl_auth_key_label_section}>
                 <LabelComponent label={props.label} desc={props.desc} />
-                <OpenWebpage_DeeplAuthKey />
+                <OpenWebpage_DeeplAuthKey {...props} />
             </div>
             <DeeplAuthKey {...props} />
         </TemplatesContainerWrapper>

@@ -128,5 +128,9 @@ export const whisper_weight_type_status = [
     { id: "large-v3-turbo", capacity: "1.58GB"},
 ].map(item => ({ ...item, is_downloaded: false, progress: null }));
 
+
+export const deepl_auth_key_url = "https://www.deepl.com/ja/your-account/keys";
+
+
 export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";
 export const supporters_images_url = "https://ShiinaSakamoto.github.io/vrct_supporters/assets/supporters";

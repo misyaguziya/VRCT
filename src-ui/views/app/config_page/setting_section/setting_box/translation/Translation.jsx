@@ -22,6 +22,8 @@ import {
     LabelComponent,
 } from "../_components";
 
+import { deepl_auth_key_url } from "@ui_configs";
+
 export const Translation = () => {
     return (
         <>
@@ -230,6 +232,8 @@ const DeeplAuthKey_Box = () => {
                     "config_page.translation.deepl_auth_key.desc",
                     {translator: t("main_page.translator")}
                 )}
+                webpage_url={deepl_auth_key_url}
+                open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
                 variable={input_value}
                 state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
