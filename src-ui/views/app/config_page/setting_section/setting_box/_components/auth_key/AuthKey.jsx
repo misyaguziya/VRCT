@@ -1,4 +1,4 @@
-import styles from "./DeeplAuthKey.module.scss";
+import styles from "./AuthKey.module.scss";
 import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
@@ -6,7 +6,7 @@ import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 import { useEffect } from "react";
 
-export const DeeplAuthKey = (props) => {
+export const AuthKey = (props) => {
     const { t } = useI18n();
     const [is_editable, seIsEditable] = useState(false);
     const entryRef = useRef(null);
