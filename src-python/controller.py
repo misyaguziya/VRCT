@@ -79,21 +79,21 @@ class Controller:
     def updateMicHostList(self) -> None:
         self.run(
             200,
-            self.run_mapping["mic_host_list"],
+            self.run_mapping["selectable_mic_host_list"],
             model.getListMicHost(),
         )
 
     def updateMicDeviceList(self) -> None:
         self.run(
             200,
-            self.run_mapping["mic_device_list"],
+            self.run_mapping["selectable_mic_device_list"],
             model.getListMicDevice(),
         )
 
     def updateSpeakerDeviceList(self) -> None:
         self.run(
             200,
-            self.run_mapping["speaker_device_list"],
+            self.run_mapping["selectable_speaker_device_list"],
             model.getListSpeakerDevice(),
         )
 

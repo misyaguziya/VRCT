@@ -12,7 +12,7 @@ VRCTアプリケーションのAPIエンドポイントを包括的にテスト�
 - マイク/スピーカー関連タイムアウト値の正常範囲チェック（取得した最新値を基準にバリデーション）
 - Whisper / CTranslate2 重みタイプ辞書のキー集合変化への追従
 
-例: `"/set/data/selected_translation_engines"` 試験前に `"/get/data/translation_engines"` を呼び、取得したリストから `random.choice()`。従来の初期キャッシュ依存から、実行時取得へ移行。
+例: `"/set/data/selected_translation_engines"` 試験前に `"/get/data/selectable_translation_engines"` を呼び、取得したリストから `random.choice()`。従来の初期キャッシュ依存から、実行時取得へ移行。
 
 ## 主要機能
 
@@ -94,13 +94,13 @@ test.test_endpoints_specific_random()
 
 動的取得対象（代表例）:
 
-- `selected_translation_engines` → `/get/data/translation_engines`
-- `selected_transcription_engine` → `/get/data/transcription_engines`
-- `selected_translation_compute_device` → `/get/data/translation_compute_device_list`
+- `selected_translation_engines` → `/get/data/selectable_translation_engines`
+- `selected_transcription_engine` → `/get/data/selectable_transcription_engines`
+- `selected_translation_compute_device` → `/get/data/selectable_translation_compute_device_list`
 - `ctranslate2_weight_type` → `/get/data/selectable_ctranslate2_weight_type_dict`
 - `whisper_weight_type` → `/get/data/selectable_whisper_weight_type_dict`
-- `selected_mic_host` / `selected_mic_device` → `/get/data/mic_host_list` / `/get/data/mic_device_list`
-- `selected_speaker_device` → `/get/data/speaker_device_list`
+- `selected_mic_host` / `selected_mic_device` → `/get/data/selectable_mic_host_list` / `/get/data/selectable_mic_device_list`
+- `selected_speaker_device` → `/get/data/selectable_speaker_device_list`
 
 ### 実行系
 

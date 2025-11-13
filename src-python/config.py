@@ -639,6 +639,9 @@ class Config:
     MIC_MAX_PHRASES = ManagedProperty('MIC_MAX_PHRASES', type_=int)
     MIC_AVG_LOGPROB = ManagedProperty('MIC_AVG_LOGPROB', type_=(int, float))
     MIC_NO_SPEECH_PROB = ManagedProperty('MIC_NO_SPEECH_PROB', type_=(int, float))
+    MIC_NO_REPEAT_NGRAM_SIZE = ManagedProperty('MIC_NO_REPEAT_NGRAM_SIZE', type_=int)
+    MIC_VAD_FILTER = ManagedProperty('MIC_VAD_FILTER', type_=bool)
+    MIC_VAD_PARAMETERS = ManagedProperty('MIC_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
     HOTKEYS = ValidatedProperty('HOTKEYS',
         validator=lambda val, inst: (
             {k: (v if (isinstance(v, list) or v is None) else inst.HOTKEYS.get(k))
@@ -655,6 +658,9 @@ class Config:
     SPEAKER_MAX_PHRASES = ManagedProperty('SPEAKER_MAX_PHRASES', type_=int)
     SPEAKER_AVG_LOGPROB = ManagedProperty('SPEAKER_AVG_LOGPROB', type_=(int, float))
     SPEAKER_NO_SPEECH_PROB = ManagedProperty('SPEAKER_NO_SPEECH_PROB', type_=(int, float))
+    SPEAKER_NO_REPEAT_NGRAM_SIZE = ManagedProperty('SPEAKER_NO_REPEAT_NGRAM_SIZE', type_=int)
+    SPEAKER_VAD_FILTER = ManagedProperty('SPEAKER_VAD_FILTER', type_=bool)
+    SPEAKER_VAD_PARAMETERS = ManagedProperty('SPEAKER_VAD_PARAMETERS', type_=dict, mutable_tracking=True)
 
     # --- Auth and API settings ---
     AUTH_KEYS = ValidatedProperty('AUTH_KEYS',
@@ -862,6 +868,16 @@ class Config:
         self._PLUGINS_STATUS = []
         self._MIC_AVG_LOGPROB = -0.8
         self._MIC_NO_SPEECH_PROB = 0.6
+        self._MIC_NO_REPEAT_NGRAM_SIZE = 0
+        self._MIC_VAD_FILTER = False
+        self._MIC_VAD_PARAMETERS = {
+            "threshold": 0.5,
+            "neg_threshold": None,
+            "min_speech_duration_ms": 0,
+            "max_speech_duration_s": float("inf"),
+            "min_silence_duration_ms": 2000,
+            "speech_pad_ms": 400,
+        }
         self._AUTO_SPEAKER_SELECT = True
         try:
             if device_manager is not None:
@@ -879,6 +895,16 @@ class Config:
         self._SPEAKER_MAX_PHRASES = 10
         self._SPEAKER_AVG_LOGPROB = -0.8
         self._SPEAKER_NO_SPEECH_PROB = 0.6
+        self._SPEAKER_NO_REPEAT_NGRAM_SIZE = 0
+        self._SPEAKER_VAD_FILTER = False
+        self._SPEAKER_VAD_PARAMETERS = {
+            "threshold": 0.5,
+            "neg_threshold": None,
+            "min_speech_duration_ms": 0,
+            "max_speech_duration_s": float("inf"),
+            "min_silence_duration_ms": 2000,
+            "speech_pad_ms": 400,
+        }
         self._OSC_IP_ADDRESS = "127.0.0.1"
         self._OSC_PORT = 9000
         self._AUTH_KEYS = {
