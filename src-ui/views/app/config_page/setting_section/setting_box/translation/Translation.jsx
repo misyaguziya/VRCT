@@ -14,6 +14,7 @@ import {
     DownloadModelsContainer,
     AuthKeyContainer,
     MultiDropdownMenuContainer,
+    EntryWithSaveButtonContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
 
@@ -44,6 +45,11 @@ export const Translation = () => {
 
             <OpenAIAuthKey_Box />
             <OpenAIModelContainer />
+
+            <LMStudioURL_Box />
+            <LMStudioModelContainer />
+
+            <OllamaModelContainer />
         </>
     );
 };
@@ -410,6 +416,88 @@ const OpenAIModelContainer = () => {
             list={currentSelectableOpenAIModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedOpenAIModel.state}
+        />
+    );
+};
+
+
+
+const LMStudioURL_Box = () => {
+    const { t } = useI18n();
+    const { currentLMStudioURL, setLMStudioURL, deleteLMStudioURL } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentLMStudioURL.data,
+        state: currentLMStudioURL.state,
+        setFunction: setLMStudioURL,
+        deleteFunction: deleteLMStudioURL,
+    });
+
+    return (
+        <>
+            <EntryWithSaveButtonContainer
+                label="LM Studio URL"
+                desc="LM Studio URL Desc"
+                variable={variable}
+                saveFunction={saveFunction}
+                onChangeFunction={onChangeFunction}
+                state={currentLMStudioURL.state}
+                remove_border_bottom={true}
+                // width="10rem"
+            />
+        </>
+    );
+};
+const LMStudioModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableLMStudioModelList,
+
+        currentSelectedLMStudioModel,
+        setSelectedLMStudioModel,
+    } = useTranslation();
+
+    if (currentSelectableLMStudioModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedLMStudioModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_lmstudio_model"
+            label="Select LMStudio Model"
+            selected_id={currentSelectedLMStudioModel.data}
+            list={currentSelectableLMStudioModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedLMStudioModel.state}
+        />
+    );
+};
+
+const OllamaModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOllamaModelList,
+
+        currentSelectedOllamaModel,
+        setSelectedOllamaModel,
+    } = useTranslation();
+
+    if (currentSelectableOllamaModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedOllamaModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_ollama_model"
+            label="Select Ollama Model"
+            selected_id={currentSelectedOllamaModel.data}
+            list={currentSelectableOllamaModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOllamaModel.state}
         />
     );
 };
