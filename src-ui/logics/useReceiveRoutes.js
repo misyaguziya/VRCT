@@ -210,6 +210,7 @@ const buildRouteMetaList = () => {
         const ep = s.base_endpoint_name;
         const hookName = `use${category}`;
         const setSuccessMethodName = `setSuccess${base}`;
+        const deleteSuccessMethodName = `deleteSuccess${base}`;
         const updateFromBackendMethodName = `updateFromBackend${base}`;
 
 
@@ -230,6 +231,15 @@ const buildRouteMetaList = () => {
             hook_name: hookName,
             method_name: updateFromBackendMethodName,
         });
+
+        if (s.logics_template_id === "get_set_delete") {
+            generated.push({
+                endpoint: `/delete/data/${ep}`,
+                ns: namespace_module,
+                hook_name: hookName,
+                method_name: deleteSuccessMethodName,
+            });
+        }
 
         if (s.logics_template_id !== "get_list") {
             generated.push({

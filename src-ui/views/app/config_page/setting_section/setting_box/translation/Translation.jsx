@@ -6,12 +6,17 @@ import { useStore_IsBreakPoint } from "@store";
 
 import {
     useTranslation,
+
+    useSaveButtonLogic,
 } from "@logics_configs";
 
 import {
     DownloadModelsContainer,
-    DeeplAuthKeyContainer,
+    AuthKeyContainer,
     MultiDropdownMenuContainer,
+    EntryWithSaveButtonContainer,
+    RadioButtonContainer,
+    DropdownMenuContainer,
 
     useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
@@ -22,12 +27,29 @@ import {
     LabelComponent,
 } from "../_components";
 
+import { deepl_auth_key_url } from "@ui_configs";
+
 export const Translation = () => {
     return (
         <>
             <CTranslate2WeightType_Box />
             <TranslationComputeDevice_Box />
-            <DeeplAuthKey_Box />
+
+            <DeepLAuthKey_Box />
+
+            <PlamoAuthKey_Box />
+            <PlamoModelContainer />
+
+            <GeminiAuthKey_Box />
+            <GeminiModelContainer />
+
+            <OpenAIAuthKey_Box />
+            <OpenAIModelContainer />
+
+            <LMStudioURL_Box />
+            <LMStudioModelContainer />
+
+            <OllamaModelContainer />
         </>
     );
 };
@@ -203,34 +225,28 @@ const TranslationComputeDevice_Box = () => {
     );
 };
 
-const DeeplAuthKey_Box = () => {
+const DeepLAuthKey_Box = () => {
     const { t } = useI18n();
     const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useTranslation();
-    const [input_value, seInputValue] = useState(currentDeepLAuthKey.data);
 
-    const onChangeFunction = (value) => {
-        seInputValue(value);
-    };
-
-    const saveFunction = () => {
-        if (input_value === "") return deleteDeepLAuthKey();
-        setDeepLAuthKey(input_value);
-    };
-
-    useEffect(() => {
-        if (currentDeepLAuthKey.state === "pending") return;
-        seInputValue(currentDeepLAuthKey.data);
-    }, [currentDeepLAuthKey]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentDeepLAuthKey.data,
+        state: currentDeepLAuthKey.state,
+        setFunction: setDeepLAuthKey,
+        deleteFunction: deleteDeepLAuthKey,
+    });
 
     return (
         <>
-            <DeeplAuthKeyContainer
+            <AuthKeyContainer
                 label={t("config_page.translation.deepl_auth_key.label")}
                 desc={t(
                     "config_page.translation.deepl_auth_key.desc",
                     {translator: t("main_page.translator")}
                 )}
-                variable={input_value}
+                webpage_url={deepl_auth_key_url}
+                open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
                 state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
@@ -238,6 +254,254 @@ const DeeplAuthKey_Box = () => {
         </>
     );
 };
+
+const PlamoAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentPlamoAuthKey, setPlamoAuthKey, deletePlamoAuthKey } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentPlamoAuthKey.data,
+        state: currentPlamoAuthKey.state,
+        setFunction: setPlamoAuthKey,
+        deleteFunction: deletePlamoAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="Plamo Auth Key"
+                desc="Plamo Auth Desc"
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
+                state={currentPlamoAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const PlamoModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectablePlamoModelList,
+
+        currentSelectedPlamoModel,
+        setSelectedPlamoModel,
+    } = useTranslation();
+
+    if (currentSelectablePlamoModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedPlamoModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_plamo_model"
+            label="Select Plamo Model"
+            selected_id={currentSelectedPlamoModel.data}
+            list={currentSelectablePlamoModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedPlamoModel.state}
+        />
+    );
+};
+
+
+
+const GeminiAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentGeminiAuthKey, setGeminiAuthKey, deleteGeminiAuthKey } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentGeminiAuthKey.data,
+        state: currentGeminiAuthKey.state,
+        setFunction: setGeminiAuthKey,
+        deleteFunction: deleteGeminiAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="Gemini Auth Key"
+                desc="Gemini Auth Desc"
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
+                state={currentGeminiAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const GeminiModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableGeminiModelList,
+
+        currentSelectedGeminiModel,
+        setSelectedGeminiModel,
+    } = useTranslation();
+
+    if (currentSelectableGeminiModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedGeminiModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_gemini_model"
+            label="Select Gemini Model"
+            selected_id={currentSelectedGeminiModel.data}
+            list={currentSelectableGeminiModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedGeminiModel.state}
+        />
+    );
+};
+
+
+const OpenAIAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentOpenAIAuthKey, setOpenAIAuthKey, deleteOpenAIAuthKey } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenAIAuthKey.data,
+        state: currentOpenAIAuthKey.state,
+        setFunction: setOpenAIAuthKey,
+        deleteFunction: deleteOpenAIAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="OpenAI Auth Key"
+                desc="OpenAI Auth Desc"
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
+                state={currentOpenAIAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenAIModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOpenAIModelList,
+
+        currentSelectedOpenAIModel,
+        setSelectedOpenAIModel,
+    } = useTranslation();
+
+    if (currentSelectableOpenAIModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedOpenAIModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_openai_model"
+            label="Select OpenAI Model"
+            selected_id={currentSelectedOpenAIModel.data}
+            list={currentSelectableOpenAIModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOpenAIModel.state}
+        />
+    );
+};
+
+
+
+const LMStudioURL_Box = () => {
+    const { t } = useI18n();
+    const { currentLMStudioURL, setLMStudioURL, deleteLMStudioURL } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentLMStudioURL.data,
+        state: currentLMStudioURL.state,
+        setFunction: setLMStudioURL,
+        deleteFunction: deleteLMStudioURL,
+    });
+
+    return (
+        <>
+            <EntryWithSaveButtonContainer
+                label="LM Studio URL"
+                desc="LM Studio URL Desc"
+                variable={variable}
+                saveFunction={saveFunction}
+                onChangeFunction={onChangeFunction}
+                state={currentLMStudioURL.state}
+                remove_border_bottom={true}
+                // width="10rem"
+            />
+        </>
+    );
+};
+const LMStudioModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableLMStudioModelList,
+
+        currentSelectedLMStudioModel,
+        setSelectedLMStudioModel,
+    } = useTranslation();
+
+    if (currentSelectableLMStudioModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedLMStudioModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_lmstudio_model"
+            label="Select LMStudio Model"
+            selected_id={currentSelectedLMStudioModel.data}
+            list={currentSelectableLMStudioModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedLMStudioModel.state}
+        />
+    );
+};
+
+const OllamaModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOllamaModelList,
+
+        currentSelectedOllamaModel,
+        setSelectedOllamaModel,
+    } = useTranslation();
+
+    if (currentSelectableOllamaModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedOllamaModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_ollama_model"
+            label="Select Ollama Model"
+            selected_id={currentSelectedOllamaModel.data}
+            list={currentSelectableOllamaModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOllamaModel.state}
+        />
+    );
+};
+
 
 // Duplicate
 const transformDeviceArray = (devices) => {
