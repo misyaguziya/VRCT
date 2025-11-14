@@ -309,6 +309,39 @@ export const useSliderLogic = ({
     };
 };
 
+
+export const useSaveButtonLogic = ({
+    variable,
+    state,
+    setFunction,
+    deleteFunction
+}) => {
+    const [input_value, setInputValue] = useState(variable);
+
+    const onChangeFunction = (value) => {
+        setInputValue(value);
+    };
+
+    const saveFunction = () => {
+        if (input_value === "" || input_value === null) {
+            return deleteFunction();
+        }
+        setFunction(input_value);
+    };
+
+    useEffect(() => {
+        if (state === "pending") return;
+        setInputValue(variable);
+
+    }, [variable]);
+
+    return {
+        variable: input_value,
+        onChangeFunction: onChangeFunction,
+        saveFunction: saveFunction,
+    };
+};
+
 const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
     let variable = min;

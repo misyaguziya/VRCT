@@ -6,6 +6,8 @@ import { useStore_IsBreakPoint } from "@store";
 
 import {
     useTranslation,
+
+    useSaveButtonLogic,
 } from "@logics_configs";
 
 import {
@@ -32,7 +34,7 @@ export const Translation = () => {
             <CTranslate2WeightType_Box />
             <TranslationComputeDevice_Box />
 
-            <DeeplAuthKey_Box />
+            <DeepLAuthKey_Box />
 
             <PlamoAuthKey_Box />
             <PlamoModelContainer />
@@ -217,26 +219,16 @@ const TranslationComputeDevice_Box = () => {
     );
 };
 
-const DeeplAuthKey_Box = () => {
+const DeepLAuthKey_Box = () => {
     const { t } = useI18n();
     const { currentDeepLAuthKey, setDeepLAuthKey, deleteDeepLAuthKey } = useTranslation();
-    const [input_value, seInputValue] = useState(currentDeepLAuthKey.data);
 
-    const onChangeFunction = (value) => {
-        seInputValue(value);
-    };
-
-    const saveFunction = () => {
-        if (input_value === "" || input_value === null) {
-            return deleteDeepLAuthKey();
-        };
-        setDeepLAuthKey(input_value);
-    };
-
-    useEffect(() => {
-        if (currentDeepLAuthKey.state === "pending") return;
-        seInputValue(currentDeepLAuthKey.data);
-    }, [currentDeepLAuthKey]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentDeepLAuthKey.data,
+        state: currentDeepLAuthKey.state,
+        setFunction: setDeepLAuthKey,
+        deleteFunction: deleteDeepLAuthKey,
+    });
 
     return (
         <>
@@ -248,7 +240,7 @@ const DeeplAuthKey_Box = () => {
                 )}
                 webpage_url={deepl_auth_key_url}
                 open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
-                variable={input_value}
+                variable={variable}
                 state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
@@ -260,37 +252,22 @@ const DeeplAuthKey_Box = () => {
 const PlamoAuthKey_Box = () => {
     const { t } = useI18n();
     const { currentPlamoAuthKey, setPlamoAuthKey, deletePlamoAuthKey } = useTranslation();
-    const [input_value, seInputValue] = useState(currentPlamoAuthKey.data);
 
-    const onChangeFunction = (value) => {
-        seInputValue(value);
-    };
-
-    const saveFunction = () => {
-        if (input_value === "" || input_value === null) {
-            return deletePlamoAuthKey();
-        };
-        setPlamoAuthKey(input_value);
-    };
-
-    useEffect(() => {
-        if (currentPlamoAuthKey.state === "pending") return;
-        seInputValue(currentPlamoAuthKey.data);
-    }, [currentPlamoAuthKey]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentPlamoAuthKey.data,
+        state: currentPlamoAuthKey.state,
+        setFunction: setPlamoAuthKey,
+        deleteFunction: deletePlamoAuthKey,
+    });
 
     return (
         <>
             <AuthKeyContainer
                 label="Plamo Auth Key"
                 desc="Plamo Auth Desc"
-                // label={t("config_page.translation.deepl_auth_key.label")}
-                // desc={t(
-                //     "config_page.translation.deepl_auth_key.desc",
-                //     {translator: t("main_page.translator")}
-                // )}
                 // webpage_url={deepl_auth_key_url}
                 // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
-                variable={input_value}
+                variable={variable}
                 state={currentPlamoAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
@@ -318,8 +295,6 @@ const PlamoModelContainer = () => {
         <DropdownMenuContainer
             dropdown_id="select_plamo_model"
             label="Select Plamo Model"
-            // label={t("config_page.transcription.mic_phrase_timeout.label")}
-            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
             selected_id={currentSelectedPlamoModel.data}
             list={currentSelectablePlamoModelList.data}
             selectFunction={selectFunction}
@@ -333,37 +308,22 @@ const PlamoModelContainer = () => {
 const GeminiAuthKey_Box = () => {
     const { t } = useI18n();
     const { currentGeminiAuthKey, setGeminiAuthKey, deleteGeminiAuthKey } = useTranslation();
-    const [input_value, seInputValue] = useState(currentGeminiAuthKey.data);
 
-    const onChangeFunction = (value) => {
-        seInputValue(value);
-    };
-
-    const saveFunction = () => {
-        if (input_value === "" || input_value === null) {
-            return deleteGeminiAuthKey();
-        };
-        setGeminiAuthKey(input_value);
-    };
-
-    useEffect(() => {
-        if (currentGeminiAuthKey.state === "pending") return;
-        seInputValue(currentGeminiAuthKey.data);
-    }, [currentGeminiAuthKey]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentGeminiAuthKey.data,
+        state: currentGeminiAuthKey.state,
+        setFunction: setGeminiAuthKey,
+        deleteFunction: deleteGeminiAuthKey,
+    });
 
     return (
         <>
             <AuthKeyContainer
                 label="Gemini Auth Key"
                 desc="Gemini Auth Desc"
-                // label={t("config_page.translation.deepl_auth_key.label")}
-                // desc={t(
-                //     "config_page.translation.deepl_auth_key.desc",
-                //     {translator: t("main_page.translator")}
-                // )}
                 // webpage_url={deepl_auth_key_url}
                 // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
-                variable={input_value}
+                variable={variable}
                 state={currentGeminiAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
@@ -391,8 +351,6 @@ const GeminiModelContainer = () => {
         <DropdownMenuContainer
             dropdown_id="select_gemini_model"
             label="Select Gemini Model"
-            // label={t("config_page.transcription.mic_phrase_timeout.label")}
-            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
             selected_id={currentSelectedGeminiModel.data}
             list={currentSelectableGeminiModelList.data}
             selectFunction={selectFunction}
@@ -405,37 +363,22 @@ const GeminiModelContainer = () => {
 const OpenAIAuthKey_Box = () => {
     const { t } = useI18n();
     const { currentOpenAIAuthKey, setOpenAIAuthKey, deleteOpenAIAuthKey } = useTranslation();
-    const [input_value, seInputValue] = useState(currentOpenAIAuthKey.data);
 
-    const onChangeFunction = (value) => {
-        seInputValue(value);
-    };
-
-    const saveFunction = () => {
-        if (input_value === "" || input_value === null) {
-            return deleteOpenAIAuthKey();
-        };
-        setOpenAIAuthKey(input_value);
-    };
-
-    useEffect(() => {
-        if (currentOpenAIAuthKey.state === "pending") return;
-        seInputValue(currentOpenAIAuthKey.data);
-    }, [currentOpenAIAuthKey]);
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenAIAuthKey.data,
+        state: currentOpenAIAuthKey.state,
+        setFunction: setOpenAIAuthKey,
+        deleteFunction: deleteOpenAIAuthKey,
+    });
 
     return (
         <>
             <AuthKeyContainer
                 label="OpenAI Auth Key"
                 desc="OpenAI Auth Desc"
-                // label={t("config_page.translation.deepl_auth_key.label")}
-                // desc={t(
-                //     "config_page.translation.deepl_auth_key.desc",
-                //     {translator: t("main_page.translator")}
-                // )}
                 // webpage_url={deepl_auth_key_url}
                 // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
-                variable={input_value}
+                variable={variable}
                 state={currentOpenAIAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
@@ -463,8 +406,6 @@ const OpenAIModelContainer = () => {
         <DropdownMenuContainer
             dropdown_id="select_openai_model"
             label="Select OpenAI Model"
-            // label={t("config_page.transcription.mic_phrase_timeout.label")}
-            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
             selected_id={currentSelectedOpenAIModel.data}
             list={currentSelectableOpenAIModelList.data}
             selectFunction={selectFunction}

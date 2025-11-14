@@ -18,4 +18,5 @@ export { useSettingBoxScrollPosition } from "./config_page_setter/_aux/useSettin
 
 export {
     useSliderLogic,
+    useSaveButtonLogic,
 } from "./config_page_setter/useSettingsLogics.js";
