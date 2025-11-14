@@ -5,6 +5,13 @@ export const arrayToObject = (array) => {
     }, {});
 };
 
+export const arrayToIdLabel = (array) => {
+    return array.map((element) => ({
+        id: element,
+        label: element,
+    }));
+};
+
 export const chunkArray = (array, size) => {
     const chunked = [];
     for (let i = 0; i < array.length; i += size) {

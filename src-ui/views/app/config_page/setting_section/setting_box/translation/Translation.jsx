@@ -12,6 +12,8 @@ import {
     DownloadModelsContainer,
     AuthKeyContainer,
     MultiDropdownMenuContainer,
+    RadioButtonContainer,
+    DropdownMenuContainer,
 
     useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
@@ -29,7 +31,17 @@ export const Translation = () => {
         <>
             <CTranslate2WeightType_Box />
             <TranslationComputeDevice_Box />
+
             <DeeplAuthKey_Box />
+
+            <PlamoAuthKey_Box />
+            <PlamoModelContainer />
+
+            <GeminiAuthKey_Box />
+            <GeminiModelContainer />
+
+            <OpenAIAuthKey_Box />
+            <OpenAIModelContainer />
         </>
     );
 };
@@ -244,6 +256,223 @@ const DeeplAuthKey_Box = () => {
         </>
     );
 };
+
+const PlamoAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentPlamoAuthKey, setPlamoAuthKey, deletePlamoAuthKey } = useTranslation();
+    const [input_value, seInputValue] = useState(currentPlamoAuthKey.data);
+
+    const onChangeFunction = (value) => {
+        seInputValue(value);
+    };
+
+    const saveFunction = () => {
+        if (input_value === "" || input_value === null) {
+            return deletePlamoAuthKey();
+        };
+        setPlamoAuthKey(input_value);
+    };
+
+    useEffect(() => {
+        if (currentPlamoAuthKey.state === "pending") return;
+        seInputValue(currentPlamoAuthKey.data);
+    }, [currentPlamoAuthKey]);
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="Plamo Auth Key"
+                desc="Plamo Auth Desc"
+                // label={t("config_page.translation.deepl_auth_key.label")}
+                // desc={t(
+                //     "config_page.translation.deepl_auth_key.desc",
+                //     {translator: t("main_page.translator")}
+                // )}
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={input_value}
+                state={currentPlamoAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const PlamoModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectablePlamoModelList,
+
+        currentSelectedPlamoModel,
+        setSelectedPlamoModel,
+    } = useTranslation();
+
+    if (currentSelectablePlamoModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedPlamoModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_plamo_model"
+            label="Select Plamo Model"
+            // label={t("config_page.transcription.mic_phrase_timeout.label")}
+            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
+            selected_id={currentSelectedPlamoModel.data}
+            list={currentSelectablePlamoModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedPlamoModel.state}
+        />
+    );
+};
+
+
+
+const GeminiAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentGeminiAuthKey, setGeminiAuthKey, deleteGeminiAuthKey } = useTranslation();
+    const [input_value, seInputValue] = useState(currentGeminiAuthKey.data);
+
+    const onChangeFunction = (value) => {
+        seInputValue(value);
+    };
+
+    const saveFunction = () => {
+        if (input_value === "" || input_value === null) {
+            return deleteGeminiAuthKey();
+        };
+        setGeminiAuthKey(input_value);
+    };
+
+    useEffect(() => {
+        if (currentGeminiAuthKey.state === "pending") return;
+        seInputValue(currentGeminiAuthKey.data);
+    }, [currentGeminiAuthKey]);
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="Gemini Auth Key"
+                desc="Gemini Auth Desc"
+                // label={t("config_page.translation.deepl_auth_key.label")}
+                // desc={t(
+                //     "config_page.translation.deepl_auth_key.desc",
+                //     {translator: t("main_page.translator")}
+                // )}
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={input_value}
+                state={currentGeminiAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const GeminiModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableGeminiModelList,
+
+        currentSelectedGeminiModel,
+        setSelectedGeminiModel,
+    } = useTranslation();
+
+    if (currentSelectableGeminiModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedGeminiModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_gemini_model"
+            label="Select Gemini Model"
+            // label={t("config_page.transcription.mic_phrase_timeout.label")}
+            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
+            selected_id={currentSelectedGeminiModel.data}
+            list={currentSelectableGeminiModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedGeminiModel.state}
+        />
+    );
+};
+
+
+const OpenAIAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentOpenAIAuthKey, setOpenAIAuthKey, deleteOpenAIAuthKey } = useTranslation();
+    const [input_value, seInputValue] = useState(currentOpenAIAuthKey.data);
+
+    const onChangeFunction = (value) => {
+        seInputValue(value);
+    };
+
+    const saveFunction = () => {
+        if (input_value === "" || input_value === null) {
+            return deleteOpenAIAuthKey();
+        };
+        setOpenAIAuthKey(input_value);
+    };
+
+    useEffect(() => {
+        if (currentOpenAIAuthKey.state === "pending") return;
+        seInputValue(currentOpenAIAuthKey.data);
+    }, [currentOpenAIAuthKey]);
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="OpenAI Auth Key"
+                desc="OpenAI Auth Desc"
+                // label={t("config_page.translation.deepl_auth_key.label")}
+                // desc={t(
+                //     "config_page.translation.deepl_auth_key.desc",
+                //     {translator: t("main_page.translator")}
+                // )}
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={input_value}
+                state={currentOpenAIAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenAIModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOpenAIModelList,
+
+        currentSelectedOpenAIModel,
+        setSelectedOpenAIModel,
+    } = useTranslation();
+
+    if (currentSelectableOpenAIModelList.data.length === 0) return null;
+
+    const selectFunction = (selected_data) => {
+        setSelectedOpenAIModel(selected_data.selected_id);
+    };
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_openai_model"
+            label="Select OpenAI Model"
+            // label={t("config_page.transcription.mic_phrase_timeout.label")}
+            // desc={t("config_page.transcription.mic_phrase_timeout.desc")}
+            selected_id={currentSelectedOpenAIModel.data}
+            list={currentSelectableOpenAIModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOpenAIModel.state}
+        />
+    );
+};
+
 
 // Duplicate
 const transformDeviceArray = (devices) => {
