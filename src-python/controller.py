@@ -1813,20 +1813,30 @@ class Controller:
         try:
             data = str(data)
             if data.startswith("sk-") and len(data) >= 164:
-                key = data
-                auth_keys = config.AUTH_KEYS
-                auth_keys[translator_name] = key
-                config.AUTH_KEYS = auth_keys
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
-                config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
-                self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-                if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                    config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-                model.updateTranslatorOpenAIClient()
-                self.updateTranslationEngineAndEngineList()
-                response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                result = model.authenticationTranslatorOpenAIAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
+                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                    if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                        config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                        model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
+                        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                    model.updateTranslatorOpenAIClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of OpenAI auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
             else:
                 response = {
                     "status":400,
