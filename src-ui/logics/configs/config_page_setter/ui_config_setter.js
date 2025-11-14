@@ -314,6 +314,62 @@ export const SETTINGS_ARRAY = [
         add_endpoint_run_array: ["from_backend"],
         base_endpoint_name: "selected_openai_model",
     },
+    // LM Studio
+    {
+        Category: "Translation",
+        Base_Name: "LMStudioURL",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "lmstudio_url",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableLMStudioModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_lmstudio_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedLMStudioModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_lmstudio_model",
+    },
+    // Ollama
+    {
+        Category: "Translation",
+        Base_Name: "OllamaURL",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ollama_url",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableOllamaModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_ollama_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedOllamaModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_ollama_model",
+    },
 
     // Transcription
     // Mic
