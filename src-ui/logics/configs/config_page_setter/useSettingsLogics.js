@@ -1,7 +1,7 @@
 import * as stores from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
-import { arrayToObject } from "@utils";
+import { arrayToObject, arrayToIdLabel } from "@utils";
 
 const transformResponse = (transformName, payload) => {
     if (!transformName) return payload;
@@ -9,6 +9,8 @@ const transformResponse = (transformName, payload) => {
     switch (transformName) {
         case "arrayToObject":
             return arrayToObject(payload);
+        case "arrayToIdLabel":
+            return arrayToIdLabel(payload);
         default:
             return payload;
     }
@@ -55,8 +57,10 @@ export const useSettingsLogics = (settingsArray, Category) => {
         const updateFromBackendExportName = `updateFromBackend${base}`;
         const getExportName = `get${base}`;
         const setExportName = `set${base}`;
+        const deleteExportName = `delete${base}`;
         const toggleExportName = `toggle${base}`;
         const setSuccessExportName = `setSuccess${base}`;
+        const deleteSuccessExportName = `deleteSuccess${base}`;
 
         const runExportName = `runSuccess${base}`;
 
@@ -75,6 +79,13 @@ export const useSettingsLogics = (settingsArray, Category) => {
             };
         };
 
+        const buildDelete = () => {
+            return (value) => {
+                if (pending) pending();
+                asyncStdoutToPython(`/delete/data/${s.base_endpoint_name}`, value);
+            };
+        };
+
         const buildRun = () => {
             return () => {
                 asyncStdoutToPython(`/run/${s.base_endpoint_name}`);
@@ -84,6 +95,14 @@ export const useSettingsLogics = (settingsArray, Category) => {
 
         // To use a response from backend------------------------------------
         const buildSetSuccess = (transformName) => {
+            return (payload) => {
+                const transformed = transformResponse(transformName, payload);
+                if (update) update(transformed);
+                showNotification_SaveSuccess();
+            };
+        };
+
+        const buildDeleteSuccess = (transformName) => {
             return (payload) => {
                 const transformed = transformResponse(transformName, payload);
                 if (update) update(transformed);
@@ -117,6 +136,15 @@ export const useSettingsLogics = (settingsArray, Category) => {
             result[getExportName] = buildGet();
             result[setExportName] = buildSet();
             result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            continue;
+        }
+
+        if (s.logics_template_id === "get_set_delete") {
+            result[getExportName] = buildGet();
+            result[setExportName] = buildSet();
+            result[setSuccessExportName] = buildSetSuccess(s.response_transform ?? null);
+            result[deleteExportName] = buildDelete();
+            result[deleteSuccessExportName] = buildDeleteSuccess(s.response_transform ?? null);
             continue;
         }
 
@@ -278,6 +306,39 @@ export const useSliderLogic = ({
         onchangeFunction,
         onchangeCommittedFunction,
         marks,
+    };
+};
+
+
+export const useSaveButtonLogic = ({
+    variable,
+    state,
+    setFunction,
+    deleteFunction
+}) => {
+    const [input_value, setInputValue] = useState(variable);
+
+    const onChangeFunction = (value) => {
+        setInputValue(value);
+    };
+
+    const saveFunction = () => {
+        if (input_value === "" || input_value === null) {
+            return deleteFunction();
+        }
+        setFunction(input_value);
+    };
+
+    useEffect(() => {
+        if (state === "pending") return;
+        setInputValue(variable);
+
+    }, [variable]);
+
+    return {
+        variable: input_value,
+        onChangeFunction: onChangeFunction,
+        saveFunction: saveFunction,
     };
 };
 

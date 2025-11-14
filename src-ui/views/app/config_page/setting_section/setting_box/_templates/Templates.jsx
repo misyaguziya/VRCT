@@ -12,8 +12,7 @@ import {
     EntryWithSaveButton,
     HotkeysEntry,
     RadioButton,
-    OpenWebpage_DeeplAuthKey,
-    DeeplAuthKey,
+    AuthKey,
     ActionButton,
     ComputeDevice,
     WordFilter,
@@ -96,7 +95,7 @@ const CommonContainer = ({
     if (label_type === "label_component") {
         return (
             <TemplatesContainerWrapper {...container_wrapper_props}>
-                <LabelComponent label={props.label} desc={props.desc} />
+                <LabelComponent {...props} />
                 <Component {...props} is_break_point={currentIsBreakPoint.data} />
             </TemplatesContainerWrapper>
         );
@@ -109,7 +108,7 @@ const CommonContainer = ({
     } else if (label_type === "label_only") {
         return (
             <TemplatesContainerWrapper {...container_wrapper_props}>
-                <LabelComponent label={props.label} desc={props.desc} />
+                <LabelComponent {...props} />
             </TemplatesContainerWrapper>
         );
     }
@@ -143,15 +142,13 @@ export const RadioButtonContainer = (props) => (
     <CommonContainer Component={RadioButton} {...props} />
 );
 
-export const DeeplAuthKeyContainer = (props) => {
+export const AuthKeyContainer = (props) => {
+    const webpage_settings = {
+        webpage_url: props.webpage_url,
+        open_webpage_label: props.open_webpage_label,
+    };
     return (
-        <TemplatesContainerWrapper>
-            <div className={styles.deepl_auth_key_label_section}>
-                <LabelComponent label={props.label} desc={props.desc} />
-                <OpenWebpage_DeeplAuthKey />
-            </div>
-            <DeeplAuthKey {...props} />
-        </TemplatesContainerWrapper>
+        <CommonContainer Component={AuthKey} {...props} {...webpage_settings} />
     );
 };
 

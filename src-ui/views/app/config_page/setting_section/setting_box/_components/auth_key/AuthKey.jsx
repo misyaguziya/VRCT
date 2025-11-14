@@ -1,13 +1,12 @@
-import styles from "./DeeplAuthKey.module.scss";
+import styles from "./AuthKey.module.scss";
 import { useI18n } from "@useI18n";
 import clsx from "clsx";
 import CircularProgress from "@mui/material/CircularProgress";
-import ExternalLink from "@images/external_link.svg?react";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 import { useEffect } from "react";
 
-export const DeeplAuthKey = (props) => {
+export const AuthKey = (props) => {
     const { t } = useI18n();
     const [is_editable, seIsEditable] = useState(false);
     const entryRef = useRef(null);
@@ -54,19 +53,6 @@ export const DeeplAuthKey = (props) => {
                     </div>
                 }
             </div>
-        </div>
-    );
-};
-
-
-export const OpenWebpage_DeeplAuthKey = () => {
-    const { t } = useI18n();
-    return (
-        <div className={styles.open_webpage_button_wrapper}>
-            <a className={styles.open_webpage_button} href="https://www.deepl.com/ja/your-account/keys" target="_blank" rel="noreferrer" >
-                <p className={styles.open_webpage_text}>{t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}</p>
-                <ExternalLink className={styles.external_link_svg} />
-            </a>
         </div>
     );
 };

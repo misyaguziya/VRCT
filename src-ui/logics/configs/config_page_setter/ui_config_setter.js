@@ -221,13 +221,154 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "get_set",
         base_endpoint_name: "selected_translation_compute_device",
     },
+    // DeepL
     {
         Category: "Translation",
         Base_Name: "DeepLAuthKey",
         default_value: "",
         ui_template_id: "input",
-        logics_template_id: "get_set",
+        logics_template_id: "get_set_delete",
         base_endpoint_name: "deepl_auth_key",
+    },
+    // Plamo
+    {
+        Category: "Translation",
+        Base_Name: "PlamoAuthKey",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set_delete",
+        base_endpoint_name: "plamo_auth_key",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectablePlamoModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_plamo_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedPlamoModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_plamo_model",
+    },
+    // Gemini
+    {
+        Category: "Translation",
+        Base_Name: "GeminiAuthKey",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set_delete",
+        base_endpoint_name: "gemini_auth_key",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableGeminiModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_gemini_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedGeminiModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_gemini_model",
+    },
+    // OpenAI
+    {
+        Category: "Translation",
+        Base_Name: "OpenAIAuthKey",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set_delete",
+        base_endpoint_name: "openai_auth_key",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableOpenAIModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_openai_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedOpenAIModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_openai_model",
+    },
+    // LM Studio
+    {
+        Category: "Translation",
+        Base_Name: "LMStudioURL",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "lmstudio_url",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableLMStudioModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_lmstudio_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedLMStudioModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_lmstudio_model",
+    },
+    // Ollama
+    {
+        Category: "Translation",
+        Base_Name: "OllamaURL",
+        default_value: "",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "ollama_url",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectableOllamaModelList",
+        default_value: [],
+        ui_template_id: "list",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selectable_ollama_model_list",
+        response_transform: "arrayToObject",
+    },
+    {
+        Category: "Translation",
+        Base_Name: "SelectedOllamaModel",
+        default_value: "",
+        ui_template_id: "select",
+        logics_template_id: "get_set",
+        add_endpoint_run_array: ["from_backend"],
+        base_endpoint_name: "selected_ollama_model",
     },
 
     // Transcription
@@ -558,24 +699,19 @@ for (const setting_data of SETTINGS_ARRAY) {
 const buildCategoryApiFromSettings = (settings, settingsArray, Category, extraFunctions = {}) => {
     const api = {};
     const filtered = settingsArray.filter((s) => s.Category === Category);
+    const COMMON_PROPS = [ "current", "update", "get", "set", "toggle", "setSuccess", "delete", "deleteSuccess", "updateFromBackend" ];
 
     for (const s of filtered) {
         const base = s.Base_Name;
-        const currentKey = `current${base}`;
-        const updateKey = `update${base}`;
-        const getKey = `get${base}`;
-        const setKey = `set${base}`;
-        const toggleKey = `toggle${base}`;
-        const setSuccessKey = `setSuccess${base}`;
-        const updateFromBackendKey = `updateFromBackend${base}`;
 
-        if (settings[currentKey] !== undefined) api[currentKey] = settings[currentKey];
-        if (settings[updateKey] !== undefined) api[updateKey] = settings[updateKey];
-        if (typeof settings[getKey] === "function") api[getKey] = settings[getKey];
-        if (typeof settings[setKey] === "function") api[setKey] = settings[setKey];
-        if (typeof settings[toggleKey] === "function") api[toggleKey] = settings[toggleKey];
-        if (typeof settings[setSuccessKey] === "function") api[setSuccessKey] = settings[setSuccessKey];
-        if (typeof settings[updateFromBackendKey] === "function") api[updateFromBackendKey] = settings[updateFromBackendKey];
+        COMMON_PROPS.forEach(prop => {
+            const key = `${prop}${base}`;
+            const settingValue = settings[key];
+
+            if (settingValue !== undefined) {
+                api[key] = settingValue;
+            }
+        });
 
         if (s.logics_template_id === "weight_download_status") {
             const updateDownloadProgressKey = `updateDownloadProgress${base}`;
@@ -589,6 +725,8 @@ const buildCategoryApiFromSettings = (settings, settingsArray, Category, extraFu
             if (typeof settings[pendingKey] === "function") api[pendingKey] = settings[pendingKey];
             if (typeof settings[downloadedKey] === "function") api[downloadedKey] = settings[downloadedKey];
             if (typeof settings[downloadKey] === "function") api[downloadKey] = settings[downloadKey];
+
+            const updateFromBackendKey = `updateFromBackend${base}`;
             if (typeof settings[updateFromBackendKey] === "function") api[updateFromBackendKey] = settings[updateFromBackendKey];
         }
     }
