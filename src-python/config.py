@@ -85,8 +85,10 @@ class ManagedDict(dict):
             internal_dict = self._get_internal()
             internal_dict.clear()
             internal_dict.update(dict.items(self))
-            # Trigger config save
-            self._instance.saveConfig(self._property_name, dict(self), immediate_save=self._immediate_save)
+            # Trigger config save only if the corresponding property is serializable
+            descriptor = getattr(type(self._instance), self._property_name, None)
+            if getattr(descriptor, "serialize", True):
+                self._instance.saveConfig(self._property_name, dict(self), immediate_save=self._immediate_save)
         except Exception:
             pass
 
@@ -162,8 +164,10 @@ class ManagedList(list):
             internal_list = self._get_internal()
             internal_list.clear()
             internal_list.extend(list.__iter__(self))
-            # Trigger config save
-            self._instance.saveConfig(self._property_name, list(self), immediate_save=self._immediate_save)
+            # Trigger config save only if the corresponding property is serializable
+            descriptor = getattr(type(self._instance), self._property_name, None)
+            if getattr(descriptor, "serialize", True):
+                self._instance.saveConfig(self._property_name, list(self), immediate_save=self._immediate_save)
         except Exception:
             pass
 
@@ -292,7 +296,8 @@ class ManagedProperty:
         setattr(instance, self.private_name, value)
         # Persist change
         try:
-            instance.saveConfig(self.name, value, immediate_save=self.immediate_save)
+            if self.serialize:
+                instance.saveConfig(self.name, value, immediate_save=self.immediate_save)
         except Exception:
             # Keep setter robust during import-time initialization
             pass
@@ -324,7 +329,8 @@ class ValidatedProperty:
             return
         setattr(instance, self.private_name, normalized)
         try:
-            instance.saveConfig(self.name, normalized, immediate_save=self.immediate_save)
+            if self.serialize:
+                instance.saveConfig(self.name, normalized, immediate_save=self.immediate_save)
         except Exception:
             pass
 
