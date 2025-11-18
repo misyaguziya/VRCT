@@ -101,12 +101,17 @@ export const getPluginsList = () => {
 if (IS_PLUGIN_PATH_DEV_MODE || IS_PLUGIN_LIST_URL_DEV_MODE) console.warn("ui_configs IS_PLUGIN_PATH_DEV_MODE or IS_PLUGIN_LIST_URL_DEV_MODE is true. Turn to 'false' when it's production environment.");
 
 export const translator_status = [
-    { id: "DeepL", label: "DeepL", is_available: false },
-    { id: "DeepL_API", label: `DeepL API`, is_available: false },
+    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
     { id: "Google", label: "Google", is_available: false },
     { id: "Bing", label: "Bing", is_available: false },
     { id: "Papago", label: "Papago", is_available: false },
-    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
+    { id: "DeepL", label: "DeepL", is_available: false },
+    { id: "DeepL_API", label: `DeepL API`, is_available: false },
+    { id: "Plamo_API", label: `Plamo API`, is_available: false },
+    { id: "Gemini_API", label: `Gemini API`, is_available: false },
+    { id: "OpenAI_API", label: `OpenAI API`, is_available: false },
+    { id: "LMStudio", label: `LMStudio`, is_available: false },
+    { id: "Ollama", label: `Ollama`, is_available: false },
 ];
 
 export const ctranslate2_weight_type_status = [
