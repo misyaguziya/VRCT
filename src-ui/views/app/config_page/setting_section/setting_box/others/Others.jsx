@@ -1,7 +1,11 @@
 import { useI18n } from "@useI18n";
 import styles from "./Others.module.scss";
 
-import { useOpenFolder } from "@logics_common";
+import {
+    useOpenFolder,
+    useIsOscAvailable,
+} from "@logics_common";
+
 import {
     useOthers,
 } from "@logics_configs";
@@ -104,18 +108,22 @@ const AutoExportMessageLogsContainer = () => {
 export const VrcMicMuteSyncContainer = () => {
     const { t } = useI18n();
     const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useOthers();
+    const { currentIsOscAvailable } = useIsOscAvailable();
 
-    const variable = {
-        state: currentEnableVrcMicMuteSync.state,
-        data: currentEnableVrcMicMuteSync.data.is_enabled,
-    };
+    const add_warnings = [];
+    if (currentIsOscAvailable.data === false) {
+        add_warnings.push({
+            label: t("config_page.common.warning_labels.unable_to_use_osc_query"),
+        });
+    }
 
     return (
         <CheckboxContainer
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             desc={t("config_page.others.vrc_mic_mute_sync.desc")}
-            variable={variable}
-            is_available={currentEnableVrcMicMuteSync.data.is_available}
+            variable={currentEnableVrcMicMuteSync}
+            is_available={currentIsOscAvailable.data}
+            add_warnings={add_warnings}
             toggleFunction={toggleEnableVrcMicMuteSync}
         />
     );

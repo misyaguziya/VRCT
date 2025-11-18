@@ -4,7 +4,11 @@ import RefreshSvg from "@images/refresh.svg?react";
 import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
-import { useSoftwareVersion } from "@logics_common";
+import {
+    useSoftwareVersion,
+    useIsOscAvailable,
+} from "@logics_common";
+
 import { useVr, useOthers } from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
@@ -70,6 +74,7 @@ const PluginsQuickSetting = () => {
 const OpenVrcMicMuteSyncQuickSetting = () => {
     const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const { currentIsOscAvailable } = useIsOscAvailable();
     const { currentEnableVrcMicMuteSync } = useOthers();
 
     const onClickFunction = () => {
@@ -79,7 +84,8 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
     return (
         <OpenQuickSettingButton
             label={t("config_page.others.vrc_mic_mute_sync.label")}
-            variable={currentEnableVrcMicMuteSync.data.is_enabled}
+            variable={currentEnableVrcMicMuteSync.data}
+            is_available={currentIsOscAvailable.data}
             onClickFunction={onClickFunction}
         />
     );
