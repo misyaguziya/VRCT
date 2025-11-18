@@ -83,6 +83,8 @@ config_page:
             type_template_auto: "自動"
             type_template_low: "{{type_name}} （精度が悪く、処理は早い）"
             type_template_high: "{{type_name}} （精度が良く、処理は遅い）"
+        warning_labels:
+            unable_to_use_osc_query: "OSC IP Address の設定によりOSCデータの受信ができないため、現在この機能は使用できません。"
 
     side_menu_labels:
         device: "デバイス"

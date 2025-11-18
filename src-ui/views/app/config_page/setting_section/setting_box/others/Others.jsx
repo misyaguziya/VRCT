@@ -110,12 +110,20 @@ export const VrcMicMuteSyncContainer = () => {
     const { currentEnableVrcMicMuteSync, toggleEnableVrcMicMuteSync } = useOthers();
     const { currentIsOscAvailable } = useIsOscAvailable();
 
+    const add_warnings = [];
+    if (currentIsOscAvailable.data === false) {
+        add_warnings.push({
+            label: t("config_page.common.warning_labels.unable_to_use_osc_query"),
+        });
+    }
+
     return (
         <CheckboxContainer
             label={t("config_page.others.vrc_mic_mute_sync.label")}
             desc={t("config_page.others.vrc_mic_mute_sync.desc")}
             variable={currentEnableVrcMicMuteSync}
             is_available={currentIsOscAvailable.data}
+            add_warnings={add_warnings}
             toggleFunction={toggleEnableVrcMicMuteSync}
         />
     );

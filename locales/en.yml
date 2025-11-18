@@ -83,6 +83,8 @@ config_page:
             type_template_auto: "Automatic"
             type_template_low: "{{type_name}} (Lower accuracy, faster processing)"
             type_template_high: "{{type_name}} (Higher accuracy, slower processing)"
+        warning_labels:
+            unable_to_use_osc_query: "Due to the OSC IP Address settings, OSC data cannot be received, so this feature is currently unavailable."
 
     side_menu_labels:
         device: "Device"
