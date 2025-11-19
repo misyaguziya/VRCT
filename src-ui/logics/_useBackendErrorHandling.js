@@ -2,6 +2,7 @@ import { useI18n } from "@useI18n";
 
 import {
     useNotificationStatus,
+    useLLMConnection,
 } from "@logics_common";
 
 import {
@@ -45,6 +46,11 @@ export const _useBackendErrorHandling = () => {
         updateWebsocketHost,
         updateWebsocketPort,
     } = useAdvancedSettings();
+
+    const {
+        updateIsOllamaConnected,
+        updateIsLMStudioConnected,
+    } = useLLMConnection();
 
     const errorHandling_Backend = ({message, data, endpoint, result}) => {
         switch (endpoint) {
@@ -219,6 +225,18 @@ export const _useBackendErrorHandling = () => {
                     updateWebsocketPort(data);
                     showNotification_Error(message);
                 }
+                return;
+
+            case "/run/lmstudio_connection":
+                updateIsLMStudioConnected(data);
+                showNotification_Error(message);
+                console.error(message);
+                return;
+
+            case "/run/ollama_connection":
+                updateIsOllamaConnected(data);
+                showNotification_Error(message);
+                console.error(message);
                 return;
 
             default:

@@ -14,3 +14,4 @@ export { ThresholdComponent } from "./threshold_component/ThresholdComponent";
 export { WordFilter, WordFilterListToggleComponent } from "./word_filter/WordFilter";
 export { DownloadModels } from "./download_models/DownloadModels";
 export { MessageFormat } from "./message_format/MessageFormat";
+export { ConnectionCheckButton } from "./connection_check_button/ConnectionCheckButton";
