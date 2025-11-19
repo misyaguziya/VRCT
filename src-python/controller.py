@@ -396,6 +396,12 @@ class Controller:
                         )
                         model.updateOverlayLargeLog(overlay_image)
 
+                if config.ENABLE_COPY_TO_CLIPBOARD is True:
+                    clipboard_message = self.messageFormatter("SEND", translation, message)
+                    model.setCopyToClipboard(clipboard_message)
+                    if config.ENABLE_PASTE_FROM_CLIPBOARD is True:
+                        model.setPasteFromClipboard()
+
                 if model.checkWebSocketServerAlive() is True:
                     model.websocketSendMessage(
                         {
@@ -727,6 +733,12 @@ class Controller:
                         transliteration_translation
                     )
                     model.updateOverlayLargeLog(overlay_image)
+
+            if config.ENABLE_COPY_TO_CLIPBOARD is True:
+                clipboard_message = self.messageFormatter("SEND", translation, message)
+                model.setCopyToClipboard(clipboard_message)
+                if config.ENABLE_PASTE_FROM_CLIPBOARD is True:
+                    model.setPasteFromClipboard()
 
             if model.checkWebSocketServerAlive() is True:
                 model.websocketSendMessage(
