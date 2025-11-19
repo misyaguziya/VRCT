@@ -1,6 +1,8 @@
 import sys
 import time
+import os
 from subprocess import Popen, PIPE
+from psutil import process_iter
 import openvr
 
 try:
@@ -8,6 +10,10 @@ try:
 except ImportError:
     def printLog(data, *args, **kwargs):
         print(data, *args, **kwargs)
+
+def checkSteamvrRunning() -> bool:
+    _proc_name = "vrmonitor.exe" if os.name == "nt" else "vrmonitor"
+    return _proc_name in (p.name() for p in process_iter())
 
 # Windows-specific imports via ctypes will be used when focusing windows
 if sys.platform == 'win32':
@@ -117,11 +123,10 @@ def paste_via_pyautogui(countdown: int = 0) -> bool:
         printLog('pyautogui not installed. Install with: pip install pyautogui')
         return False
 
-    printLog(f'Give focus to the target input. Pasting in {countdown} seconds...')
     for i in range(countdown, 0, -1):
         print(i, end=' ', flush=True)
         time.sleep(1)
-    printLog('\nSending Ctrl+V...')
+
     try:
         # pyautogui.hotkey is a safe cross-platform way to send keys
         pyautogui.hotkey('ctrl', 'v')
@@ -132,8 +137,8 @@ def paste_via_pyautogui(countdown: int = 0) -> bool:
 
 
 class Clipboard:
-    def __init__(self, vr_mode: bool = True):
-        if not vr_mode:
+    def __init__(self):
+        if not checkSteamvrRunning():
             self.app_name = None
         else:
             openvr.init(openvr.VRApplication_Background)
@@ -156,6 +161,7 @@ class Clipboard:
                     self.app_name = name
                     break
             openvr.shutdown()
+        printLog(f"Clipboard initialized. SteamVR App Name: {self.app_name}")
 
     def copy(self, message: str) -> bool:
         """Copy `message` to clipboard.
@@ -179,18 +185,17 @@ class Clipboard:
             True if paste command was sent, False otherwise.
         """
 
-        if window_name is None:
-            window_name = self.app_name
+        window_name = window_name if window_name is not None else self.app_name
 
-        # focus target window (Windows only) — window_name is required
-        focused = False
-        if sys.platform == 'win32':
-            if not window_name:
-                printLog('paste: window_name is required on Windows')
-                return False
+        # If window_name is provided, attempt to focus it (Windows only).
+        # If window_name is None, skip focusing and paste into the currently focused window.
+        if window_name is not None and sys.platform == 'win32':
+            printLog(f"paste: attempting to focus window matching '{window_name}'")
+            focused = False
 
             # try title substring match first
             wins = find_windows_by_title_substring(window_name)
+            printLog(f"paste: found {wins} windows matching title substring '{window_name}'")
             for hwnd in wins:
                 if focus_window(hwnd):
                     focused = True
@@ -199,6 +204,7 @@ class Clipboard:
             # if not found by title, try treating window_name as process name
             if not focused:
                 wins = find_windows_by_process_name(window_name)
+                printLog(f"paste: found {wins} windows matching process name '{window_name}'")
                 for hwnd in wins:
                     if focus_window(hwnd):
                         focused = True
@@ -218,4 +224,4 @@ class Clipboard:
 if __name__ == '__main__':
     clipboard = Clipboard()
     clipboard.copy("Sample text to copy to clipboard.")
-    clipboard.paste(window_name=None, countdown=0)
+    clipboard.paste(window_name=None, countdown=3)

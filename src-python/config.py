@@ -734,6 +734,10 @@ class Config:
     SELECTED_TRANSLATION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSLATION_COMPUTE_DEVICE', _compute_device_validator)
     SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE', _compute_device_validator)
 
+    # -- Clipboard control ---
+    ENABLE_COPY_TO_CLIPBOARD = ManagedProperty('ENABLE_COPY_TO_CLIPBOARD', type_=bool)
+    ENABLE_PASTE_FROM_CLIPBOARD = ManagedProperty('ENABLE_PASTE_FROM_CLIPBOARD', type_=bool)
+
     def init_config(self):
         # Read Only
         self._VERSION = "3.3.1"
@@ -997,6 +1001,8 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+        self._ENABLE_COPY_TO_CLIPBOARD = False
+        self._ENABLE_PASTE_FROM_CLIPBOARD = False
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:
