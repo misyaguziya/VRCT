@@ -527,6 +527,19 @@ def _compute_device_validator(val, inst):
             return copy.deepcopy(val)
     return None
 
+def _allowed_in_populated(list_attr_name: str):
+    def _inner(value, inst):
+        try:
+            lst = getattr(inst, list_attr_name)
+        except Exception:
+            return True  # インスタンス状態取得失敗時も弾かない
+        if not lst:  # 空/未初期化
+            return True
+        if value is None:
+            return True
+        return value in lst
+    return _inner
+
 
 class Config:
     """Application configuration singleton.
@@ -719,11 +732,11 @@ class Config:
     USE_EXCLUDE_WORDS = ManagedProperty('USE_EXCLUDE_WORDS', type_=bool)
     CTRANSLATE2_WEIGHT_TYPE = ManagedProperty('CTRANSLATE2_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST)
     WHISPER_WEIGHT_TYPE = ManagedProperty('WHISPER_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST)
-    SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_PLAMO_MODEL_LIST)
-    SELECTED_GEMINI_MODEL = ManagedProperty('SELECTED_GEMINI_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_GEMINI_MODEL_LIST)
-    SELECTED_OPENAI_MODEL = ManagedProperty('SELECTED_OPENAI_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OPENAI_MODEL_LIST)
-    SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_LMSTUDIO_MODEL_LIST)
-    SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OLLAMA_MODEL_LIST)
+    SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_PLAMO_MODEL_LIST'))
+    SELECTED_GEMINI_MODEL = ManagedProperty('SELECTED_GEMINI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GEMINI_MODEL_LIST'))
+    SELECTED_OPENAI_MODEL = ManagedProperty('SELECTED_OPENAI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_MODEL_LIST'))
+    SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
+    SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
@@ -1032,6 +1045,26 @@ class Config:
                         except Exception:
                             errorLogging()
         self.saveConfigToFile()
+
+    def revalidate_selected_models(self):
+        pairs = [
+            ('SELECTED_PLAMO_MODEL', 'SELECTABLE_PLAMO_MODEL_LIST'),
+            ('SELECTED_GEMINI_MODEL', 'SELECTABLE_GEMINI_MODEL_LIST'),
+            ('SELECTED_OPENAI_MODEL', 'SELECTABLE_OPENAI_MODEL_LIST'),
+            ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
+            ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
+        ]
+        for sel_attr, list_attr in pairs:
+            try:
+                current = getattr(self, sel_attr)
+                lst = getattr(self, list_attr)
+                if lst and current is not None and current not in lst:
+                    if len(lst) > 0:
+                        setattr(self, sel_attr, lst[0])
+                    else:
+                        setattr(self, sel_attr, None)
+            except Exception:
+                errorLogging()
 
 # Auto-register all descriptors after Config class definition
 _auto_register_descriptors()
