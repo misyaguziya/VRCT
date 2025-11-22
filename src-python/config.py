@@ -558,8 +558,16 @@ class Config:
         return cls._instance
 
     def saveConfigToFile(self) -> None:
+        # 永続化対象を descriptor 情報 (json_serializable_vars) から再構成
+        filtered = {}
+        for var_name, var_func in json_serializable_vars.items():
+            try:
+                filtered[var_name] = var_func(self)
+            except Exception:
+                pass
+        self._config_data = filtered
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
-            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
+            json_dump(filtered, fp, indent=4, ensure_ascii=False)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
@@ -601,12 +609,12 @@ class Config:
 
     # Read Write
     # --- Simple boolean flags (managed by descriptor) ---
-    ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool)
-    ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool)
-    ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool)
-    ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool)
-    ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool)
-    ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool)
+    ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool, serialize=False)
+    ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool, serialize=False)
+    ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool, serialize=False)
+    ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool, serialize=False)
+    ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool, serialize=False)
+    ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool, serialize=False)
 
     # --- Selectable dict/list properties (managed by descriptor, not serialized) ---
     # These are dynamically generated in init_config() based on installed packages/APIs
@@ -1006,15 +1014,24 @@ class Config:
                     self._config_data = json_load(fp)
 
                     for key, value in self._config_data.items():
+                        # 読み込み時: serialize=True かつ readonlyでない Descriptor のみ反映。
+                        # 未知キー（Descriptorなし）は無視して注入を防止。
                         try:
-                            setattr(self, key, value)
+                            descriptor = getattr(type(self), key, None)
+                            if isinstance(descriptor, ManagedProperty):
+                                if descriptor.readonly or not descriptor.serialize:
+                                    continue
+                                setattr(self, key, value)
+                            elif isinstance(descriptor, ValidatedProperty):
+                                if not descriptor.serialize:
+                                    continue
+                                setattr(self, key, value)
+                            else:
+                                # 不明キーは破棄（古い/不要/改竄の可能性）
+                                continue
                         except Exception:
                             errorLogging()
-
-        with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
-            for var_name, var_func in json_serializable_vars.items():
-                self._config_data[var_name] = var_func(self)
-            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
+        self.saveConfigToFile()
 
 # Auto-register all descriptors after Config class definition
 _auto_register_descriptors()
