@@ -3138,6 +3138,9 @@ class Controller:
                 model.stopWebSocketServer()
                 printLog("WebSocket server host or port is not available")
 
+        printLog("Revalidate Selected Models")
+        config.revalidate_selected_models()
+
         printLog("Update settings")
         self.updateConfigSettings()
 
