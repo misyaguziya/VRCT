@@ -176,6 +176,16 @@ class Translator:
         """Update the OpenAI client (fetch available models)."""
         self.openai_client.updateClient()
 
+    def getLMStudioConnected(self) -> bool:
+        """Get LM Studio connection status.
+
+        Returns True if connected, False otherwise.
+        """
+        if self.lmstudio_client is None:
+            return False
+        else:
+            return True
+
     def setLMStudioClientURL(self, base_url: str | None = None, root_path: str = None) -> bool:
         """Authenticate LM Studio with the provided base URL.
 
@@ -206,6 +216,16 @@ class Translator:
     def updateLMStudioClient(self) -> None:
         """Update the LM Studio client (fetch available models)."""
         self.lmstudio_client.updateClient()
+
+    def getOllamaConnected(self) -> bool:
+        """Get Ollama connection status.
+
+        Returns True if connected, False otherwise.
+        """
+        if self.ollama_client is None:
+            return False
+        else:
+            return True
 
     def checkOllamaClient(self, root_path: str = None) -> bool:
         """Check if Ollama client is available.
