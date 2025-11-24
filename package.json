@@ -1,7 +1,7 @@
 {
   "name": "vrct",
   "private": true,
-  "version": "0.0.0",
+  "version": "3.3.2",
   "type": "module",
   "scripts": {
     "setup-python": "install.bat",
@@ -14,14 +14,15 @@
     "tauri-dev": "tauri dev",
     "task-kill": "python task_kill.py",
     "clean": "python clean.py",
-    "dev": "npm run task-kill && npm run build-python && npm run dev-ui",
-    "dev-cuda": "npm run task-kill && npm run build-python-cuda && npm run dev-ui",
-    "dev-ui": "npm-run-all --parallel vite tauri-dev",
-    "build": "npm run clean && npm run build-python && npm run vite-build && npm run tauri build",
-    "build-cuda": "npm run clean && npm run build-python-cuda && npm run vite-build && npm run tauri build",
-    "release": "npm run build && python zip.py --zip_name VRCT.zip",
-    "release-cuda": "npm run build-cuda && python zip.py --zip_name VRCT_cuda.zip",
-    "release-all": "npm run release && npm run release-cuda"
+    "update-version": "python update_version.py",
+    "dev": "npm run task-kill && npm run clean && npm run update-version && npm run build-python && npm run dev-ui",
+    "dev-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run dev-ui",
+    "dev-ui": "npm run task-kill && npm-run-all --parallel vite tauri-dev",
+    "build": "npm run task-kill && npm run clean && npm run update-version && npm run build-python && npm run vite-build && npm run tauri build",
+    "build-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run vite-build && npm run tauri build",
+    "release": "npm run update-version && npm run build && python zip.py --zip_name VRCT.zip",
+    "release-cuda": "npm run update-version && npm run build-cuda && python zip.py --zip_name VRCT_cuda.zip",
+    "release-all": "npm run update-version && npm run release && npm run release-cuda"
   },
   "dependencies": {
     "@babel/standalone": "7.27.0",
