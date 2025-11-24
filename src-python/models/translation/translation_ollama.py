@@ -7,15 +7,16 @@ try:
 except Exception:
     import sys
     from os import path as os_path
-    sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
-    from translation_languages import translation_lang
+    sys.path.append(os_path.dirname(os_path.abspath(__file__)))
+    from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadPromptConfig
+    loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
     """Check authentication for Ollama API.
     """
     try:
-        response = requests.get(f"{base_url}")
+        response = requests.get(f"{base_url}", timeout=0.2)
         if response.status_code == 200:
             return True
         else:
