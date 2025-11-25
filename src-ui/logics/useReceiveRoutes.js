@@ -20,7 +20,10 @@ export const STATIC_ROUTE_META_LIST = [
     { endpoint: "/run/open_filepath_logs", ns: common, hook_name: "useOpenFolder", method_name: "openedFolder_MessageLogs" },
     { endpoint: "/run/open_filepath_config_file", ns: common, hook_name: "useOpenFolder", method_name: "openedFolder_ConfigFile" },
 
+    { endpoint: "/get/data/connected_lmstudio", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_LMStudio" },
     { endpoint: "/run/lmstudio_connection", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_LMStudio" },
+
+    { endpoint: "/get/data/connected_ollama", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_Ollama" },
     { endpoint: "/run/ollama_connection", ns: common, hook_name: "useLLMConnection", method_name: "setConnectionStatus_Ollama" },
 
     // Software Version
