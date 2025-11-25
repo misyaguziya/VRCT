@@ -2,17 +2,17 @@
 
 
 a = Analysis(
-    ['src-python\\mainloop.py'],
+    ['..\\src-python\\mainloop.py'],
     pathex=[],
     binaries=[],
     datas=[
-        ('./src-python/models/overlay/fonts', 'fonts/'),
-        ('./src-python/models/translation/prompt', 'prompt/'),
-        ('./src-python/models/translation/languages', 'languages/'),
-        ('.venv/Lib/site-packages/zeroconf', 'zeroconf/'),
-        ('.venv/Lib/site-packages/openvr', 'openvr/'),
-        ('.venv/Lib/site-packages/faster_whisper', 'faster_whisper/'),
-        ('.venv/Lib/site-packages/hf_xet', 'hf_xet/')
+        ('./../src-python/models/overlay/fonts', 'fonts/'),
+        ('./../src-python/models/translation/prompt', 'prompt/'),
+        ('./../src-python/models/translation/languages', 'languages/'),
+        ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
+        ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
+        ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
+        ('./../.venv/Lib/site-packages/hf_xet', 'hf_xet/')
         ],
     hiddenimports=[],
     hookspath=[],
