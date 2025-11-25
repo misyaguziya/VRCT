@@ -33,7 +33,7 @@ def update_versions():
     with open(config_path, "w", encoding="utf-8") as f:
         f.write(new_content)
 
-    print(f"✓ バージョン {version} に更新しました")
+    print(f"updated to version {version}")
 
 if __name__ == "__main__":
     update_versions()
