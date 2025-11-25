@@ -249,6 +249,10 @@ class Model:
         self.ensure_initialized()
         self.translator.updateOpenAIClient()
 
+    def getTranslatorLMStudioConnected(self) -> bool:
+        self.ensure_initialized()
+        return self.translator.getLMStudioConnected()
+
     def authenticationTranslatorLMStudio(self, base_url: str) -> bool:
         result = self.translator.setLMStudioClientURL(base_url=base_url, root_path=config.PATH_LOCAL)
         return result
@@ -264,6 +268,10 @@ class Model:
     def updateTranslatorLMStudioClient(self) -> None:
         self.ensure_initialized()
         self.translator.updateLMStudioClient()
+
+    def getTranslatorOllamaConnected(self) -> bool:
+        self.ensure_initialized()
+        return self.translator.getOllamaConnected()
 
     def authenticationTranslatorOllama(self) -> bool:
         result = self.translator.checkOllamaClient(root_path=config.PATH_LOCAL)

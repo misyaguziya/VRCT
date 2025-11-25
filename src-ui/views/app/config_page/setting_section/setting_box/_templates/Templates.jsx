@@ -19,6 +19,7 @@ import {
     WordFilterListToggleComponent,
     DownloadModels,
     MessageFormat,
+    ConnectionCheckButton,
 } from "../_components";
 import { Checkbox } from "@common_components";
 
@@ -179,6 +180,10 @@ export const WordFilterContainer = (props) => {
 
 export const DownloadModelsContainer = (props) => (
     <CommonContainer Component={DownloadModels} {...props} />
+);
+
+export const ConnectionCheckButtonContainer = (props) => (
+    <CommonContainer Component={ConnectionCheckButton} {...props} />
 );
 
 export const MessageFormatContainer = (props) => {

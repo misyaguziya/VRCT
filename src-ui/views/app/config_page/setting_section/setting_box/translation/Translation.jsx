@@ -17,6 +17,7 @@ import {
     EntryWithSaveButtonContainer,
     RadioButtonContainer,
     DropdownMenuContainer,
+    ConnectionCheckButtonContainer,
 
     useOnMouseLeaveDropdownMenu,
 } from "../_templates/Templates";
@@ -25,9 +26,11 @@ import {
     DropdownMenu,
     MultiDropdownMenu,
     LabelComponent,
+    ConnectionCheckButton,
 } from "../_components";
 
 import { deepl_auth_key_url } from "@ui_configs";
+import { useLLMConnection } from "@logics_common";
 
 export const Translation = () => {
     return (
@@ -46,9 +49,11 @@ export const Translation = () => {
             <OpenAIAuthKey_Box />
             <OpenAIModelContainer />
 
+            <LMStudioConnectionCheck_Box />
             <LMStudioURL_Box />
             <LMStudioModelContainer />
 
+            <OllamaConnectionCheck_Box />
             <OllamaModelContainer />
         </>
     );
@@ -422,6 +427,23 @@ const OpenAIModelContainer = () => {
 
 
 
+const LMStudioConnectionCheck_Box = () => {
+    const { t } = useI18n();
+    const { currentIsLMStudioConnected, checkConnection_LMStudio } = useLLMConnection();
+
+    return (
+        <>
+            <ConnectionCheckButtonContainer
+                label="Check LM Studio Connection"
+                variable={currentIsLMStudioConnected.data}
+                state={currentIsLMStudioConnected.state}
+                checkFunction={checkConnection_LMStudio}
+                remove_border_bottom={true}
+                // width="10rem"
+            />
+        </>
+    );
+};
 const LMStudioURL_Box = () => {
     const { t } = useI18n();
     const { currentLMStudioURL, setLMStudioURL, deleteLMStudioURL } = useTranslation();
@@ -475,6 +497,23 @@ const LMStudioModelContainer = () => {
     );
 };
 
+const OllamaConnectionCheck_Box = () => {
+    const { t } = useI18n();
+    const { currentIsOllamaConnected, checkConnection_Ollama } = useLLMConnection();
+
+    return (
+        <>
+            <ConnectionCheckButtonContainer
+                label="Check Ollama Connection"
+                variable={currentIsOllamaConnected.data}
+                state={currentIsOllamaConnected.state}
+                checkFunction={checkConnection_Ollama}
+                remove_border_bottom={true}
+                // width="10rem"
+            />
+        </>
+    );
+};
 const OllamaModelContainer = () => {
     const { t } = useI18n();
     const {

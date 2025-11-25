@@ -207,6 +207,7 @@ mapping = {
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
+    "/get/data/connected_lmstudio": {"status": True, "variable":controller.getTranslatorLMStudioConnection},
     "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
     "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
     "/get/data/selected_lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
@@ -214,6 +215,7 @@ mapping = {
     "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
     "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
 
+    "/get/data/connected_ollama": {"status": True, "variable":controller.getTranslatorOllamaConnection},
     "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
     "/get/data/selectable_ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
     "/get/data/selected_ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
