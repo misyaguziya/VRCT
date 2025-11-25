@@ -1900,6 +1900,9 @@ class Controller:
             }
         return response
 
+    def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":model.getTranslatorLMStudioConnected()}
+
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         printLog("Check Translator LMStudio Connection")
         translator_name = "LMStudio"
@@ -1936,6 +1939,10 @@ class Controller:
                 }
             }
         return response
+
+    def getConnectedLMStudio(self, *args, **kwargs) -> dict:
+        is_connected = model.getTranslatorLMStudioConnectedStatus()
+        return {"status":200, "result": is_connected}
 
     def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.LMSTUDIO_URL}
@@ -2014,6 +2021,9 @@ class Controller:
                 }
             }
         return response
+
+    def getTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":model.getTranslatorOllamaConnected()}
 
     def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
         printLog("Check Translator Ollama Connection")
