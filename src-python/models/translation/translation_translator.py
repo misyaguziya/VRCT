@@ -233,7 +233,10 @@ class Translator:
         Returns True if Ollama is reachable, False otherwise.
         """
         self.ollama_client = OllamaClient(root_path=root_path)
-        return self.ollama_client.authenticationCheck()
+        result = self.ollama_client.authenticationCheck()
+        if result is False:
+            self.ollama_client = None
+        return result
 
     def getOllamaModelList(self, root_path: str = None) -> bool:
         """Initialize Ollama client and fetch available models.
