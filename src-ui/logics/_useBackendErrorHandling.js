@@ -241,6 +241,9 @@ export const _useBackendErrorHandling = () => {
 
             default:
                 console.error(`Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`);
+                showNotification_Error(
+                    `An error occurred. Please contact the developers and restart VRCT. Error: Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`, { hide_duration: null }
+                );
                 return;
         }
 
