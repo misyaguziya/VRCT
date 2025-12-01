@@ -1900,6 +1900,9 @@ class Controller:
             }
         return response
 
+    def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":model.getTranslatorLMStudioConnected()}
+
     def checkTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         printLog("Check Translator LMStudio Connection")
         translator_name = "LMStudio"
@@ -1909,10 +1912,12 @@ class Controller:
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                 config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                if len(config.SELECTABLE_LMSTUDIO_MODEL_LIST) == 0:
+                    raise Exception("No LMStudio models available")
                 if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
                     config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
-                    model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                    self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
+                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
+                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 model.updateTranslatorLMStudioClient()
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":True}
@@ -1935,6 +1940,10 @@ class Controller:
             }
         return response
 
+    def getConnectedLMStudio(self, *args, **kwargs) -> dict:
+        is_connected = model.getTranslatorLMStudioConnectedStatus()
+        return {"status":200, "result": is_connected}
+
     def getTranslatorLMStudioURL(self, *args, **kwargs) -> dict:
         return {"status":200, "result":config.LMSTUDIO_URL}
 
@@ -1949,10 +1958,12 @@ class Controller:
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                 config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                if len(config.SELECTABLE_LMSTUDIO_MODEL_LIST) == 0:
+                    raise Exception("No LMStudio models available")
                 if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
                     config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
-                    model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
-                    self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
+                model.setTranslatorLMStudioModel(model=config.SELECTED_LMSTUDIO_MODEL)
+                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 model.updateTranslatorLMStudioClient()
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":config.LMSTUDIO_URL}
@@ -2011,6 +2022,9 @@ class Controller:
             }
         return response
 
+    def getTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":model.getTranslatorOllamaConnected()}
+
     def checkTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
         printLog("Check Translator Ollama Connection")
         translator_name = "Ollama"
@@ -2020,10 +2034,12 @@ class Controller:
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                 config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
                 self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
+                if len(config.SELECTABLE_OLLAMA_MODEL_LIST) == 0:
+                    raise Exception("No Ollama models available")
                 if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
                     config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
-                    model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
-                    self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
+                model.setTranslatorOllamaModel(model=config.SELECTED_OLLAMA_MODEL)
+                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
                 model.updateTranslatorOllamaClient()
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":True}
@@ -2957,13 +2973,13 @@ class Controller:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorPlamoAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
-                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                            printLog("Plamo API Key is valid")
                             config.SELECTABLE_PLAMO_MODEL_LIST = model.getTranslatorPlamoModelList()
                             if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
                                 config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
                             model.setTranslatorPlamoModel(config.SELECTED_PLAMO_MODEL)
                             model.updateTranslatorPlamoClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("Plamo API Key is valid")
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
@@ -2975,13 +2991,13 @@ class Controller:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorGeminiAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
-                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                            printLog("Gemini API Key is valid")
                             config.SELECTABLE_GEMINI_MODEL_LIST = model.getTranslatorGeminiModelList()
                             if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
                                 config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
                             model.setTranslatorGeminiModel(config.SELECTED_GEMINI_MODEL)
                             model.updateTranslatorGeminiClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("Gemini API Key is valid")
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
@@ -2993,13 +3009,13 @@ class Controller:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.AUTH_KEYS[engine] is not None:
                         if model.authenticationTranslatorOpenAIAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
-                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                            printLog("OpenAI API Key is valid")
                             config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
                             if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
                                 config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
                             model.setTranslatorOpenAIModel(config.SELECTED_OPENAI_MODEL)
                             model.updateTranslatorOpenAIClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("OpenAI API Key is valid")
                         else:
                             # error update Auth key
                             auth_keys = config.AUTH_KEYS
@@ -3007,30 +3023,36 @@ class Controller:
                             config.AUTH_KEYS = auth_keys
                             printLog("OpenAI API Key is invalid")
                 case "LMStudio":
-                    printLog("Start check LMStudio API Key")
+                    printLog("Start check LMStudio Server")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if config.LMSTUDIO_URL is not None:
                         if model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL) is True:
-                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                            printLog("LMStudio URL is valid")
                             config.SELECTABLE_LMSTUDIO_MODEL_LIST = model.getTranslatorLMStudioModelList()
+                            if len(config.SELECTABLE_LMSTUDIO_MODEL_LIST) == 0:
+                                printLog("LMStudio model list is empty")
+                                break
                             if config.SELECTED_LMSTUDIO_MODEL not in config.SELECTABLE_LMSTUDIO_MODEL_LIST:
                                 config.SELECTED_LMSTUDIO_MODEL = config.SELECTABLE_LMSTUDIO_MODEL_LIST[0]
                             model.setTranslatorLMStudioModel(config.SELECTED_LMSTUDIO_MODEL)
                             model.updateTranslatorLMStudioClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("LMStudio is available")
                         else:
                             printLog("LMStudio is not available")
                 case "Ollama":
-                    printLog("Start check Ollama API Key")
+                    printLog("Start check Ollama Server")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                     if model.authenticationTranslatorOllama() is True:
-                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
-                        printLog("Ollama is available")
                         config.SELECTABLE_OLLAMA_MODEL_LIST = model.getTranslatorOllamaModelList()
+                        if len(config.SELECTABLE_OLLAMA_MODEL_LIST) == 0:
+                            printLog("Ollama model list is empty")
+                            break
                         if config.SELECTED_OLLAMA_MODEL not in config.SELECTABLE_OLLAMA_MODEL_LIST:
                             config.SELECTED_OLLAMA_MODEL = config.SELECTABLE_OLLAMA_MODEL_LIST[0]
                         model.setTranslatorOllamaModel(config.SELECTED_OLLAMA_MODEL)
                         model.updateTranslatorOllamaClient()
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                        printLog("Ollama is available")
                     else:
                         printLog("Ollama is not available")
                 case _:
@@ -3125,6 +3147,9 @@ class Controller:
                 config.WEBSOCKET_SERVER = False
                 model.stopWebSocketServer()
                 printLog("WebSocket server host or port is not available")
+
+        printLog("Revalidate Selected Models")
+        config.revalidate_selected_models()
 
         printLog("Update settings")
         self.updateConfigSettings()
