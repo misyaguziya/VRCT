@@ -1,7 +1,7 @@
 import * as stores from "@store";
 import { useStdoutToPython } from "@useStdoutToPython";
 import { useNotificationStatus } from "@logics_common";
-import { arrayToObject, arrayToIdLabel } from "@utils";
+import { arrayToObject, arrayToIdLabel, speakerDeviceArrayToObject } from "@utils";
 
 const transformResponse = (transformName, payload) => {
     if (!transformName) return payload;
@@ -9,6 +9,8 @@ const transformResponse = (transformName, payload) => {
     switch (transformName) {
         case "arrayToObject":
             return arrayToObject(payload);
+        case "speakerDeviceArrayToObject":
+            return speakerDeviceArrayToObject(payload);
         case "arrayToIdLabel":
             return arrayToIdLabel(payload);
         default:

@@ -52,6 +52,7 @@ class AudioTranscriber:
         device: str = "cpu",
         device_index: int = 0,
         compute_type: str = "auto",
+        is_zluda: bool = False,
     ) -> None:
         self.speaker = speaker
         self.phrase_timeout = phrase_timeout
@@ -61,6 +62,7 @@ class AudioTranscriber:
         self.audio_recognizer = Recognizer()
         self.transcription_engine = "Google"
         self.whisper_model = None
+        self.is_zluda = is_zluda
         self.audio_sources: Dict[str, Any] = {
             "sample_rate": source.SAMPLE_RATE,
             "sample_width": source.SAMPLE_WIDTH,
@@ -72,10 +74,24 @@ class AudioTranscriber:
         }
 
         if transcription_engine == "Whisper" and checkWhisperWeight(root, whisper_weight_type) is True:
-            self.whisper_model = getWhisperModel(
-                root, whisper_weight_type, device=device, device_index=device_index, compute_type=compute_type
-            )
-            self.transcription_engine = "Whisper"
+            try:
+                self.whisper_model = getWhisperModel(
+                    root, whisper_weight_type, device=device, device_index=device_index, compute_type=compute_type, is_zluda=is_zluda
+                )
+                self.transcription_engine = "Whisper"
+            except ValueError as e:
+                # Handle ZLUDA runtime errors
+                if "ZLUDA_RUNTIME_ERROR" in str(e):
+                    errorLogging()
+                    # ZLUDA error will be handled by caller, re-raise
+                    raise
+                # Handle VRAM errors
+                elif "VRAM_OUT_OF_MEMORY" in str(e):
+                    errorLogging()
+                    raise
+                else:
+                    errorLogging()
+                    raise
 
     def transcribeAudioQueue(
         self,

@@ -251,6 +251,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
         except Exception:
             try:
                 source = Microphone(speaker=True)
+                device_index = -1  # Unknown device index for fallback
             except Exception:
                 raise
         super().__init__(
@@ -261,4 +262,7 @@ class SelectedSpeakerEnergyAndAudioRecorder(BaseEnergyAndAudioRecorder):
             phrase_timeout=phrase_timeout,
             record_timeout=record_timeout,
         )
+        # Store device index for availability checking
+        self.device_index = device_index
+        self.device_name = device.get('name', 'Unknown')
         # self.adjustForNoise()

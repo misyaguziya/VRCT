@@ -508,13 +508,36 @@ def _mic_device_validator(val, inst):
     except Exception:
         return None
 
+def _speaker_host_validator(val, inst):
+    if device_manager is None:
+        return None
+    if not isinstance(val, str):
+        return None
+    hosts = list(device_manager.getSpeakerDevices().keys())
+    return val if val in hosts else None
+
 def _speaker_device_validator(val, inst):
+    """Validate speaker device selection (now includes input devices).
+    
+    Validates that the selected speaker device exists in the enumerated device list.
+    The speaker device list includes both loopback devices and regular input devices,
+    enabling capture from virtual audio cables, streaming software, and other audio
+    routing tools.
+    
+    Args:
+        val: Device name to validate (must be a string)
+        inst: Config instance
+        
+    Returns:
+        The validated device name if valid, None otherwise
+    """
     if device_manager is None:
         return None
     if not isinstance(val, str):
         return None
     try:
-        names = [d.get('name') for d in device_manager.getSpeakerDevices()]
+        devices = device_manager.getSpeakerDevices().get(inst.SELECTED_SPEAKER_HOST, [])
+        names = [d.get('name') for d in devices]
         return val if val in names else None
     except Exception:
         return None
@@ -751,9 +774,14 @@ class Config:
     AUTO_SPEAKER_SELECT = ManagedProperty('AUTO_SPEAKER_SELECT', type_=bool)
     SELECTED_MIC_HOST = ValidatedProperty('SELECTED_MIC_HOST', _mic_host_validator)
     SELECTED_MIC_DEVICE = ValidatedProperty('SELECTED_MIC_DEVICE', _mic_device_validator)
+    SELECTED_SPEAKER_HOST = ValidatedProperty('SELECTED_SPEAKER_HOST', _speaker_host_validator)
     SELECTED_SPEAKER_DEVICE = ValidatedProperty('SELECTED_SPEAKER_DEVICE', _speaker_device_validator)
     SELECTED_TRANSLATION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSLATION_COMPUTE_DEVICE', _compute_device_validator)
     SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE', _compute_device_validator)
+
+    # --- ZLUDA configuration ---
+    ZLUDA_ENABLED = ManagedProperty('ZLUDA_ENABLED', type_=bool, serialize=False)
+    ZLUDA_PATH = ManagedProperty('ZLUDA_PATH', type_=str, serialize=True)
 
     def init_config(self):
         # Read Only
@@ -909,11 +937,14 @@ class Config:
         try:
             if device_manager is not None:
                 sp_def = device_manager.getDefaultSpeakerDevice()
+                self._SELECTED_SPEAKER_HOST = sp_def.get("host", {}).get("name", "NoHost")
                 self._SELECTED_SPEAKER_DEVICE = sp_def.get("device", {}).get("name", "NoDevice")
             else:
+                self._SELECTED_SPEAKER_HOST = "NoHost"
                 self._SELECTED_SPEAKER_DEVICE = "NoDevice"
         except Exception:
             errorLogging()
+            self._SELECTED_SPEAKER_HOST = "NoHost"
             self._SELECTED_SPEAKER_DEVICE = "NoDevice"
         self._SPEAKER_THRESHOLD = 300
         self._SPEAKER_AUTOMATIC_THRESHOLD = False
@@ -1018,6 +1049,10 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+
+        # ZLUDA configuration
+        self._ZLUDA_ENABLED = False
+        self._ZLUDA_PATH = None
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:

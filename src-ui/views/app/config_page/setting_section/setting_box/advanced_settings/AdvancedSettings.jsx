@@ -28,6 +28,7 @@ export const AdvancedSettings = () => {
                 <OscPortContainer />
                 <OpenConfigFolderContainer />
                 <OpenSwitchComputeDeviceModalContainer />
+                <ZLUDAInfoContainer />
             </div>
             <WebsocketContainer />
         </div>
@@ -213,5 +214,112 @@ const WebsocketPortContainer = () => {
             state={currentWebsocketPort.state}
             width="10rem"
         />
+    );
+};
+
+// Import for Python communication
+import { useStdoutToPython } from "@useStdoutToPython";
+
+// ZLUDA Information Display Component
+const ZLUDAInfoContainer = () => {
+    const { t } = useI18n();
+    const { asyncStdoutToPython } = useStdoutToPython();
+    const [zludaInfo, setZludaInfo] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchZLUDAInfo = async () => {
+            try {
+                // Call Python backend using the standard IPC method
+                const response = await asyncStdoutToPython("/get/data/zluda_installation_info");
+                if (response && response.status === 200) {
+                    setZludaInfo(response.result);
+                }
+            } catch (error) {
+                console.error("Failed to fetch ZLUDA info:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchZLUDAInfo();
+    }, [asyncStdoutToPython]);
+
+    if (loading) {
+        return (
+            <div className={styles.zludaInfoContainer}>
+                <div className={styles.zludaLabel}>
+                    {t("config_page.advanced_settings.zluda_info.label")}
+                </div>
+                <div className={styles.zludaLoading}>Loading...</div>
+            </div>
+        );
+    }
+
+    if (!zludaInfo) {
+        return null;
+    }
+
+    const openHelpLink = () => {
+        if (zludaInfo.help_url) {
+            window.open(zludaInfo.help_url, "_blank");
+        }
+    };
+
+    return (
+        <div className={styles.zludaInfoContainer}>
+            <div className={styles.zludaHeader}>
+                <span className={styles.zludaLabel}>
+                    {t("config_page.advanced_settings.zluda_info.label")}
+                </span>
+            </div>
+
+            <div className={styles.zludaContent}>
+                {/* Installation Status */}
+                <div className={styles.zludaStatusRow}>
+                    <span className={styles.zludaStatusLabel}>Status:</span>
+                    <span className={zludaInfo.installed ? styles.zludaStatusInstalled : styles.zludaStatusNotInstalled}>
+                        {zludaInfo.installed 
+                            ? "✓ " + t("config_page.advanced_settings.zluda_info.status_installed", { path: zludaInfo.path })
+                            : "✗ " + t("config_page.advanced_settings.zluda_info.status_not_installed")
+                        }
+                    </span>
+                </div>
+
+                {/* Version */}
+                {zludaInfo.installed && (
+                    <div className={styles.zludaInfoRow}>
+                        {t("config_page.advanced_settings.zluda_info.version", { version: zludaInfo.version })}
+                    </div>
+                )}
+
+                {/* AMD GPU Count */}
+                {zludaInfo.installed && (
+                    <div className={styles.zludaInfoRow}>
+                        {t("config_page.advanced_settings.zluda_info.devices", { count: zludaInfo.devices_available })}
+                    </div>
+                )}
+
+                {/* Help Text */}
+                <div className={styles.zludaHelpText}>
+                    {t("config_page.advanced_settings.zluda_info.help_text")}
+                </div>
+
+                {/* Manual Install Instructions */}
+                {!zludaInfo.installed && (
+                    <div className={styles.zludaManualInstall}>
+                        ⓘ {t("config_page.advanced_settings.zluda_info.manual_install")}
+                    </div>
+                )}
+
+                {/* Help Link Button */}
+                <button 
+                    className={styles.zludaHelpButton}
+                    onClick={openHelpLink}
+                >
+                    🔗 {t("config_page.advanced_settings.zluda_info.help_link")}
+                </button>
+            </div>
+        </div>
     );
 };

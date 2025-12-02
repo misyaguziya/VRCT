@@ -1,0 +1,258 @@
+{
+    "CONVERT_MESSAGE_TO_ROMAJI": false,
+    "CONVERT_MESSAGE_TO_HIRAGANA": false,
+    "MAIN_WINDOW_SIDEBAR_COMPACT_MODE": false,
+    "TRANSPARENCY": 100,
+    "UI_SCALING": 100,
+    "TEXTBOX_UI_SCALING": 100,
+    "MESSAGE_BOX_RATIO": 10,
+    "SEND_MESSAGE_BUTTON_TYPE": "show",
+    "SHOW_RESEND_BUTTON": false,
+    "FONT_FAMILY": "Yu Gothic UI",
+    "UI_LANGUAGE": "en",
+    "MAIN_WINDOW_GEOMETRY": {
+        "x_pos": 0,
+        "y_pos": 0,
+        "width": 870,
+        "height": 654
+    },
+    "MIC_THRESHOLD": 300,
+    "MIC_AUTOMATIC_THRESHOLD": false,
+    "MIC_RECORD_TIMEOUT": 3,
+    "MIC_PHRASE_TIMEOUT": 3,
+    "MIC_MAX_PHRASES": 10,
+    "MIC_AVG_LOGPROB": -0.8,
+    "MIC_NO_SPEECH_PROB": 0.6,
+    "MIC_NO_REPEAT_NGRAM_SIZE": 0,
+    "MIC_VAD_FILTER": false,
+    "MIC_VAD_PARAMETERS": {
+        "threshold": 0.5,
+        "neg_threshold": null,
+        "min_speech_duration_ms": 0,
+        "max_speech_duration_s": Infinity,
+        "min_silence_duration_ms": 2000,
+        "speech_pad_ms": 400
+    },
+    "HOTKEYS": {
+        "toggle_vrct_visibility": null,
+        "toggle_translation": null,
+        "toggle_transcription_send": null,
+        "toggle_transcription_receive": null
+    },
+    "SPEAKER_THRESHOLD": 300,
+    "SPEAKER_AUTOMATIC_THRESHOLD": false,
+    "SPEAKER_RECORD_TIMEOUT": 3,
+    "SPEAKER_PHRASE_TIMEOUT": 3,
+    "SPEAKER_MAX_PHRASES": 10,
+    "SPEAKER_AVG_LOGPROB": -0.8,
+    "SPEAKER_NO_SPEECH_PROB": 0.6,
+    "SPEAKER_NO_REPEAT_NGRAM_SIZE": 0,
+    "SPEAKER_VAD_FILTER": false,
+    "SPEAKER_VAD_PARAMETERS": {
+        "threshold": 0.5,
+        "neg_threshold": null,
+        "min_speech_duration_ms": 0,
+        "max_speech_duration_s": Infinity,
+        "min_silence_duration_ms": 2000,
+        "speech_pad_ms": 400
+    },
+    "AUTH_KEYS": {
+        "DeepL_API": null,
+        "Plamo_API": null,
+        "Gemini_API": null,
+        "OpenAI_API": null
+    },
+    "LMSTUDIO_URL": "http://127.0.0.1:1234/v1",
+    "SELECTED_TRANSCRIPTION_COMPUTE_TYPE": "auto",
+    "OVERLAY_SMALL_LOG_SETTINGS": {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 1.0,
+        "tracker": "HMD"
+    },
+    "OVERLAY_LARGE_LOG_SETTINGS": {
+        "x_pos": 0.0,
+        "y_pos": 0.0,
+        "z_pos": 0.0,
+        "x_rotation": 0.0,
+        "y_rotation": 0.0,
+        "z_rotation": 0.0,
+        "display_duration": 5,
+        "fadeout_duration": 2,
+        "opacity": 1.0,
+        "ui_scaling": 1.0,
+        "tracker": "LeftHand"
+    },
+    "SEND_MESSAGE_FORMAT_PARTS": {
+        "message": {
+            "prefix": "",
+            "suffix": ""
+        },
+        "separator": "\n",
+        "translation": {
+            "prefix": "",
+            "separator": "\n",
+            "suffix": ""
+        },
+        "translation_first": false
+    },
+    "RECEIVED_MESSAGE_FORMAT_PARTS": {
+        "message": {
+            "prefix": "",
+            "suffix": ""
+        },
+        "separator": "\n",
+        "translation": {
+            "prefix": "",
+            "separator": "\n",
+            "suffix": ""
+        },
+        "translation_first": false
+    },
+    "WEBSOCKET_SERVER": false,
+    "OSC_IP_ADDRESS": "127.0.0.1",
+    "OSC_PORT": 9000,
+    "AUTO_CLEAR_MESSAGE_BOX": true,
+    "SEND_ONLY_TRANSLATED_MESSAGES": false,
+    "OVERLAY_SMALL_LOG": false,
+    "OVERLAY_LARGE_LOG": false,
+    "OVERLAY_SHOW_ONLY_TRANSLATED_MESSAGES": false,
+    "SEND_MESSAGE_TO_VRC": true,
+    "SEND_RECEIVED_MESSAGE_TO_VRC": false,
+    "LOGGER_FEATURE": false,
+    "VRC_MIC_MUTE_SYNC": false,
+    "NOTIFICATION_VRC_SFX": true,
+    "WEBSOCKET_HOST": "127.0.0.1",
+    "WEBSOCKET_PORT": 2231,
+    "SELECTED_TAB_NO": "1",
+    "SELECTED_TRANSCRIPTION_ENGINE": "Google",
+    "USE_EXCLUDE_WORDS": true,
+    "CTRANSLATE2_WEIGHT_TYPE": "m2m100_418M-ct2-int8",
+    "WHISPER_WEIGHT_TYPE": "base",
+    "SELECTED_PLAMO_MODEL": null,
+    "SELECTED_GEMINI_MODEL": null,
+    "SELECTED_OPENAI_MODEL": null,
+    "SELECTED_LMSTUDIO_MODEL": null,
+    "SELECTED_OLLAMA_MODEL": null,
+    "MIC_WORD_FILTER": [],
+    "PLUGINS_STATUS": [],
+    "SELECTED_TRANSLATION_ENGINES": {
+        "1": "CTranslate2",
+        "2": "CTranslate2",
+        "3": "CTranslate2"
+    },
+    "SELECTED_YOUR_LANGUAGES": {
+        "1": {
+            "1": {
+                "language": "Japanese",
+                "country": "Japan",
+                "enable": true
+            }
+        },
+        "2": {
+            "1": {
+                "language": "Japanese",
+                "country": "Japan",
+                "enable": true
+            }
+        },
+        "3": {
+            "1": {
+                "language": "Japanese",
+                "country": "Japan",
+                "enable": true
+            }
+        }
+    },
+    "SELECTED_TARGET_LANGUAGES": {
+        "1": {
+            "1": {
+                "language": "English",
+                "country": "United States",
+                "enable": true
+            },
+            "2": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            },
+            "3": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            }
+        },
+        "2": {
+            "1": {
+                "language": "English",
+                "country": "United States",
+                "enable": true
+            },
+            "2": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            },
+            "3": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            }
+        },
+        "3": {
+            "1": {
+                "language": "English",
+                "country": "United States",
+                "enable": true
+            },
+            "2": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            },
+            "3": {
+                "language": "English",
+                "country": "United States",
+                "enable": false
+            }
+        }
+    },
+    "SELECTED_TRANSLATION_COMPUTE_TYPE": "auto",
+    "AUTO_MIC_SELECT": true,
+    "AUTO_SPEAKER_SELECT": true,
+    "SELECTED_MIC_HOST": "MME",
+    "SELECTED_MIC_DEVICE": "VBMatrix Out 1 (VB-Audio Matrix",
+    "SELECTED_SPEAKER_DEVICE": "VBMatrix In 1 (VB-Audio Matrix VAIO) [Loopback]",
+    "SELECTED_TRANSLATION_COMPUTE_DEVICE": {
+        "device": "cpu",
+        "device_index": 0,
+        "device_name": "cpu",
+        "compute_types": [
+            "auto",
+            "float32",
+            "int16",
+            "int8",
+            "int8_float32"
+        ]
+    },
+    "SELECTED_TRANSCRIPTION_COMPUTE_DEVICE": {
+        "device": "cpu",
+        "device_index": 0,
+        "device_name": "cpu",
+        "compute_types": [
+            "auto",
+            "float32",
+            "int16",
+            "int8",
+            "int8_float32"
+        ]
+    },
+    "ZLUDA_PATH": null
+}

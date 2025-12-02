@@ -118,8 +118,17 @@ class Controller:
             )
 
     def restartAccessSpeakerDevices(self) -> None:
+        # Check if speaker device is still available before restarting
         if config.ENABLE_TRANSCRIPTION_RECEIVE is True:
-            self.startThreadingTranscriptionReceiveMessage()
+            speaker_device_list = device_manager.getSpeakerDevices().get(config.SELECTED_SPEAKER_HOST, [])
+            device_names = [device.get("name") for device in speaker_device_list]
+            
+            # If the selected device is no longer available, handle unavailability
+            if config.SELECTED_SPEAKER_DEVICE not in device_names and config.SELECTED_SPEAKER_DEVICE != "NoDevice":
+                self.handleSpeakerDeviceUnavailable()
+            else:
+                self.startThreadingTranscriptionReceiveMessage()
+        
         if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
             model.startCheckSpeakerEnergy(
                 self.progressBarSpeakerEnergy,
@@ -143,13 +152,11 @@ class Controller:
         self.run(200, self.run_mapping["selected_mic_host"], config.SELECTED_MIC_HOST)
         self.run(200, self.run_mapping["selected_mic_device"], config.SELECTED_MIC_DEVICE)
 
-    def updateSelectedSpeakerDevice(self, device) -> None:
+    def updateSelectedSpeakerDevice(self, host, device) -> None:
+        config.SELECTED_SPEAKER_HOST = host
         config.SELECTED_SPEAKER_DEVICE = device
-        self.run(
-            200,
-            self.run_mapping["selected_speaker_device"],
-            device,
-        )
+        self.run(200, self.run_mapping["selected_speaker_host"], config.SELECTED_SPEAKER_HOST)
+        self.run(200, self.run_mapping["selected_speaker_device"], config.SELECTED_SPEAKER_DEVICE)
 
     def progressBarMicEnergy(self, energy) -> None:
         if energy is False:
@@ -812,6 +819,12 @@ class Controller:
     def getSelectableWhisperWeightTypeDict(*args, **kwargs) -> dict:
         return {"status":200, "result":config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT}
 
+    @staticmethod
+    def getZLUDAInstallationInfo(*args, **kwargs) -> dict:
+        """Get ZLUDA installation information for UI display."""
+        from utils import getZLUDAInstallationInfo
+        return {"status": 200, "result": getZLUDAInstallationInfo()}
+
     # @staticmethod
     # def getMaxMicThreshold(*args, **kwargs) -> dict:
     #     return {"status":200, "result":config.MAX_MIC_THRESHOLD}
@@ -916,6 +929,10 @@ class Controller:
     @staticmethod
     def getMicDeviceList(*args, **kwargs) -> dict:
         return {"status":200, "result": model.getListMicDevice()}
+
+    @staticmethod
+    def getSpeakerHostList(*args, **kwargs) -> dict:
+        return {"status":200, "result": model.getListSpeakerHost()}
 
     @staticmethod
     def getSpeakerDeviceList(*args, **kwargs) -> dict:
@@ -1330,6 +1347,19 @@ class Controller:
             device_manager.clearCallbackProcessAfterUpdateSpeakerDevices()
             config.AUTO_SPEAKER_SELECT = False
         return {"status":200, "result":config.AUTO_SPEAKER_SELECT}
+
+    @staticmethod
+    def getSelectedSpeakerHost(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_SPEAKER_HOST}
+
+    def setSelectedSpeakerHost(self, data, *args, **kwargs) -> dict:
+        config.SELECTED_SPEAKER_HOST = data
+        config.SELECTED_SPEAKER_DEVICE = model.getSpeakerDefaultDevice()
+        if config.ENABLE_CHECK_ENERGY_RECEIVE is True:
+            self.stopThreadingCheckSpeakerEnergy()
+            self.startThreadingTranscriptionReceiveMessage()
+        self.run(200, self.run_mapping["selected_speaker_device"], config.SELECTED_SPEAKER_DEVICE)
+        return {"status":200, "result":config.SELECTED_SPEAKER_HOST}
 
     @staticmethod
     def getSelectedSpeakerDevice(*args, **kwargs) -> dict:
@@ -2581,12 +2611,60 @@ class Controller:
         th_stopTranscriptionSendMessage.start()
         th_stopTranscriptionSendMessage.join()
 
+    def handleSpeakerDeviceUnavailable(self) -> None:
+        """Handle speaker device becoming unavailable during transcription."""
+        try:
+            # Check if the selected speaker device is still available
+            speaker_device_list = device_manager.getSpeakerDevices().get(config.SELECTED_SPEAKER_HOST, [])
+            device_names = [device.get("name") for device in speaker_device_list]
+            
+            if config.SELECTED_SPEAKER_DEVICE not in device_names:
+                # Device is no longer available - stop transcription
+                self.stopTranscriptionReceiveMessage()
+                
+                # Notify user about device unavailability
+                self.run(
+                    400,
+                    self.run_mapping["error_device"],
+                    {
+                        "message": f"Speaker device '{config.SELECTED_SPEAKER_DEVICE}' became unavailable during transcription",
+                        "data": None
+                    },
+                )
+                
+                # Disable transcription receive
+                config.ENABLE_TRANSCRIPTION_RECEIVE = False
+                self.run(
+                    200,
+                    self.run_mapping["enable_transcription_receive"],
+                    False,
+                )
+        except Exception:
+            errorLogging()
+
     def startTranscriptionReceiveMessage(self) -> None:
         while self.device_access_status is False:
             sleep(1)
         self.device_access_status = False
         try:
             model.startSpeakerTranscript(self.speakerMessage)
+        except (OSError, IOError) as e:
+            # Device error (device disconnected or unavailable)
+            self.run(
+                400,
+                self.run_mapping["error_device"],
+                {
+                    "message": f"Speaker device error: {str(e)}",
+                    "data": None
+                },
+            )
+            # Disable transcription receive
+            config.ENABLE_TRANSCRIPTION_RECEIVE = False
+            self.run(
+                200,
+                self.run_mapping["enable_transcription_receive"],
+                False,
+            )
         except Exception as e:
             # VRAM不足エラーの検出
             is_vram_error, error_message = model.detectVRAMError(e)

@@ -155,14 +155,58 @@ class Model:
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
 
     def changeTranslatorCTranslate2Model(self):
+        """Change the CTranslate2 translation model.
+        
+        Handles ZLUDA runtime errors by falling back to CPU if ZLUDA device fails.
+        
+        Returns:
+            Tuple of (success: bool, error_message: Optional[str])
+        """
         self.ensure_initialized()
-        self.translator.changeCTranslate2Model(
+        from utils import isZLUDADevice
+        
+        is_zluda = isZLUDADevice(config.SELECTED_TRANSLATION_COMPUTE_DEVICE)
+        
+        success, error_msg = self.translator.changeCTranslate2Model(
             path=config.PATH_LOCAL,
             model_type=config.CTRANSLATE2_WEIGHT_TYPE,
             device=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device"],
             device_index=config.SELECTED_TRANSLATION_COMPUTE_DEVICE["device_index"],
-            compute_type=config.SELECTED_TRANSLATION_COMPUTE_TYPE
-            )
+            compute_type=config.SELECTED_TRANSLATION_COMPUTE_TYPE,
+            is_zluda=is_zluda
+        )
+        
+        # If ZLUDA failed, fall back to CPU
+        if not success and is_zluda:
+            printLog("ZLUDA translation model initialization failed, falling back to CPU", error_msg)
+            
+            # Get CPU device from compute device list
+            cpu_device = None
+            for device in config.SELECTABLE_COMPUTE_DEVICE_LIST:
+                if device.get("device") == "cpu":
+                    cpu_device = device
+                    break
+            
+            if cpu_device:
+                # Update config to use CPU
+                config.SELECTED_TRANSLATION_COMPUTE_DEVICE = cpu_device
+                config.SELECTED_TRANSLATION_COMPUTE_TYPE = "auto"
+                
+                # Retry with CPU
+                success, error_msg = self.translator.changeCTranslate2Model(
+                    path=config.PATH_LOCAL,
+                    model_type=config.CTRANSLATE2_WEIGHT_TYPE,
+                    device="cpu",
+                    device_index=0,
+                    compute_type="auto",
+                    is_zluda=False
+                )
+                
+                if success:
+                    printLog("Successfully fell back to CPU for translation", None)
+                    return (True, "ZLUDA_FALLBACK_TO_CPU")
+            
+        return (success, error_msg)
 
     def downloadCTranslate2ModelWeight(self, weight_type, callback=None, end_callback=None):
         return downloadCTranslate2Weight(config.PATH_LOCAL, weight_type, callback, end_callback)
@@ -611,14 +655,41 @@ class Model:
             result = ["NoDevice"]
         return result
 
+    def getListSpeakerHost(self):
+        self.ensure_initialized()
+        try:
+            sd = device_manager.getSpeakerDevices()
+            result = [host for host in sd.keys()]
+        except Exception:
+            errorLogging()
+            result = []
+        return result
+
+    def getSpeakerDefaultDevice(self):
+        self.ensure_initialized()
+        try:
+            sd = device_manager.getSpeakerDevices()
+            result = sd.get(config.SELECTED_SPEAKER_HOST, [{"name": "NoDevice"}])[0]["name"]
+        except Exception:
+            errorLogging()
+            result = "NoDevice"
+        return result
+
     def getListSpeakerDevice(self):
         self.ensure_initialized()
         try:
             sd = device_manager.getSpeakerDevices()
-            result = [device["name"] for device in sd]
+            # Return device objects with type information instead of just names
+            result = []
+            for device in sd.get(config.SELECTED_SPEAKER_HOST, [{"name": "NoDevice"}]):
+                result.append({
+                    "name": device["name"],
+                    "index": device.get("index", -1),
+                    "isLoopbackDevice": device.get("isLoopbackDevice", False)
+                })
         except Exception:
             errorLogging()
-            result = ["NoDevice"]
+            result = [{"name": "NoDevice", "index": -1, "isLoopbackDevice": False}]
         return result
 
     def startMicTranscript(self, fnc):
@@ -649,18 +720,64 @@ class Model:
             )
             # self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, mic_energy_queue)
             self.mic_audio_recorder.recordIntoQueue(self.mic_audio_queue, None)
-            self.mic_transcriber = AudioTranscriber(
-                speaker=False,
-                source=self.mic_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.MIC_MAX_PHRASES,
-                transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-                root=config.PATH_LOCAL,
-                whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-                device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
-                device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
-                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            )
+            
+            from utils import isZLUDADevice
+            is_zluda = isZLUDADevice(config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE)
+            
+            try:
+                self.mic_transcriber = AudioTranscriber(
+                    speaker=False,
+                    source=self.mic_audio_recorder.source,
+                    phrase_timeout=phrase_timeout,
+                    max_phrases=config.MIC_MAX_PHRASES,
+                    transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+                    root=config.PATH_LOCAL,
+                    whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+                    device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
+                    device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                    compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+                    is_zluda=is_zluda,
+                )
+            except ValueError as e:
+                # Handle ZLUDA runtime errors by falling back to CPU
+                if "ZLUDA_RUNTIME_ERROR" in str(e) and is_zluda:
+                    printLog("ZLUDA transcription model initialization failed, falling back to CPU", str(e))
+                    
+                    # Get CPU device from compute device list
+                    cpu_device = None
+                    for device in config.SELECTABLE_COMPUTE_DEVICE_LIST:
+                        if device.get("device") == "cpu":
+                            cpu_device = device
+                            break
+                    
+                    if cpu_device:
+                        # Update config to use CPU
+                        config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = cpu_device
+                        config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
+                        
+                        # Retry with CPU
+                        self.mic_transcriber = AudioTranscriber(
+                            speaker=False,
+                            source=self.mic_audio_recorder.source,
+                            phrase_timeout=phrase_timeout,
+                            max_phrases=config.MIC_MAX_PHRASES,
+                            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+                            root=config.PATH_LOCAL,
+                            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+                            device="cpu",
+                            device_index=0,
+                            compute_type="auto",
+                            is_zluda=False,
+                        )
+                        printLog("Successfully fell back to CPU for mic transcription", None)
+                        # Store fallback info for notification
+                        self._zluda_transcription_fallback = True
+                    else:
+                        # No CPU device available, re-raise
+                        raise
+                else:
+                    # Not a ZLUDA error or other error, re-raise
+                    raise
             def sendMicTranscript():
                 try:
                     selected_your_languages = config.SELECTED_YOUR_LANGUAGES[config.SELECTED_TAB_NO]
@@ -819,9 +936,10 @@ class Model:
 
     def startSpeakerTranscript(self, fnc:Optional[Callable[[dict], None]]=None) -> None:
         self.ensure_initialized()
+        speaker_host_name = config.SELECTED_SPEAKER_HOST
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
 
-        speaker_device_list = device_manager.getSpeakerDevices()
+        speaker_device_list = device_manager.getSpeakerDevices().get(speaker_host_name, [{"name": "NoDevice"}])
         selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":
@@ -842,20 +960,67 @@ class Model:
                 dynamic_energy_threshold=config.SPEAKER_AUTOMATIC_THRESHOLD,
                 phrase_time_limit=record_timeout,
             )
+            
             # self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, speaker_energy_queue)
             self.speaker_audio_recorder.recordIntoQueue(speaker_audio_queue, None)
-            self.speaker_transcriber = AudioTranscriber(
-                speaker=True,
-                source=self.speaker_audio_recorder.source,
-                phrase_timeout=phrase_timeout,
-                max_phrases=config.SPEAKER_MAX_PHRASES,
-                transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
-                root=config.PATH_LOCAL,
-                whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
-                device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
-                device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
-                compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
-            )
+            
+            from utils import isZLUDADevice
+            is_zluda = isZLUDADevice(config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE)
+            
+            try:
+                self.speaker_transcriber = AudioTranscriber(
+                    speaker=True,
+                    source=self.speaker_audio_recorder.source,
+                    phrase_timeout=phrase_timeout,
+                    max_phrases=config.SPEAKER_MAX_PHRASES,
+                    transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+                    root=config.PATH_LOCAL,
+                    whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+                    device=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device"],
+                    device_index=config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE["device_index"],
+                    compute_type=config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE,
+                    is_zluda=is_zluda,
+                )
+            except ValueError as e:
+                # Handle ZLUDA runtime errors by falling back to CPU
+                if "ZLUDA_RUNTIME_ERROR" in str(e) and is_zluda:
+                    printLog("ZLUDA transcription model initialization failed, falling back to CPU", str(e))
+                    
+                    # Get CPU device from compute device list
+                    cpu_device = None
+                    for device in config.SELECTABLE_COMPUTE_DEVICE_LIST:
+                        if device.get("device") == "cpu":
+                            cpu_device = device
+                            break
+                    
+                    if cpu_device:
+                        # Update config to use CPU
+                        config.SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = cpu_device
+                        config.SELECTED_TRANSCRIPTION_COMPUTE_TYPE = "auto"
+                        
+                        # Retry with CPU
+                        self.speaker_transcriber = AudioTranscriber(
+                            speaker=True,
+                            source=self.speaker_audio_recorder.source,
+                            phrase_timeout=phrase_timeout,
+                            max_phrases=config.SPEAKER_MAX_PHRASES,
+                            transcription_engine=config.SELECTED_TRANSCRIPTION_ENGINE,
+                            root=config.PATH_LOCAL,
+                            whisper_weight_type=config.WHISPER_WEIGHT_TYPE,
+                            device="cpu",
+                            device_index=0,
+                            compute_type="auto",
+                            is_zluda=False,
+                        )
+                        printLog("Successfully fell back to CPU for speaker transcription", None)
+                        # Store fallback info for notification
+                        self._zluda_transcription_fallback = True
+                    else:
+                        # No CPU device available, re-raise
+                        raise
+                else:
+                    # Not a ZLUDA error or other error, re-raise
+                    raise
             def sendSpeakerTranscript():
                 try:
                     selected_target_languages = config.SELECTED_TARGET_LANGUAGES[config.SELECTED_TAB_NO]
@@ -923,8 +1088,9 @@ class Model:
         if fnc is not None:
             self.check_speaker_energy_fnc = cast(Callable[[float], None], fnc)
 
+        speaker_host_name = config.SELECTED_SPEAKER_HOST
         speaker_device_name = config.SELECTED_SPEAKER_DEVICE
-        speaker_device_list = device_manager.getSpeakerDevices()
+        speaker_device_list = device_manager.getSpeakerDevices().get(speaker_host_name, [{"name": "NoDevice"}])
         selected_speaker_device = [device for device in speaker_device_list if device["name"] == speaker_device_name]
 
         if len(selected_speaker_device) == 0 or speaker_device_name == "NoDevice":

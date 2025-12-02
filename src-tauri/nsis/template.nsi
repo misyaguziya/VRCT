@@ -592,10 +592,14 @@ Section Install
   ; 指定のURLからファイルをダウンロード
   !define SOFTWARE_RELEASE_URL "https://huggingface.co/ms-software/VRCT/resolve/main"
   !define SOFTWARE_DOWNLOAD_FILENAME "VRCT.zip"
+  !define ZLUDA_RELEASE_URL "https://github.com/vosen/ZLUDA/releases/download/v5"
+  !define ZLUDA_DOWNLOAD_FILENAME "ZLUDA-windows-amd64.zip"
   Var /GLOBAL i
   Var /GLOBAL cmder_dl
   Var /GLOBAL cmder_version
   Var /GLOBAL file_name
+  Var /GLOBAL zluda_dl
+  Var /GLOBAL zluda_file
   StrCpy $file_name "${SOFTWARE_DOWNLOAD_FILENAME}"
 
   StrCpy $cmder_dl "${SOFTWARE_RELEASE_URL}/$file_name"
@@ -611,6 +615,42 @@ Section Install
   dlok:
   DetailPrint "Extracting $file_name ..."
   nsisunz::UnzipToStack "$TEMP\$file_name" $INSTDIR
+
+  ; Download and Install ZLUDA v5 from GitHub
+  DetailPrint "Downloading ZLUDA v5 from GitHub..."
+  StrCpy $zluda_file "${ZLUDA_DOWNLOAD_FILENAME}"
+  StrCpy $zluda_dl "${ZLUDA_RELEASE_URL}/$zluda_file"
+  DetailPrint "ZLUDA URL: $zluda_dl"
+  
+  inetc::get $zluda_dl "$TEMP\$zluda_file" /end
+  Pop $0
+  StrCmp "$0" "OK" zluda_dlok
+  DetailPrint "ZLUDA Download Failed: $0 (non-critical, continuing installation)"
+  Goto zluda_done
+  
+  zluda_dlok:
+  DetailPrint "ZLUDA downloaded successfully"
+  DetailPrint "Installing ZLUDA..."
+  StrCpy $2 "$INSTDIR\zluda"
+  CreateDirectory "$2"
+  
+  DetailPrint "Extracting ZLUDA to $2..."
+  nsisunz::UnzipToStack "$TEMP\$zluda_file" "$2"
+  Pop $0
+  StrCmp "$0" "success" zluda_extract_ok
+  DetailPrint "ZLUDA extraction failed: $0 (non-critical)"
+  Goto zluda_done
+  
+  zluda_extract_ok:
+  DetailPrint "ZLUDA v5 installed successfully at $2"
+  DetailPrint "AMD GPU users can now use ZLUDA for GPU acceleration"
+  
+  ; Write ZLUDA path to config for UI display
+  FileOpen $3 "$INSTDIR\zluda_path.txt" w
+  FileWrite $3 "$2"
+  FileClose $3
+  
+  zluda_done:
 
   ; Create uninstaller
   WriteUninstaller "$INSTDIR\uninstall.exe"
@@ -755,6 +795,9 @@ Section Uninstall
 
   ; Delete weights folder
   RmDir /r "$INSTDIR\weights"
+
+  ; Delete zluda folder
+  RmDir /r "$INSTDIR\zluda"
 
   ; Delete uninstaller
   Delete "$INSTDIR\uninstall.exe"

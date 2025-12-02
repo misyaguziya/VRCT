@@ -302,6 +302,15 @@ config_page:
             label: "Open Config File"
         switch_compute_device:
             label: "Switch VRCT To CPU/GPU Version"
+        zluda_info:
+            label: "ZLUDA (AMD GPU Support)"
+            status_installed: "Installed at: {{path}}"
+            status_not_installed: "Not installed"
+            version: "Version: {{version}}"
+            devices: "AMD GPUs detected: {{count}}"
+            help_text: "ZLUDA enables AMD GPU acceleration for AI models. It was automatically installed during setup."
+            help_link: "Learn more about ZLUDA"
+            manual_install: "To manually install ZLUDA, download from GitHub and extract to the 'zluda' folder in the VRCT installation directory."
         enable_websocket:
             label: "Enable WebSocket Server"
         websocket_host:

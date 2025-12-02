@@ -32,6 +32,8 @@ run_mapping = {
     "error_translation_speaker_vram_overflow":"/run/error_translation_speaker_vram_overflow",
     "error_transcription_mic_vram_overflow":"/run/error_transcription_mic_vram_overflow",
     "error_transcription_speaker_vram_overflow":"/run/error_transcription_speaker_vram_overflow",
+    "error_translation_zluda_runtime":"/run/error_translation_zluda_runtime",
+    "error_transcription_zluda_runtime":"/run/error_transcription_zluda_runtime",
 
     "word_filter":"/run/word_filter",
 
@@ -44,6 +46,7 @@ run_mapping = {
 
     "selected_mic_host":"/run/selected_mic_host",
     "selected_mic_device":"/run/selected_mic_device",
+    "selected_speaker_host":"/run/selected_speaker_host",
     "selected_speaker_device":"/run/selected_speaker_device",
 
     "selected_translation_engines":"/run/selected_translation_engines",
@@ -233,6 +236,7 @@ mapping = {
     # Transcription
     "/get/data/selectable_mic_host_list": {"status": True, "variable":controller.getMicHostList},
     "/get/data/selectable_mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
+    "/get/data/selectable_speaker_host_list": {"status": True, "variable":controller.getSpeakerHostList},
     "/get/data/selectable_speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
     # "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
@@ -285,6 +289,9 @@ mapping = {
     "/get/data/auto_speaker_select": {"status": True, "variable":controller.getAutoSpeakerSelect},
     "/set/enable/auto_speaker_select": {"status": True, "variable":controller.setEnableAutoSpeakerSelect},
     "/set/disable/auto_speaker_select": {"status": True, "variable":controller.setDisableAutoSpeakerSelect},
+
+    "/get/data/selected_speaker_host": {"status": True, "variable":controller.getSelectedSpeakerHost},
+    "/set/data/selected_speaker_host": {"status": True, "variable":controller.setSelectedSpeakerHost},
 
     "/get/data/selected_speaker_device": {"status": True, "variable":controller.getSelectedSpeakerDevice},
     "/set/data/selected_speaker_device": {"status": True, "variable":controller.setSelectedSpeakerDevice},
@@ -390,6 +397,8 @@ mapping = {
 
     "/get/data/osc_port": {"status": True, "variable":controller.getOscPort},
     "/set/data/osc_port": {"status": True, "variable":controller.setOscPort},
+
+    "/get/data/zluda_installation_info": {"status": True, "variable":controller.getZLUDAInstallationInfo},
 
     "/get/data/notification_vrc_sfx": {"status": True, "variable":controller.getNotificationVrcSfx},
     "/set/enable/notification_vrc_sfx": {"status": True, "variable":controller.setEnableNotificationVrcSfx},

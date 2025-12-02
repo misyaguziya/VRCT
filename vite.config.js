@@ -47,13 +47,14 @@ export default defineConfig(async () => {
             outDir: path.resolve(__dirname, "dist"),
             rollupOptions: {
                 input: {
-                    main: path.resolve(__dirname, "index.html"),
+                    main: "index.html",
                 },
             },
             sourcemap: true,
         },
 
         resolve: {
+            preserveSymlinks: false,
             alias: {
                 "@root": path.resolve(__dirname),
 

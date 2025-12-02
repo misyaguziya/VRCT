@@ -299,6 +299,15 @@ config_page:
             label: "打開設定文件"
         switch_compute_device:
             label:
+        zluda_info:
+            label: "ZLUDA (AMD GPU 支援)"
+            status_installed: "已安裝: {{path}}"
+            status_not_installed: "未安裝"
+            version: "版本: {{version}}"
+            devices: "偵測到的 AMD GPU: {{count}}個"
+            help_text: "ZLUDA 為 AMD GPU 提供 AI 模型加速支援。在安裝過程中已自動安裝。"
+            help_link: "了解更多關於 ZLUDA"
+            manual_install: "要手動安裝，請從 GitHub 下載並解壓縮到 VRCT 安裝目錄的 'zluda' 資料夾中。"
         enable_websocket:
             label:
         websocket_host:

@@ -115,11 +115,20 @@ def getWhisperModel(
     device: str = "cpu",
     device_index: int = 0,
     compute_type: str = "auto",
+    is_zluda: bool = False,
 ) -> WhisperModel:
     """Return a `WhisperModel` instance loaded from local weights.
 
+    Args:
+        root: Root path for model weights
+        weight_type: Type of Whisper model to load
+        device: Device type ("cpu" or "cuda")
+        device_index: Device index for GPU
+        compute_type: Compute type for inference
+        is_zluda: Whether this is a ZLUDA device
+
     Raises:
-        ValueError: when VRAM shortage is detected (wrapped from RuntimeError)
+        ValueError: when VRAM shortage is detected or ZLUDA runtime error occurs
         Exception: other loading errors are propagated.
     """
     path = os_path.join(root, "weights", "whisper", weight_type)
@@ -141,6 +150,13 @@ def getWhisperModel(
         error_message = str(e)
         if "CUDA out of memory" in error_message or "CUBLAS_STATUS_ALLOC_FAILED" in error_message:
             raise ValueError("VRAM_OUT_OF_MEMORY", error_message)
+        
+        # Check if this is a ZLUDA runtime error
+        if is_zluda:
+            from utils import detectZLUDARuntimeError
+            if detectZLUDARuntimeError(e):
+                raise ValueError("ZLUDA_RUNTIME_ERROR", error_message)
+        
         raise
 
 if __name__ == "__main__":

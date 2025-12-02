@@ -5,6 +5,23 @@ export const arrayToObject = (array) => {
     }, {});
 };
 
+export const speakerDeviceArrayToObject = (array) => {
+    // Transform speaker device array with type information
+    // Input: [{name: "Device1", index: 0, isLoopbackDevice: true}, ...]
+    // Output: {"Device1": "Device1 (Loopback)", "Device2": "Device2 (Output)", ...}
+    return array.reduce((obj, device) => {
+        if (typeof device === 'string') {
+            // Fallback for old format (just strings)
+            obj[device] = device;
+        } else if (device && device.name) {
+            const deviceType = device.isLoopbackDevice ? " (Loopback)" : " (Output)";
+            const displayName = device.name === "NoDevice" ? device.name : device.name + deviceType;
+            obj[device.name] = displayName;
+        }
+        return obj;
+    }, {});
+};
+
 export const arrayToIdLabel = (array) => {
     return array.map((element) => ({
         id: element,

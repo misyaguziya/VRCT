@@ -260,11 +260,24 @@ class Translator:
         """Update the Ollama client (fetch available models)."""
         self.ollama_client.updateClient()
 
-    def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto") -> None:
+    def changeCTranslate2Model(self, path: str, model_type: str, device: str = "cpu", device_index: int = 0, compute_type: str = "auto", is_zluda: bool = False) -> Tuple[bool, Optional[str]]:
         """Load a CTranslate2 model from weights.
 
         This sets internal translator/tokenizer objects and flips
         ``is_loaded_ctranslate2_model`` on success.
+        
+        Args:
+            path: Root path for model weights
+            model_type: Type of model to load
+            device: Device type ("cpu" or "cuda")
+            device_index: Device index for GPU
+            compute_type: Compute type for inference
+            is_zluda: Whether this is a ZLUDA device
+            
+        Returns:
+            Tuple of (success: bool, error_message: Optional[str])
+            - (True, None) on success
+            - (False, error_message) on failure
         """
         self.is_loaded_ctranslate2_model = False
         directory_name = ctranslate2_weights[model_type]["directory_name"]
@@ -274,21 +287,35 @@ class Translator:
 
         if compute_type == "auto":
             compute_type = getBestComputeType(device, device_index)
-        self.ctranslate2_translator = ctranslate2.Translator(
-            weight_path,
-            device=device,
-            device_index=device_index,
-            compute_type=compute_type,
-            inter_threads=1,
-            intra_threads=4,
-        )
+        
+        try:
+            self.ctranslate2_translator = ctranslate2.Translator(
+                weight_path,
+                device=device,
+                device_index=device_index,
+                compute_type=compute_type,
+                inter_threads=1,
+                intra_threads=4,
+            )
+        except Exception as e:
+            errorLogging()
+            # Check if this is a ZLUDA runtime error
+            from utils import detectZLUDARuntimeError
+            if is_zluda and detectZLUDARuntimeError(e):
+                error_msg = f"ZLUDA runtime error during translation model initialization: {str(e)}"
+                return (False, error_msg)
+            # For non-ZLUDA errors, re-raise
+            raise
+        
         try:
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
         except Exception:
             errorLogging()
             tokenizer_path = os_path.join("./weights", "ctranslate2", directory_name, "tokenizer")
             self.ctranslate2_tokenizer = transformers.AutoTokenizer.from_pretrained(tokenizer, cache_dir=tokenizer_path)
+        
         self.is_loaded_ctranslate2_model = True
+        return (True, None)
 
     def isLoadedCTranslate2Model(self) -> bool:
         return self.is_loaded_ctranslate2_model

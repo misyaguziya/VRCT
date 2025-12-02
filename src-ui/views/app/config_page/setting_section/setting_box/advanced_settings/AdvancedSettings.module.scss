@@ -3,3 +3,114 @@
     gap: 6.4rem;
     flex-direction: column;
 }
+
+
+// ZLUDA Information Display Styles
+.zludaInfoContainer {
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+
+    .zludaHeader {
+        margin-bottom: 0.75rem;
+    }
+
+    .zludaLabel {
+        font-weight: 600;
+        font-size: 1rem;
+        color: var(--text-primary, #ffffff);
+    }
+
+    .zludaLoading {
+        padding: 1rem;
+        text-align: center;
+        color: var(--text-secondary, #aaaaaa);
+        font-style: italic;
+    }
+
+    .zludaContent {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding-left: 0.5rem;
+
+        .zludaStatusRow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+
+            .zludaStatusLabel {
+                font-weight: 500;
+                color: var(--text-secondary, #cccccc);
+            }
+
+            .zludaStatusInstalled {
+                color: #4caf50;
+                font-weight: 500;
+                word-break: break-all;
+            }
+
+            .zludaStatusNotInstalled {
+                color: #ff9800;
+                font-weight: 500;
+            }
+        }
+
+        .zludaInfoRow {
+            font-size: 0.9rem;
+            color: var(--text-secondary, #aaaaaa);
+            padding: 0.25rem 0;
+        }
+
+        .zludaHelpText {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background-color: rgba(33, 150, 243, 0.1);
+            border-left: 3px solid #2196f3;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary, #cccccc);
+        }
+
+        .zludaManualInstall {
+            margin-top: 0.5rem;
+            padding: 0.75rem;
+            background-color: rgba(255, 152, 0, 0.1);
+            border-left: 3px solid #ff9800;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: var(--text-secondary, #cccccc);
+        }
+
+        .zludaHelpButton {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-primary, #ffffff);
+            transition: all 0.2s ease;
+            align-self: flex-start;
+
+            &:hover {
+                background-color: rgba(33, 150, 243, 0.2);
+                border-color: #2196f3;
+                transform: translateY(-1px);
+            }
+
+            &:active {
+                transform: translateY(0);
+            }
+        }
+    }
+}

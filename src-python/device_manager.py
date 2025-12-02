@@ -87,14 +87,15 @@ class DeviceManager:
 
         self.mic_devices: Dict[str, List[Dict[str, Any]]] = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
         self.default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
-        self.speaker_devices: List[Dict[str, Any]] = [{"index": -1, "name": "NoDevice"}]
-        self.default_speaker_device: Dict[str, Any] = {"device": {"index": -1, "name": "NoDevice"}}
+        self.speaker_devices: Dict[str, List[Dict[str, Any]]] = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
+        self.default_speaker_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
 
         # Initialize previous state trackers
         self.prev_mic_host: List[str] = [host for host in self.mic_devices]
         self.prev_mic_devices: Dict[str, List[Dict[str, Any]]] = self.mic_devices
         self.prev_default_mic_device: Dict[str, Any] = self.default_mic_device
-        self.prev_speaker_devices: List[Dict[str, Any]] = self.speaker_devices
+        self.prev_speaker_host: List[str] = [host for host in self.speaker_devices]
+        self.prev_speaker_devices: Dict[str, List[Dict[str, Any]]] = self.speaker_devices
         self.prev_default_speaker_device: Dict[str, Any] = self.default_speaker_device
 
         # Update flags
@@ -140,14 +141,14 @@ class DeviceManager:
     def update(self):
         buffer_mic_devices: Dict[str, List[Dict[str, Any]]] = {}
         buffer_default_mic_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
-        buffer_speaker_devices: List[Dict[str, Any]] = []
-        buffer_default_speaker_device: Dict[str, Any] = {"device": {"index": -1, "name": "NoDevice"}}
+        buffer_speaker_devices: Dict[str, List[Dict[str, Any]]] = {}
+        buffer_default_speaker_device: Dict[str, Any] = {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}}
 
         if PyAudio is None:
             # PyAudio not available; leave defaults in place
             self.mic_devices = buffer_mic_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]}
             self.default_mic_device = buffer_default_mic_device
-            self.speaker_devices = buffer_speaker_devices or [{"index": -1, "name": "NoDevice"}]
+            self.speaker_devices = buffer_speaker_devices or {"NoHost": [{"index": -1, "name": "NoDevice"}]}
             self.default_speaker_device = buffer_default_speaker_device
             return
 
@@ -179,54 +180,58 @@ class DeviceManager:
                         continue
                     break
 
-                # collect speaker loopback devices (requires WASAPI)
-                speaker_devices: List[Dict[str, Any]] = []
-                if paWASAPI is not None:
-                    try:
-                        wasapi_info = p.get_host_api_info_by_type(paWASAPI)
-                        wasapi_name = wasapi_info.get("name")
-                        for host_index in range(p.get_host_api_count()):
-                            host = p.get_host_api_info_by_index(host_index)
-                            if host.get("name") == wasapi_name:
-                                device_count = host.get('deviceCount', 0)
-                                for device_index in range(device_count):
-                                    device = p.get_device_info_by_host_api_device_index(host_index, device_index)
-                                    if not device.get("isLoopbackDevice", True):
-                                        for loopback in p.get_loopback_device_info_generator():
-                                            # match by name inclusion
-                                            if device.get("name") in loopback.get("name", ""):
-                                                speaker_devices.append(loopback)
-                    except Exception:
-                        # WASAPI not available or failed; ignore and continue
-                        pass
+                # Collect speaker devices grouped by host (both loopback and regular input devices)
+                # This enables speaker device to work with loopback AND any audio input source (virtual cables, etc.)
+                for host_index in range(p.get_host_api_count()):
+                    host = p.get_host_api_info_by_index(host_index)
+                    host_name = host.get("name")
+                    device_count = host.get('deviceCount', 0)
+                    
+                    for device_index in range(device_count):
+                        device = p.get_device_info_by_host_api_device_index(host_index, device_index)
+                        
+                        # Collect regular input devices (non-loopback)
+                        if device.get("maxInputChannels", 0) > 0 and not device.get("isLoopbackDevice", False):
+                            device_copy = dict(device)
+                            device_copy["isLoopbackDevice"] = False
+                            buffer_speaker_devices.setdefault(host_name, []).append(device_copy)
+                        
+                        # Collect loopback devices (WASAPI only)
+                        if paWASAPI is not None and host_name == p.get_host_api_info_by_type(paWASAPI).get("name"):
+                            if not device.get("isLoopbackDevice", True):
+                                try:
+                                    for loopback in p.get_loopback_device_info_generator():
+                                        if device.get("name") in loopback.get("name", ""):
+                                            loopback_copy = dict(loopback)
+                                            loopback_copy["isLoopbackDevice"] = True
+                                            buffer_speaker_devices.setdefault(host_name, []).append(loopback_copy)
+                                except Exception:
+                                    pass
+                
+                if not buffer_speaker_devices:
+                    buffer_speaker_devices = {"NoHost": [{"index": -1, "name": "NoDevice"}]}
 
-                # deduplicate and sort
-                speaker_devices = [dict(t) for t in {tuple(d.items()) for d in speaker_devices}] or [{"index": -1, "name": "NoDevice"}]
-                buffer_speaker_devices = sorted(speaker_devices, key=lambda d: d.get('index', -1))
-
-                # default speaker
+                # Find default speaker device (loopback of default output)
                 if paWASAPI is not None:
                     try:
                         wasapi_info = p.get_host_api_info_by_type(paWASAPI)
                         default_speaker_device_index = wasapi_info.get("defaultOutputDevice", -1)
                         for host_index in range(p.get_host_api_count()):
-                            host_info = p.get_host_api_info_by_index(host_index)
-                            device_count = host_info.get('deviceCount', 0)
-                            for device_index in range(0, device_count):
+                            host = p.get_host_api_info_by_index(host_index)
+                            device_count = host.get('deviceCount', 0)
+                            for device_index in range(device_count):
                                 device = p.get_device_info_by_host_api_device_index(host_index, device_index)
                                 if device.get("index") == default_speaker_device_index:
                                     default_speakers = device
                                     if not default_speakers.get("isLoopbackDevice", True):
                                         for loopback in p.get_loopback_device_info_generator():
                                             if default_speakers.get("name") in loopback.get("name", ""):
-                                                buffer_default_speaker_device = {"device": loopback}
+                                                buffer_default_speaker_device = {"host": host, "device": loopback}
                                                 break
                                     break
-
                             if buffer_default_speaker_device["device"].get("name") != "NoDevice":
                                 break
                     except Exception:
-                        # best-effort; ignore failures
                         pass
 
         except Exception:
@@ -247,10 +252,13 @@ class DeviceManager:
         if self.prev_mic_host != [host for host in self.mic_devices]:
             self.update_flag_host_list = True
             self.prev_mic_host = [host for host in self.mic_devices]
+        if self.prev_speaker_host != [host for host in self.speaker_devices]:
+            self.update_flag_host_list = True
+            self.prev_speaker_host = [host for host in self.speaker_devices]
         if {key: [device['name'] for device in devices] for key, devices in self.prev_mic_devices.items()} != {key: [device['name'] for device in devices] for key, devices in self.mic_devices.items()}:
             self.update_flag_mic_device_list = True
             self.prev_mic_devices = self.mic_devices
-        if [device['name'] for device in self.prev_speaker_devices] != [device['name'] for device in self.speaker_devices]:
+        if {key: [device['name'] for device in devices] for key, devices in self.prev_speaker_devices.items()} != {key: [device['name'] for device in devices] for key, devices in self.speaker_devices.items()}:
             self.update_flag_speaker_device_list = True
             self.prev_speaker_devices = self.speaker_devices
 
@@ -431,7 +439,7 @@ class DeviceManager:
     def setSpeakerDefaultDevice(self):
         if isinstance(self.callback_default_speaker_device, Callable):
             try:
-                self.callback_default_speaker_device(self.default_speaker_device["device"]["name"])
+                self.callback_default_speaker_device(self.default_speaker_device["host"]["name"], self.default_speaker_device["device"]["name"])
             except Exception:
                 errorLogging()
 
@@ -490,7 +498,7 @@ class DeviceManager:
                     errorLogging()
                 except Exception:
                     pass
-        return getattr(self, 'speaker_devices', [{"index": -1, "name": "NoDevice"}])
+        return getattr(self, 'speaker_devices', {"NoHost": [{"index": -1, "name": "NoDevice"}]})
 
     def getDefaultSpeakerDevice(self):
         # Ensure initialized and return default speaker device (safe default if still not populated)
@@ -502,7 +510,7 @@ class DeviceManager:
                     errorLogging()
                 except Exception:
                     pass
-        return getattr(self, 'default_speaker_device', {"device": {"index": -1, "name": "NoDevice"}})
+        return getattr(self, 'default_speaker_device', {"host": {"index": -1, "name": "NoHost"}, "device": {"index": -1, "name": "NoDevice"}})
 
     def forceUpdateAndSetMicDevices(self):
         self.update()
