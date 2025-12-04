@@ -40,18 +40,18 @@ export const _useBackendErrorHandling = () => {
         updateDeepLAuthKey,
 
         updatePlamoAuthKey,
-        updatePlamoModel,
+        updateSelectedPlamoModel,
 
         updateGeminiAuthKey,
-        updateGeminiModel,
+        updateSelectedGeminiModel,
 
         updateOpenAIAuthKey,
-        updateOpenAIModel,
+        updateSelectedOpenAIModel,
 
         updateLMStudioUrl,
-        updateLMStudioModel,
+        updateSelectedLMStudioModel,
 
-        updateOllamaModel,
+        updateSelectedOllamaModel,
     } = useTranslation();
 
     const { updateEnableVrcMicMuteSync } = useOthers();
@@ -164,6 +164,16 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
+            case "/set/data/selected_plamo_model":
+                if (message === "Plamo model is not valid") {
+                    updateSelectedPlamoModel(data);
+                    showNotification_Error(message, { category_id: "selected_plamo_model" });
+                } else {
+                    updateSelectedPlamoModel(data);
+                    showNotification_Error(message, { category_id: "selected_plamo_model" });
+                }
+                return;
+
             case "/set/data/gemini_auth_key":
                 if (message === "Gemini auth key length is not correct") {
                     updateGeminiAuthKey(data);
@@ -174,6 +184,16 @@ export const _useBackendErrorHandling = () => {
                 } else {
                     updateGeminiAuthKey(data);
                     showNotification_Error(message, { category_id: "gemini_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_gemini_model":
+                if (message === "Gemini model is not valid") {
+                    updateSelectedGeminiModel(data);
+                    showNotification_Error(message, { category_id: "selected_gemini_model" });
+                } else {
+                    updateSelectedGeminiModel(data);
+                    showNotification_Error(message, { category_id: "selected_gemini_model" });
                 }
                 return;
 
@@ -190,33 +210,13 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
-
-            case "/set/data/selected_plamo_model":
-                if (message === "Plamo model is not valid") {
-                    updatePlamoModel(data);
-                    showNotification_Error(message, { category_id: "selected_plamo_model" });
-                } else {
-                    updatePlamoModel(data);
-                    showNotification_Error(message, { category_id: "selected_plamo_model" });
-                }
-                return;
-
-            case "/set/data/selected_gemini_model":
-                if (message === "Gemini model is not valid") {
-                    updateGeminiModel(data);
-                    showNotification_Error(message, { category_id: "selected_gemini_model" });
-                } else {
-                    updateGeminiModel(data);
-                    showNotification_Error(message, { category_id: "selected_gemini_model" });
-                }
-                return;
-
             case "/set/data/selected_openai_model":
+                console.log(data);
                 if (message === "OpenAI model is not valid") {
-                    updateOpenAIModel(data);
+                    updateSelectedOpenAIModel(data);
                     showNotification_Error(message, { category_id: "selected_openai_model" });
                 } else {
-                    updateOpenAIModel(data);
+                    updateSelectedOpenAIModel(data);
                     showNotification_Error(message, { category_id: "selected_openai_model" });
                 }
                 return;
@@ -233,20 +233,20 @@ export const _useBackendErrorHandling = () => {
 
             case "/set/data/selected_lmstudio_model":
                 if (message === "LMStudio model is not valid") {
-                    updateLMStudioModel(data);
+                    updateSelectedLMStudioModel(data);
                     showNotification_Error(message, { category_id: "selected_lmstudio_model" });
                 } else {
-                    updateLMStudioModel(data);
+                    updateSelectedLMStudioModel(data);
                     showNotification_Error(message, { category_id: "selected_lmstudio_model" });
                 }
                 return;
 
             case "/set/data/selected_ollama_model":
                 if (message === "ollama model is not valid") {
-                    updateOllamaModel(data);
+                    updateSelectedOllamaModel(data);
                     showNotification_Error(message, { category_id: "selected_ollama_model" });
                 } else {
-                    updateOllamaModel(data);
+                    updateSelectedOllamaModel(data);
                     showNotification_Error(message, { category_id: "selected_ollama_model" });
                 }
                 return;
