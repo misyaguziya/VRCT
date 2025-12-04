@@ -49,7 +49,8 @@ const useStartPython = () => {
         });
         command.stderr.on("data", line => {
             showNotification_Error(
-                `An error occurred. Please restart VRCT or contact the developers. The last line:${JSON.stringify(line)}`, { hide_duration: null });
+                `An error occurred. Please restart VRCT or contact the developers. The last line:${JSON.stringify(line)}`, { hide_duration: null }
+            );
             console.error("stderr", line);
         });
         const backend_subprocess = await command.spawn();
