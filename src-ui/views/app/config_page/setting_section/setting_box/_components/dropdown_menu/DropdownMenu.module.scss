@@ -4,6 +4,7 @@
     display: flex;
     flex-direction: row;
     gap: 2.8rem;
+    flex-shrink: 0;
 }
 
 .each_dropdown_menu_wrapper {
@@ -12,6 +13,7 @@
     gap: 0.6rem;
     white-space: nowrap;
     max-width: 24rem;
+    flex-shrink: 0;
     &.is_disabled {
         pointer-events: none;
     }
