@@ -76,6 +76,7 @@ config_page:
     common:
         version: "Version {{version}}"
         model_download_button_label: "Download"
+        correct_auth_key_required: "Correct Auth Key Required"
         compute_device:
             desc: "The accuracy and speed of each processing type may vary depending on your machine specs, and the compatibility with calculation methods may differ from the displayed order. Please use this as a general guideline."
             label_device: "Processing Device"
