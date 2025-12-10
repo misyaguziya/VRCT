@@ -48,7 +48,7 @@ export const _useBackendErrorHandling = () => {
         updateOpenAIAuthKey,
         updateSelectedOpenAIModel,
 
-        updateLMStudioUrl,
+        updateLMStudioURL,
         updateSelectedLMStudioModel,
 
         updateSelectedOllamaModel,
@@ -223,10 +223,10 @@ export const _useBackendErrorHandling = () => {
 
             case "/set/data/lmstudio_url":
                 if (message === "LMStudio URL is not valid") {
-                    updateLMStudioUrl(data);
+                    updateLMStudioURL(data);
                     showNotification_Error(message, { category_id: "lmstudio_url" });
                 } else {
-                    updateLMStudioUrl(data);
+                    updateLMStudioURL(data);
                     showNotification_Error(message, { category_id: "lmstudio_url" });
                 }
                 return;

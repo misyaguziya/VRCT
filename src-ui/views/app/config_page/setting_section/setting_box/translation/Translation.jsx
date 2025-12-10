@@ -294,22 +294,28 @@ const PlamoModelContainer = () => {
 
         currentSelectedPlamoModel,
         setSelectedPlamoModel,
+
+        currentPlamoAuthKey,
     } = useTranslation();
 
-    if (currentSelectablePlamoModelList.data.length === 0) return null;
 
     const selectFunction = (selected_data) => {
         setSelectedPlamoModel(selected_data.selected_id);
     };
 
+
+    let selected_label = (!currentPlamoAuthKey.data && !currentSelectedPlamoModel.data) ? t("config_page.common.correct_auth_key_required") : currentSelectedPlamoModel.data;
+
+
     return (
         <DropdownMenuContainer
             dropdown_id="select_plamo_model"
             label="Select Plamo Model"
-            selected_id={currentSelectedPlamoModel.data}
+            selected_id={selected_label}
             list={currentSelectablePlamoModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedPlamoModel.state}
+            is_disabled={!currentPlamoAuthKey.data}
         />
     );
 };
@@ -350,22 +356,28 @@ const GeminiModelContainer = () => {
 
         currentSelectedGeminiModel,
         setSelectedGeminiModel,
+
+        currentGeminiAuthKey,
     } = useTranslation();
 
-    if (currentSelectableGeminiModelList.data.length === 0) return null;
 
     const selectFunction = (selected_data) => {
         setSelectedGeminiModel(selected_data.selected_id);
     };
 
+    let selected_label = (!currentGeminiAuthKey.data && !currentSelectedGeminiModel.data)
+        ? t("config_page.common.correct_auth_key_required")
+        : currentSelectedGeminiModel.data;
+
     return (
         <DropdownMenuContainer
             dropdown_id="select_gemini_model"
             label="Select Gemini Model"
-            selected_id={currentSelectedGeminiModel.data}
+            selected_id={selected_label}
             list={currentSelectableGeminiModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedGeminiModel.state}
+            is_disabled={!currentGeminiAuthKey.data}
         />
     );
 };
@@ -405,22 +417,28 @@ const OpenAIModelContainer = () => {
 
         currentSelectedOpenAIModel,
         setSelectedOpenAIModel,
+
+        currentOpenAIAuthKey,
     } = useTranslation();
 
-    if (currentSelectableOpenAIModelList.data.length === 0) return null;
 
     const selectFunction = (selected_data) => {
         setSelectedOpenAIModel(selected_data.selected_id);
     };
 
+    let selected_label = (!currentOpenAIAuthKey.data && !currentSelectedOpenAIModel.data)
+        ? t("config_page.common.correct_auth_key_required")
+        : currentSelectedOpenAIModel.data;
+
     return (
         <DropdownMenuContainer
             dropdown_id="select_openai_model"
             label="Select OpenAI Model"
-            selected_id={currentSelectedOpenAIModel.data}
+            selected_id={selected_label}
             list={currentSelectableOpenAIModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedOpenAIModel.state}
+            is_disabled={!currentOpenAIAuthKey.data}
         />
     );
 };
@@ -479,20 +497,25 @@ const LMStudioModelContainer = () => {
         setSelectedLMStudioModel,
     } = useTranslation();
 
-    if (currentSelectableLMStudioModelList.data.length === 0) return null;
+    const { currentIsLMStudioConnected } = useLLMConnection();
 
     const selectFunction = (selected_data) => {
         setSelectedLMStudioModel(selected_data.selected_id);
     };
 
+    let selected_label = (!currentIsLMStudioConnected.data && !currentSelectedLMStudioModel.data)
+        ? "Connection Required"
+        : currentSelectedLMStudioModel.data;
+
     return (
         <DropdownMenuContainer
             dropdown_id="select_lmstudio_model"
             label="Select LMStudio Model"
-            selected_id={currentSelectedLMStudioModel.data}
+            selected_id={selected_label}
             list={currentSelectableLMStudioModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedLMStudioModel.state}
+            is_disabled={!currentIsLMStudioConnected.data}
         />
     );
 };
@@ -523,20 +546,25 @@ const OllamaModelContainer = () => {
         setSelectedOllamaModel,
     } = useTranslation();
 
-    if (currentSelectableOllamaModelList.data.length === 0) return null;
+    const { currentIsOllamaConnected } = useLLMConnection();
 
     const selectFunction = (selected_data) => {
         setSelectedOllamaModel(selected_data.selected_id);
     };
 
+    let selected_label = (!currentIsOllamaConnected.data && !currentSelectedOllamaModel.data)
+        ? "Connection Required"
+        : currentSelectedOllamaModel.data;
+
     return (
         <DropdownMenuContainer
             dropdown_id="select_ollama_model"
             label="Select Ollama Model"
-            selected_id={currentSelectedOllamaModel.data}
+            selected_id={selected_label}
             list={currentSelectableOllamaModelList.data}
             selectFunction={selectFunction}
             state={currentSelectedOllamaModel.state}
+            is_disabled={!currentIsOllamaConnected.data}
         />
     );
 };
