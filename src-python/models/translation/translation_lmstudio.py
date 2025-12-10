@@ -11,7 +11,7 @@ except Exception:
     sys.path.append(os_path.dirname(os_path.abspath(__file__)))
     from translation_languages import translation_lang, loadTranslationLanguages
     from translation_utils import loadPromptConfig
-    loadTranslationLanguages(path=".", force=True)
+    translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
     """Check if the provided API key is valid by attempting to list models.

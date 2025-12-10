@@ -769,3 +769,7 @@ LMStudio:
 Ollama:
   source: *openai_langs
   target: *openai_langs
+
+Groq_API:
+  source: *openai_langs
+  target: *openai_langs

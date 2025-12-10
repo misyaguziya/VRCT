@@ -1900,6 +1900,103 @@ class Controller:
             }
         return response
 
+    @staticmethod
+    def getGroqAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
+
+    def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Auth Key", data)
+        translator_name = "Groq_API"
+        try:
+            data = str(data)
+            if data.startswith("gsk-") and len(data) >= 40:
+                result = model.authenticationTranslatorGroqAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_GROQ_MODEL_LIST = model.getTranslatorGroqModelList()
+                    self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+                    if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
+                        config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
+                        model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
+                        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+                    model.updateTranslatorGroqClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of Groq auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Groq auth key is not valid",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delGroqAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "Groq_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getGroqModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_GROQ_MODEL_LIST}
+
+    def getGroqModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_GROQ_MODEL}
+
+    def setGroqModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorGroqModel(model=data)
+            if result is True:
+                config.SELECTED_GROQ_MODEL = data
+                model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
+                model.updateTranslatorGroqClient()
+                response = {"status":200, "result":config.SELECTED_GROQ_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Groq model is not valid",
+                        "data": config.SELECTED_GROQ_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_GROQ_MODEL
+                }
+            }
+        return response
+
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
 
