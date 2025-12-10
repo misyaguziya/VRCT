@@ -266,6 +266,23 @@ class Model:
         self.ensure_initialized()
         self.translator.updateGroqClient()
 
+    def authenticationTranslatorOpenRouterAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationOpenRouterAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOpenRouterModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenRouterModelList()
+
+    def setTranslatorOpenRouterModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setOpenRouterModel(model=model)
+        return result
+
+    def updateTranslatorOpenRouterClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenRouterClient()
+
     def getTranslatorLMStudioConnected(self) -> bool:
         self.ensure_initialized()
         return self.translator.getLMStudioConnected()

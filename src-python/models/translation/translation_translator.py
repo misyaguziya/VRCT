@@ -16,6 +16,7 @@ try:
     from .translation_lmstudio import LMStudioClient
     from .translation_ollama import OllamaClient
     from .translation_groq import GroqClient
+    from .translation_openrouter import OpenRouterClient
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -27,6 +28,7 @@ except Exception:
     from translation_lmstudio import LMStudioClient
     from translation_ollama import OllamaClient
     from translation_groq import GroqClient
+    from translation_openrouter import OpenRouterClient
 
 import ctranslate2
 import transformers
@@ -53,6 +55,7 @@ class Translator:
         self.gemini_client: Optional[GeminiClient] = None
         self.openai_client: Optional[OpenAIClient] = None
         self.groq_client: Optional[GroqClient] = None
+        self.openrouter_client: Optional[OpenRouterClient] = None
         self.lmstudio_client: LMStudioClient[LMStudioClient] = None
         self.ollama_client: OllamaClient[OllamaClient] = None
         self.ctranslate2_translator: Any = None
@@ -212,6 +215,40 @@ class Translator:
     def updateGroqClient(self) -> None:
         """Update the Groq client (fetch available models)."""
         self.groq_client.updateClient()
+
+    def authenticationOpenRouterAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate OpenRouter API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.openrouter_client = OpenRouterClient(root_path=root_path)
+        if self.openrouter_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.openrouter_client = None
+            return False
+
+    def getOpenRouterModelList(self) -> list[str]:
+        """Get available OpenRouter models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.openrouter_client is None:
+            return []
+        return self.openrouter_client.getModelList()
+
+    def setOpenRouterModel(self, model: str) -> bool:
+        """Change the OpenRouter model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.openrouter_client is None:
+            return False
+        return self.openrouter_client.setModel(model)
+
+    def updateOpenRouterClient(self) -> None:
+        """Update the OpenRouter client (fetch available models)."""
+        self.openrouter_client.updateClient()
 
     def getLMStudioConnected(self) -> bool:
         """Get LM Studio connection status.
@@ -451,6 +488,15 @@ class Translator:
                         result = False
                     else:
                         result = self.groq_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "OpenRouter_API":
+                    if self.openrouter_client is None:
+                        result = False
+                    else:
+                        result = self.openrouter_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,

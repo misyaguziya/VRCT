@@ -773,3 +773,7 @@ Ollama:
 Groq_API:
   source: *openai_langs
   target: *openai_langs
+
+OpenRouter_API:
+  source: *openai_langs
+  target: *openai_langs
