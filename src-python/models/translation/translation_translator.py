@@ -15,6 +15,7 @@ try:
     from .translation_openai import OpenAIClient
     from .translation_lmstudio import LMStudioClient
     from .translation_ollama import OllamaClient
+    from .translation_groq import GroqClient
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -25,6 +26,7 @@ except Exception:
     from translation_openai import OpenAIClient
     from translation_lmstudio import LMStudioClient
     from translation_ollama import OllamaClient
+    from translation_groq import GroqClient
 
 import ctranslate2
 import transformers
@@ -50,6 +52,7 @@ class Translator:
         self.plamo_client: Optional[PlamoClient] = None
         self.gemini_client: Optional[GeminiClient] = None
         self.openai_client: Optional[OpenAIClient] = None
+        self.groq_client: Optional[GroqClient] = None
         self.lmstudio_client: LMStudioClient[LMStudioClient] = None
         self.ollama_client: OllamaClient[OllamaClient] = None
         self.ctranslate2_translator: Any = None
@@ -175,6 +178,40 @@ class Translator:
     def updateOpenAIClient(self) -> None:
         """Update the OpenAI client (fetch available models)."""
         self.openai_client.updateClient()
+
+    def authenticationGroqAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate Groq API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.groq_client = GroqClient(root_path=root_path)
+        if self.groq_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.groq_client = None
+            return False
+
+    def getGroqModelList(self) -> list[str]:
+        """Get available Groq models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.groq_client is None:
+            return []
+        return self.groq_client.getModelList()
+
+    def setGroqModel(self, model: str) -> bool:
+        """Change the Groq model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.groq_client is None:
+            return False
+        return self.groq_client.setModel(model)
+
+    def updateGroqClient(self) -> None:
+        """Update the Groq client (fetch available models)."""
+        self.groq_client.updateClient()
 
     def getLMStudioConnected(self) -> bool:
         """Get LM Studio connection status.
@@ -405,6 +442,15 @@ class Translator:
                         result = False
                     else:
                         result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "Groq_API":
+                    if self.groq_client is None:
+                        result = False
+                    else:
+                        result = self.groq_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,
