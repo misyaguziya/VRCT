@@ -1997,6 +1997,103 @@ class Controller:
             }
         return response
 
+    @staticmethod
+    def getOpenRouterAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
+
+    def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenRouter Auth Key", data)
+        translator_name = "OpenRouter_API"
+        try:
+            data = str(data)
+            if len(data) >= 20:  # OpenRouter API key basic validation
+                result = model.authenticationTranslatorOpenRouterAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_OPENROUTER_MODEL_LIST = model.getTranslatorOpenRouterModelList()
+                    self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+                    if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
+                        config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
+                        model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
+                        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+                    model.updateTranslatorOpenRouterClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of OpenRouter auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenRouter auth key is not valid",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delOpenRouterAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "OpenRouter_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getOpenRouterModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_OPENROUTER_MODEL_LIST}
+
+    def getOpenRouterModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+
+    def setOpenRouterModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenRouter Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorOpenRouterModel(model=data)
+            if result is True:
+                config.SELECTED_OPENROUTER_MODEL = data
+                model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
+                model.updateTranslatorOpenRouterClient()
+                response = {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenRouter model is not valid",
+                        "data": config.SELECTED_OPENROUTER_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_OPENROUTER_MODEL
+                }
+            }
+        return response
+
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
 

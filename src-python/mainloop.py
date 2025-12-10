@@ -60,6 +60,8 @@ run_mapping = {
     "selected_openai_model":"/run/selected_openai_model",
     "selectable_groq_model_list":"/run/selectable_groq_model_list",
     "selected_groq_model":"/run/selected_groq_model",
+    "selectable_openrouter_model_list":"/run/selectable_openrouter_model_list",
+    "selected_openrouter_model":"/run/selected_openrouter_model",
     "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
     "selected_lmstudio_model":"/run/selected_lmstudio_model",
     "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
