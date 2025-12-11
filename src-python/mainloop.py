@@ -211,6 +211,20 @@ mapping = {
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
 
+    "/get/data/selectable_groq_model_list": {"status": True, "variable":controller.getGroqModelList},
+    "/get/data/selected_groq_model": {"status": True, "variable":controller.getGroqModel},
+    "/set/data/selected_groq_model": {"status": True, "variable":controller.setGroqModel},
+    "/get/data/groq_auth_key": {"status": True, "variable":controller.getGroqAuthKey},
+    "/set/data/groq_auth_key": {"status": True, "variable":controller.setGroqAuthKey},
+    "/delete/data/groq_auth_key": {"status": True, "variable":controller.delGroqAuthKey},
+
+    "/get/data/selectable_openrouter_model_list": {"status": True, "variable":controller.getOpenRouterModelList},
+    "/get/data/selected_openrouter_model": {"status": True, "variable":controller.getOpenRouterModel},
+    "/set/data/selected_openrouter_model": {"status": True, "variable":controller.setOpenRouterModel},
+    "/get/data/openrouter_auth_key": {"status": True, "variable":controller.getOpenRouterAuthKey},
+    "/set/data/openrouter_auth_key": {"status": True, "variable":controller.setOpenRouterAuthKey},
+    "/delete/data/openrouter_auth_key": {"status": True, "variable":controller.delOpenRouterAuthKey},
+
     "/get/data/connected_lmstudio": {"status": True, "variable":controller.getTranslatorLMStudioConnection},
     "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
     "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
