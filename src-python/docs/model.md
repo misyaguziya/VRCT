@@ -215,6 +215,76 @@ CTranslate2 モデルがロード済みかチェック。
 
 **戻り値:** 認証成功時 True
 
+---
+
+#### Groq API 統合
+
+##### `authenticationTranslatorGroqAuthKey(auth_key: str) -> bool`
+
+**責務:** Groq API キーの検証
+
+**処理:** `translator.authenticationGroqAuthKey()` に委譲し、`root_path=config.PATH_LOCAL` を渡す
+
+**戻り値:** 認証成功時 True
+
+##### `getTranslatorGroqModelList() -> list[str]`
+
+**責務:** 利用可能な Groq モデルリストの取得
+
+**処理:** `translator.getGroqModelList()` に委譲
+
+**戻り値:** モデル名のリスト（例: `["llama3-8b-8192", "mixtral-8x7b-32768"]`）
+
+##### `setTranslatorGroqModel(model: str) -> bool`
+
+**責務:** 使用する Groq モデルの設定
+
+**処理:** `translator.setGroqModel(model)` に委譲
+
+**戻り値:** 設定成功時 True（モデルが利用可能リストに含まれない場合 False）
+
+##### `updateTranslatorGroqClient() -> None`
+
+**責務:** Groq クライアントの更新（モデル変更後に呼び出し）
+
+**処理:** `translator.updateGroqClient()` に委譲し、新しいモデルで LangChain `ChatOpenAI` インスタンスを再生成
+
+---
+
+#### OpenRouter API 統合
+
+##### `authenticationTranslatorOpenRouterAuthKey(auth_key: str) -> bool`
+
+**責務:** OpenRouter API キーの検証
+
+**処理:** `translator.authenticationOpenRouterAuthKey()` に委譲し、`root_path=config.PATH_LOCAL` を渡す
+
+**戻り値:** 認証成功時 True
+
+##### `getTranslatorOpenRouterModelList() -> list[str]`
+
+**責務:** 利用可能な OpenRouter モデルリストの取得
+
+**処理:** `translator.getOpenRouterModelList()` に委譲
+
+**戻り値:** モデル名のリスト（例: `["anthropic/claude-3-sonnet", "google/gemini-pro"]`）
+
+##### `setTranslatorOpenRouterModel(model: str) -> bool`
+
+**責務:** 使用する OpenRouter モデルの設定
+
+**処理:** `translator.setOpenRouterModel(model)` に委譲
+
+**戻り値:** 設定成功時 True（モデルが利用可能リストに含まれない場合 False）
+
+##### `updateTranslatorOpenRouterClient() -> None`
+
+**責務:** OpenRouter クライアントの更新（モデル変更後に呼び出し）
+
+**処理:** `translator.updateOpenRouterClient()` に委譲し、新しいモデルで LangChain `ChatOpenAI` インスタンスを再生成
+
+---
+
 #### 翻訳実行
 
 ##### `getTranslate(translator_name, source_language, target_language, target_country, message) -> Tuple[str, bool]`

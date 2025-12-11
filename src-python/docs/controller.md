@@ -706,6 +706,114 @@ OSC Query 機能が無効になったことを通知。無効化された機能�
 
 ---
 
+### 16-1. Groq API 認証・モデル管理
+
+#### `setGroqAuthKey(data, *args, **kwargs) -> dict`
+
+**責務:** Groq API キーを設定し、認証を実行
+
+**処理:**
+1. キー長のバリデーション（`gsk` で始まり40文字以上）
+2. `model.authenticationTranslatorGroqAuthKey()` で認証
+3. 認証成功時:
+   - `config.AUTH_KEYS["Groq_API"]` に保存
+   - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Groq_API"]` を True に
+   - `config.SELECTABLE_GROQ_MODEL_LIST` を取得
+   - 未選択の場合は先頭モデルを自動選択
+   - `model.updateTranslatorGroqClient()` でクライアント更新
+   - `updateTranslationEngineAndEngineList()` を呼び出し
+4. 認証失敗時: status 400 を返却
+
+**API キー検証失敗時の処理:**
+- モデルリストをクリア (`config.SELECTABLE_GROQ_MODEL_LIST = []`)
+- 選択モデルをクリア (`config.SELECTED_GROQ_MODEL = None`)
+- フロントエンドに通知
+
+#### `delGroqAuthKey(*args, **kwargs) -> dict`
+
+**責務:** Groq API キーを削除
+
+**処理:**
+1. `config.AUTH_KEYS["Groq_API"]` を None に
+2. `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Groq_API"]` を False に
+3. モデルリストと選択モデルをクリア
+4. `updateTranslationEngineAndEngineList()` を呼び出し
+
+#### `getGroqAuthKey(*args, **kwargs) -> dict`
+現在の Groq API キーを取得（マスク処理なし）。
+
+#### `getGroqModelList(*args, **kwargs) -> dict`
+利用可能な Groq モデルリストを取得。
+
+#### `getGroqModel(*args, **kwargs) -> dict`
+現在選択中の Groq モデルを取得。
+
+#### `setGroqModel(data, *args, **kwargs) -> dict`
+
+**責務:** 使用する Groq モデルを変更
+
+**処理:**
+1. モデル名のバリデーション（利用可能リスト内か確認）
+2. `model.setTranslatorGroqModel()` でモデル設定
+3. `model.updateTranslatorGroqClient()` でクライアント再生成
+4. `config.SELECTED_GROQ_MODEL` を更新
+
+---
+
+### 16-2. OpenRouter API 認証・モデル管理
+
+#### `setOpenRouterAuthKey(data, *args, **kwargs) -> dict`
+
+**責務:** OpenRouter API キーを設定し、認証を実行
+
+**処理:**
+1. キー長のバリデーション（20文字以上）
+2. `model.authenticationTranslatorOpenRouterAuthKey()` で認証
+3. 認証成功時:
+   - `config.AUTH_KEYS["OpenRouter_API"]` に保存
+   - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["OpenRouter_API"]` を True に
+   - `config.SELECTABLE_OPENROUTER_MODEL_LIST` を取得
+   - 未選択の場合は先頭モデルを自動選択
+   - `model.updateTranslatorOpenRouterClient()` でクライアント更新
+   - `updateTranslationEngineAndEngineList()` を呼び出し
+4. 認証失敗時: status 400 を返却
+
+**API キー検証失敗時の処理:**
+- モデルリストをクリア (`config.SELECTABLE_OPENROUTER_MODEL_LIST = []`)
+- 選択モデルをクリア (`config.SELECTED_OPENROUTER_MODEL = None`)
+- フロントエンドに通知
+
+#### `delOpenRouterAuthKey(*args, **kwargs) -> dict`
+
+**責務:** OpenRouter API キーを削除
+
+**処理:**
+1. `config.AUTH_KEYS["OpenRouter_API"]` を None に
+2. `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["OpenRouter_API"]` を False に
+3. モデルリストと選択モデルをクリア
+4. `updateTranslationEngineAndEngineList()` を呼び出し
+
+#### `getOpenRouterAuthKey(*args, **kwargs) -> dict`
+現在の OpenRouter API キーを取得（マスク処理なし）。
+
+#### `getOpenRouterModelList(*args, **kwargs) -> dict`
+利用可能な OpenRouter モデルリストを取得。
+
+#### `getOpenRouterModel(*args, **kwargs) -> dict`
+現在選択中の OpenRouter モデルを取得。
+
+#### `setOpenRouterModel(data, *args, **kwargs) -> dict`
+
+**責務:** 使用する OpenRouter モデルを変更
+
+**処理:**
+1. モデル名のバリデーション（利用可能リスト内か確認）
+2. `model.setTranslatorOpenRouterModel()` でモデル設定
+3. `model.updateTranslatorOpenRouterClient()` でクライアント再生成
+4. `config.SELECTED_OPENROUTER_MODEL` を更新
+
+---
+
 ### 17. WebSocket サーバー制御
 
 #### `setWebSocketHost(data, *args, **kwargs) -> dict`

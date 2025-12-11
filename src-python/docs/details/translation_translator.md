@@ -12,6 +12,13 @@
 - Microsoft Translator（Bing）
 - Papago Translator
 - CTranslate2（ローカル翻訳）
+- Plamo API（プリファードネットワークス LLM）
+- Gemini API（Google LLM）
+- OpenAI API（ChatGPT系）
+- Groq API（高速 LLM 推論）
+- OpenRouter API（統合 LLM プロバイダー）
+- LMStudio（ローカル LLM）
+- Ollama（ローカル LLM）
 
 ### 統一インターフェース
 - エンジン依存を隠蔽した単一の翻訳メソッド
@@ -405,41 +412,74 @@ root/
 - `model.py`: 翻訳機能統合
 - `controller.py`: 翻訳制御インターフェース
 
-## 最近の更新 (2025-10-20)
+## 最近の更新
 
-### 新規ローカル LLM エンジン追加
+### 2025-12-10: Groq API および OpenRouter API サポート追加
+
+#### Groq API 統合
+- Groq API (`https://api.groq.com/openai/v1`) を翻訳エンジンとして追加
+- OpenAI 互換エンドポイントで高速 LLM 推論を実現
+- API キーバリデーション（`gsk` で始まり40文字以上）
+- モデルリスト自動取得とフィルタリング（テキスト処理モデルのみ）
+- 認証成功時に `SELECTABLE_GROQ_MODEL_LIST` を更新、未選択時は先頭モデルを自動選択
+- API キー無効時にモデルリストと選択モデルをクリアしフロントエンドに通知
+
+#### OpenRouter API 統合
+- OpenRouter API (`https://openrouter.ai/api/v1`) を翻訳エンジンとして追加
+- 単一 API キーで複数 LLM プロバイダーへアクセス可能
+- API キーバリデーション（20文字以上）
+- モデルリスト自動取得とフィルタリング（テキスト処理モデルのみ）
+- 認証成功時に `SELECTABLE_OPENROUTER_MODEL_LIST` を更新、未選択時は先頭モデルを自動選択
+- API キー無効時にモデルリストと選択モデルをクリアしフロントエンドに通知
+
+#### updateTranslationEngineAndEngineList() の拡張
+- `SELECTABLE_TRANSLATION_ENGINE_STATUS` で Groq_API と OpenRouter_API の状態を管理
+- 各エンジンの認証キー更新時に自動的にモデルリストを再取得
+- フロントエンドへの通知を `run_mapping` 経由で送信
+
+#### 影響
+| 項目 | 内容 |
+|------|------|
+| Groq API | 高速 LLM 推論による翻訳速度向上 |
+| OpenRouter API | 単一キーで複数 LLM プロバイダーへアクセス |
+| モデル管理 | API キー検証失敗時の自動クリアで一貫性向上 |
+| UX改善 | 認証後の自動モデル選択で初期設定簡略化 |
+
+### 2025-10-20: LLM エンジン拡張と最適化
+
+#### 新規ローカル LLM エンジン追加
 
 LMStudio / Ollama を翻訳エンジンとして追加。接続確認後にモデルリスト (`SELECTABLE_LMSTUDIO_MODEL_LIST` / `SELECTABLE_OLLAMA_MODEL_LIST`) を取得し、未選択なら先頭モデルを自動選択 (`SELECTED_LMSTUDIO_MODEL` / `SELECTED_OLLAMA_MODEL`)。現時点では CTranslate2 と同様にローカル動作を想定し、翻訳関数側は将来の統合（温度等パラメータ）に備えて抽象化維持。
 
-### モデル選択プロパティ名称統一
+#### モデル選択プロパティ名称統一
 
 Plamo / Gemini / OpenAI の選択モデルプロパティを `SELECTED_*` 形式へ変更。旧名称 (`PLAMO_MODEL` / `GEMINI_MODEL` / `OPENAI_MODEL`) は利用停止。自動認証後のモデルリスト更新ロジックで未選択時に先頭補完を行う。
 
-### OpenAI / Gemini / Plamo 認証後のモデルリスト自動更新
+#### OpenAI / Gemini / Plamo 認証後のモデルリスト自動更新
 
 Auth設定メソッド完了時に `SELECTABLE_*_MODEL_LIST` を再取得し不足時は UI へ push。OpenAI はキー設定直後に最新モデルリストを反映し高速化。Gemini / Plamo も同様に `updateTranslator*Client()` 呼び出しでクライアント再生成。
 
-### CTranslate2 言語ネスト化対応
+#### CTranslate2 言語ネスト化対応
 
 `translation_lang["CTranslate2"][weight_type]["source"|"target"]` へ構造変更。`CTRANSLATE2_WEIGHT_TYPE` により重みタイプ別の言語集合を参照。Translator 内では `translator_name == "CTranslate2"` の分岐で weight_type を参照して言語判定を行う実装に変更。
 
-### YAML 言語マッピング導入
+#### YAML 言語マッピング導入
 
 外部ファイル `languages.yml` を読み込んで翻訳エンジン別対応言語を動的拡張。新言語追加は YAML 編集のみで実現（コード再デプロイ不要）。読み込み失敗時は空辞書でフォールバックし既存ハードコードを保持。
 
-### VRAM エラー検知とフォールバック
+#### VRAM エラー検知とフォールバック
 
 DeepL / Plamo / Gemini / OpenAI 実行時の VRAM 不足検知で自動的に CTranslate2 へ切替し翻訳を停止 (`ENABLE_TRANSLATION=False`)。ユーザー通知後は再度有効化要求時に再初期化を試行。安定性向上のためログへ VRAM エラー詳細を記録。
 
-### トークナイザーパス修正
+#### トークナイザーパス修正
 
 CTranslate2 トークナイザーのダウンロード処理で保存ディレクトリ作成とパス使用順序不整合を修正。これにより初回起動時の失敗率低下。
 
-### 全言語ペア包括テスト導入
+#### 全言語ペア包括テスト導入
 
 `backend_test.py` にて `test_translate_all_language_pairs()` を追加。複数エンジン・全言語ペアを列挙実行し `translation_test_results.json` を生成。失敗ペアの早期検出と YAML 追加言語検証に活用。
 
-### 影響
+#### 影響
 
 | 項目 | 内容 |
 |------|------|
