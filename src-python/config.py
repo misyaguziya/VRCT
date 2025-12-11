@@ -638,6 +638,8 @@ class Config:
     SELECTABLE_PLAMO_MODEL_LIST = ManagedProperty('SELECTABLE_PLAMO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_GEMINI_MODEL_LIST = ManagedProperty('SELECTABLE_GEMINI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GROQ_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENROUTER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENROUTER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
@@ -735,6 +737,8 @@ class Config:
     SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_PLAMO_MODEL_LIST'))
     SELECTED_GEMINI_MODEL = ManagedProperty('SELECTED_GEMINI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GEMINI_MODEL_LIST'))
     SELECTED_OPENAI_MODEL = ManagedProperty('SELECTED_OPENAI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_MODEL_LIST'))
+    SELECTED_GROQ_MODEL = ManagedProperty('SELECTED_GROQ_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_MODEL_LIST'))
+    SELECTED_OPENROUTER_MODEL = ManagedProperty('SELECTED_OPENROUTER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENROUTER_MODEL_LIST'))
     SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
     SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
 
@@ -815,6 +819,8 @@ class Config:
         self._SELECTABLE_PLAMO_MODEL_LIST = []
         self._SELECTABLE_GEMINI_MODEL_LIST = []
         self._SELECTABLE_OPENAI_MODEL_LIST = []
+        self._SELECTABLE_GROQ_MODEL_LIST = []
+        self._SELECTABLE_OPENROUTER_MODEL_LIST = []
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
@@ -939,6 +945,8 @@ class Config:
             "Plamo_API": None,
             "Gemini_API": None,
             "OpenAI_API": None,
+            "Groq_API": None,
+            "OpenRouter_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
@@ -947,6 +955,8 @@ class Config:
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
+        self._SELECTED_GROQ_MODEL = None
+        self._SELECTED_OPENROUTER_MODEL = None
         self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
         self._SELECTED_LMSTUDIO_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
@@ -1051,6 +1061,8 @@ class Config:
             ('SELECTED_PLAMO_MODEL', 'SELECTABLE_PLAMO_MODEL_LIST'),
             ('SELECTED_GEMINI_MODEL', 'SELECTABLE_GEMINI_MODEL_LIST'),
             ('SELECTED_OPENAI_MODEL', 'SELECTABLE_OPENAI_MODEL_LIST'),
+            ('SELECTED_GROQ_MODEL', 'SELECTABLE_GROQ_MODEL_LIST'),
+            ('SELECTED_OPENROUTER_MODEL', 'SELECTABLE_OPENROUTER_MODEL_LIST'),
             ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
             ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
         ]

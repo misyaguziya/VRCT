@@ -13,42 +13,71 @@ except Exception:
     from translation_utils import loadPromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
-BASE_URL = "https://api.platform.preferredai.jp/v1"
-
 def _authentication_check(api_key: str) -> bool:
     """Check if the provided API key is valid by attempting to list models.
     """
     try:
-        client = OpenAI(api_key=api_key, base_url=BASE_URL)
+        client = OpenAI(
+            api_key=api_key,
+            base_url="https://openrouter.ai/api/v1",
+        )
         client.models.list()
         return True
     except Exception:
         return False
 
 def _get_available_text_models(api_key: str) -> list[str]:
-    """Extract all available models from the PLAMO API
+    """Extract only OpenRouter models suitable for translation and chat applications.
     """
-    client = OpenAI(api_key=api_key, base_url=BASE_URL)
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://openrouter.ai/api/v1",
+    )
     res = client.models.list()
     allowed_models = []
 
     for model in res.data:
-        allowed_models.append(model.id)
+        model_id = model.id
+
+        # 除外対象のキーワード
+        exclude_keywords = [
+            "whisper",       # 音声認識
+            "embedding",     # 埋め込み
+            "image",         # 画像生成
+            "tts",           # 音声合成
+            "audio",         # 音声系
+            "search",        # 検索補助モデル
+            "transcribe",    # 音声→文字起こし
+            "diarize",       # 話者分離
+            "vision"         # 画像入力系
+        ]
+
+        # 除外キーワードが含まれているモデルをスキップ
+        if any(kw in model_id.lower() for kw in exclude_keywords):
+            continue
+
+        # テキスト処理用モデルのみ対象
+        allowed_models.append(model_id)
 
     allowed_models.sort()
     return allowed_models
 
-class PlamoClient:
+class OpenRouterClient:
+    """OpenRouter API Translation wrapper using OpenAI-compatible endpoint.
+    
+    OpenRouter provides access to various LLM models via a unified API.
+    The API endpoint: https://openrouter.ai/api/v1
+    """
     def __init__(self, root_path: str = None):
         self.api_key = None
-        self.base_url = BASE_URL
         self.model = None
+        self.base_url = "https://openrouter.ai/api/v1"
 
-        prompt_config = loadPromptConfig(root_path, "translation_plamo.yml")
-        self.supported_languages = list(translation_lang["Plamo_API"]["source"].keys())
+        prompt_config = loadPromptConfig(root_path, "translation_openrouter.yml")
+        self.supported_languages = list(translation_lang["OpenRouter_API"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
-        self.plamo_llm = None
+        self.openrouter_llm = None
 
     def getModelList(self) -> list[str]:
         return _get_available_text_models(self.api_key) if self.api_key else []
@@ -73,25 +102,25 @@ class PlamoClient:
             return False
 
     def updateClient(self) -> None:
-        self.plamo_llm = ChatOpenAI(
+        self.openrouter_llm = ChatOpenAI(
             base_url=self.base_url,
             model=self.model,
-            streaming=False,
             api_key=SecretStr(self.api_key),
+            streaming=False,
         )
 
     def translate(self, text: str, input_lang: str, output_lang: str) -> str:
         system_prompt = self.prompt_template.format(
             supported_languages=self.supported_languages,
             input_lang=input_lang,
-            output_lang=output_lang
+            output_lang=output_lang,
         )
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
         ]
 
-        resp = self.plamo_llm.invoke(messages)
+        resp = self.openrouter_llm.invoke(messages)
         content = ""
         if isinstance(resp.content, str):
             content = resp.content
@@ -104,8 +133,8 @@ class PlamoClient:
         return content.strip()
 
 if __name__ == "__main__":
-    AUTH_KEY = "PLAMO_API_KEY"
-    client = PlamoClient()
+    AUTH_KEY = input("OPENROUTER_API_KEY: ")
+    client = OpenRouterClient()
     client.setAuthKey(AUTH_KEY)
     models = client.getModelList()
     if models:
