@@ -2879,6 +2879,39 @@ class Controller:
             model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
 
+    # Clipboard control
+    @staticmethod
+    def getCopyToClipboard(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.ENABLE_COPY_TO_CLIPBOARD}
+
+    @staticmethod
+    def setEnableCopyToClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_COPY_TO_CLIPBOARD is False:
+            config.ENABLE_COPY_TO_CLIPBOARD = True
+        return {"status":200, "result":config.ENABLE_COPY_TO_CLIPBOARD}
+
+    @staticmethod
+    def setDisableCopyToClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_COPY_TO_CLIPBOARD is True:
+            config.ENABLE_COPY_TO_CLIPBOARD = False
+        return {"status":200, "result":config.ENABLE_COPY_TO_CLIPBOARD}
+
+    @staticmethod
+    def getPasteFromClipboard(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.ENABLE_PASTE_FROM_CLIPBOARD}
+
+    @staticmethod
+    def setEnablePasteFromClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_PASTE_FROM_CLIPBOARD is False:
+            config.ENABLE_PASTE_FROM_CLIPBOARD = True
+        return {"status":200, "result":config.ENABLE_PASTE_FROM_CLIPBOARD}
+
+    @staticmethod
+    def setDisablePasteFromClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_PASTE_FROM_CLIPBOARD is True:
+            config.ENABLE_PASTE_FROM_CLIPBOARD = False
+        return {"status":200, "result":config.ENABLE_PASTE_FROM_CLIPBOARD}
+
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)
 
