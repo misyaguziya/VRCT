@@ -382,6 +382,14 @@ mapping = {
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
 
+    # Clipboard Settings
+    # "/get/data/copy_to_clipboard": {"status": True, "variable":controller.getCopyToClipboard},
+    # "/set/enable/copy_to_clipboard": {"status": True, "variable":controller.setEnableCopyToClipboard},
+    # "/set/disable/copy_to_clipboard": {"status": True, "variable":controller.setDisableCopyToClipboard},
+    # "/get/data/paste_from_clipboard": {"status": True, "variable":controller.getPasteFromClipboard},
+    # "/set/enable/paste_from_clipboard": {"status": True, "variable":controller.setEnablePasteFromClipboard},
+    # "/set/disable/paste_from_clipboard": {"status": True, "variable":controller.setDisablePasteFromClipboard},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
