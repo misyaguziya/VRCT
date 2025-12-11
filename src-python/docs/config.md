@@ -216,10 +216,16 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 **通信設定**
 - `OSC_IP_ADDRESS`: OSC IPアドレス（デフォルト: "127.0.0.1"）
 - `OSC_PORT`: OSCポート（デフォルト: 9000）
-- `AUTH_KEYS`: 認証キー辞書（DeepL API等）
+- `AUTH_KEYS`: 認証キー辞書（DeepL API, Groq API, OpenRouter API等）
 - `WEBSOCKET_HOST`: WebSocketホスト
 - `WEBSOCKET_PORT`: WebSocketポート
 - `WEBSOCKET_SERVER`: WebSocketサーバー有効フラグ（非永続化）
+
+**翻訳エンジン モデル選択**
+- `SELECTABLE_GROQ_MODEL_LIST`: 利用可能な Groq モデルリスト（非永続化）
+- `SELECTED_GROQ_MODEL`: 選択中の Groq モデル
+- `SELECTABLE_OPENROUTER_MODEL_LIST`: 利用可能な OpenRouter モデルリスト（非永続化）
+- `SELECTED_OPENROUTER_MODEL`: 選択中の OpenRouter モデル
 
 **オーバーレイ設定**
 - `OVERLAY_SMALL_LOG`: 小ログオーバーレイ有効
