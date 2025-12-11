@@ -1637,6 +1637,10 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
+                    config.SELECTABLE_PLAMO_MODEL_LIST = []
+                    config.SELECTED_PLAMO_MODEL = None
+                    self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
                     response = {
                         "status":400,
                         "result":{
@@ -1645,6 +1649,10 @@ class Controller:
                         }
                     }
             else:
+                config.SELECTABLE_PLAMO_MODEL_LIST = []
+                config.SELECTED_PLAMO_MODEL = None
+                self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -1654,6 +1662,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_PLAMO_MODEL_LIST = []
+            config.SELECTED_PLAMO_MODEL = None
+            self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -1668,6 +1680,10 @@ class Controller:
         auth_keys = config.AUTH_KEYS
         auth_keys[translator_name] = None
         config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_PLAMO_MODEL_LIST = []
+        config.SELECTED_PLAMO_MODEL = None
+        self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1733,6 +1749,10 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
+                    config.SELECTABLE_GEMINI_MODEL_LIST = []
+                    config.SELECTED_GEMINI_MODEL = None
+                    self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
                     response = {
                         "status":400,
                         "result":{
@@ -1741,6 +1761,10 @@ class Controller:
                         }
                     }
             else:
+                config.SELECTABLE_GEMINI_MODEL_LIST = []
+                config.SELECTED_GEMINI_MODEL = None
+                self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -1750,6 +1774,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_GEMINI_MODEL_LIST = []
+            config.SELECTED_GEMINI_MODEL = None
+            self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -1764,6 +1792,10 @@ class Controller:
         auth_keys = config.AUTH_KEYS
         auth_keys[translator_name] = None
         config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_GEMINI_MODEL_LIST = []
+        config.SELECTED_GEMINI_MODEL = None
+        self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1830,6 +1862,10 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
+                    config.SELECTABLE_OPENAI_MODEL_LIST = []
+                    config.SELECTED_OPENAI_MODEL = None
+                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
                     response = {
                         "status":400,
                         "result":{
@@ -1838,6 +1874,10 @@ class Controller:
                         }
                     }
             else:
+                config.SELECTABLE_OPENAI_MODEL_LIST = []
+                config.SELECTED_OPENAI_MODEL = None
+                self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -1847,6 +1887,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_OPENAI_MODEL_LIST = []
+            config.SELECTED_OPENAI_MODEL = None
+            self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -1861,6 +1905,10 @@ class Controller:
         auth_keys = config.AUTH_KEYS
         auth_keys[translator_name] = None
         config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_OPENAI_MODEL_LIST = []
+        config.SELECTED_OPENAI_MODEL = None
+        self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
         self.updateTranslationEngineAndEngineList()
         return {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1900,6 +1948,232 @@ class Controller:
             }
         return response
 
+    @staticmethod
+    def getGroqAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["Groq_API"]}
+
+    def setGroqAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Auth Key", data)
+        translator_name = "Groq_API"
+        try:
+            data = str(data)
+            if data.startswith("gsk") and len(data) >= 40:
+                result = model.authenticationTranslatorGroqAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_GROQ_MODEL_LIST = model.getTranslatorGroqModelList()
+                    self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+                    if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
+                        config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
+                        model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
+                        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+                    model.updateTranslatorGroqClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    config.SELECTABLE_GROQ_MODEL_LIST = []
+                    config.SELECTED_GROQ_MODEL = None
+                    self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of Groq auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
+            else:
+                config.SELECTABLE_GROQ_MODEL_LIST = []
+                config.SELECTED_GROQ_MODEL = None
+                self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Groq auth key is not valid",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            config.SELECTABLE_GROQ_MODEL_LIST = []
+            config.SELECTED_GROQ_MODEL = None
+            self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delGroqAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "Groq_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_GROQ_MODEL_LIST = []
+        config.SELECTED_GROQ_MODEL = None
+        self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getGroqModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_GROQ_MODEL_LIST}
+
+    def getGroqModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_GROQ_MODEL}
+
+    def setGroqModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set Groq Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorGroqModel(model=data)
+            if result is True:
+                config.SELECTED_GROQ_MODEL = data
+                model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
+                model.updateTranslatorGroqClient()
+                response = {"status":200, "result":config.SELECTED_GROQ_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"Groq model is not valid",
+                        "data": config.SELECTED_GROQ_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_GROQ_MODEL
+                }
+            }
+        return response
+
+    @staticmethod
+    def getOpenRouterAuthKey(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.AUTH_KEYS["OpenRouter_API"]}
+
+    def setOpenRouterAuthKey(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenRouter Auth Key", data)
+        translator_name = "OpenRouter_API"
+        try:
+            data = str(data)
+            if len(data) >= 20:  # OpenRouter API key basic validation
+                result = model.authenticationTranslatorOpenRouterAuthKey(auth_key=data)
+                if result is True:
+                    key = data
+                    auth_keys = config.AUTH_KEYS
+                    auth_keys[translator_name] = key
+                    config.AUTH_KEYS = auth_keys
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_OPENROUTER_MODEL_LIST = model.getTranslatorOpenRouterModelList()
+                    self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+                    if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
+                        config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
+                        model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
+                        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+                    model.updateTranslatorOpenRouterClient()
+                    self.updateTranslationEngineAndEngineList()
+                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                else:
+                    config.SELECTABLE_OPENROUTER_MODEL_LIST = []
+                    config.SELECTED_OPENROUTER_MODEL = None
+                    self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+                    response = {
+                        "status":400,
+                        "result":{
+                            "message":"Authentication failure of OpenRouter auth key",
+                            "data": config.AUTH_KEYS[translator_name]
+                        }
+                    }
+            else:
+                config.SELECTABLE_OPENROUTER_MODEL_LIST = []
+                config.SELECTED_OPENROUTER_MODEL = None
+                self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenRouter auth key is not valid",
+                        "data": config.AUTH_KEYS[translator_name]
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            config.SELECTABLE_OPENROUTER_MODEL_LIST = []
+            config.SELECTED_OPENROUTER_MODEL = None
+            self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.AUTH_KEYS[translator_name]
+                }
+            }
+        return response
+
+    def delOpenRouterAuthKey(self, *args, **kwargs) -> dict:
+        translator_name = "OpenRouter_API"
+        auth_keys = config.AUTH_KEYS
+        auth_keys[translator_name] = None
+        config.AUTH_KEYS = auth_keys
+        config.SELECTABLE_OPENROUTER_MODEL_LIST = []
+        config.SELECTED_OPENROUTER_MODEL = None
+        self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
+        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+        self.updateTranslationEngineAndEngineList()
+        return {"status":200, "result":config.AUTH_KEYS[translator_name]}
+
+    def getOpenRouterModelList(self, *args, **kwargs) -> dict:
+        return {"status":200, "result": config.SELECTABLE_OPENROUTER_MODEL_LIST}
+
+    def getOpenRouterModel(self, *args, **kwargs) -> dict:
+        return {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+
+    def setOpenRouterModel(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenRouter Model", data)
+        try:
+            data = str(data)
+            result = model.setTranslatorOpenRouterModel(model=data)
+            if result is True:
+                config.SELECTED_OPENROUTER_MODEL = data
+                model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
+                model.updateTranslatorOpenRouterClient()
+                response = {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
+            else:
+                response = {
+                    "status":400,
+                    "result":{
+                        "message":"OpenRouter model is not valid",
+                        "data": config.SELECTED_OPENROUTER_MODEL
+                    }
+                }
+        except Exception as e:
+            errorLogging()
+            response = {
+                "status":400,
+                "result":{
+                    "message":f"Error {e}",
+                    "data": config.SELECTED_OPENROUTER_MODEL
+                }
+            }
+        return response
+
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
         return {"status":200, "result":model.getTranslatorLMStudioConnected()}
 
@@ -1922,6 +2196,10 @@ class Controller:
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":True}
             else:
+                config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
+                config.SELECTED_LMSTUDIO_MODEL = None
+                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -1931,6 +2209,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
+            config.SELECTED_LMSTUDIO_MODEL = None
+            self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -1968,6 +2250,10 @@ class Controller:
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":config.LMSTUDIO_URL}
             else:
+                config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
+                config.SELECTED_LMSTUDIO_MODEL = None
+                self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -1977,6 +2263,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
+            config.SELECTED_LMSTUDIO_MODEL = None
+            self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -2044,6 +2334,10 @@ class Controller:
                 self.updateTranslationEngineAndEngineList()
                 response = {"status":200, "result":True}
             else:
+                config.SELECTABLE_OLLAMA_MODEL_LIST = []
+                config.SELECTED_OLLAMA_MODEL = None
+                self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
+                self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
                 response = {
                     "status":400,
                     "result":{
@@ -2053,6 +2347,10 @@ class Controller:
                 }
         except Exception as e:
             errorLogging()
+            config.SELECTABLE_OLLAMA_MODEL_LIST = []
+            config.SELECTED_OLLAMA_MODEL = None
+            self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
+            self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
             response = {
                 "status":400,
                 "result":{
@@ -3022,6 +3320,42 @@ class Controller:
                             auth_keys[engine] = None
                             config.AUTH_KEYS = auth_keys
                             printLog("OpenAI API Key is invalid")
+                case "Groq_API":
+                    printLog("Start check Groq API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorGroqAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_GROQ_MODEL_LIST = model.getTranslatorGroqModelList()
+                            if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
+                                config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
+                            model.setTranslatorGroqModel(config.SELECTED_GROQ_MODEL)
+                            model.updateTranslatorGroqClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("Groq API Key is valid")
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                            printLog("Groq API Key is invalid")
+                case "OpenRouter_API":
+                    printLog("Start check OpenRouter API Key")
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
+                    if config.AUTH_KEYS[engine] is not None:
+                        if model.authenticationTranslatorOpenRouterAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            config.SELECTABLE_OPENROUTER_MODEL_LIST = model.getTranslatorOpenRouterModelList()
+                            if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
+                                config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
+                            model.setTranslatorOpenRouterModel(config.SELECTED_OPENROUTER_MODEL)
+                            model.updateTranslatorOpenRouterClient()
+                            config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = True
+                            printLog("OpenRouter API Key is valid")
+                        else:
+                            # error update Auth key
+                            auth_keys = config.AUTH_KEYS
+                            auth_keys[engine] = None
+                            config.AUTH_KEYS = auth_keys
+                            printLog("OpenRouter API Key is invalid")
                 case "LMStudio":
                     printLog("Start check LMStudio Server")
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False

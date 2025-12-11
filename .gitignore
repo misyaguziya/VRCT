@@ -46,3 +46,4 @@ dist-ssr
 # Customize
 /build
 error.txt
+config.json
