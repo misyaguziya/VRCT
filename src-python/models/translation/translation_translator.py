@@ -425,8 +425,17 @@ class Translator:
                 target_language = translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
-    def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:
+    def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str, context_history: Optional[list[dict]] = None) -> Any:
         """Translate `message` using the named translator backend.
+
+        Args:
+            translator_name: Name of the translator backend to use
+            weight_type: Model weight type for CTranslate2
+            source_language: Source language name
+            target_language: Target language name
+            target_country: Target country for locale-specific translations
+            message: Text to translate
+            context_history: Optional conversation context (Chat/Mic/Speaker messages)
 
         Returns translated string on success, or False on failure. When
         source_language == target_language the original message is returned.
@@ -460,6 +469,8 @@ class Translator:
                     if self.plamo_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.plamo_client.setContextHistory(context_history)
                         result = self.plamo_client.translate(
                             message,
                             input_lang=source_language,
@@ -469,6 +480,8 @@ class Translator:
                     if self.gemini_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.gemini_client.setContextHistory(context_history)
                         result = self.gemini_client.translate(
                             message,
                             input_lang=source_language,
@@ -478,6 +491,8 @@ class Translator:
                     if self.openai_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.openai_client.setContextHistory(context_history)
                         result = self.openai_client.translate(
                             message,
                             input_lang=source_language,
@@ -487,6 +502,8 @@ class Translator:
                     if self.groq_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.groq_client.setContextHistory(context_history)
                         result = self.groq_client.translate(
                             message,
                             input_lang=source_language,
@@ -496,6 +513,8 @@ class Translator:
                     if self.openrouter_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.openrouter_client.setContextHistory(context_history)
                         result = self.openrouter_client.translate(
                             message,
                             input_lang=source_language,
@@ -505,6 +524,8 @@ class Translator:
                     if self.lmstudio_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.lmstudio_client.setContextHistory(context_history)
                         result = self.lmstudio_client.translate(
                             message,
                             input_lang=source_language,
@@ -514,6 +535,8 @@ class Translator:
                     if self.ollama_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.ollama_client.setContextHistory(context_history)
                         result = self.ollama_client.translate(
                             message,
                             input_lang=source_language,

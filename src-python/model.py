@@ -117,6 +117,8 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
+        self.translation_history: list[dict] = []
+        self.translation_history_max_items = 20
         overlay_small_log_settings = copy.deepcopy(config.OVERLAY_SMALL_LOG_SETTINGS)
         overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
         overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
@@ -378,16 +380,62 @@ class Model:
 
         return compatible_engines
 
+    def addTranslationHistory(self, source: str, text: str) -> None:
+        """Add a message to translation context history.
+        
+        Args:
+            source: "chat" | "mic" | "speaker"
+            text: message content
+        """
+        self.ensure_initialized()
+        if not text or not text.strip():
+            return
+        
+        history_item = {
+            "source": source,
+            "text": text.strip(),
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.translation_history.append(history_item)
+        
+        # 最大件数を超えた場合は古いものを削除
+        if len(self.translation_history) > self.translation_history_max_items:
+            self.translation_history = self.translation_history[-self.translation_history_max_items:]
+    
+    def getTranslationHistory(self, max_items: int = None) -> list[dict]:
+        """Get recent translation context history.
+        
+        Args:
+            max_items: Maximum number of items to return (newest first)
+        
+        Returns:
+            List of history items
+        """
+        self.ensure_initialized()
+        if max_items is None or max_items <= 0:
+            return self.translation_history
+        return self.translation_history[-max_items:]
+    
+    def clearTranslationHistory(self) -> None:
+        """Clear all translation context history."""
+        self.ensure_initialized()
+        self.translation_history = []
+
     def getTranslate(self, translator_name, source_language, target_language, target_country, message):
         self.ensure_initialized()
         success_flag = False
+        
+        # Get context history for LLM-based translators
+        history = self.getTranslationHistory()
+        
         translation = self.translator.translate(
                         translator_name=translator_name,
                         weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                         source_language=source_language,
                         target_language=target_language,
                         target_country=target_country,
-                        message=message
+                        message=message,
+                        context_history=history
                 )
 
         # 翻訳失敗時のフェールセーフ処理

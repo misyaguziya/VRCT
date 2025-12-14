@@ -4,13 +4,13 @@ import requests
 
 try:
     from .translation_languages import translation_lang
-    from .translation_utils import loadPromptConfig
+    from .translation_utils import loadTranslatePromptConfig
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.abspath(__file__)))
     from translation_languages import translation_lang, loadTranslationLanguages
-    from translation_utils import loadPromptConfig
+    from translation_utils import loadTranslatePromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
@@ -50,9 +50,19 @@ class LMStudioClient:
         self.model = None
         self.base_url = base_url  # None の場合は公式エンドポイント
 
-        prompt_config = loadPromptConfig(root_path, "translation_lmstudio.yml")
+        prompt_config = loadTranslatePromptConfig(root_path, "translation_lmstudio.yml")
         self.supported_languages = list(translation_lang["LMStudio"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
+        # history config (optional)
+        self.history_cfg = prompt_config.get("history", {
+            "use_history": False,
+            "sources": [],
+            "max_messages": 0,
+            "max_chars": 0,
+            "header_template": "",
+            "item_template": "[{source}] {role}: {text}",
+        })
+        self._context_history: list[dict] = []
 
         self.openai_llm = None
 
@@ -86,12 +96,58 @@ class LMStudioClient:
             streaming=False,
         )
 
+    def setContextHistory(self, history_items: list[dict]) -> None:
+        """Set recent conversation history for prompt injection.
+
+        Each item should be a dict containing:
+        - source: "chat" | "mic" | "speaker"
+        - text: message string
+        - timestamp: ISO format datetime string
+        """
+        self._context_history = history_items or []
+
     def translate(self, text: str, input_lang: str, output_lang: str) -> str:
         system_prompt = self.prompt_template.format(
             supported_languages=self.supported_languages,
             input_lang=input_lang,
             output_lang=output_lang,
         )
+
+        # Inject recent conversation history if enabled by YAML config
+        if self.history_cfg.get("use_history"):
+            allowed_sources = set(self.history_cfg.get("sources", []))
+            max_messages = int(self.history_cfg.get("max_messages", 0))
+            max_chars = int(self.history_cfg.get("max_chars", 0))
+            item_tmpl = self.history_cfg.get("item_template", "[{source}] {role}: {text}")
+            header_tmpl = self.history_cfg.get("header_template", "{history}")
+
+            filtered = [h for h in self._context_history if h.get("source") in allowed_sources]
+            recent = filtered[-max_messages:] if max_messages > 0 else filtered
+            formatted_items = []
+            for h in recent:
+                # Format timestamp as HH:MM to save tokens
+                timestamp_str = ''
+                if 'timestamp' in h:
+                    from datetime import datetime
+                    try:
+                        ts = datetime.fromisoformat(h['timestamp'])
+                        timestamp_str = ts.strftime('%H:%M')
+                    except:
+                        timestamp_str = ''
+                formatted_items.append(
+                    item_tmpl.format(
+                        timestamp=timestamp_str,
+                        source=h.get("source", ""),
+                        text=h.get("text", ""),
+                    )
+                )
+            history_blob = "\n".join(formatted_items).strip()
+            if max_chars and len(history_blob) > max_chars:
+                history_blob = history_blob[-max_chars:]
+            history_header = header_tmpl.format(max_messages=max_messages, history=history_blob)
+            if history_header:
+                system_prompt = f"{system_prompt}\n\n{history_header}"
+
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": text},
