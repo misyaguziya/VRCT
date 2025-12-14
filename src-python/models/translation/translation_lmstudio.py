@@ -4,13 +4,13 @@ import requests
 
 try:
     from .translation_languages import translation_lang
-    from .translation_utils import loadPromptConfig
+    from .translation_utils import loadTranslatePromptConfig
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.abspath(__file__)))
     from translation_languages import translation_lang, loadTranslationLanguages
-    from translation_utils import loadPromptConfig
+    from translation_utils import loadTranslatePromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 def _authentication_check(base_url: str | None = None) -> bool:
@@ -50,7 +50,7 @@ class LMStudioClient:
         self.model = None
         self.base_url = base_url  # None の場合は公式エンドポイント
 
-        prompt_config = loadPromptConfig(root_path, "translation_lmstudio.yml")
+        prompt_config = loadTranslatePromptConfig(root_path, "translation_lmstudio.yml")
         self.supported_languages = list(translation_lang["LMStudio"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
