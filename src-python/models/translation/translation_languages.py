@@ -41,14 +41,14 @@ def _load_languages(path: str, filename: str) -> str:
     Returns:
         Absolute path to the resource file
     """
-    if os.path.exists(os.path.join(path, "_internal", "languages", "languages.yml")):
-        languages_path =  os.path.join(path, "_internal", "languages", "languages.yml")
-    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "languages", "languages.yml")):
-        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "languages", "languages.yml")
-    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "languages", "languages.yml")):
-        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "languages", "languages.yml")
+    if os.path.exists(os.path.join(path, "_internal", "translation_settings", "languages", filename)):
+        languages_path =  os.path.join(path, "_internal", "translation_settings", "languages", filename)
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "translation_settings", "languages", filename)):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "translation_settings", "languages", filename)
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation_settings", "languages", filename)):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation_settings", "languages", filename)
     else:
-        raise FileNotFoundError(f"Prompt file not found: {filename}")
+        raise FileNotFoundError(f"Languages file not found: {filename}")
     with open(languages_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
@@ -99,7 +99,7 @@ def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
         if _loaded and not force:
             return translation_lang
 
-        data = _load_languages(path, "languages/languages.yml")
+        data = _load_languages(path, "languages.yml")
 
         if not isinstance(data, dict):
             raise ValueError(

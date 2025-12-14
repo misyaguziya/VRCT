@@ -4,13 +4,13 @@ from pydantic import SecretStr
 
 try:
     from .translation_languages import translation_lang
-    from .translation_utils import loadPromptConfig
+    from .translation_utils import loadTranslatePromptConfig
 except Exception:
     import sys
     from os import path as os_path
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
     from translation_languages import translation_lang, loadTranslationLanguages
-    from translation_utils import loadPromptConfig
+    from translation_utils import loadTranslatePromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
 BASE_URL = "https://api.platform.preferredai.jp/v1"
@@ -44,7 +44,7 @@ class PlamoClient:
         self.base_url = BASE_URL
         self.model = None
 
-        prompt_config = loadPromptConfig(root_path, "translation_plamo.yml")
+        prompt_config = loadTranslatePromptConfig(root_path, "translation_plamo.yml")
         self.supported_languages = list(translation_lang["Plamo_API"]["source"].keys())
         self.prompt_template = prompt_config["system_prompt"]
 
