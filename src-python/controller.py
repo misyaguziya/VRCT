@@ -292,6 +292,8 @@ class Controller:
                                 "data": None
                             },
                         )
+                    else:
+                        pass
                 except Exception as e:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
@@ -412,6 +414,8 @@ class Controller:
                     translation_text = f" ({'/'.join(translation)})" if translation else ""
                     model.logger.info(f"[SENT] {message}{translation_text}")
 
+            model.addTranslationHistory("mic", message)
+
     def speakerMessage(self, result:dict) -> None:
         message = result["text"]
         language = result["language"]
@@ -452,6 +456,8 @@ class Controller:
                                 "data": None
                             },
                         )
+                    else:
+                        pass
                 except Exception as e:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
@@ -594,6 +600,8 @@ class Controller:
                     translation_text = f" ({'/'.join(translation)})" if translation else ""
                     model.logger.info(f"[RECEIVED] {message}{translation_text}")
 
+            model.addTranslationHistory("speaker", message)
+
     def chatMessage(self, data) -> dict:
         id = data["id"]
         message = data["message"]
@@ -625,6 +633,8 @@ class Controller:
                                 "data": None
                             },
                         )
+                    else:
+                        pass
                 except Exception as e:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
@@ -743,6 +753,8 @@ class Controller:
             if config.LOGGER_FEATURE is True:
                 translation_text = f" ({'/'.join(translation)})" if translation else ""
                 model.logger.info(f"[CHAT] {message}{translation_text}")
+
+        model.addTranslationHistory("chat", message)
 
         return {
                 "status":200,

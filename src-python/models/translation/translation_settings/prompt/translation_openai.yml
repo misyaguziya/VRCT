@@ -5,3 +5,12 @@ system_prompt: |
 
   Translate the user provided text from {input_lang} to {output_lang}.
   Return ONLY the translated text. Do not add quotes or extra commentary.
+history:
+  use_history: true
+  sources: [chat, mic, speaker] # 取り込み対象の履歴種別
+  max_messages: 5               # 注入する履歴件数の上限（新しい順）
+  max_chars: 4000               # 履歴整形後の最大文字数（超過時は先頭を切り捨て）
+  header_template: |
+    Conversation context (recent {max_messages} messages):
+    {history}
+  item_template: "[{timestamp}][{source}] {text}"
