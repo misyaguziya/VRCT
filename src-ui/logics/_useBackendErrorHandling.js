@@ -115,7 +115,7 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
-            case "/run/enable_transcription_send":
+            case "/run/enable_transcription_receive":
                 if (message === "Transcription receive disabled due to VRAM overflow") {
                     updateTranscriptionReceiveStatus(data);
                     showNotification_Error("Transcription receive disabled due to VRAM overflow");
@@ -211,7 +211,6 @@ export const _useBackendErrorHandling = () => {
                 return;
 
             case "/set/data/selected_openai_model":
-                console.log(data);
                 if (message === "OpenAI model is not valid") {
                     updateSelectedOpenAIModel(data);
                     showNotification_Error(message, { category_id: "selected_openai_model" });
@@ -344,15 +343,23 @@ export const _useBackendErrorHandling = () => {
                 return;
 
             case "/run/lmstudio_connection":
-                updateIsLMStudioConnected(data);
-                showNotification_Error(message);
-                console.error(message);
+                if (message === "Cannot connect to LMStudio server") {
+                    updateIsLMStudioConnected(data);
+                    showNotification_Error(message, { category_id: "lmstudio_connection" });
+                } else {
+                    updateIsLMStudioConnected(data);
+                    showNotification_Error(message, { category_id: "lmstudio_connection" });
+                }
                 return;
 
             case "/run/ollama_connection":
-                updateIsOllamaConnected(data);
-                showNotification_Error(message);
-                console.error(message);
+                if (message === "Cannot connect to ollama server") {
+                    updateIsOllamaConnected(data);
+                    showNotification_Error(message, { category_id: "ollama_connection" });
+                } else {
+                    updateIsOllamaConnected(data);
+                    showNotification_Error(message, { category_id: "ollama_connection" });
+                }
                 return;
 
             default:

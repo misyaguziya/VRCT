@@ -110,6 +110,8 @@ export const translator_status = [
     { id: "Plamo_API", label: `Plamo API`, is_available: false },
     { id: "Gemini_API", label: `Gemini API`, is_available: false },
     { id: "OpenAI_API", label: `OpenAI API`, is_available: false },
+    { id: "Groq_API", label: `Groq API`, is_available: false },
+    { id: "OpenRouter_API", label: `OpenRouter API`, is_available: false },
     { id: "LMStudio", label: `LMStudio`, is_available: false },
     { id: "Ollama", label: `Ollama`, is_available: false },
 ];
