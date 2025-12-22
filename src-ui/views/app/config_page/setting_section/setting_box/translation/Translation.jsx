@@ -49,6 +49,12 @@ export const Translation = () => {
             <OpenAIAuthKey_Box />
             <OpenAIModelContainer />
 
+            <GroqAuthKey_Box />
+            <GroqModelContainer />
+
+            <OpenRouterAuthKey_Box />
+            <OpenRouterModelContainer />
+
             <LMStudioConnectionCheck_Box />
             <LMStudioURL_Box />
             <LMStudioModelContainer />
@@ -444,6 +450,126 @@ const OpenAIModelContainer = () => {
 };
 
 
+const GroqAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentGroqAuthKey, setGroqAuthKey, deleteGroqAuthKey } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentGroqAuthKey.data,
+        state: currentGroqAuthKey.state,
+        setFunction: setGroqAuthKey,
+        deleteFunction: deleteGroqAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="Groq Auth Key"
+                desc="Groq Auth Desc"
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
+                state={currentGroqAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const GroqModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableGroqModelList,
+
+        currentSelectedGroqModel,
+        setSelectedGroqModel,
+
+        currentGroqAuthKey,
+    } = useTranslation();
+
+
+    const selectFunction = (selected_data) => {
+        setSelectedGroqModel(selected_data.selected_id);
+    };
+
+    let selected_label = (!currentGroqAuthKey.data && !currentSelectedGroqModel.data)
+        ? t("config_page.common.correct_auth_key_required")
+        : currentSelectedGroqModel.data;
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_groq_model"
+            label="Select Groq Model"
+            selected_id={selected_label}
+            list={currentSelectableGroqModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedGroqModel.state}
+            is_disabled={!currentGroqAuthKey.data}
+        />
+    );
+};
+
+
+const OpenRouterAuthKey_Box = () => {
+    const { t } = useI18n();
+    const { currentOpenRouterAuthKey, setOpenRouterAuthKey, deleteOpenRouterAuthKey } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenRouterAuthKey.data,
+        state: currentOpenRouterAuthKey.state,
+        setFunction: setOpenRouterAuthKey,
+        deleteFunction: deleteOpenRouterAuthKey,
+    });
+
+    return (
+        <>
+            <AuthKeyContainer
+                label="OpenRouter Auth Key"
+                desc="OpenRouter Auth Desc"
+                // webpage_url={deepl_auth_key_url}
+                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                variable={variable}
+                state={currentOpenRouterAuthKey.state}
+                onChangeFunction={onChangeFunction}
+                saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenRouterModelContainer = () => {
+    const { t } = useI18n();
+    const {
+        currentSelectableOpenRouterModelList,
+
+        currentSelectedOpenRouterModel,
+        setSelectedOpenRouterModel,
+
+        currentOpenRouterAuthKey,
+    } = useTranslation();
+
+
+    const selectFunction = (selected_data) => {
+        setSelectedOpenRouterModel(selected_data.selected_id);
+    };
+
+    let selected_label = (!currentOpenRouterAuthKey.data && !currentSelectedOpenRouterModel.data)
+        ? t("config_page.common.correct_auth_key_required")
+        : currentSelectedOpenRouterModel.data;
+
+    return (
+        <DropdownMenuContainer
+            dropdown_id="select_openrouter_model"
+            label="Select OpenRouter Model"
+            selected_id={selected_label}
+            list={currentSelectableOpenRouterModelList.data}
+            selectFunction={selectFunction}
+            state={currentSelectedOpenRouterModel.state}
+            is_disabled={!currentOpenRouterAuthKey.data}
+        />
+    );
+};
 
 const LMStudioConnectionCheck_Box = () => {
     const { t } = useI18n();
