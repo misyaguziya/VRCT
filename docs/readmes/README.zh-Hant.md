@@ -35,12 +35,6 @@ Become a VRCT Supporter on:
     </picture>
 </a>&emsp;&nbsp;
 
-<a href="https://ko-fi.com/vrct_dev">
-    <picture>
-        <img src="/docs/img/kofi_logo.png" alt="Ko-fi" height="22px">
-    </picture>
-</a>&emsp;&nbsp;
-
 <br>
 
 <picture>
@@ -81,7 +75,7 @@ VRCT 可以：
 
 # 文件
 解釋了初始設定、基本功能以及其他功能。
-- [文件（日語）](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+- [Documents Link](https://misyaguziya.github.io/VRCT-Docs/)
 
 # YouTube 教學（日語、英文字幕）
 <div align="center">

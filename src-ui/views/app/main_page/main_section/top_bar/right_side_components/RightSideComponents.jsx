@@ -9,10 +9,17 @@ import {
     useIsOscAvailable,
 } from "@logics_common";
 
-import { useVr, useOthers } from "@logics_configs";
+import {
+    useAppearance,
+    useVr,
+    useOthers,
+} from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
+import { generateLocalizedDocumentUrl } from "@ui_configs";
+
 export const RightSideComponents = () => {
+    const { currentUiLanguage } = useAppearance();
 
     return (
         <div className={styles.container}>
@@ -23,7 +30,7 @@ export const RightSideComponents = () => {
             <SoftwareUpdateAvailableButton />
             <a
                 className={styles.help_and_info_button}
-                href="https://docs.google.com/spreadsheets/d/1_L5i-1U6PB1dnaPPTE_5uKMfqOpkLziPyRkiMLi4mqU/edit?usp=sharing"
+                href={generateLocalizedDocumentUrl(currentUiLanguage.data).vrct_document_ui_guide_url}
                 target="_blank"
                 rel="noreferrer"
             >
