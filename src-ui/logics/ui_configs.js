@@ -137,5 +137,26 @@ export const whisper_weight_type_status = [
 export const deepl_auth_key_url = "https://www.deepl.com/ja/your-account/keys";
 
 
+export const vrct_document_home_url = "https://misyaguziya.github.io/VRCT-Docs";
+export const vrct_document_url_chunk_faq = "docs/faq";
+export const vrct_document_url_chunk_ui_guide = "docs/ui-guide";
+
+export const generateLocalizedDocumentUrl = (lang_code = "en") => {
+    const supported_languages = ["en", "ja"];
+
+    if (supported_languages.includes(lang_code) === false) {
+        lang_code = "en";
+    }
+
+    const lang_path = (lang_code === "en") ? "" : `/${lang_code}`;
+
+    return {
+        vrct_document_home_url: `${vrct_document_home_url}`,
+        vrct_document_faq_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_faq}`,
+        vrct_document_ui_guide_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_ui_guide}`,
+    };
+};
+
+
 export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";
 export const supporters_images_url = "https://ShiinaSakamoto.github.io/vrct_supporters/assets/supporters";
