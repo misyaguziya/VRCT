@@ -31,6 +31,8 @@ import { useI18n } from "@useI18n";
 import { useAppearance } from "@logics_configs";
 import { PosterShowcaseContents } from "./poster_showcase_contents/PosterShowcaseContents";
 
+import { generateLocalizedDocumentUrl } from "@ui_configs";
+
 export const AboutVrct = () => {
     const { t } = useI18n();
     const { currentUiLanguage } = useAppearance();
@@ -153,7 +155,7 @@ const about_vrct_links = {
     dev_shiina_x: { img: dev_x_icon, href: "https://twitter.com/Shiina_12siy" },
 
     project_link_booth: { img: project_link_booth, href: "https://misyaguziya.booth.pm/items/5155325" },
-    project_link_documents: { img: project_link_documents, href: "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246" },
+    project_link_documents: { img: project_link_documents, href: generateLocalizedDocumentUrl().vrct_document_home_url },
     project_link_vrct_github: { img: project_link_vrct_github, href: "https://github.com/misyaguziya/VRCT" },
     project_link_contact_us: { img: project_link_contact_us, href: "https://docs.google.com/forms/d/e/1FAIpQLSei-xoydOY60ivXqhOjaTzNN8PiBQIDcNhzfy6cw2sjYkcg_g/viewform" },
 
