@@ -602,9 +602,6 @@ class Config:
     PATH_LOGS = ManagedProperty('PATH_LOGS', readonly=True, serialize=False)
     GITHUB_URL = ManagedProperty('GITHUB_URL', readonly=True, serialize=False)
     UPDATER_URL = ManagedProperty('UPDATER_URL', readonly=True, serialize=False)
-    BOOTH_URL = ManagedProperty('BOOTH_URL', readonly=True, serialize=False)
-    DOCUMENTS_URL = ManagedProperty('DOCUMENTS_URL', readonly=True, serialize=False)
-    DEEPL_AUTH_KEY_PAGE_URL = ManagedProperty('DEEPL_AUTH_KEY_PAGE_URL', readonly=True, serialize=False)
     MAX_MIC_THRESHOLD = ManagedProperty('MAX_MIC_THRESHOLD', readonly=True, serialize=False)
     MAX_SPEAKER_THRESHOLD = ManagedProperty('MAX_SPEAKER_THRESHOLD', readonly=True, serialize=False)
     WATCHDOG_TIMEOUT = ManagedProperty('WATCHDOG_TIMEOUT', readonly=True, serialize=False)
@@ -771,9 +768,6 @@ class Config:
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._UPDATER_URL = "https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest"
-        self._BOOTH_URL = "https://misyaguziya.booth.pm/"
-        self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
-        self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000

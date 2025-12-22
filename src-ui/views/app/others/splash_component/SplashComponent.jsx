@@ -6,6 +6,7 @@ import MegaphoneSvg from "@images/megaphone.svg?react";
 import XMarkSvg from "@images/cancel.svg?react";
 import { useWindow } from "@logics_common";
 import clsx from "clsx";
+import { generateLocalizedDocumentUrl } from "@ui_configs";
 
 export const SplashComponent = () => {
     return (
@@ -56,7 +57,7 @@ const AnnouncementsContainer = () => {
                 [styles.is_shown]: is_shown,
                 [styles.is_labels_active]: is_labels_active,
             })}
-            href="https://docs.google.com/spreadsheets/d/1_L5i-1U6PB1dnaPPTE_5uKMfqOpkLziPyRkiMLi4mqU/edit?usp=sharing"
+            href={generateLocalizedDocumentUrl().vrct_document_faq_url}
             target="_blank"
             rel="noreferrer"
         >

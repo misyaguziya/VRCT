@@ -35,12 +35,6 @@ Become a VRCT Supporter on:
     </picture>
 </a>&emsp;&nbsp;
 
-<a href="https://ko-fi.com/vrct_dev">
-    <picture>
-        <img src="/docs/img/kofi_logo.png" alt="Ko-fi" height="22px">
-    </picture>
-</a>&emsp;&nbsp;
-
 <br>
 
 <picture>
@@ -82,7 +76,7 @@ VRCT supports your conversations with
 
 # Documents
 Initial setup, basic functions, and other features are also described.
-- [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+- [Documents Link](https://misyaguziya.github.io/VRCT-Docs/)
 
 # How to Use (YouTube)
 <div align="center">
