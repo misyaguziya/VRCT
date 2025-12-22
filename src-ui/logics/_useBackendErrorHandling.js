@@ -115,7 +115,7 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
-            case "/run/enable_transcription_send":
+            case "/run/enable_transcription_receive":
                 if (message === "Transcription receive disabled due to VRAM overflow") {
                     updateTranscriptionReceiveStatus(data);
                     showNotification_Error("Transcription receive disabled due to VRAM overflow");
