@@ -13,26 +13,20 @@ except Exception:
     from translation_utils import loadTranslatePromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
-def _authentication_check(api_key: str) -> bool:
+def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
     """Check if the provided API key is valid by attempting to list models.
     """
     try:
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://openrouter.ai/api/v1",
-        )
+        client = OpenAI(api_key=api_key, base_url=base_url)
         client.models.list()
         return True
     except Exception:
         return False
 
-def _get_available_text_models(api_key: str) -> list[str]:
+def _get_available_text_models(api_key: str, base_url: str | None = None) -> list[str]:
     """Extract only OpenRouter models suitable for translation and chat applications.
     """
-    client = OpenAI(
-        api_key=api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
+    client = OpenAI(api_key=api_key, base_url=base_url)
     res = client.models.list()
     allowed_models = []
 
@@ -90,13 +84,13 @@ class OpenRouterClient:
         self.openrouter_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key) if self.api_key else []
+        return _get_available_text_models(self.api_key, self.base_url) if self.api_key else []
 
     def getAuthKey(self) -> str:
         return self.api_key
 
     def setAuthKey(self, api_key: str) -> bool:
-        result = _authentication_check(api_key)
+        result = _authentication_check(api_key, self.base_url)
         if result:
             self.api_key = api_key
         return result
