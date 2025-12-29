@@ -4,12 +4,15 @@
 
 OpenRouter API を用いた統合 LLM 翻訳クライアントラッパー。OpenAI 互換エンドポイント (`https://openrouter.ai/api/v1`) を利用し、複数の LLM プロバイダーへの統一アクセスを提供する。
 
-## 最近の更新 (2025-12-10)
+## 最近の更新 (2025-12-29)
 
-- OpenRouter API サポートを新規追加
-- 単一 API キーで複数 LLM プロバイダーへアクセス可能
-- 除外キーワード (`whisper`, `embedding`, `image`, `tts`, `audio`, `search`, `transcribe`, `diarize`, `vision`) によるテキスト処理モデルのフィルタリング
-- YAML (`prompt/translation_openrouter.yml`) からシステムプロンプトをロード
+- OpenRouter API 認証チェック方法を変更
+  - **以前:** `client.models.list()` を呼び出して認証確認
+  - **現在:** `https://openrouter.ai/api/v1/auth/key` エンドポイントに GET リクエスト送信して確認
+  - **理由:** より信頼性の高い専用認証エンドポイントを使用し、高速かつ確実に API キー有効性を検証
+- 認証失敗時の sensitive data 処理
+  - API キー検証失敗時はレスポンス `data` フィールドに `None` を設定（API キーを露出させない）
+  - エラーメッセージのみを返却し、具体的なキー情報は隠蔽
 
 ### 影響
 
@@ -22,6 +25,8 @@ OpenRouter API を用いた統合 LLM 翻訳クライアントラッパー。Ope
 ## 責務
 
 - OpenRouter API Key (20文字以上) を用いた認証確認
+  - `https://openrouter.ai/api/v1/auth/key` エンドポイントへの HTTP GET リクエストで検証（タイムアウト10秒）
+  - ステータスコード 200 で有効と判定
 - 利用可能モデルのフィルタリングとソート
 - 選択モデルの検証と内部保持
 - LangChain `ChatOpenAI` インスタンス生成（base_url に OpenRouter エンドポイント指定）
