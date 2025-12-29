@@ -48,6 +48,12 @@ export const _useBackendErrorHandling = () => {
         updateOpenAIAuthKey,
         updateSelectedOpenAIModel,
 
+        updateGroqAuthKey,
+        updateSelectedGroqModel,
+
+        updateOpenRouterAuthKey,
+        updateSelectedOpenRouterModel,
+
         updateLMStudioURL,
         updateSelectedLMStudioModel,
 
@@ -217,6 +223,52 @@ export const _useBackendErrorHandling = () => {
                 } else {
                     updateSelectedOpenAIModel(data);
                     showNotification_Error(message, { category_id: "selected_openai_model" });
+                }
+                return;
+
+            case "/set/data/groq_auth_key":
+                if (message === "Groq auth key is not valid") {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                } else if (message === "Authentication failure of Groq auth key") {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                } else {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_groq_model":
+                if (message === "Groq model is not valid") {
+                    updateSelectedGroqModel(data);
+                    showNotification_Error(message, { category_id: "selected_groq_model" });
+                } else {
+                    updateSelectedGroqModel(data);
+                    showNotification_Error(message, { category_id: "selected_groq_model" });
+                }
+                return;
+
+            case "/set/data/openrouter_auth_key":
+                if (message === "OpenRouter auth key is not valid") {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                } else if (message === "Authentication failure of OpenRouter auth key") {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                } else {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_openrouter_model":
+                if (message === "OpenRouter model is not valid") {
+                    updateSelectedOpenRouterModel(data);
+                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
+                } else {
+                    updateSelectedOpenRouterModel(data);
+                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
                 }
                 return;
 

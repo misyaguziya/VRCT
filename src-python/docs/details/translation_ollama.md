@@ -4,6 +4,14 @@
 
 Ollama サーバー上で稼働するローカル LLM を翻訳エンジンとして扱うためのクライアントラッパー。モデル一覧取得・モデル選択・翻訳実行を統一パターンで提供する。
 
+## 最近の更新 (2025-12-30)
+
+- 接続失敗時のエラーハンドリング改善
+  - `/api/ping` への疎通確認失敗時にモデルリストをクリア (`SELECTABLE_OLLAMA_MODEL_LIST = []`)
+  - 選択モデルをクリア (`SELECTED_OLLAMA_MODEL = None`)
+  - `SELECTABLE_TRANSLATION_ENGINE_STATUS["Ollama"]` を False に設定
+  - フロントエンドに通知して UI を同期
+
 ## 最近の更新 (2025-10-20)
 
 - 新規追加: Ollama を翻訳エンジン群へ統合
@@ -73,6 +81,10 @@ if client.authenticationCheck():
 - サーバー既定 URL: `http://localhost:11434`
 - モデル一覧取得は起動しているローカルサーバー状態に依存
 - `updateClient()` 呼び出し前は `translate()` を利用不可
+- **接続失敗時の自動処理:**
+  - `/api/ping` への疎通確認が失敗すると、自動的にモデルリストと選択モデルがクリアされる
+  - `SELECTABLE_TRANSLATION_ENGINE_STATUS["Ollama"]` が False に設定され、エンジンが使用不可状態になる
+  - Controller が自動的にフロントエンドに状態変化を通知
 
 ## 制限事項
 
