@@ -1643,8 +1643,8 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_plamo_model_list"], config.SELECTABLE_PLAMO_MODEL_LIST)
                     if config.SELECTED_PLAMO_MODEL not in config.SELECTABLE_PLAMO_MODEL_LIST:
                         config.SELECTED_PLAMO_MODEL = config.SELECTABLE_PLAMO_MODEL_LIST[0]
-                        model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
-                        self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
+                    model.setTranslatorPlamoModel(model=config.SELECTED_PLAMO_MODEL)
+                    self.run(200, self.run_mapping["selected_plamo_model"], config.SELECTED_PLAMO_MODEL)
                     model.updateTranslatorPlamoClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1755,8 +1755,8 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_gemini_model_list"], config.SELECTABLE_GEMINI_MODEL_LIST)
                     if config.SELECTED_GEMINI_MODEL not in config.SELECTABLE_GEMINI_MODEL_LIST:
                         config.SELECTED_GEMINI_MODEL = config.SELECTABLE_GEMINI_MODEL_LIST[0]
-                        model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
-                        self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
+                    model.setTranslatorGeminiModel(model=config.SELECTED_GEMINI_MODEL)
+                    self.run(200, self.run_mapping["selected_gemini_model"], config.SELECTED_GEMINI_MODEL)
                     model.updateTranslatorGeminiClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1868,8 +1868,8 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
                     if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
                         config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                        model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
+                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
                     model.updateTranslatorOpenAIClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -1981,8 +1981,8 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_groq_model_list"], config.SELECTABLE_GROQ_MODEL_LIST)
                     if config.SELECTED_GROQ_MODEL not in config.SELECTABLE_GROQ_MODEL_LIST:
                         config.SELECTED_GROQ_MODEL = config.SELECTABLE_GROQ_MODEL_LIST[0]
-                        model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
-                        self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
+                    model.setTranslatorGroqModel(model=config.SELECTED_GROQ_MODEL)
+                    self.run(200, self.run_mapping["selected_groq_model"], config.SELECTED_GROQ_MODEL)
                     model.updateTranslatorGroqClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
@@ -2094,8 +2094,8 @@ class Controller:
                     self.run(200, self.run_mapping["selectable_openrouter_model_list"], config.SELECTABLE_OPENROUTER_MODEL_LIST)
                     if config.SELECTED_OPENROUTER_MODEL not in config.SELECTABLE_OPENROUTER_MODEL_LIST:
                         config.SELECTED_OPENROUTER_MODEL = config.SELECTABLE_OPENROUTER_MODEL_LIST[0]
-                        model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
-                        self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
+                    model.setTranslatorOpenRouterModel(model=config.SELECTED_OPENROUTER_MODEL)
+                    self.run(200, self.run_mapping["selected_openrouter_model"], config.SELECTED_OPENROUTER_MODEL)
                     model.updateTranslatorOpenRouterClient()
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
