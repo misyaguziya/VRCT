@@ -693,7 +693,13 @@ OSC Query 機能が無効になったことを通知。無効化された機能�
    - `config.AUTH_KEYS["DeepL_API"]` に保存
    - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["DeepL_API"]` を True に
    - `updateTranslationEngineAndEngineList()` を呼び出し
-4. 認証失敗時: status 400 を返却
+4. 認証失敗時 (status 400):
+   - レスポンス `data` フィールドは **常に None**（キーを返さない）
+   - `delDeeplAuthKey()` を呼び出してクリーンアップ
+
+**認証失敗時の共通ポリシー（Plamo/Gemini/OpenAI/DeepL/Groq/OpenRouter 共通）**
+- レスポンス `data` はキーを含めず `None` を返す
+- 対応する `del*AuthKey()` を呼び出し、保存済みキーとモデル選択をクリア
 
 #### `delDeeplAuthKey(*args, **kwargs) -> dict`
 

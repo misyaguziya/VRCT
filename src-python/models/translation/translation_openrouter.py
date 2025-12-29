@@ -14,7 +14,7 @@ except Exception:
     from translation_utils import loadTranslatePromptConfig
     translation_lang = loadTranslationLanguages(path=".", force=True)
 
-def _authentication_check(api_key: str, base_url: str | None = None) -> bool:
+def _authentication_check(api_key: str) -> bool:
     """Check if the provided API key is valid by attempting to list models.
     """
 
@@ -94,7 +94,7 @@ class OpenRouterClient:
         return self.api_key
 
     def setAuthKey(self, api_key: str) -> bool:
-        result = _authentication_check(api_key, self.base_url)
+        result = _authentication_check(api_key)
         if result:
             self.api_key = api_key
         return result

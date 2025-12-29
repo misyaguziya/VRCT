@@ -279,7 +279,7 @@ def SELECTED_TAB_NO(self, value):
 ```
 
 各setterは以下のパターンを実装:
-1. 型チェック (`isinstance`)：**`None` 値は常に許可される** （値をクリアしたい場合への対応）
+1. 型チェック (`isinstance`)：`ManagedProperty` による型チェックは `None` を許容するが、個別 setter が数値変換などを行う場合は `None` を拒否するケースがある
 2. 値の範囲・有効性チェック
 3. 内部変数への代入
 4. `saveConfig` 呼び出し（永続化対象の場合）
@@ -287,12 +287,12 @@ def SELECTED_TAB_NO(self, value):
 #### 型チェックの詳細（v3.3.0+）
 
 ```python
-# 型チェック実装：Noneは常に許可
+# 型チェック実装：ManagedProperty 経由では None を常に許可
 if self.type_ is not None and value is not None and not isinstance(value, self.type_):
     return  # 無視する
 ```
 
-この変更により、設定値をクリア（None に設定）する用途に対応。例えば認証失敗時に API キーを `None` に設定する場合に有効。
+この仕様は `ManagedProperty` を通じた型チェックに適用される。個別の setter で追加のバリデーションやキャストを行う場合、`None` は別途拒否されることがある。
 
 ### メッセージフォーマット構造
 
