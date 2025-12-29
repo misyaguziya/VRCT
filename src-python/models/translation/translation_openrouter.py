@@ -1,3 +1,4 @@
+import requests
 from openai import OpenAI
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
@@ -16,23 +17,20 @@ except Exception:
 def _authentication_check(api_key: str) -> bool:
     """Check if the provided API key is valid by attempting to list models.
     """
-    try:
-        client = OpenAI(
-            api_key=api_key,
-            base_url="https://openrouter.ai/api/v1",
-        )
-        client.models.list()
-        return True
-    except Exception:
-        return False
 
-def _get_available_text_models(api_key: str) -> list[str]:
+    url = "https://openrouter.ai/api/v1/auth/key"
+    headers = {
+        "Authorization": f"Bearer {api_key}"
+    }
+
+    r = requests.get(url, headers=headers, timeout=10)
+
+    return r.status_code == 200
+
+def _get_available_text_models(api_key: str, base_url: str | None = None) -> list[str]:
     """Extract only OpenRouter models suitable for translation and chat applications.
     """
-    client = OpenAI(
-        api_key=api_key,
-        base_url="https://openrouter.ai/api/v1",
-    )
+    client = OpenAI(api_key=api_key, base_url=base_url)
     res = client.models.list()
     allowed_models = []
 
@@ -90,7 +88,7 @@ class OpenRouterClient:
         self.openrouter_llm = None
 
     def getModelList(self) -> list[str]:
-        return _get_available_text_models(self.api_key) if self.api_key else []
+        return _get_available_text_models(self.api_key, self.base_url) if self.api_key else []
 
     def getAuthKey(self) -> str:
         return self.api_key

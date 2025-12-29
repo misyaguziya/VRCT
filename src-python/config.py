@@ -272,8 +272,8 @@ class ManagedProperty:
         if self.readonly:
             raise AttributeError(f"Cannot set read-only property '{self.name}'")
 
-        # Type check if requested
-        if self.type_ is not None and not isinstance(value, self.type_):
+        # Type check if requested（Noneは常に許可）
+        if self.type_ is not None and value is not None and not isinstance(value, self.type_):
             return
 
         # Allowed-values check: can be an iterable or a callable

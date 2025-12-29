@@ -189,7 +189,7 @@ class OpenAIClient:
         return content.strip()
 
 if __name__ == "__main__":
-    AUTH_KEY = "OPENAI_API_KEY"
+    AUTH_KEY = input("OPENAI_API_KEY: ")
     client = OpenAIClient()
     client.setAuthKey(AUTH_KEY)
     models = client.getModelList()
