@@ -7,8 +7,8 @@ a = Analysis(
     binaries=[],
     datas=[
         ('./../src-python/models/overlay/fonts', 'fonts/'),
-        ('./../src-python/models/translation/translation_settings/prompt', 'prompt/'),
-        ('./../src-python/models/translation/translation_settings/languages', 'languages/'),
+        ('./../src-python/models/translation/translation_settings/prompt', 'translation_settings/prompt/'),
+        ('./../src-python/models/translation/translation_settings/languages', 'translation_settings/languages/'),
         ('./../.venv_cuda/Lib/site-packages/zeroconf', 'zeroconf/'),
         ('./../.venv_cuda/Lib/site-packages/openvr', 'openvr/'),
         ('./../.venv_cuda/Lib/site-packages/faster_whisper', 'faster_whisper/'),
