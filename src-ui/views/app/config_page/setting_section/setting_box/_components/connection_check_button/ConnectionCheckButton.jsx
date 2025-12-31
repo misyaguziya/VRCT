@@ -10,7 +10,6 @@ export const ConnectionCheckButton = (props) => {
     return (
         <div className={styles.container}>
             <p>{label}</p>
-            <p>{`UI Status: ${props.state}`}</p>
             <button className={styles.button_wrapper} onClick={props.checkFunction}>
                 <p className={styles.button_label}>Connection Check</p>
             </button>
