@@ -1,17 +1,20 @@
 import styles from "./ConnectionCheckButton.module.scss";
+import { useI18n } from "@useI18n";
 
 export const ConnectionCheckButton = (props) => {
+    const { t } = useI18n();
+
     const label = props.state === "pending"
-        ? "Checking... 🌀"
+        ? `${t("config_page.common.connection_check.checking")} 🌀`
         : props.variable === true
-            ? "Connected ✅"
-            : "Disconnected ❌";
+            ? `${t("config_page.common.connection_check.connected")} ✅`
+            : `${t("config_page.common.connection_check.disconnected")} ❌`;
 
     return (
         <div className={styles.container}>
-            <p>{label}</p>
+            <p className={styles.status_label}>{label}</p>
             <button className={styles.button_wrapper} onClick={props.checkFunction}>
-                <p className={styles.button_label}>Connection Check</p>
+                <p className={styles.button_label}>{t("config_page.common.connection_check.button_label")}</p>
             </button>
         </div>
     );

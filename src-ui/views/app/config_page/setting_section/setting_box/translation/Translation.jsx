@@ -288,8 +288,8 @@ const PlamoAuthKey_Box = () => {
     return (
         <>
             <AuthKeyContainer
-                label="Plamo Auth Key"
-                desc="Plamo Auth Desc"
+                label={t("config_page.translation.plamo_auth_key.label")}
+                // desc="Plamo Auth Desc"
                 webpage_url={plamo_auth_key_url}
                 open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
@@ -324,7 +324,7 @@ const PlamoModelContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="select_plamo_model"
-            label="Select Plamo Model"
+            label={t("config_page.translation.select_plamo_model.label")}
             selected_id={selected_label}
             list={currentSelectablePlamoModelList.data}
             selectFunction={selectFunction}
@@ -350,8 +350,8 @@ const GeminiAuthKey_Box = () => {
     return (
         <>
             <AuthKeyContainer
-                label="Gemini Auth Key"
-                desc="Gemini Auth Desc"
+                label={t("config_page.translation.gemini_auth_key.label")}
+                // desc="Gemini Auth Desc"
                 webpage_url={gemini_auth_key_url}
                 open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
@@ -386,7 +386,7 @@ const GeminiModelContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="select_gemini_model"
-            label="Select Gemini Model"
+            label={t("config_page.translation.select_gemini_model.label")}
             selected_id={selected_label}
             list={currentSelectableGeminiModelList.data}
             selectFunction={selectFunction}
@@ -411,8 +411,8 @@ const OpenAIAuthKey_Box = () => {
     return (
         <>
             <AuthKeyContainer
-                label="OpenAI Auth Key"
-                desc="OpenAI Auth Desc"
+                label={t("config_page.translation.openai_auth_key.label")}
+                // desc="OpenAI Auth Desc"
                 webpage_url={openai_auth_key_url}
                 open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
@@ -447,7 +447,7 @@ const OpenAIModelContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="select_openai_model"
-            label="Select OpenAI Model"
+            label={t("config_page.translation.select_openai_model.label")}
             selected_id={selected_label}
             list={currentSelectableOpenAIModelList.data}
             selectFunction={selectFunction}
@@ -472,8 +472,8 @@ const GroqAuthKey_Box = () => {
     return (
         <>
             <AuthKeyContainer
-                label="Groq Auth Key"
-                desc="Groq Auth Desc"
+                label={t("config_page.translation.groq_auth_key.label")}
+                // desc="Groq Auth Desc"
                 webpage_url={groq_auth_key_url}
                 open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
@@ -508,7 +508,7 @@ const GroqModelContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="select_groq_model"
-            label="Select Groq Model"
+            label={t("config_page.translation.select_groq_model.label")}
             selected_id={selected_label}
             list={currentSelectableGroqModelList.data}
             selectFunction={selectFunction}
@@ -533,8 +533,8 @@ const OpenRouterAuthKey_Box = () => {
     return (
         <>
             <AuthKeyContainer
-                label="OpenRouter Auth Key"
-                desc="OpenRouter Auth Desc"
+                label={t("config_page.translation.openrouter_auth_key.label")}
+                // desc="OpenRouter Auth Desc"
                 webpage_url={openrouter_auth_key_url}
                 open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
@@ -569,7 +569,7 @@ const OpenRouterModelContainer = () => {
     return (
         <DropdownMenuContainer
             dropdown_id="select_openrouter_model"
-            label="Select OpenRouter Model"
+            label={t("config_page.translation.select_openrouter_model.label")}
             selected_id={selected_label}
             list={currentSelectableOpenRouterModelList.data}
             selectFunction={selectFunction}
@@ -586,7 +586,7 @@ const LMStudioConnectionCheck_Box = () => {
     return (
         <>
             <ConnectionCheckButtonContainer
-                label="Check LM Studio Connection"
+                label={t("config_page.translation.lmstudio_connection_check.label")}
                 variable={currentIsLMStudioConnected.data}
                 state={currentIsLMStudioConnected.state}
                 checkFunction={checkConnection_LMStudio}
@@ -611,7 +611,8 @@ const LMStudioURL_Box = () => {
         <>
             <EntryWithSaveButtonContainer
                 label="LM Studio URL"
-                desc="LM Studio URL Desc"
+                // label={t("config_page.translation.lmstudio_url.label")}
+                // desc={t("config_page.translation.lmstudio_url.desc")}
                 variable={variable}
                 saveFunction={saveFunction}
                 onChangeFunction={onChangeFunction}
@@ -638,13 +639,13 @@ const LMStudioModelContainer = () => {
     };
 
     let selected_label = (!currentIsLMStudioConnected.data && !currentSelectedLMStudioModel.data)
-        ? "Connection Required"
+        ? t("config_page.translation.select_lmstudio_model.connection_required")
         : currentSelectedLMStudioModel.data;
 
     return (
         <DropdownMenuContainer
             dropdown_id="select_lmstudio_model"
-            label="Select LMStudio Model"
+            label={t("config_page.translation.select_lmstudio_model.label")}
             selected_id={selected_label}
             list={currentSelectableLMStudioModelList.data}
             selectFunction={selectFunction}
@@ -661,7 +662,7 @@ const OllamaConnectionCheck_Box = () => {
     return (
         <>
             <ConnectionCheckButtonContainer
-                label="Check Ollama Connection"
+                label={t("config_page.translation.ollama_connection_check.label")}
                 variable={currentIsOllamaConnected.data}
                 state={currentIsOllamaConnected.state}
                 checkFunction={checkConnection_Ollama}
@@ -687,13 +688,13 @@ const OllamaModelContainer = () => {
     };
 
     let selected_label = (!currentIsOllamaConnected.data && !currentSelectedOllamaModel.data)
-        ? "Connection Required"
+        ? t("config_page.translation.select_ollama_model.connection_required")
         : currentSelectedOllamaModel.data;
 
     return (
         <DropdownMenuContainer
             dropdown_id="select_ollama_model"
-            label="Select Ollama Model"
+            label={t("config_page.translation.select_ollama_model.label")}
             selected_id={selected_label}
             list={currentSelectableOllamaModelList.data}
             selectFunction={selectFunction}
