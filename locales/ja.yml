@@ -76,6 +76,7 @@ config_page:
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
+        open_auth_key_webpage: "認証キー管理ページを開く"
         compute_device:
             desc: "各処理タイプの精度・速度は、マシンスペックによって計算方法に相性があり、表示順とは異なる事があるため、大まかな目安としてください。"
             label_device: "処理デバイス"
