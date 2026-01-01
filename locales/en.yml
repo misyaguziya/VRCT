@@ -315,7 +315,6 @@ config_page:
         convert_message_to_hiragana:
             label: "Show Hiragana"
 
-
     hotkeys:
         toggle_vrct_visibility:
             label: "Toggle VRCT visibility"
