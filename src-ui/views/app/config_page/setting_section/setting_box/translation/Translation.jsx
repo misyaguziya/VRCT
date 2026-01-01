@@ -29,7 +29,15 @@ import {
     ConnectionCheckButton,
 } from "../_components";
 
-import { deepl_auth_key_url } from "@ui_configs";
+import {
+    deepl_auth_key_url,
+    plamo_auth_key_url,
+    gemini_auth_key_url,
+    openai_auth_key_url,
+    groq_auth_key_url,
+    openrouter_auth_key_url,
+} from "@ui_configs";
+
 import { useLLMConnection } from "@logics_common";
 
 export const Translation = () => {
@@ -256,7 +264,7 @@ const DeepLAuthKey_Box = () => {
                     {translator: t("main_page.translator")}
                 )}
                 webpage_url={deepl_auth_key_url}
-                open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentDeepLAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -282,8 +290,8 @@ const PlamoAuthKey_Box = () => {
             <AuthKeyContainer
                 label="Plamo Auth Key"
                 desc="Plamo Auth Desc"
-                // webpage_url={deepl_auth_key_url}
-                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                webpage_url={plamo_auth_key_url}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentPlamoAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -344,8 +352,8 @@ const GeminiAuthKey_Box = () => {
             <AuthKeyContainer
                 label="Gemini Auth Key"
                 desc="Gemini Auth Desc"
-                // webpage_url={deepl_auth_key_url}
-                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                webpage_url={gemini_auth_key_url}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentGeminiAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -405,8 +413,8 @@ const OpenAIAuthKey_Box = () => {
             <AuthKeyContainer
                 label="OpenAI Auth Key"
                 desc="OpenAI Auth Desc"
-                // webpage_url={deepl_auth_key_url}
-                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                webpage_url={openai_auth_key_url}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentOpenAIAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -466,8 +474,8 @@ const GroqAuthKey_Box = () => {
             <AuthKeyContainer
                 label="Groq Auth Key"
                 desc="Groq Auth Desc"
-                // webpage_url={deepl_auth_key_url}
-                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                webpage_url={groq_auth_key_url}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentGroqAuthKey.state}
                 onChangeFunction={onChangeFunction}
@@ -527,8 +535,8 @@ const OpenRouterAuthKey_Box = () => {
             <AuthKeyContainer
                 label="OpenRouter Auth Key"
                 desc="OpenRouter Auth Desc"
-                // webpage_url={deepl_auth_key_url}
-                // open_webpage_label={t("config_page.translation.deepl_auth_key.open_auth_key_webpage")}
+                webpage_url={openrouter_auth_key_url}
+                open_webpage_label={t("config_page.common.open_auth_key_webpage")}
                 variable={variable}
                 state={currentOpenRouterAuthKey.state}
                 onChangeFunction={onChangeFunction}
