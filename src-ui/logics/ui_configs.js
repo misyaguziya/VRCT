@@ -137,6 +137,12 @@ export const whisper_weight_type_status = [
 
 
 export const deepl_auth_key_url = "https://www.deepl.com/ja/your-account/keys";
+export const plamo_auth_key_url = "https://plamo.preferredai.jp/api";
+export const gemini_auth_key_url = "https://aistudio.google.com/api-keys";
+export const openai_auth_key_url = "https://platform.openai.com/api-keys";
+export const groq_auth_key_url = "https://console.groq.com/keys";
+export const openrouter_auth_key_url = "https://openrouter.ai/keys";
+
 
 
 export const vrct_document_home_url = "https://misyaguziya.github.io/VRCT-Docs";

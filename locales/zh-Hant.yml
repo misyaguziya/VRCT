@@ -76,6 +76,13 @@ config_page:
     common:
         version: "版本 {{version}}"
         model_download_button_label: "下載"
+        correct_auth_key_required:
+        open_auth_key_webpage:
+        connection_check:
+            button_label:
+            checking:
+            connected:
+            disconnected:
         compute_device:
             desc: "各處理類型的精度和速度會因機器規格不同而有所差異，可能與顯示順序不同，請作為大致參考。"
             label_device: "處理裝置"
@@ -146,6 +153,7 @@ config_page:
             large: "高準確率模型（{{capacity}}）"
         translation_compute_device:
             label: "AI 翻譯的處理裝置"
+
         deepl_auth_key:
             label: "DeepL 授權金鑰"
             desc: "使用 DeepL API 時請在主螢幕選擇 {{translator}}。※可能不支援某些語言。"
@@ -153,6 +161,43 @@ config_page:
             save: "儲存"
             edit: "編輯"
             auth_key_success: "授權金鑰更新完成。"
+
+        plamo_auth_key:
+            label:
+        select_plamo_model:
+            label:
+
+        gemini_auth_key:
+            label:
+        select_gemini_model:
+            label:
+
+        openai_auth_key:
+            label:
+        select_openai_model:
+            label:
+
+        groq_auth_key:
+            label:
+        select_groq_model:
+            label:
+
+        openrouter_auth_key:
+            label:
+        select_openrouter_model:
+            label:
+
+        lmstudio_connection_check:
+            label:
+        select_lmstudio_model:
+            label:
+            connection_required:
+
+        ollama_connection_check:
+            label:
+        select_ollama_model:
+            label:
+            connection_required:
 
     transcription:
         section_label_mic: "麥克風"
