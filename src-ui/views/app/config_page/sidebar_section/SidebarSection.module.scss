@@ -64,6 +64,9 @@
     font-size: 1.6rem;
     // text-overflow: ellipsis;
     position: relative;
+    &.tab_text_small {
+        font-size: 1.4rem;
+    }
 }
 .crown_emoji {
     font-size: 1.6rem;

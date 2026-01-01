@@ -27,11 +27,15 @@ export const SidebarSection = () => {
 
 import clsx from "clsx";
 import { useI18n } from "@useI18n";
-import { useStore_SelectedConfigTabId } from "@store";
+import {
+    useStore_SelectedConfigTabId,
+    useStore_IsBreakPoint,
+} from "@store";
 
 const Tab = (props) => {
     const { t } = useI18n();
     const { updateSelectedConfigTabId, currentSelectedConfigTabId } = useStore_SelectedConfigTabId();
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
     const onclickFunction = () => {
         updateSelectedConfigTabId(props.tab_id);
     };
@@ -54,7 +58,9 @@ const Tab = (props) => {
 
     return (
         <div className={tab_container_class_names} onClick={onclickFunction}>
-            <p className={styles.tab_text}>{getLabel()}</p>
+            <p className={clsx(styles.tab_text, {
+                [styles.tab_text_small]: currentIsBreakPoint.data
+            })}>{getLabel()}</p>
             <div className={switch_indicator_class_names}></div>
         </div>
     );
