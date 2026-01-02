@@ -7,6 +7,7 @@ from device_manager import device_manager
 from config import config
 from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
+from errors import ErrorCode, VRCTError
 
 class Controller:
     def __init__(self) -> None:
@@ -153,13 +154,14 @@ class Controller:
 
     def progressBarMicEnergy(self, energy) -> None:
         if energy is False:
+            error_response = VRCTError.create_error_response(
+                ErrorCode.DEVICE_NO_MIC,
+                data=None
+            )
             self.run(
-                400,
+                error_response["status"],
                 self.run_mapping["error_device"],
-                {
-                    "message":"No mic device detected",
-                    "data": None
-                },
+                error_response["result"],
             )
         else:
             self.run(
@@ -170,13 +172,14 @@ class Controller:
 
     def progressBarSpeakerEnergy(self, energy) -> None:
         if energy is False:
+            error_response = VRCTError.create_error_response(
+                ErrorCode.DEVICE_NO_SPEAKER,
+                data=None
+            )
             self.run(
-                400,
+                error_response["status"],
                 self.run_mapping["error_device"],
-                {
-                    "message":"No speaker device detected",
-                    "data": None
-                },
+                error_response["result"],
             )
         else:
             self.run(
@@ -209,13 +212,14 @@ class Controller:
                     self.weight_type,
                 )
             else:
+                error_response = VRCTError.create_error_response(
+                    ErrorCode.WEIGHT_CTRANSLATE2_DOWNLOAD,
+                    data=None
+                )
                 self.run(
-                    400,
+                    error_response["status"],
                     self.run_mapping["error_ctranslate2_weight"],
-                    {
-                        "message":"CTranslate2 weight download error",
-                        "data": None
-                    },
+                    error_response["result"],
                 )
 
     class DownloadWhisper:
@@ -242,13 +246,14 @@ class Controller:
                     self.weight_type,
                 )
             else:
+                error_response = VRCTError.create_error_response(
+                    ErrorCode.WEIGHT_WHISPER_DOWNLOAD,
+                    data=None
+                )
                 self.run(
-                    400,
+                    error_response["status"],
                     self.run_mapping["error_whisper_weight"],
-                    {
-                        "message":"Whisper weight download error",
-                        "data": None
-                    },
+                    error_response["result"],
                 )
 
     def micMessage(self, result: dict) -> None:
@@ -298,23 +303,25 @@ class Controller:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
                     if is_vram_error:
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_VRAM_MIC,
+                            data=error_message
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_mic_vram_overflow"],
-                            {
-                                "message":"VRAM out of memory during translation of mic",
-                                "data": error_message
-                            },
+                            error_response["result"],
                         )
                         # 翻訳機能をOFFにする
                         self.setDisableTranslation()
+                        disable_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_DISABLED_VRAM,
+                            data=False
+                        )
                         self.run(
-                            400,
+                            disable_response["status"],
                             self.run_mapping["enable_translation"],
-                            {
-                                "message":"Translation disabled due to VRAM overflow",
-                                "data": False
-                            },
+                            disable_response["result"],
                         )
                         return
                     else:
@@ -448,13 +455,14 @@ class Controller:
                     translation, success = model.getOutputTranslate(message, source_language=language)
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                            data=None
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_engine"],
-                            {
-                                "message":"Translation engine limit error",
-                                "data": None
-                            },
+                            error_response["result"],
                         )
                     else:
                         pass
@@ -462,23 +470,25 @@ class Controller:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
                     if is_vram_error:
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_VRAM_SPEAKER,
+                            data=error_message
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_speaker_vram_overflow"],
-                            {
-                                "message":"VRAM out of memory during translation of speaker",
-                                "data": error_message
-                            },
+                            error_response["result"],
                         )
                         # 翻訳機能をOFFにする
                         self.setDisableTranslation()
+                        disable_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_DISABLED_VRAM,
+                            data=False
+                        )
                         self.run(
-                            400,
+                            disable_response["status"],
                             self.run_mapping["enable_translation"],
-                            {
-                                "message":"Translation disabled due to VRAM overflow",
-                                "data": False
-                            },
+                            disable_response["result"],
                         )
                         return
                     else:
@@ -625,13 +635,14 @@ class Controller:
 
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_ENGINE_LIMIT,
+                            data=None
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_engine"],
-                            {
-                                "message":"Translation engine limit error",
-                                "data": None
-                            },
+                            error_response["result"],
                         )
                     else:
                         pass
@@ -639,23 +650,25 @@ class Controller:
                     # VRAM不足エラーの検出
                     is_vram_error, error_message = model.detectVRAMError(e)
                     if is_vram_error:
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_VRAM_CHAT,
+                            data=error_message
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_chat_vram_overflow"],
-                            {
-                                "message":"VRAM out of memory during translation of chat",
-                                "data": error_message
-                            },
+                            error_response["result"],
                         )
                         # 翻訳機能をOFFにする
                         self.setDisableTranslation()
+                        disable_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_DISABLED_VRAM,
+                            data=False
+                        )
                         self.run(
-                            400,
+                            disable_response["status"],
                             self.run_mapping["enable_translation"],
-                            {
-                                "message":"Translation disabled due to VRAM overflow",
-                                "data": False
-                            },
+                            disable_response["result"],
                         )
                         # エラー時は翻訳なしで返す
                         return {"status":200,
@@ -845,22 +858,24 @@ class Controller:
                     if is_vram_error:
                         # Defaultのデバイス設定に戻す
                         printLog("VRAM error detected, reverting device setting")
+                        error_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_VRAM_ENABLE,
+                            data=error_message
+                        )
                         self.run(
-                            400,
+                            error_response["status"],
                             self.run_mapping["error_translation_enable_vram_overflow"],
-                            {
-                                "message":"VRAM out of memory enabling translation",
-                                "data": error_message
-                            },
+                            error_response["result"],
                         )
                         self.setDisableTranslation()
+                        disable_response = VRCTError.create_error_response(
+                            ErrorCode.TRANSLATION_DISABLED_VRAM,
+                            data=False
+                        )
                         self.run(
-                            400,
+                            disable_response["status"],
                             self.run_mapping["enable_translation"],
-                            {
-                                "message":"Translation disabled due to VRAM overflow",
-                                "data": False
-                            },
+                            disable_response["result"],
                         )
                         model.changeTranslatorCTranslate2Model()
                         model.setChangedTranslatorParameters(False)
@@ -1185,13 +1200,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Mic energy threshold value is out of range",
-                    "data": config.MIC_THRESHOLD
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_MIC_THRESHOLD,
+                data=config.MIC_THRESHOLD
+            )
         else:
             response = {"status":status, "result":config.MIC_THRESHOLD}
         return response
@@ -1226,13 +1238,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Mic record timeout value is out of range",
-                    "data": config.MIC_RECORD_TIMEOUT
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_MIC_RECORD_TIMEOUT,
+                data=config.MIC_RECORD_TIMEOUT
+            )
         else:
             response = {"status":200, "result":config.MIC_RECORD_TIMEOUT}
         return response
@@ -1250,13 +1259,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Mic phrase timeout value is out of range",
-                    "data": config.MIC_PHRASE_TIMEOUT
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_MIC_PHRASE_TIMEOUT,
+                data=config.MIC_PHRASE_TIMEOUT
+            )
         else:
             response = {"status":200, "result":config.MIC_PHRASE_TIMEOUT}
         return response
@@ -1274,13 +1280,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Mic max phrases value is out of range",
-                    "data": config.MIC_MAX_PHRASES
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_MIC_MAX_PHRASES,
+                data=config.MIC_MAX_PHRASES
+            )
         else:
             response = {"status":200, "result":config.MIC_MAX_PHRASES}
         return response
@@ -1368,13 +1371,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Speaker energy threshold value is out of range",
-                    "data": config.SPEAKER_THRESHOLD
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_SPEAKER_THRESHOLD,
+                data=config.SPEAKER_THRESHOLD
+            )
         else:
             response = {"status":200, "result":config.SPEAKER_THRESHOLD}
         return response
@@ -1408,13 +1408,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Speaker record timeout value is out of range",
-                    "data": config.SPEAKER_RECORD_TIMEOUT
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_SPEAKER_RECORD_TIMEOUT,
+                data=config.SPEAKER_RECORD_TIMEOUT
+            )
         else:
             response = {"status":200, "result":config.SPEAKER_RECORD_TIMEOUT}
         return response
@@ -1432,13 +1429,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Speaker phrase timeout value is out of range",
-                    "data": config.SPEAKER_PHRASE_TIMEOUT
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_SPEAKER_PHRASE_TIMEOUT,
+                data=config.SPEAKER_PHRASE_TIMEOUT
+            )
         else:
             response = {"status":200, "result":config.SPEAKER_PHRASE_TIMEOUT}
         return response
@@ -1457,13 +1451,10 @@ class Controller:
             else:
                 raise ValueError()
         except Exception:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Speaker max phrases value is out of range",
-                    "data": config.SPEAKER_MAX_PHRASES
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_SPEAKER_MAX_PHRASES,
+                data=config.SPEAKER_MAX_PHRASES
+            )
         else:
             response = {"status":200, "result":config.SPEAKER_MAX_PHRASES}
         return response
@@ -1510,13 +1501,10 @@ class Controller:
 
     def setOscIpAddress(self, data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Invalid IP address",
-                    "data": config.OSC_IP_ADDRESS
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_INVALID_IP,
+                data=config.OSC_IP_ADDRESS
+            )
         else:
             try:
                 model.setOscIpAddress(data)
@@ -1533,13 +1521,10 @@ class Controller:
                 response = {"status":200, "result":config.OSC_IP_ADDRESS}
             except Exception:
                 model.setOscIpAddress(config.OSC_IP_ADDRESS)
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Cannot set IP address",
-                        "data": config.OSC_IP_ADDRESS
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.VALIDATION_CANNOT_SET_IP,
+                    data=config.OSC_IP_ADDRESS
+                )
         return response
 
     @staticmethod
@@ -1588,30 +1573,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of deepL auth key",
-                            "data": config.AUTH_KEYS[translator_name]
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_DEEPL_FAILED,
+                        data=config.AUTH_KEYS[translator_name]
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"DeepL auth key length is not correct",
-                        "data": config.AUTH_KEYS[translator_name]
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_DEEPL_LENGTH,
+                    data=config.AUTH_KEYS[translator_name]
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.AUTH_KEYS[translator_name]
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.AUTH_KEYS[translator_name]
+            )
         return response
 
     def delDeeplAuthKey(self, *args, **kwargs) -> dict:
@@ -1649,30 +1625,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of plamo auth key",
-                            "data": None
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_PLAMO_FAILED,
+                        data=None
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Plamo auth key length is not correct",
-                        "data": None
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_PLAMO_LENGTH,
+                    data=None
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": None
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
         if response["status"] == 400:
             self.delPlamoAuthKey()
         return response
@@ -1707,22 +1674,16 @@ class Controller:
                 model.updateTranslatorPlamoClient()
                 response = {"status":200, "result":config.SELECTED_PLAMO_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Plamo model is not valid",
-                        "data": config.SELECTED_PLAMO_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_PLAMO_INVALID,
+                    data=config.SELECTED_PLAMO_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_PLAMO_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_PLAMO_MODEL
+            )
         return response
 
     def getGeminiAuthKey(self, *args, **kwargs) -> dict:
@@ -1751,30 +1712,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of gemini auth key",
-                            "data": None
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_GEMINI_FAILED,
+                        data=None
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Gemini auth key length is not correct",
-                        "data": None
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_GEMINI_LENGTH,
+                    data=None
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": None
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
         if response["status"] == 400:
             self.delGeminiAuthKey()
         return response
@@ -1809,22 +1761,16 @@ class Controller:
                 model.updateTranslatorGeminiClient()
                 response = {"status":200, "result":config.SELECTED_GEMINI_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Gemini model is not valid",
-                        "data": config.SELECTED_GEMINI_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_GEMINI_INVALID,
+                    data=config.SELECTED_GEMINI_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_GEMINI_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_GEMINI_MODEL
+            )
         return response
 
     @staticmethod
@@ -1854,30 +1800,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of OpenAI auth key",
-                            "data": None
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_OPENAI_FAILED,
+                        data=None
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"OpenAI auth key is not valid",
-                        "data": None
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_OPENAI_INVALID,
+                    data=None
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": None
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
         if response["status"] == 400:
             self.delOpenAIAuthKey()
         return response
@@ -1912,22 +1849,16 @@ class Controller:
                 model.updateTranslatorOpenAIClient()
                 response = {"status":200, "result":config.SELECTED_OPENAI_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"OpenAI model is not valid",
-                        "data": config.SELECTED_OPENAI_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_OPENAI_INVALID,
+                    data=config.SELECTED_OPENAI_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_OPENAI_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_OPENAI_MODEL
+            )
         return response
 
     @staticmethod
@@ -1957,30 +1888,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of Groq auth key",
-                            "data": None
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_GROQ_FAILED,
+                        data=None
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Groq auth key is not valid",
-                        "data": None
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_GROQ_INVALID,
+                    data=None
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": None
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
         if response["status"] == 400:
             self.delGroqAuthKey()
         return response
@@ -2015,22 +1937,16 @@ class Controller:
                 model.updateTranslatorGroqClient()
                 response = {"status":200, "result":config.SELECTED_GROQ_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Groq model is not valid",
-                        "data": config.SELECTED_GROQ_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_GROQ_INVALID,
+                    data=config.SELECTED_GROQ_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_GROQ_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_GROQ_MODEL
+            )
         return response
 
     @staticmethod
@@ -2060,30 +1976,21 @@ class Controller:
                     self.updateTranslationEngineAndEngineList()
                     response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"Authentication failure of OpenRouter auth key",
-                            "data": None
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_OPENROUTER_FAILED,
+                        data=None
+                    )
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"OpenRouter auth key is not valid",
-                        "data": None
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.AUTH_OPENROUTER_INVALID,
+                    data=None
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": None
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=None
+            )
         if response["status"] == 400:
             self.delOpenRouterAuthKey()
         return response
@@ -2118,22 +2025,16 @@ class Controller:
                 model.updateTranslatorOpenRouterClient()
                 response = {"status":200, "result":config.SELECTED_OPENROUTER_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"OpenRouter model is not valid",
-                        "data": config.SELECTED_OPENROUTER_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_OPENROUTER_INVALID,
+                    data=config.SELECTED_OPENROUTER_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_OPENROUTER_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_OPENROUTER_MODEL
+            )
         return response
 
     def getTranslatorLMStudioConnection(self, *args, **kwargs) -> dict:
@@ -2164,13 +2065,10 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
                 self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 self.updateTranslationEngineAndEngineList()
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Cannot connect to LMStudio server",
-                        "data": False
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_LMSTUDIO_FAILED,
+                    data=False
+                )
         except Exception as e:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
@@ -2179,13 +2077,10 @@ class Controller:
             self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
             self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": False
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=False
+            )
         return response
 
     def getConnectedLMStudio(self, *args, **kwargs) -> dict:
@@ -2222,13 +2117,10 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
                 self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
                 self.updateTranslationEngineAndEngineList()
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"LMStudio URL is not valid",
-                        "data": config.LMSTUDIO_URL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_LMSTUDIO_URL_INVALID,
+                    data=config.LMSTUDIO_URL
+                )
         except Exception as e:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
@@ -2237,13 +2129,10 @@ class Controller:
             self.run(200, self.run_mapping["selectable_lmstudio_model_list"], config.SELECTABLE_LMSTUDIO_MODEL_LIST)
             self.run(200, self.run_mapping["selected_lmstudio_model"], config.SELECTED_LMSTUDIO_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.LMSTUDIO_URL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.LMSTUDIO_URL
+            )
         return response
 
     def getTranslatorLStudioModelList(self, *args, **kwargs) -> dict:
@@ -2264,22 +2153,16 @@ class Controller:
                 model.updateTranslatorLMStudioClient()
                 response = {"status":200, "result":config.SELECTED_LMSTUDIO_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"LMStudio model is not valid",
-                        "data": config.SELECTED_LMSTUDIO_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_LMSTUDIO_INVALID,
+                    data=config.SELECTED_LMSTUDIO_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_LMSTUDIO_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_LMSTUDIO_MODEL
+            )
         return response
 
     def getTranslatorOllamaConnection(self, *args, **kwargs) -> dict:
@@ -2310,13 +2193,10 @@ class Controller:
                 self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
                 self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
                 self.updateTranslationEngineAndEngineList()
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"Cannot connect to ollama server",
-                        "data": False
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.CONNECTION_OLLAMA_FAILED,
+                    data=False
+                )
         except Exception as e:
             errorLogging()
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
@@ -2325,13 +2205,10 @@ class Controller:
             self.run(200, self.run_mapping["selectable_ollama_model_list"], config.SELECTABLE_OLLAMA_MODEL_LIST)
             self.run(200, self.run_mapping["selected_ollama_model"], config.SELECTED_OLLAMA_MODEL)
             self.updateTranslationEngineAndEngineList()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": False
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=False
+            )
         return response
 
     def getTranslatorOllamaModelList(self, *args, **kwargs) -> dict:
@@ -2352,22 +2229,16 @@ class Controller:
                 model.updateTranslatorOllamaClient()
                 response = {"status":200, "result":config.SELECTED_OLLAMA_MODEL}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"ollama model is not valid",
-                        "data": config.SELECTED_OLLAMA_MODEL
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.MODEL_OLLAMA_INVALID,
+                    data=config.SELECTED_OLLAMA_MODEL
+                )
         except Exception as e:
             errorLogging()
-            response = {
-                "status":400,
-                "result":{
-                    "message":f"Error {e}",
-                    "data": config.SELECTED_OLLAMA_MODEL
-                }
-            }
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.SELECTED_OLLAMA_MODEL
+            )
         return response
 
     @staticmethod
@@ -2599,13 +2470,10 @@ class Controller:
                 model.changeMicTranscriptStatus()
                 response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
             else:
-                response = {
-                        "status":400,
-                        "result":{
-                            "message":"Cannot enable VRC mic mute sync while OSC query is disabled",
-                            "data": config.VRC_MIC_MUTE_SYNC
-                        }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED,
+                    data=config.VRC_MIC_MUTE_SYNC
+                )
         else:
             response = {"status":200, "result":config.VRC_MIC_MUTE_SYNC}
         return response
@@ -2814,23 +2682,25 @@ class Controller:
             # VRAM不足エラーの検出
             is_vram_error, error_message = model.detectVRAMError(e)
             if is_vram_error:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_VRAM_MIC,
+                    data=error_message
+                )
                 self.run(
-                    400,
+                    response["status"],
                     self.run_mapping["error_transcription_mic_vram_overflow"],
-                    {
-                        "message":"VRAM out of memory during mic transcription",
-                        "data": error_message
-                    },
+                    response["result"],
                 )
                 # ここでマイクの音声認識を停止
                 self.stopTranscriptionSendMessage()
+                disable_response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_SEND_DISABLED_VRAM,
+                    data=False
+                )
                 self.run(
-                    400,
+                    disable_response["status"],
                     self.run_mapping["enable_transcription_send"],
-                    {
-                        "message":"Transcription send disabled due to VRAM overflow",
-                        "data": False
-                    },
+                    disable_response["result"],
                 )
             else:
                 # その他のエラーは通常通り処理
@@ -2863,23 +2733,25 @@ class Controller:
             # VRAM不足エラーの検出
             is_vram_error, error_message = model.detectVRAMError(e)
             if is_vram_error:
+                response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_VRAM_SPEAKER,
+                    data=error_message
+                )
                 self.run(
-                    400,
+                    response["status"],
                     self.run_mapping["error_transcription_speaker_vram_overflow"],
-                    {
-                        "message":"VRAM out of memory during speaker transcription",
-                        "data": error_message
-                    },
+                    response["result"],
                 )
                 # ここでスピーカーの音声認識を停止
                 self.stopTranscriptionReceiveMessage()
+                disable_response = VRCTError.create_error_response(
+                    ErrorCode.TRANSCRIPTION_RECEIVE_DISABLED_VRAM,
+                    data=False
+                )
                 self.run(
-                    400,
+                    disable_response["status"],
                     self.run_mapping["enable_transcription_receive"],
-                    {
-                        "message":"Transcription receive disabled due to VRAM overflow",
-                        "data": False
-                    },
+                    disable_response["result"],
                 )
             else:
                 # その他のエラーは通常通り処理
@@ -3068,13 +2940,10 @@ class Controller:
     @staticmethod
     def setWebSocketHost(data, *args, **kwargs) -> dict:
         if isValidIpAddress(data) is False:
-            response = {
-                "status":400,
-                "result":{
-                    "message":"Invalid IP address",
-                    "data": config.WEBSOCKET_HOST
-                }
-            }
+            response = VRCTError.create_error_response(
+                ErrorCode.VALIDATION_INVALID_IP,
+                data=config.WEBSOCKET_HOST
+            )
         else:
             if model.checkWebSocketServerAlive() is False:
                 config.WEBSOCKET_HOST = data
@@ -3088,13 +2957,10 @@ class Controller:
                     config.WEBSOCKET_HOST = data
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
-                    response = {
-                        "status":400,
-                        "result":{
-                            "message":"WebSocket server host is not available",
-                            "data": config.WEBSOCKET_HOST
-                        }
-                    }
+                    response = VRCTError.create_error_response(
+                        ErrorCode.WEBSOCKET_HOST_UNAVAILABLE,
+                        data=config.WEBSOCKET_HOST
+                    )
 
         return response
 
@@ -3116,13 +2982,10 @@ class Controller:
                 config.WEBSOCKET_PORT = int(data)
                 response = {"status":200, "result":config.WEBSOCKET_PORT}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"WebSocket server port is not available",
-                        "data": config.WEBSOCKET_PORT
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.WEBSOCKET_PORT_UNAVAILABLE,
+                    data=config.WEBSOCKET_PORT
+                )
         return response
 
     @staticmethod
@@ -3137,13 +3000,10 @@ class Controller:
                 config.WEBSOCKET_SERVER = True
                 response = {"status":200, "result":config.WEBSOCKET_SERVER}
             else:
-                response = {
-                    "status":400,
-                    "result":{
-                        "message":"WebSocket server host or port is not available",
-                        "data": config.WEBSOCKET_SERVER
-                    }
-                }
+                response = VRCTError.create_error_response(
+                    ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+                    data=config.WEBSOCKET_SERVER
+                )
         else:
             response = {"status":200, "result":config.WEBSOCKET_SERVER}
         return response
