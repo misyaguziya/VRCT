@@ -419,25 +419,29 @@ speakerMessage(result: dict) -> None
 
 ## エラーハンドリング
 
-### VRAM不足エラー
+### エラー構造
+- すべて `VRCTError` で生成し、ステータス・コード・メッセージ・data を統一
+- `create_error_response()` / `create_exception_error_response()` を使用し、`self.run()` へそのまま渡す
+- 代表コード: デバイス系 (`DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`)、VRAM系 (`TRANSLATION_VRAM_*`)、認証系 (`AUTH_*`)、モデル不正 (`MODEL_*`)、バリデーション系 (`VALIDATION_*`)、接続系 (`CONNECTION_LMSTUDIO_FAILED` など)
 
-- 自動的にCTranslate2への切り替え
-- ユーザーへの適切な通知
+### VRAM不足エラー
+- 翻訳処理中に VRAM 例外を検出し `/run/error_translation_*_vram_overflow` で通知
+- 翻訳機能を自動で無効化し、`TRANSLATION_DISABLED_VRAM` を通知
+- マイク/スピーカー/チャット/有効化時の各パスで専用コードを返却
 
 ### デバイスエラー
+- マイク・スピーカー未検出時に `DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`
+- エネルギーしきい値/タイムアウト等のバリデーションに `VALIDATION_*` を使用
 
-- デバイス接続状態の監視
-- 自動復旧機能
+### 認証・モデルエラー
+- DeepL/Plamo/Gemini/OpenAI/Groq/OpenRouter の認証失敗やキー長不正を `AUTH_*` で通知
+- モデル未選択/不正時は `MODEL_*` で通知し、選択リストを再送
 
-### ネットワークエラー
-
-- 接続状態の定期確認
-- オフライン機能への切り替え
+### 接続エラー
+- LMStudio/Ollama 接続失敗を `CONNECTION_*` で通知し、翻訳エンジンリストを更新
 
 ### 設定エラー
-
-- 設定値の妥当性チェック
-- デフォルト値への復帰
+- IP アドレスやしきい値などの不正値を `VALIDATION_*` で統一し、リクエスト値を data に格納
 
 ## パフォーマンス考慮事項
 
