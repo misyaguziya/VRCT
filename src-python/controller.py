@@ -3051,27 +3051,21 @@ class Controller:
         })
 
     def init(self, *args, **kwargs) -> None:
-        import time
-        total_start_time = time.time()
-        
         removeLog()
         printLog("Start Initialization")
-        
+
         # Network check
-        section_start = time.time()
         connected_network = isConnectedNetwork()
         if connected_network is True:
             self.connectedNetwork()
         else:
             self.disconnectedNetwork()
         printLog(f"Connected Network: {connected_network}")
-        printLog(f"[TIME] Network Check: {time.time() - section_start:.2f}s")
 
         self.initializationProgress(1)
 
         # Download weights
         if connected_network is True:
-            section_start = time.time()
             printLog("Download CTranslate2 Model Weight")
             weight_type = config.CTRANSLATE2_WEIGHT_TYPE
             th_download_ctranslate2 = None
@@ -3092,10 +3086,8 @@ class Controller:
                 th_download_ctranslate2.join()
             if isinstance(th_download_whisper, Thread):
                 th_download_whisper.join()
-            printLog(f"[TIME] Weight Download: {time.time() - section_start:.2f}s")
 
         # Check and disable/enable AI models (parallel)
-        section_start = time.time()
 
         def check_ctranslate2() -> bool:
             return model.checkTranslatorCTranslate2ModelWeight(config.CTRANSLATE2_WEIGHT_TYPE) is True
@@ -3108,32 +3100,29 @@ class Controller:
             future_whisper = executor.submit(check_whisper)
             ctranslate2_available = future_ctranslate2.result()
             whisper_available = future_whisper.result()
-        
+
         # インスタンス変数にキャッシュ（後続の処理で再利用）
         self._ctranslate2_available_cache = ctranslate2_available
         self._whisper_available_cache = whisper_available
-        
+
         if not ctranslate2_available or not whisper_available:
             self.disableAiModels()
         else:
             self.enableAiModels()
-        printLog(f"[TIME] AI Models Check: {time.time() - section_start:.2f}s")
 
         # Init Translation Engine Status (with parallel processing)
-        section_start = time.time()
         printLog("Init Translation Engine Status")
-        
+
         # バックグラウンドチェック対象エンジン（LMStudio/Ollama）
         background_check_engines = {"LMStudio", "Ollama"}
-        
+
         def check_translation_engine(engine: str) -> tuple:
             """翻訳エンジンのステータスをチェック（並列実行用）"""
-            engine_start = time.time()
             status = False
             auth_key_invalid = False
             model_list = None
             selected_model = None
-            
+
             try:
                 match engine:
                     case "CTranslate2":
@@ -3209,19 +3198,17 @@ class Controller:
                 printLog(f"Error checking engine {engine}: {str(e)}")
                 errorLogging()
                 status = False
-            
-            elapsed = time.time() - engine_start
-            return engine, status, auth_key_invalid, model_list, selected_model, elapsed
-        
+
+            return engine, status, auth_key_invalid, model_list, selected_model
+
         def check_local_server_engine_background(engine: str):
             """ローカルサーバー系エンジンをバックグラウンドでチェック"""
             try:
                 printLog(f"[Background] Start check {engine}")
-                engine_start = time.time()
                 status = False
                 model_list = None
                 selected_model = None
-                
+
                 if engine == "LMStudio":
                     if config.LMSTUDIO_URL is not None:
                         if model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL) is True:
@@ -3243,54 +3230,53 @@ class Controller:
                             model.setTranslatorOllamaModel(selected_model)
                             model.updateTranslatorOllamaClient()
                             status = True
-                
+
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = status
-                elapsed = time.time() - engine_start
-                printLog(f"[Background] {engine} check completed: {status} ({elapsed:.2f}s)")
-                
+                printLog(f"[Background] {engine} check completed: {status}")
+
                 # 更新通知（もしrun_mappingがあれば）
                 if status:
                     self.updateTranslationEngineAndEngineList()
             except Exception as e:
                 printLog(f"[Background] Error checking {engine}: {str(e)}")
                 errorLogging()
-        
+
         # 並列実行（バックグラウンドチェック対象を除外）
         engine_results = {}
         engines_to_check = [e for e in config.SELECTABLE_TRANSLATION_ENGINE_LIST if e not in background_check_engines]
-        
+
         with ThreadPoolExecutor(max_workers=4) as executor:
             future_to_engine = {executor.submit(check_translation_engine, engine): engine 
                               for engine in engines_to_check}
-            
+
             for future in as_completed(future_to_engine):
-                engine, status, auth_key_invalid, model_list, selected_model, elapsed = future.result()
-                engine_results[engine] = (status, auth_key_invalid, model_list, selected_model, elapsed)
-        
+                engine, status, auth_key_invalid, model_list, selected_model = future.result()
+                engine_results[engine] = (status, auth_key_invalid, model_list, selected_model)
+
         # バックグラウンドチェック対象エンジンは初期値Falseで即座に設定
         for engine in background_check_engines:
             if engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
                 config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
                 printLog(f"Start check {engine}")
-                printLog(f"[TIME] Engine '{engine}': 0.00s (deferred to background)")
+                printLog(f"Engine '{engine}' deferred to background check")
                 # バックグラウンドスレッドで実行
                 bg_thread = Thread(target=check_local_server_engine_background, args=(engine,))
                 bg_thread.daemon = True
                 bg_thread.start()
-        
+
         # 結果を順番に適用（メインスレッドで実行）
         for engine in engines_to_check:
             if engine not in engine_results:
                 continue
-            
-            status, auth_key_invalid, model_list, selected_model, elapsed = engine_results[engine]
-            
+
+            status, auth_key_invalid, model_list, selected_model = engine_results[engine]
+
             # ログ出力
             printLog(f"Start check {engine}")
-            
+
             # ステータス設定
             config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = status
-            
+
             # 認証キー無効化
             if auth_key_invalid:
                 auth_keys = config.AUTH_KEYS
@@ -3299,7 +3285,7 @@ class Controller:
                 printLog(f"{engine} auth key is invalid")
             elif status:
                 printLog(f"{engine} is valid/available")
-            
+
             # モデルリストと選択モデルの設定
             if model_list is not None and status:
                 match engine:
@@ -3328,13 +3314,12 @@ class Controller:
                         config.SELECTED_OPENROUTER_MODEL = selected_model
                         model.setTranslatorOpenRouterModel(selected_model)
                         model.updateTranslatorOpenRouterClient()
-            
-            printLog(f"[TIME] Engine '{engine}': {elapsed:.2f}s")
-        
-        printLog(f"[TIME] Translation Engine Status Init: {time.time() - section_start:.2f}s")
+
+            printLog(f"{engine} check completed")
+
+        printLog("Translation Engine Status Init completed")
 
         # Init Transcription Engine Status
-        section_start = time.time()
         for engine in config.SELECTABLE_TRANSCRIPTION_ENGINE_LIST:
             match engine:
                 case "Whisper":
@@ -3345,73 +3330,57 @@ class Controller:
                         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = True
                     else:
                         config.SELECTABLE_TRANSCRIPTION_ENGINE_STATUS[engine] = False
-        printLog(f"[TIME] Transcription Engine Status Init: {time.time() - section_start:.2f}s")
         self.initializationProgress(2)
 
         # Set Translation Engine
-        section_start = time.time()
         printLog("Set Translation Engine")
         self.updateDownloadedCTranslate2ModelWeight()
         self.updateTranslationEngineAndEngineList()
-        printLog(f"[TIME] Set Translation Engine: {time.time() - section_start:.2f}s")
 
         # Set Transcription Engine
-        section_start = time.time()
         printLog("Set Transcription Engine")
         self.updateDownloadedWhisperModelWeight()
         self.updateTranscriptionEngine()
-        printLog(f"[TIME] Set Transcription Engine: {time.time() - section_start:.2f}s")
 
         # Set Transliteration
-        section_start = time.time()
         printLog("Set Transliteration")
         if config.CONVERT_MESSAGE_TO_ROMAJI is True or config.CONVERT_MESSAGE_TO_HIRAGANA is True:
             model.startTransliteration()
-        printLog(f"[TIME] Set Transliteration: {time.time() - section_start:.2f}s")
 
         self.initializationProgress(3)
 
         # Set Word Filter
-        section_start = time.time()
         printLog("Set Word Filter")
         model.addKeywords()
-        printLog(f"[TIME] Set Word Filter: {time.time() - section_start:.2f}s")
 
         # Check Software Updated (Background)
-        section_start = time.time()
         printLog("Check Software Updated (Background)")
-        
+
         def check_software_updated_background():
             """ソフトウェア更新チェックをバックグラウンドで実行"""
-            bg_start = time.time()
             try:
                 self.checkSoftwareUpdated()
-                printLog(f"[Background] Software update check completed: {time.time() - bg_start:.2f}s")
+                printLog("[Background] Software update check completed")
             except Exception:
                 errorLogging()
                 printLog("[Background] Software update check failed")
-        
+
         bg_thread = Thread(target=check_software_updated_background)
         bg_thread.daemon = True
         bg_thread.start()
-        printLog(f"[TIME] Check Software Updated (Background): {time.time() - section_start:.2f}s")
 
         # Init Logger
-        section_start = time.time()
         printLog("Init Logger")
         if config.LOGGER_FEATURE is True:
             model.startLogger()
-        printLog(f"[TIME] Init Logger: {time.time() - section_start:.2f}s")
 
         self.initializationProgress(4)
 
         # Init OSC Receive (Background)
-        section_start = time.time()
         printLog("Init OSC Receive (Background)")
-        
+
         def init_osc_receive_background():
             """OSC Receiveの初期化をバックグラウンドで実行"""
-            bg_start = time.time()
             try:
                 model.startReceiveOSC()
                 osc_query_enabled = model.getIsOscQueryEnabled()
@@ -3426,18 +3395,16 @@ class Controller:
                         self.setDisableVrcMicMuteSync()
                         mute_sync_info_flag = True
                     self.disableOscQuery(mute_sync_info=mute_sync_info_flag)
-                printLog(f"[Background] OSC Receive initialization completed: {time.time() - bg_start:.2f}s")
+                printLog("[Background] OSC Receive initialization completed")
             except Exception:
                 errorLogging()
                 printLog("[Background] OSC Receive initialization failed")
-        
+
         bg_thread = Thread(target=init_osc_receive_background)
         bg_thread.daemon = True
         bg_thread.start()
-        printLog(f"[TIME] Init OSC Receive (Background): {time.time() - section_start:.2f}s")
 
         # Init Device Manager
-        section_start = time.time()
         printLog("Init Device Manager")
         device_manager.setCallbackHostList(self.updateMicHostList)
         device_manager.setCallbackMicDeviceList(self.updateMicDeviceList)
@@ -3448,17 +3415,13 @@ class Controller:
             self.applyAutoMicSelect()
         if config.AUTO_SPEAKER_SELECT is True:
             self.applyAutoSpeakerSelect()
-        printLog(f"[TIME] Init Device Manager: {time.time() - section_start:.2f}s")
 
         # Init Overlay
-        section_start = time.time()
         printLog("Init Overlay")
         if (config.OVERLAY_SMALL_LOG is True or config.OVERLAY_LARGE_LOG is True):
             model.startOverlay()
-        printLog(f"[TIME] Init Overlay: {time.time() - section_start:.2f}s")
 
         # Init WebSocket Server
-        section_start = time.time()
         printLog("Init WebSocket Server")
         if config.WEBSOCKET_SERVER is True:
             if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
@@ -3467,20 +3430,14 @@ class Controller:
                 config.WEBSOCKET_SERVER = False
                 model.stopWebSocketServer()
                 printLog("WebSocket server host or port is not available")
-        printLog(f"[TIME] Init WebSocket Server: {time.time() - section_start:.2f}s")
 
         # Revalidate Selected Models
-        section_start = time.time()
         printLog("Revalidate Selected Models")
         config.revalidate_selected_models()
-        printLog(f"[TIME] Revalidate Selected Models: {time.time() - section_start:.2f}s")
 
         # Update Settings
-        section_start = time.time()
         printLog("Update settings")
         self.updateConfigSettings()
-        printLog(f"[TIME] Update settings: {time.time() - section_start:.2f}s")
 
         printLog("End Initialization")
-        printLog(f"[TIME] Total Initialization: {time.time() - total_start_time:.2f}s")
         self.startWatchdog()
