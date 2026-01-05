@@ -771,6 +771,213 @@ class TelemetryCore:
 
 ---
 
+## App Closed イベント処理の詳細
+
+### 処理タイミング
+
+`app_closed` イベントはアプリケーション終了時に送信する **最後のイベント** です。以下のタイミングで発火します：
+
+1. **Watchdog タイムアウト**（異常終了）
+2. **ユーザーがアプリを閉じる**（正常終了）
+3. **KeyboardInterrupt（Ctrl+C）**（強制終了）
+
+### 既存コード構造への組み込み
+
+#### パターン1: mainloop.py の stop() メソッド
+
+```python
+# mainloop.py
+from models.telemetry import telemetry
+
+class Main:
+    def stop(self, wait: float = 2.0) -> None:
+        """Signal threads to stop and wait for them to finish.
+
+        Args:
+            wait: maximum seconds to wait for threads to join.
+        """
+        # ここで telemetry を終了（最後のイベント送信）
+        try:
+            telemetry.shutdown()  # app_closed 送信
+        except Exception:
+            pass  # 握りつぶし
+        
+        self._stop_event.set()
+        # give threads a chance to exit
+        start = time.time()
+        for th in self._threads:
+            remaining = max(0.0, wait - (time.time() - start))
+            th.join(timeout=remaining)
+```
+
+**重要**: `telemetry.shutdown()` は **スレッド停止前** に呼び出す必要があります。そうしないと heartbeat スレッドが動作していない状態で shutdown に失敗する可能性があります。
+
+#### パターン2: Controller.setWatchdogCallback
+
+Watchdog がタイムアウトした場合も `stop()` 経由で終了するため、上記の実装で自動的に `app_closed` が送信されます。
+
+```python
+# mainloop.py
+if __name__ == "__main__":
+    main_instance.startReceiver()
+    main_instance.startHandler()
+
+    # Watchdog タイムアウト時に main_instance.stop() を呼び出し
+    # → 自動的に telemetry.shutdown() が実行される
+    main_instance.controller.setWatchdogCallback(main_instance.stop)
+    
+    main_instance.controller.init()
+    # ...
+```
+
+#### パターン3: KeyboardInterrupt 時
+
+```python
+# mainloop.py の Main.start()
+def start(self) -> None:
+    """Start the main loop to keep the program running."""
+    try:
+        while not self._stop_event.is_set():
+            time.sleep(1)
+    except KeyboardInterrupt:
+        self.stop()  # telemetry.shutdown() が呼ばれる
+```
+
+### app_closed 送信前の確認事項
+
+`telemetry.shutdown()` が呼ばれる直前に、以下の処理を完了しておくべきです：
+
+| 処理 | タイミング | 理由 |
+|------|----------|------|
+| **設定保存** | telemetry.shutdown() **前** | 設定が失われるのを防ぐ |
+| **ファイルクローズ** | telemetry.shutdown() **前** | ファイルディスクリプタをリソースリークから守る |
+| **オーバーレイ終了** | telemetry.shutdown() **前** | VR ウィンドウを正常にクローズ |
+| **OSC ハンドラー停止** | telemetry.shutdown() **前** | ネットワークリソースを解放 |
+| **モデルクリーンアップ** | telemetry.shutdown() **前** | GPU メモリを解放 |
+| **テレメトリ終了** | telemetry.shutdown() | 最後 |
+
+### 実装フローチャート
+
+```
+ユーザーがアプリを閉じる / Watchdog タイムアウト / Ctrl+C
+    ↓
+main_instance.stop() 呼び出し
+    ↓
+1. try:
+     telemetry.shutdown()  # app_closed 送信 + heartbeat停止
+   except:
+     pass  # 握りつぶし（通信失敗でも続行）
+    ↓
+2. self._stop_event.set()
+    ↓
+3. スレッド停止待機（最大 2.0秒）
+    ↓
+4. モデルクリーンアップ（if model が初期化されていれば）
+    ↓
+5. メモリ解放
+    ↓
+プロセス終了
+```
+
+### コード例：model.py でのクリーンアップ
+
+`model.shutdown()` メソッドを追加することで、モデルのリソース解放を統一管理できます：
+
+```python
+# model.py
+def shutdown(self) -> None:
+    """Model cleanup on application shutdown."""
+    try:
+        # オーバーレイ終了
+        if hasattr(self, 'overlay') and self.overlay:
+            self.shutdownOverlay()
+        
+        # Watchdog 停止
+        if hasattr(self, 'th_watchdog'):
+            self.stopWatchdog()
+        
+        # WebSocket サーバー停止
+        if hasattr(self, 'websocket_server_alive') and self.websocket_server_alive:
+            self.stopWebSocketServer()
+        
+        # OSC ハンドラー停止
+        if hasattr(self, 'osc_handler'):
+            self.stopReceiveOSC()
+        
+        # オーディオ停止
+        self.stopMicTranscript()
+        self.stopSpeakerTranscript()
+        self.stopCheckMicEnergy()
+        self.stopCheckSpeakerEnergy()
+        
+        # ロガー停止
+        if self.logger:
+            self.stopLogger()
+        
+        # メモリ解放
+        gc.collect()
+    except Exception:
+        errorLogging()
+```
+
+その後、mainloop.py で呼び出し：
+
+```python
+# mainloop.py
+def stop(self, wait: float = 2.0) -> None:
+    """Signal threads to stop and wait for them to finish."""
+    
+    # テレメトリ終了（app_closed 送信）
+    try:
+        telemetry.shutdown()
+    except Exception:
+        pass
+    
+    # モデルクリーンアップ
+    try:
+        model.shutdown()
+    except Exception:
+        pass
+    
+    self._stop_event.set()
+    start = time.time()
+    for th in self._threads:
+        remaining = max(0.0, wait - (time.time() - start))
+        th.join(timeout=remaining)
+```
+
+### オフライン時の動作
+
+テレメトリが OFF の場合でも、以下のようにコードは安全に機能します：
+
+```python
+# telemetry.shutdown() 内の処理（OFF時）
+def shutdown(self):
+    if self.state.is_enabled():
+        try:
+            self.core.send_event("app_closed")  # ← 実行されない
+        except Exception:
+            pass
+    
+    self.heartbeat.stop()  # OFF時も停止する（スレッド安全）
+    self.state.reset()     # 状態リセット
+```
+
+### 通信失敗時の処理
+
+ネットワーク障害で `app_closed` 送信に失敗した場合：
+
+```python
+try:
+    telemetry.shutdown()  # Aptabase への通信失敗
+except Exception:
+    pass  # 握りつぶし：エラーメッセージ出力なし
+```
+
+**アプリは normal exit します。再送・バッファリング・ログ出力は行いません。**
+
+---
+
 ## テスト計画
 
 ### ユニットテスト
