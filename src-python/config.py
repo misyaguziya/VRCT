@@ -724,6 +724,9 @@ class Config:
     NOTIFICATION_VRC_SFX = ManagedProperty('NOTIFICATION_VRC_SFX', type_=bool)
     WEBSOCKET_HOST = ManagedProperty('WEBSOCKET_HOST', type_=str)
     WEBSOCKET_PORT = ManagedProperty('WEBSOCKET_PORT', type_=int)
+    
+    # --- Telemetry Settings ---
+    TELEMETRY_ENABLED = ManagedProperty('TELEMETRY_ENABLED', type_=bool)
 
     # --- Selection properties with validation (ManagedProperty) ---
     SELECTED_TAB_NO = ManagedProperty('SELECTED_TAB_NO', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TAB_NO_LIST)
@@ -1022,6 +1025,9 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+        
+        ## Telemetry
+        self._TELEMETRY_ENABLED = True  # デフォルト有効
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:

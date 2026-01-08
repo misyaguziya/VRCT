@@ -370,47 +370,67 @@ def telemetry.get_state() -> dict:
 
 ### パブリック API 使用例
 
-#### ケース1: アプリ起動・終了
+#### ケース1: アプリ起動・終了（MVC 準拠）
 
 ```python
-# mainloop.py
+# model.py
 from models.telemetry import telemetry
 from config import config
 
-# 起動時
-def app_startup():
-    telemetry.init(enabled=config.TELEMETRY_ENABLED)
-    # ... 他の初期化処理
+class Model:
+    def init(self):
+        # ... 既存の初期化処理
+        
+        # Telemetry 初期化
+        try:
+            telemetry.init(enabled=config.TELEMETRY_ENABLED)
+        except Exception:
+            errorLogging()
+    
+    def shutdown(self):
+        """Model cleanup on application shutdown."""
+        try:
+            # Telemetry 終了（app_closed 送信）
+            telemetry.shutdown()
+        except Exception:
+            errorLogging()
+        
+        # ... その他のクリーンアップ処理
 
-# 終了時
-def app_shutdown():
-    telemetry.shutdown()
-    # ... 他のクリーンアップ
+# controller.py
+class Controller:
+    def init(self):
+        # Model 初期化（telemetry も初期化される）
+        model.init()
+    
+    def shutdown(self):
+        # Model シャットダウン（telemetry も終了）
+        model.shutdown()
 ```
 
-#### ケース2: 翻訳機能
+#### ケース2: 翻訳機能（MVC 準拠）
 
 ```python
 # controller.py
 def micMessage(self, result: dict):
-    # テキスト入力フェーズ（テキスト入力イベント用）
+    # テキスト入力フェーズ
     message = result["text"]
-    telemetry.touch_activity()
+    model.telemetryTouchActivity()  # model 経由でアクティビティ更新
     
     # 翻訳開始前（コア機能イベント送信）
     if config.ENABLE_TRANSLATION:
-        telemetry.track_core_feature("translation")
+        model.telemetryTrackCoreFeature("translation")  # model 経由
         translation, success = model.getInputTranslate(message)
         # ... 処理続行
 ```
 
-#### ケース3: マイク文字起こし
+#### ケース3: マイク文字起こし（MVC 準拠）
 
 ```python
 # model.py
 def startMicTranscript(self, fnc):
-    # マイク開始前
-    telemetry.track_core_feature("mic_speech_to_text")
+    # マイク開始前（内部で telemetry 呼び出し）
+    self.telemetryTrackCoreFeature("mic_speech_to_text")
     
     mic_device = selected_mic_device[0]
     self.mic_audio_recorder = SelectedMicEnergyAndAudioRecorder(...)
@@ -418,24 +438,24 @@ def startMicTranscript(self, fnc):
     # ... 処理続行
 ```
 
-#### ケース4: エラー報告
+#### ケース4: エラー報告（MVC 準拠）
 
 ```python
 # controller.py
 except Exception as e:
     is_vram_error, error_message = model.detectVRAMError(e)
     if is_vram_error:
-        telemetry.track("error", {"error_type": "VRAM_ERROR"})
+        model.telemetryTrack("error", {"error_type": "VRAM_ERROR"})  # model 経由
         # ... エラー処理
 ```
 
-#### ケース5: 設定変更
+#### ケース5: 設定変更（MVC 準拠）
 
 ```python
 # controller.py
 def setUiLanguage(data):
     config.UI_LANGUAGE = data
-    telemetry.track("config_changed", {"section": "appearance"})
+    model.telemetryTrack("config_changed", {"section": "appearance"})  # model 経由
     return {"status": 200, "result": config.UI_LANGUAGE}
 ```
 
@@ -783,12 +803,10 @@ class TelemetryCore:
 
 ### 既存コード構造への組み込み
 
-#### パターン1: mainloop.py の stop() メソッド
+#### パターン1: mainloop.py の stop() メソッド（MVC 準拠）
 
 ```python
 # mainloop.py
-from models.telemetry import telemetry
-
 class Main:
     def stop(self, wait: float = 2.0) -> None:
         """Signal threads to stop and wait for them to finish.
@@ -796,11 +814,11 @@ class Main:
         Args:
             wait: maximum seconds to wait for threads to join.
         """
-        # ここで telemetry を終了（最後のイベント送信）
+        # Controller 経由で shutdown（telemetry も含む）
         try:
-            telemetry.shutdown()  # app_closed 送信
+            self.controller.shutdown()  # model.shutdown() を呼び出し
         except Exception:
-            pass  # 握りつぶし
+            errorLogging()
         
         self._stop_event.set()
         # give threads a chance to exit
@@ -810,7 +828,7 @@ class Main:
             th.join(timeout=remaining)
 ```
 
-**重要**: `telemetry.shutdown()` は **スレッド停止前** に呼び出す必要があります。そうしないと heartbeat スレッドが動作していない状態で shutdown に失敗する可能性があります。
+**重要**: `controller.shutdown()` は **スレッド停止前** に呼び出す必要があります。そうしないと heartbeat スレッドが動作していない状態で shutdown に失敗する可能性があります。
 
 #### パターン2: Controller.setWatchdogCallback
 
@@ -922,24 +940,18 @@ def shutdown(self) -> None:
 
 その後、mainloop.py で呼び出し：
 
+```python（MVC 準拠）：
+
 ```python
 # mainloop.py
 def stop(self, wait: float = 2.0) -> None:
     """Signal threads to stop and wait for them to finish."""
     
-    # テレメトリ終了（app_closed 送信）
+    # Controller 経由でシャットダウン（telemetry + model 含む）
     try:
-        telemetry.shutdown()
+        self.controller.shutdown()  # model.shutdown() が呼ばれる
     except Exception:
-        pass
-    
-    # モデルクリーンアップ
-    try:
-        model.shutdown()
-    except Exception:
-        pass
-    
-    self._stop_event.set()
+        errorLogging()op_event.set()
     start = time.time()
     for th in self._threads:
         remaining = max(0.0, wait - (time.time() - start))

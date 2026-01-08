@@ -48,6 +48,13 @@ class Controller:
 
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
+    
+    def shutdown(self) -> None:
+        """Shutdown controller and model (including telemetry)."""
+        try:
+            model.shutdown()
+        except Exception:
+            errorLogging()
 
     # response functions
     def connectedNetwork(self) -> None:
@@ -271,6 +278,8 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) > 0:
+            model.telemetryTouchActivity()
+            model.telemetryTrackCoreFeature("mic_speech_to_text")
             translation = []
             transliteration_message = []
             transliteration_translation = []
@@ -287,6 +296,7 @@ class Controller:
                 pass
             else:
                 try:
+                    model.telemetryTrackCoreFeature("translation")
                     translation, success = model.getInputTranslate(message, source_language=language)
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
@@ -437,6 +447,8 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
+            model.telemetryTouchActivity()
+            model.telemetryTrackCoreFeature("speaker_speech_to_text")
             translation = []
             transliteration_message = []
             transliteration_translation = []
@@ -453,6 +465,7 @@ class Controller:
                 pass
             else:
                 try:
+                    model.telemetryTrackCoreFeature("translation")
                     translation, success = model.getOutputTranslate(message, source_language=language)
                     if all(success) is not True:
                         self.changeToCTranslate2Process()
@@ -617,6 +630,8 @@ class Controller:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
+            model.telemetryTouchActivity()
+            model.telemetryTrackCoreFeature("text_input")
             translation = []
             transliteration_message: List[Any] = []
             transliteration_translation = []
@@ -624,6 +639,7 @@ class Controller:
                 pass
             else:
                 try:
+                    model.telemetryTrackCoreFeature("translation")
                     if config.USE_EXCLUDE_WORDS is True:
                         replacement_message, replacement_dict = self.replaceExclamationsWithRandom(message)
                         translation, success = model.getInputTranslate(replacement_message)
