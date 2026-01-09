@@ -314,6 +314,9 @@ config_page:
             desc: "与「{{convert_message_to_hiragana}}」同时启用时，将通过鼠标悬停显示。"
         convert_message_to_hiragana:
             label: "显示平假名"
+        telemetry:
+            label:
+            desc:
 
     hotkeys:
         toggle_vrct_visibility:
