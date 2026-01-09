@@ -152,7 +152,10 @@ export const useWindow = () => {
     const asyncMinimizeApp = async () => {
         await appWindow.minimize();
     };
+
     const asyncCloseApp = async () => {
+        asyncStdoutToPython("/run/shutdown");
+        await new Promise(resolve => setTimeout(resolve, 2000));
         await appWindow.close();
     };
 
