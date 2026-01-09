@@ -1296,74 +1296,23 @@ class Model:
         except Exception:
             errorLogging()
             return False
-    
-    # =========================================================================
-    # Telemetry Methods (MVC Pattern)
-    # =========================================================================
-    
+
     def shutdown(self):
         """Model cleanup on application shutdown."""
         # Telemetry 終了（app_closed 送信）
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.shutdown()
-        
-        try:
-            # オーバーレイ終了
-            if hasattr(self, 'overlay') and self.overlay:
-                self.shutdownOverlay()
-        except Exception:
-            errorLogging()
-        
-        try:
-            # Watchdog 停止
-            if hasattr(self, 'th_watchdog'):
-                self.stopWatchdog()
-        except Exception:
-            errorLogging()
-        
-        try:
-            # WebSocket サーバー停止
-            if hasattr(self, 'websocket_server_alive') and self.websocket_server_alive:
-                self.stopWebSocketServer()
-        except Exception:
-            errorLogging()
-        
-        try:
-            # OSC ハンドラー停止
-            if hasattr(self, 'osc_handler'):
-                self.stopReceiveOSC()
-        except Exception:
-            errorLogging()
-        
-        try:
-            # オーディオ停止
-            self.stopMicTranscript()
-            self.stopSpeakerTranscript()
-            self.stopCheckMicEnergy()
-            self.stopCheckSpeakerEnergy()
-        except Exception:
-            errorLogging()
-        
-        try:
-            # ロガー停止
-            if hasattr(self, 'logger') and self.logger:
-                self.stopLogger()
-        except Exception:
-            errorLogging()
-        
-        # メモリ解放
-        gc.collect()
-    
+
     def telemetryTrack(self, event: str, payload: dict = None):
         """汎用テレメトリイベント送信 (Model ラッパー)"""
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.track(event, payload)
-    
+
     def telemetryTrackCoreFeature(self, feature: str):
         """コア機能テレメトリイベント送信 (Model ラッパー)"""
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.track_core_feature(feature)
-    
+
     def telemetryTouchActivity(self):
         """テレメトリアクティビティ更新 (Model ラッパー)"""
         if hasattr(self, "telemetry") and self.telemetry:
