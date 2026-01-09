@@ -524,7 +524,12 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
 
 const CommonSettingsContainer = () => {
     const { t } = useI18n();
-    const { currentOverlayShowOnlyTranslatedMessages, toggleOverlayShowOnlyTranslatedMessages } = useVr();
+    const {
+        currentOverlayShowOnlyTranslatedMessages,
+        toggleOverlayShowOnlyTranslatedMessages,
+        currentVoiceTypingMode,
+        toggleVoiceTypingMode,
+    } = useVr();
 
     return (
         <div className={styles.common_container}>
@@ -533,6 +538,12 @@ const CommonSettingsContainer = () => {
                 label={t("config_page.vr.overlay_show_only_translated_messages.label")}
                 variable={currentOverlayShowOnlyTranslatedMessages}
                 toggleFunction={toggleOverlayShowOnlyTranslatedMessages}
+            />
+            <CheckboxContainer
+                label={t("config_page.vr.voice_typing_mode.label")}
+                desc={t("config_page.vr.voice_typing_mode.desc")}
+                variable={currentVoiceTypingMode}
+                toggleFunction={toggleVoiceTypingMode}
             />
         </div>
     );
