@@ -757,8 +757,7 @@ class Config:
     SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE', _compute_device_validator)
 
     # -- Clipboard control ---
-    ENABLE_COPY_TO_CLIPBOARD = ManagedProperty('ENABLE_COPY_TO_CLIPBOARD', type_=bool)
-    ENABLE_PASTE_FROM_CLIPBOARD = ManagedProperty('ENABLE_PASTE_FROM_CLIPBOARD', type_=bool)
+    ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
 
     def init_config(self):
         # Read Only
@@ -1026,10 +1025,10 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
-        self._ENABLE_COPY_TO_CLIPBOARD = False
-        self._ENABLE_PASTE_FROM_CLIPBOARD = False
+        self._ENABLE_CLIPBOARD = False
 
     def load_config(self):
+        self._config_data = {}
         if os_path.isfile(self.PATH_CONFIG) is not False:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 if fp.readable() and fp.seek(0, 2) > 0:
@@ -1054,6 +1053,7 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
         self.saveConfigToFile()
 
     def revalidate_selected_models(self):
