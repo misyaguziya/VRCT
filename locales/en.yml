@@ -76,6 +76,13 @@ config_page:
     common:
         version: "Version {{version}}"
         model_download_button_label: "Download"
+        correct_auth_key_required: "Correct Auth Key Required"
+        open_auth_key_webpage: "Open Auth Key Management Webpage"
+        connection_check:
+            button_label: "Connection Check"
+            checking: "Checking..."
+            connected: "Connected"
+            disconnected: "Disconnected"
         compute_device:
             desc: "The accuracy and speed of each processing type may vary depending on your machine specs, and the compatibility with calculation methods may differ from the displayed order. Please use this as a general guideline."
             label_device: "Processing Device"
@@ -83,6 +90,8 @@ config_page:
             type_template_auto: "Automatic"
             type_template_low: "{{type_name}} (Lower accuracy, faster processing)"
             type_template_high: "{{type_name}} (Higher accuracy, slower processing)"
+        warning_labels:
+            unable_to_use_osc_query: "Due to the OSC IP Address settings, OSC data cannot be received, so this feature is currently unavailable."
 
     side_menu_labels:
         device: "Device"
@@ -144,6 +153,7 @@ config_page:
             large: "High Accuracy Model ({{capacity}})"
         translation_compute_device:
             label: "Processing device for AI translation"
+
         deepl_auth_key:
             label: "DeepL Auth Key"
             desc: "When using it, please change {{translator}} on the main screen to DeepL_API. ※Some languages may not be supported."
@@ -151,6 +161,43 @@ config_page:
             save: "Save"
             edit: "Edit"
             auth_key_success: "Auth key update completed."
+
+        plamo_auth_key:
+            label: "Plamo Auth Key"
+        select_plamo_model:
+            label: "Select Plamo Model"
+
+        gemini_auth_key:
+            label: "Gemini Auth Key"
+        select_gemini_model:
+            label: "Select Gemini Model"
+
+        openai_auth_key:
+            label: "OpenAI Auth Key"
+        select_openai_model:
+            label: "Select OpenAI Model"
+
+        groq_auth_key:
+            label: "Groq Auth Key"
+        select_groq_model:
+            label: "Select Groq Model"
+
+        openrouter_auth_key:
+            label: "OpenRouter Auth Key"
+        select_openrouter_model:
+            label: "Select OpenRouter Model"
+
+        lmstudio_connection_check:
+            label: "Check LM Studio Connection"
+        select_lmstudio_model:
+            label: "Select LMStudio Model"
+            connection_required: "LMStudio Connection Required"
+
+        ollama_connection_check:
+            label: "Check Ollama Connection"
+        select_ollama_model:
+            label: "Select Ollama Model"
+            connection_required: "Ollama Connection Required"
 
     transcription:
         section_label_mic: "Mic"
@@ -267,7 +314,6 @@ config_page:
             desc:  "When enabled along with '{{convert_message_to_hiragana}}', romaji will be shown on mouse hover."
         convert_message_to_hiragana:
             label: "Show Hiragana"
-
 
     hotkeys:
         toggle_vrct_visibility:

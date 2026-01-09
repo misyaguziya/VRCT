@@ -26,10 +26,20 @@
 
 .button_indicator_label {
     font-size: 1rem;
-    &.disabled {
+    &.is_disabled {
         color: var(--dark_600_color);
     }
-    &.enabled {
+    &.is_enabled {
         color: var(--primary_300_color);
+        &:not(.is_available) {
+            color: var(--warning_color);
+        }
     }
+}
+
+.warning_svg {
+    margin-left: 0.4rem;
+    padding-bottom: 0.1rem;
+    width: 1.1rem;
+    color: var(--warning_color);
 }

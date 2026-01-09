@@ -4,6 +4,14 @@
 
 LMStudio 互換 OpenAI API を利用したローカル LLM 翻訳クライアントラッパー。モデル一覧取得・モデル選択・翻訳処理を統一インターフェースで提供する。
 
+## 最近の更新 (2025-12-30)
+
+- 接続失敗時のエラーハンドリング改善
+  - URL への疎通確認失敗時にモデルリストをクリア (`SELECTABLE_LMSTUDIO_MODEL_LIST = []`)
+  - 選択モデルをクリア (`SELECTED_LMSTUDIO_MODEL = None`)
+  - `SELECTABLE_TRANSLATION_ENGINE_STATUS["LMStudio"]` を False に設定
+  - フロントエンドに通知して UI を同期
+
 ## 最近の更新 (2025-10-20)
 
 - 新規追加: ローカル LLM (LMStudio) を翻訳エンジン群へ統合
@@ -73,6 +81,10 @@ if models:
 - `api_key` は固定文字列 "lmstudio" (LMStudio 側で不要のため) を利用
 - モデル一覧取得はエンドポイントの互換性に依存 (古いバージョン非対応の可能性)
 - `updateClient()` 呼び出し前は `translate()` を利用できない
+- **接続失敗時の自動処理:**
+  - URL への疎通確認（接続テスト）が失敗すると、自動的にモデルリストと選択モデルがクリアされる
+  - `SELECTABLE_TRANSLATION_ENGINE_STATUS["LMStudio"]` が False に設定され、エンジンが使用不可状態になる
+  - Controller が自動的にフロントエンドに状態変化を通知
 
 ## 制限事項
 

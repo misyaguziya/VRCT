@@ -15,6 +15,8 @@ try:
     from .translation_openai import OpenAIClient
     from .translation_lmstudio import LMStudioClient
     from .translation_ollama import OllamaClient
+    from .translation_groq import GroqClient
+    from .translation_openrouter import OpenRouterClient
 except Exception:
     import sys
     sys.path.append(os_path.dirname(os_path.dirname(os_path.dirname(os_path.abspath(__file__)))))
@@ -25,6 +27,8 @@ except Exception:
     from translation_openai import OpenAIClient
     from translation_lmstudio import LMStudioClient
     from translation_ollama import OllamaClient
+    from translation_groq import GroqClient
+    from translation_openrouter import OpenRouterClient
 
 import ctranslate2
 import transformers
@@ -50,6 +54,8 @@ class Translator:
         self.plamo_client: Optional[PlamoClient] = None
         self.gemini_client: Optional[GeminiClient] = None
         self.openai_client: Optional[OpenAIClient] = None
+        self.groq_client: Optional[GroqClient] = None
+        self.openrouter_client: Optional[OpenRouterClient] = None
         self.lmstudio_client: LMStudioClient[LMStudioClient] = None
         self.ollama_client: OllamaClient[OllamaClient] = None
         self.ctranslate2_translator: Any = None
@@ -176,6 +182,84 @@ class Translator:
         """Update the OpenAI client (fetch available models)."""
         self.openai_client.updateClient()
 
+    def authenticationGroqAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate Groq API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.groq_client = GroqClient(root_path=root_path)
+        if self.groq_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.groq_client = None
+            return False
+
+    def getGroqModelList(self) -> list[str]:
+        """Get available Groq models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.groq_client is None:
+            return []
+        return self.groq_client.getModelList()
+
+    def setGroqModel(self, model: str) -> bool:
+        """Change the Groq model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.groq_client is None:
+            return False
+        return self.groq_client.setModel(model)
+
+    def updateGroqClient(self) -> None:
+        """Update the Groq client (fetch available models)."""
+        self.groq_client.updateClient()
+
+    def authenticationOpenRouterAuthKey(self, auth_key: str, root_path: str = None) -> bool:
+        """Authenticate OpenRouter API with the provided key.
+
+        Returns True on success, False on failure.
+        """
+        self.openrouter_client = OpenRouterClient(root_path=root_path)
+        if self.openrouter_client.setAuthKey(auth_key):
+            return True
+        else:
+            self.openrouter_client = None
+            return False
+
+    def getOpenRouterModelList(self) -> list[str]:
+        """Get available OpenRouter models.
+
+        Returns a list of model names, or an empty list on failure.
+        """
+        if self.openrouter_client is None:
+            return []
+        return self.openrouter_client.getModelList()
+
+    def setOpenRouterModel(self, model: str) -> bool:
+        """Change the OpenRouter model used for translation.
+
+        Returns True on success, False on failure.
+        """
+        if self.openrouter_client is None:
+            return False
+        return self.openrouter_client.setModel(model)
+
+    def updateOpenRouterClient(self) -> None:
+        """Update the OpenRouter client (fetch available models)."""
+        self.openrouter_client.updateClient()
+
+    def getLMStudioConnected(self) -> bool:
+        """Get LM Studio connection status.
+
+        Returns True if connected, False otherwise.
+        """
+        if self.lmstudio_client is None:
+            return False
+        else:
+            return True
+
     def setLMStudioClientURL(self, base_url: str | None = None, root_path: str = None) -> bool:
         """Authenticate LM Studio with the provided base URL.
 
@@ -207,13 +291,26 @@ class Translator:
         """Update the LM Studio client (fetch available models)."""
         self.lmstudio_client.updateClient()
 
+    def getOllamaConnected(self) -> bool:
+        """Get Ollama connection status.
+
+        Returns True if connected, False otherwise.
+        """
+        if self.ollama_client is None:
+            return False
+        else:
+            return True
+
     def checkOllamaClient(self, root_path: str = None) -> bool:
         """Check if Ollama client is available.
 
         Returns True if Ollama is reachable, False otherwise.
         """
         self.ollama_client = OllamaClient(root_path=root_path)
-        return self.ollama_client.authenticationCheck()
+        result = self.ollama_client.authenticationCheck()
+        if result is False:
+            self.ollama_client = None
+        return result
 
     def getOllamaModelList(self, root_path: str = None) -> bool:
         """Initialize Ollama client and fetch available models.
@@ -328,8 +425,17 @@ class Translator:
                 target_language = translation_lang[translator_name]["target"][target_language]
         return source_language, target_language
 
-    def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str) -> Any:
+    def translate(self, translator_name: str, weight_type: str, source_language: str, target_language: str, target_country: str, message: str, context_history: Optional[list[dict]] = None) -> Any:
         """Translate `message` using the named translator backend.
+
+        Args:
+            translator_name: Name of the translator backend to use
+            weight_type: Model weight type for CTranslate2
+            source_language: Source language name
+            target_language: Target language name
+            target_country: Target country for locale-specific translations
+            message: Text to translate
+            context_history: Optional conversation context (Chat/Mic/Speaker messages)
 
         Returns translated string on success, or False on failure. When
         source_language == target_language the original message is returned.
@@ -363,6 +469,8 @@ class Translator:
                     if self.plamo_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.plamo_client.setContextHistory(context_history)
                         result = self.plamo_client.translate(
                             message,
                             input_lang=source_language,
@@ -372,6 +480,8 @@ class Translator:
                     if self.gemini_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.gemini_client.setContextHistory(context_history)
                         result = self.gemini_client.translate(
                             message,
                             input_lang=source_language,
@@ -381,7 +491,31 @@ class Translator:
                     if self.openai_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.openai_client.setContextHistory(context_history)
                         result = self.openai_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "Groq_API":
+                    if self.groq_client is None:
+                        result = False
+                    else:
+                        if context_history:
+                            self.groq_client.setContextHistory(context_history)
+                        result = self.groq_client.translate(
+                            message,
+                            input_lang=source_language,
+                            output_lang=target_language,
+                        )
+                case "OpenRouter_API":
+                    if self.openrouter_client is None:
+                        result = False
+                    else:
+                        if context_history:
+                            self.openrouter_client.setContextHistory(context_history)
+                        result = self.openrouter_client.translate(
                             message,
                             input_lang=source_language,
                             output_lang=target_language,
@@ -390,6 +524,8 @@ class Translator:
                     if self.lmstudio_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.lmstudio_client.setContextHistory(context_history)
                         result = self.lmstudio_client.translate(
                             message,
                             input_lang=source_language,
@@ -399,6 +535,8 @@ class Translator:
                     if self.ollama_client is None:
                         result = False
                     else:
+                        if context_history:
+                            self.ollama_client.setContextHistory(context_history)
                         result = self.ollama_client.translate(
                             message,
                             input_lang=source_language,

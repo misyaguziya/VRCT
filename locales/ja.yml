@@ -76,6 +76,13 @@ config_page:
     common:
         version: "バージョン {{version}}"
         model_download_button_label: "ダウンロード"
+        correct_auth_key_required: "正しい認証キーが必要"
+        open_auth_key_webpage: "認証キー管理ページを開く"
+        connection_check:
+            button_label: "接続確認"
+            checking: "確認中..."
+            connected: "接続済み"
+            disconnected: "未接続"
         compute_device:
             desc: "各処理タイプの精度・速度は、マシンスペックによって計算方法に相性があり、表示順とは異なる事があるため、大まかな目安としてください。"
             label_device: "処理デバイス"
@@ -83,6 +90,8 @@ config_page:
             type_template_auto: "自動"
             type_template_low: "{{type_name}} （精度が悪く、処理は早い）"
             type_template_high: "{{type_name}} （精度が良く、処理は遅い）"
+        warning_labels:
+            unable_to_use_osc_query: "OSC IP Address の設定によりOSCデータの受信ができないため、現在この機能は使用できません。"
 
     side_menu_labels:
         device: "デバイス"
@@ -144,6 +153,7 @@ config_page:
             large: "高精度モデル （{{capacity}}）"
         translation_compute_device:
             label: "AI翻訳の処理デバイス"
+
         deepl_auth_key:
             label: "DeepL APIキーの登録"
             desc: "使用の際は、メイン画面にある {{translator}} をDeepL_APIに変更してください。\n※対応していない言語もあります。"
@@ -151,6 +161,43 @@ config_page:
             save: "保存"
             edit: "編集"
             auth_key_success: "認証キーの更新が完了しました。"
+
+        plamo_auth_key:
+            label: "Plamo 認証キー"
+        select_plamo_model:
+            label: "Plamo モデルを選択"
+
+        gemini_auth_key:
+            label: "Gemini 認証キー"
+        select_gemini_model:
+            label: "Gemini モデルを選択"
+
+        openai_auth_key:
+            label: "OpenAI 認証キー"
+        select_openai_model:
+            label: "OpenAI モデルを選択"
+
+        groq_auth_key:
+            label: "Groq 認証キー"
+        select_groq_model:
+            label: "Groq モデルを選択"
+
+        openrouter_auth_key:
+            label: "OpenRouter 認証キー"
+        select_openrouter_model:
+            label: "OpenRouter モデルを選択"
+
+        lmstudio_connection_check:
+            label: "LM Studio との接続確認"
+        select_lmstudio_model:
+            label: "LMStudio モデルを選択"
+            connection_required: "LMStudio との接続が必要"
+
+        ollama_connection_check:
+            label: "Ollama との接続確認"
+        select_ollama_model:
+            label: "Ollama モデルを選択"
+            connection_required: "Ollama との接続が必要"
 
     transcription:
         section_label_mic: "マイク"

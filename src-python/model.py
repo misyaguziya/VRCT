@@ -118,6 +118,8 @@ class Model:
         self.previous_receive_message = ""
         self.translator = Translator()
         self.keyword_processor = KeywordProcessor()
+        self.translation_history: list[dict] = []
+        self.translation_history_max_items = 20
         overlay_small_log_settings = copy.deepcopy(config.OVERLAY_SMALL_LOG_SETTINGS)
         overlay_large_log_settings = copy.deepcopy(config.OVERLAY_LARGE_LOG_SETTINGS)
         overlay_large_log_settings["ui_scaling"] = overlay_large_log_settings["ui_scaling"] * 0.25
@@ -251,6 +253,44 @@ class Model:
         self.ensure_initialized()
         self.translator.updateOpenAIClient()
 
+    def authenticationTranslatorGroqAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationGroqAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorGroqModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getGroqModelList()
+
+    def setTranslatorGroqModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setGroqModel(model=model)
+        return result
+
+    def updateTranslatorGroqClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateGroqClient()
+
+    def authenticationTranslatorOpenRouterAuthKey(self, auth_key: str) -> bool:
+        result = self.translator.authenticationOpenRouterAuthKey(auth_key, root_path=config.PATH_LOCAL)
+        return result
+
+    def getTranslatorOpenRouterModelList(self) -> list[str]:
+        self.ensure_initialized()
+        return self.translator.getOpenRouterModelList()
+
+    def setTranslatorOpenRouterModel(self, model: str) -> bool:
+        self.ensure_initialized()
+        result = self.translator.setOpenRouterModel(model=model)
+        return result
+
+    def updateTranslatorOpenRouterClient(self) -> None:
+        self.ensure_initialized()
+        self.translator.updateOpenRouterClient()
+
+    def getTranslatorLMStudioConnected(self) -> bool:
+        self.ensure_initialized()
+        return self.translator.getLMStudioConnected()
+
     def authenticationTranslatorLMStudio(self, base_url: str) -> bool:
         result = self.translator.setLMStudioClientURL(base_url=base_url, root_path=config.PATH_LOCAL)
         return result
@@ -266,6 +306,10 @@ class Model:
     def updateTranslatorLMStudioClient(self) -> None:
         self.ensure_initialized()
         self.translator.updateLMStudioClient()
+
+    def getTranslatorOllamaConnected(self) -> bool:
+        self.ensure_initialized()
+        return self.translator.getOllamaConnected()
 
     def authenticationTranslatorOllama(self) -> bool:
         result = self.translator.checkOllamaClient(root_path=config.PATH_LOCAL)
@@ -338,16 +382,62 @@ class Model:
 
         return compatible_engines
 
+    def addTranslationHistory(self, source: str, text: str) -> None:
+        """Add a message to translation context history.
+        
+        Args:
+            source: "chat" | "mic" | "speaker"
+            text: message content
+        """
+        self.ensure_initialized()
+        if not text or not text.strip():
+            return
+        
+        history_item = {
+            "source": source,
+            "text": text.strip(),
+            "timestamp": datetime.now().isoformat(),
+        }
+        self.translation_history.append(history_item)
+        
+        # 最大件数を超えた場合は古いものを削除
+        if len(self.translation_history) > self.translation_history_max_items:
+            self.translation_history = self.translation_history[-self.translation_history_max_items:]
+    
+    def getTranslationHistory(self, max_items: int = None) -> list[dict]:
+        """Get recent translation context history.
+        
+        Args:
+            max_items: Maximum number of items to return (newest first)
+        
+        Returns:
+            List of history items
+        """
+        self.ensure_initialized()
+        if max_items is None or max_items <= 0:
+            return self.translation_history
+        return self.translation_history[-max_items:]
+    
+    def clearTranslationHistory(self) -> None:
+        """Clear all translation context history."""
+        self.ensure_initialized()
+        self.translation_history = []
+
     def getTranslate(self, translator_name, source_language, target_language, target_country, message):
         self.ensure_initialized()
         success_flag = False
+        
+        # Get context history for LLM-based translators
+        history = self.getTranslationHistory()
+        
         translation = self.translator.translate(
                         translator_name=translator_name,
                         weight_type=config.CTRANSLATE2_WEIGHT_TYPE,
                         source_language=source_language,
                         target_language=target_language,
                         target_country=target_country,
-                        message=message
+                        message=message,
+                        context_history=history
                 )
 
         # 翻訳失敗時のフェールセーフ処理

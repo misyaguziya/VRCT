@@ -216,10 +216,16 @@ _debounce_time: int = 2  # デバウンス時間（秒）
 **通信設定**
 - `OSC_IP_ADDRESS`: OSC IPアドレス（デフォルト: "127.0.0.1"）
 - `OSC_PORT`: OSCポート（デフォルト: 9000）
-- `AUTH_KEYS`: 認証キー辞書（DeepL API等）
+- `AUTH_KEYS`: 認証キー辞書（DeepL API, Groq API, OpenRouter API等）
 - `WEBSOCKET_HOST`: WebSocketホスト
 - `WEBSOCKET_PORT`: WebSocketポート
 - `WEBSOCKET_SERVER`: WebSocketサーバー有効フラグ（非永続化）
+
+**翻訳エンジン モデル選択**
+- `SELECTABLE_GROQ_MODEL_LIST`: 利用可能な Groq モデルリスト（非永続化）
+- `SELECTED_GROQ_MODEL`: 選択中の Groq モデル
+- `SELECTABLE_OPENROUTER_MODEL_LIST`: 利用可能な OpenRouter モデルリスト（非永続化）
+- `SELECTED_OPENROUTER_MODEL`: 選択中の OpenRouter モデル
 
 **オーバーレイ設定**
 - `OVERLAY_SMALL_LOG`: 小ログオーバーレイ有効
@@ -273,10 +279,20 @@ def SELECTED_TAB_NO(self, value):
 ```
 
 各setterは以下のパターンを実装:
-1. 型チェック (`isinstance`)
+1. 型チェック (`isinstance`)：`ManagedProperty` による型チェックは `None` を許容するが、個別 setter が数値変換などを行う場合は `None` を拒否するケースがある
 2. 値の範囲・有効性チェック
 3. 内部変数への代入
 4. `saveConfig` 呼び出し（永続化対象の場合）
+
+#### 型チェックの詳細（v3.3.0+）
+
+```python
+# 型チェック実装：ManagedProperty 経由では None を常に許可
+if self.type_ is not None and value is not None and not isinstance(value, self.type_):
+    return  # 無視する
+```
+
+この仕様は `ManagedProperty` を通じた型チェックに適用される。個別の setter で追加のバリデーションやキャストを行う場合、`None` は別途拒否されることがある。
 
 ### メッセージフォーマット構造
 

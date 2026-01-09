@@ -15,6 +15,8 @@ error.log
 VRCT.zip
 VRCT_cuda.zip
 
+.qoder/
+
 # Added by WebUI migration
 # Logs
 logs
@@ -46,3 +48,4 @@ dist-ssr
 # Customize
 /build
 error.txt
+config.json

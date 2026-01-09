@@ -7,14 +7,14 @@ common:
     go_back_button_label: "返回"
 
 common_error:
-    no_device_mic: # 未检测到他人语音 ?
-    no_device_speaker: # 未检测到他人语音 ?
-    threshold_invalid_value: # 数值应为 {{min}} 至 {{max}} 之间。 ? 设定的数值从 {{min}} 到 {{max}} ?
-    failed_download_weight_ctranslate2:
-    failed_download_weight_whisper:
-    translation_limit:
-    deepl_auth_key_invalid_length:
-    deepl_auth_key_failed_authentication: "授权密匙错误或已达API使用上限"
+    no_device_mic: "未检测到麦克风设备。"
+    no_device_speaker: "未检测到扬声器设备。"
+    threshold_invalid_value: "可设置的数值范围为 {{min}} 到 {{max}}。"
+    failed_download_weight_ctranslate2: "CTranslate2 模型下载失败。"
+    failed_download_weight_whisper: "Whisper 模型下载失败。"
+    translation_limit: "已达到翻译引擎使用限制或临时受到使用限制。"
+    deepl_auth_key_invalid_length: "授权密钥字符数错误。"
+    deepl_auth_key_failed_authentication: "授权密钥错误或已达API使用上限。"
 
     invalid_value_mic_record_timeout: "数值应为 0 至 「{{mic_phrase_timeout_label}}」"
     invalid_value_mic_phrase_timeout: "转录间隔时间大于0秒且不能小于「{{mic_record_timeout_label}}」"
@@ -25,7 +25,7 @@ common_error:
     invalid_value_speaker_max_phrase: "数值应为 0 以上"
 
 common_warning:
-    unable_to_use_osc_query:
+    unable_to_use_osc_query: "由于 OSC IP Address 的设置无法接收 OSC 数据，以下功能已自动禁用。"
 
 main_page:
     translation: "翻译"
@@ -42,7 +42,7 @@ main_page:
     translator_label_default: "默认"
 
     translator_selector:
-        is_selected_same_language:
+        is_selected_same_language: "「{{your_language}}」和「{{target_language}}」选择了相同的语言，因此只能使用「{{ctranslate2}}」。"
 
     message_log:
         all: "全部"
@@ -50,7 +50,7 @@ main_page:
         received: "接受"
         system: "系统"
 
-        resend_button_on_hover_desc:
+        resend_button_on_hover_desc: "长按发送"
 
     state_text_enabled: "启用"
     state_text_disabled: "停用"
@@ -63,42 +63,51 @@ main_page:
     updating: "更新中..."
 
 update_modal:
-    cpu_desc:
-    cuda_desc:
-    cuda_compare_cpu_desc:
-    cuda_disk_space_desc:
-    close_modal:
-    download_latest_and_restart:
-    is_latest_version_already:
-    is_current_compute_device:
+    cpu_desc: "仅使用 CPU 作为处理设备"
+    cuda_desc: "可选择 CPU 和 NVIDIA GPU 作为处理设备"
+    cuda_compare_cpu_desc: "选择 GPU 时，与 CPU 相比处理更快"
+    cuda_disk_space_desc: "需要约 {{size}} 的磁盘空间"
+    close_modal: "关闭"
+    download_latest_and_restart: "将下载最新版本，\n应用程序将自动重启。"
+    is_latest_version_already: "已在使用最新版本"
+    is_current_compute_device: "当前使用的版本"
 
 config_page:
     common:
         version: "版本 {{version}}"
-        model_download_button_label:
+        model_download_button_label: "下载"
+        correct_auth_key_required:
+        open_auth_key_webpage:
+        connection_check:
+            button_label:
+            checking:
+            connected:
+            disconnected:
         compute_device:
-            desc:
-            label_device:
-            label_type:
-            type_template_auto:
-            type_template_low:
-            type_template_high:
+            desc: "各处理类型的精度和速度会因机器规格不同而有所差异，可能与显示顺序不同，请作为大致参考。"
+            label_device: "处理设备"
+            label_type: "处理类型"
+            type_template_auto: "自动"
+            type_template_low: "{{type_name}} （精度较低，处理较快）"
+            type_template_high: "{{type_name}} （精度较高，处理较慢）"
+        warning_labels:
+            unable_to_use_osc_query: "由于 OSC IP Address 的设置无法接收 OSC 数据，目前无法使用此功能。"
 
     side_menu_labels:
-        device:
+        device: "设备"
         appearance: "外观"
         translation: "翻译"
-        transcription: "转录"
+        transcription: "语音识别"
         others: "其他"
-        hotkeys:
-        plugins:
+        hotkeys: "快捷键"
+        plugins: "插件"
         advanced_settings: "高级设置"
 
     device:
-        check_volume: "Check Volume"
-        label_auto_select: "Auto Select"
-        label_host: "Host/Driver"
-        label_device: "Device"
+        check_volume: "音量检查"
+        label_auto_select: "自动选择"
+        label_host: "主机/驱动程序"
+        label_device: "设备"
         mic_host_device:
             label: "麦克风 (设备)"
         mic_dynamic_energy_threshold:
@@ -129,8 +138,8 @@ config_page:
             show: "显示"
             show_and_disable_enter_key: "显示,并且停用‘回车发送信息’"
         show_resend_button:
-            label:
-            desc:
+            label: "显示重新发送按钮"
+            desc: "鼠标悬停在已发送消息日志上时，会显示重新发送按钮。点击进入编辑模式，长按重新发送。"
         font_family:
             label: "字体"
         ui_language:
@@ -143,19 +152,57 @@ config_page:
             small: "普通模型 ({{capacity}})"
             large: "高精度模型 ({{capacity}})"
         translation_compute_device:
-            label:
+            label: "AI 翻译的处理设备"
+
         deepl_auth_key:
             label: "DeepL 授权密匙"
             desc: "在使用的时候,使用时请在主屏幕上通过 DeepL_API 选择 {{translator}}\n※某些语言可能不支持"
             open_auth_key_webpage: "打开DeepL账号页面"
-            save:
-            edit:
+            save: "保存"
+            edit: "编辑"
             auth_key_success: "授权密匙认证完成。"
 
+        plamo_auth_key:
+            label:
+        select_plamo_model:
+            label:
+
+        gemini_auth_key:
+            label:
+        select_gemini_model:
+            label:
+
+        openai_auth_key:
+            label:
+        select_openai_model:
+            label:
+
+        groq_auth_key:
+            label:
+        select_groq_model:
+            label:
+
+        openrouter_auth_key:
+            label:
+        select_openrouter_model:
+            label:
+
+        lmstudio_connection_check:
+            label:
+        select_lmstudio_model:
+            label:
+            connection_required:
+
+        ollama_connection_check:
+            label:
+        select_ollama_model:
+            label:
+            connection_required:
+
     transcription:
-        section_label_mic: "你的麦克风"
-        section_label_speaker: "他人声音"
-        section_label_transcription_engines:
+        section_label_mic: "麦克风"
+        section_label_speaker: "扬声器"
+        section_label_transcription_engines: "语音识别引擎"
         mic_record_timeout:
             label: "语音输入结束后的静音时间"
             desc: "当检测到静音并经过设定的秒数后，语音输入即被视为完成。"
@@ -180,22 +227,22 @@ config_page:
             label: "语音接收时的最小单词数"
             desc: "转录字数的下限,只有超过这个数字,才会记录转录结果"
         select_transcription_engine:
-            label:
+            label: "语音识别使用的引擎"
         whisper_weight_type:
-            label: "选择某个Whisper模型"
-            desc:
+            label: "Whisper 模型类型"
+            desc: "容量越大的模型精度越高，但会占用更多 CPU/GPU 资源。\n※特别是比 medium 更大的模型，根据 CPU/GPU 性能可能难以使用。"
             model_template: "{{model_name}} 模型 ({{capacity}})"
             recommended_model_template: "{{model_name}} 模型 ({{capacity}}) (推荐)"
         transcription_compute_device:
-            label:
+            label: "AI 语音识别使用的处理设备"
 
     vr:
-        single_line:
-        multi_lines:
-        overlay_enable:
+        single_line: "单行"
+        multi_lines: "多行"
+        overlay_enable: "启用"
         restore_default_settings: "恢复默认设置"
-        position:
-        rotation:
+        position: "位置"
+        rotation: "旋转"
         x_position: "X轴(左右)"
         y_position: "Y轴(上下)"
         z_position: "Z轴(前后)"
@@ -203,24 +250,24 @@ config_page:
         y_rotation: "Y轴旋转"
         z_rotation: "Z轴旋转"
         sample_text_button:
-            start:
-            stop:
-            sample_text:
+            start: "向 Overlay\n发送示例文本"
+            stop: "停止发送"
+            sample_text: "示例文本"
         opacity: "透明度"
         ui_scaling: "大小"
         display_duration: "显示持续时间"
         fadeout_duration: "渐隐持续时间"
-        common_settings:
-        tracker:
-        hmd:
-        left_hand:
-        right_hand:
+        common_settings: "通用设置"
+        tracker: "显示追踪器的位置"
+        hmd: "HMD"
+        left_hand: "左手"
+        right_hand: "右手"
         overlay_show_only_translated_messages:
-            label:
+            label: "仅显示翻译后的消息"
 
     others:
-        section_label_sounds:
-        section_label_message_formats:
+        section_label_sounds: "声音"
+        section_label_message_formats: "消息格式"
         auto_clear_the_message_box:
             label: "发言后自动清空chatbox"
         send_only_translated_messages:
@@ -235,60 +282,60 @@ config_page:
             label: "发送信息至VRChat"
             desc: "不发送信息至VRChat的情况下也能使用它,但该功能现在并未完成.在想要发送信息时,请不要忘记打开这个功能."
         notification_vrc_sfx:
-            label:
-            desc:
+            label: "发送聊天时播放聊天框的通知音"
+            desc: "禁用此功能后，将不会播放其他人能听到的聊天框通知音，静默发送。"
         send_received_message_to_vrc:
-            label:
-            desc:
+            label: "将接收到的消息发送到 VRChat"
+            desc: "将从扬声器听到并转录的消息发送到 VRChat。"
         message_format_common:
             example_view:
-                title:
-                original_translated:
-                original_translated_multi:
-                translated_only_multi:
-                translated_only:
-                original_only:
+                title: "预览"
+                original_translated: "原文 + 翻译"
+                original_translated_multi: "原文 + 翻译（多语言）"
+                translated_only_multi: "仅翻译（多语言）"
+                translated_only: "仅翻译"
+                original_only: "仅原文"
             settings:
-                title:
-                original:
-                translated:
-                for_multi_translation:
+                title: "设置"
+                original: "原文"
+                translated: "翻译"
+                for_multi_translation: "多语言翻译用"
         send_message_format:
-            label:
-            desc:
+            label: "消息格式（发送）"
+            desc: "可以更改在 VRChat 中对方实际看到的格式。"
         received_message_format:
-            label:
-            desc:
+            label: "消息格式（Speaker2Chatbox）"
+            desc: "目前用于通过 Speaker2Chatbox 发送时的显示。"
         common_convert_message_hiragana_romaji:
-            desc_1:
-            desc_2:
+            desc_1: "仅在选择日语作为翻译语言时支持。"
+            desc_2: "由于日语的特殊性，精度有限。"
         convert_message_to_romaji:
-            label:
-            desc:
+            label: "显示罗马音"
+            desc: "与「{{convert_message_to_hiragana}}」同时启用时，将通过鼠标悬停显示。"
         convert_message_to_hiragana:
-            label:
+            label: "显示平假名"
 
     hotkeys:
         toggle_vrct_visibility:
-            label:
+            label: "切换 VRCT 最小化/激活"
         toggle_translation:
-            label:
+            label: "切换「{{translation}}」开/关"
         toggle_transcription_send:
-            label:
+            label: "切换「{{transcription_send}}」开/关"
         toggle_transcription_receive:
-            label:
+            label: "切换「{{transcription_receive}}」开/关"
 
     plugins:
-        downloaded_version:
-        latest_version:
-        available_after_updating:
-        unavailable_downloaded:
-        no_latest_info:
-        using_latest_version:
-        available_latest_version:
-        unavailable_latest_version:
-        available_in_latest_vrct_version:
-        unavailable_not_downloaded:
+        downloaded_version: "已下载版本：{{downloaded_version}}"
+        latest_version: "最新版本：{{latest_version}}"
+        available_after_updating: "更新到最新版后可用"
+        unavailable_downloaded: "当前不可用 与使用中的 VRCT 版本不兼容"
+        no_latest_info: "无法获取最新信息"
+        using_latest_version: "正在使用最新版本"
+        available_latest_version: "最新版本可用"
+        unavailable_latest_version: "最新版本当前不可用"
+        available_in_latest_vrct_version: "可在 VRCT 最新版中使用"
+        unavailable_not_downloaded: "当前不可用"
 
     advanced_settings:
         osc_ip_address:
@@ -298,28 +345,28 @@ config_page:
         open_config_filepath:
             label: "打开设置文件"
         switch_compute_device:
-            label:
+            label: "切换 VRCT CPU/GPU 版本"
         enable_websocket:
-            label:
+            label: "启用 WebSocket 服务器"
         websocket_host:
-            label:
+            label: "WebSocket 主机"
         websocket_port:
-            label:
+            label: "WebSocket 端口"
 
     notifications:
-        save_success:
+        save_success: "设置已保存。"
 
 plugin_notifications:
-    downloading:
-    downloaded_success:
-    downloaded_error:
+    downloading: "正在下载插件。"
+    downloaded_success: "插件下载完成。"
+    downloaded_error: "插件下载失败。"
 
-    updating:
-    updated_success:
-    updated_error:
+    updating: "正在更新插件。"
+    updated_success: "插件更新完成。"
+    updated_error: "插件更新失败。"
 
-    disabled_out_of_support:
-    disabled_due_to_an_error:
+    disabled_out_of_support: "与当前版本不兼容。已禁用插件。"
+    disabled_due_to_an_error: "插件运行时检测到错误。请向插件开发者报告。"
 
-    is_enabled:
-    is_disabled:
+    is_enabled: "插件已启用。"
+    is_disabled: "插件已禁用。"
