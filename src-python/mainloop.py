@@ -129,6 +129,9 @@ mapping = {
 
     "/run/send_text_overlay": {"status": True, "variable":controller.sendTextOverlay},
 
+    "/get/data/telemetry" : {"status": True, "variable":controller.getTelemetry},
+    "/set/enable/telemetry" : {"status": True, "variable":controller.setEnableTelemetry},
+    "/set/disable/telemetry" : {"status": True, "variable":controller.setDisableTelemetry},
     "/run/shutdown": {"status": True, "variable":controller.shutdown},
 
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
