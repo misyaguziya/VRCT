@@ -264,6 +264,9 @@ config_page:
         right_hand: "Right Hand"
         overlay_show_only_translated_messages:
             label: "Show Only Translated Messages"
+        voice_typing_mode:
+            label: "Voice Typing Mode"
+            desc: "Automatically pastes transcribed text into the active input field.\n*Utilizes standard Windows clipboard functionality."
 
     others:
         section_label_sounds: "Sounds"
