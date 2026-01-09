@@ -32,6 +32,7 @@ from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
+from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger
 
 class threadFnc(Thread):
@@ -140,6 +141,11 @@ class Model:
         # default no-op callbacks for energy check functions
         self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
         self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
+
+        # Telemetry 初期化（Model 内でインスタンスを保持）
+        self.telemetry = Telemetry()
+        self.telemetry.init(enabled=config.TELEMETRY_ENABLED, app_version=config.VERSION)
+
         self._inited = True
 
     def ensure_initialized(self) -> None:
@@ -1290,5 +1296,26 @@ class Model:
         except Exception:
             errorLogging()
             return False
+
+    def shutdown(self):
+        """Model cleanup on application shutdown."""
+        # Telemetry 終了（app_closed 送信）
+        if hasattr(self, "telemetry") and self.telemetry:
+            self.telemetry.shutdown()
+
+    def telemetryTrack(self, event: str, payload: dict = None):
+        """汎用テレメトリイベント送信 (Model ラッパー)"""
+        if hasattr(self, "telemetry") and self.telemetry:
+            self.telemetry.track(event, payload)
+
+    def telemetryTrackCoreFeature(self, feature: str):
+        """コア機能テレメトリイベント送信 (Model ラッパー)"""
+        if hasattr(self, "telemetry") and self.telemetry:
+            self.telemetry.track_core_feature(feature)
+
+    def telemetryTouchActivity(self):
+        """テレメトリアクティビティ更新 (Model ラッパー)"""
+        if hasattr(self, "telemetry") and self.telemetry:
+            self.telemetry.touch_activity()
 
 model = Model()

@@ -129,6 +129,8 @@ mapping = {
 
     "/run/send_text_overlay": {"status": True, "variable":controller.sendTextOverlay},
 
+    "/run/shutdown": {"status": True, "variable":controller.shutdown},
+
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 
     "/run/update_software": {"status": True, "variable":controller.updateSoftware},
@@ -584,6 +586,12 @@ class Main:
         Args:
             wait: maximum seconds to wait for threads to join.
         """
+        # Controller 経由でシャットダウン（model.shutdown() → telemetry.shutdown() が呼ばれる）
+        try:
+            self.controller.shutdown()
+        except Exception:
+            errorLogging()
+        
         self._stop_event.set()
         # give threads a chance to exit
         start = time.time()
