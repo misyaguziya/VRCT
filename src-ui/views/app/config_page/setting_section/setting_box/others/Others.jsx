@@ -53,6 +53,9 @@ export const Others = () => {
                 <ConvertMessageToRomajiContainer />
                 <ConvertMessageToHiraganaContainer />
             </div>
+            <div>
+                <TelemetryContainer />
+            </div>
         </div>
     );
 };
@@ -243,6 +246,20 @@ const ConvertMessageToHiraganaContainer = () => {
             desc={desc}
             variable={currentConvertMessageToHiragana}
             toggleFunction={toggleConvertMessageToHiragana}
+        />
+    );
+};
+
+const TelemetryContainer = () => {
+    const { t } = useI18n();
+    const { currentTelemetry, toggleTelemetry } = useOthers();
+
+    return (
+        <CheckboxContainer
+            label={t("config_page.others.telemetry.label")}
+            desc={t("config_page.others.telemetry.desc")}
+            variable={currentTelemetry}
+            toggleFunction={toggleTelemetry}
         />
     );
 };

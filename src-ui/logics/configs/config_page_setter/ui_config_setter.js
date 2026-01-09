@@ -709,6 +709,14 @@ export const SETTINGS_ARRAY = [
         logics_template_id: "toggle_enable_disable",
         base_endpoint_name: "convert_message_to_hiragana",
     },
+    {
+        Category: "Others",
+        Base_Name: "Telemetry",
+        default_value: false,
+        ui_template_id: "toggle",
+        logics_template_id: "toggle_enable_disable",
+        base_endpoint_name: "telemetry",
+    },
 
     // AdvancedSettings
     {
