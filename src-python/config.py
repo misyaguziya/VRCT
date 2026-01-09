@@ -726,7 +726,7 @@ class Config:
     WEBSOCKET_PORT = ManagedProperty('WEBSOCKET_PORT', type_=int)
     
     # --- Telemetry Settings ---
-    TELEMETRY_ENABLED = ManagedProperty('TELEMETRY_ENABLED', type_=bool)
+    ENABLE_TELEMETRY = ManagedProperty('ENABLE_TELEMETRY', type_=bool)
 
     # --- Selection properties with validation (ManagedProperty) ---
     SELECTED_TAB_NO = ManagedProperty('SELECTED_TAB_NO', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_TAB_NO_LIST)
@@ -1027,7 +1027,7 @@ class Config:
         self._WEBSOCKET_PORT = 2231
         
         ## Telemetry
-        self._TELEMETRY_ENABLED = True  # デフォルト有効
+        self._ENABLE_TELEMETRY = True  # デフォルト有効
 
     def load_config(self):
         if os_path.isfile(self.PATH_CONFIG) is not False:

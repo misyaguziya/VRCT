@@ -56,7 +56,7 @@ class Controller:
             dict with status 200 and result True on success.
         """
         try:
-            model.shutdown()
+            model.telemetryShutdown()
             return {"status": 200, "result": True}
         except Exception:
             errorLogging()
@@ -2595,6 +2595,24 @@ class Controller:
                 model.updateOverlayLargeLog(overlay_image)
         return {"status":200, "result":data}
 
+    @staticmethod
+    def getTelemetry(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.ENABLE_TELEMETRY}
+
+    @staticmethod
+    def setEnableTelemetry(*args, **kwargs) -> dict:
+        if config.ENABLE_TELEMETRY is False:
+            config.ENABLE_TELEMETRY = True
+            model.telemetryInit(enabled=config.ENABLE_TELEMETRY, app_version=config.VERSION)
+        return {"status":200, "result":config.ENABLE_TELEMETRY}
+
+    @staticmethod
+    def setDisableTelemetry(*args, **kwargs) -> dict:
+        if config.ENABLE_TELEMETRY is True:
+            config.ENABLE_TELEMETRY = False
+            model.telemetryShutdown()
+        return {"status":200, "result":config.ENABLE_TELEMETRY}
+
     def swapYourLanguageAndTargetLanguage(self, *args, **kwargs) -> dict:
         your_languages = config.SELECTED_YOUR_LANGUAGES
         your_language_temp = your_languages[config.SELECTED_TAB_NO]["1"]
@@ -3456,6 +3474,11 @@ class Controller:
         # Revalidate Selected Models
         printLog("Revalidate Selected Models")
         config.revalidate_selected_models()
+
+        # telemetry Init
+        printLog("Telemetry Init")
+        if config.ENABLE_TELEMETRY is True:
+            model.telemetryInit(enabled=config.ENABLE_TELEMETRY, app_version=config.VERSION)
 
         # Update Settings
         printLog("Update settings")
