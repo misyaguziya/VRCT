@@ -317,6 +317,9 @@ config_page:
             desc:
         convert_message_to_hiragana:
             label:
+        telemetry:
+            label:
+            desc:
 
     hotkeys:
         toggle_vrct_visibility:

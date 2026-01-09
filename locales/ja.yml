@@ -317,6 +317,9 @@ config_page:
             desc: "「{{convert_message_to_hiragana}}」と同時に有効にした場合は、マウスホバーで表示されます。"
         convert_message_to_hiragana:
             label: "ひらがなを表示"
+        telemetry:
+            label: "製品の改善に協力する"
+            desc: "みなさんの使用状況データを、開発者が数字を見てにやにやするので、オン（送信する）にしたままだと嬉しいです。\n※個人を特定するような情報は収集しません。\n※ちゃんと開発に役立てます。"
 
     hotkeys:
         toggle_vrct_visibility:
