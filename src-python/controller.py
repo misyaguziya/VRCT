@@ -49,12 +49,18 @@ class Controller:
     def setRun(self, run:Callable[[int, str, Any], None]) -> None:
         self.run = run
     
-    def shutdown(self) -> None:
-        """Shutdown controller and model (including telemetry)."""
+    def shutdown(self, *args, **kwargs) -> dict:
+        """Shutdown controller and model (including telemetry).
+        
+        Returns:
+            dict with status 200 and result True on success.
+        """
         try:
             model.shutdown()
+            return {"status": 200, "result": True}
         except Exception:
             errorLogging()
+            return {"status": 500, "result": False}
 
     # response functions
     def connectedNetwork(self) -> None:

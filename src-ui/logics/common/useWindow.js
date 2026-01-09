@@ -152,7 +152,18 @@ export const useWindow = () => {
     const asyncMinimizeApp = async () => {
         await appWindow.minimize();
     };
+
     const asyncCloseApp = async () => {
+        // Send shutdown signal to backend before closing the app
+        // This ensures telemetry app_closed event is sent and flushed
+        // Note: Don't await this call, let it run in background (fire-and-forget)
+        asyncStdoutToPython("/run/shutdown");
+        
+        // Give backend time to process shutdown and flush telemetry
+        // Tauri sidecar will be terminated when UI closes, so timing is critical
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Now close the UI window (this will also terminate the backend sidecar)
         await appWindow.close();
     };
 

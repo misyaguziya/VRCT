@@ -129,6 +129,8 @@ mapping = {
 
     "/run/send_text_overlay": {"status": True, "variable":controller.sendTextOverlay},
 
+    "/run/shutdown": {"status": True, "variable":controller.shutdown},
+
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 
     "/run/update_software": {"status": True, "variable":controller.updateSoftware},
@@ -460,20 +462,14 @@ class Main:
         """Read lines from stdin, parse JSON and enqueue requests.
 
         Uses blocking readline but honors stop via _stop_event checked between reads.
-        EOF on stdin indicates the frontend has closed; trigger app_closed event.
         """
         while not self._stop_event.is_set():
             try:
                 line = sys.stdin.readline()
                 if not line:
-                    # EOF reached - frontend has closed connection
-                    # Trigger telemetry shutdown to send app_closed event
-                    printLog("Frontend disconnected (stdin EOF)", {"event": "frontend_closed"})
-                    try:
-                        self.controller.shutdown()
-                    except Exception:
-                        errorLogging()
-                    break
+                    # EOF reached; sleep briefly and re-check stop event
+                    time.sleep(0.1)
+                    continue
                 received_data = json.loads(line.strip())
 
                 if received_data:
