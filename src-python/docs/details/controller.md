@@ -4,6 +4,26 @@
 
 VRCTアプリケーションのビジネスロジックを制御するコントローラークラスです。UI層とモデル層の間に位置し、ユーザーの入力を適切な処理に変換し、結果を UI に返す役割を担います。全ての機能制御、設定管理、状態管理を一元的に行います。
 
+## 最近の更新 (2026-01-03)
+
+### 起動高速化・非同期化
+
+- 初期化時間を約12.6s→8.9sに短縮（環境計測値）
+- AI Models Check を2並列化（CTranslate2/Whisper）し、結果を `_ctranslate2_available_cache` / `_whisper_available_cache` に保存
+- 翻訳エンジン判定を並列化（ThreadPoolExecutor, max_workers=4）し、LMStudio/Ollamaはバックグラウンド判定に変更
+- ソフトウェア更新チェックをバックグラウンド化
+- OSC受信初期化をバックグラウンド化し、OSCQueryサービス生成は接続成功まで継続リトライ
+- 翻訳/音声認識エンジンのセット処理で重みチェックキャッシュを再利用し再計測を排除（0.98s/0.52s→0.00s）
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| 起動時間 | 約3.7s短縮（12.6s→8.9s） |
+| 並列・非同期化 | 翻訳・音声認識エンジン判定を並列/バックグラウンド化 |
+| 安定性 | OSCQuery起動のリトライ上限でブロッキングを抑制 |
+| 再利用性 | 重みチェック結果をキャッシュし重複I/Oを削減 |
+
 ## 最近の更新 (2025-10-20)
 
 ### 新規ローカルLLM翻訳エンジン統合
@@ -399,25 +419,29 @@ speakerMessage(result: dict) -> None
 
 ## エラーハンドリング
 
-### VRAM不足エラー
+### エラー構造
+- すべて `VRCTError` で生成し、ステータス・コード・メッセージ・data を統一
+- `create_error_response()` / `create_exception_error_response()` を使用し、`self.run()` へそのまま渡す
+- 代表コード: デバイス系 (`DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`)、VRAM系 (`TRANSLATION_VRAM_*`)、認証系 (`AUTH_*`)、モデル不正 (`MODEL_*`)、バリデーション系 (`VALIDATION_*`)、接続系 (`CONNECTION_LMSTUDIO_FAILED` など)
 
-- 自動的にCTranslate2への切り替え
-- ユーザーへの適切な通知
+### VRAM不足エラー
+- 翻訳処理中に VRAM 例外を検出し `/run/error_translation_*_vram_overflow` で通知
+- 翻訳機能を自動で無効化し、`TRANSLATION_DISABLED_VRAM` を通知
+- マイク/スピーカー/チャット/有効化時の各パスで専用コードを返却
 
 ### デバイスエラー
+- マイク・スピーカー未検出時に `DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`
+- エネルギーしきい値/タイムアウト等のバリデーションに `VALIDATION_*` を使用
 
-- デバイス接続状態の監視
-- 自動復旧機能
+### 認証・モデルエラー
+- DeepL/Plamo/Gemini/OpenAI/Groq/OpenRouter の認証失敗やキー長不正を `AUTH_*` で通知
+- モデル未選択/不正時は `MODEL_*` で通知し、選択リストを再送
 
-### ネットワークエラー
-
-- 接続状態の定期確認
-- オフライン機能への切り替え
+### 接続エラー
+- LMStudio/Ollama 接続失敗を `CONNECTION_*` で通知し、翻訳エンジンリストを更新
 
 ### 設定エラー
-
-- 設定値の妥当性チェック
-- デフォルト値への復帰
+- IP アドレスやしきい値などの不正値を `VALIDATION_*` で統一し、リクエスト値を data に格納
 
 ## パフォーマンス考慮事項
 

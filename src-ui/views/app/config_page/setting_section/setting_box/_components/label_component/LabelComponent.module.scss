@@ -2,7 +2,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    // flex-shrink: 0;
+    max-width: 38rem;
+    overflow-wrap: break-word;
 }
 
 .label {
@@ -16,6 +17,28 @@
     font-size: 1.4rem;
     font-weight: 300;
     color: var(--dark_500_color);
-    max-width: 38rem;
     overflow-wrap: break-word;
+}
+
+.warnings_section {
+    font-weight: 300;
+    color: var(--dark_500_color);
+}
+
+.warning_item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.warning_label {
+    font-size: 1.2rem;
+    color: var(--warning_color);
+    overflow-wrap: break-word;
+}
+
+.warning_svg {
+    width: 1.4rem;
+    color: var(--warning_color);
+    flex-shrink: 0;
 }

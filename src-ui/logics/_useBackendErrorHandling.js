@@ -2,6 +2,7 @@ import { useI18n } from "@useI18n";
 
 import {
     useNotificationStatus,
+    useLLMConnection,
 } from "@logics_common";
 
 import {
@@ -35,7 +36,29 @@ export const _useBackendErrorHandling = () => {
 
     const { updateTranslationStatus, updateTranscriptionSendStatus, updateTranscriptionReceiveStatus } = useMainFunction();
 
-    const { updateDeepLAuthKey } = useTranslation();
+    const {
+        updateDeepLAuthKey,
+
+        updatePlamoAuthKey,
+        updateSelectedPlamoModel,
+
+        updateGeminiAuthKey,
+        updateSelectedGeminiModel,
+
+        updateOpenAIAuthKey,
+        updateSelectedOpenAIModel,
+
+        updateGroqAuthKey,
+        updateSelectedGroqModel,
+
+        updateOpenRouterAuthKey,
+        updateSelectedOpenRouterModel,
+
+        updateLMStudioURL,
+        updateSelectedLMStudioModel,
+
+        updateSelectedOllamaModel,
+    } = useTranslation();
 
     const { updateEnableVrcMicMuteSync } = useOthers();
 
@@ -45,6 +68,11 @@ export const _useBackendErrorHandling = () => {
         updateWebsocketHost,
         updateWebsocketPort,
     } = useAdvancedSettings();
+
+    const {
+        updateIsOllamaConnected,
+        updateIsLMStudioConnected,
+    } = useLLMConnection();
 
     const errorHandling_Backend = ({message, data, endpoint, result}) => {
         switch (endpoint) {
@@ -93,7 +121,7 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
-            case "/run/enable_transcription_send":
+            case "/run/enable_transcription_receive":
                 if (message === "Transcription receive disabled due to VRAM overflow") {
                     updateTranscriptionReceiveStatus(data);
                     showNotification_Error("Transcription receive disabled due to VRAM overflow");
@@ -126,6 +154,151 @@ export const _useBackendErrorHandling = () => {
                 } else { // Exception
                     updateDeepLAuthKey(data);
                     showNotification_Error(message, { category_id: "deepl_auth_key" });
+                }
+                return;
+
+            case "/set/data/plamo_auth_key":
+                if (message === "Plamo auth key length is not correct") {
+                    updatePlamoAuthKey(data);
+                    showNotification_Error(message, { category_id: "plamo_auth_key" });
+                } else if (message === "Authentication failure of plamo auth key") {
+                    updatePlamoAuthKey(data);
+                    showNotification_Error(message, { category_id: "plamo_auth_key" });
+                } else {
+                    updatePlamoAuthKey(data);
+                    showNotification_Error(message, { category_id: "plamo_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_plamo_model":
+                if (message === "Plamo model is not valid") {
+                    updateSelectedPlamoModel(data);
+                    showNotification_Error(message, { category_id: "selected_plamo_model" });
+                } else {
+                    updateSelectedPlamoModel(data);
+                    showNotification_Error(message, { category_id: "selected_plamo_model" });
+                }
+                return;
+
+            case "/set/data/gemini_auth_key":
+                if (message === "Gemini auth key length is not correct") {
+                    updateGeminiAuthKey(data);
+                    showNotification_Error(message, { category_id: "gemini_auth_key" });
+                } else if (message === "Authentication failure of gemini auth key") {
+                    updateGeminiAuthKey(data);
+                    showNotification_Error(message, { category_id: "gemini_auth_key" });
+                } else {
+                    updateGeminiAuthKey(data);
+                    showNotification_Error(message, { category_id: "gemini_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_gemini_model":
+                if (message === "Gemini model is not valid") {
+                    updateSelectedGeminiModel(data);
+                    showNotification_Error(message, { category_id: "selected_gemini_model" });
+                } else {
+                    updateSelectedGeminiModel(data);
+                    showNotification_Error(message, { category_id: "selected_gemini_model" });
+                }
+                return;
+
+            case "/set/data/openai_auth_key":
+                if (message === "OpenAI auth key is not valid") {
+                    updateOpenAIAuthKey(data);
+                    showNotification_Error(message, { category_id: "openai_auth_key" });
+                } else if (message === "Authentication failure of OpenAI auth key") {
+                    updateOpenAIAuthKey(data);
+                    showNotification_Error(message, { category_id: "openai_auth_key" });
+                } else {
+                    updateOpenAIAuthKey(data);
+                    showNotification_Error(message, { category_id: "openai_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_openai_model":
+                if (message === "OpenAI model is not valid") {
+                    updateSelectedOpenAIModel(data);
+                    showNotification_Error(message, { category_id: "selected_openai_model" });
+                } else {
+                    updateSelectedOpenAIModel(data);
+                    showNotification_Error(message, { category_id: "selected_openai_model" });
+                }
+                return;
+
+            case "/set/data/groq_auth_key":
+                if (message === "Groq auth key is not valid") {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                } else if (message === "Authentication failure of Groq auth key") {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                } else {
+                    updateGroqAuthKey(data);
+                    showNotification_Error(message, { category_id: "groq_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_groq_model":
+                if (message === "Groq model is not valid") {
+                    updateSelectedGroqModel(data);
+                    showNotification_Error(message, { category_id: "selected_groq_model" });
+                } else {
+                    updateSelectedGroqModel(data);
+                    showNotification_Error(message, { category_id: "selected_groq_model" });
+                }
+                return;
+
+            case "/set/data/openrouter_auth_key":
+                if (message === "OpenRouter auth key is not valid") {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                } else if (message === "Authentication failure of OpenRouter auth key") {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                } else {
+                    updateOpenRouterAuthKey(data);
+                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
+                }
+                return;
+
+            case "/set/data/selected_openrouter_model":
+                if (message === "OpenRouter model is not valid") {
+                    updateSelectedOpenRouterModel(data);
+                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
+                } else {
+                    updateSelectedOpenRouterModel(data);
+                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
+                }
+                return;
+
+            case "/set/data/lmstudio_url":
+                if (message === "LMStudio URL is not valid") {
+                    updateLMStudioURL(data);
+                    showNotification_Error(message, { category_id: "lmstudio_url" });
+                } else {
+                    updateLMStudioURL(data);
+                    showNotification_Error(message, { category_id: "lmstudio_url" });
+                }
+                return;
+
+            case "/set/data/selected_lmstudio_model":
+                if (message === "LMStudio model is not valid") {
+                    updateSelectedLMStudioModel(data);
+                    showNotification_Error(message, { category_id: "selected_lmstudio_model" });
+                } else {
+                    updateSelectedLMStudioModel(data);
+                    showNotification_Error(message, { category_id: "selected_lmstudio_model" });
+                }
+                return;
+
+            case "/set/data/selected_ollama_model":
+                if (message === "ollama model is not valid") {
+                    updateSelectedOllamaModel(data);
+                    showNotification_Error(message, { category_id: "selected_ollama_model" });
+                } else {
+                    updateSelectedOllamaModel(data);
+                    showNotification_Error(message, { category_id: "selected_ollama_model" });
                 }
                 return;
 
@@ -221,8 +394,31 @@ export const _useBackendErrorHandling = () => {
                 }
                 return;
 
+            case "/run/lmstudio_connection":
+                if (message === "Cannot connect to LMStudio server") {
+                    updateIsLMStudioConnected(data);
+                    showNotification_Error(message, { category_id: "lmstudio_connection" });
+                } else {
+                    updateIsLMStudioConnected(data);
+                    showNotification_Error(message, { category_id: "lmstudio_connection" });
+                }
+                return;
+
+            case "/run/ollama_connection":
+                if (message === "Cannot connect to ollama server") {
+                    updateIsOllamaConnected(data);
+                    showNotification_Error(message, { category_id: "ollama_connection" });
+                } else {
+                    updateIsOllamaConnected(data);
+                    showNotification_Error(message, { category_id: "ollama_connection" });
+                }
+                return;
+
             default:
                 console.error(`Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`);
+                showNotification_Error(
+                    `An error occurred. Please contact the developers and restart VRCT. Error: Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`, { hide_duration: null }
+                );
                 return;
         }
 

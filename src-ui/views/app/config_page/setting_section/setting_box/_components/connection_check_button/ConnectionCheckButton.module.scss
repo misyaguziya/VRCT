@@ -1,0 +1,26 @@
+.button_wrapper {
+    padding: 1.6rem;
+    border-radius: 0.4rem;
+    &:hover {
+        background-color: var(--dark_825_color);
+    }
+    &:active {
+        background-color: var(--dark_900_color);
+    }
+}
+
+.status_label {
+    font-size: 1.2rem;
+    color: var(--dark_200_color);
+    margin-bottom: 0.8rem;
+}
+
+.button_label {
+    font-size: 1.4rem;
+    color: var(--dark_100_color);
+}
+
+.button_svg {
+    width: 2.4rem;
+    color: var(--dark_400_color);
+}

@@ -101,12 +101,19 @@ export const getPluginsList = () => {
 if (IS_PLUGIN_PATH_DEV_MODE || IS_PLUGIN_LIST_URL_DEV_MODE) console.warn("ui_configs IS_PLUGIN_PATH_DEV_MODE or IS_PLUGIN_LIST_URL_DEV_MODE is true. Turn to 'false' when it's production environment.");
 
 export const translator_status = [
-    { id: "DeepL", label: "DeepL", is_available: false },
-    { id: "DeepL_API", label: `DeepL API`, is_available: false },
+    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
     { id: "Google", label: "Google", is_available: false },
     { id: "Bing", label: "Bing", is_available: false },
     { id: "Papago", label: "Papago", is_available: false },
-    { id: "CTranslate2", label: `AI\nCTranslate2`, is_available: false, is_default: true },
+    { id: "DeepL", label: "DeepL", is_available: false },
+    { id: "DeepL_API", label: `DeepL API`, is_available: false },
+    { id: "Plamo_API", label: `Plamo API`, is_available: false },
+    { id: "Gemini_API", label: `Gemini API`, is_available: false },
+    { id: "OpenAI_API", label: `OpenAI API`, is_available: false },
+    { id: "Groq_API", label: `Groq API`, is_available: false },
+    { id: "OpenRouter_API", label: `OpenRouter API`, is_available: false },
+    { id: "LMStudio", label: `LMStudio`, is_available: false },
+    { id: "Ollama", label: `Ollama`, is_available: false },
 ];
 
 export const ctranslate2_weight_type_status = [
@@ -130,6 +137,33 @@ export const whisper_weight_type_status = [
 
 
 export const deepl_auth_key_url = "https://www.deepl.com/ja/your-account/keys";
+export const plamo_auth_key_url = "https://plamo.preferredai.jp/api";
+export const gemini_auth_key_url = "https://aistudio.google.com/api-keys";
+export const openai_auth_key_url = "https://platform.openai.com/api-keys";
+export const groq_auth_key_url = "https://console.groq.com/keys";
+export const openrouter_auth_key_url = "https://openrouter.ai/keys";
+
+
+
+export const vrct_document_home_url = "https://misyaguziya.github.io/VRCT-Docs";
+export const vrct_document_url_chunk_faq = "docs/faq";
+export const vrct_document_url_chunk_ui_guide = "docs/ui-guide";
+
+export const generateLocalizedDocumentUrl = (lang_code = "en") => {
+    const supported_languages = ["en", "ja"];
+
+    if (supported_languages.includes(lang_code) === false) {
+        lang_code = "en";
+    }
+
+    const lang_path = (lang_code === "en") ? "" : `/${lang_code}`;
+
+    return {
+        vrct_document_home_url: `${vrct_document_home_url}`,
+        vrct_document_faq_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_faq}`,
+        vrct_document_ui_guide_url: `${vrct_document_home_url}${lang_path}/${vrct_document_url_chunk_ui_guide}`,
+    };
+};
 
 
 export const supporters_data_url = "https://shiinasakamoto.github.io/vrct_supporters/assets/supporters/data.json";

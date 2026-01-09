@@ -4,11 +4,22 @@ import RefreshSvg from "@images/refresh.svg?react";
 import HelpSvg from "@images/help.svg?react";
 
 import { useStore_OpenedQuickSetting } from "@store";
-import { useSoftwareVersion } from "@logics_common";
-import { useVr, useOthers } from "@logics_configs";
+import {
+    useSoftwareVersion,
+    useIsOscAvailable,
+} from "@logics_common";
+
+import {
+    useAppearance,
+    useVr,
+    useOthers,
+} from "@logics_configs";
 import { OpenQuickSettingButton } from "./_buttons/OpenQuickSettingButton";
 
+import { generateLocalizedDocumentUrl } from "@ui_configs";
+
 export const RightSideComponents = () => {
+    const { currentUiLanguage } = useAppearance();
 
     return (
         <div className={styles.container}>
@@ -19,7 +30,7 @@ export const RightSideComponents = () => {
             <SoftwareUpdateAvailableButton />
             <a
                 className={styles.help_and_info_button}
-                href="https://docs.google.com/spreadsheets/d/1_L5i-1U6PB1dnaPPTE_5uKMfqOpkLziPyRkiMLi4mqU/edit?usp=sharing"
+                href={generateLocalizedDocumentUrl(currentUiLanguage.data).vrct_document_ui_guide_url}
                 target="_blank"
                 rel="noreferrer"
             >
@@ -70,6 +81,7 @@ const PluginsQuickSetting = () => {
 const OpenVrcMicMuteSyncQuickSetting = () => {
     const { t } = useI18n();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+    const { currentIsOscAvailable } = useIsOscAvailable();
     const { currentEnableVrcMicMuteSync } = useOthers();
 
     const onClickFunction = () => {
@@ -79,7 +91,8 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
     return (
         <OpenQuickSettingButton
             label={t("config_page.others.vrc_mic_mute_sync.label")}
-            variable={currentEnableVrcMicMuteSync.data.is_enabled}
+            variable={currentEnableVrcMicMuteSync.data}
+            is_available={currentIsOscAvailable.data}
             onClickFunction={onClickFunction}
         />
     );

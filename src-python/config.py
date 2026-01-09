@@ -272,8 +272,8 @@ class ManagedProperty:
         if self.readonly:
             raise AttributeError(f"Cannot set read-only property '{self.name}'")
 
-        # Type check if requested
-        if self.type_ is not None and not isinstance(value, self.type_):
+        # Type check if requested（Noneは常に許可）
+        if self.type_ is not None and value is not None and not isinstance(value, self.type_):
             return
 
         # Allowed-values check: can be an iterable or a callable
@@ -527,6 +527,19 @@ def _compute_device_validator(val, inst):
             return copy.deepcopy(val)
     return None
 
+def _allowed_in_populated(list_attr_name: str):
+    def _inner(value, inst):
+        try:
+            lst = getattr(inst, list_attr_name)
+        except Exception:
+            return True  # インスタンス状態取得失敗時も弾かない
+        if not lst:  # 空/未初期化
+            return True
+        if value is None:
+            return True
+        return value in lst
+    return _inner
+
 
 class Config:
     """Application configuration singleton.
@@ -558,8 +571,16 @@ class Config:
         return cls._instance
 
     def saveConfigToFile(self) -> None:
+        # 永続化対象を descriptor 情報 (json_serializable_vars) から再構成
+        filtered = {}
+        for var_name, var_func in json_serializable_vars.items():
+            try:
+                filtered[var_name] = var_func(self)
+            except Exception:
+                pass
+        self._config_data = filtered
         with open(self.PATH_CONFIG, "w", encoding="utf-8") as fp:
-            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
+            json_dump(filtered, fp, indent=4, ensure_ascii=False)
 
     def saveConfig(self, key: str, value: Any, immediate_save: bool = False) -> None:
         self._config_data[key] = value
@@ -581,9 +602,6 @@ class Config:
     PATH_LOGS = ManagedProperty('PATH_LOGS', readonly=True, serialize=False)
     GITHUB_URL = ManagedProperty('GITHUB_URL', readonly=True, serialize=False)
     UPDATER_URL = ManagedProperty('UPDATER_URL', readonly=True, serialize=False)
-    BOOTH_URL = ManagedProperty('BOOTH_URL', readonly=True, serialize=False)
-    DOCUMENTS_URL = ManagedProperty('DOCUMENTS_URL', readonly=True, serialize=False)
-    DEEPL_AUTH_KEY_PAGE_URL = ManagedProperty('DEEPL_AUTH_KEY_PAGE_URL', readonly=True, serialize=False)
     MAX_MIC_THRESHOLD = ManagedProperty('MAX_MIC_THRESHOLD', readonly=True, serialize=False)
     MAX_SPEAKER_THRESHOLD = ManagedProperty('MAX_SPEAKER_THRESHOLD', readonly=True, serialize=False)
     WATCHDOG_TIMEOUT = ManagedProperty('WATCHDOG_TIMEOUT', readonly=True, serialize=False)
@@ -601,12 +619,12 @@ class Config:
 
     # Read Write
     # --- Simple boolean flags (managed by descriptor) ---
-    ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool)
-    ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool)
-    ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool)
-    ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool)
-    ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool)
-    ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool)
+    ENABLE_TRANSLATION = ManagedProperty('ENABLE_TRANSLATION', type_=bool, serialize=False)
+    ENABLE_TRANSCRIPTION_SEND = ManagedProperty('ENABLE_TRANSCRIPTION_SEND', type_=bool, serialize=False)
+    ENABLE_TRANSCRIPTION_RECEIVE = ManagedProperty('ENABLE_TRANSCRIPTION_RECEIVE', type_=bool, serialize=False)
+    ENABLE_FOREGROUND = ManagedProperty('ENABLE_FOREGROUND', type_=bool, serialize=False)
+    ENABLE_CHECK_ENERGY_SEND = ManagedProperty('ENABLE_CHECK_ENERGY_SEND', type_=bool, serialize=False)
+    ENABLE_CHECK_ENERGY_RECEIVE = ManagedProperty('ENABLE_CHECK_ENERGY_RECEIVE', type_=bool, serialize=False)
 
     # --- Selectable dict/list properties (managed by descriptor, not serialized) ---
     # These are dynamically generated in init_config() based on installed packages/APIs
@@ -617,6 +635,8 @@ class Config:
     SELECTABLE_PLAMO_MODEL_LIST = ManagedProperty('SELECTABLE_PLAMO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_GEMINI_MODEL_LIST = ManagedProperty('SELECTABLE_GEMINI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OPENAI_MODEL_LIST = ManagedProperty('SELECTABLE_OPENAI_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_GROQ_MODEL_LIST = ManagedProperty('SELECTABLE_GROQ_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
+    SELECTABLE_OPENROUTER_MODEL_LIST = ManagedProperty('SELECTABLE_OPENROUTER_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_LMSTUDIO_MODEL_LIST = ManagedProperty('SELECTABLE_LMSTUDIO_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
     SELECTABLE_OLLAMA_MODEL_LIST = ManagedProperty('SELECTABLE_OLLAMA_MODEL_LIST', type_=list, serialize=False, mutable_tracking=True)
 
@@ -711,11 +731,13 @@ class Config:
     USE_EXCLUDE_WORDS = ManagedProperty('USE_EXCLUDE_WORDS', type_=bool)
     CTRANSLATE2_WEIGHT_TYPE = ManagedProperty('CTRANSLATE2_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_LIST)
     WHISPER_WEIGHT_TYPE = ManagedProperty('WHISPER_WEIGHT_TYPE', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_WHISPER_WEIGHT_TYPE_LIST)
-    SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_PLAMO_MODEL_LIST)
-    SELECTED_GEMINI_MODEL = ManagedProperty('SELECTED_GEMINI_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_GEMINI_MODEL_LIST)
-    SELECTED_OPENAI_MODEL = ManagedProperty('SELECTED_OPENAI_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OPENAI_MODEL_LIST)
-    SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_LMSTUDIO_MODEL_LIST)
-    SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=lambda v, inst: v in inst.SELECTABLE_OLLAMA_MODEL_LIST)
+    SELECTED_PLAMO_MODEL = ManagedProperty('SELECTED_PLAMO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_PLAMO_MODEL_LIST'))
+    SELECTED_GEMINI_MODEL = ManagedProperty('SELECTED_GEMINI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GEMINI_MODEL_LIST'))
+    SELECTED_OPENAI_MODEL = ManagedProperty('SELECTED_OPENAI_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENAI_MODEL_LIST'))
+    SELECTED_GROQ_MODEL = ManagedProperty('SELECTED_GROQ_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_GROQ_MODEL_LIST'))
+    SELECTED_OPENROUTER_MODEL = ManagedProperty('SELECTED_OPENROUTER_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OPENROUTER_MODEL_LIST'))
+    SELECTED_LMSTUDIO_MODEL = ManagedProperty('SELECTED_LMSTUDIO_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_LMSTUDIO_MODEL_LIST'))
+    SELECTED_OLLAMA_MODEL = ManagedProperty('SELECTED_OLLAMA_MODEL', type_=str, allowed=_allowed_in_populated('SELECTABLE_OLLAMA_MODEL_LIST'))
 
     # --- Translation and language settings ---
     MIC_WORD_FILTER = ValidatedProperty('MIC_WORD_FILTER', _mic_word_filter_validator)
@@ -740,7 +762,7 @@ class Config:
 
     def init_config(self):
         # Read Only
-        self._VERSION = "3.3.1"
+        self._VERSION = "3.3.2"
         if getattr(sys, 'frozen', False):
             self._PATH_LOCAL = os_path.dirname(sys.executable)
         else:
@@ -750,9 +772,6 @@ class Config:
         os_makedirs(self._PATH_LOGS, exist_ok=True)
         self._GITHUB_URL = "https://api.github.com/repos/misyaguziya/VRCT/releases/latest"
         self._UPDATER_URL = "https://api.github.com/repos/misyaguziya/VRCT_updater/releases/latest"
-        self._BOOTH_URL = "https://misyaguziya.booth.pm/"
-        self._DOCUMENTS_URL = "https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246"
-        self._DEEPL_AUTH_KEY_PAGE_URL = "https://www.deepl.com/ja/account/summary"
 
         self._MAX_MIC_THRESHOLD = 2000
         self._MAX_SPEAKER_THRESHOLD = 4000
@@ -798,6 +817,8 @@ class Config:
         self._SELECTABLE_PLAMO_MODEL_LIST = []
         self._SELECTABLE_GEMINI_MODEL_LIST = []
         self._SELECTABLE_OPENAI_MODEL_LIST = []
+        self._SELECTABLE_GROQ_MODEL_LIST = []
+        self._SELECTABLE_OPENROUTER_MODEL_LIST = []
         self._SELECTABLE_LMSTUDIO_MODEL_LIST = []
         self._SELECTABLE_OLLAMA_MODEL_LIST = []
 
@@ -922,6 +943,8 @@ class Config:
             "Plamo_API": None,
             "Gemini_API": None,
             "OpenAI_API": None,
+            "Groq_API": None,
+            "OpenRouter_API": None,
         }
         self._USE_EXCLUDE_WORDS = True
         self._SELECTED_TRANSLATION_COMPUTE_DEVICE = copy.deepcopy(self.SELECTABLE_COMPUTE_DEVICE_LIST[0])
@@ -930,6 +953,8 @@ class Config:
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
+        self._SELECTED_GROQ_MODEL = None
+        self._SELECTED_OPENROUTER_MODEL = None
         self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"
         self._SELECTED_LMSTUDIO_MODEL = None
         self._SELECTED_OLLAMA_MODEL = None
@@ -1012,15 +1037,46 @@ class Config:
                     self._config_data = json_load(fp)
 
                     for key, value in self._config_data.items():
+                        # 読み込み時: serialize=True かつ readonlyでない Descriptor のみ反映。
+                        # 未知キー（Descriptorなし）は無視して注入を防止。
                         try:
-                            setattr(self, key, value)
+                            descriptor = getattr(type(self), key, None)
+                            if isinstance(descriptor, ManagedProperty):
+                                if descriptor.readonly or not descriptor.serialize:
+                                    continue
+                                setattr(self, key, value)
+                            elif isinstance(descriptor, ValidatedProperty):
+                                if not descriptor.serialize:
+                                    continue
+                                setattr(self, key, value)
+                            else:
+                                # 不明キーは破棄（古い/不要/改竄の可能性）
+                                continue
                         except Exception:
                             errorLogging()
+        self.saveConfigToFile()
 
-        with open(self.PATH_CONFIG, 'w', encoding="utf-8") as fp:
-            for var_name, var_func in json_serializable_vars.items():
-                self._config_data[var_name] = var_func(self)
-            json_dump(self._config_data, fp, indent=4, ensure_ascii=False)
+    def revalidate_selected_models(self):
+        pairs = [
+            ('SELECTED_PLAMO_MODEL', 'SELECTABLE_PLAMO_MODEL_LIST'),
+            ('SELECTED_GEMINI_MODEL', 'SELECTABLE_GEMINI_MODEL_LIST'),
+            ('SELECTED_OPENAI_MODEL', 'SELECTABLE_OPENAI_MODEL_LIST'),
+            ('SELECTED_GROQ_MODEL', 'SELECTABLE_GROQ_MODEL_LIST'),
+            ('SELECTED_OPENROUTER_MODEL', 'SELECTABLE_OPENROUTER_MODEL_LIST'),
+            ('SELECTED_LMSTUDIO_MODEL', 'SELECTABLE_LMSTUDIO_MODEL_LIST'),
+            ('SELECTED_OLLAMA_MODEL', 'SELECTABLE_OLLAMA_MODEL_LIST'),
+        ]
+        for sel_attr, list_attr in pairs:
+            try:
+                current = getattr(self, sel_attr)
+                lst = getattr(self, list_attr)
+                if lst and current is not None and current not in lst:
+                    if len(lst) > 0:
+                        setattr(self, sel_attr, lst[0])
+                    else:
+                        setattr(self, sel_attr, None)
+            except Exception:
+                errorLogging()
 
 # Auto-register all descriptors after Config class definition
 _auto_register_descriptors()

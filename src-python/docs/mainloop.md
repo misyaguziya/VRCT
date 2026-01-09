@@ -17,6 +17,10 @@
 - `/run/enable_translation` - 翻訳機能の有効/無効状態
 - `/run/transcription_mic_message` - マイク音声認識結果
 - `/run/transcription_speaker_message` - スピーカー音声認識結果
+- `/run/selectable_groq_model_list` - 利用可能な Groq モデルリスト通知
+- `/run/selected_groq_model` - 選択中の Groq モデル通知
+- `/run/selectable_openrouter_model_list` - 利用可能な OpenRouter モデルリスト通知
+- `/run/selected_openrouter_model` - 選択中の OpenRouter モデル通知
 - `/run/error_*` - 各種エラー通知
 - `/run/initialization_complete` - 初期化完了通知
 
@@ -30,7 +34,20 @@
 **エンドポイント分類:**
 
 - `/get/data/*` - 設定値の取得（初期化時に使用）
+  - `/get/data/groq_auth_key` - Groq API キー取得
+  - `/get/data/selectable_groq_model_list` - 利用可能な Groq モデルリスト取得
+  - `/get/data/selected_groq_model` - 選択中の Groq モデル取得
+  - `/get/data/openrouter_auth_key` - OpenRouter API キー取得
+  - `/get/data/selectable_openrouter_model_list` - 利用可能な OpenRouter モデルリスト取得
+  - `/get/data/selected_openrouter_model` - 選択中の OpenRouter モデル取得
 - `/set/data/*` - 設定値の更新
+  - `/set/data/groq_auth_key` - Groq API キー設定
+  - `/set/data/selected_groq_model` - Groq モデル選択
+  - `/set/data/openrouter_auth_key` - OpenRouter API キー設定
+  - `/set/data/selected_openrouter_model` - OpenRouter モデル選択
+- `/delete/data/*` - 設定値の削除
+  - `/delete/data/groq_auth_key` - Groq API キー削除
+  - `/delete/data/openrouter_auth_key` - OpenRouter API キー削除
 - `/set/enable/*` - 機能の有効化
 - `/set/disable/*` - 機能の無効化
 - `/run/*` - アクション実行（メッセージ送信、ダウンロード等）

@@ -4,6 +4,15 @@
 
 `controller.py` は VRCT アプリケーションのビジネスロジック層であり、フロントエンド（UI）とバックエンド（Model）の間の制御フローを担当する。音声認識、翻訳、OSC通信、オーバーレイ表示など、VRCT の全機能の調整役として動作し、各種設定の取得・更新、デバイス管理、エラーハンドリングを提供する。
 
+## 最近の更新 (2026-01-03)
+
+- 起動高速化: 初期化時間を約12.6s→8.9sに短縮
+- AI Models Check 並列化: CTranslate2/Whisperの重みチェックを2並列で実行
+- 翻訳エンジン判定の非同期化: LMStudio/Ollamaをバックグラウンド判定、他APIは4並列
+- 重みチェック結果のキャッシュ: `_ctranslate2_available_cache` / `_whisper_available_cache` を導入し後続処理で再利用
+- 音声認識エンジン判定の高速化: Whisperはキャッシュ結果を利用し0.56s→0.00s
+- ソフトウェア更新チェックの非同期化: GitHub APIチェックをバックグラウンド化
+
 ## アーキテクチャ上の位置づけ
 
 ```
@@ -693,7 +702,13 @@ OSC Query 機能が無効になったことを通知。無効化された機能�
    - `config.AUTH_KEYS["DeepL_API"]` に保存
    - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["DeepL_API"]` を True に
    - `updateTranslationEngineAndEngineList()` を呼び出し
-4. 認証失敗時: status 400 を返却
+4. 認証失敗時 (status 400):
+   - レスポンス `data` フィールドは **常に None**（キーを返さない）
+   - `delDeeplAuthKey()` を呼び出してクリーンアップ
+
+**認証失敗時の共通ポリシー（Plamo/Gemini/OpenAI/DeepL/Groq/OpenRouter 共通）**
+- レスポンス `data` はキーを含めず `None` を返す
+- 対応する `del*AuthKey()` を呼び出し、保存済みキーとモデル選択をクリア
 
 #### `delDeeplAuthKey(*args, **kwargs) -> dict`
 
@@ -703,6 +718,118 @@ OSC Query 機能が無効になったことを通知。無効化された機能�
 1. `config.AUTH_KEYS["DeepL_API"]` を None に
 2. `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["DeepL_API"]` を False に
 3. `updateTranslationEngineAndEngineList()` を呼び出し
+
+---
+
+### 16-1. Groq API 認証・モデル管理
+
+#### `setGroqAuthKey(data, *args, **kwargs) -> dict`
+
+**責務:** Groq API キーを設定し、認証を実行
+
+**処理:**
+1. キー長のバリデーション（`gsk` で始まり40文字以上）
+2. `model.authenticationTranslatorGroqAuthKey()` で認証
+3. 認証成功時:
+   - `config.AUTH_KEYS["Groq_API"]` に保存
+   - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Groq_API"]` を True に
+   - `config.SELECTABLE_GROQ_MODEL_LIST` を取得
+   - 未選択の場合は先頭モデルを自動選択
+   - `model.updateTranslatorGroqClient()` でクライアント更新
+   - `updateTranslationEngineAndEngineList()` を呼び出し
+4. 認証失敗時 (status 400):
+   - レスポンス `data` フィールドを **None に設定** （sensitive data を隠す）
+   - `delGroqAuthKey()` を呼び出してクリーンアップ
+
+**API キー検証失敗時の処理:**
+- モデルリストをクリア (`config.SELECTABLE_GROQ_MODEL_LIST = []`)
+- 選択モデルをクリア (`config.SELECTED_GROQ_MODEL = None`)
+- フロントエンドに通知（レスポンス `data` は None）
+
+#### `delGroqAuthKey(*args, **kwargs) -> dict`
+
+**責務:** Groq API キーを削除
+
+**処理:**
+1. `config.AUTH_KEYS["Groq_API"]` を None に
+2. `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["Groq_API"]` を False に
+3. モデルリストと選択モデルをクリア
+4. `updateTranslationEngineAndEngineList()` を呼び出し
+
+#### `getGroqAuthKey(*args, **kwargs) -> dict`
+現在の Groq API キーを取得（マスク処理なし）。
+
+#### `getGroqModelList(*args, **kwargs) -> dict`
+利用可能な Groq モデルリストを取得。
+
+#### `getGroqModel(*args, **kwargs) -> dict`
+現在選択中の Groq モデルを取得。
+
+#### `setGroqModel(data, *args, **kwargs) -> dict`
+
+**責務:** 使用する Groq モデルを変更
+
+**処理:**
+1. モデル名のバリデーション（利用可能リスト内か確認）
+2. `model.setTranslatorGroqModel()` でモデル設定
+3. `model.updateTranslatorGroqClient()` でクライアント再生成
+4. `config.SELECTED_GROQ_MODEL` を更新
+
+---
+
+### 16-2. OpenRouter API 認証・モデル管理
+
+#### `setOpenRouterAuthKey(data, *args, **kwargs) -> dict`
+
+**責務:** OpenRouter API キーを設定し、認証を実行
+
+**処理:**
+1. キー長のバリデーション（20文字以上）
+2. `model.authenticationTranslatorOpenRouterAuthKey()` で認証
+3. 認証成功時:
+   - `config.AUTH_KEYS["OpenRouter_API"]` に保存
+   - `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["OpenRouter_API"]` を True に
+   - `config.SELECTABLE_OPENROUTER_MODEL_LIST` を取得
+   - 未選択の場合は先頭モデルを自動選択
+   - `model.updateTranslatorOpenRouterClient()` でクライアント更新
+   - `updateTranslationEngineAndEngineList()` を呼び出し
+4. 認証失敗時 (status 400):
+   - レスポンス `data` フィールドを **None に設定** （sensitive data を隠す）
+   - `delOpenRouterAuthKey()` を呼び出してクリーンアップ
+
+**API キー検証失敗時の処理:**
+- モデルリストをクリア (`config.SELECTABLE_OPENROUTER_MODEL_LIST = []`)
+- 選択モデルをクリア (`config.SELECTED_OPENROUTER_MODEL = None`)
+- フロントエンドに通知（レスポンス `data` は None）
+
+#### `delOpenRouterAuthKey(*args, **kwargs) -> dict`
+
+**責務:** OpenRouter API キーを削除
+
+**処理:**
+1. `config.AUTH_KEYS["OpenRouter_API"]` を None に
+2. `config.SELECTABLE_TRANSLATION_ENGINE_STATUS["OpenRouter_API"]` を False に
+3. モデルリストと選択モデルをクリア
+4. `updateTranslationEngineAndEngineList()` を呼び出し
+
+#### `getOpenRouterAuthKey(*args, **kwargs) -> dict`
+現在の OpenRouter API キーを取得（マスク処理なし）。
+
+#### `getOpenRouterModelList(*args, **kwargs) -> dict`
+利用可能な OpenRouter モデルリストを取得。
+
+#### `getOpenRouterModel(*args, **kwargs) -> dict`
+現在選択中の OpenRouter モデルを取得。
+
+#### `setOpenRouterModel(data, *args, **kwargs) -> dict`
+
+**責務:** 使用する OpenRouter モデルを変更
+
+**処理:**
+1. モデル名のバリデーション（利用可能リスト内か確認）
+2. `model.setTranslatorOpenRouterModel()` でモデル設定
+3. `model.updateTranslatorOpenRouterClient()` でクライアント再生成
+4. `config.SELECTED_OPENROUTER_MODEL` を更新
 
 ---
 
