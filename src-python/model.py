@@ -32,6 +32,7 @@ from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
+from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger
 
@@ -141,8 +142,7 @@ class Model:
         # default no-op callbacks for energy check functions
         self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
         self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
-
-        # Telemetry 初期化（Model 内でインスタンスを保持）
+        self.clipboard = Clipboard()
         self.telemetry = Telemetry()
 
         self._inited = True
@@ -1292,6 +1292,29 @@ class Model:
         try:
             message_json = json.dumps(message_dict)
             return self.websocket_server.send(message_json)
+        except Exception:
+            errorLogging()
+            return False
+
+    def setCopyToClipboard(self, text:str) -> bool:
+        self.ensure_initialized()
+        try:
+            if isinstance(self.clipboard, Clipboard):
+                self.clipboard.copy(text)
+                return True
+            else:
+                return False
+        except Exception:
+            errorLogging()
+            return False
+
+    def setPasteFromClipboard(self) -> bool:
+        self.ensure_initialized()
+        try:
+            if isinstance(self.clipboard, Clipboard):
+                return self.clipboard.paste()
+            else:
+                return False
         except Exception:
             errorLogging()
             return False

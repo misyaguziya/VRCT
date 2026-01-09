@@ -422,6 +422,11 @@ class Controller:
                         )
                         model.updateOverlayLargeLog(overlay_image)
 
+                if config.ENABLE_CLIPBOARD is True:
+                    clipboard_message = self.messageFormatter("SEND", translation, message)
+                    model.setCopyToClipboard(clipboard_message)
+                    model.setPasteFromClipboard()
+
                 if model.checkWebSocketServerAlive() is True:
                     model.websocketSendMessage(
                         {
@@ -773,6 +778,11 @@ class Controller:
                         transliteration_translation
                     )
                     model.updateOverlayLargeLog(overlay_image)
+
+            if config.ENABLE_CLIPBOARD is True:
+                clipboard_message = self.messageFormatter("SEND", translation, message)
+                model.setCopyToClipboard(clipboard_message)
+                model.setPasteFromClipboard()
 
             if model.checkWebSocketServerAlive() is True:
                 model.websocketSendMessage(
@@ -3067,6 +3077,23 @@ class Controller:
             config.WEBSOCKET_SERVER = False
             model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
+
+    # Clipboard control
+    @staticmethod
+    def getClipboard(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.ENABLE_CLIPBOARD}
+
+    @staticmethod
+    def setEnableClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_CLIPBOARD is False:
+            config.ENABLE_CLIPBOARD = True
+        return {"status":200, "result":config.ENABLE_CLIPBOARD}
+
+    @staticmethod
+    def setDisableClipboard(*args, **kwargs) -> dict:
+        if config.ENABLE_CLIPBOARD is True:
+            config.ENABLE_CLIPBOARD = False
+        return {"status":200, "result":config.ENABLE_CLIPBOARD}
 
     def initializationProgress(self, progress):
         self.run(200, self.run_mapping["initialization_progress"], progress)

@@ -759,6 +759,9 @@ class Config:
     SELECTED_TRANSLATION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSLATION_COMPUTE_DEVICE', _compute_device_validator)
     SELECTED_TRANSCRIPTION_COMPUTE_DEVICE = ValidatedProperty('SELECTED_TRANSCRIPTION_COMPUTE_DEVICE', _compute_device_validator)
 
+    # -- Clipboard control ---
+    ENABLE_CLIPBOARD = ManagedProperty('ENABLE_CLIPBOARD', type_=bool)
+
     def init_config(self):
         # Read Only
         self._VERSION = "3.3.2"
@@ -1025,11 +1028,11 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
-        
-        ## Telemetry
-        self._ENABLE_TELEMETRY = True  # デフォルト有効
+        self._ENABLE_CLIPBOARD = False
+        self._ENABLE_TELEMETRY = True
 
     def load_config(self):
+        self._config_data = {}
         if os_path.isfile(self.PATH_CONFIG) is not False:
             with open(self.PATH_CONFIG, 'r', encoding="utf-8") as fp:
                 if fp.readable() and fp.seek(0, 2) > 0:
@@ -1054,6 +1057,7 @@ class Config:
                                 continue
                         except Exception:
                             errorLogging()
+
         self.saveConfigToFile()
 
     def revalidate_selected_models(self):

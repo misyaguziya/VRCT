@@ -264,6 +264,9 @@ config_page:
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "仅显示翻译后的消息"
+        voice_typing_mode:
+            label:
+            desc:
 
     others:
         section_label_sounds: "声音"

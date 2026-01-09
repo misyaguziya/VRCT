@@ -407,6 +407,11 @@ mapping = {
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
 
+    # Clipboard Settings
+    "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
+    "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
+    "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
