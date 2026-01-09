@@ -74,351 +74,222 @@ export const _useBackendErrorHandling = () => {
         updateIsLMStudioConnected,
     } = useLLMConnection();
 
-    const errorHandling_Backend = ({message, data, endpoint, result}) => {
-        switch (endpoint) {
-            case "/run/error_device":
-                if (message === "No mic device detected") showNotification_Error(t("common_error.no_device_mic"));
-                if (message === "No speaker device detected") showNotification_Error(t("common_error.no_device_speaker"));
+    const errorHandling_Backend = ({error_code, message, data, endpoint, result}) => {
+        switch (error_code) {
+            // ============================================================================
+            // デバイス関連エラー (DEVICE_*)
+            // ============================================================================
+            case "DEVICE_NO_MIC":
+                showNotification_Error(t("common_error.no_device_mic"), { category_id: error_code });
+                return;
+            case "DEVICE_NO_SPEAKER":
+                showNotification_Error(t("common_error.no_device_speaker"), { category_id: error_code });
                 return;
 
-            case "/set/data/mic_threshold":
-                if (message === "Mic energy threshold value is out of range") {
-                    showNotification_Error(t("common_error.threshold_invalid_value",
-                        { min: ui_configs.mic_threshold_min, max: ui_configs.mic_threshold_max },
-                    ));
-                };
+            // ============================================================================
+            // 翻訳関連エラー (TRANSLATION_*)
+            // ============================================================================
+            case "TRANSLATION_ENGINE_LIMIT":
+                showNotification_Error(t("common_error.translation_limit"), { category_id: error_code });
                 return;
-            case "/set/data/speaker_threshold":
-                if (message === "Speaker energy threshold value is out of range") {
-                    showNotification_Error(t("common_error.threshold_invalid_value",
-                        { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max },
-                    ));
-                }
+            case "TRANSLATION_VRAM_CHAT":
+            case "TRANSLATION_VRAM_MIC":
+            case "TRANSLATION_VRAM_SPEAKER":
+            case "TRANSLATION_VRAM_ENABLE":
+                showNotification_Error(message, { category_id: error_code });
                 return;
-
-            case "/run/error_ctranslate2_weight":
-                if (message === "CTranslate2 weight download error") showNotification_Error(t("common_error.failed_download_weight_ctranslate2"));
-                return;
-            case "/run/error_whisper_weight":
-                if (message === "Whisper weight download error") showNotification_Error(t("common_error.failed_download_weight_whisper"));
+            case "TRANSLATION_DISABLED_VRAM":
+                updateTranslationStatus(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/run/error_translation_engine":
-                if (message === "Translation engine limit error") showNotification_Error(t("common_error.translation_limit"));
+            // ============================================================================
+            // 音声認識関連エラー (TRANSCRIPTION_*)
+            // ============================================================================
+            case "TRANSCRIPTION_VRAM_MIC":
+            case "TRANSCRIPTION_VRAM_SPEAKER":
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "TRANSCRIPTION_SEND_DISABLED_VRAM":
+                updateTranscriptionSendStatus(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "TRANSCRIPTION_RECEIVE_DISABLED_VRAM":
+                updateTranscriptionReceiveStatus(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/run/enable_translation":
-                if (message === "Translation disabled due to VRAM overflow") {
-                    updateTranslationStatus(data);
-                    showNotification_Error("Translation disabled due to VRAM overflow");
-                }
+            // ============================================================================
+            // ウェイトダウンロード関連エラー (WEIGHT_*)
+            // ============================================================================
+            case "WEIGHT_CTRANSLATE2_DOWNLOAD":
+                showNotification_Error(t("common_error.failed_download_weight_ctranslate2"), { category_id: error_code });
+                return;
+            case "WEIGHT_WHISPER_DOWNLOAD":
+                showNotification_Error(t("common_error.failed_download_weight_whisper"), { category_id: error_code });
                 return;
 
-            case "/run/enable_transcription_send":
-                if (message === "Transcription send disabled due to VRAM overflow") {
-                    updateTranscriptionSendStatus(data);
-                    showNotification_Error("Transcription send disabled due to VRAM overflow");
-                }
+            // ============================================================================
+            // バリデーションエラー (VALIDATION_*)
+            // ============================================================================
+            case "VALIDATION_MIC_THRESHOLD":
+                showNotification_Error(t("common_error.threshold_invalid_value", { min: ui_configs.mic_threshold_min, max: ui_configs.mic_threshold_max }), { category_id: error_code });
+                return;
+            case "VALIDATION_SPEAKER_THRESHOLD":
+                showNotification_Error(t("common_error.threshold_invalid_value", { min: ui_configs.speaker_threshold_min, max: ui_configs.speaker_threshold_max }), { category_id: error_code });
+                return;
+            case "VALIDATION_MIC_RECORD_TIMEOUT":
+                updateMicRecordTimeout(data);
+                showNotification_Error(t("common_error.invalid_value_mic_record_timeout", { mic_phrase_timeout_label: t("config_page.transcription.mic_phrase_timeout.label") }), { category_id: error_code });
+                return;
+            case "VALIDATION_MIC_PHRASE_TIMEOUT":
+                updateMicPhraseTimeout(data);
+                showNotification_Error(t("common_error.invalid_value_mic_phrase_timeout", { mic_record_timeout_label: t("config_page.transcription.mic_record_timeout.label") }), { category_id: error_code });
+                return;
+            case "VALIDATION_MIC_MAX_PHRASES":
+                updateMicMaxWords(data);
+                showNotification_Error(t("common_error.invalid_value_mic_max_phrase"), { category_id: error_code });
+                return;
+            case "VALIDATION_SPEAKER_RECORD_TIMEOUT":
+                updateSpeakerRecordTimeout(data);
+                showNotification_Error(t("common_error.invalid_value_speaker_record_timeout", { speaker_phrase_timeout_label: t("config_page.transcription.speaker_phrase_timeout.label") }), { category_id: error_code });
+                return;
+            case "VALIDATION_SPEAKER_PHRASE_TIMEOUT":
+                updateSpeakerPhraseTimeout(data);
+                showNotification_Error(t("common_error.invalid_value_speaker_phrase_timeout", { speaker_record_timeout_label: t("config_page.transcription.speaker_record_timeout.label") }), { category_id: error_code });
+                return;
+            case "VALIDATION_SPEAKER_MAX_PHRASES":
+                updateSpeakerMaxWords(data);
+                showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"), { category_id: error_code });
+                return;
+            case "VALIDATION_INVALID_IP":
+            case "VALIDATION_CANNOT_SET_IP":
+                updateOscIpAddress(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/run/enable_transcription_receive":
-                if (message === "Transcription receive disabled due to VRAM overflow") {
-                    updateTranscriptionReceiveStatus(data);
-                    showNotification_Error("Transcription receive disabled due to VRAM overflow");
-                }
+            // ============================================================================
+            // 認証エラー (AUTH_*)
+            // ============================================================================
+            case "AUTH_DEEPL_LENGTH":
+                updateDeepLAuthKey(data);
+                showNotification_Error(t("common_error.deepl_auth_key_invalid_length"), { category_id: error_code });
+                return;
+            case "AUTH_DEEPL_FAILED":
+                updateDeepLAuthKey(data);
+                showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"), { category_id: error_code });
+                return;
+            case "AUTH_PLAMO_LENGTH":
+            case "AUTH_PLAMO_FAILED":
+                updatePlamoAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "AUTH_GEMINI_LENGTH":
+            case "AUTH_GEMINI_FAILED":
+                updateGeminiAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "AUTH_OPENAI_INVALID":
+            case "AUTH_OPENAI_FAILED":
+                updateOpenAIAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "AUTH_GROQ_INVALID":
+            case "AUTH_GROQ_FAILED":
+                updateGroqAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "AUTH_OPENROUTER_INVALID":
+            case "AUTH_OPENROUTER_FAILED":
+                updateOpenRouterAuthKey(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/run/error_translation_chat_vram_overflow":
-                if (message === "VRAM out of memory during translation of chat") showNotification_Error("VRAM out of memory during translation of chat");
+            // ============================================================================
+            // モデル選択エラー (MODEL_*)
+            // ============================================================================
+            case "MODEL_PLAMO_INVALID":
+                updateSelectedPlamoModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-            case "/run/error_translation_mic_vram_overflow":
-                if (message === "VRAM out of memory during translation of mic") showNotification_Error("VRAM out of memory during translation of mic");
+            case "MODEL_GEMINI_INVALID":
+                updateSelectedGeminiModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-            case "/run/error_translation_speaker_vram_overflow":
-                if (message === "VRAM out of memory during translation of speaker") showNotification_Error("VRAM out of memory during translation of speaker");
+            case "MODEL_OPENAI_INVALID":
+                updateSelectedOpenAIModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-            case "/run/error_transcription_mic_vram_overflow":
-                if (message === "VRAM out of memory during mic transcription") showNotification_Error("VRAM out of memory during mic transcription");
+            case "MODEL_GROQ_INVALID":
+                updateSelectedGroqModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-            case "/run/error_transcription_speaker_vram_overflow":
-                if (message === "VRAM out of memory during speaker transcription") showNotification_Error("VRAM out of memory during speaker transcription");
+            case "MODEL_OPENROUTER_INVALID":
+                updateSelectedOpenRouterModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-
-            case "/set/data/deepl_auth_key":
-                if (message === "DeepL auth key length is not correct") {
-                    updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_invalid_length"), { category_id: "deepl_auth_key" });
-                } else if (message === "Authentication failure of deepL auth key") {
-                    updateDeepLAuthKey(data);
-                    showNotification_Error(t("common_error.deepl_auth_key_failed_authentication"), { category_id: "deepl_auth_key" });
-                } else { // Exception
-                    updateDeepLAuthKey(data);
-                    showNotification_Error(message, { category_id: "deepl_auth_key" });
-                }
+            case "MODEL_LMSTUDIO_INVALID":
+                updateSelectedLMStudioModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
-
-            case "/set/data/plamo_auth_key":
-                if (message === "Plamo auth key length is not correct") {
-                    updatePlamoAuthKey(data);
-                    showNotification_Error(message, { category_id: "plamo_auth_key" });
-                } else if (message === "Authentication failure of plamo auth key") {
-                    updatePlamoAuthKey(data);
-                    showNotification_Error(message, { category_id: "plamo_auth_key" });
-                } else {
-                    updatePlamoAuthKey(data);
-                    showNotification_Error(message, { category_id: "plamo_auth_key" });
-                }
+            case "MODEL_OLLAMA_INVALID":
+                updateSelectedOllamaModel(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/set/data/selected_plamo_model":
-                if (message === "Plamo model is not valid") {
-                    updateSelectedPlamoModel(data);
-                    showNotification_Error(message, { category_id: "selected_plamo_model" });
-                } else {
-                    updateSelectedPlamoModel(data);
-                    showNotification_Error(message, { category_id: "selected_plamo_model" });
-                }
+            // ============================================================================
+            // 接続エラー (CONNECTION_*)
+            // ============================================================================
+            case "CONNECTION_LMSTUDIO_FAILED":
+                updateIsLMStudioConnected(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "CONNECTION_OLLAMA_FAILED":
+                updateIsOllamaConnected(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "CONNECTION_LMSTUDIO_URL_INVALID":
+                updateLMStudioURL(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/set/data/gemini_auth_key":
-                if (message === "Gemini auth key length is not correct") {
-                    updateGeminiAuthKey(data);
-                    showNotification_Error(message, { category_id: "gemini_auth_key" });
-                } else if (message === "Authentication failure of gemini auth key") {
-                    updateGeminiAuthKey(data);
-                    showNotification_Error(message, { category_id: "gemini_auth_key" });
-                } else {
-                    updateGeminiAuthKey(data);
-                    showNotification_Error(message, { category_id: "gemini_auth_key" });
-                }
+            // ============================================================================
+            // WebSocketエラー (WEBSOCKET_*)
+            // ============================================================================
+            case "WEBSOCKET_HOST_INVALID":
+                updateWebsocketHost(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "WEBSOCKET_PORT_UNAVAILABLE":
+                updateWebsocketPort(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "WEBSOCKET_SERVER_UNAVAILABLE":
+                updateEnableWebsocket(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/set/data/selected_gemini_model":
-                if (message === "Gemini model is not valid") {
-                    updateSelectedGeminiModel(data);
-                    showNotification_Error(message, { category_id: "selected_gemini_model" });
-                } else {
-                    updateSelectedGeminiModel(data);
-                    showNotification_Error(message, { category_id: "selected_gemini_model" });
-                }
+            // ============================================================================
+            // VRC連携エラー (VRC_*)
+            // ============================================================================
+            case "VRC_MIC_MUTE_SYNC_OSC_DISABLED":
+                updateEnableVrcMicMuteSync(data);
+                showNotification_Error(message, { category_id: error_code });
                 return;
 
-            case "/set/data/openai_auth_key":
-                if (message === "OpenAI auth key is not valid") {
-                    updateOpenAIAuthKey(data);
-                    showNotification_Error(message, { category_id: "openai_auth_key" });
-                } else if (message === "Authentication failure of OpenAI auth key") {
-                    updateOpenAIAuthKey(data);
-                    showNotification_Error(message, { category_id: "openai_auth_key" });
-                } else {
-                    updateOpenAIAuthKey(data);
-                    showNotification_Error(message, { category_id: "openai_auth_key" });
-                }
-                return;
-
-            case "/set/data/selected_openai_model":
-                if (message === "OpenAI model is not valid") {
-                    updateSelectedOpenAIModel(data);
-                    showNotification_Error(message, { category_id: "selected_openai_model" });
-                } else {
-                    updateSelectedOpenAIModel(data);
-                    showNotification_Error(message, { category_id: "selected_openai_model" });
-                }
-                return;
-
-            case "/set/data/groq_auth_key":
-                if (message === "Groq auth key is not valid") {
-                    updateGroqAuthKey(data);
-                    showNotification_Error(message, { category_id: "groq_auth_key" });
-                } else if (message === "Authentication failure of Groq auth key") {
-                    updateGroqAuthKey(data);
-                    showNotification_Error(message, { category_id: "groq_auth_key" });
-                } else {
-                    updateGroqAuthKey(data);
-                    showNotification_Error(message, { category_id: "groq_auth_key" });
-                }
-                return;
-
-            case "/set/data/selected_groq_model":
-                if (message === "Groq model is not valid") {
-                    updateSelectedGroqModel(data);
-                    showNotification_Error(message, { category_id: "selected_groq_model" });
-                } else {
-                    updateSelectedGroqModel(data);
-                    showNotification_Error(message, { category_id: "selected_groq_model" });
-                }
-                return;
-
-            case "/set/data/openrouter_auth_key":
-                if (message === "OpenRouter auth key is not valid") {
-                    updateOpenRouterAuthKey(data);
-                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
-                } else if (message === "Authentication failure of OpenRouter auth key") {
-                    updateOpenRouterAuthKey(data);
-                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
-                } else {
-                    updateOpenRouterAuthKey(data);
-                    showNotification_Error(message, { category_id: "openrouter_auth_key" });
-                }
-                return;
-
-            case "/set/data/selected_openrouter_model":
-                if (message === "OpenRouter model is not valid") {
-                    updateSelectedOpenRouterModel(data);
-                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
-                } else {
-                    updateSelectedOpenRouterModel(data);
-                    showNotification_Error(message, { category_id: "selected_openrouter_model" });
-                }
-                return;
-
-            case "/set/data/lmstudio_url":
-                if (message === "LMStudio URL is not valid") {
-                    updateLMStudioURL(data);
-                    showNotification_Error(message, { category_id: "lmstudio_url" });
-                } else {
-                    updateLMStudioURL(data);
-                    showNotification_Error(message, { category_id: "lmstudio_url" });
-                }
-                return;
-
-            case "/set/data/selected_lmstudio_model":
-                if (message === "LMStudio model is not valid") {
-                    updateSelectedLMStudioModel(data);
-                    showNotification_Error(message, { category_id: "selected_lmstudio_model" });
-                } else {
-                    updateSelectedLMStudioModel(data);
-                    showNotification_Error(message, { category_id: "selected_lmstudio_model" });
-                }
-                return;
-
-            case "/set/data/selected_ollama_model":
-                if (message === "ollama model is not valid") {
-                    updateSelectedOllamaModel(data);
-                    showNotification_Error(message, { category_id: "selected_ollama_model" });
-                } else {
-                    updateSelectedOllamaModel(data);
-                    showNotification_Error(message, { category_id: "selected_ollama_model" });
-                }
-                return;
-
-            case "/set/data/mic_record_timeout":
-                if (message === "Mic record timeout value is out of range") {
-                    updateMicRecordTimeout(data);
-                    showNotification_Error(t("common_error.invalid_value_mic_record_timeout", {
-                        mic_phrase_timeout_label: t("config_page.transcription.mic_phrase_timeout.label")
-                    }));
-                }
-                return;
-            case "/set/data/mic_phrase_timeout":
-                if (message === "Mic phrase timeout value is out of range") {
-                    updateMicPhraseTimeout(data);
-                    showNotification_Error(t("common_error.invalid_value_mic_phrase_timeout", {
-                        mic_record_timeout_label: t("config_page.transcription.mic_record_timeout.label")
-                    }));
-                }
-                return;
-            case "/set/data/mic_max_phrases":
-                if (message === "Mic max phrases value is out of range") {
-                    updateMicMaxWords(data);
-                    showNotification_Error(t("common_error.invalid_value_mic_max_phrase"));
-                }
-                return;
-
-
-            case "/set/data/speaker_record_timeout":
-                if (message === "Speaker record timeout value is out of range") {
-                    updateSpeakerRecordTimeout(data);
-                    showNotification_Error(t("common_error.invalid_value_speaker_record_timeout", {
-                        speaker_phrase_timeout_label: t("config_page.transcription.speaker_phrase_timeout.label")
-                    }));
-                }
-                return;
-            case "/set/data/speaker_phrase_timeout":
-                if (message === "Speaker phrase timeout value is out of range") {
-                    updateSpeakerPhraseTimeout(data);
-                    showNotification_Error(t("common_error.invalid_value_speaker_phrase_timeout", {
-                        speaker_record_timeout_label: t("config_page.transcription.speaker_record_timeout.label")
-                    }));
-                }
-                return;
-            case "/set/data/speaker_max_phrases":
-                if (message === "Speaker max phrases value is out of range") {
-                    updateSpeakerMaxWords(data);
-                    showNotification_Error(t("common_error.invalid_value_speaker_max_phrase"));
-                }
-                return;
-
-            case "/set/enable/vrc_mic_mute_sync":
-                // Normally, this path shouldn't happen because VRC Mic Mute Sync is disabled and can't be turned on from the UI.
-                if (message === "Cannot enable VRC mic mute sync while OSC query is disabled") {
-                    updateEnableVrcMicMuteSync(data);
-                    showNotification_Error("Cannot enable VRC Mic Mute Sync while OSC query is disabled");
-                }
-                return;
-
-
-            // Advanced Settings, error messages are set by Backend (EN only)
-            case "/set/data/osc_ip_address":
-                if (message === "Invalid IP address") {
-                    updateOscIpAddress(data);
-                    showNotification_Error(message);
-                } else if (message === "Cannot set IP address") {
-                    updateOscIpAddress(data);
-                    showNotification_Error(message);
-                } // else? (Backend will send the message "Cannot set IP address" when throw Exception)
-                return;
-
-
-            case "/set/enable/websocket_server":
-                if (message === "WebSocket server host or port is not available") {
-                    updateEnableWebsocket(data);
-                    showNotification_Error(message);
-                }
-                return;
-
-            case "/set/data/websocket_host":
-                if (message === "Invalid IP address") {
-                    updateWebsocketHost(data);
-                    showNotification_Error(message);
-                } else if (message === "WebSocket server host is not available") {
-                    updateWebsocketHost(data);
-                    showNotification_Error(message);
-                }
-                return;
-
-            case "/set/data/websocket_port":
-                if (message === "WebSocket server port is not available") {
-                    updateWebsocketPort(data);
-                    showNotification_Error(message);
-                }
-                return;
-
-            case "/run/lmstudio_connection":
-                if (message === "Cannot connect to LMStudio server") {
-                    updateIsLMStudioConnected(data);
-                    showNotification_Error(message, { category_id: "lmstudio_connection" });
-                } else {
-                    updateIsLMStudioConnected(data);
-                    showNotification_Error(message, { category_id: "lmstudio_connection" });
-                }
-                return;
-
-            case "/run/ollama_connection":
-                if (message === "Cannot connect to ollama server") {
-                    updateIsOllamaConnected(data);
-                    showNotification_Error(message, { category_id: "ollama_connection" });
-                } else {
-                    updateIsOllamaConnected(data);
-                    showNotification_Error(message, { category_id: "ollama_connection" });
-                }
+            // ============================================================================
+            // 汎用エラー (GENERAL_*)
+            // ============================================================================
+            case "GENERAL_EXCEPTION":
+            case "GENERAL_UNKNOWN":
+                console.error(`Error occurred at endpoint: ${endpoint}\nerror_code: ${error_code}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`);
+                showNotification_Error(message, { category_id: error_code });
+                showNotification_Error(`An error occurred. Please contact the developers and restart VRCT. Error: ${error_code} - ${message || JSON.stringify(result)}`, { hide_duration: null, category_id: error_code });
                 return;
 
             default:
-                console.error(`Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`);
-                showNotification_Error(
-                    `An error occurred. Please contact the developers and restart VRCT. Error: Invalid endpoint or message: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`, { hide_duration: null }
-                );
+                console.error(`Invalid error_code or message: ${error_code}\nendpoint: ${endpoint}\nmessage: ${message}\nresult: ${JSON.stringify(result)}`);
+                showNotification_Error(`An error occurred. Please contact the developers and restart VRCT. Error: ${error_code} - ${message || JSON.stringify(result)}`, { hide_duration: null, category_id: error_code });
                 return;
         }
 

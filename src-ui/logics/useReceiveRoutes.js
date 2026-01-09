@@ -175,6 +175,7 @@ export const useReceiveRoutes = () => {
 
             case 400:
                 errorHandling_Backend({
+                    error_code: parsed_data.result.error_code,
                     message: parsed_data.result.message,
                     data: parsed_data.result.data,
                     endpoint: parsed_data.endpoint,
