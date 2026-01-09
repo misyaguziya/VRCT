@@ -36,7 +36,7 @@ VRCT の **匿名な使用状況** を取得し、プロダクトの改善に役
 
 | 項目 | 方針 |
 |------|------|
-| **デフォルト状態** | 有効（`telemetry_enabled = true`） |
+| **デフォルト状態** | 有効（`ENABLE_TELEMETRY = true`） |
 | **ユーザー制御** | 設定から任意で無効化可能 |
 | **無効時の動作** | 一切の通信・スレッド・処理を停止 |
 | **送信内容** | イベント名と固定属性のみ |
@@ -164,9 +164,9 @@ Timeline:
 ```
 1. アプリ起動
    ↓
-2. config.json から telemetry_enabled 読込
+2. config.json から ENABLE_TELEMETRY 読込
    ↓
-3. telemetry.init(enabled=config.telemetry_enabled)
+3. telemetry.init(enabled=config.ENABLE_TELEMETRY)
    ├─ enabled=True の場合
    │  ├─ Aptabase SDK 初期化
    │  ├─ heartbeat スレッド開始
@@ -180,7 +180,7 @@ Timeline:
 ```
 操作発生（翻訳/ASR/テキスト入力）
    ↓
-telemetry_enabled チェック
+ENABLE_TELEMETRY チェック
    ├─ False → 何もしない
    └─ True
       ↓
@@ -217,7 +217,7 @@ telemetry.init(enabled=True)
 ```
 config.json 更新
    ↓
-telemetry_enabled: false に変更
+ENABLE_TELEMETRY: false に変更
    ↓
 telemetry.shutdown() 
    ├─ heartbeat スレッド停止
@@ -383,7 +383,7 @@ class Model:
         
         # Telemetry 初期化
         try:
-            telemetry.init(enabled=config.TELEMETRY_ENABLED)
+            telemetry.init(enabled=config.ENABLE_TELEMETRY)
         except Exception:
             errorLogging()
     
@@ -1073,11 +1073,11 @@ def test_full_flow():
 
 ```python
 # config.py 修正
-TELEMETRY_ENABLED = True  # デフォルト有効
+ENABLE_TELEMETRY = True  # デフォルト有効
 
 # config.json への保存
 {
-    "telemetry_enabled": true
+    "ENABLE_TELEMETRY": true
 }
 ```
 
@@ -1122,7 +1122,7 @@ UI に以下を表示：
 | 1 | `__init__.py`, `state.py` 作成 | 高 |
 | 2 | `client.py`, `core.py` 作成 | 高 |
 | 3 | `heartbeat.py` 作成・テスト | 高 |
-| 4 | `config.py` に `telemetry_enabled` 追加 | 高 |
+| 4 | `config.py` に `ENABLE_TELEMETRY` 追加 | 高 |
 | 5 | `controller.py` に API 呼び出し追加 | 高 |
 | 6 | `mainloop.py` に init/shutdown 追加 | 高 |
 | 7 | ユニット・統合テスト | 高 |
