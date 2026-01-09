@@ -264,6 +264,9 @@ config_page:
         right_hand: "오른손"
         overlay_show_only_translated_messages:
             label: "번역된 메시지만 표시"
+        voice_typing_mode:
+            label:
+            desc:
 
     others:
         section_label_sounds: "사운드"

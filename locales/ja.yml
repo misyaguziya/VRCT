@@ -264,6 +264,9 @@ config_page:
         right_hand: "右手"
         overlay_show_only_translated_messages:
             label: "翻訳後のメッセージのみ表示する"
+        voice_typing_mode:
+            label: "音声タイピングモード"
+            desc: "文字起こしされたテキストを、アクティブな入力欄へと自動的に貼り付けます。\n※Windows標準のクリップボード機能を利用しています。"
 
     others:
         section_label_sounds: "サウンド"
