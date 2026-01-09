@@ -1,6 +1,7 @@
 import sys
 import time
 import os
+import threading
 from subprocess import Popen, PIPE
 from psutil import process_iter
 import openvr
@@ -138,9 +139,35 @@ def paste_via_pyautogui(countdown: int = 0) -> bool:
 
 class Clipboard:
     def __init__(self):
-        if not checkSteamvrRunning():
-            self.app_name = None
-        else:
+        self.is_enabled = True
+        self._vr_monitor_thread = None
+        self._stop_monitoring = False
+        self.app_name = None
+        
+        self._initialize()
+
+    def _initialize(self):
+        """Initialize clipboard by starting VR monitor thread."""
+        self._stop_monitoring = False
+        self._vr_monitor_thread = threading.Thread(target=self._monitor_steamvr, daemon=True)
+        self._vr_monitor_thread.start()
+        self.app_name = None
+        printLog("Clipboard initialized. Waiting for SteamVR.")
+
+    def _monitor_steamvr(self):
+        """Monitor SteamVR startup in background thread."""
+        printLog("Clipboard: VR monitor thread started.")
+        while not self._stop_monitoring:
+            if checkSteamvrRunning():
+                printLog("Clipboard: SteamVR detected. Setting up app info.")
+                self._setup_vr_app_name()
+                break
+            time.sleep(10)
+        printLog("Clipboard: VR monitor thread ended.")
+
+    def _setup_vr_app_name(self):
+        """Setup VR application name from OpenVR."""
+        try:
             openvr.init(openvr.VRApplication_Background)
             apps = openvr.VRApplications()
 
@@ -161,7 +188,24 @@ class Clipboard:
                     self.app_name = name
                     break
             openvr.shutdown()
-        printLog(f"Clipboard initialized. SteamVR App Name: {self.app_name}")
+        except Exception as e:
+            printLog(f"Clipboard: Error setting up VR app name: {e}")
+            self.app_name = None
+
+    def enable(self):
+        """Enable clipboard functionality. Reinitialize the class."""
+        printLog("Clipboard: Enabling clipboard functionality.")
+        self.is_enabled = True
+        self._initialize()
+
+    def disable(self):
+        """Disable clipboard functionality. Stop VR monitoring."""
+        printLog("Clipboard: Disabling clipboard functionality.")
+        self.is_enabled = False
+        self._stop_monitoring = True
+        if self._vr_monitor_thread is not None and self._vr_monitor_thread.is_alive():
+            self._vr_monitor_thread.join(timeout=1)
+            self._vr_monitor_thread = None
 
     def copy(self, message: str) -> bool:
         """Copy `message` to clipboard.
@@ -172,6 +216,8 @@ class Clipboard:
         Returns:
             True if copy succeeded, False otherwise.
         """
+        if not self.is_enabled:
+            return False
         return copy_to_clipboard(message)
 
     def paste(self, window_name: str|None = None, countdown: int = 0) -> bool:
@@ -184,6 +230,8 @@ class Clipboard:
         Returns:
             True if paste command was sent, False otherwise.
         """
+        if not self.is_enabled:
+            return False
 
         window_name = window_name if window_name is not None else self.app_name
 
