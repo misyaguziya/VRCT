@@ -57,7 +57,9 @@ class Translator:
         self.groq_client: Optional[GroqClient] = None
         self.openrouter_client: Optional[OpenRouterClient] = None
         self.lmstudio_client: LMStudioClient[LMStudioClient] = None
+        self.lmstudio_connected: bool = False
         self.ollama_client: OllamaClient[OllamaClient] = None
+        self.ollama_connected: bool = False
         self.ctranslate2_translator: Any = None
         self.ctranslate2_tokenizer: Any = None
         self.is_loaded_ctranslate2_model: bool = False
@@ -123,6 +125,7 @@ class Translator:
         if self.gemini_client.setAuthKey(auth_key):
             return True
         else:
+            self.gemini_client = None
             return False
 
     def getGeminiModelList(self) -> list[str]:
@@ -253,12 +256,9 @@ class Translator:
     def getLMStudioConnected(self) -> bool:
         """Get LM Studio connection status.
 
-        Returns True if connected, False otherwise.
+        Returns True if connected and verified, False otherwise.
         """
-        if self.lmstudio_client is None:
-            return False
-        else:
-            return True
+        return self.lmstudio_connected
 
     def setLMStudioClientURL(self, base_url: str | None = None, root_path: str = None) -> bool:
         """Authenticate LM Studio with the provided base URL.
@@ -269,6 +269,9 @@ class Translator:
         result = self.lmstudio_client.setBaseURL(base_url)
         if result is False:
             self.lmstudio_client = None
+            self.lmstudio_connected = False
+        else:
+            self.lmstudio_connected = True
         return result
 
     def getLMStudioModelList(self) -> list[str]:
@@ -294,12 +297,9 @@ class Translator:
     def getOllamaConnected(self) -> bool:
         """Get Ollama connection status.
 
-        Returns True if connected, False otherwise.
+        Returns True if connected and verified, False otherwise.
         """
-        if self.ollama_client is None:
-            return False
-        else:
-            return True
+        return self.ollama_connected
 
     def checkOllamaClient(self, root_path: str = None) -> bool:
         """Check if Ollama client is available.
@@ -310,6 +310,9 @@ class Translator:
         result = self.ollama_client.authenticationCheck()
         if result is False:
             self.ollama_client = None
+            self.ollama_connected = False
+        else:
+            self.ollama_connected = True
         return result
 
     def getOllamaModelList(self, root_path: str = None) -> bool:
