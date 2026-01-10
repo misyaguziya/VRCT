@@ -125,6 +125,18 @@ class Main:
 - `/set/data/websocket_host`: サーバーホスト設定
 - `/set/data/websocket_port`: サーバーポート設定
 
+### クリップボード機能
+
+- `/get/data/clipboard`: クリップボード機能の状態取得（`config.ENABLE_CLIPBOARD` の値）
+- `/set/enable/clipboard`: `config.ENABLE_CLIPBOARD` を True に設定
+- `/set/disable/clipboard`: `config.ENABLE_CLIPBOARD` を False に設定
+
+### テレメトリ機能
+
+- `/get/data/telemetry`: テレメトリの状態取得
+- `/set/enable/telemetry`: テレメトリの有効化（Aptabase初期化）
+- `/set/disable/telemetry`: テレメトリの無効化（シャットダウン）
+
 ### システム管理
 
 - `/run/update_software`: ソフトウェアアップデート
