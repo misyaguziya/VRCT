@@ -189,6 +189,24 @@ def WEBSOCKET_PORT(self) -> int
 ```
 - WebSocketサーバーポート
 
+### クリップボード設定
+
+```python
+@property
+def ENABLE_CLIPBOARD(self) -> bool
+```
+- クリップボード機能（コピー・ペースト）の有効・無効
+
+### テレメトリ設定
+
+```python
+@property
+def ENABLE_TELEMETRY(self) -> bool
+```
+- テレメトリ（Aptabase）の有効・無効
+- デフォルト: True（有効）
+- ユーザーは設定から任意で無効化可能
+
 ### 計算デバイス設定
 
 ```python
@@ -340,6 +358,12 @@ config.saveConfig("ENABLE_TRANSLATION", True, immediate_save=True)
 - OSC ポート: 9000
 - WebSocket ホスト: "127.0.0.1"
 - WebSocket ポート: 8765
+
+### クリップボード設定
+- クリップボード機能: 無効
+
+### テレメトリ設定
+- テレメトリ: **有効（デフォルト）**
 
 ## 依存関係
 
