@@ -4,6 +4,25 @@
 
 VRCTアプリケーションの中核となるModelクラスを定義するモジュールです。音声認識、翻訳、VRオーバーレイ、OSC通信、WebSocketサーバーなどの主要機能を統合管理し、システム全体の動作を制御します。
 
+## 最近の更新 (2026-01-11)
+
+### クリップボード機能
+
+- `clipboard` インスタンスを Model 内に保持
+- `setCopyToClipboard(text: str) -> bool`: 翻訳結果をクリップボードにコピー
+- `setPasteFromClipboard() -> bool`: Ctrl+V でペースト実行（VRChat ウィンドウ自動フォーカス）
+- OpenVR による VRChat アプリ名の自動検出
+
+### テレメトリ機能
+
+- `telemetryInit(enabled: bool, app_version: str)`: Aptabase を用いたテレメトリ初期化
+- `telemetryShutdown()`: テレメトリのシャットダウン（app_closed イベント送信）
+- `telemetryTouchActivity()`: ユーザーアクティビティの記録
+- `telemetry.*()`: イベント送信メソッド群
+- デフォルト有効、ユーザー制御可能な設計
+
+### その他の更新
+
 ## 最近の更新 (2025-10-20)
 
 ### VRAMエラー検出とフォールバック
@@ -313,6 +332,30 @@ model.startWebSocketServer("127.0.0.1", 8765)
 # メッセージ送信
 message = {"type": "translation", "text": "Hello", "translation": "こんにちは"}
 success = model.websocketSendMessage(message)
+```
+
+### クリップボード機能の使用
+
+```python
+# テキストをクリップボードにコピー
+text = "翻訳結果"
+success = model.setCopyToClipboard(text)
+
+# ペースト実行（VRChat ウィンドウに自動フォーカス）
+success = model.setPasteFromClipboard()
+```
+
+### テレメトリの初期化・シャットダウン
+
+```python
+# テレメトリ初期化（アプリ起動時）
+model.telemetryInit(enabled=config.ENABLE_TELEMETRY, app_version=config.VERSION)
+
+# テレメトリシャットダウン（アプリ終了時）
+model.telemetryShutdown()
+
+# アクティビティ記録
+model.telemetryTouchActivity()
 ```
 
 ## 依存関係

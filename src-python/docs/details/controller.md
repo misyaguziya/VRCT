@@ -247,12 +247,39 @@ setDisableWebSocketServer(data) -> dict
 
 - WebSocketサーバーの制御
 
+### クリップボード制御
+
+```python
+getClipboard() -> dict
+setEnableClipboard() -> dict
+setDisableClipboard() -> dict
+```
+
+- クリップボード機能（コピー・ペースト）の状態取得・設定変更
+- `config.ENABLE_CLIPBOARD` フラグを変更（True/False）
+- 取得結果は `{"status": 200, "result": bool}`
+- **注意**: `model.clipboard.enable()/disable()` は呼び出されません
+
+### テレメトリ制御
+
+```python
+getTelemetry() -> dict
+setEnableTelemetry() -> dict
+setDisableTelemetry() -> dict
+```
+
+- テレメトリ（Aptabase）の有効化・無効化・状態取得
+- 有効化時は `telemetryInit()` を呼び出し
+- 無効化時は `telemetryShutdown()` を呼び出し
+
+### WebSocket接続設定
+
 ```python
 setWebSocketHost(data) -> dict
 setWebSocketPort(data) -> dict
 ```
 
-- WebSocket接続設定
+- WebSocketホスト・ポートの設定
 
 ### システム管理
 
