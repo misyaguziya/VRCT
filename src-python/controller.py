@@ -3180,9 +3180,6 @@ class Controller:
         # Init Translation Engine Status (with parallel processing)
         printLog("Init Translation Engine Status")
 
-        # バックグラウンドチェック対象エンジン（LMStudio/Ollama）
-        background_check_engines = {"LMStudio", "Ollama"}
-
         def check_translation_engine(engine: str) -> tuple:
             """翻訳エンジンのステータスをチェック（並列実行用）"""
             status = False
@@ -3254,11 +3251,18 @@ class Controller:
                             else:
                                 auth_key_invalid = True
                     case "LMStudio":
-                        # バックグラウンドチェックにスキップ
-                        status = False
+                        if config.LMSTUDIO_URL is not None:
+                            if model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL) is True:
+                                model_list = model.getTranslatorLMStudioModelList()
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_LMSTUDIO_MODEL if config.SELECTED_LMSTUDIO_MODEL in model_list else model_list[0]
+                                    status = True
                     case "Ollama":
-                        # バックグラウンドチェックにスキップ
-                        status = False
+                        if model.authenticationTranslatorOllama() is True:
+                            model_list = model.getTranslatorOllamaModelList()
+                            if len(model_list) > 0:
+                                selected_model = config.SELECTED_OLLAMA_MODEL if config.SELECTED_OLLAMA_MODEL in model_list else model_list[0]
+                                status = True
                     case _:
                         status = connected_network is True
             except Exception as e:
@@ -3268,49 +3272,8 @@ class Controller:
 
             return engine, status, auth_key_invalid, model_list, selected_model
 
-        def check_local_server_engine_background(engine: str):
-            """ローカルサーバー系エンジンをバックグラウンドでチェック"""
-            try:
-                printLog(f"[Background] Start check {engine}")
-                status = False
-                model_list = None
-                selected_model = None
-
-                if engine == "LMStudio":
-                    if config.LMSTUDIO_URL is not None:
-                        if model.authenticationTranslatorLMStudio(base_url=config.LMSTUDIO_URL) is True:
-                            model_list = model.getTranslatorLMStudioModelList()
-                            if len(model_list) > 0:
-                                selected_model = config.SELECTED_LMSTUDIO_MODEL if config.SELECTED_LMSTUDIO_MODEL in model_list else model_list[0]
-                                config.SELECTABLE_LMSTUDIO_MODEL_LIST = model_list
-                                config.SELECTED_LMSTUDIO_MODEL = selected_model
-                                model.setTranslatorLMStudioModel(selected_model)
-                                model.updateTranslatorLMStudioClient()
-                                status = True
-                elif engine == "Ollama":
-                    if model.authenticationTranslatorOllama() is True:
-                        model_list = model.getTranslatorOllamaModelList()
-                        if len(model_list) > 0:
-                            selected_model = config.SELECTED_OLLAMA_MODEL if config.SELECTED_OLLAMA_MODEL in model_list else model_list[0]
-                            config.SELECTABLE_OLLAMA_MODEL_LIST = model_list
-                            config.SELECTED_OLLAMA_MODEL = selected_model
-                            model.setTranslatorOllamaModel(selected_model)
-                            model.updateTranslatorOllamaClient()
-                            status = True
-
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = status
-                printLog(f"[Background] {engine} check completed: {status}")
-
-                # 更新通知（もしrun_mappingがあれば）
-                if status:
-                    self.updateTranslationEngineAndEngineList()
-            except Exception as e:
-                printLog(f"[Background] Error checking {engine}: {str(e)}")
-                errorLogging()
-
-        # 並列実行（バックグラウンドチェック対象を除外）
         engine_results = {}
-        engines_to_check = [e for e in config.SELECTABLE_TRANSLATION_ENGINE_LIST if e not in background_check_engines]
+        engines_to_check = list(config.SELECTABLE_TRANSLATION_ENGINE_LIST)
 
         with ThreadPoolExecutor(max_workers=4) as executor:
             future_to_engine = {executor.submit(check_translation_engine, engine): engine 
@@ -3319,17 +3282,6 @@ class Controller:
             for future in as_completed(future_to_engine):
                 engine, status, auth_key_invalid, model_list, selected_model = future.result()
                 engine_results[engine] = (status, auth_key_invalid, model_list, selected_model)
-
-        # バックグラウンドチェック対象エンジンは初期値Falseで即座に設定
-        for engine in background_check_engines:
-            if engine in config.SELECTABLE_TRANSLATION_ENGINE_LIST:
-                config.SELECTABLE_TRANSLATION_ENGINE_STATUS[engine] = False
-                printLog(f"Start check {engine}")
-                printLog(f"Engine '{engine}' deferred to background check")
-                # バックグラウンドスレッドで実行
-                bg_thread = Thread(target=check_local_server_engine_background, args=(engine,))
-                bg_thread.daemon = True
-                bg_thread.start()
 
         # 結果を順番に適用（メインスレッドで実行）
         for engine in engines_to_check:
@@ -3352,6 +3304,13 @@ class Controller:
                 printLog(f"{engine} auth key is invalid")
             elif status:
                 printLog(f"{engine} is valid/available")
+
+            if engine == "LMStudio" and not status:
+                config.SELECTABLE_LMSTUDIO_MODEL_LIST = []
+                config.SELECTED_LMSTUDIO_MODEL = None
+            if engine == "Ollama" and not status:
+                config.SELECTABLE_OLLAMA_MODEL_LIST = []
+                config.SELECTED_OLLAMA_MODEL = None
 
             # モデルリストと選択モデルの設定
             if model_list is not None and status:
@@ -3381,6 +3340,16 @@ class Controller:
                         config.SELECTED_OPENROUTER_MODEL = selected_model
                         model.setTranslatorOpenRouterModel(selected_model)
                         model.updateTranslatorOpenRouterClient()
+                    case "LMStudio":
+                        config.SELECTABLE_LMSTUDIO_MODEL_LIST = model_list
+                        config.SELECTED_LMSTUDIO_MODEL = selected_model
+                        model.setTranslatorLMStudioModel(selected_model)
+                        model.updateTranslatorLMStudioClient()
+                    case "Ollama":
+                        config.SELECTABLE_OLLAMA_MODEL_LIST = model_list
+                        config.SELECTED_OLLAMA_MODEL = selected_model
+                        model.setTranslatorOllamaModel(selected_model)
+                        model.updateTranslatorOllamaClient()
 
             printLog(f"{engine} check completed")
 
