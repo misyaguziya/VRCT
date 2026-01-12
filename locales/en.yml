@@ -318,8 +318,8 @@ config_page:
         convert_message_to_hiragana:
             label: "Show Hiragana"
         telemetry:
-            label: "Support our development"
-            desc: "Keeping this on (sending usage data) makes our developers smile, knowing that our software is reaching people like you. \n* Data is anonymous and contains no personal info. \n* Every bit of data is put toward making the product better."
+            label: "Support Our Development"
+            desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
 
     hotkeys:
         toggle_vrct_visibility:
