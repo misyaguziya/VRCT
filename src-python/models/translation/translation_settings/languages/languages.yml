@@ -74,8 +74,8 @@ DeepL_API:
   target:
     Japanese: ja
     English: en
-    English (American): en-US
-    English (British): en-GB
+    English American: en-US
+    English British: en-GB
     Bulgarian: bg
     Czech: cs
     Danish: da
@@ -94,8 +94,8 @@ DeepL_API:
     Norwegian: 'no'
     Dutch: nl
     Polish: pl
-    Portuguese (Brazilian): pt-BR
-    Portuguese (European): pt-PT
+    Portuguese Brazilian: pt-BR
+    Portuguese European: pt-PT
     Romanian: ro
     Russian: ru
     Slovak: sk
