@@ -1,5 +1,6 @@
 from os import path as os_path
 from os import makedirs as os_makedirs
+from os import rename as os_rename
 from requests import get as requests_get
 from typing import Callable
 import transformers
@@ -50,6 +51,19 @@ ctranslate2_weights = {
 def checkCTranslate2Weight(root: str, weight_type: str = "m2m100_418M-ct2-int8"):
     weight_directory_name = ctranslate2_weights[weight_type]["directory_name"]
     path = os_path.join(root, "weights", "ctranslate2", weight_directory_name)
+
+    # 後方互換のためファイル名を変更する
+    legacy_dirs = {
+        "m2m100_418M-ct2-int8": "m2m100_418M",
+        "m2m100_1.2B-ct2-int8": "m2m100_12b",
+    }
+
+    legacy_dir = legacy_dirs.get(weight_type, None)
+    if legacy_dir:
+        old_path = os_path.join(root, "weights", "ctranslate2", legacy_dir)
+        if os_path.isdir(old_path):
+            os_rename(old_path, path)
+
     try:
         # モデルロード可能かどうかで判定
         compute_type = getBestComputeType("cpu", 0)
