@@ -2870,10 +2870,13 @@ class Controller:
         if hasattr(self, '_ctranslate2_available_cache'):
             # 起動時のキャッシュを使用: 選択中の重みタイプのみ設定
             config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[config.CTRANSLATE2_WEIGHT_TYPE] = self._ctranslate2_available_cache
-        else:
-            # 通常時は全重みタイプをチェック
-            for weight_type in config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT.keys():
-                config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[weight_type] = model.checkTranslatorCTranslate2ModelWeight(weight_type)
+        
+        # すべての重みタイプをチェック（キャッシュされていないものだけ）
+        for weight_type in config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT.keys():
+            # 選択中のウェイトはキャッシュで設定済みなのでスキップ
+            if hasattr(self, '_ctranslate2_available_cache') and weight_type == config.CTRANSLATE2_WEIGHT_TYPE:
+                continue
+            config.SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT[weight_type] = model.checkTranslatorCTranslate2ModelWeight(weight_type)
 
     def updateTranslationEngineAndEngineList(self):
         engines = config.SELECTED_TRANSLATION_ENGINES
@@ -2899,10 +2902,13 @@ class Controller:
         if hasattr(self, '_whisper_available_cache'):
             # 起動時のキャッシュを使用: 選択中の重みタイプのみ設定
             config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[config.WHISPER_WEIGHT_TYPE] = self._whisper_available_cache
-        else:
-            # 通常時は全重みタイプをチェック
-            for weight_type in config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT.keys():
-                config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
+        
+        # すべての重みタイプをチェック（キャッシュされていないものだけ）
+        for weight_type in config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT.keys():
+            # 選択中のウェイトはキャッシュで設定済みなのでスキップ
+            if hasattr(self, '_whisper_available_cache') and weight_type == config.WHISPER_WEIGHT_TYPE:
+                continue
+            config.SELECTABLE_WHISPER_WEIGHT_TYPE_DICT[weight_type] = model.checkTranscriptionWhisperModelWeight(weight_type)
 
     def updateTranscriptionEngine(self):
         weight_type = config.WHISPER_WEIGHT_TYPE
@@ -3134,6 +3140,9 @@ class Controller:
         # Download weights
         if connected_network is True:
             printLog("Download CTranslate2 Model Weight")
+            # 後方互換用
+            model.backwardCompatibleTranslatorCTranslate2ModelRenameWeightsDir()
+
             weight_type = config.CTRANSLATE2_WEIGHT_TYPE
             th_download_ctranslate2 = None
             if model.checkTranslatorCTranslate2ModelWeight(weight_type) is False:

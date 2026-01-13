@@ -25,7 +25,7 @@ from models.transcription.transcription_recorder import SelectedMicEnergyRecorde
 from models.transcription.transcription_transcriber import AudioTranscriber
 from models.translation.translation_languages import translation_lang
 from models.transcription.transcription_languages import transcription_lang
-from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer
+from models.translation.translation_utils import checkCTranslate2Weight, downloadCTranslate2Weight, downloadCTranslate2Tokenizer, backwardCompatibleRenameWeightsDir
 from models.transcription.transcription_whisper import checkWhisperWeight, downloadWhisperWeight
 from models.transliteration.transliteration_transliterator import Transliterator
 from models.overlay.overlay import Overlay
@@ -158,6 +158,9 @@ class Model:
                 # Log and continue; callers should handle missing features.
                 errorLogging()
 
+    def backwardCompatibleTranslatorCTranslate2ModelRenameWeightsDir(self):
+        return backwardCompatibleRenameWeightsDir(config.PATH_LOCAL)
+        
     def checkTranslatorCTranslate2ModelWeight(self, weight_type:str):
         return checkCTranslate2Weight(config.PATH_LOCAL, weight_type)
 
