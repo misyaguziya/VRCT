@@ -320,6 +320,7 @@ config_page:
         telemetry:
             label:
             desc:
+            aptabase_privacy_policy_label:
 
     hotkeys:
         toggle_vrct_visibility:

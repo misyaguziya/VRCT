@@ -257,6 +257,8 @@ const TelemetryContainer = () => {
     return (
         <CheckboxContainer
             label={t("config_page.others.telemetry.label")}
+            webpage_url="https://aptabase.com/legal/privacy"
+            open_webpage_label={t("config_page.others.telemetry.aptabase_privacy_policy_label")}
             desc={t("config_page.others.telemetry.desc")}
             variable={currentTelemetry}
             toggleFunction={toggleTelemetry}

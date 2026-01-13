@@ -320,6 +320,7 @@ config_page:
         telemetry:
             label: "Support Our Development"
             desc: "Sends usage data so our developers can grin and say 'Thanks for using it!' while improving the app.\n* No personal info or conversation content is ever sent."
+            aptabase_privacy_policy_label: "Aptabase Privacy Policy"
 
     hotkeys:
         toggle_vrct_visibility:
