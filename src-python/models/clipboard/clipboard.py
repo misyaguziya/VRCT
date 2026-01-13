@@ -139,7 +139,6 @@ def paste_via_pyautogui(countdown: int = 0) -> bool:
 
 class Clipboard:
     def __init__(self):
-        self.is_enabled = True
         self._vr_monitor_thread = None
         self._stop_monitoring = False
         self.app_name = None
@@ -192,47 +191,7 @@ class Clipboard:
             printLog(f"Clipboard: Error setting up VR app name: {e}")
             self.app_name = None
 
-    def enable(self):
-        """Enable clipboard functionality. Reinitialize the class."""
-        printLog("Clipboard: Enabling clipboard functionality.")
-        self.is_enabled = True
-        self._initialize()
-
-    def disable(self):
-        """Disable clipboard functionality. Stop VR monitoring."""
-        printLog("Clipboard: Disabling clipboard functionality.")
-        self.is_enabled = False
-        self._stop_monitoring = True
-        if self._vr_monitor_thread is not None and self._vr_monitor_thread.is_alive():
-            self._vr_monitor_thread.join(timeout=1)
-            self._vr_monitor_thread = None
-
-    def copy(self, message: str) -> bool:
-        """Copy `message` to clipboard.
-
-        Args:
-            message: Text to copy.
-
-        Returns:
-            True if copy succeeded, False otherwise.
-        """
-        if not self.is_enabled:
-            return False
-        return copy_to_clipboard(message)
-
-    def paste(self, window_name: str|None = None, countdown: int = 0) -> bool:
-        """Focus a window identified by `window_name`, then paste via Ctrl+V.
-
-        Args:
-            window_name: Window title substring or process name to find and focus (Windows only). Required.
-            countdown: Seconds to wait before sending paste key.
-
-        Returns:
-            True if paste command was sent, False otherwise.
-        """
-        if not self.is_enabled:
-            return False
-
+    def copy_and_paste(self, message: str, window_name: str|None = None, countdown: int = 0) -> bool:
         window_name = window_name if window_name is not None else self.app_name
 
         # If window_name is provided, attempt to focus it (Windows only).
@@ -265,11 +224,17 @@ class Clipboard:
             # small delay to allow focus to settle
             time.sleep(0.2)
 
-        # paste
-        pasted = paste_via_pyautogui(countdown)
-        return bool(pasted)
+            # copy
+            copied = copy_to_clipboard(message)
+            if not copied:
+                printLog("copy_and_paste: failed to copy to clipboard")
+                return False
+            # paste
+            pasted = paste_via_pyautogui(countdown)
+            return bool(pasted)
+        else:
+            return False
 
 if __name__ == '__main__':
     clipboard = Clipboard()
-    clipboard.copy("Sample text to copy to clipboard.")
-    clipboard.paste(window_name=None, countdown=3)
+    clipboard.copy_and_paste("Sample text to copy to clipboard.", window_name=None, countdown=3)
