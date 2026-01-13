@@ -320,6 +320,7 @@ config_page:
         telemetry:
             label: "製品の改善に協力する"
             desc: "開発者が「みんな使ってくれてるんだな～」ってにやにやしながら機能改善するための使用状況データを送信します。\n※会話内容など個人情報は一切送信しません。"
+            aptabase_privacy_policy_label: "Aptabase プライバシーポリシー"
 
     hotkeys:
         toggle_vrct_visibility:
