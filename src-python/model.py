@@ -1299,23 +1299,12 @@ class Model:
             errorLogging()
             return False
 
-    def setCopyToClipboard(self, text:str) -> bool:
+    def setCopyToClipboardAndPasteFromClipboard(self, text:str) -> bool:
         self.ensure_initialized()
         try:
             if isinstance(self.clipboard, Clipboard):
-                self.clipboard.copy(text)
+                self.clipboard.copy_and_paste(text)
                 return True
-            else:
-                return False
-        except Exception:
-            errorLogging()
-            return False
-
-    def setPasteFromClipboard(self) -> bool:
-        self.ensure_initialized()
-        try:
-            if isinstance(self.clipboard, Clipboard):
-                return self.clipboard.paste()
             else:
                 return False
         except Exception:
