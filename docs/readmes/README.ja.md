@@ -91,6 +91,12 @@ VRCTはあなたの会話を以下でサポートをします。
 - [レラ](https://github.com/soumt-r) (テクニカルサポート)
 - [どね](https://twitter.com/done_vrc) (ロゴデザイン)
 
+## テレメトリー（利用統計情報）
+
+VRCTは[Aptabase](https://aptabase.com)を通じて、アプリの改善のために匿名のテレメトリーデータを収集しています。収集されるデータは、起動回数、起動時間、使用機能です。個人を特定できる情報は一切収集されません。
+
+テレメトリーはアプリの設定からいつでも無効化できます。詳細は[Aptabaseプライバシーポリシー](https://aptabase.com/legal/privacy)をご確認ください。
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />
