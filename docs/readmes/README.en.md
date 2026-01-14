@@ -91,6 +91,12 @@ Initial setup, basic functions, and other features are also described.
 - [レラ](https://github.com/soumt-r) (Technical Advisor)
 - [どね](https://twitter.com/done_vrc) (Logo Design)
 
+## Telemetry
+
+VRCT collects anonymous telemetry data via [Aptabase](https://aptabase.com) to help improve the app. The collected data includes app starts, session duration, and feature usage. No personally identifiable information is collected.
+
+You can opt out of telemetry in the app settings at any time. See the [Aptabase Privacy Policy](https://aptabase.com/legal/privacy) for more details.
+
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">
   <img src="https://contrib.rocks/image?repo=misyaguziya/VRCT" />
