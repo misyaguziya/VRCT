@@ -6,6 +6,7 @@ transformers==4.40.2
 pillow == 10.0.0
 PyAudioWPatch == 0.2.12.6
 python-osc == 1.9.0
+PyYAML==6.0.2
 deepl == 1.22.0
 flashtext ==2.7
 pyinstaller==6.10.0
@@ -19,9 +20,16 @@ websockets==15.0.1
 huggingface_hub==0.32.2
 hf-xet==1.1.2
 setuptools==80.8.0
+langchain-openai==0.3.32
+langchain-google-genai==2.1.10
+google-genai==1.45.0
+grpcio==1.67.1
+langchain-ollama==0.3.10
 SudachiPy==0.6.10
 SudachiDict-core==20250825
 SudachiDict-full==20250825
 translators @ git+https://github.com/misyaguziya/translators@5.9.2.1
 SpeechRecognition @ git+https://github.com/misyaguziya/custom_speech_recognition@3.10.4.1
 tinyoscquery @ git+https://github.com/cyberkitsune/tinyoscquery@0.1.3
+aptabase==0.1.0
+PyAutoGUI==0.9.54

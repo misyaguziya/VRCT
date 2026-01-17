@@ -1,5 +1,7 @@
 # katakana_to_hepburn.py
 # カタカナ -> ヘボン式ローマ字（パッケージ不要）
+from typing import List
+
 
 def katakana_to_hepburn(kata: str, use_macron: bool = True) -> str:
     """
@@ -8,7 +10,7 @@ def katakana_to_hepburn(kata: str, use_macron: bool = True) -> str:
     use_macron=False のときは単純に連続母音を残す（例: ou, oo）。
     """
     # 基本音の対応（主要なカタカナ）
-    base = {
+    base: dict = {
         'ア':'a','イ':'i','ウ':'u','エ':'e','オ':'o',
         'カ':'ka','キ':'ki','ク':'ku','ケ':'ke','コ':'ko',
         'サ':'sa','シ':'shi','ス':'su','セ':'se','ソ':'so',
@@ -31,7 +33,7 @@ def katakana_to_hepburn(kata: str, use_macron: bool = True) -> str:
     }
 
     # 拡張：子音 + 小ャユョ の組合せ（主要なもの）
-    digraphs = {
+    digraphs: dict = {
         ('キ','ャ'):'kya', ('キ','ュ'):'kyu', ('キ','ョ'):'kyo',
         ('ギ','ャ'):'gya', ('ギ','ュ'):'gyu', ('ギ','ョ'):'gyo',
         ('シ','ャ'):'sha', ('シ','ュ'):'shu', ('シ','ョ'):'sho',
@@ -49,8 +51,8 @@ def katakana_to_hepburn(kata: str, use_macron: bool = True) -> str:
         # F-sounds (ファ フィ フェ フォ)
         ('フ','ァ'):'fa', ('フ','ィ'):'fi', ('フ','ェ'):'fe', ('フ','ォ'):'fo',
         # シェ チェ ティ etc.
-        ('シ','ェ'):'she', ('チ','ェ'):'che',
-        ('テ','ィ'):'ti', ('ト','ゥ'):'tu', ('ド','ゥ'):'du',
+    ('シ','ェ'):'she', ('チ','ェ'):'che',
+    ('テ','ィ'):'ti',
         ('ウ','ァ'):'wa', ('ウ','ィ'):'wi', ('ウ','ェ'):'we', ('ウ','ォ'):'wo',
         # その他外来語によくある組合せ
         ('ス','ィ'):'si', ('ズ','ィ'):'zi', ('ツ','ァ'):'tsa', ('ツ','ィ'):'tsi', ('ツ','ェ'):'tse', ('ツ','ォ'):'tso',
@@ -78,7 +80,7 @@ def katakana_to_hepburn(kata: str, use_macron: bool = True) -> str:
         return rom  # 母音がないなら全部
 
     # 変換メイン
-    res = []
+    res: List[str] = []
     i = 0
     kata = kata.strip()
     length = len(kata)

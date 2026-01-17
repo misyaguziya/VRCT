@@ -1,0 +1,503 @@
+# controller.py - VRCTコントローラーモジュール
+
+## 概要
+
+VRCTアプリケーションのビジネスロジックを制御するコントローラークラスです。UI層とモデル層の間に位置し、ユーザーの入力を適切な処理に変換し、結果を UI に返す役割を担います。全ての機能制御、設定管理、状態管理を一元的に行います。
+
+## 最近の更新 (2026-01-03)
+
+### 起動高速化・非同期化
+
+- 初期化時間を約12.6s→8.9sに短縮（環境計測値）
+- AI Models Check を2並列化（CTranslate2/Whisper）し、結果を `_ctranslate2_available_cache` / `_whisper_available_cache` に保存
+- 翻訳エンジン判定を並列化（ThreadPoolExecutor, max_workers=4）し、LMStudio/Ollamaはバックグラウンド判定に変更
+- ソフトウェア更新チェックをバックグラウンド化
+- OSC受信初期化をバックグラウンド化し、OSCQueryサービス生成は接続成功まで継続リトライ
+- 翻訳/音声認識エンジンのセット処理で重みチェックキャッシュを再利用し再計測を排除（0.98s/0.52s→0.00s）
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| 起動時間 | 約3.7s短縮（12.6s→8.9s） |
+| 並列・非同期化 | 翻訳・音声認識エンジン判定を並列/バックグラウンド化 |
+| 安定性 | OSCQuery起動のリトライ上限でブロッキングを抑制 |
+| 再利用性 | 重みチェック結果をキャッシュし重複I/Oを削減 |
+
+## 最近の更新 (2025-10-20)
+
+### 新規ローカルLLM翻訳エンジン統合
+
+- LMStudio / Ollama への接続確認エンドポイント追加: `/run/lmstudio_connection`, `/run/ollama_connection`
+- LMStudio URL 設定: `/get|set/data/lmstudio_url`
+- モデルリスト取得と選択: `/get/data/*_model_list`, `/get|set/data/*_model` (lmstudio / ollama / plamo / gemini / openai)
+- 認証・接続成功時に `selectable_*_model_list` / `selected_*_model` を run 経由で通知 (例: `/run/selectable_lmstudio_model_list`, `/run/selected_lmstudio_model`)
+
+### モデルリスト自動更新フロー
+
+- Plamo / Gemini / OpenAI 認証後に動的に最新モデルリストを取得し未選択時は先頭モデルへ自動設定
+- LMStudio / Ollama は接続成功時にローカル列挙したモデルを即座に選択候補へ反映
+
+### VRAMエラー検出と自動フォールバック
+
+- 翻訳処理中の `CUDA out of memory` / `CUBLAS_STATUS_ALLOC_FAILED` などを検出し `/run/error_translation_*_vram_overflow` で通知
+- 自動で翻訳機能を無効化し CTranslate2 へフォールバック、再度有効化試行時も VRAM エラー検出で安全に解除
+
+### CTranslate2 ウェイト / Whisper ウェイト管理
+
+- ダウンロード進捗/完了/エラー用 run エンドポイント: `download_progress_ctranslate2_weight`, `downloaded_ctranslate2_weight`, `error_ctranslate2_weight` / Whisper も同様
+- `SELECTABLE_CTRANSLATE2_WEIGHT_TYPE_DICT` / `SELECTABLE_WHISPER_WEIGHT_TYPE_DICT` の値更新を完了時に反映
+
+### 命名・構造整理
+
+- 翻訳エンジン選択はタブ別 `SELECTED_TRANSLATION_ENGINES[tab_no]` を使用
+- 言語選択構造: `SELECTED_YOUR_LANGUAGES[tab_no]`, `SELECTED_TARGET_LANGUAGES[tab_no]` のネストを前提にエンジン適合性判定
+- CTranslate2 の言語マッピングはウェイト種別 (`CTRANSLATE2_WEIGHT_TYPE`) でネストされた構造に対応
+
+### 言語マッピング外部化
+
+- `getListLanguageAndCountry()` が YAML からロード済み `translation_lang` / `transcription_lang` を統合して互換言語のみ抽出
+
+### APIキー検証の厳格化
+
+- Plamo API: キー長判定を「==72」から「>=72」へ変更し 72 文字以上を許容
+- Gemini API: 最小キー長を 20 → 39 へ引き上げ
+- OpenAI API: "sk-" 接頭辞必須かつ長さ 164 文字以上の厳格化、エラーメッセージを「無効」に統一
+
+### 翻訳モデル選択時の適用確実化
+
+- OpenAI / Plamo / Gemini / LMStudio / Ollama でモデル設定後に `setTranslatorXModel()` と `updateTranslatorXClient()` を必ず呼び出してクライアント状態を確実反映
+- デフォルトモデル自動選択時もモデル適用を即座実行
+
+### デバイス自動選択改善
+
+- マイク/スピーカー自動選択機能で更新前後に適切な停止/再開コールバックをチェーン設定 (energy チェック再起動含む)
+
+### 影響
+
+| 項目 | 内容 |
+|------|------|
+| 翻訳柔軟性 | ローカルLLM (LMStudio/Ollama) によりネットワーク不要運用が可能 |
+| 回復性 | VRAMエラー時自動フォールバックで異常終了を防止 |
+| 拡張性 | モデルリスト自動更新により新モデル追加時の手動変更不要化 |
+| 一貫性 | 統一された SELECTED_/SELECTABLE_ 命名とタブ別管理で UI 連携が簡易化 |
+| 可読性 | 外部 YAML 言語定義によりコード側のハードコード削減 |
+
+## 主要機能
+
+### 機能制御
+
+- 翻訳機能の有効化・無効化
+- 音声認識機能の制御
+- VRオーバーレイの管理
+- WebSocketサーバーの制御
+
+### 設定管理
+
+- アプリケーション設定の取得・更新
+- デバイス設定の管理
+- 言語・エンジン設定の制御
+
+### 状態管理
+
+- システム状態の監視
+- エラー状態の管理
+- 初期化プロセスの制御
+
+### 通信制御
+
+- OSC通信の管理
+- WebSocket通信の制御
+- 外部アプリケーション連携
+
+## クラス構造
+
+### Controller クラス
+
+```python
+class Controller:
+    def __init__(self) -> None
+```
+
+中核となるコントローラークラス
+
+### 内部ヘルパークラス
+
+#### DownloadCTranslate2 クラス
+
+```python
+class DownloadCTranslate2:
+    def progressBar(self, progress) -> None
+    def downloaded(self) -> None
+```
+
+- 翻訳モデルのダウンロード進捗管理
+
+#### DownloadWhisper クラス
+
+```python
+class DownloadWhisper:
+    def progressBar(self, progress) -> None
+    def downloaded(self) -> None
+```
+
+- 音声認識モデルのダウンロード進捗管理
+
+## 主要メソッド
+
+### 初期化・設定
+
+```python
+init() -> None
+```
+
+- コントローラーの初期化
+- 各コンポーネントの起動
+- 初期設定の適用
+
+```python
+setInitMapping(init_mapping: dict) -> None
+setRunMapping(run_mapping: dict) -> None
+setRun(run: Callable) -> None
+```
+
+- エンドポイント・コールバック設定
+
+### 翻訳機能制御
+
+```python
+setEnableTranslation(data) -> dict
+setDisableTranslation(data) -> dict
+```
+
+- 翻訳機能の有効化・無効化
+
+```python
+setSelectedTranslationEngines(data) -> dict
+getSelectedTranslationEngines(data) -> dict
+```
+
+- 翻訳エンジンの選択・取得
+
+```python
+setSelectedYourLanguages(data) -> dict
+setSelectedTargetLanguages(data) -> dict
+```
+
+- 送信・受信言語の設定
+
+```python
+sendMessageBox(data) -> dict
+```
+
+- メッセージの翻訳・送信処理
+
+### 音声認識機能制御
+
+```python
+setEnableTranscriptionSend(data) -> dict
+setEnableTranscriptionReceive(data) -> dict
+```
+
+- 音声認識機能の有効化
+
+```python
+setSelectedTranscriptionEngine(data) -> dict
+getSelectedTranscriptionEngine(data) -> dict
+```
+
+- 音声認識エンジンの選択・取得
+
+```python
+setSelectedMicDevice(data) -> dict
+setSelectedSpeakerDevice(data) -> dict
+```
+
+- 音声デバイスの選択
+
+```python
+setMicThreshold(data) -> dict
+setSpeakerThreshold(data) -> dict
+```
+
+- 音声しきい値の設定
+
+### VRオーバーレイ制御
+
+```python
+setEnableOverlaySmallLog(data) -> dict
+setEnableOverlayLargeLog(data) -> dict
+```
+
+- VRオーバーレイの有効化
+
+```python
+setOverlaySmallLogSettings(data) -> dict
+setOverlayLargeLogSettings(data) -> dict
+```
+
+- オーバーレイ設定の更新
+
+### WebSocket制御
+
+```python
+setEnableWebSocketServer(data) -> dict
+setDisableWebSocketServer(data) -> dict
+```
+
+- WebSocketサーバーの制御
+
+### クリップボード制御
+
+```python
+getClipboard() -> dict
+setEnableClipboard() -> dict
+setDisableClipboard() -> dict
+```
+
+- クリップボード機能（コピー・ペースト）の状態取得・設定変更
+- `config.ENABLE_CLIPBOARD` フラグを変更（True/False）
+- 取得結果は `{"status": 200, "result": bool}`
+- **注意**: `model.clipboard.enable()/disable()` は呼び出されません
+
+### テレメトリ制御
+
+```python
+getTelemetry() -> dict
+setEnableTelemetry() -> dict
+setDisableTelemetry() -> dict
+```
+
+- テレメトリ（Aptabase）の有効化・無効化・状態取得
+- 有効化時は `telemetryInit()` を呼び出し
+- 無効化時は `telemetryShutdown()` を呼び出し
+
+### WebSocket接続設定
+
+```python
+setWebSocketHost(data) -> dict
+setWebSocketPort(data) -> dict
+```
+
+- WebSocketホスト・ポートの設定
+
+### システム管理
+
+```python
+updateSoftware(data) -> dict
+updateCudaSoftware(data) -> dict
+```
+
+- ソフトウェアアップデート
+
+```python
+downloadCtranslate2Weight(data) -> dict
+downloadWhisperWeight(data) -> dict
+```
+
+- AIモデルのダウンロード
+
+```python
+feedWatchdog(data) -> dict
+```
+
+- ウォッチドッグの生存シグナル送信
+
+## 使用方法
+
+### 基本的な使い方
+
+```python
+from controller import Controller
+
+# コントローラーの初期化
+controller = Controller()
+controller.init()
+
+# 翻訳機能の有効化
+result = controller.setEnableTranslation(None)
+print(f"翻訳機能: {result}")
+
+# メッセージ送信
+message_data = {"id": "123", "message": "Hello World"}
+result = controller.sendMessageBox(message_data)
+```
+
+### エンドポイント設定
+
+```python
+# マッピング設定
+mapping = {
+    "/set/enable/translation": controller.setEnableTranslation,
+    "/get/data/version": controller.getVersion,
+}
+
+# 実行関数の設定
+def run_callback(status, endpoint, result):
+    print(f"Status: {status}, Endpoint: {endpoint}, Result: {result}")
+
+controller.setRun(run_callback)
+```
+
+### 音声認識の設定
+
+```python
+# マイクデバイスの選択
+host_data = "DirectSound"
+result = controller.setSelectedMicHost(host_data)
+
+device_data = "マイク (USB Audio Device)"
+result = controller.setSelectedMicDevice(device_data)
+
+# 音声認識の開始
+result = controller.setEnableTranscriptionSend(None)
+```
+
+## レスポンス形式
+
+全てのメソッドは統一されたレスポンス形式を返します：
+
+```python
+{
+    "status": int,    # HTTPステータスコード(200, 400, 500等)
+    "result": any     # 処理結果（成功時）または エラーメッセージ（失敗時）
+}
+```
+
+### 成功レスポンス例
+
+```python
+{
+    "status": 200,
+    "result": "翻訳機能が有効化されました"
+}
+```
+
+### エラーレスポンス例
+
+```python
+{
+    "status": 400,
+    "result": "Invalid device selection"
+}
+```
+
+## 詳細状態管理
+
+### システム状態
+
+- 各機能の有効・無効状態
+- デバイスの接続状態
+- ネットワーク接続状態
+
+### エラー状態
+
+- デバイスエラー
+- 翻訳エンジンエラー
+- VRAMオーバーフローエラー
+
+### 初期化状態
+
+- 段階的な初期化プロセス
+- 依存関係の解決状態
+
+## イベント処理
+
+### 音声認識イベント
+
+```python
+micMessage(result: dict) -> None
+```
+
+- マイク音声認識結果の処理
+- 翻訳・フィルタリング・送信
+
+```python
+speakerMessage(result: dict) -> None
+```
+
+- スピーカー音声認識結果の処理
+
+### ダウンロードイベント
+
+- 進捗通知
+- 完了通知
+- エラー通知
+
+### デバイス変更イベント
+
+- マイク・スピーカーの選択変更
+- 計算デバイスの変更
+
+## 依存関係
+
+### 直接依存
+
+- `config`: 設定管理
+- `model`: コアモデル機能
+- `device_manager`: デバイス管理
+- `utils`: ユーティリティ機能
+
+### 間接依存
+
+- 各種モデルモジュール（翻訳、音声認識等）
+- VRオーバーレイモジュール
+- 通信モジュール
+
+## エラーハンドリング
+
+### エラー構造
+- すべて `VRCTError` で生成し、ステータス・コード・メッセージ・data を統一
+- `create_error_response()` / `create_exception_error_response()` を使用し、`self.run()` へそのまま渡す
+- 代表コード: デバイス系 (`DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`)、VRAM系 (`TRANSLATION_VRAM_*`)、認証系 (`AUTH_*`)、モデル不正 (`MODEL_*`)、バリデーション系 (`VALIDATION_*`)、接続系 (`CONNECTION_LMSTUDIO_FAILED` など)
+
+### VRAM不足エラー
+- 翻訳処理中に VRAM 例外を検出し `/run/error_translation_*_vram_overflow` で通知
+- 翻訳機能を自動で無効化し、`TRANSLATION_DISABLED_VRAM` を通知
+- マイク/スピーカー/チャット/有効化時の各パスで専用コードを返却
+
+### デバイスエラー
+- マイク・スピーカー未検出時に `DEVICE_NO_MIC` / `DEVICE_NO_SPEAKER`
+- エネルギーしきい値/タイムアウト等のバリデーションに `VALIDATION_*` を使用
+
+### 認証・モデルエラー
+- DeepL/Plamo/Gemini/OpenAI/Groq/OpenRouter の認証失敗やキー長不正を `AUTH_*` で通知
+- モデル未選択/不正時は `MODEL_*` で通知し、選択リストを再送
+
+### 接続エラー
+- LMStudio/Ollama 接続失敗を `CONNECTION_*` で通知し、翻訳エンジンリストを更新
+
+### 設定エラー
+- IP アドレスやしきい値などの不正値を `VALIDATION_*` で統一し、リクエスト値を data に格納
+
+## パフォーマンス考慮事項
+
+### 遅延初期化
+
+- 必要な時点での機能初期化
+- メモリ使用量の最適化
+
+### 非同期処理
+
+- バックグラウンドでの重い処理
+- UI の応答性維持
+
+### キャッシュ機能
+
+- 設定値のキャッシュ
+- 翻訳結果のキャッシュ
+
+## 注意事項
+
+- すべてのメソッドは例外安全である
+- 設定変更は即座に config に反映される
+- 重い処理は別スレッドで実行される
+- VR機能は適切な環境でのみ動作する
+- ネットワーク機能はオフライン時に制限される
+
+## セキュリティ考慮事項
+
+- 外部入力の適切な検証
+- APIキーの安全な管理
+- ファイルアクセスの制限
+- ネットワーク通信の暗号化（該当する場合）

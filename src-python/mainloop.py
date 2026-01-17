@@ -1,9 +1,9 @@
 import sys
 import json
 import time
-from typing import Any
-from threading import Thread
-from queue import Queue
+from typing import Any, Tuple
+from threading import Thread, Event, Lock
+from queue import Queue, Empty
 import logging
 from controller import Controller  # noqa: E402
 from utils import printLog, printResponse, errorLogging, encodeBase64 # noqa: E402
@@ -42,6 +42,7 @@ run_mapping = {
     "downloaded_whisper_weight":"/run/downloaded_whisper_weight",
     "error_whisper_weight":"/run/error_whisper_weight",
 
+    "selected_mic_host":"/run/selected_mic_host",
     "selected_mic_device":"/run/selected_mic_device",
     "selected_speaker_device":"/run/selected_speaker_device",
 
@@ -51,9 +52,24 @@ run_mapping = {
     "selected_translation_compute_type":"/run/selected_translation_compute_type",
     "selected_transcription_compute_type":"/run/selected_transcription_compute_type",
 
-    "mic_host_list":"/run/mic_host_list",
-    "mic_device_list":"/run/mic_device_list",
-    "speaker_device_list":"/run/speaker_device_list",
+    "selectable_plamo_model_list":"/run/selectable_plamo_model_list",
+    "selected_plamo_model":"/run/selected_plamo_model",
+    "selectable_gemini_model_list":"/run/selectable_gemini_model_list",
+    "selected_gemini_model":"/run/selected_gemini_model",
+    "selectable_openai_model_list":"/run/selectable_openai_model_list",
+    "selected_openai_model":"/run/selected_openai_model",
+    "selectable_groq_model_list":"/run/selectable_groq_model_list",
+    "selected_groq_model":"/run/selected_groq_model",
+    "selectable_openrouter_model_list":"/run/selectable_openrouter_model_list",
+    "selected_openrouter_model":"/run/selected_openrouter_model",
+    "selectable_lmstudio_model_list":"/run/selectable_lmstudio_model_list",
+    "selected_lmstudio_model":"/run/selected_lmstudio_model",
+    "selectable_ollama_model_list":"/run/selectable_ollama_model_list",
+    "selected_ollama_model":"/run/selected_ollama_model",
+
+    "selectable_mic_host_list":"/run/selectable_mic_host_list",
+    "selectable_mic_device_list":"/run/selectable_mic_device_list",
+    "selectable_speaker_device_list":"/run/selectable_speaker_device_list",
 
     "software_update_info":"/run/software_update_info",
 
@@ -91,7 +107,7 @@ mapping = {
     "/set/enable/main_window_sidebar_compact_mode": {"status": True, "variable":controller.setEnableMainWindowSidebarCompactMode},
     "/set/disable/main_window_sidebar_compact_mode": {"status": True, "variable":controller.setDisableMainWindowSidebarCompactMode},
 
-    "/get/data/translation_engines": {"status": True, "variable":controller.getTranslationEngines},
+    "/get/data/selectable_translation_engines": {"status": True, "variable":controller.getTranslationEngines},
     "/get/data/selectable_language_list": {"status": True, "variable":controller.getListLanguageAndCountry},
 
     "/get/data/selected_translation_engines": {"status": False, "variable":controller.getSelectedTranslationEngines},
@@ -103,7 +119,7 @@ mapping = {
     "/get/data/selected_target_languages": {"status": True, "variable":controller.getSelectedTargetLanguages},
     "/set/data/selected_target_languages": {"status": True, "variable":controller.setSelectedTargetLanguages},
 
-    "/get/data/transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
+    "/get/data/selectable_transcription_engines": {"status": False, "variable":controller.getTranscriptionEngines},
     "/get/data/selected_transcription_engine": {"status": False, "variable":controller.getSelectedTranscriptionEngine},
     "/set/data/selected_transcription_engine": {"status": False, "variable":controller.setSelectedTranscriptionEngine},
 
@@ -112,6 +128,11 @@ mapping = {
     "/run/stop_typing_message_box": {"status": False, "variable":controller.stopTypingMessageBox},
 
     "/run/send_text_overlay": {"status": True, "variable":controller.sendTextOverlay},
+
+    "/get/data/telemetry" : {"status": True, "variable":controller.getTelemetry},
+    "/set/enable/telemetry" : {"status": True, "variable":controller.setEnableTelemetry},
+    "/set/disable/telemetry" : {"status": True, "variable":controller.setDisableTelemetry},
+    "/run/shutdown": {"status": True, "variable":controller.shutdown},
 
     "/run/swap_your_language_and_target_language": {"status": True, "variable":controller.swapYourLanguageAndTargetLanguage},
 
@@ -152,18 +173,18 @@ mapping = {
 
     # Compute device
     "/get/data/compute_mode": {"status": True, "variable":controller.getComputeMode},
-    "/get/data/translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/selectable_translation_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_translation_compute_device": {"status": True, "variable":controller.getSelectedTranslationComputeDevice},
     "/set/data/selected_translation_compute_device": {"status": True, "variable":controller.setSelectedTranslationComputeDevice},
-    "/get/data/transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
+    "/get/data/selectable_transcription_compute_device_list": {"status": True, "variable":controller.getComputeDeviceList},
     "/get/data/selected_transcription_compute_device": {"status": True, "variable":controller.getSelectedTranscriptionComputeDevice},
     "/set/data/selected_transcription_compute_device": {"status": True, "variable":controller.setSelectedTranscriptionComputeDevice},
 
     # Translation
     "/get/data/selectable_ctranslate2_weight_type_dict": {"status": True, "variable":controller.getSelectableCtranslate2WeightTypeDict},
 
-    "/get/data/ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
-    "/set/data/ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
+    "/get/data/selected_ctranslate2_weight_type": {"status": True, "variable":controller.getCtranslate2WeightType},
+    "/set/data/selected_ctranslate2_weight_type": {"status": True, "variable":controller.setCtranslate2WeightType},
 
     "/get/data/selected_translation_compute_type": {"status": True, "variable":controller.getSelectedTranslationComputeType},
     "/set/data/selected_translation_compute_type": {"status": True, "variable":controller.setSelectedTranslationComputeType},
@@ -174,6 +195,56 @@ mapping = {
     "/set/data/deepl_auth_key": {"status": False, "variable":controller.setDeeplAuthKey},
     "/delete/data/deepl_auth_key": {"status": False, "variable":controller.delDeeplAuthKey},
 
+    "/get/data/selectable_plamo_model_list": {"status": False, "variable":controller.getPlamoModelList},
+    "/get/data/selected_plamo_model": {"status": False, "variable":controller.getPlamoModel},
+    "/set/data/selected_plamo_model": {"status": False, "variable":controller.setPlamoModel},
+    "/get/data/plamo_auth_key": {"status": False, "variable":controller.getPlamoAuthKey},
+    "/set/data/plamo_auth_key": {"status": False, "variable":controller.setPlamoAuthKey},
+    "/delete/data/plamo_auth_key": {"status": False, "variable":controller.delPlamoAuthKey},
+
+    "/get/data/selectable_gemini_model_list": {"status": True, "variable":controller.getGeminiModelList},
+    "/get/data/selected_gemini_model": {"status": True, "variable":controller.getGeminiModel},
+    "/set/data/selected_gemini_model": {"status": True, "variable":controller.setGeminiModel},
+    "/get/data/gemini_auth_key": {"status": True, "variable":controller.getGeminiAuthKey},
+    "/set/data/gemini_auth_key": {"status": True, "variable":controller.setGeminiAuthKey},
+    "/delete/data/gemini_auth_key": {"status": True, "variable":controller.delGeminiAuthKey},
+
+    "/get/data/selectable_openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
+    "/get/data/selected_openai_model": {"status": True, "variable":controller.getOpenAIModel},
+    "/set/data/selected_openai_model": {"status": True, "variable":controller.setOpenAIModel},
+    "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
+    "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
+    "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},
+
+    "/get/data/selectable_groq_model_list": {"status": True, "variable":controller.getGroqModelList},
+    "/get/data/selected_groq_model": {"status": True, "variable":controller.getGroqModel},
+    "/set/data/selected_groq_model": {"status": True, "variable":controller.setGroqModel},
+    "/get/data/groq_auth_key": {"status": True, "variable":controller.getGroqAuthKey},
+    "/set/data/groq_auth_key": {"status": True, "variable":controller.setGroqAuthKey},
+    "/delete/data/groq_auth_key": {"status": True, "variable":controller.delGroqAuthKey},
+
+    "/get/data/selectable_openrouter_model_list": {"status": True, "variable":controller.getOpenRouterModelList},
+    "/get/data/selected_openrouter_model": {"status": True, "variable":controller.getOpenRouterModel},
+    "/set/data/selected_openrouter_model": {"status": True, "variable":controller.setOpenRouterModel},
+    "/get/data/openrouter_auth_key": {"status": True, "variable":controller.getOpenRouterAuthKey},
+    "/set/data/openrouter_auth_key": {"status": True, "variable":controller.setOpenRouterAuthKey},
+    "/delete/data/openrouter_auth_key": {"status": True, "variable":controller.delOpenRouterAuthKey},
+
+    "/get/data/connected_lmstudio": {"status": True, "variable":controller.getTranslatorLMStudioConnection},
+    "/run/lmstudio_connection": {"status": True, "variable":controller.checkTranslatorLMStudioConnection},
+    "/get/data/selectable_lmstudio_model_list": {"status": True, "variable":controller.getTranslatorLStudioModelList},
+    "/get/data/selected_lmstudio_model": {"status": True, "variable":controller.getTranslatorLMStudioModel},
+    "/set/data/selected_lmstudio_model": {"status": True, "variable":controller.setTranslatorLMStudioModel},
+    "/get/data/lmstudio_url": {"status": True, "variable":controller.getTranslatorLMStudioURL},
+    "/set/data/lmstudio_url": {"status": True, "variable":controller.setTranslatorLMStudioURL},
+
+    "/get/data/connected_ollama": {"status": True, "variable":controller.getTranslatorOllamaConnection},
+    "/run/ollama_connection": {"status": True, "variable":controller.checkTranslatorOllamaConnection},
+    "/get/data/selectable_ollama_model_list": {"status": True, "variable":controller.getTranslatorOllamaModelList},
+    "/get/data/selected_ollama_model": {"status": True, "variable":controller.getTranslatorOllamaModel},
+    "/set/data/selected_ollama_model": {"status": True, "variable":controller.setTranslatorOllamaModel},
+
+    # Transliteration
     "/get/data/convert_message_to_romaji": {"status": True, "variable":controller.getConvertMessageToRomaji},
     "/set/enable/convert_message_to_romaji": {"status": True, "variable":controller.setEnableConvertMessageToRomaji},
     "/set/disable/convert_message_to_romaji": {"status": True, "variable":controller.setDisableConvertMessageToRomaji},
@@ -183,9 +254,9 @@ mapping = {
     "/set/disable/convert_message_to_hiragana": {"status": True, "variable":controller.setDisableConvertMessageToHiragana},
 
     # Transcription
-    "/get/data/mic_host_list": {"status": True, "variable":controller.getMicHostList},
-    "/get/data/mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
-    "/get/data/speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
+    "/get/data/selectable_mic_host_list": {"status": True, "variable":controller.getMicHostList},
+    "/get/data/selectable_mic_device_list": {"status": True, "variable":controller.getMicDeviceList},
+    "/get/data/selectable_speaker_device_list": {"status": True, "variable":controller.getSpeakerDeviceList},
 
     # "/get/data/max_mic_threshold": {"status": True, "variable":controller.getMaxMicThreshold},
     # "/get/data/max_speaker_threshold": {"status": True, "variable":controller.getMaxSpeakerThreshold},
@@ -268,8 +339,8 @@ mapping = {
 
     "/get/data/selectable_whisper_weight_type_dict": {"status": True, "variable":controller.getSelectableWhisperWeightTypeDict},
 
-    "/get/data/whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
-    "/set/data/whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
+    "/get/data/selected_whisper_weight_type": {"status": True, "variable":controller.getWhisperWeightType},
+    "/set/data/selected_whisper_weight_type": {"status": True, "variable":controller.setWhisperWeightType},
 
     "/get/data/selected_transcription_compute_type": {"status": True, "variable":controller.getSelectedTranscriptionComputeType},
     "/set/data/selected_transcription_compute_type": {"status": True, "variable":controller.setSelectedTranscriptionComputeType},
@@ -336,6 +407,11 @@ mapping = {
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
 
+    # Clipboard Settings
+    "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
+    "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},
+    "/set/disable/clipboard": {"status": True, "variable":controller.setDisableClipboard},
+
     # Advanced Settings
     "/get/data/osc_ip_address": {"status": True, "variable":controller.getOscIpAddress},
     "/set/data/osc_ip_address": {"status": True, "variable":controller.setOscIpAddress},
@@ -357,31 +433,72 @@ mapping = {
 init_mapping = {key:value for key, value in mapping.items() if key.startswith("/get/data/")}
 controller.setInitMapping(init_mapping)
 
+DEFAULT_WORKER_COUNT = 3  # 必要なら増やす
+
 class Main:
-    def __init__(self, controller_instance, mapping_data) -> None:
-        self.queue = Queue()
-        self.main_loop = True
+    def __init__(self, controller_instance: Controller, mapping_data: dict, worker_count: int = DEFAULT_WORKER_COUNT) -> None:
+        self.queue: Queue[Tuple[str, Any]] = Queue()
+        self._stop_event: Event = Event()
         self.controller = controller_instance
         self.mapping = mapping_data
+        self._threads: list[Thread] = []
+        self._worker_count = worker_count
+
+        # エンドポイントごとの排他制御用 Lock を作成
+        # enable/disable ペアは同じロックキーに正規化する
+        def _canonical_lock_key(endpoint: str) -> str:
+            if not isinstance(endpoint, str):
+                return str(endpoint)
+            if endpoint.startswith("/set/enable/"):
+                return "/lock/set/" + endpoint[len("/set/enable/"):]
+            if endpoint.startswith("/set/disable/"):
+                return "/lock/set/" + endpoint[len("/set/disable/"):]
+            return endpoint
+
+        # mapping に含まれるすべてのエンドポイントを走査して正規化キー集合を作る
+        lock_keys = set()
+        for key in self.mapping.keys():
+            lock_keys.add(_canonical_lock_key(key))
+
+        # 正規化キーごとに Lock を割り当てる
+        self._endpoint_locks: dict[str, Lock] = {k: Lock() for k in lock_keys}
+
+        # 正規化関数をインスタンスに保存
+        self._canonical_lock_key = _canonical_lock_key
 
     def receiver(self) -> None:
-        while True:
-            received_data = sys.stdin.readline().strip()
-            received_data = json.loads(received_data)
+        """Read lines from stdin, parse JSON and enqueue requests.
 
-            if received_data:
-                endpoint = received_data.get("endpoint", None)
-                data = received_data.get("data", None)
-                data = encodeBase64(data) if data is not None else None
-                printLog(endpoint, {"receive_data": data})
-                self.queue.put((endpoint, data))
+        Uses blocking readline but honors stop via _stop_event checked between reads.
+        """
+        while not self._stop_event.is_set():
+            try:
+                line = sys.stdin.readline()
+                if not line:
+                    # EOF reached; sleep briefly and re-check stop event
+                    time.sleep(0.1)
+                    continue
+                received_data = json.loads(line.strip())
+
+                if received_data:
+                    endpoint = received_data.get("endpoint")
+                    data = received_data.get("data")
+                    data = encodeBase64(data) if data is not None else None
+                    printLog(endpoint, {"receive_data": data})
+                    self.queue.put((endpoint, data))
+            except json.JSONDecodeError:
+                # malformed input; log and continue
+                errorLogging()
+            except Exception:
+                errorLogging()
 
     def startReceiver(self) -> None:
-        th_receiver = Thread(target=self.receiver)
+        th_receiver = Thread(target=self.receiver, name="main_receiver")
         th_receiver.daemon = True
         th_receiver.start()
+        self._threads.append(th_receiver)
 
-    def handleRequest(self, endpoint, data=None) -> tuple:
+    def handleRequest(self, endpoint: str, data: Any = None) -> tuple:
         result = None  # デフォルト値を設定
         status = 500   # デフォルト値を設定
 
@@ -395,45 +512,100 @@ class Main:
         else:
             try:
                 response = handler["variable"](data)
-                status = response.get("status", None)
-                result = response.get("result", None)
-                time.sleep(0.2) # 処理の安定化のために少し待機
-            except Exception as e:
+                status = response.get("status")
+                result = response.get("result")
+                time.sleep(0.2)  # 処理の安定化のために少し待機
+            except Exception:
                 errorLogging()
-                result = str(e)
+                result = "Internal error"
                 status = 500
 
         return result, status
 
-    def handler(self) -> None:
-        while True:
-            if not self.queue.empty():
-                try:
-                    endpoint, data = self.queue.get()
-                    result, status = self.handleRequest(endpoint, data)
-                except Exception as e:
-                    errorLogging()
-                    result = str(e)
-                    status = 500
+    def _call_handler(self, endpoint: str, data: Any = None) -> tuple:
+        result = None
+        status = 500
+        handler = self.mapping.get(endpoint)
+        if handler is None:
+            response = "Invalid endpoint"
+            status = 404
+        else:
+            try:
+                response = handler["variable"](data)
+                status = response.get("status", 500)
+                result = response.get("result", None)
+                time.sleep(0.2)
+            except Exception:
+                errorLogging()
+                result = "Internal error"
+                status = 500
+        return result, status
 
-                if status == 423:
+    def handler(self) -> None:
+        while not self._stop_event.is_set():
+            try:
+                endpoint, data = self.queue.get(timeout=0.5)
+            except Empty:
+                continue
+
+            # endpoint をロック用の正規化キーに変換してロックを取得
+            lock_key = self._canonical_lock_key(endpoint)
+            lock = self._endpoint_locks.get(lock_key)
+
+            if lock is not None:
+                acquired = lock.acquire(blocking=False)
+                if not acquired:
+                    # 同一機能で既に処理中 -> 少し待って再キュー
+                    time.sleep(0.05)
                     self.queue.put((endpoint, data))
-                else:
-                    printLog(endpoint, {"status": status, "send_data": result})
-                    printResponse(status, endpoint, result)
-            time.sleep(0.1)
+                    continue
+                try:
+                    result, status = self._call_handler(endpoint, data)
+                finally:
+                    lock.release()
+            else:
+                result, status = self._call_handler(endpoint, data)
+
+            if status == 423:
+                time.sleep(0.1)
+                self.queue.put((endpoint, data))
+            else:
+                printLog(endpoint, {"status": status, "send_data": result})
+                printResponse(status, endpoint, result)
 
     def startHandler(self) -> None:
-        th_handler = Thread(target=self.handler)
-        th_handler.daemon = True
-        th_handler.start()
+        for i in range(max(1, self._worker_count)):
+            th_handler = Thread(target=self.handler, name=f"main_handler_{i}")
+            th_handler.daemon = True
+            th_handler.start()
+            self._threads.append(th_handler)
 
     def start(self) -> None:
-        while self.main_loop:
-            time.sleep(1)
+        """Start the main loop to keep the program running."""
+        try:
+            while not self._stop_event.is_set():
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.stop()
 
-    def stop(self) -> None:
-        self.main_loop = False
+    def stop(self, wait: float = 2.0) -> None:
+        """Signal threads to stop and wait for them to finish.
+
+        Args:
+            wait: maximum seconds to wait for threads to join.
+        """
+        # Controller 経由でシャットダウン（model.shutdown() → telemetry.shutdown() が呼ばれる）
+        try:
+            self.controller.shutdown()
+        except Exception:
+            errorLogging()
+        
+        self._stop_event.set()
+        # give threads a chance to exit
+        start = time.time()
+        for th in self._threads:
+            remaining = max(0.0, wait - (time.time() - start))
+            th.join(timeout=remaining)
 
 # 外部から参照可能なインスタンスを提供
 main_instance = Main(controller_instance=controller, mapping_data=mapping)

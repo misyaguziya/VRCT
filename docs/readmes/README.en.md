@@ -35,12 +35,6 @@ Become a VRCT Supporter on:
     </picture>
 </a>&emsp;&nbsp;
 
-<a href="https://ko-fi.com/vrct_dev">
-    <picture>
-        <img src="/docs/img/kofi_logo.png" alt="Ko-fi" height="22px">
-    </picture>
-</a>&emsp;&nbsp;
-
 <br>
 
 <picture>
@@ -82,7 +76,7 @@ VRCT supports your conversations with
 
 # Documents
 Initial setup, basic functions, and other features are also described.
-- [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+- [Documents Link](https://misyaguziya.github.io/VRCT-Docs/)
 
 # How to Use (YouTube)
 <div align="center">
@@ -96,6 +90,12 @@ Initial setup, basic functions, and other features are also described.
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI multilingual support)
 - [レラ](https://github.com/soumt-r) (Technical Advisor)
 - [どね](https://twitter.com/done_vrc) (Logo Design)
+
+## Telemetry
+
+VRCT collects anonymous telemetry data via [Aptabase](https://aptabase.com) to help improve the app. The collected data includes app starts, session duration, and feature usage. No personally identifiable information is collected.
+
+You can opt out of telemetry in the app settings at any time. See the [Aptabase Privacy Policy](https://aptabase.com/legal/privacy) for more details.
 
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">

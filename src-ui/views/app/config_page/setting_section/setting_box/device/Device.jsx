@@ -1,0 +1,209 @@
+import { useI18n } from "@useI18n";
+import styles from "./Device.module.scss";
+import clsx from "clsx";
+import { useStore_IsBreakPoint } from "@store";
+import { ui_configs } from "@ui_configs";
+import {
+    useDevice,
+} from "@logics_configs";
+
+import {
+    useOnMouseLeaveDropdownMenu,
+    MultiDropdownMenuContainer,
+} from "../_templates/Templates";
+
+import {
+    LabelComponent,
+    DropdownMenu,
+    MultiDropdownMenu,
+    ThresholdComponent,
+    SwitchBox,
+} from "../_components";
+
+export const Device = () => {
+    return (
+        <>
+            <Mic_Container />
+            <Speaker_Container />
+        </>
+    );
+};
+
+const Mic_Container = () => {
+    const { t } = useI18n();
+    const {
+        currentEnableAutoMicSelect,
+        toggleEnableAutoMicSelect,
+        currentMicDeviceList,
+        currentMicHostList,
+
+        currentSelectedMicHost,
+        setSelectedMicHost,
+        currentSelectedMicDevice,
+        setSelectedMicDevice,
+
+        currentEnableAutomaticMicThreshold,
+        toggleEnableAutomaticMicThreshold,
+    } = useDevice();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
+    const selectFunction_host = (selected_data) => {
+        setSelectedMicHost(selected_data.selected_id);
+    };
+
+    const selectFunction_device = (selected_data) => {
+        setSelectedMicDevice(selected_data.selected_id);
+    };
+
+    // [Fix me] currentEnableAutoMicSelect.data === "pending"; ?  not currentEnableAutoMicSelect.state === "pending"; ??(.state)
+    const is_disabled_selector = currentEnableAutoMicSelect.data === true || currentEnableAutoMicSelect.data === "pending";
+
+    const getLabels = () => {
+        if (currentEnableAutomaticMicThreshold.data === true) {
+            return {
+                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_automatic"),
+            };
+        } else {
+            return {
+                label: t("config_page.device.mic_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.device.mic_dynamic_energy_threshold.desc_for_manual"),
+            };
+        }
+    };
+
+    return (
+        <div className={styles.mic_container}>
+            <MultiDropdownMenuContainer
+                label={t("config_page.device.mic_host_device.label")}
+                remove_border_bottom={true}
+                dropdown_settings={[
+                    {
+                        insert_component: SwitchBox,
+                        insert_component_props: {
+                            secondary_label: t("config_page.device.label_auto_select"),
+                            variable: currentEnableAutoMicSelect,
+                            toggleFunction: toggleEnableAutoMicSelect,
+                        }
+                    },
+                    {
+                        dropdown_id: "mic_host",
+                        secondary_label: t("config_page.device.label_host"),
+                        selected_id: currentSelectedMicHost.data,
+                        list: currentMicHostList.data,
+                        selectFunction: selectFunction_host,
+                        state: currentSelectedMicHost.state,
+                        style: { maxWidth: "20rem", minWidth: "10rem" },
+                        is_disabled: is_disabled_selector,
+                    },
+                    {
+                        dropdown_id: "mic_device",
+                        secondary_label: t("config_page.device.label_device"),
+                        selected_id: currentSelectedMicDevice.data,
+                        list: currentMicDeviceList.data,
+                        selectFunction: selectFunction_device,
+                        state: currentSelectedMicDevice.state,
+                        is_disabled: is_disabled_selector,
+                    }
+                ]}
+            />
+            <div className={styles.threshold_container}>
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent {...getLabels()} />
+                    <SwitchBox
+                        variable={currentEnableAutomaticMicThreshold}
+                        toggleFunction={toggleEnableAutomaticMicThreshold}
+                    />
+                </div>
+                <div className={styles.threshold_section}>
+                    <ThresholdComponent
+                        id="mic_threshold"
+                        min={ui_configs.mic_threshold_min}
+                        max={ui_configs.mic_threshold_max}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const Speaker_Container = () => {
+    const { t } = useI18n();
+    const {
+        currentEnableAutoSpeakerSelect,
+        toggleEnableAutoSpeakerSelect,
+        currentSpeakerDeviceList,
+        currentSelectedSpeakerDevice,
+        setSelectedSpeakerDevice,
+        currentEnableAutomaticSpeakerThreshold,
+        toggleEnableAutomaticSpeakerThreshold,
+    } = useDevice();
+    const { onMouseLeaveFunction } = useOnMouseLeaveDropdownMenu();
+
+    const selectFunction = (selected_data) => {
+        setSelectedSpeakerDevice(selected_data.selected_id);
+    };
+
+    const is_disabled_selector = currentEnableAutoSpeakerSelect.data === true || currentEnableAutoSpeakerSelect.data === "pending";
+
+    const getLabels = () => {
+        if (currentEnableAutomaticSpeakerThreshold.data === true) {
+            return {
+                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_automatic"),
+                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_automatic"),
+            };
+        } else {
+            return {
+                label: t("config_page.device.speaker_dynamic_energy_threshold.label_for_manual"),
+                desc: t("config_page.device.speaker_dynamic_energy_threshold.desc_for_manual"),
+            };
+        }
+
+    };
+
+    const { currentIsBreakPoint } = useStore_IsBreakPoint();
+    const device_container_class = clsx(styles.device_container, {
+        [styles.is_break_point]: currentIsBreakPoint.data,
+    });
+
+    return (
+        <div className={styles.speaker_container}>
+            <div className={device_container_class} onMouseLeave={onMouseLeaveFunction}>
+                <LabelComponent label={t("config_page.device.speaker_device.label")} />
+                <div className={styles.device_contents}>
+                    <SwitchBox
+                        secondary_label={t("config_page.device.label_auto_select")}
+                        variable={currentEnableAutoSpeakerSelect}
+                        toggleFunction={toggleEnableAutoSpeakerSelect}
+                    />
+                    <DropdownMenu
+                        dropdown_id="speaker_device"
+                        secondary_label={t("config_page.device.label_device")}
+                        label={t("config_page.device.speaker_device.label")}
+                        selected_id={currentSelectedSpeakerDevice.data}
+                        list={currentSpeakerDeviceList.data}
+                        selectFunction={selectFunction}
+                        state={currentSelectedSpeakerDevice.state}
+                        is_disabled={is_disabled_selector}
+                    />
+                </div>
+            </div>
+            <div className={styles.threshold_container}>
+                <div className={styles.threshold_switch_section}>
+                    <LabelComponent {...getLabels()}/>
+                    <SwitchBox
+                        variable={currentEnableAutomaticSpeakerThreshold}
+                        toggleFunction={toggleEnableAutomaticSpeakerThreshold}
+                    />
+                </div>
+                <div className={styles.threshold_section}>
+                    <ThresholdComponent
+                        id="speaker_threshold"
+                        min={ui_configs.speaker_threshold_min}
+                        max={ui_configs.speaker_threshold_max}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+};

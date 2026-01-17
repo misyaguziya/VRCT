@@ -1,5 +1,7 @@
 from sudachipy import tokenizer
 from sudachipy import dictionary
+from typing import List, Dict, Any
+import threading
 try:
     from .transliteration_kana_to_hepburn import katakana_to_hepburn
 except ImportError:
@@ -10,9 +12,12 @@ except ImportError:
     from transliteration_context_rules import apply_context_rules
 
 class Transliterator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.tokenizer_obj = dictionary.Dictionary(dict_type="full").create()
         self.mode = tokenizer.Tokenizer.SplitMode.C
+        # Lock to prevent concurrent access to sudachipy tokenizer which may
+        # internally use Rust/PyO3 borrow semantics and raise "Already borrowed".
+        self._tokenizer_lock = threading.Lock()
 
     @staticmethod
     def is_kanji(ch: str) -> bool:
@@ -26,7 +31,7 @@ class Transliterator:
         )
 
     @staticmethod
-    def split_kanji_okurigana(surface: str, reading_kana: str, use_macron: bool = True):
+    def split_kanji_okurigana(surface: str, reading_kana: str, use_macron: bool = True) -> List[Dict[str, str]]:
         """Split a single surface word and its kana reading into parts.
 
         Inputs:
@@ -45,7 +50,7 @@ class Transliterator:
           constructed list.
         """
 
-        result = []
+        result: List[Dict[str, str]] = []
 
         # 表層を「漢字ブロック」と「非漢字ブロック」に分割
         buf = ""
@@ -113,7 +118,7 @@ class Transliterator:
 
         return result
 
-    def analyze(self, text: str, use_macron: bool = False):
+    def analyze(self, text: str, use_macron: bool = False) -> List[Dict[str, Any]]:
         """Tokenize ``text`` and produce per-subunit reading information.
 
         Returns a list of dicts for each token/sub-part with keys:
@@ -131,9 +136,12 @@ class Transliterator:
           results.
         """
 
-        tokens = self.tokenizer_obj.tokenize(text, self.mode)
+        # Tokenizer may raise RuntimeError: Already borrowed when called
+        # concurrently. Protect the call with a lock to serialize access.
+        with self._tokenizer_lock:
+            tokens = self.tokenizer_obj.tokenize(text, self.mode)
 
-        results = []
+        results: List[Dict[str, Any]] = []
         for t in tokens:
             surface = t.surface()
             reading = t.reading_form()

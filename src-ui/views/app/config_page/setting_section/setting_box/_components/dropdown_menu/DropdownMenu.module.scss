@@ -1,0 +1,28 @@
+@import "@scss_mixins";
+
+.container {
+    display: flex;
+    flex-direction: row;
+    gap: 2.8rem;
+    flex-shrink: 0;
+}
+
+.each_dropdown_menu_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    white-space: nowrap;
+    max-width: 24rem;
+    flex-shrink: 0;
+    &.is_disabled {
+        pointer-events: none;
+    }
+}
+
+.secondary_label {
+    padding-left: 0.2rem;
+    padding-right: 0.4rem;
+    font-size: 1.4rem;
+    color: var(--dark_500_color);
+    white-space: nowrap;
+}

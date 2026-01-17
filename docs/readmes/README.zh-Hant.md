@@ -35,12 +35,6 @@ Become a VRCT Supporter on:
     </picture>
 </a>&emsp;&nbsp;
 
-<a href="https://ko-fi.com/vrct_dev">
-    <picture>
-        <img src="/docs/img/kofi_logo.png" alt="Ko-fi" height="22px">
-    </picture>
-</a>&emsp;&nbsp;
-
 <br>
 
 <picture>
@@ -81,7 +75,7 @@ VRCT 可以：
 
 # 文件
 解釋了初始設定、基本功能以及其他功能。
-- [文件（日語）](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+- [Documents Link](https://misyaguziya.github.io/VRCT-Docs/)
 
 # YouTube 教學（日語、英文字幕）
 <div align="center">
@@ -95,6 +89,12 @@ VRCT 可以：
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI 多語系支援)
 - [レラ](https://github.com/soumt-r) (技術支援)
 - [どね](https://twitter.com/done_vrc) (Logo 設計)
+
+## 遙測（使用統計）
+
+VRCT 透過 [Aptabase](https://aptabase.com) 收集匿名遙測資料以協助改善應用程式。收集的資料包括應用程式啟動次數、使用時長、功能使用。不會收集任何可識別個人身份的資訊。
+
+您可以隨時在應用程式設定中停用遙測。詳情請參閱 [Aptabase 隱私權政策](https://aptabase.com/legal/privacy)。
 
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">

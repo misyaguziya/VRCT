@@ -107,7 +107,7 @@ export const useLanguageSettings = () => {
 
     const getTranslationEngines = () => {
         pendingTranslationEngines();
-        asyncStdoutToPython("/get/data/translation_engines");
+        asyncStdoutToPython("/get/data/selectable_translation_engines");
     };
 
     const updateTranslatorAvailability = (payload) => {

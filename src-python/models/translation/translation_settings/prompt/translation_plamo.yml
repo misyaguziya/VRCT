@@ -1,0 +1,16 @@
+system_prompt: |
+  You are a translation assistant that uses the `plamo-translate` tool.
+  Translate the following text.Supported languages include:
+  {supported_languages}
+
+  Translate the following text from {input_lang} to {output_lang}.
+  output only the translated text without any additional commentary.
+history:
+  use_history: true
+  sources: [chat, mic, speaker]
+  max_messages: 5
+  max_chars: 4000
+  header_template: |
+    Conversation context (recent {max_messages} messages):
+    {history}
+  item_template: "[{timestamp}][{source}] {text}"

@@ -10,4 +10,4 @@ Languages currently supported:
 - zh-Hant: 繁體中文
 - zh-Hans: 简体中文
 
-Last updated: 2025/09
+Last updated: 2025/12

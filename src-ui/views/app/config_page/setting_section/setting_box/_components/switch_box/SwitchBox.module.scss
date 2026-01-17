@@ -1,0 +1,17 @@
+@import "@scss_mixins";
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+
+.secondary_label {
+    padding-left: 0.2rem;
+    padding-right: 0.4rem;
+    font-size: 1.4rem;
+    color: var(--dark_500_color);
+    white-space: nowrap;
+}

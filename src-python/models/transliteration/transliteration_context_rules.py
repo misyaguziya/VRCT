@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Any
 import re
 
 """Contextual transliteration rules for tokenized results.
@@ -33,7 +33,7 @@ DEFAULT_RULES = {
 
 
 
-def apply_context_rules(results: List[Dict], use_macron: bool = False) -> List[Dict]:
+def apply_context_rules(results: List[Dict[str, Any]], use_macron: bool = False) -> List[Dict[str, Any]]:
     """Apply contextual rewrite rules to `results`.
 
     Parameters
@@ -50,7 +50,7 @@ def apply_context_rules(results: List[Dict], use_macron: bool = False) -> List[D
     """
 
     # prepare rules: sort by priority (desc) and precompile regex where provided
-    raw_rules = DEFAULT_RULES.get("rules", [])
+    raw_rules: List[Dict[str, Any]] = DEFAULT_RULES.get("rules", [])
     rules = sorted(raw_rules, key=lambda r: r.get("priority", 0), reverse=True)
     for r in rules:
         if r.get("match_mode") == "regex" and r.get("pattern"):

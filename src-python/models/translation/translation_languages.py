@@ -1,384 +1,144 @@
-translation_lang = {}
-dict_deepl_languages = {
-    "Arabic":"ar",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "English":"en",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Irish":"ga",
-	"Croatian":"hr",
-	"Hungarian":"hu",
-	"Indonesian":"id",
-	"Icelandic":"is",
-	"Italian":"it",
-	"Japanese":"ja",
-	"Korean":"ko",
-	"Lithuanian":"lt",
-	"Latvian":"lv",
-	"Maltese":"mt",
-	"Bokmal":"nb",
-	"Dutch":"nl",
-	"Norwegian":"no",
-	"Polish":"pl",
-	"Portuguese":"pt",
-	"Romanian":"ro",
-	"Russian":"ru",
-	"Slovak":"sk",
-	"Slovenian":"sl",
-	"Swedish":"sv",
-	"Turkish":"tr",
-	"Ukrainian":"uk",
-	"Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-translation_lang["DeepL"] = {
-    "source":dict_deepl_languages,
-    "target":dict_deepl_languages,
-}
+"""Load translation language code mappings from YAML.
 
-dict_deepl_api_source_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Hungarian":"hu",
-    "Indonesian":"id",
-    "Italian":"it",
-    "Korean":"ko",
-    "Lithuanian":"lt",
-    "Latvian":"lv",
-    "Norwegian":"nb",
-    "Dutch":"nl",
-    "Polish":"pl",
-    "Portuguese":"pt",
-    "Romanian":"ro",
-    "Russian":"ru",
-    "Slovak":"sk",
-    "Slovenian":"sl",
-    "Swedish":"sv",
-    "Turkish":"tr",
-    "Ukrainian":"uk",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-dict_deepl_api_target_languages = {
-    "Japanese":"ja",
-    "English American":"en-US",
-    "English British":"en-GB",
-    "Bulgarian":"bg",
-    "Czech":"cs",
-    "Danish":"da",
-    "German":"de",
-    "Greek":"el",
-    "English":"en",
-    "Spanish":"es",
-    "Estonian":"et",
-    "Finnish":"fi",
-    "French":"fr",
-    "Hungarian":"hu",
-    "Indonesian":"id",
-    "Italian":"it",
-    "Korean":"ko",
-    "Lithuanian":"lt",
-    "Latvian":"lv",
-    "Norwegian":"nb",
-    "Dutch":"nl",
-    "Polish":"pl",
-    "Portuguese Brazilian":"pt-BR",
-    "Portuguese European":"pt-PT",
-    "Romanian":"ro",
-    "Russian":"ru",
-    "Slovak":"sk",
-    "Slovenian":"sl",
-    "Swedish":"sv",
-    "Turkish":"tr",
-    "Ukrainian":"uk",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh"
-}
-translation_lang["DeepL_API"] = {
-    "source": dict_deepl_api_source_languages,
-    "target": dict_deepl_api_target_languages,
-}
+YAML ファイル: languages/languages.yml
+構造:
+  <BackendName>:
+    source: { DisplayName: Code, ... }
+    target: { DisplayName: Code, ... }
+  CTranslate2:
+    <ModelName>:
+      source: {...}
+      target: {...}
+"""
 
-dict_google_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh-TW",
-    "Arabic":"ar",
-    "Russian":"ru",
-    "French":"fr",
-    "German":"de",
-    "Spanish":"es",
-    "Portuguese":"pt",
-    "Italian":"it",
-    "Korean":"ko",
-    "Greek":"el",
-    "Dutch":"nl",
-    "Hindi":"hi",
-    "Turkish":"tr",
-    "Malay":"ms",
-    "Thai":"th",
-    "Vietnamese":"vi",
-    "Indonesian":"id",
-    "Hebrew":"he",
-    "Polish":"pl",
-    "Mongolian":"mn",
-    "Czech":"cs",
-    "Hungarian":"hu",
-    "Estonian":"et",
-    "Bulgarian":"bg",
-    "Danish":"da",
-    "Finnish":"fi",
-    "Romanian":"ro",
-    "Swedish":"sv",
-    "Slovenian":"sl",
-    "Persian/Farsi":"fa",
-    "Bosnian":"bs",
-    "Serbian":"sr",
-    "Filipino":"tl",
-    "Haitiancreole":"ht",
-    "Catalan":"ca",
-    "Croatian":"hr",
-    "Latvian":"lv",
-    "Lithuanian":"lt",
-    "Urdu":"ur",
-    "Ukrainian":"uk",
-    "Welsh":"cy",
-    "Swahili":"sw",
-    "Samoan":"sm",
-    "Slovak":"sk",
-    "Afrikaans":"af",
-    "Norwegian":"no",
-    "Bengali":"bn",
-    "Malagasy":"mg",
-    "Maltese":"mt",
-    "Gujarati":"gu",
-    "Tamil":"ta",
-    "Telugu":"te",
-    "Punjabi":"pa",
-    "Amharic":"am",
-    "Azerbaijani":"az",
-    "Belarusian":"be",
-    "Cebuano":"ceb",
-    "Esperanto":"eo",
-    # "Basque":"eu",
-    "Irish":"ga"
-}
-translation_lang["Google"] = {
-    "source":dict_google_languages,
-    "target":dict_google_languages,
-}
+import os
+import threading
+from typing import Any, Dict
+import yaml
+try:
+    from utils import printLog, errorLogging
+except ImportError:
+    def printLog(data, *args, **kwargs):
+        print(data, *args, **kwargs)
 
-dict_bing_languages = {
-    "Japanese":"ja",
-    "English":"en",
-    "Chinese Simplified":"zh",
-    "Chinese Traditional":"zh-Hant",
-    "Arabic":"ar",
-    "Russian":"ru",
-    "French":"fr",
-    "German":"de",
-    "Spanish":"es",
-    "Portuguese":"pt",
-    "Italian":"it",
-    "Korean":"ko",
-    "Greek":"el",
-    "Dutch":"nl",
-    "Hindi":"hi",
-    "Turkish":"tr",
-    "Malay":"ms",
-    "Thai":"th",
-    "Vietnamese":"vi",
-    "Indonesian":"id",
-    "Hebrew":"he",
-    "Polish":"pl",
-    "Czech":"cs",
-    "Hungarian":"hu",
-    "Estonian":"et",
-    "Bulgarian":"bg",
-    "Danish":"da",
-    "Finnish":"fi",
-    "Romanian":"ro",
-    "Swedish":"sv",
-    "Slovenian":"sl",
-    "Persian/Farsi":"fa",
-    "Bosnian":"bs",
-    "Serbian":"sr",
-    "Fijian":"fj",
-    "Filipino":"tl",
-    "Haitiancreole":"ht",
-    "Catalan":"ca",
-    "Croatian":"hr",
-    "Latvian":"lv",
-    "Lithuanian":"lt",
-    "Urdu":"ur",
-    "Ukrainian":"uk",
-    "Welsh":"cy",
-    "Tahiti":"ty",
-    "Tongan":"to",
-    "Swahili":"sw",
-    "Samoan":"sm",
-    "Slovak":"sk",
-    "Afrikaans":"af",
-    "Norwegian":"no",
-    "Bengali":"bn",
-    "Malagasy":"mg",
-    "Maltese":"mt",
-    "Queretaro otomi":"otq",
-    "Klingon/tlhingan Hol":"tlh",
-    "Gujarati":"gu",
-    "Tamil":"ta",
-    "Telugu":"te",
-    "Punjabi":"pa",
-    "Irish":"ga"
-}
-translation_lang["Bing"] = {
-    "source":dict_bing_languages,
-    "target":dict_bing_languages,
-}
+    def errorLogging():
+        import traceback
+        traceback.print_exc()
 
-dict_papago_languages = {
-    "German": "de",
-    "English": "en",
-    "Spanish":"es",
-    "French": "fr",
-    "Hindi": "hi",
-    "Indonesian": "id",
-    "Italian": "it",
-    "Japanese": "ja",
-    "Korean": "ko",
-    "Portuguese": "pt",
-    "Russian": "ru",
-    "Thai": "th",
-    "Vietnamese": "vi",
-    "Chinese Simplified":"zh-CN",
-    "Chinese Traditional":"zh-TW",
-}
 
-translation_lang["Papago"] = {
-    "source":dict_papago_languages,
-    "target":dict_papago_languages,
-}
+# 型: translation_lang[backend][(model)?]['source'|'target'][display_name] = code
+translation_lang: Dict[str, Dict[str, Dict[str, str]]] = {}
+_loaded = False
+_lock = threading.Lock()
 
-dict_ctranslate2_languages = {
-    "English": "en",
-    "Chinese Simplified": "zh",
-    "Chinese Traditional":"zh",
-    "German": "de",
-    "Spanish": "es",
-    "Russian": "ru",
-    "Korean": "ko",
-    "French": "fr",
-    "Japanese": "ja",
-    "Portuguese": "pt",
-    "Turkish": "tr",
-    "Polish": "pl",
-    "Catalan": "ca",
-    "Dutch": "nl",
-    "Arabic": "ar",
-    "Swedish": "sv",
-    "Italian": "it",
-    "Indonesian": "id",
-    "Hindi": "hi",
-    "Finnish": "fi",
-    "Vietnamese": "vi",
-    "Hebrew": "he",
-    "Ukrainian": "uk",
-    "Greek": "el",
-    "Malay": "ms",
-    "Czech": "cs",
-    "Romanian": "ro",
-    "Danish": "da",
-    "Hungarian": "hu",
-    "Tamil": "ta",
-    "Norwegian": "no",
-    "Thai": "th",
-    "Urdu": "ur",
-    "Croatian": "hr",
-    "Bulgarian": "bg",
-    "Lithuanian": "lt",
-    "Latin": "la",
-    "Maori": "mi",
-    "Malayalam": "ml",
-    "Welsh": "cy",
-    "Slovak": "sk",
-    # "Telugu": "te",
-    "Persian": "fa",
-    "Latvian": "lv",
-    "Bengali": "bn",
-    "Serbian": "sr",
-    "Azerbaijani": "az",
-    "Slovenian": "sl",
-    "Kannada": "kn",
-    "Estonian": "et",
-    "Macedonian": "mk",
-    "Breton": "br",
-    # "Basque": "eu",
-    "Icelandic": "is",
-    "Armenian": "hy",
-    "Nepali": "ne",
-    "Mongolian": "mn",
-    "Bosnian": "bs",
-    "Kazakh": "kk",
-    "Albanian": "sq",
-    "Swahili": "sw",
-    "Galician": "gl",
-    "Marathi": "mr",
-    "Punjabi": "pa",
-    "Sinhala": "si",
-    "Khmer": "km",
-    "Shona": "sn",
-    "Yoruba": "yo",
-    "Somali": "so",
-    "Afrikaans": "af",
-    "Occitan": "oc",
-    "Georgian": "ka",
-    "Belarusian": "be",
-    "Tajik": "tg",
-    "Sindhi": "sd",
-    "Gujarati": "gu",
-    "Amharic": "am",
-    "Yiddish": "yi",
-    "Lao": "lo",
-    "Uzbek": "uz",
-    "Faroese": "fo",
-    "Haitian creole": "ht",
-    "Pashto": "ps",
-    "Turkmen": "tk",
-    "Nynorsk": "nn",
-    "Maltese": "mt",
-    "Sanskrit": "sa",
-    "Luxembourgish": "lb",
-    "Myanmar": "my",
-    "Tibetan": "bo",
-    "Filipino": "tl",
-    "Malagasy": "mg",
-    "Assamese": "as",
-    "Tatar": "tt",
-    "Hawaiian": "haw",
-    "Lingala": "ln",
-    "Hausa": "ha",
-    "Bashkir": "ba",
-    "Javanese": "jw",
-    "Sundanese": "su"
-}
 
-translation_lang["CTranslate2"] = {
-    "source":dict_ctranslate2_languages,
-    "target":dict_ctranslate2_languages,
-}
+def _load_languages(path: str, filename: str) -> str:
+    """Get absolute path to resource file relative to this module.
+
+    Args:
+        filename: relative filename from this module's directory
+
+    Returns:
+        Absolute path to the resource file
+    """
+    if os.path.exists(os.path.join(path, "_internal", "translation_settings", "languages", filename)):
+        languages_path =  os.path.join(path, "_internal", "translation_settings", "languages", filename)
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "translation_settings", "languages", filename)):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models", "translation", "translation_settings", "languages", filename)
+    elif os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation_settings", "languages", filename)):
+        languages_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "translation_settings", "languages", filename)
+    else:
+        raise FileNotFoundError(f"Languages file not found: {filename}")
+    with open(languages_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+def _validate_source_target(backend: str, mapping: Any) -> None:
+    """Validate that a backend mapping has proper source/target structure.
+
+    Args:
+        backend: backend name for error messages
+        mapping: mapping to validate
+
+    Raises:
+        ValueError: If mapping structure is invalid
+    """
+    if not isinstance(mapping, dict):
+        raise ValueError(f"{backend}: 値は dict である必要があります。")
+    if "source" not in mapping or "target" not in mapping:
+        raise ValueError(f"{backend}: 'source' と 'target' が必要です。")
+
+    for key in ("source", "target"):
+        if not isinstance(mapping[key], dict):
+            raise ValueError(f"{backend}: '{key}' は dict である必要があります。")
+        # value は str を想定
+        for disp, code in mapping[key].items():
+            if not isinstance(disp, str) or not isinstance(code, str):
+                raise ValueError(
+                    f"{backend}: '{key}' のエントリは str: str である必要があります。 ({disp} => {code})"
+                )
+
+def loadTranslationLanguages(path: str, force: bool = False) -> Dict[str, Any]:
+    """Load translation language mappings from YAML file.
+
+    Args:
+        path: Path to the YAML file
+        force: If True, reload even if already loaded
+
+    Returns:
+        Dictionary of translation language mappings
+
+    Raises:
+        FileNotFoundError: If languages/languages.yml is not found
+        ValueError: If YAML structure is invalid
+    """
+    global _loaded, translation_lang
+    if _loaded and not force:
+        return translation_lang
+
+    with _lock:
+        if _loaded and not force:
+            return translation_lang
+
+        data = _load_languages(path, "languages.yml")
+
+        if not isinstance(data, dict):
+            raise ValueError(
+                "languages/languages.yml のルートはマッピング(dict)である必要があります。"
+            )
+
+        # 検証と正規化
+        validated: Dict[str, Dict[str, Dict[str, str]]] = {}
+        for backend, value in data.items():
+            if backend == "CTranslate2":
+                # NOTE: CTranslate2 はモデルごとに異なる言語セットを持つ
+                if not isinstance(value, dict):
+                    raise ValueError(
+                        "CTranslate2 の値はモデル名→ {source:, target:} の dict である必要があります。"
+                    )
+                validated["CTranslate2"] = {}
+                for model_name, model_map in value.items():
+                    _validate_source_target(
+                        backend=f"CTranslate2/{model_name}", mapping=model_map
+                    )
+                    validated["CTranslate2"][model_name] = {
+                        "source": model_map["source"],
+                        "target": model_map["target"],
+                    }
+            else:
+                _validate_source_target(backend=backend, mapping=value)
+                validated[backend] = {
+                    "source": value["source"],
+                    "target": value["target"],
+                }
+
+        translation_lang = validated
+        _loaded = True
+        return translation_lang
+
+if __name__ == "__main__":
+    try:
+        langs = loadTranslationLanguages(path=".", force=True)
+        printLog("Loaded translation languages:")
+        printLog(langs)
+    except Exception:
+        errorLogging()

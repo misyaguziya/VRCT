@@ -35,12 +35,6 @@ Become a VRCT Supporter on:
     </picture>
 </a>&emsp;&nbsp;
 
-<a href="https://ko-fi.com/vrct_dev">
-    <picture>
-        <img src="/docs/img/kofi_logo.png" alt="Ko-fi" height="22px">
-    </picture>
-</a>&emsp;&nbsp;
-
 <br>
 
 <picture>
@@ -82,7 +76,7 @@ VRCT는 다음과 같이 당신의 대화를 도와드려요.
 
 # 문서 (일본어)
 초기 설정과 기본 기능 및 기타 기능에 대해 설명되어 있어요.
-- [Documents Link](https://mzsoftware.notion.site/VRCT-Documents-be79b7a165f64442ad8f326d86c22246?pvs=4)
+- [Documents Link](https://misyaguziya.github.io/VRCT-Docs/)
 
 # 사용법 (Youtube)
 <div align="center">
@@ -96,6 +90,12 @@ VRCT는 다음과 같이 당신의 대화를 도와드려요.
 - [しいな(Shiina_12siy)](https://twitter.com/Shiina_12siy) (UI/UX, UI 다국어 지원)
 - [レラ](https://github.com/soumt-r) (기술 지원)
 - [どね](https://twitter.com/done_vrc) (로고 디자인)
+
+## 텔레메트리 (사용 통계)
+
+VRCT는 [Aptabase](https://aptabase.com)를 통해 앱 개선을 위한 익명 텔레메트리 데이터를 수집합니다. 수집되는 데이터는 앱 시작 횟수, 세션 시간, 기능 사용입니다. 개인 식별 정보는 수집되지 않습니다.
+
+앱 설정에서 언제든지 텔레메트리를 비활성화할 수 있습니다. 자세한 내용은 [Aptabase 개인정보 처리방침](https://aptabase.com/legal/privacy)을 참조하세요.
 
 ## Thanks to our contributors
 <a href="https://github.com/misyaguziya/VRCT/graphs/contributors" target="_blank">

@@ -1,0 +1,29 @@
+.container {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    gap: 2rem;
+    &.flex_column {
+        flex-direction: column;
+    }
+    &:not(.remove_border_bottom) {
+        border-bottom: solid 0.1rem var(--dark_800_color);
+    }
+
+    &.is_break_point {
+        flex-direction: column;
+        gap: 2rem;
+        align-items: start;
+    }
+}
+
+.deepl_auth_key_label_section {
+    max-width: 34rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.4rem;
+}
