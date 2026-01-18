@@ -98,6 +98,15 @@ class ErrorCode(str, Enum):
     WEBSOCKET_HOST_INVALID = "WEBSOCKET_HOST_INVALID"
     WEBSOCKET_PORT_UNAVAILABLE = "WEBSOCKET_PORT_UNAVAILABLE"
     WEBSOCKET_SERVER_UNAVAILABLE = "WEBSOCKET_SERVER_UNAVAILABLE"
+
+    # ============================================================================
+    # OBS Browser Sourceエラー (OBS_BROWSER_SOURCE_*)
+    # ============================================================================
+    OBS_BROWSER_SOURCE_HOST_UNAVAILABLE = "OBS_BROWSER_SOURCE_HOST_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_PORT_UNAVAILABLE = "OBS_BROWSER_SOURCE_PORT_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE = "OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE"
+    OBS_BROWSER_SOURCE_FONT_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID"
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID = "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID"
     
     # ============================================================================
     # VRC連携エラー (VRC_*)
@@ -122,6 +131,7 @@ class ErrorCategory(str, Enum):
     MODEL = "model"
     CONNECTION = "connection"
     WEBSOCKET = "websocket"
+    OBS_BROWSER_SOURCE = "obs_browser_source"
     VRC = "vrc"
     GENERAL = "general"
 
@@ -440,6 +450,38 @@ ERROR_METADATA: Dict[ErrorCode, Dict[str, Any]] = {
         "severity": "error",
         "user_action_required": True,
     },
+
+    # OBS Browser Source errors
+    ErrorCode.OBS_BROWSER_SOURCE_HOST_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server host is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server port is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source server is not available",
+        "severity": "error",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_COLOR_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source font color is not valid (#RRGGBB)",
+        "severity": "warning",
+        "user_action_required": True,
+    },
+    ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID: {
+        "category": ErrorCategory.OBS_BROWSER_SOURCE,
+        "message": "OBS Browser Source outline color is not valid (#RRGGBB)",
+        "severity": "warning",
+        "user_action_required": True,
+    },
     
     # VRC連携エラー
     ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED: {
@@ -649,6 +691,18 @@ ENDPOINT_ERROR_MAPPING: Dict[str, Dict[str, ErrorCode]] = {
     },
     "/set/enable/websocket_server": {
         "UNAVAILABLE": ErrorCode.WEBSOCKET_SERVER_UNAVAILABLE,
+    },
+    "/set/enable/obs_browser_source": {
+        "UNAVAILABLE": ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE,
+    },
+    "/set/data/obs_browser_source_port": {
+        "UNAVAILABLE": ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE,
+    },
+    "/set/data/obs_browser_source_font_color": {
+        "INVALID": ErrorCode.OBS_BROWSER_SOURCE_FONT_COLOR_INVALID,
+    },
+    "/set/data/obs_browser_source_font_outline_color": {
+        "INVALID": ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID,
     },
     "/set/enable/vrc_mic_mute_sync": {
         "OSC_DISABLED": ErrorCode.VRC_MIC_MUTE_SYNC_OSC_DISABLED,

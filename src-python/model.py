@@ -32,6 +32,7 @@ from models.overlay.overlay import Overlay
 from models.overlay.overlay_image import OverlayImage
 from models.watchdog.watchdog import Watchdog
 from models.websocket.websocket_server import WebSocketServer
+from models.obs.obs_browser_source_server import ObsBrowserSourceServer
 from models.clipboard.clipboard import Clipboard
 from models.telemetry import Telemetry
 from utils import errorLogging, setupLogger
@@ -139,6 +140,7 @@ class Model:
         self.websocket_server_loop = False
         self.websocket_server_alive = False
         self.th_websocket_server = None
+        self.obs_browser_source_server = None
         # default no-op callbacks for energy check functions
         self.check_mic_energy_fnc: Callable[[float], None] = lambda v: None
         self.check_speaker_energy_fnc: Callable[[float], None] = lambda v: None
@@ -1282,6 +1284,52 @@ class Model:
         """WebSocketサーバーの稼働状態を確認する"""
         self.ensure_initialized()
         return self.websocket_server_alive
+
+    def startObsBrowserSourceServer(self, host: str, port: int) -> None:
+        """Start the local HTTP server used as an OBS Browser Source."""
+        self.ensure_initialized()
+
+        try:
+            if (
+                isinstance(self.obs_browser_source_server, ObsBrowserSourceServer)
+                and self.obs_browser_source_server.is_running
+                and self.obs_browser_source_server.host == host
+                and self.obs_browser_source_server.port == port
+            ):
+                return
+        except Exception:
+            # If anything goes wrong while checking state, restart.
+            pass
+
+        self.stopObsBrowserSourceServer()
+
+        try:
+            self.obs_browser_source_server = ObsBrowserSourceServer(host=host, port=port)
+            self.obs_browser_source_server.start()
+        except Exception:
+            errorLogging()
+            self.obs_browser_source_server = None
+
+    def stopObsBrowserSourceServer(self) -> None:
+        self.ensure_initialized()
+        try:
+            if isinstance(self.obs_browser_source_server, ObsBrowserSourceServer):
+                self.obs_browser_source_server.stop()
+        except Exception:
+            errorLogging()
+        finally:
+            self.obs_browser_source_server = None
+
+    def checkObsBrowserSourceServerAlive(self) -> bool:
+        self.ensure_initialized()
+        try:
+            return (
+                isinstance(self.obs_browser_source_server, ObsBrowserSourceServer)
+                and self.obs_browser_source_server.is_running
+            )
+        except Exception:
+            errorLogging()
+            return False
 
     def websocketSendMessage(self, message_dict:dict):
         """

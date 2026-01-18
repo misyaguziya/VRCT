@@ -407,6 +407,27 @@ mapping = {
     "/set/enable/websocket_server": {"status": True, "variable":controller.setEnableWebSocketServer},
     "/set/disable/websocket_server": {"status": True, "variable":controller.setDisableWebSocketServer},
 
+    # OBS Browser Source Settings
+    "/get/data/obs_browser_source": {"status": True, "variable":controller.getObsBrowserSource},
+    "/set/enable/obs_browser_source": {"status": True, "variable":controller.setEnableObsBrowserSource},
+    "/set/disable/obs_browser_source": {"status": True, "variable":controller.setDisableObsBrowserSource},
+    "/get/data/obs_browser_source_port": {"status": True, "variable":controller.getObsBrowserSourcePort},
+    "/set/data/obs_browser_source_port": {"status": True, "variable":controller.setObsBrowserSourcePort},
+    "/get/data/obs_browser_source_max_messages": {"status": True, "variable":controller.getObsBrowserSourceMaxMessages},
+    "/set/data/obs_browser_source_max_messages": {"status": True, "variable":controller.setObsBrowserSourceMaxMessages},
+    "/get/data/obs_browser_source_display_duration": {"status": True, "variable":controller.getObsBrowserSourceDisplayDuration},
+    "/set/data/obs_browser_source_display_duration": {"status": True, "variable":controller.setObsBrowserSourceDisplayDuration},
+    "/get/data/obs_browser_source_fadeout_duration": {"status": True, "variable":controller.getObsBrowserSourceFadeoutDuration},
+    "/set/data/obs_browser_source_fadeout_duration": {"status": True, "variable":controller.setObsBrowserSourceFadeoutDuration},
+    "/get/data/obs_browser_source_font_size": {"status": True, "variable":controller.getObsBrowserSourceFontSize},
+    "/set/data/obs_browser_source_font_size": {"status": True, "variable":controller.setObsBrowserSourceFontSize},
+    "/get/data/obs_browser_source_font_color": {"status": True, "variable":controller.getObsBrowserSourceFontColor},
+    "/set/data/obs_browser_source_font_color": {"status": True, "variable":controller.setObsBrowserSourceFontColor},
+    "/get/data/obs_browser_source_font_outline_thickness": {"status": True, "variable":controller.getObsBrowserSourceFontOutlineThickness},
+    "/set/data/obs_browser_source_font_outline_thickness": {"status": True, "variable":controller.setObsBrowserSourceFontOutlineThickness},
+    "/get/data/obs_browser_source_font_outline_color": {"status": True, "variable":controller.getObsBrowserSourceFontOutlineColor},
+    "/set/data/obs_browser_source_font_outline_color": {"status": True, "variable":controller.setObsBrowserSourceFontOutlineColor},
+
     # Clipboard Settings
     "/get/data/clipboard": {"status": True, "variable":controller.getClipboard},
     "/set/enable/clipboard": {"status": True, "variable":controller.setEnableClipboard},

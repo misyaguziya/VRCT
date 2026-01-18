@@ -10,6 +10,8 @@ from model import model
 from utils import removeLog, printLog, errorLogging, isConnectedNetwork, isValidIpAddress, isAvailableWebSocketServer
 from errors import ErrorCode, VRCTError
 
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{6}$")
+
 class Controller:
     def __init__(self) -> None:
         # typed attributes to satisfy static type checkers
@@ -3021,7 +3023,7 @@ class Controller:
                     response = {"status":200, "result":config.WEBSOCKET_HOST}
                 else:
                     response = VRCTError.create_error_response(
-                        ErrorCode.WEBSOCKET_HOST_UNAVAILABLE,
+                        ErrorCode.WEBSOCKET_HOST_INVALID,
                         data=config.WEBSOCKET_HOST
                     )
 
@@ -3077,6 +3079,170 @@ class Controller:
             config.WEBSOCKET_SERVER = False
             model.stopWebSocketServer()
         return {"status":200, "result":config.WEBSOCKET_SERVER}
+
+    # OBS Browser Source (local overlay for OBS)
+    @staticmethod
+    def getObsBrowserSource(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE}
+
+    @staticmethod
+    def setEnableObsBrowserSource(*args, **kwargs) -> dict:
+        if config.OBS_BROWSER_SOURCE is True:
+            return {"status":200, "result":config.OBS_BROWSER_SOURCE}
+
+        # OBS overlay depends on the WebSocket server to receive messages.
+        if model.checkWebSocketServerAlive() is False:
+            if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
+                model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
+                config.WEBSOCKET_SERVER = True
+            else:
+                return VRCTError.create_error_response(
+                    ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE,
+                    data=config.OBS_BROWSER_SOURCE,
+                    custom_message="WebSocket server host or port is not available",
+                )
+
+        obs_host = config.WEBSOCKET_HOST
+        obs_port = int(config.OBS_BROWSER_SOURCE_PORT)
+
+        if isAvailableWebSocketServer(obs_host, obs_port) is not True:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE,
+                data=config.OBS_BROWSER_SOURCE_PORT
+            )
+
+        model.startObsBrowserSourceServer(obs_host, obs_port)
+
+        if model.checkObsBrowserSourceServerAlive() is not True:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE,
+                data=config.OBS_BROWSER_SOURCE
+            )
+
+        config.OBS_BROWSER_SOURCE = True
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE}
+
+    @staticmethod
+    def setDisableObsBrowserSource(*args, **kwargs) -> dict:
+        if config.OBS_BROWSER_SOURCE is True:
+            config.OBS_BROWSER_SOURCE = False
+            model.stopObsBrowserSourceServer()
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE}
+
+    @staticmethod
+    def getObsBrowserSourcePort(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
+
+    @staticmethod
+    def setObsBrowserSourcePort(data, *args, **kwargs) -> dict:
+        try:
+            port = int(data)
+        except Exception:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE,
+                data=config.OBS_BROWSER_SOURCE_PORT,
+                custom_message="OBS Browser Source port must be a number",
+            )
+
+        if model.checkObsBrowserSourceServerAlive() is not True:
+            config.OBS_BROWSER_SOURCE_PORT = port
+            return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
+
+        if port == config.OBS_BROWSER_SOURCE_PORT:
+            return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
+
+        if isAvailableWebSocketServer(config.WEBSOCKET_HOST, port) is not True:
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_PORT_UNAVAILABLE,
+                data=config.OBS_BROWSER_SOURCE_PORT
+            )
+
+        model.stopObsBrowserSourceServer()
+        model.startObsBrowserSourceServer(config.WEBSOCKET_HOST, port)
+        if model.checkObsBrowserSourceServerAlive() is not True:
+            config.OBS_BROWSER_SOURCE = False
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE,
+                data=config.OBS_BROWSER_SOURCE
+            )
+
+        config.OBS_BROWSER_SOURCE_PORT = port
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_PORT}
+
+    @staticmethod
+    def getObsBrowserSourceMaxMessages(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
+
+    @staticmethod
+    def setObsBrowserSourceMaxMessages(data, *args, **kwargs) -> dict:
+        config.OBS_BROWSER_SOURCE_MAX_MESSAGES = int(data)
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_MAX_MESSAGES}
+
+    @staticmethod
+    def getObsBrowserSourceDisplayDuration(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
+
+    @staticmethod
+    def setObsBrowserSourceDisplayDuration(data, *args, **kwargs) -> dict:
+        config.OBS_BROWSER_SOURCE_DISPLAY_DURATION = int(data)
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_DISPLAY_DURATION}
+
+    @staticmethod
+    def getObsBrowserSourceFadeoutDuration(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
+
+    @staticmethod
+    def setObsBrowserSourceFadeoutDuration(data, *args, **kwargs) -> dict:
+        config.OBS_BROWSER_SOURCE_FADEOUT_DURATION = int(data)
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FADEOUT_DURATION}
+
+    @staticmethod
+    def getObsBrowserSourceFontSize(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
+
+    @staticmethod
+    def setObsBrowserSourceFontSize(data, *args, **kwargs) -> dict:
+        config.OBS_BROWSER_SOURCE_FONT_SIZE = int(data)
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_SIZE}
+
+    @staticmethod
+    def getObsBrowserSourceFontColor(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
+
+    @staticmethod
+    def setObsBrowserSourceFontColor(data, *args, **kwargs) -> dict:
+        color = str(data).strip()
+        if not _HEX_COLOR_RE.match(color):
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_COLOR_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_COLOR,
+            )
+        config.OBS_BROWSER_SOURCE_FONT_COLOR = color.upper()
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_COLOR}
+
+    @staticmethod
+    def getObsBrowserSourceFontOutlineThickness(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
+
+    @staticmethod
+    def setObsBrowserSourceFontOutlineThickness(data, *args, **kwargs) -> dict:
+        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = int(data)
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS}
+
+    @staticmethod
+    def getObsBrowserSourceFontOutlineColor(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
+
+    @staticmethod
+    def setObsBrowserSourceFontOutlineColor(data, *args, **kwargs) -> dict:
+        color = str(data).strip()
+        if not _HEX_COLOR_RE.match(color):
+            return VRCTError.create_error_response(
+                ErrorCode.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID,
+                data=config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR,
+            )
+        config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = color.upper()
+        return {"status":200, "result":config.OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR}
 
     # Clipboard control
     @staticmethod
@@ -3462,6 +3628,10 @@ class Controller:
 
         # Init WebSocket Server
         printLog("Init WebSocket Server")
+        # OBS Browser Source depends on WebSocket Server to receive messages.
+        if config.OBS_BROWSER_SOURCE is True and config.WEBSOCKET_SERVER is False:
+            config.WEBSOCKET_SERVER = True
+
         if config.WEBSOCKET_SERVER is True:
             if isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT) is True:
                 model.startWebSocketServer(config.WEBSOCKET_HOST, config.WEBSOCKET_PORT)
@@ -3469,6 +3639,20 @@ class Controller:
                 config.WEBSOCKET_SERVER = False
                 model.stopWebSocketServer()
                 printLog("WebSocket server host or port is not available")
+
+        # Init OBS Browser Source Server
+        printLog("Init OBS Browser Source Server")
+        if config.OBS_BROWSER_SOURCE is True:
+            if config.WEBSOCKET_SERVER is not True:
+                config.OBS_BROWSER_SOURCE = False
+                model.stopObsBrowserSourceServer()
+                printLog("OBS Browser Source requires WebSocket Server")
+            elif isAvailableWebSocketServer(config.WEBSOCKET_HOST, config.OBS_BROWSER_SOURCE_PORT) is True:
+                model.startObsBrowserSourceServer(config.WEBSOCKET_HOST, config.OBS_BROWSER_SOURCE_PORT)
+            else:
+                config.OBS_BROWSER_SOURCE = False
+                model.stopObsBrowserSourceServer()
+                printLog("OBS Browser Source server host or port is not available")
 
         # Revalidate Selected Models
         printLog("Revalidate Selected Models")

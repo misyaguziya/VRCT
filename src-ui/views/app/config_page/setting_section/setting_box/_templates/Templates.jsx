@@ -10,6 +10,7 @@ import {
     SwitchBox,
     Entry,
     EntryWithSaveButton,
+    ColorEntryWithSaveButton,
     HotkeysEntry,
     RadioButton,
     AuthKey,
@@ -133,6 +134,9 @@ export const EntryContainer = (props) => (
 );
 export const EntryWithSaveButtonContainer = (props) => (
     <CommonContainer Component={EntryWithSaveButton} {...props} add_break_point={false} />
+);
+export const ColorEntryWithSaveButtonContainer = (props) => (
+    <CommonContainer Component={ColorEntryWithSaveButton} {...props} add_break_point={false} />
 );
 
 export const HotkeysEntryContainer = (props) => (

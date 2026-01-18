@@ -355,10 +355,34 @@ config_page:
             label: "切换 VRCT CPU/GPU 版本"
         enable_websocket:
             label: "启用 WebSocket 服务器"
+            locked_by_obs_browser_source: "请先禁用 OBS 浏览器源再更改此项"
         websocket_host:
             label: "WebSocket 主机"
         websocket_port:
             label: "WebSocket 端口"
+        obs_browser_source:
+            section_label: "OBS 浏览器源"
+        enable_obs_browser_source:
+            label: "启用 OBS 浏览器源"
+            desc: "为 OBS（浏览器源）提供本地叠加页面，显示翻译并在一段时间后淡出。"
+        obs_browser_source_url:
+            label: "OBS URL（点击复制）"
+        obs_browser_source_port:
+            label: "OBS 端口"
+        obs_browser_source_max_messages:
+            label: "最大消息数"
+        obs_browser_source_display_duration:
+            label: "显示时长（秒）"
+        obs_browser_source_fadeout_duration:
+            label: "淡出时长（秒）"
+        obs_browser_source_font_size:
+            label: "字体大小（px）"
+        obs_browser_source_font_color:
+            label: "字体颜色（#RRGGBB）"
+        obs_browser_source_font_outline_thickness:
+            label: "描边粗细（px）"
+        obs_browser_source_font_outline_color:
+            label: "描边颜色（#RRGGBB）"
 
     notifications:
         save_success: "设置已保存。"
