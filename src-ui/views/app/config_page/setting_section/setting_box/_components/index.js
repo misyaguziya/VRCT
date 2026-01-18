@@ -4,6 +4,7 @@ export { AuthKey } from "./auth_key/AuthKey";
 export { DropdownMenu, MultiDropdownMenu } from "./dropdown_menu/DropdownMenu";
 export { Entry } from "./entry/Entry";
 export { EntryWithSaveButton } from "./entry_with_save_button/EntryWithSaveButton";
+export { ColorEntryWithSaveButton } from "./color_entry_with_save_button/ColorEntryWithSaveButton";
 export { HotkeysEntry } from "./hotkeys_entry/HotkeysEntry";
 export { LabelComponent } from "./label_component/LabelComponent";
 export { RadioButton } from "./radio_button/RadioButton";
