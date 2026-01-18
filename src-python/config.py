@@ -724,6 +724,17 @@ class Config:
     NOTIFICATION_VRC_SFX = ManagedProperty('NOTIFICATION_VRC_SFX', type_=bool)
     WEBSOCKET_HOST = ManagedProperty('WEBSOCKET_HOST', type_=str)
     WEBSOCKET_PORT = ManagedProperty('WEBSOCKET_PORT', type_=int)
+
+    # --- OBS Browser Source (overlay for OBS) ---
+    OBS_BROWSER_SOURCE = ManagedProperty('OBS_BROWSER_SOURCE', type_=bool)
+    OBS_BROWSER_SOURCE_PORT = ManagedProperty('OBS_BROWSER_SOURCE_PORT', type_=int)
+    OBS_BROWSER_SOURCE_MAX_MESSAGES = ManagedProperty('OBS_BROWSER_SOURCE_MAX_MESSAGES', type_=int)
+    OBS_BROWSER_SOURCE_DISPLAY_DURATION = ManagedProperty('OBS_BROWSER_SOURCE_DISPLAY_DURATION', type_=int)
+    OBS_BROWSER_SOURCE_FADEOUT_DURATION = ManagedProperty('OBS_BROWSER_SOURCE_FADEOUT_DURATION', type_=int)
+    OBS_BROWSER_SOURCE_FONT_SIZE = ManagedProperty('OBS_BROWSER_SOURCE_FONT_SIZE', type_=int)
+    OBS_BROWSER_SOURCE_FONT_COLOR = ManagedProperty('OBS_BROWSER_SOURCE_FONT_COLOR', type_=str)
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = ManagedProperty('OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS', type_=int)
+    OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = ManagedProperty('OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR', type_=str)
     
     # --- Telemetry Settings ---
     ENABLE_TELEMETRY = ManagedProperty('ENABLE_TELEMETRY', type_=bool)
@@ -1028,6 +1039,15 @@ class Config:
         self._WEBSOCKET_SERVER = False
         self._WEBSOCKET_HOST = "127.0.0.1"
         self._WEBSOCKET_PORT = 2231
+        self._OBS_BROWSER_SOURCE = False
+        self._OBS_BROWSER_SOURCE_PORT = 2232
+        self._OBS_BROWSER_SOURCE_MAX_MESSAGES = 14
+        self._OBS_BROWSER_SOURCE_DISPLAY_DURATION = 60
+        self._OBS_BROWSER_SOURCE_FADEOUT_DURATION = 12
+        self._OBS_BROWSER_SOURCE_FONT_SIZE = 40
+        self._OBS_BROWSER_SOURCE_FONT_COLOR = "#FFFFFF"
+        self._OBS_BROWSER_SOURCE_FONT_OUTLINE_THICKNESS = 3
+        self._OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR = "#000000"
         self._ENABLE_CLIPBOARD = False
         self._ENABLE_TELEMETRY = True
 
