@@ -67,6 +67,10 @@ export const _useBackendErrorHandling = () => {
         updateEnableWebsocket,
         updateWebsocketHost,
         updateWebsocketPort,
+        updateEnableObsBrowserSource,
+        updateObsBrowserSourcePort,
+        updateObsBrowserSourceFontColor,
+        updateObsBrowserSourceFontOutlineColor,
     } = useAdvancedSettings();
 
     const {
@@ -164,7 +168,11 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "VALIDATION_INVALID_IP":
             case "VALIDATION_CANNOT_SET_IP":
-                updateOscIpAddress(data);
+                if (endpoint === "/set/data/websocket_host") {
+                    updateWebsocketHost(data);
+                } else {
+                    updateOscIpAddress(data);
+                }
                 showNotification_Error(message, { category_id: error_code });
                 return;
 
@@ -266,6 +274,30 @@ export const _useBackendErrorHandling = () => {
                 return;
             case "WEBSOCKET_SERVER_UNAVAILABLE":
                 updateEnableWebsocket(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+
+            // ============================================================================
+            // OBS Browser Sourceエラー (OBS_BROWSER_SOURCE_*)
+            // ============================================================================
+            case "OBS_BROWSER_SOURCE_HOST_UNAVAILABLE":
+                updateWebsocketHost(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_PORT_UNAVAILABLE":
+                updateObsBrowserSourcePort(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_SERVER_UNAVAILABLE":
+                updateEnableObsBrowserSource(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_COLOR_INVALID":
+                updateObsBrowserSourceFontColor(data);
+                showNotification_Error(message, { category_id: error_code });
+                return;
+            case "OBS_BROWSER_SOURCE_FONT_OUTLINE_COLOR_INVALID":
+                updateObsBrowserSourceFontOutlineColor(data);
                 showNotification_Error(message, { category_id: error_code });
                 return;
 

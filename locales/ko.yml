@@ -355,10 +355,34 @@ config_page:
             label: "VRCT CPU/GPU 버전 전환"
         enable_websocket:
             label: "WebSocket 서버 활성화"
+            locked_by_obs_browser_source: "OBS 브라우저 소스를 비활성화한 뒤 변경하세요"
         websocket_host:
             label: "WebSocket 호스트"
         websocket_port:
             label: "WebSocket 포트"
+        obs_browser_source:
+            section_label: "OBS 브라우저 소스"
+        enable_obs_browser_source:
+            label: "OBS 브라우저 소스 활성화"
+            desc: "OBS(브라우저 소스)에서 번역을 표시하는 오버레이 페이지를 호스팅하고 일정 시간이 지나면 페이드아웃합니다."
+        obs_browser_source_url:
+            label: "OBS URL(클릭하여 복사)"
+        obs_browser_source_port:
+            label: "OBS 포트"
+        obs_browser_source_max_messages:
+            label: "최대 메시지 수"
+        obs_browser_source_display_duration:
+            label: "표시 시간(초)"
+        obs_browser_source_fadeout_duration:
+            label: "페이드아웃 시간(초)"
+        obs_browser_source_font_size:
+            label: "글꼴 크기(px)"
+        obs_browser_source_font_color:
+            label: "글꼴 색상(#RRGGBB)"
+        obs_browser_source_font_outline_thickness:
+            label: "외곽선 두께(px)"
+        obs_browser_source_font_outline_color:
+            label: "외곽선 색상(#RRGGBB)"
 
     notifications:
         save_success: "설정을 저장했습니다."
