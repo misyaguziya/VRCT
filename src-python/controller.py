@@ -284,7 +284,6 @@ class Controller:
             )
 
         elif isinstance(message, str) and len(message) > 0:
-            model.telemetryTouchActivity()
             model.telemetryTrackCoreFeature("mic_speech_to_text")
             translation = []
             transliteration_message = []
@@ -457,7 +456,6 @@ class Controller:
                 },
             )
         elif isinstance(message, str) and len(message) > 0:
-            model.telemetryTouchActivity()
             model.telemetryTrackCoreFeature("speaker_speech_to_text")
             translation = []
             transliteration_message = []
@@ -640,7 +638,6 @@ class Controller:
         id = data["id"]
         message = data["message"]
         if len(message) > 0:
-            model.telemetryTouchActivity()
             model.telemetryTrackCoreFeature("text_input")
             translation = []
             transliteration_message: List[Any] = []
@@ -2607,7 +2604,7 @@ class Controller:
     def setEnableTelemetry(*args, **kwargs) -> dict:
         if config.ENABLE_TELEMETRY is False:
             config.ENABLE_TELEMETRY = True
-            model.telemetryInit(enabled=config.ENABLE_TELEMETRY, app_version=config.VERSION)
+            model.telemetryInit(enabled=True, app_version=config.VERSION)
         return {"status":200, "result":config.ENABLE_TELEMETRY}
 
     @staticmethod

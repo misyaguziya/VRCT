@@ -55,9 +55,8 @@ src-python/
 │   └── telemetry/
 │       ├── __init__.py          # Public API + singleton管理
 │       ├── client.py            # Aptabase wrapper
-│       ├── state.py             # Enable/disable, last_activity
-│       ├── heartbeat.py         # 5分間隔heartbeatスレッド
-│       └── core.py              # イベント送信ロジック
+│       ├── state.py             # Enable/disable、セッション内送信済み機能管理
+│       └── core.py              # イベント送信ロジック、重複検出
 └── docs/
     └── details/
         └── telemetry.md         # 実装詳細ドキュメント
@@ -67,10 +66,9 @@ src-python/
 
 | モジュール | 責任 |
 |-----------|------|
-| `__init__.py` | パブリック API、シングルトン管理 |
-| `client.py` | Aptabase SDK ラッパー、HTTP通信 |
-| `state.py` | ON/OFF 状態、最終操作時刻管理 |
-| `heartbeat.py` | 5分間隔スレッド、タイムアウト判定 |
+| `__init__.py` | パブリック API、シングルトン管理、イベントループ管理 |
+| `client.py` | Aptabase SDK ラッパー、HTTP通信、ログレベル設定 |
+| `state.py` | ON/OFF 状態、セッション内送信済み機能の追跡 |
 | `core.py` | イベント構築・送信、重複検出 |
 
 ---
@@ -83,7 +81,6 @@ src-python/
 |-----------|------|----------|
 | `app_started` | アプリ起動時 | `{}` |
 | `app_closed` | アプリ終了時 | `{}` |
-| `session_heartbeat` | 5分間隔アクティブ確認 | `{}` |
 | `core_feature` | コア機能開始 | `{"feature": "translation" \| "mic_speech_to_text" \| "speaker_speech_to_text" \| "text_input"}` |
 | `settings_opened` | 設定画面を開く | `{}` |
 | `config_changed` | 設定変更 | `{"section": str}` |
@@ -124,37 +121,6 @@ telemetry.track_core_feature("text_input")
 send_message()  # 実処理
 ```
 
-### Session Heartbeat 仕様
-
-#### アクティブ判定条件
-以下のいずれかが発生した場合、セッションはアクティブ
-
-1. **テキスト入力**
-   - チャット送信
-   - メッセージボックスへの入力
-   
-2. **ASR 実処理**（マイク or スピーカー）
-   - マイク音声認識開始
-   - スピーカー音声認識開始
-   - 実際の音声処理（UI 状態は使用しない）
-
-#### 送信ルール
-- **送信間隔**：5分（300秒）
-- **タイムアウト**：最後のアクティビティから5分経過で送信停止
-- **復帰条件**：アクティビティ発生 → 次の heartbeat から再開
-- **無条件停止**：テレメトリ OFF 時は即座にスレッド停止
-
-#### 実装概略図
-```
-Timeline:
-├─ [Activity] touch_activity() →更新
-├─ [300秒待機]
-├─ [Check] 最後の操作 < 5分? → Yes → send heartbeat
-├─ [300秒待機]
-├─ [Check] 最後の操作 < 5分? → No → 待機のみ
-└─ [Activity] touch_activity() →復帰 → 次heartbeat送信
-```
-
 ---
 
 ## データフロー
@@ -169,7 +135,6 @@ Timeline:
 3. telemetry.init(enabled=config.ENABLE_TELEMETRY)
    ├─ enabled=True の場合
    │  ├─ Aptabase SDK 初期化
-   │  ├─ heartbeat スレッド開始
    │  └─ app_started イベント送信
    └─ enabled=False の場合
       └─ すべての処理をスキップ
@@ -183,8 +148,6 @@ Timeline:
 ENABLE_TELEMETRY チェック
    ├─ False → 何もしない
    └─ True
-      ↓
-      touch_activity() → 最終時刻更新
       ↓
       1セッション内で同一 feature 送信済み?
       ├─ Yes → スキップ
@@ -208,7 +171,7 @@ OFF 状態（設定保存）
 telemetry.init(enabled=True)
    ├─ 既知例外は握りつぶし
    ├─ Aptabase 初期化
-   ├─ heartbeat スレッド開始
+   ├─ asyncio イベントループ開始
    └─ 次のイベントから通常送信
 ```
 
@@ -220,7 +183,7 @@ config.json 更新
 ENABLE_TELEMETRY: false に変更
    ↓
 telemetry.shutdown() 
-   ├─ heartbeat スレッド停止
+   ├─ asyncio イベントループ停止
    ├─ 内部状態をリセット
    └─ メモリ解放
    ↓
@@ -246,8 +209,9 @@ def telemetry.init(enabled: bool) -> None:
         enabled (bool): テレメトリを有効にするか
         
     Behavior:
-        - enabled=True: Aptabase SDK初期化、heartbeat開始、app_started送信
+        - enabled=True: Aptabase SDK初期化、asyncioイベントループ開始、app_started送信
         - enabled=False: すべてのスキップ、以後のtrack()は何もしない
+        - 複数回呼び出し時: _init_called フラグで二重初期化を防止
         
     Exception:
         - SDK初期化失敗時: 例外握りつぶし、機能は停止するが無言
@@ -261,7 +225,7 @@ def telemetry.shutdown() -> None:
     
     Behavior:
         - app_closed イベント送信
-        - heartbeat スレッド停止
+        - asyncio イベントループ停止
         - 内部状態をリセット
         - 例外は握りつぶし（無言）
     """
@@ -316,25 +280,18 @@ def telemetry.track_core_feature(feature: str) -> None:
 
 
 # =========================================================================
-# ACTIVITY TRACKING
+# SHUTDOWN
 # =========================================================================
 
-def telemetry.touch_activity() -> None:
+def telemetry.shutdown() -> None:
     """
-    最終アクティビティ時刻を更新（heartbeat判定用）
+    テレメトリシャットダウン
     
     Behavior:
-        - enabled=False なら何もしない
-        - 内部的に datetime.now() を記録
-        - 自動呼び出し: track_core_feature() 内から呼び出される
-        - 手動呼び出し: テキスト入力検出時など、明示的に呼び出し可
-        
-    Example:
-        # テキスト入力時
-        telemetry.touch_activity()
-        
-        # track_core_feature() は内部で自動呼び出し
-        telemetry.track_core_feature("translation")
+        - app_closed イベント送信
+        - イベントループ停止（フラッシュ待機）
+        - Aptabase クライアント停止
+        - Tauri sidecar 環境では呼び出し後にプロセス終了
     """
     pass
 
@@ -360,9 +317,7 @@ def telemetry.get_state() -> dict:
     Returns:
         dict: {
             "enabled": bool,
-            "last_activity": datetime | None,
             "session_features_sent": list[str],
-            "heartbeat_active": bool,
         }
     """
     pass
@@ -471,8 +426,11 @@ def setUiLanguage(data):
 
 パブリック API を提供し、内部実装を隠蔽する。
 """
+import asyncio
+import threading
+from concurrent.futures import Future
+
 from .state import TelemetryState
-from .heartbeat import HeartbeatManager
 from .core import TelemetryCore
 
 
@@ -489,56 +447,128 @@ class Telemetry:
         if self._initialized:
             return
         self.state = TelemetryState()
-        self.heartbeat = HeartbeatManager(self.state)
         self.core = TelemetryCore(self.state)
+        self._loop = None
+        self._loop_thread = None
+        self._init_called = False
         self._initialized = True
     
-    def init(self, enabled: bool):
-        """テレメトリ初期化"""
+    def _start_event_loop(self):
+        """バックグラウンドでイベントループを開始"""
+        if self._loop_thread is not None and self._loop_thread.is_alive():
+            return
+        
+        def run_loop():
+            self._loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self._loop)
+            self._loop.run_forever()
+        
+        self._loop_thread = threading.Thread(target=run_loop, daemon=True, name="telemetry_loop")
+        self._loop_thread.start()
+        
+        # ループが開始されるまで待機
+        while self._loop is None:
+            pass
+    
+    def _stop_event_loop(self, timeout: float = 5.0):
+        """イベントループを停止（フラッシュ完了を待つ）"""
+        if self._loop is None:
+            return
+        
+        # ループにstop()を予約
+        self._loop.call_soon_threadsafe(self._loop.stop)
+        
+        # ループスレッド終了を待機
+        if self._loop_thread is not None:
+            self._loop_thread.join(timeout=timeout)
+        
+        self._loop = None
+        self._loop_thread = None
+    
+    def _run_async(self, coro):
+        """同期コンテキストから非同期関数を実行"""
+        if self._loop is None:
+            return
+        
+        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        try:
+            return future.result(timeout=5.0)
+        except Exception:
+            pass
+    
+    def _schedule_async(self, coro):
+        """非同期タスクをバックグラウンドでスケジュール（待機しない）"""
+        if self._loop is None:
+            return
+        
+        try:
+            asyncio.run_coroutine_threadsafe(coro, self._loop)
+        except Exception:
+            pass
+    
+    def init(self, enabled: bool, app_version: str = "1.0.0"):
+        """
+        テレメトリ初期化（同期インターフェース）
+        
+        重要：このメソッドは冪等です。複数回呼ばれても安全です。
+        既に初期化済みの場合は、有効/無効の状態のみを更新します。
+        """
+        # 既に初期化済みの場合は、状態の更新のみ
+        if self._init_called:
+            self.state.set_enabled(enabled)
+            return
+        
+        # 初回初期化
+        self._init_called = True
         self.state.set_enabled(enabled)
         if enabled:
-            try:
-                self.core.send_event("app_started")
-                self.heartbeat.start()
-            except Exception:
-                pass  # 握りつぶし
+            self._start_event_loop()
+            self._run_async(self._init_async(app_version))
+    
+    async def _init_async(self, app_version: str):
+        """非同期初期化処理"""
+        await self.core.start(app_version=app_version)
+        await self.core.send_event("app_started")
     
     def shutdown(self):
         """テレメトリ終了"""
-        if self.state.is_enabled():
-            try:
-                self.core.send_event("app_closed")
-            except Exception:
-                pass
-        self.heartbeat.stop()
-        self.state.reset()
+        try:
+            if self.state.is_enabled():
+                try:
+                    self._run_async(self._shutdown_async())
+                except Exception:
+                    pass
+            
+            self._stop_event_loop(timeout=5.0)
+        except Exception:
+            pass
+        finally:
+            self.state.reset()
+            self._init_called = False
+    
+    async def _shutdown_async(self):
+        """非同期終了処理"""
+        await self.core.send_event("app_closed")
+        await self.core.stop()
     
     def track(self, event: str, payload: dict = None):
         """汎用イベント送信"""
         if not self.state.is_enabled():
             return
-        try:
-            self.core.send_event(event, payload)
-        except Exception:
-            pass
+        self._schedule_async(self.core.send_event(event, payload))
     
     def track_core_feature(self, feature: str):
-        """コア機能イベント送信（重複検出付き）"""
+        """コア機能イベント送信"""
         if not self.state.is_enabled():
             return
-        self.state.touch_activity()
         if self.core.is_duplicate_core_feature(feature):
             return
-        try:
-            self.core.send_event("core_feature", {"feature": feature})
-            self.state.record_feature_sent(feature)
-        except Exception:
-            pass
+        self._schedule_async(self._track_core_feature_async(feature))
     
-    def touch_activity(self):
-        """アクティビティ時刻更新"""
-        if self.state.is_enabled():
-            self.state.touch_activity()
+    async def _track_core_feature_async(self, feature: str):
+        """非同期コア機能送信処理"""
+        await self.core.send_event("core_feature", {"feature": feature})
+        self.state.record_feature_sent(feature)
     
     def is_enabled(self) -> bool:
         """有効状態確認"""
@@ -559,18 +589,16 @@ telemetry = Telemetry()
 """
 テレメトリ状態管理
 - enable/disable フラグ
-- 最終操作時刻
 - セッション内送信済み機能リスト
 """
-from datetime import datetime
 from threading import Lock
 
 
 class TelemetryState:
     def __init__(self):
         self._enabled = True  # デフォルト有効
-        self._last_activity = None
         self._session_features_sent = set()
+        self._lock = Lock()
         self._lock = Lock()
     
     def set_enabled(self, value: bool):
@@ -585,15 +613,20 @@ class TelemetryState:
         with self._lock:
             return self._enabled
     
-    def touch_activity(self):
-        """最終操作時刻更新"""
+    def record_feature_sent(self, feature: str):
+        """送信済み機能を記録"""
         with self._lock:
-            self._last_activity = datetime.now()
+            self._session_features_sent.add(feature)
     
-    def get_last_activity(self) -> datetime:
-        """最終操作時刻取得"""
+    def has_feature_been_sent(self, feature: str) -> bool:
+        """機能がこのセッション内で送信済みか"""
         with self._lock:
-            return self._last_activity
+            return feature in self._session_features_sent
+    
+    def reset(self):
+        """状態をリセット"""
+        with self._lock:
+            self._session_features_sent.clear()
     
     def record_feature_sent(self, feature: str):
         """送信済み機能を記録"""
@@ -608,7 +641,6 @@ class TelemetryState:
     def reset(self):
         """状態をリセット"""
         with self._lock:
-            self._last_activity = None
             self._session_features_sent.clear()
     
     def get_debug_info(self) -> dict:
@@ -616,72 +648,8 @@ class TelemetryState:
         with self._lock:
             return {
                 "enabled": self._enabled,
-                "last_activity": self._last_activity.isoformat() if self._last_activity else None,
                 "session_features_sent": list(self._session_features_sent),
             }
-```
-
-### `models/telemetry/heartbeat.py`
-
-```python
-"""
-Heartbeat スレッド管理
-- 5分間隔でアクティブ確認
-- 操作なしで5分経過したら送信停止
-"""
-from datetime import datetime, timedelta
-from threading import Thread, Event
-import time
-
-
-class HeartbeatManager:
-    INTERVAL = 300  # 5 minutes
-    TIMEOUT = 300   # 5 minutes
-    
-    def __init__(self, state):
-        self.state = state
-        self.thread = None
-        self._stop_event = Event()
-    
-    def start(self):
-        """Heartbeat スレッド開始"""
-        if self.thread is not None and self.thread.is_alive():
-            return
-        self._stop_event.clear()
-        self.thread = Thread(target=self._run, daemon=True)
-        self.thread.start()
-    
-    def stop(self):
-        """Heartbeat スレッド停止"""
-        self._stop_event.set()
-        if self.thread is not None:
-            self.thread.join(timeout=1.0)
-            self.thread = None
-    
-    def _run(self):
-        """Heartbeat ループ"""
-        while not self._stop_event.is_set():
-            try:
-                time.sleep(self.INTERVAL)
-                
-                if not self.state.is_enabled():
-                    continue
-                
-                last_activity = self.state.get_last_activity()
-                if last_activity is None:
-                    continue
-                
-                elapsed = (datetime.now() - last_activity).total_seconds()
-                if elapsed < self.TIMEOUT:
-                    # アクティブなら heartbeat 送信
-                    from .core import TelemetryCore
-                    try:
-                        core = TelemetryCore(self.state)
-                        core.send_event("session_heartbeat")
-                    except Exception:
-                        pass  # 握りつぶし
-            except Exception:
-                pass  # スレッド不停止のため握りつぶし
 ```
 
 ### `models/telemetry/client.py`
@@ -828,7 +796,7 @@ class Main:
             th.join(timeout=remaining)
 ```
 
-**重要**: `controller.shutdown()` は **スレッド停止前** に呼び出す必要があります。そうしないと heartbeat スレッドが動作していない状態で shutdown に失敗する可能性があります。
+**重要**: `controller.shutdown()` は最初に呼び出され、その中で `model.shutdown()` が実行され、最後に `telemetry.shutdown()` が呼び出されます。
 
 #### パターン2: Controller.setWatchdogCallback
 
@@ -882,7 +850,7 @@ def start(self) -> None:
 main_instance.stop() 呼び出し
     ↓
 1. try:
-     telemetry.shutdown()  # app_closed 送信 + heartbeat停止
+     self.controller.shutdown()  # app_closed 送信 + すべてのクリーンアップ
    except:
      pass  # 握りつぶし（通信失敗でも続行）
     ↓
@@ -890,9 +858,7 @@ main_instance.stop() 呼び出し
     ↓
 3. スレッド停止待機（最大 2.0秒）
     ↓
-4. モデルクリーンアップ（if model が初期化されていれば）
-    ↓
-5. メモリ解放
+4. メモリ解放
     ↓
 プロセス終了
 ```
@@ -967,11 +933,10 @@ def stop(self, wait: float = 2.0) -> None:
 def shutdown(self):
     if self.state.is_enabled():
         try:
-            self.core.send_event("app_closed")  # ← 実行されない
+            self.core.send_event("app_closed")  # ← 実行される
         except Exception:
             pass
     
-    self.heartbeat.stop()  # OFF時も停止する（スレッド安全）
     self.state.reset()     # 状態リセット
 ```
 
@@ -1027,16 +992,6 @@ def test_track_core_feature_no_duplicate():
     
     # 2回目はスキップ（内部的に重複検出）
 
-def test_heartbeat_sends_when_active():
-    """5分操作なしなら heartbeat 送信"""
-    # heartbeat スレッドがちゃんと5分待機後に
-    # touch_activity() 後のアクティブ判定で送信
-
-def test_heartbeat_stops_when_inactive():
-    """5分以上操作なしなら heartbeat 停止"""
-    # last_activity が 5分以上古い場合、
-    # heartbeat 送信しない
-
 def test_shutdown_sends_app_closed():
     """shutdown() が app_closed を送信"""
     telemetry = Telemetry()
@@ -1059,10 +1014,6 @@ def test_full_flow():
     
     # 操作
     telemetry.track_core_feature("translation")
-    telemetry.touch_activity()
-    
-    # 5分待機（テスト時は短縮）
-    # heartbeat 送信確認
     
     # 終了
     telemetry.shutdown()
@@ -1099,7 +1050,6 @@ ENABLE_TELEMETRY = True  # デフォルト有効
 
 - [ ] イベントペイロードに個人情報が含まれていない
 - [ ] マイク/スピーカーイベントが分離している
-- [ ] heartbeat が UI 状態に依存していない
 - [ ] OFF 時にすべての通信が停止する
 - [ ] 例外が握りつぶされ、ユーザーに見えない
 - [ ] Aptabase SDK の最新版を使用
@@ -1121,13 +1071,12 @@ UI に以下を表示：
 |---------|--------|--------|
 | 1 | `__init__.py`, `state.py` 作成 | 高 |
 | 2 | `client.py`, `core.py` 作成 | 高 |
-| 3 | `heartbeat.py` 作成・テスト | 高 |
-| 4 | `config.py` に `ENABLE_TELEMETRY` 追加 | 高 |
-| 5 | `controller.py` に API 呼び出し追加 | 高 |
-| 6 | `mainloop.py` に init/shutdown 追加 | 高 |
-| 7 | ユニット・統合テスト | 高 |
-| 8 | ドキュメント更新 | 中 |
-| 9 | UI 文言追加 | 中 |
+| 3 | `config.py` に `ENABLE_TELEMETRY` 追加 | 高 |
+| 4 | `controller.py` に API 呼び出し追加 | 高 |
+| 5 | `mainloop.py` に init/shutdown 追加 | 高 |
+| 6 | ユニット・統合テスト | 高 |
+| 7 | ドキュメント更新 | 中 |
+| 8 | UI 文言追加 | 中 |
 
 ---
 
@@ -1136,7 +1085,6 @@ UI に以下を表示：
 - [x] テレメトリ OFF 時、一切の通信が発生しない
 - [x] オフライン状態でもアプリが正常に動作する
 - [x] `core_feature` は1セッション中に1回のみ送信される
-- [x] heartbeat は 5分以上操作がないと送信を停止する
 - [x] 個人情報・入力内容・音声データは絶対に送信されない
 - [x] 送信失敗時は例外を握りつぶし、無言で続行する
 - [x] マイク/スピーカーイベントが分離している
@@ -1148,4 +1096,5 @@ UI に以下を表示：
 - [Aptabase Python SDK](https://github.com/aptabase/aptabase-python)
 - [Aptabase Dashboard](https://aptabase.com)
 - [Privacy by Design](https://en.wikipedia.org/wiki/Privacy_by_design)
+
 
