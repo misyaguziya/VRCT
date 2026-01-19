@@ -1,6 +1,7 @@
 """
 Aptabase SDK ラッパー（非同期版）
 """
+import logging
 from typing import Optional, Dict, Any
 
 # Aptabase SDK のインポート
@@ -11,10 +12,12 @@ except ImportError:
 
 
 class AptabaseWrapper:
-    APP_KEY = "A-US-2082730845"
+    APP_KEY = "A-US-6044063021"
     
     def __init__(self):
         self.client = None
+        # Suppress noisy logs from the Aptabase SDK (only CRITICAL allowed)
+        logging.getLogger("aptabase").setLevel(logging.CRITICAL)
     
     async def start(self, app_version: str = "1.0.0"):
         """Aptabase クライアント開始"""
