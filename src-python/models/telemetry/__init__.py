@@ -10,7 +10,6 @@ from concurrent.futures import Future
 # Allow running as a script for quick verification.
 try:
     from .state import TelemetryState
-    from .heartbeat import HeartbeatManager
     from .core import TelemetryCore
 except ImportError:
     import os
@@ -18,7 +17,6 @@ except ImportError:
 
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
     from models.telemetry.state import TelemetryState
-    from models.telemetry.heartbeat import HeartbeatManager
     from models.telemetry.core import TelemetryCore
 
 
@@ -36,9 +34,9 @@ class Telemetry:
             return
         self.state = TelemetryState()
         self.core = TelemetryCore(self.state)
-        self.heartbeat = HeartbeatManager(self.state, self.core, self._schedule_async_with_loop)
         self._loop = None
         self._loop_thread = None
+        self._init_called = False  # init()が呼ばれたかを追跡（重複初期化防止）
         self._initialized = True
     
     def _start_event_loop(self):
@@ -96,12 +94,20 @@ class Telemetry:
         except Exception:
             pass
     
-    def _schedule_async_with_loop(self, coro):
-        """ループ取得とスケジューリングのヘルパー（heartbeat用）"""
-        return self._schedule_async(coro)
-    
     def init(self, enabled: bool, app_version: str = "1.0.0"):
-        """テレメトリ初期化（同期インターフェース）"""
+        """テレメトリ初期化（同期インターフェース）
+        
+        重要：このメソッドは冪等です。複数回呼ばれても安全です。
+        既に初期化済みの場合は、有効/無効の状態のみを更新します。
+        これにより、設定変更時などに誤ってapp_startedイベントが重複送信される問題を防ぎます。
+        """
+        # 既に初期化済みの場合は、状態の更新のみ
+        if self._init_called:
+            self.state.set_enabled(enabled)
+            return
+        
+        # 初回初期化
+        self._init_called = True
         self.state.set_enabled(enabled)
         if enabled:
             self._start_event_loop()
@@ -111,23 +117,18 @@ class Telemetry:
         """非同期初期化処理"""
         await self.core.start(app_version=app_version)
         await self.core.send_event("app_started")
-        self.heartbeat.start()
     
     def shutdown(self):
         """テレメトリ終了（同期インターフェース）
         
         重要：Tauri sidecar環境では、このメソッド実行後にプロセス終了が発生します。
         app_closed イベントが確実に送信されるように、以下の手順を実行します：
-        1. heartbeat スレッド停止
-        2. app_closed イベント送信を同期待機
-        3. Aptabase クライアント停止（フラッシュ含む）
-        4. イベントループ完全停止を待機
+        1. app_closed イベント送信を同期待機
+        2. Aptabase クライアント停止（フラッシュ含む）
+        3. イベントループ完全停止を待機
         """
         try:
-            # Step 1: Heartbeat 停止（5分待機中の送信を防ぐ）
-            self.heartbeat.stop()
-            
-            # Step 2-3: app_closed 送信とクライアント停止を同期待機
+            # app_closed 送信とクライアント停止を同期待機
             if self.state.is_enabled():
                 try:
                     # _run_async で最大5秒間待機（Aptabase のフラッシュ含む）
@@ -135,7 +136,7 @@ class Telemetry:
                 except Exception:
                     pass
             
-            # Step 4: イベントループを完全停止（フラッシュ確認を待つ）
+            # イベントループを完全停止（フラッシュ確認を待つ）
             # sidecar 終了前に確実に完了させるため、タイムアウトを長めに設定
             self._stop_event_loop(timeout=5.0)
         except Exception:
@@ -144,6 +145,7 @@ class Telemetry:
         finally:
             # 状態をリセット
             self.state.reset()
+            self._init_called = False  # 初期化フラグもリセット
     
     async def _shutdown_async(self):
         """非同期終了処理"""
@@ -160,7 +162,6 @@ class Telemetry:
         """コア機能イベント送信（同期インターフェース）"""
         if not self.state.is_enabled():
             return
-        self.state.touch_activity()
         if self.core.is_duplicate_core_feature(feature):
             return
         self._schedule_async(self._track_core_feature_async(feature))
@@ -169,11 +170,6 @@ class Telemetry:
         """非同期コア機能送信処理"""
         await self.core.send_event("core_feature", {"feature": feature})
         self.state.record_feature_sent(feature)
-    
-    def touch_activity(self):
-        """アクティビティ時刻更新"""
-        if self.state.is_enabled():
-            self.state.touch_activity()
     
     def is_enabled(self) -> bool:
         """有効状態確認"""
@@ -190,7 +186,6 @@ if __name__ == "__main__":
     telemetry.init(enabled=True)
     telemetry.track("debug_test", {"message": "telemetry main demo"})
     telemetry.track_core_feature("text_input")
-    telemetry.touch_activity()
     print("state:", telemetry.get_state())
     
     # イベント送信完了を待つ

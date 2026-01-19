@@ -11,7 +11,6 @@ from threading import Lock
 class TelemetryState:
     def __init__(self):
         self._enabled = True  # デフォルト有効
-        self._last_activity = None
         self._session_features_sent = set()
         self._lock = Lock()
     
@@ -27,16 +26,6 @@ class TelemetryState:
         with self._lock:
             return self._enabled
     
-    def touch_activity(self):
-        """最終操作時刻更新"""
-        with self._lock:
-            self._last_activity = datetime.now()
-    
-    def get_last_activity(self):
-        """最終操作時刻取得"""
-        with self._lock:
-            return self._last_activity
-    
     def record_feature_sent(self, feature: str):
         """送信済み機能を記録"""
         with self._lock:
@@ -50,7 +39,6 @@ class TelemetryState:
     def reset(self):
         """状態をリセット"""
         with self._lock:
-            self._last_activity = None
             self._session_features_sent.clear()
     
     def get_debug_info(self) -> dict:
@@ -58,6 +46,5 @@ class TelemetryState:
         with self._lock:
             return {
                 "enabled": self._enabled,
-                "last_activity": self._last_activity.isoformat() if self._last_activity else None,
                 "session_features_sent": list(self._session_features_sent),
             }

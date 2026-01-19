@@ -1331,9 +1331,4 @@ class Model:
         if hasattr(self, "telemetry") and self.telemetry:
             self.telemetry.track_core_feature(feature)
 
-    def telemetryTouchActivity(self):
-        """テレメトリアクティビティ更新 (Model ラッパー)"""
-        if hasattr(self, "telemetry") and self.telemetry:
-            self.telemetry.touch_activity()
-
 model = Model()
