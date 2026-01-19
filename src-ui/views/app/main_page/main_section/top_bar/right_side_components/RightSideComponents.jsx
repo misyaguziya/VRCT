@@ -99,11 +99,11 @@ const OpenVrcMicMuteSyncQuickSetting = () => {
 };
 
 const SoftwareUpdateAvailableButton = () => {
-    const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { t } = useI18n();
-    if (currentLatestSoftwareVersionInfo.data.is_update_available === false) return null;
-
+    const { currentLatestSoftwareVersionInfo } = useSoftwareVersion();
     const { updateOpenedQuickSetting } = useStore_OpenedQuickSetting();
+
+    if (currentLatestSoftwareVersionInfo.data.is_update_available === false) return null;
 
     return (
         <button className={styles.software_update_button} onClick={()=>updateOpenedQuickSetting("update_software")}>
