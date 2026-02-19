@@ -3,16 +3,22 @@
 .container {
     display: flex;
     flex-direction: row;
-    gap: 2.8rem;
+    gap: 2.4rem;
     flex-shrink: 0;
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
 }
 
 .each_dropdown_menu_wrapper {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.4rem;
     white-space: nowrap;
-    max-width: 24rem;
+    max-width: 28rem;
     flex-shrink: 0;
     &.is_disabled {
         pointer-events: none;

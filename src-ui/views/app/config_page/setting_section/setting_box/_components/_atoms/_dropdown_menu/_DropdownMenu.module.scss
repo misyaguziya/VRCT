@@ -30,9 +30,10 @@
 
 .dropdown_selected_text {
     font-size: 1.4rem;
-    padding-right: 2.8rem;
-    overflow: hidden;
-    white-space: nowrap;
+    padding-right: 3.6rem; // room for arrow + breathing space
+    overflow: visible;
+    white-space: normal; // allow wrapping
+    word-break: break-word;
 }
 
 .dropdown_content_wrapper {

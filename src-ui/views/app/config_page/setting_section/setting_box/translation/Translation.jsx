@@ -227,7 +227,6 @@ const TranslationComputeDevice_Box = () => {
                     list: list_for_ui,
                     selectFunction: selectFunction_ComputeDevice,
                     state: currentSelectedTranslationComputeDevice.state,
-                    style: { maxWidth: "20rem", minWidth: "10rem" },
                     is_disabled: is_disabled_selector,
                 },
                 {

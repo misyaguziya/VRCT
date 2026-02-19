@@ -84,7 +84,8 @@ const Mic_Container = () => {
                             secondary_label: t("config_page.device.label_auto_select"),
                             variable: currentEnableAutoMicSelect,
                             toggleFunction: toggleEnableAutoMicSelect,
-                        }
+                        },
+                        insert_to: "before",
                     },
                     {
                         dropdown_id: "mic_host",
@@ -93,7 +94,6 @@ const Mic_Container = () => {
                         list: currentMicHostList.data,
                         selectFunction: selectFunction_host,
                         state: currentSelectedMicHost.state,
-                        style: { maxWidth: "20rem", minWidth: "10rem" },
                         is_disabled: is_disabled_selector,
                     },
                     {
