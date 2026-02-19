@@ -1,0 +1,10 @@
+.marquee {
+    overflow: hidden;
+    width: 100%;
+}
+.content {
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+    padding-right: 0.5rem;
+}

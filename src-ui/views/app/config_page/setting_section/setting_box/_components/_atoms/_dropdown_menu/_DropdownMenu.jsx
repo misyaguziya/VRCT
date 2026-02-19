@@ -2,6 +2,7 @@ import styles from "./_DropdownMenu.module.scss";
 import clsx from "clsx";
 import ArrowLeftSvg from "@images/arrow_left.svg?react";
 import { useStore_IsOpenedDropdownMenu } from "@store";
+import { MarqueeText } from "@common_components";
 
 export const _DropdownMenu = (props) => {
     const { updateIsOpenedDropdownMenu, currentIsOpenedDropdownMenu } = useStore_IsOpenedDropdownMenu();
@@ -50,7 +51,15 @@ export const _DropdownMenu = (props) => {
             <div className={dropdown_toggle_button_class_name} onClick={toggleDropdownMenu} style={props.style}>
                 {(props.state === "pending")
                     ? <p className={styles.dropdown_selected_text}>Loading...</p>
-                    : <p className={styles.dropdown_selected_text}>{getSelectedText()}</p>
+                    : (
+                        <MarqueeText
+                            className={styles.dropdown_selected_text}
+                            speed={40}
+                            shouldAnimate={true}
+                        >
+                            {getSelectedText()}
+                        </MarqueeText>
+                    )
                 }
                 {(props.state === "pending")
                     ? <span className={styles.loader}></span>
