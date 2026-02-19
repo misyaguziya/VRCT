@@ -5,6 +5,10 @@
     flex-direction: row;
     gap: 2.4rem;
     flex-shrink: 0;
+    &.is_break_point {
+        width: 100%;
+        justify-content: space-between;
+    }
 }
 
 .wrapper {

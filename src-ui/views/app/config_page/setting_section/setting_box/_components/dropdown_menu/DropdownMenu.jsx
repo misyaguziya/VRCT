@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import styles from "./DropdownMenu.module.scss";
 import { _DropdownMenu } from "../_atoms/_dropdown_menu/_DropdownMenu";
 
@@ -11,8 +12,12 @@ export const DropdownMenu = (props) => {
 };
 
 export const MultiDropdownMenu = (props) => {
+    const container_class = clsx(styles.container, {
+        [styles.is_break_point]: props.is_break_point,
+    });
+
     return (
-        <div className={styles.container}>
+        <div className={container_class}>
             {(() => {
                 const beforeInserts = [];
                 const afterInserts = [];
