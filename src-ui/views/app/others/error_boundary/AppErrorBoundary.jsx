@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import XMarkSvg from "@images/cancel.svg?react";
+
 import CopySvg from "@images/copy.svg?react";
 import CheckMarkSvg from "@images/check_mark.svg?react";
 
 import { ContactsContainer } from "./contacts_container/ContactsContainer";
 
 import { useWindow } from "@logics_common";
+import { CloseButton } from "@common_components";
 
 import styles from "./AppErrorBoundary.module.scss";
 
@@ -23,6 +24,7 @@ export const AppErrorBoundary = ({children}) => {
 };
 
 const ErrorContainer = ({error}) => {
+    const { asyncCloseApp } = useWindow();
     const [is_copied, setIsCopied] = useState(false);
 
     const formatted_stack = error ? formatStackTrace(error.stack) : "Unknown error";
@@ -41,7 +43,7 @@ const ErrorContainer = ({error}) => {
     return (
         <div className={styles.container}>
             <div className={styles.drag_able_area} data-tauri-drag-region></div>
-            <CloseButtonContainer />
+            <CloseButton variant="active_error" onClick={asyncCloseApp} />
             <div className={styles.wrapper}>
                 <p className={styles.error_message}>An error occurred. Please restart VRCT or contact the developers.</p>
                 {error ?
@@ -66,23 +68,10 @@ const ErrorContainer = ({error}) => {
     );
 };
 
-// Duplicated
-const CloseButtonContainer = () => {
-    const { asyncCloseApp } = useWindow();
-    return (
-        <button className={styles.close_button_wrapper} onClick={asyncCloseApp}>
-            <div className={styles.close_button}>
-                <XMarkSvg className={styles.x_mark_svg}/>
-            </div>
-        </button>
-    );
-};
-
 
 const formatStackTrace = (stack) => {
     if (!stack) return "";
     // フルパスの除去（例として window.location.origin や絶対パス部分を削除）
-    // ※必要に応じて正規表現を調整してください
     const formatted = stack.replace(new RegExp(window.location.origin, "g"), "");
 
     return formatted;

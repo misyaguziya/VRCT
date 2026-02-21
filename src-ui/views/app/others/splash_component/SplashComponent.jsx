@@ -3,18 +3,19 @@ import styles from "./SplashComponent.module.scss";
 import { StartUpProgressContainer } from "./start_up_progress_container/StartUpProgressContainer";
 import { DownloadModelsContainer } from "./download_models_container/DownloadModelsContainer";
 import MegaphoneSvg from "@images/megaphone.svg?react";
-import XMarkSvg from "@images/cancel.svg?react";
 import { useWindow } from "@logics_common";
 import clsx from "clsx";
 import { generateLocalizedDocumentUrl } from "@ui_configs";
+import { CloseButton } from "@common_components";
 
 export const SplashComponent = () => {
+    const { asyncCloseApp } = useWindow();
     return (
         <div className={styles.container}>
             <StartUpProgressContainer />
             <DownloadModelsContainer />
             <AnnouncementsContainer />
-            <CloseButtonContainer />
+            <CloseButton onClick={asyncCloseApp} />
         </div>
     );
 };
@@ -68,19 +69,5 @@ const AnnouncementsContainer = () => {
                 </p>
             </button>
         </a>
-    );
-};
-
-
-// Duplicated
-const CloseButtonContainer = () => {
-    const { asyncCloseApp } = useWindow();
-
-    return (
-        <button className={styles.close_button_wrapper} onClick={asyncCloseApp}>
-            <div className={styles.close_button}>
-                <XMarkSvg className={styles.x_mark_svg}/>
-            </div>
-        </button>
     );
 };
