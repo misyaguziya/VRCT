@@ -4,6 +4,15 @@
     position: relative;
 }
 
+.drag_able_area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: var(--title_bar_height);
+    background-color: var(--dark_800_color);
+}
+
 .wrapper {
     width: 100%;
     height: 100vh;

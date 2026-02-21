@@ -40,6 +40,7 @@ const ErrorContainer = ({error}) => {
 
     return (
         <div className={styles.container}>
+            <div className={styles.drag_able_area} data-tauri-drag-region></div>
             <CloseButtonContainer />
             <div className={styles.wrapper}>
                 <p className={styles.error_message}>An error occurred. Please restart VRCT or contact the developers.</p>
