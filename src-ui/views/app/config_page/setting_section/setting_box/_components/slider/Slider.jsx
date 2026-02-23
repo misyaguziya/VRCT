@@ -1,8 +1,6 @@
-import React from "react";
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import styles from "./Slider.module.scss";
-import MUI_Slider from "@mui/material/Slider";
 import clsx from "clsx";
-
 import { useSliderLogic } from "@logics_configs";
 
 export const Slider = (props) => {
@@ -24,107 +22,176 @@ export const Slider = (props) => {
         marks_step: props.marks_step,
     });
 
+    const isVertical = props.orientation === "vertical";
+    const min = props.min !== undefined ? Number(props.min) : 0;
+    const max = props.max !== undefined ? Number(props.max) : 100;
+    const step = props.step == null ? null : Number(props.step);
 
-    const sliderSx = {
-        color: "var(--dark_700_color)",
-        "& .MuiSlider-thumb": {
-            backgroundColor: "var(--primary_600_color)",
-            "&:hover, &.Mui-focusVisible, &.Mui-active": {
-                boxShadow: `0 0 0 0.8rem var(--primary_600_color_44)`,
-            },
-            "& .MuiSlider-valueLabel": {
-                position: "absolute",
-                backgroundColor: "var(--dark_800_color)",
-                width: "fit-content",
-                minWidth: "4.8rem",
-                padding: "0.4rem 0.8rem",
-                lineHeight: "1.15",
-                "& .MuiSlider-valueLabelLabel": {
-                    fontSize: "1.4rem",
-                },
-                ...(location === "top" && {
-                    top: "-110%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%) scale(0)",
-                    transformOrigin: "bottom center",
-                    "&.MuiSlider-valueLabelOpen": {
-                        transform: "translate(-50%, -50%) scale(1)",
-                    },
-                    "&::before": {
-                        bottom: "0%",
-                        left: "50%",
-                    },
-                }),
-                ...(location === "right" && {
-                    top: "50%",
-                    left: "150%",
-                    transform: "translate(0, -50%) scale(0)",
-                    transformOrigin: "left center",
-                    "&.MuiSlider-valueLabelOpen": {
-                        transform: "translate(0, -50%) scale(1)",
-                    },
-                    "&::before": {
-                        bottom: "50%",
-                        left: "0",
-                    },
-                }),
-                ...(location === "left" && {
-                    // top: "50%",
-                    // right: "50%",
-                    // transform: "translate(-50%, -50%) scale(0)",
-                    // transformOrigin: "bottom center",
-                    // "&.MuiSlider-valueLabelOpen": {
-                    //     transform: "translate(-50%, -50%) scale(1)",
-                    // },
-                    // "&::before": {
-                    //     bottom: "50%",
-                    //     left: "100%",
-                    // },
-                }),
-            },
-        },
-        "& .MuiSlider-markLabel": {
-            fontSize: "1.4rem",
-            color: "var(--dark_550_color)",
-            whiteSpace: "nowrap",
-        },
-        "& .MuiSlider-markLabelActive": {
-            color: "var(--primary_300_color)",
-        },
+    const trackRef = useRef(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
+
+    const decimalPlaces = step && step.toString().includes('.')
+        ? step.toString().split('.')[1].length
+        : 0;
+
+    const [localValue, setLocalValue] = useState(ui_value);
+
+    // Sync localValue with ui_value (from store) only when NOT dragging
+    useEffect(() => {
+        if (!isDragging) {
+            setLocalValue(ui_value);
+        }
+    }, [ui_value, isDragging]);
+
+    const calculateValue = useCallback((clientX, clientY) => {
+        if (!trackRef.current) return localValue;
+        const rect = trackRef.current.getBoundingClientRect();
+        let percentage;
+        if (isVertical) {
+            let y = clientY - rect.top;
+            y = Math.max(0, Math.min(y, rect.height));
+            percentage = 1 - (y / rect.height);
+        } else {
+            let x = clientX - rect.left;
+            x = Math.max(0, Math.min(x, rect.width));
+            percentage = x / rect.width;
+        }
+
+        let rawValue = percentage * (max - min) + min;
+        if (step) {
+            const steps = Math.round((rawValue - min) / step);
+            // Use decimalPlaces + 2 for intermediate to avoid rounding issues, then final toFixed(decimalPlaces)
+            rawValue = parseFloat((steps * step + min).toFixed(decimalPlaces + 2));
+            rawValue = parseFloat(rawValue.toFixed(decimalPlaces));
+        }
+        return Math.max(min, Math.min(rawValue, max));
+    }, [isVertical, max, min, step, localValue, decimalPlaces]);
+
+    const handlePointerDown = (e) => {
+        if (e.button !== 0) return; // Only left click
+        setIsDragging(true);
+        const newValue = calculateValue(e.clientX, e.clientY);
+        setLocalValue(newValue);
+        if (newValue !== ui_value) {
+            onchangeFunction(newValue);
+        }
+        e.preventDefault();
+
+        // Ensure thumb gets focus-like behavior manually, though we rely on drag state
     };
+
+    useEffect(() => {
+        if (!isDragging) return;
+
+        const handlePointerMove = (e) => {
+            const newValue = calculateValue(e.clientX, e.clientY);
+            setLocalValue(newValue);
+            if (newValue !== ui_value) {
+                onchangeFunction(newValue);
+            }
+        };
+
+        const handlePointerUp = (e) => {
+            setIsDragging(false);
+            const newValue = calculateValue(e.clientX, e.clientY);
+            setLocalValue(newValue);
+            if (onchangeCommittedFunction) {
+                onchangeCommittedFunction(newValue);
+            }
+        };
+
+        window.addEventListener("pointermove", handlePointerMove);
+        window.addEventListener("pointerup", handlePointerUp);
+
+        return () => {
+            window.removeEventListener("pointermove", handlePointerMove);
+            window.removeEventListener("pointerup", handlePointerUp);
+        };
+    }, [isDragging, calculateValue, onchangeFunction, onchangeCommittedFunction, ui_value]);
+
+    const handleMouseEnter = (e) => {
+        setIsHovered(true);
+        if (props.onMouseEnterFunction) props.onMouseEnterFunction(e);
+    };
+
+    const handleMouseLeave = (e) => {
+        setIsHovered(false);
+        if (props.onMouseLeaveFunction) props.onMouseLeaveFunction(e);
+    };
+
+    const percentage = Math.max(0, Math.min((localValue - min) / (max - min), 1)) * 100;
+
+    const valueLabelStr = typeof props.valueLabelFormat === "function"
+        ? props.valueLabelFormat(localValue)
+        : (props.valueLabelFormat != null ? props.valueLabelFormat : localValue);
+    const valueLabelDisplay = props.valueLabelDisplay || "auto";
+    const showValueLabel = valueLabelDisplay === "on" || (valueLabelDisplay === "auto" && (isHovered || isDragging));
 
     return (
         <div
             className={clsx(
                 styles.container,
                 props.className,
-                { [styles.no_padding]: props.no_padding || props.is_break_point }
+                {
+                    [styles.no_padding]: props.no_padding || props.is_break_point,
+                }
             )}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
         >
-            <MUI_Slider
-                aria-label="Default"
-                // valueLabelDisplay="on"
-                valueLabelDisplay={props.valueLabelDisplay ? props.valueLabelDisplay : "auto"}
-                value={ui_value}
-                step={props.step == null ? null : Number(props.step)}
-                min={Number(props.min)}
-                max={Number(props.max)}
-                onChange={(_e, value) => onchangeFunction(value)}
-                onChangeCommitted={(_e, value) =>
-                    onchangeCommittedFunction ? onchangeCommittedFunction(value) : null
-                }
-                onMouseEnter={(event) =>
-                    props.onMouseEnterFunction ? props.onMouseEnterFunction(event) : null
-                }
-                onMouseLeave={(event) =>
-                    props.onMouseLeaveFunction ? props.onMouseLeaveFunction(event) : null
-                }
-                marks={marks}
-                track={props.track === undefined ? false : props.track}
-                orientation={props.orientation}
-                valueLabelFormat={`${props.valueLabelFormat ? props.valueLabelFormat : ui_value}`}
-                sx={sliderSx}
-            />
+            <div
+                className={clsx(styles.sliderRoot, {
+                    [styles.vertical]: isVertical,
+                    [styles.horizontal]: !isVertical,
+                    [styles.dragging]: isDragging
+                })}
+                ref={trackRef}
+                onPointerDown={handlePointerDown}
+            >
+                <div className={styles.rail}></div>
+                {props.track !== false && (
+                    <div
+                        className={styles.track}
+                        style={{
+                            ...(isVertical ? { bottom: "0%", height: `${percentage}%` } : { left: "0%", width: `${percentage}%` })
+                        }}
+                    ></div>
+                )}
+
+                {marks && marks.map((mark, i) => {
+                    const markPercent = Math.max(0, Math.min((mark.value - min) / (max - min), 1)) * 100;
+                    const isActive = mark.value <= localValue;
+                    return (
+                        <div
+                            key={i}
+                            className={clsx(styles.mark, { [styles.markActive]: isActive })}
+                            style={{
+                                ...(isVertical ? { bottom: `${markPercent}%` } : { left: `${markPercent}%` })
+                            }}
+                        >
+                            {mark.label && (
+                                <span className={clsx(styles.markLabel, { [styles.markLabelActive]: isActive })}>
+                                    {mark.label}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
+
+                <div
+                    className={clsx(styles.thumb, { [styles.thumbActive]: isDragging })}
+                    style={{
+                        ...(isVertical ? { bottom: `${percentage}%` } : { left: `${percentage}%` })
+                    }}
+                >
+                    <div className={clsx(styles.valueLabel, styles[`location-${location}`], {
+                        [styles.valueLabelOpen]: showValueLabel
+                    })}>
+                        <span className={styles.valueLabelLabel}>{valueLabelStr}</span>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 };

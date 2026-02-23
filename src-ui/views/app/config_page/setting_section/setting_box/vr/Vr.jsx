@@ -343,7 +343,7 @@ export const RotationControls = ({ settings, onchangeFunction, selectFunction, u
                     className={styles.x_rotation_slider}
                     no_padding={true}
                     variable={-settings.x_rotation}
-                    valueLabelFormat={settings.x_rotation}
+                    valueLabelFormat={(val) => -val}
                     step={ui_configs.x_rotation.step}
                     min={ui_configs.x_rotation.min}
                     max={ui_configs.x_rotation.max}
@@ -465,7 +465,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     className={clsx(styles.other_controls_slider, styles.opacity_slider)}
                     no_padding={true}
                     variable={settings.opacity * 100}
-                    valueLabelFormat={`${ui_variable_opacity}%`}
+                    valueLabelFormat={(val) => `${val.toFixed(0)}%`}
                     step={5}
                     min={10}
                     max={100}
@@ -481,7 +481,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     className={clsx(styles.other_controls_slider, styles.ui_scaling_slider)}
                     no_padding={true}
                     variable={settings.ui_scaling * 100}
-                    valueLabelFormat={`${ui_variable_ui_scaling}%`}
+                    valueLabelFormat={(val) => `${val.toFixed(0)}%`}
                     step={ui_configs.ui_scaling.step}
                     min={ui_configs.ui_scaling.min}
                     max={ui_configs.ui_scaling.max}
@@ -495,7 +495,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     className={clsx(styles.other_controls_slider, styles.display_duration_slider)}
                     no_padding={true}
                     variable={settings.display_duration}
-                    valueLabelFormat={`${settings.display_duration} second(s)`}
+                    valueLabelFormat={(val) => `${val} second(s)`}
                     step={1}
                     min={1}
                     max={60}
@@ -509,7 +509,7 @@ const OtherControls = ({settings, onchangeFunction, ui_configs}) => {
                     className={clsx(styles.other_controls_slider, styles.fadeout_duration_slider)}
                     no_padding={true}
                     variable={settings.fadeout_duration}
-                    valueLabelFormat={`${settings.fadeout_duration} second(s)`}
+                    valueLabelFormat={(val) => `${val} second(s)`}
                     step={1}
                     min={0}
                     max={5}

@@ -231,7 +231,7 @@ export const useConfigFunctions = (Category) => {
 };
 
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo ,useRef } from "react";
 
 export const useSliderLogic = ({
     variable,
@@ -249,6 +249,25 @@ export const useSliderLogic = ({
     }
 
     const [ui_value, setUiValue] = useState(variable);
+    const debounceTimerRef = useRef(null);
+
+    const debouncedSetter = useCallback((value) => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        debounceTimerRef.current = setTimeout(() => {
+            setterFunction(value);
+            debounceTimerRef.current = null;
+        }, 200);
+    }, [setterFunction]);
+
+    useEffect(() => {
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, []);
 
     const decimalPlaces = marks_step.toString().includes('.')
         ? marks_step.toString().split('.')[1].length
@@ -275,8 +294,8 @@ export const useSliderLogic = ({
     if (setter_timing === "on_change") {
         onchangeFunction = useCallback((value) => {
             setUiValue(value);
-            setterFunction(value);
-        }, [setterFunction]);
+            debouncedSetter(value);
+        }, [debouncedSetter]);
 
         onchangeCommittedFunction = null;
 
@@ -344,20 +363,20 @@ export const useSaveButtonLogic = ({
 
 const createMarks = (min, max, marks_step = 1, labelFormatter = (value) => value) => {
     const marks = [];
-    let variable = min;
+    let current = min;
 
-    for (let i = 0; variable <= max; i++) {
-        const fixedValue = parseFloat(variable.toFixed(10));
+    const decimalPlaces = marks_step.toString().includes('.')
+        ? marks_step.toString().split('.')[1].length
+        : 0;
 
+    for (let i = 0; i <= 1000; i++) {
+        // Use a small epsilon for the comparison to handle floating point errors
+        if (current > max + (marks_step / 10)) break;
+
+        const fixedValue = parseFloat(current.toFixed(decimalPlaces));
         marks.push({ value: fixedValue, label: `${labelFormatter(fixedValue)}` });
 
-        variable += marks_step;
-        variable = parseFloat(variable.toFixed(10));
-
-        if (i > 1000) {
-            console.error("Loop limit exceeded (1000 iterations). createMarks()");
-            break;
-        }
+        current += marks_step;
     }
     return marks;
 };

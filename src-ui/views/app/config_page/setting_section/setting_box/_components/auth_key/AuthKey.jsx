@@ -1,7 +1,7 @@
 import styles from "./AuthKey.module.scss";
 import { useI18n } from "@useI18n";
 import clsx from "clsx";
-import CircularProgress from "@mui/material/CircularProgress";
+import { CircularProgress } from "@common_components";
 import { _Entry } from "../_atoms/_entry/_Entry";
 import { useState, useRef } from "react";
 import { useEffect } from "react";
