@@ -32,6 +32,7 @@
     overflow-y: auto;
     flex: 1;
     padding-top: var(--config_page_topbar_height); // Ensure alignment with content area
+    max-height: 60rem;
 }
 
 .tabs_wrapper {

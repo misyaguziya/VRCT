@@ -18,7 +18,10 @@ export const VersionLabel = ({ isCompact = false }) => {
     const software_version_number = currentSoftwareVersion.data;
 
     const version_label = (
-        <div className={clsx(styles.version_text_container, {[styles.is_compact]: isCompact})}>
+        <div className={clsx(styles.version_text_container, {
+            [styles.is_compact]: isCompact,
+            [styles.is_cuda]: is_cuda,
+            })}>
             <p className={styles.version_label}>{`v${software_version_number}`}</p>
             {is_cuda && <p className={styles.cuda_label}> CUDA</p>}
         </div>
@@ -38,7 +41,10 @@ export const VersionLabel = ({ isCompact = false }) => {
     };
 
     return (
-        <div className={clsx(styles.container, { [styles.is_compact]: isCompact })}>
+        <div className={clsx(styles.container, {
+                [styles.is_compact]: isCompact,
+                [styles.is_cuda]: is_cuda,
+            })}>
             <div className={clsx(styles.wrapper, {[styles.is_copied]: is_copied, [styles.is_compact]: isCompact})} onClick={copyToClipboard}>
                 {version_label}
                 {!isCompact && (
