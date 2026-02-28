@@ -154,7 +154,7 @@ const TransparencyContainer = () => {
             setterFunction={setTransparency}
             min={40}
             max={100}
-            step={10}
+            step={1}
         />
     );
 };
