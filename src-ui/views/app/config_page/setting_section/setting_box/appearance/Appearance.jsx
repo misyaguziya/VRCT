@@ -58,7 +58,8 @@ const UiScalingContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.appearance.ui_size.label") + " (%)"}
+            label={t("config_page.appearance.ui_size.label")}
+            valueLabelFormat="value %"
             variable={currentUiScaling.data}
             setterFunction={setUiScaling}
             postUpdateAction={asyncUpdateBreakPoint}
@@ -77,7 +78,8 @@ export const MessageLogUiScalingContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.appearance.textbox_ui_size.label") + " (%)"}
+            label={t("config_page.appearance.textbox_ui_size.label")}
+            valueLabelFormat="value %"
             variable={currentMessageLogUiScaling.data}
             setterFunction={setMessageLogUiScaling}
             min={40}
@@ -149,12 +151,14 @@ const TransparencyContainer = () => {
 
     return (
         <SliderContainer
-            label={t("config_page.appearance.transparency.label") + " (%)"}
+            label={t("config_page.appearance.transparency.label")}
+            valueLabelFormat="value %"
             variable={currentTransparency.data}
             setterFunction={setTransparency}
             min={40}
             max={100}
             step={1}
+            label_format="value %"
         />
     );
 };

@@ -122,9 +122,20 @@ export const Slider = (props) => {
 
     const percentage = Math.max(0, Math.min((localValue - min) / (max - min), 1)) * 100;
 
-    const valueLabelStr = typeof props.valueLabelFormat === "function"
-        ? props.valueLabelFormat(localValue)
-        : (props.valueLabelFormat != null ? props.valueLabelFormat : localValue);
+    const valueLabelStr = (() => {
+        let displayValue = localValue;
+        if (typeof props.valueLabelFunction === "function") {
+            displayValue = props.valueLabelFunction(localValue);
+        }
+
+        if (typeof props.valueLabelFormat === "function") {
+            return props.valueLabelFormat(displayValue);
+        } else if (typeof props.valueLabelFormat === "string") {
+            return props.valueLabelFormat.replace("value", displayValue);
+        }
+
+        return displayValue;
+    })();
     const valueLabelDisplay = props.valueLabelDisplay || "auto";
     const showValueLabel = valueLabelDisplay === "on" || (valueLabelDisplay === "auto" && (isHovered || isDragging));
 
