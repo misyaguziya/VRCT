@@ -1801,13 +1801,67 @@ class Controller:
     def getOpenAIAuthKey(*args, **kwargs) -> dict:
         return {"status":200, "result":config.AUTH_KEYS["OpenAI_API"]}
 
+    @staticmethod
+    def getOpenAIURL(*args, **kwargs) -> dict:
+        return {"status":200, "result":config.OPENAI_URL}
+
+    def setOpenAIURL(self, data, *args, **kwargs) -> dict:
+        printLog("Set OpenAI URL", data)
+        translator_name = "OpenAI_API"
+        try:
+            data = str(data).strip()
+            if len(data) == 0:
+                data = "https://api.openai.com/v1"
+
+            config.OPENAI_URL = data
+            auth_key = config.AUTH_KEYS[translator_name]
+
+            if auth_key:
+                result = model.authenticationTranslatorOpenAIAuthKey(
+                    auth_key=auth_key,
+                    base_url=config.OPENAI_URL,
+                )
+                if result is True:
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
+                    config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
+                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                    if config.SELECTABLE_OPENAI_MODEL_LIST:
+                        if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                            config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                        model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
+                        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                        model.updateTranslatorOpenAIClient()
+                    else:
+                        config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+                        config.SELECTED_OPENAI_MODEL = None
+                        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                else:
+                    config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
+                    config.SELECTABLE_OPENAI_MODEL_LIST = []
+                    config.SELECTED_OPENAI_MODEL = None
+                    self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
+                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+
+            self.updateTranslationEngineAndEngineList()
+            response = {"status":200, "result":config.OPENAI_URL}
+        except Exception as e:
+            errorLogging()
+            response = VRCTError.create_exception_error_response(
+                e,
+                data=config.OPENAI_URL
+            )
+        return response
+
     def setOpenAIAuthKey(self, data, *args, **kwargs) -> dict:
         printLog("Set OpenAI Auth Key", data)
         translator_name = "OpenAI_API"
         try:
-            data = str(data)
-            if data.startswith("sk-") and len(data) >= 164:
-                result = model.authenticationTranslatorOpenAIAuthKey(auth_key=data)
+            data = str(data).strip()
+            if len(data) >= 1:
+                result = model.authenticationTranslatorOpenAIAuthKey(
+                    auth_key=data,
+                    base_url=config.OPENAI_URL,
+                )
                 if result is True:
                     key = data
                     auth_keys = config.AUTH_KEYS
@@ -1816,13 +1870,19 @@ class Controller:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = True
                     config.SELECTABLE_OPENAI_MODEL_LIST = model.getTranslatorOpenAIModelList()
                     self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
-                    if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
-                        config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
-                    model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
-                    self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
-                    model.updateTranslatorOpenAIClient()
-                    self.updateTranslationEngineAndEngineList()
-                    response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
+                    if len(config.SELECTABLE_OPENAI_MODEL_LIST) == 0:
+                        response = VRCTError.create_error_response(
+                            ErrorCode.AUTH_OPENAI_FAILED,
+                            data=None
+                        )
+                    else:
+                        if config.SELECTED_OPENAI_MODEL not in config.SELECTABLE_OPENAI_MODEL_LIST:
+                            config.SELECTED_OPENAI_MODEL = config.SELECTABLE_OPENAI_MODEL_LIST[0]
+                        model.setTranslatorOpenAIModel(model=config.SELECTED_OPENAI_MODEL)
+                        self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                        model.updateTranslatorOpenAIClient()
+                        self.updateTranslationEngineAndEngineList()
+                        response = {"status":200, "result":config.AUTH_KEYS[translator_name]}
                 else:
                     response = VRCTError.create_error_response(
                         ErrorCode.AUTH_OPENAI_FAILED,
@@ -3224,10 +3284,16 @@ class Controller:
                         if config.AUTH_KEYS[engine] is None:
                             status = False
                         else:
-                            if model.authenticationTranslatorOpenAIAuthKey(auth_key=config.AUTH_KEYS[engine]) is True:
+                            if model.authenticationTranslatorOpenAIAuthKey(
+                                auth_key=config.AUTH_KEYS[engine],
+                                base_url=config.OPENAI_URL,
+                            ) is True:
                                 model_list = model.getTranslatorOpenAIModelList()
-                                selected_model = config.SELECTED_OPENAI_MODEL if config.SELECTED_OPENAI_MODEL in model_list else model_list[0]
-                                status = True
+                                if len(model_list) > 0:
+                                    selected_model = config.SELECTED_OPENAI_MODEL if config.SELECTED_OPENAI_MODEL in model_list else model_list[0]
+                                    status = True
+                                else:
+                                    status = False
                             else:
                                 auth_key_invalid = True
                     case "Groq_API":

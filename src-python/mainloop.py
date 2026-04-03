@@ -212,6 +212,8 @@ mapping = {
     "/get/data/selectable_openai_model_list": {"status": True, "variable":controller.getOpenAIModelList},
     "/get/data/selected_openai_model": {"status": True, "variable":controller.getOpenAIModel},
     "/set/data/selected_openai_model": {"status": True, "variable":controller.setOpenAIModel},
+    "/get/data/openai_url": {"status": True, "variable":controller.getOpenAIURL},
+    "/set/data/openai_url": {"status": True, "variable":controller.setOpenAIURL},
     "/get/data/openai_auth_key": {"status": True, "variable":controller.getOpenAIAuthKey},
     "/set/data/openai_auth_key": {"status": True, "variable":controller.setOpenAIAuthKey},
     "/delete/data/openai_auth_key": {"status": True, "variable":controller.delOpenAIAuthKey},

@@ -32,7 +32,7 @@ def _get_available_text_models(api_key: str, base_url: str | None = None) -> lis
 
     for model in res.data:
         model_id = model.id
-        root = getattr(model, "root", "")
+        model_id_lower = model_id.lower()
 
         # 除外対象のキーワード
         exclude_keywords = [
@@ -48,14 +48,12 @@ def _get_available_text_models(api_key: str, base_url: str | None = None) -> lis
         ]
 
         # 除外キーワードが含まれているモデルをスキップ
-        if any(kw in model_id for kw in exclude_keywords):
+        if any(kw in model_id_lower for kw in exclude_keywords):
             continue
 
-        # GPTモデルまたはFine-tune GPTモデルのみ対象
-        if model_id.startswith("gpt-"):
-            allowed_models.append(model_id)
-        elif model_id.startswith("ft:") and root.startswith("gpt-"):
-            allowed_models.append(model_id)
+        # OpenAI互換エンドポイントでは provider 独自モデル名が多いため、
+        # 除外条件に該当しないテキストモデルを許可する。
+        allowed_models.append(model_id)
 
     allowed_models.sort()
     return allowed_models

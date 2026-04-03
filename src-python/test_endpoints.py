@@ -261,6 +261,12 @@ class TestMainloop():
             case "/set/data/openai_auth_key":
                 data = "OPENAI_DUMMY_KEY"
                 expected_status = [200, 400]
+            case "/set/data/openai_url":
+                data = random.choice([
+                    "https://api.openai.com/v1",
+                    "http://127.0.0.1:1234/v1",
+                    "http://localhost:11434/v1",
+                ])
             case "/set/data/selected_lmstudio_model":
                 self.config_dict["lmstudio_model_list"], _ = self.main.handleRequest("/get/data/selectable_lmstudio_model_list", None)
                 model_list = self.config_dict.get("lmstudio_model_list", [])

@@ -54,6 +54,7 @@ export const Translation = () => {
             <GeminiAuthKey_Box />
             <GeminiModelContainer />
 
+            <OpenAIURL_Box />
             <OpenAIAuthKey_Box />
             <OpenAIModelContainer />
 
@@ -419,6 +420,30 @@ const OpenAIAuthKey_Box = () => {
                 state={currentOpenAIAuthKey.state}
                 onChangeFunction={onChangeFunction}
                 saveFunction={saveFunction}
+                remove_border_bottom={true}
+            />
+        </>
+    );
+};
+const OpenAIURL_Box = () => {
+    const { t } = useI18n();
+    const { currentOpenAIURL, setOpenAIURL } = useTranslation();
+
+    const { variable, onChangeFunction, saveFunction } = useSaveButtonLogic({
+        variable: currentOpenAIURL.data,
+        state: currentOpenAIURL.state,
+        setFunction: setOpenAIURL,
+        deleteFunction: () => setOpenAIURL("https://api.openai.com/v1"),
+    });
+
+    return (
+        <>
+            <EntryWithSaveButtonContainer
+                label={t("config_page.translation.openai_url.label")}
+                variable={variable}
+                saveFunction={saveFunction}
+                onChangeFunction={onChangeFunction}
+                state={currentOpenAIURL.state}
                 remove_border_bottom={true}
             />
         </>

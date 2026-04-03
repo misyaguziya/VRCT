@@ -695,6 +695,7 @@ class Config:
             if isinstance(val, dict) and set(val.keys()) == set(inst.AUTH_KEYS.keys()) else None
         )
     )
+    OPENAI_URL = ManagedProperty('OPENAI_URL', type_=str)
     LMSTUDIO_URL = ManagedProperty('LMSTUDIO_URL', type_=str)
 
     # --- Transcription settings ---
@@ -955,6 +956,7 @@ class Config:
         self._SELECTED_PLAMO_MODEL = None
         self._SELECTED_GEMINI_MODEL = None
         self._SELECTED_OPENAI_MODEL = None
+        self._OPENAI_URL = "https://api.openai.com/v1"
         self._SELECTED_GROQ_MODEL = None
         self._SELECTED_OPENROUTER_MODEL = None
         self._LMSTUDIO_URL = "http://127.0.0.1:1234/v1"

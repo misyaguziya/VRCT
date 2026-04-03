@@ -172,6 +172,8 @@ config_page:
         select_gemini_model:
             label: "Gemini モデルを選択"
 
+        openai_url:
+            label: "OpenAI API URL"
         openai_auth_key:
             label: "OpenAI 認証キー"
         select_openai_model:

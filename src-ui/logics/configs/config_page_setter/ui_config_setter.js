@@ -290,6 +290,14 @@ export const SETTINGS_ARRAY = [
     // OpenAI
     {
         Category: "Translation",
+        Base_Name: "OpenAIURL",
+        default_value: "https://api.openai.com/v1",
+        ui_template_id: "input",
+        logics_template_id: "get_set",
+        base_endpoint_name: "openai_url",
+    },
+    {
+        Category: "Translation",
         Base_Name: "OpenAIAuthKey",
         default_value: "",
         ui_template_id: "input",

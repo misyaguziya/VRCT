@@ -172,6 +172,8 @@ config_page:
         select_gemini_model:
             label:
 
+        openai_url:
+            label: "OpenAI API 位址"
         openai_auth_key:
             label:
         select_openai_model:
