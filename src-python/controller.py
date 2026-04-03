@@ -1815,6 +1815,7 @@ class Controller:
 
             config.OPENAI_URL = data
             auth_key = config.AUTH_KEYS[translator_name]
+            response = {"status":200, "result":config.OPENAI_URL}
 
             if auth_key:
                 result = model.authenticationTranslatorOpenAIAuthKey(
@@ -1835,15 +1836,22 @@ class Controller:
                         config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
                         config.SELECTED_OPENAI_MODEL = None
                         self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                        response = VRCTError.create_error_response(
+                            ErrorCode.AUTH_OPENAI_FAILED,
+                            data=None
+                        )
                 else:
                     config.SELECTABLE_TRANSLATION_ENGINE_STATUS[translator_name] = False
                     config.SELECTABLE_OPENAI_MODEL_LIST = []
                     config.SELECTED_OPENAI_MODEL = None
                     self.run(200, self.run_mapping["selectable_openai_model_list"], config.SELECTABLE_OPENAI_MODEL_LIST)
                     self.run(200, self.run_mapping["selected_openai_model"], config.SELECTED_OPENAI_MODEL)
+                    response = VRCTError.create_error_response(
+                        ErrorCode.AUTH_OPENAI_FAILED,
+                        data=None
+                    )
 
             self.updateTranslationEngineAndEngineList()
-            response = {"status":200, "result":config.OPENAI_URL}
         except Exception as e:
             errorLogging()
             response = VRCTError.create_exception_error_response(
