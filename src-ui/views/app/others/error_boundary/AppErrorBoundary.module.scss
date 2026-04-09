@@ -52,7 +52,6 @@
 }
 
 .copy_error_message_button {
-    // background-color: var(--dark_800_color);
     padding: 0.8rem 1rem;
     font-size: 1.4rem;
     display: flex;
@@ -77,4 +76,77 @@
 .check_mark_svg {
     width: 1.4rem;
     color: var(--primary_300_color);
+}
+
+.action_buttons_container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 48rem;
+    margin: 1.6rem 0 2.4rem;
+}
+
+.update_button {
+    width: 100%;
+    padding: 1rem 1.6rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.6rem;
+    background-color: var(--primary_500_color);
+    color: var(--dark_100_color);
+    box-shadow: 0 0 0 0 var(--primary_500_color);
+    animation: update_pulse 2s ease-out infinite;
+    transition: opacity 0.2s, background-color 0.2s;
+
+    &:hover:not(:disabled) {
+        background-color: var(--primary_400_color);
+    }
+    &:active:not(:disabled) {
+        background-color: var(--primary_600_color);
+        animation: none;
+    }
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        animation: none;
+    }
+}
+
+@keyframes update_pulse {
+    0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary_500_color) 60%, transparent); }
+    70%  { box-shadow: 0 0 0 0.8rem color-mix(in srgb, var(--primary_500_color) 0%, transparent); }
+    100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary_500_color) 0%, transparent); }
+}
+
+.status_link_button {
+    width: 100%;
+    padding: 0.8rem 1.6rem;
+    font-size: 1.4rem;
+    display: flex;
+    gap: 0.8rem;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0.6rem;
+    background-color: var(--dark_825_color);
+    color: var(--dark_300_color);
+    transition: background-color 0.15s, color 0.15s;
+
+    &:hover {
+        background-color: var(--dark_800_color);
+        color: var(--dark_100_color);
+    }
+    &:active {
+        background-color: var(--dark_850_color);
+    }
+}
+
+.external_link_svg {
+    width: 1.3rem;
+    flex-shrink: 0;
+    color: var(--dark_500_color);
 }
