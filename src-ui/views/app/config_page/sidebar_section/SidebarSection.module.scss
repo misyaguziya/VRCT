@@ -123,10 +123,6 @@
     transition: opacity 0.2s;
     color: var(--dark_basic_text_color);
 
-    &.tab_text_small {
-        font-size: 1.15rem;
-    }
-
     &.hide {
         opacity: 0;
         pointer-events: none;

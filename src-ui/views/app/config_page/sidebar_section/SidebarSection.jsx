@@ -110,7 +110,6 @@ const Tab = (props) => {
                 <TabIcon tab_id={props.tab_id} className={styles.tab_icon} />
             </div>
             <p className={clsx(styles.tab_text, {
-                [styles.tab_text_small]: props.isSmall,
                 [styles.hide]: props.isSmall && !props.isHovered
             })}>{getLabel()}</p>
             <div className={switch_indicator_class_names}></div>
