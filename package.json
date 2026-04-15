@@ -18,6 +18,7 @@
     "dev": "npm run task-kill && npm run clean && npm run update-version && npm run build-python && npm run dev-ui",
     "dev-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run dev-ui",
     "dev-ui": "npm run task-kill && npm-run-all --parallel vite tauri-dev",
+    "analyze-error": "node utils/analyze_ui_error.js",
     "build": "npm run task-kill && npm run clean && npm run update-version && npm run build-python && npm run vite-build && npm run tauri build",
     "build-cuda": "npm run task-kill && npm run clean && npm run update-version && npm run build-python-cuda && npm run vite-build && npm run tauri build",
     "release": "npm run update-version && npm run build && python utils\\zip.py --zip_name VRCT.zip",

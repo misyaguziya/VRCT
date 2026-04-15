@@ -21,10 +21,13 @@ import styles from "./AppErrorBoundary.module.scss";
 const VRCT_STATUS_URL = "https://misyaguziya.github.io/VRCT-Docs/docs/faq/#vrct-status";
 
 export const AppErrorBoundary = ({children}) => {
+    const [errorInfo, setErrorInfo] = useState(null);
+
     return (
         <ErrorBoundary
+            onError={(error, info) => setErrorInfo(info)}
             fallbackRender={({ error }) => (
-                <ErrorContainer error={error} />
+                <ErrorContainer error={error} errorInfo={errorInfo} />
             )
         }>
             {children}
@@ -32,16 +35,29 @@ export const AppErrorBoundary = ({children}) => {
     );
 };
 
-const ErrorContainer = ({error}) => {
+const ErrorContainer = ({error, errorInfo}) => {
     const { asyncCloseApp } = useWindow();
+    const { currentSoftwareVersion } = useSoftwareVersion();
     const [is_copied, setIsCopied] = useState(false);
 
     const formatted_stack = error ? formatStackTrace(error.stack) : "Unknown error";
+    const app_version = currentSoftwareVersion?.data || "Unknown";
+
+    const error_log_text = [
+        `Version: ${app_version}`,
+        `Date: ${new Date().toISOString().replace('T', ' ').split('.')[0]}`,
+        "",
+        "=== Error Stack ===",
+        formatted_stack,
+        "",
+        "=== Component Stack ===",
+        errorInfo?.componentStack ? formatStackTrace(errorInfo.componentStack) : "Not available",
+    ].join("\n");
 
     const copyToClipboard = async () => {
         if (is_copied) return;
 
-        await navigator.clipboard.writeText(formatted_stack);
+        await navigator.clipboard.writeText(error_log_text);
         setIsCopied(true);
 
         setTimeout(() => {
@@ -60,7 +76,7 @@ const ErrorContainer = ({error}) => {
                     <div className={styles.error_detail_container}>
                         <div className={styles.error_stack_container}>
                             <p className={styles.error_stack}>
-                                {formatted_stack}
+                                {error_log_text}
                             </p>
                         </div>
                         <button className={styles.copy_error_message_button} onClick={copyToClipboard}>
